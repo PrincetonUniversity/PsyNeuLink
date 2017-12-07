@@ -81,9 +81,14 @@ Class Reference
 
 """
 
+import inspect
+
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import MODULATORY_PROJECTION, NAME
+from psyneulink.globals.keywords import MODULATORY_PROJECTION, NAME, INITIALIZING, EXECUTING, kwAssign
 from psyneulink.components.component import InitStatus
+from psyneulink.globals.log import LogLevel, LogEntry
+from psyneulink.scheduling.timescale import CurrentTime
+
 
 __all__ = [
     'MODULATORY_SIGNAL_PARAMS'
@@ -132,7 +137,7 @@ class ModulatoryProjection_Base(Projection_Base):
        specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection.value>`
        before combining it with others (see `exponent <ModulatoryProjection.exponent>` for additional details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         ModulatoryProjection, its `function <ModulatoryProject.function>`, and/or a custom function and its parameters.
         By default, it contains an entry for the ModulatoryProjection's default `function <ModulatoryProject.function>`
@@ -221,7 +226,7 @@ class ModulatoryProjection_Base(Projection_Base):
                          prefs=prefs,
                          context=context)
 
-    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 
         template = "{} for {}[{}]"
 

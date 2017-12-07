@@ -1,7 +1,7 @@
 ControlMechanisms
 =================
 
-**Base class**:
+**Core class**:
 
 * `ControlMechanism`
 

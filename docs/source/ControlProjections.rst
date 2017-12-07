@@ -1,7 +1,7 @@
 Control Projections
 ===================
 
-**Base class**:
+**Core class**:
 
 * `ControlProjection`
 

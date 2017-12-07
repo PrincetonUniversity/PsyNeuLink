@@ -1,19 +1,25 @@
 import sys
 import numpy as np
 
-from psyneulink.library.subsystems.agt.gilzenrattransfermechanism import GilzenratTransferMechanism
+from psyneulink.library.mechanisms.processing.transfer.lca import LCA
 from psyneulink.components.functions.function import Linear, Logistic, NormalDist, FHNIntegrator
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
-from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 
 class TestGilzenratMechanisms:
 
     def test_defaults(self):
-        G = GilzenratTransferMechanism()
+        G = LCA(integrator_mode=True,
+                leak=-1.0,
+                noise=0.0,
+                time_step_size=0.02,
+                function=Linear,
+                self_excitation=1.0,
+                competition=-1.0)
 
         # - - - - - LCA integrator functions - - - - -
         # X = previous_value + (rate * previous_value + variable) * self.time_step_size + noise
@@ -36,12 +42,15 @@ class TestGilzenratMechanisms:
         # f(X) = 1.0*0.0396 <--- return 0.02, recurrent projection 0.02
 
     def test_previous_value_stored(self):
-        G = GilzenratTransferMechanism(
-                            initial_value=np.array([[1.0]]),
-                            function = Linear(slope=2.0)
-                            # time_step_size = default = 0.02
-                            # noise = default = 0.0
-                            )
+        G = LCA(integrator_mode=True,
+                leak=-1.0,
+                noise=0.0,
+                time_step_size=0.02,
+                function=Linear(slope=2.0),
+                self_excitation=1.0,
+                competition=-1.0,
+                initial_value=np.array([[1.0]]))
+
         P = Process(pathway=[G])
         S = System(processes=[P])
         G.output_state.value = [0.0]
@@ -125,184 +134,243 @@ class TestGilzenratMechanisms:
                                                  0.014921084302726394, 0.018111324713170868, 0.021507331976846619,
                                                  0.025122069034563425, 0.028974949616469712]
 )
+#
+# class TestGilzenratFullModel:
+#     def test_replicate_gilzenrat_paper(self):
+#         """
+#         This implements a model of Locus Coeruleus / Norepinephrine (LC/NE) function described in `Gilzenrat et al. (2002)
+#         <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_, used to simulate behavioral
+#         and electrophysiological data (from LC recordings) in non-human primates.
+#
+#         This test does NOT validate output against expected values yet -- it is only here to ensure that changes to
+#         PsyNeuLink do not prevent the system below from being created without errors
+#
+#         Plotting code is commented out and only one trial will be executed
+#         """
+#         # --------------------------------- Global Variables ----------------------------------------
+#
+#         # Mode ("coherence")
+#         C = 0.95
+#         # Uncorrelated Activity
+#         d = 0.5
+#
+#         # Initial values
+#         initial_h_of_v = 0.07
+#         # initial_h_of_v = 0.07
+#         initial_v = (initial_h_of_v - (1 - C) * d) / C
+#         # initial_w = 0.14
+#         initial_w = 0.14
+#
+#         # g(t) = G + k*w(t)
+#
+#         # Scaling factor for transforming NE release (u ) to gain (g ) on potentiated units
+#         k = 3.0
+#         # Base level of gain applied to decision and response units
+#         G = 0.5
+#
+#         # numerical integration
+#         time_step_size = 0.02
+#         # number_of_trials = int(20/time_step_size)
+#         number_of_trials = 1
+#
+#         # noise
+#         standard_deviation = 0.22 * (time_step_size ** 0.5)
+#
+#         # --------------------------------------------------------------------------------------------
+#
+#         input_layer = TransferMechanism(default_variable=np.array([[0, 0]]),
+#                                         name='INPUT LAYER')
+#
+#         # Implement projections from inputs to decision layer with weak cross-talk connections
+#         #    from target and distractor inputs to their competing decision layer units
+#         input_weights = np.array([[1, .33], [.33, 1]])
+#
+#         # Implement self-excitatory (auto) and mutually inhibitory (hetero) connections within the decision layer
+#         decision_layer = GilzenratTransferMechanism(size=2,
+#                                                     initial_value=np.array([[1, 0]]),
+#                                                     matrix=np.matrix([[1, 0], [0, -1]]),
+#                                                     # auto=1.0,
+#                                                     # hetero=-1.0,
+#                                                     time_step_size=time_step_size,
+#                                                     noise=NormalDist(mean=0.0,
+#                                                                      standard_dev=standard_deviation).function,
+#                                                     function=Logistic(bias=0.0),
+#                                                     name='DECISION LAYER')
+#
+#         # Implement connection from target but not distractor unit in decision layer to response
+#         output_weights = np.array([[1.84], [0]])
+#
+#         # Implement response layer with a single, self-excitatory connection
+#         # To do Markus: specify recurrent self-connrection weight for response unit to 2.00
+#         response = GilzenratTransferMechanism(size=1,
+#                                               initial_value=np.array([[2.0]]),
+#                                               matrix=np.matrix([[0.5]]),
+#                                               function=Logistic(bias=2),
+#                                               time_step_size=time_step_size,
+#                                               noise=NormalDist(mean=0.0, standard_dev=standard_deviation).function,
+#                                               name='RESPONSE')
+#
+#         # Implement response layer with input_state for ObjectiveMechanism that has a single value
+#         # and a MappingProjection to it that zeros the contribution of the decision unit in the decision layer
+#         LC = LCControlMechanism(
+#             time_step_size_FHN=time_step_size,  # integrating step size
+#             mode_FHN=C,  # coherence: set to either .95 or .55
+#             uncorrelated_activity_FHN=d,  # Baseline level of intrinsic, uncorrelated LC activity
+#             time_constant_v_FHN=0.05,
+#             time_constant_w_FHN=5,
+#             a_v_FHN=-1.0,
+#             b_v_FHN=1.0,
+#             c_v_FHN=1.0,
+#             d_v_FHN=0.0,
+#             e_v_FHN=-1.0,
+#             f_v_FHN=1.0,
+#             a_w_FHN=1.0,
+#             b_w_FHN=-1.0,
+#             c_w_FHN=0.0,
+#             t_0_FHN=0,
+#             initial_v_FHN=initial_v,
+#             initial_w_FHN=initial_w,
+#             threshold_FHN=0.5,
+#             # Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
+#             objective_mechanism=ObjectiveMechanism(
+#                 function=Linear,
+#                 monitored_output_states=[(decision_layer, None, None, np.array([[0.3], [0.0]]))],
+#                 # monitored_output_states=[{PROJECTION_TYPE: MappingProjection,
+#                 #                           SENDER: decision_layer,
+#                 #                           MATRIX: np.array([[0.3],[0.0]])}],
+#                 name='LC ObjectiveMechanism'
+#             ),
+#             modulated_mechanisms=[decision_layer, response],
+#             name='LC')
+#
+#         for signal in LC._control_signals:
+#             signal._intensity = k * initial_w + G
+#
+#         # ELICITS WARNING:
+#         decision_process = Process(pathway=[input_layer,
+#                                             input_weights,
+#                                             decision_layer,
+#                                             output_weights,
+#                                             response],
+#                                    name='DECISION PROCESS')
+#
+#         lc_process = Process(pathway=[decision_layer,
+#                                       # CAUSES ERROR:
+#                                       # np.array([[1,0],[0,0]]),
+#                                       LC],
+#                              name='LC PROCESS')
+#
+#         task = System(processes=[decision_process, lc_process])
+#
+#         # stimulus
+#         stim_list_dict = {input_layer: np.repeat(np.array([[0, 0], [1, 0]]), 10 / time_step_size, axis=0)}
+#
+#         def h_v(v, C, d):
+#             return C * v + (1 - C) * d
+#
+#         # Initialize output arrays for plotting
+#         LC_results_v = [h_v(initial_v, C, d)]
+#         LC_results_w = [initial_w]
+#         decision_layer_target = [0.5]
+#         decision_layer_distractor = [0.5]
+#         response_layer = [0.5]
+#
+#         def record_trial():
+#             LC_results_v.append(h_v(LC.value[2][0], C, d))
+#             LC_results_w.append(LC.value[3][0])
+#             decision_layer_target.append(decision_layer.value[0][0])
+#             decision_layer_distractor.append(decision_layer.value[0][1])
+#             response_layer.append(response.value[0][0])
+#             current_trial_num = len(LC_results_v)
+#             if current_trial_num % 50 == 0:
+#                 percent = int(round((float(current_trial_num) / number_of_trials) * 100))
+#                 sys.stdout.write("\r" + str(percent) + "% complete")
+#                 sys.stdout.flush()
+#
+#         sys.stdout.write("\r0% complete")
+#         sys.stdout.flush()
+#         task.run(stim_list_dict, num_trials=number_of_trials, call_after_trial=record_trial)
+#
+#         # from matplotlib import pyplot as plt
+#         # import numpy as np
+#         # t = np.arange(0.0, len(LC_results_v), 1.0)
+#         # plt.plot(t, LC_results_v, label="h(v)")
+#         # plt.plot(t, LC_results_w, label="w")
+#         # plt.plot(t, decision_layer_target, label="target")
+#         # plt.plot(t, decision_layer_distractor, label="distractor")
+#         # plt.plot(t, response_layer, label="response")
+#         # plt.xlabel(' # of timesteps ')
+#         # plt.ylabel('h(V)')
+#         # plt.legend(loc='upper left')
+#         # plt.ylim((-0.2, 1.2))
+#         # plt.show()
+#
+#         # This prints information about the System,
+#         # including its execution list indicating the order in which the Mechanisms will execute
+#         # IMPLEMENTATION NOTE:
+#         #  MAY STILL NEED TO SCHEDULE RESPONSE TO EXECUTE BEFORE LC
+#         #  (TO BE MODULATED BY THE GAIN MANIPULATION IN SYNCH WITH THE DECISION LAYER
+#         # task.show()
+#
+#         # This displays a diagram of the System
+#         # task.show_graph()
+#
 
-class TestGilzenratFullModel:
-    def test_replicate_gilzenrat_paper(self):
-        """
-        This implements a model of Locus Coeruleus / Norepinephrine (LC/NE) function described in `Gilzenrat et al. (2002)
-        <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_, used to simulate behavioral
-        and electrophysiological data (from LC recordings) in non-human primates.
+class TestLCControlMechanism:
+    def test_default_lc_control_mechanism(self):
+        G = 1.0
+        k = 0.5
+        starting_value_LC = 2.0
+        user_specified_gain = 1.0
 
-        This test does NOT validate output against expected values yet -- it is only here to ensure that changes to
-        PsyNeuLink do not prevent the system below from being created without errors
+        A = TransferMechanism(function=Logistic(gain=user_specified_gain))
 
-        Plotting code is commented out and only one trial will be executed
-        """
-        # --------------------------------- Global Variables ----------------------------------------
+        B = TransferMechanism(function=Logistic(gain=user_specified_gain))
+        # B.output_states[0].value *= 0.0  # Reset after init | Doesn't matter here b/c default var = zero, no intercept
 
-        # Mode ("coherence")
-        C = 0.95
-        # Uncorrelated Activity
-        d = 0.5
+        P = Process(pathway=[A, B])
 
-        # Initial values
-        initial_h_of_v = 0.07
-        # initial_h_of_v = 0.07
-        initial_v = (initial_h_of_v - (1 - C) * d) / C
-        # initial_w = 0.14
-        initial_w = 0.14
+        LC = LCControlMechanism(modulated_mechanisms=[A, B],
+                                base_level_gain=G,
+                                scaling_factor_gain=k,
+                                objective_mechanism=ObjectiveMechanism(function=Linear,
+                                                                       monitored_output_states=[B],
+                                                                       name='LC ObjectiveMechanism')
+                                )
+        for output_state in LC.output_states:
+            output_state.value *= starting_value_LC
 
-        # g(t) = G + k*w(t)
+        S = System(processes=[P])
 
-        # Scaling factor for transforming NE release (u ) to gain (g ) on potentiated units
-        k = 3.0
-        # Base level of gain applied to decision and response units
-        G = 0.5
+        gain_created_by_LC_output_state_1 = []
+        gain_created_by_LC_output_state_2 = []
+        gain_assigned_to_A = []
+        gain_assigned_to_A_underscore = []
+        gain_assigned_to_B = []
+        gain_assigned_to_B_underscore = []
 
-        # numerical integration
-        time_step_size = 0.02
-        # number_of_trials = int(20/time_step_size)
-        number_of_trials = 1
+        def report_trial():
+            gain_created_by_LC_output_state_1.append(LC.output_states[0].value)
+            gain_created_by_LC_output_state_2.append(LC.output_states[1].value)
+            gain_assigned_to_A.append(A.function_object.gain)
+            gain_assigned_to_B.append(B.function_object.gain)
+            gain_assigned_to_A_underscore.append(A.function_object._gain)
+            gain_assigned_to_B_underscore.append(B.function_object._gain)
 
-        # noise
-        standard_deviation = 0.22 * (time_step_size ** 0.5)
+        S.run(inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
+              call_after_trial=report_trial)
 
-        # --------------------------------------------------------------------------------------------
+        # (1) First value of gain in mechanisms A and B must be whatever we hardcoded for LC starting value
+        assert gain_assigned_to_A[0] == starting_value_LC
 
-        input_layer = TransferMechanism(default_variable=np.array([[0, 0]]),
-                                        name='INPUT LAYER')
+        # (2) _gain should always be set to user-specified value
+        for i in range(5):
+            assert gain_assigned_to_A_underscore[i] == user_specified_gain
+            assert gain_assigned_to_B_underscore[i] == user_specified_gain
 
-        # Implement projections from inputs to decision layer with weak cross-talk connections
-        #    from target and distractor inputs to their competing decision layer units
-        input_weights = np.array([[1, .33], [.33, 1]])
+        # (3) LC output on trial n becomes gain of A and B on trial n + 1
+        assert np.allclose(gain_assigned_to_A[1:], gain_created_by_LC_output_state_1[0:-1])
+        assert np.allclose(gain_assigned_to_B[1:], gain_created_by_LC_output_state_2[0:-1])
 
-        # Implement self-excitatory (auto) and mutually inhibitory (hetero) connections within the decision layer
-        decision_layer = GilzenratTransferMechanism(size=2,
-                                                    initial_value=np.array([[1, 0]]),
-                                                    matrix=np.matrix([[1, 0], [0, -1]]),
-                                                    # auto=1.0,
-                                                    # hetero=-1.0,
-                                                    time_step_size=time_step_size,
-                                                    noise=NormalDist(mean=0.0,
-                                                                     standard_dev=standard_deviation).function,
-                                                    function=Logistic(bias=0.0),
-                                                    name='DECISION LAYER')
-
-        # Implement connection from target but not distractor unit in decision layer to response
-        output_weights = np.array([[1.84], [0]])
-
-        # Implement response layer with a single, self-excitatory connection
-        # To do Markus: specify recurrent self-connrection weight for response unit to 2.00
-        response = GilzenratTransferMechanism(size=1,
-                                              initial_value=np.array([[2.0]]),
-                                              matrix=np.matrix([[0.5]]),
-                                              function=Logistic(bias=2),
-                                              time_step_size=time_step_size,
-                                              noise=NormalDist(mean=0.0, standard_dev=standard_deviation).function,
-                                              name='RESPONSE')
-
-        # Implement response layer with input_state for ObjectiveMechanism that has a single value
-        # and a MappingProjection to it that zeros the contribution of the decision unit in the decision layer
-        LC = LCControlMechanism(
-            time_step_size_FHN=time_step_size,  # integrating step size
-            mode_FHN=C,  # coherence: set to either .95 or .55
-            uncorrelated_activity_FHN=d,  # Baseline level of intrinsic, uncorrelated LC activity
-            time_constant_v_FHN=0.05,
-            time_constant_w_FHN=5,
-            a_v_FHN=-1.0,
-            b_v_FHN=1.0,
-            c_v_FHN=1.0,
-            d_v_FHN=0.0,
-            e_v_FHN=-1.0,
-            f_v_FHN=1.0,
-            a_w_FHN=1.0,
-            b_w_FHN=-1.0,
-            c_w_FHN=0.0,
-            t_0_FHN=0,
-            initial_v_FHN=initial_v,
-            initial_w_FHN=initial_w,
-            threshold_FHN=0.5,
-            # Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
-            objective_mechanism=ObjectiveMechanism(
-                function=Linear,
-                monitored_output_states=[(decision_layer, None, None, np.array([[0.3], [0.0]]))],
-                # monitored_output_states=[{PROJECTION_TYPE: MappingProjection,
-                #                           SENDER: decision_layer,
-                #                           MATRIX: np.array([[0.3],[0.0]])}],
-                name='LC ObjectiveMechanism'
-            ),
-            modulated_mechanisms=[decision_layer, response],
-            name='LC')
-
-        for signal in LC._control_signals:
-            signal._intensity = k * initial_w + G
-
-        # ELICITS WARNING:
-        decision_process = Process(pathway=[input_layer,
-                                            input_weights,
-                                            decision_layer,
-                                            output_weights,
-                                            response],
-                                   name='DECISION PROCESS')
-
-        lc_process = Process(pathway=[decision_layer,
-                                      # CAUSES ERROR:
-                                      # np.array([[1,0],[0,0]]),
-                                      LC],
-                             name='LC PROCESS')
-
-        task = System(processes=[decision_process, lc_process])
-
-        # stimulus
-        stim_list_dict = {input_layer: np.repeat(np.array([[0, 0], [1, 0]]), 10 / time_step_size, axis=0)}
-
-        def h_v(v, C, d):
-            return C * v + (1 - C) * d
-
-        # Initialize output arrays for plotting
-        LC_results_v = [h_v(initial_v, C, d)]
-        LC_results_w = [initial_w]
-        decision_layer_target = [0.5]
-        decision_layer_distractor = [0.5]
-        response_layer = [0.5]
-
-        def record_trial():
-            LC_results_v.append(h_v(LC.value[2][0], C, d))
-            LC_results_w.append(LC.value[3][0])
-            decision_layer_target.append(decision_layer.value[0][0])
-            decision_layer_distractor.append(decision_layer.value[0][1])
-            response_layer.append(response.value[0][0])
-            current_trial_num = len(LC_results_v)
-            if current_trial_num % 50 == 0:
-                percent = int(round((float(current_trial_num) / number_of_trials) * 100))
-                sys.stdout.write("\r" + str(percent) + "% complete")
-                sys.stdout.flush()
-
-        sys.stdout.write("\r0% complete")
-        sys.stdout.flush()
-        task.run(stim_list_dict, num_trials=number_of_trials, call_after_trial=record_trial)
-
-        # from matplotlib import pyplot as plt
-        # import numpy as np
-        # t = np.arange(0.0, len(LC_results_v), 1.0)
-        # plt.plot(t, LC_results_v, label="h(v)")
-        # plt.plot(t, LC_results_w, label="w")
-        # plt.plot(t, decision_layer_target, label="target")
-        # plt.plot(t, decision_layer_distractor, label="distractor")
-        # plt.plot(t, response_layer, label="response")
-        # plt.xlabel(' # of timesteps ')
-        # plt.ylabel('h(V)')
-        # plt.legend(loc='upper left')
-        # plt.ylim((-0.2, 1.2))
-        # plt.show()
-
-        # This prints information about the System,
-        # including its execution list indicating the order in which the Mechanisms will execute
-        # IMPLEMENTATION NOTE:
-        #  MAY STILL NEED TO SCHEDULE RESPONSE TO EXECUTE BEFORE LC
-        #  (TO BE MODULATED BY THE GAIN MANIPULATION IN SYNCH WITH THE DECISION LAYER
-        # task.show()
-
-        # This displays a diagram of the System
-        # task.show_graph()
-
+        # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
+        assert np.allclose(gain_assigned_to_A, gain_assigned_to_B)

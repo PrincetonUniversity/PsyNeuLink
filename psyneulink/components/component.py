@@ -135,6 +135,12 @@ corresponding arguments of its constructor, or by assigning them directly (see `
   `function <Component.function>` after the function is called.
 ..
 
+.. _Component_Log:
+
+* **log** - the `log <Component.log>` attribute contains the Component's `Log`, in which its `value <Component.value>`
+  can be recorded during initialization, validation and/or execution.
+..
+
 .. _Component_Name:
 
 * **name** - the `name <Component.name>` attribute contains the name assigned to the Component when it was created.
@@ -348,11 +354,11 @@ import typecheck as tc
 
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, \
+    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, LOG_ENTRIES, \
     INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
     SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
-from psyneulink.globals.log import Log
+from psyneulink.globals.log import Log, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
@@ -467,7 +473,6 @@ class ParamsDict(UserDict):
         super().__setitem__(key, item)
         # assign value to attrib
         setattr(self.owner, key, item)
-
 
 parameter_keywords = set()
 
@@ -662,6 +667,9 @@ class Component(object):
     value : 2d np.array
         see `value <Component_Value>`
 
+    log : Log
+        see `log <Component_Log>`
+
     name : str
         see `name <Component_Name>`
 
@@ -676,6 +684,7 @@ class Component(object):
 # IMPLEMENTATION NOTE:  *** CHECK THAT THIS DOES NOT CAUSE ANY CHANGES AT SUBORDNIATE LEVELS TO PROPOGATE EVERYWHERE
     componentCategory = None
     componentType = None
+
 
     class Defaults(object):
         def _attributes(obj):
@@ -1095,14 +1104,15 @@ class Component(object):
             except KeyError:
                 pass
 
-            # If name is None, mark as deferred so that name can be customized
-            #    using info that has become available at time of deferred init
-            self.init_args[NAME] = self.name or (self.init_args[NAME] or
-                                                 (DEFERRED_INITIALIZATION + ' ' + self.className) or
-                                                 DEFERRED_DEFAULT_NAME)
-
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
+
+            # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
+            if DEFERRED_INITIALIZATION in self.name:
+                self.name = self.name.replace("["+DEFERRED_INITIALIZATION+"]","")
+            # Otherwise, allow class to replace std default name with class-specific one if it has a method for doing so
+            else:
+                self._assign_default_name()
 
             self.init_status = InitStatus.INITIALIZED
 
@@ -1117,6 +1127,9 @@ class Component(object):
                           name=name,
                           registry=DeferredInitRegistry,
                           context=context)
+
+    def _assign_default_name(self, **kwargs):
+        return
 
     def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
@@ -1765,7 +1778,6 @@ class Component(object):
             #    so that latter are evaluated in context of former
             for param_name, param_value in sorted(default_set.items()):
 
-                # MODIFIED 11/30/16 NEW:
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
                 if param_name is FUNCTION:
                     try:
@@ -1778,27 +1790,22 @@ class Component(object):
                     except UnboundLocalError:
                         pass
                 # FIX: MAY NEED TO ALSO ALLOW assign_default_FUNCTION_PARAMS FOR COMMAND_LINE IN CONTEXT
-                # MODIFIED 11/30/16 END
 
                 if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
                     continue
 
-                # MODIFIED 11/29/16 NEW:
                 # Don't replace requested entry with default
                 if param_name in request_set:
                     continue
-                # MODIFIED 11/29/16 END
 
                 # Add to request_set any entries it is missing fron the default_set
                 request_set.setdefault(param_name, param_value)
                 # Update any values in a dict
                 if isinstance(param_value, dict):
                     for dict_entry_name, dict_entry_value in param_value.items():
-                        # MODIFIED 11/29/16 NEW:
                         # Don't replace requested entries
                         if dict_entry_name in request_set[param_name]:
                             continue
-                        # MODIFIED 11/29/16 END
                         request_set[param_name].setdefault(dict_entry_name, dict_entry_value)
 
         # VALIDATE PARAMS
@@ -1813,11 +1820,6 @@ class Component(object):
             #                       any override of _validate_params, which (should not, but) may process params
             #                       before calling super()._validate_params
             for param_name, param_value in request_set.items():
-                # # MODIFIED 11/25/17 OLD:
-                # if isinstance(param_value, tuple):
-                #     param_value = self._get_param_value_from_tuple(param_value)
-                #     request_set[param_name] = param_value
-                # MODIFIED 11/25/17 NEW:
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
                 elif isinstance(param_value, (str, Component, type)):
@@ -1826,13 +1828,13 @@ class Component(object):
                 else:
                     continue
                 request_set[param_name] = param_value
-                # MODIFIED 11/25/17 END:
 
             try:
                 self._validate_params(variable=variable,
                                       request_set=request_set,
                                       target_set=target_set,
                                       context=context)
+            # variable not implemented by Mechanism subclass, so validate without it
             except TypeError:
                 self._validate_params(request_set=request_set,
                                       target_set=target_set,
@@ -1886,11 +1888,7 @@ class Component(object):
 
         self._instantiate_defaults(request_set=request_set,
                                    target_set=validated_set,
-                                   # # MODIFIED 4/14/17 OLD:
-                                   # assign_missing=False,
-                                   # MODIFIED 4/14/17 NEW:
-                                   assign_missing=False,
-                                   # MODIFIED 4/14/17 END
+                                    assign_missing=False,
                                    context=context)
 
         self.paramInstanceDefaults.update(validated_set)
@@ -2077,7 +2075,7 @@ class Component(object):
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
                 # these are always allowable since they are attribs of every Component
-                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE}:  # added SIZE here (7/5/17, CW)
+                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES}:  # added SIZE here (7/5/17, CW)
                     continue
                 # function is a class, so function_params has not yet been implemented
                 if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
@@ -2085,7 +2083,6 @@ class Component(object):
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
             # The value of the param is None in paramClassDefaults: suppress type checking
-            # DOCUMENT:
             # IMPLEMENTATION NOTE: this can be used for params with multiple possible types,
             #                      until type lists are implemented (see below)
             if self.paramClassDefaults[param_name] is None or self.paramClassDefaults[param_name] is NotImplemented:
@@ -2099,18 +2096,14 @@ class Component(object):
             # If the value in paramClassDefault is a type, check if param value is an instance of it
             if inspect.isclass(self.paramClassDefaults[param_name]):
                 if isinstance(param_value, self.paramClassDefaults[param_name]):
-                    # MODIFIED 2/14/17 NEW:
                     target_set[param_name] = param_value
-                    # MODIFIED 2/14/17 END
                     continue
                 # If the value is a Function class, allow any instance of Function class
                 from psyneulink.components.functions.function import Function_Base
                 if issubclass(self.paramClassDefaults[param_name], Function_Base):
                     # if isinstance(param_value, (function_type, Function_Base)):  <- would allow function of any kind
                     if isinstance(param_value, Function_Base):
-                        # MODIFIED 2/14/17 NEW:
                         target_set[param_name] = param_value
-                        # MODIFIED 2/14/17 END
                         continue
 
             # If the value in paramClassDefault is an object, check if param value is the corresponding class
@@ -2246,7 +2239,6 @@ class Component(object):
                 raise ComponentError("Value of {} param for {} ({}) is not compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
-    # MODIFIED 11/25/17 NEW:
     def _get_param_value_for_modulatory_spec(self, param_name, param_value):
         from psyneulink.globals.keywords import MODULATORY_SPEC_KEYWORDS
         if isinstance(param_value, str):
@@ -2271,8 +2263,6 @@ class Component(object):
         except:
             raise ComponentError("PROGRAM ERROR: Could not get default value for {} of {} (to replace spec as {})".
                                  format(param_name, self.name, param_value))
-
-    # MODIFIED 11/25/17 END:
 
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of a (value, projection) tuple;
@@ -2837,6 +2827,24 @@ class Component(object):
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
+
+    @property
+    def loggable_items(self):
+        """List of names of all items that can be logged
+        This is a convenience method that calls self.log
+        """
+        return self.log.loggable_items
+
+    def log_items(self, items, log_level=LogLevel.EXECUTION):
+        # Overriden by subclasses to add param_sets (see Mechanism_Base for an example)
+        self.log.log_items(items=items, log_level=log_level)
+
+    @property
+    def logged_items(self):
+        """List of names of all the items being logged
+        This is a convenience method that calls self.log.entries
+        """
+        return self.log.logged_items
 
     @property
     def auto_dependent(self):

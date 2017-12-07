@@ -125,24 +125,29 @@ Examples for each, that illustrate all of their parameters, are shown below:
 
 `BogaczEtAl <BogaczEtAl>` Function::
 
-    >>> my_DDM_BogaczEtAl = pnl.DDM(function=pnl.BogaczEtAl(drift_rate=3.0,
-    ...                                                     starting_point=1.0,
-    ...                                                     threshold=30.0,
-    ...                                                      noise=1.5,
-    ...                                                      t0 = 2.0),
-    ...                             name='my_DDM_BogaczEtAl')
+    >>> my_DDM_BogaczEtAl = pnl.DDM(
+    ...     function=pnl.BogaczEtAl(
+    ...         drift_rate=0.08928,
+    ...         starting_point=0.5,
+    ...         threshold=0.2645,
+    ...         noise=0.5,
+    ...         t0=0.15
+    ...     ),
+    ...     name='my_DDM_BogaczEtAl'
+    ... )
 
 `NavarroAndFuss <NavarroAndFuss>` Function (requires MATLAB engine)::
 
-    >>> import matlab.engine                                                               # doctest: +SKIP
-    >>> self.eng1 = matlab.engine.start_matlab('-nojvm')                                   # doctest: +SKIP
-
-    >>> my_DDM_NavarroAndFuss = pnl.DDM(function=pnl.NavarroAndFuss(drift_rate=3.0,        # doctest: +SKIP
-    ...                                                             starting_point=1.0,    # doctest: +SKIP
-    ...                                                             threshold=30.0,        # doctest: +SKIP
-    ...                                                             noise=1.5,             # doctest: +SKIP
-    ...                                                             t0 = 2.0),             # doctest: +SKIP
-    ...                                 name='my_DDM_NavarroAndFuss')                      # doctest: +SKIP
+    >>> my_DDM_NavarroAndFuss = pnl.DDM(
+    ...     function=pnl.NavarroAndFuss(
+    ...         drift_rate=0.08928,
+    ...         starting_point=0.5,
+    ...         threshold=0.2645,
+    ...         noise=0.5,
+    ...         t0=0.15
+    ...     ),
+    ...     name='my_DDM_NavarroAndFuss'
+    ... )                                   #doctest: +SKIP
 
 .. _DDM_Integration_Mode:
 
@@ -156,11 +161,15 @@ mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <D
 
 `Integrator <Integrator>` Function::
 
-    >>> my_DDM_path_integrator = pnl.DDM(function=pnl.DriftDiffusionIntegrator(noise=0.5,
-    ...                                                                        initializer=1.0,
-    ...                                                                        t0=2.0,
-    ...                                                                        rate=3.0),
-    ...                                   name='my_DDM_path_integrator')
+    >>> my_DDM_path_integrator = pnl.DDM(
+    ...     function=pnl.DriftDiffusionIntegrator(
+    ...         noise=0.5,
+    ...         initializer=1.0,
+    ...         t0=2.0,
+    ...         rate=3.0
+    ...     ),
+    ...     name='my_DDM_path_integrator'
+    ... )
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
@@ -511,7 +520,7 @@ class DDM(ProcessingMechanism_Base):
         specifies the function to use to `execute <DDM_Execution>` the decision process; determines the mode of
         execution (see `function <DDM.function>` and `DDM_Modes` for additional information).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a dictionary that can be used to specify parameters of the Mechanism, parameters of its `function
         <DDM.function>`, and/or  a custom function and its parameters (see `Mechanism <Mechanism>` for specification of
         a params dict).
@@ -888,12 +897,13 @@ class DDM(ProcessingMechanism_Base):
                                                                1 - return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]
 
             elif isinstance(self.function.__self__, NavarroAndFuss):
-                return_value = np.array([[0], [0], [0], [0], [0], [0]])
-                return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_DT.value]
+                return_value = np.array([[0.0], [0.0], [0.0], [0.0], [0.0], [0.0]])
+                return_value[self.RESPONSE_TIME_INDEX] = result[NF_Results.MEAN_RT.value]
                 return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX] = result[NF_Results.MEAN_ER.value]
                 return_value[self.PROBABILITY_UPPER_THRESHOLD_INDEX] = 1 - result[NF_Results.MEAN_ER.value]
-                return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.MEAN_CORRECT_RT.value]
-                return_value[self.RT_CORRECT_VARIANCE_INDEX]= result[NF_Results.MEAN_CORRECT_VARIANCE.value]
+                # index 1 holds upper/correct (0 holds lower/error)
+                return_value[self.RT_CORRECT_MEAN_INDEX] = result[NF_Results.COND_RTS.value][1]
+                return_value[self.RT_CORRECT_VARIANCE_INDEX] = result[NF_Results.COND_VAR_RTS.value][1]
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
             else:

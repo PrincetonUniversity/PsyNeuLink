@@ -173,16 +173,13 @@ Class Reference
 """
 
 import numbers
+import numpy as np
+import typecheck as tc
 import warnings
 
 from collections import namedtuple
 from enum import Enum, IntEnum
 from random import randint
-
-import numpy as np
-import typecheck as tc
-
-from numpy import abs, exp, tanh
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
@@ -538,7 +535,7 @@ class Function_Base(Function):
     variable : value : default ClassDefaults.variable
         specifies the format and a default value for the input to `function <Function>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -764,7 +761,7 @@ class ArgumentTherapy(Function_Base):
     pertinacity : float : default 10.0
         specifies therapeutic consistency
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -942,7 +939,7 @@ class ArgumentTherapy(Function_Base):
         variable : boolean : default ClassDefaults.variable
            an assertion to which a therapeutic response is made.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -1012,7 +1009,7 @@ class UserDefinedFunction(Function_Base):
     variable : value : default ClassDefaults.variable
         specifies the format and a default value for the input to `function <Function>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -1194,7 +1191,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         specifies a value to add to each element of the output of `function <Reduce.function>`
         (see `offset <Reduce.offset>` for details)
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -1301,7 +1298,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         variable : list or np.array : default ClassDefaults.variable
            a list or np.array of numeric values.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -1428,7 +1425,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         specifies a value to add to each element of the result of `function <LinearCombination.function>`
         (see `offset <LinearCombination.offset>` for details)
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -1683,7 +1680,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         variable : 1d or 2d np.array : default ClassDefaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -1890,7 +1887,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         specifies a value to add to the result of `function <CombineMeans.function>`
         (see `offset <CombineMeans.offset>` for details)
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -2120,7 +2117,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         variable : 1d or 2d np.array : default ClassDefaults.variable
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -2286,7 +2283,7 @@ class SoftMax(NormalizingFunction):
         specifies the format of array returned by `function <SoftMax.function>`
         (see `output <SoftMax.output>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -2515,7 +2512,7 @@ class SoftMax(NormalizingFunction):
         variable : 1d np.array : default ClassDefaults.variable
            an array to be transformed.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -2717,7 +2714,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
     intercept : float : default 0.0
         specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -2895,7 +2892,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         variable : number or np.array : default ClassDefaults.variable
            a single value or array to be transformed.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -3019,7 +3016,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
     scale : float : default 1.0
         specifies a value by which to multiply the exponentiated value of `variable <Exponential.variable>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -3187,7 +3184,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         variable : number or np.array : default ClassDefaults.variable
            a single value or array to be exponentiated.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -3258,7 +3255,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies a value to add to each element of `variable <Logistic.variable>` after applying `gain <Logistic.gain>`
         but before logistic transformation.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -3430,7 +3427,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         variable : number or np.array : default ClassDefaults.variable
            a single value or array to be transformed.
 
-        params : Optional[Dict[param keyword, param value]]
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -3504,7 +3501,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #         specifies the format of array returned by `function <SoftMax.function>`
 #         (see `output <SoftMax.output>` for details).
 #
-#     params : Dict[param keyword, param value] : default None
+#     params : Dict[param keyword: param value] : default None
 #         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
 #         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 #         arguments of the constructor.
@@ -3602,7 +3599,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #         variable : 1d np.array : default ClassDefaults.variable
 #            an array to be transformed.
 #
-#         params : Dict[param keyword, param value] : default None
+#         params : Dict[param keyword: param value] : default None
 #             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
 #             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 #             arguments of the constructor.
@@ -3767,7 +3764,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     bounds : None
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4093,7 +4090,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         variable : list or 1d np.array
             array to be transformed;  length must equal the number of rows of 'matrix <LinearMatrix.matrix>`.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -4266,14 +4263,13 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         `noise <Integrator.noise>` for details).
 
     time_step_size : float : default 0.0
-        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-        is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+        determines the timing precision of the integration process
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <Integrator.default_variable>` (see `initializer <Integrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4293,9 +4289,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     variable : number or np.array
         current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
         added to the prior value;  if it is an array, each element is independently integrated.
-
-    integration_type : [**NEEDS TO BE SPECIFIED**] : default [**NEEDS TO BE SPECIFIED**]
-        [**NEEDS TO BE SPECIFIED**]
 
     rate : float or 1d np.array
         determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
@@ -4579,7 +4572,7 @@ class SimpleIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4702,7 +4695,7 @@ class SimpleIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -4738,8 +4731,6 @@ class SimpleIntegrator(
         # if params and VARIABLE in params:
         #     new_value = params[VARIABLE]
 
-        # Compute function based on integration_type param
-
         value = previous_value + (new_value * rate) + noise
 
         adjusted_value = value + offset
@@ -4754,22 +4745,31 @@ class SimpleIntegrator(
 class LCAIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
-    LCAIntegrator(                 \
-        default_variable=None,  \
-        noise=0.0,              \
-        initializer,            \
-        params=None,            \
-        owner=None,             \
-        prefs=None,             \
+    LCAIntegrator(                  \
+        default_variable=None,      \
+        noise=0.0,                  \
+        initializer=0.0,            \
+        rate=1.0,                   \
+        offset=None,                \
+        time_step_size=0.1,         \
+        params=None,                \
+        owner=None,                 \
+        prefs=None,                 \
         )
 
     .. _LCAIntegrator:
 
     Integrate current value of `variable <LCAIntegrator.variable>` with its prior value:
 
+    .. math::
+
+        rate \\dot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+
+    COMMENT:
     `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + \
     `variable <variable.LCAIntegrator.variable>` + \
     `noise <LCAIntegrator.noise>`;
+    COMMENT
 
     Arguments
     ---------
@@ -4779,18 +4779,18 @@ class LCAIntegrator(
         integrated.
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <LCAIntegrator.default_variable>` (see `rate <LCAIntegrator.rate>` for details).
+        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the accumulation of the
+        `value <LCAIntegrator.value>` on each time step
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <LCAIntegrator.function>`. (see
         `noise <LCAIntegrator.noise>` for details).
 
-    initializer float, list or 1d np.array : default 0.0
+    initializer : float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <LCAIntegrator.default_variable>` (see `initializer <LCAIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -4812,8 +4812,9 @@ class LCAIntegrator(
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values. If it has a single element, it
-        applies to all elements of `variable <LCAIntegrator.variable>`;  if it has more than one element, each element
+        scales the contribution of `previous_value <LCAIntegrator.previous_value>` to the
+        accumulation of the `value <LCAIntegrator.value>` on each time step. If rate has a single element, it
+        applies to all elements of `variable <LCAIntegrator.variable>`;  if rate has more than one element, each element
         applies to the corresponding element of `variable <LCAIntegrator.variable>`.
 
     noise : float, function, list, or 1d np.array
@@ -4824,7 +4825,6 @@ class LCAIntegrator(
         If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
         will be executed separately for each variable element.
-
 
         .. note::
             In order to generate random noise, we recommend selecting a probability distribution function
@@ -4905,9 +4905,11 @@ class LCAIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: `variable <Linear.slope>` combined with `previous_value <LCAIntegrator.previous_value>`
-        according to `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + `variable
-        <variable.LCAIntegrator.variable>` + `noise <LCAIntegrator.noise>`;
+        Return:
+
+        .. math::
+
+            rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
 
         Arguments
         ---------
@@ -4915,7 +4917,7 @@ class LCAIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -4951,7 +4953,6 @@ class LCAIntegrator(
         # if params and VARIABLE in params:
         #     new_value = params[VARIABLE]
 
-        # Compute function based on integration_type param
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
         value = previous_value + (rate*previous_value + new_value)*self.time_step_size + noise*(self.time_step_size**0.5)
 
@@ -5005,7 +5006,7 @@ class ConstantIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -5138,7 +5139,7 @@ class ConstantIntegrator(
         Arguments
         ---------
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -5222,7 +5223,7 @@ class AdaptiveIntegrator(
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <AdaptiveIntegrator.default_variable>` (see `initializer <AdaptiveIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -5394,13 +5395,13 @@ class AdaptiveIntegrator(
                 for r in target_set[RATE]:
                     if r < 0.0 or r > 1.0:
                         raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                            "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+                                            "between 0.0 and 1.0 because it is an AdaptiveIntegrator".
                                             format(target_set[RATE], self.name))
             else:
                 if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
                     raise FunctionError(
                         "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                        "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+                        "1.0 because it is an AdaptiveIntegrator".format(target_set[RATE], self.name))
 
         if NOISE in target_set:
             self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
@@ -5555,7 +5556,7 @@ class AdaptiveIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -5598,8 +5599,8 @@ class DriftDiffusionIntegrator(
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
+        scale= 1.0,                     \
+        offset= 0.0,                    \
         time_step_size=1.0,             \
         t0=0.0,                         \
         decay=0.0,                      \
@@ -5611,21 +5612,19 @@ class DriftDiffusionIntegrator(
 
     .. _DriftDiffusionIntegrator:
 
-    Accumulate evidence overtime based on a stimulus, previous position, and noise.
+    Accumulate evidence overtime based on a stimulus, rate, previous position, and noise.
 
     Arguments
     ---------
 
     default_variable : number, list or np.array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
+        specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <DriftDiffusionIntegrator.default_variable>` (see `rate <DriftDiffusionIntegrator.rate>` for details).
+        specifies the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <DriftDiffusionIntegrator.function>`. (see
+        scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function>`. (see
         `noise <DriftDiffusionIntegrator.noise>` for details).
 
     time_step_size : float : default 0.0
@@ -5636,11 +5635,11 @@ class DriftDiffusionIntegrator(
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
         the DDM Mechanism.
 
-    initializer float, list or 1d np.array : default 0.0
+    initializer : float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -5661,20 +5660,20 @@ class DriftDiffusionIntegrator(
         current input value, which represents the stimulus component of drift.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-        applies to all elements of `variable <DriftDiffusionIntegrator.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <DriftDiffusionIntegrator.variable>`.
+        specifies the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, function, list, or 1d np.array
-        scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function>
+        scales the random value to be added in each call to `function <DriftDiffusionIntegrator.function> according to
+        the standard DDM probability distribution.
 
-        Noise must be specified as a float (or list or array of floats) because this
-        value will be used to construct the standard DDM probability distribution.
+        On each call to `function <DriftDiffusionIntegrator.function>, :math:`\\sqrt{time\\_step\\_size \\cdot noise}
+        \\cdot Sample\\,From\\,Normal\\,distribution` is added to the accumulated evidence.
+
+        Noise must be specified as a float (or list or array of floats).
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise
-        <DriftDiffusionIntegrator.noise>` parameter appropriately.
+        <DriftDiffusionIntegrator.noise>` parameter according to the standard DDM probability distribution.
 
     t0 : float
         determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
@@ -5772,16 +5771,18 @@ class DriftDiffusionIntegrator(
         """
         Return: One time step of evidence accumulation according to the Drift Diffusion Model
 
-        previous_value + rate * variable * time_step_size + :math:`\\sqrt{time_step_size * noise}` * random
-        sample from Normal distribution
+        ..  math::
+
+            previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\sqrt{time\\_step\\_size \\cdot noise}
+            \\cdot Sample\\,from\\,Normal\\,Distribution
 
         Arguments
         ---------
 
         variable : number, list or np.array : default ClassDefaults.variable
-           the stimulus component of drift rate in the Drift Diffusion Model.
+            specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -5829,11 +5830,11 @@ class OrnsteinUhlenbeckIntegrator(
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
+        offset= 0.0,                    \
         time_step_size=1.0,             \
         t0=0.0,                         \
-        initializer,                    \
+        decay=1.0,                      \
+        initializer=0.0,                \
         params=None,                    \
         owner=None,                     \
         prefs=None,                     \
@@ -5847,16 +5848,14 @@ class OrnsteinUhlenbeckIntegrator(
     ---------
 
     default_variable : number, list or np.array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
+        specifies a template for  the stimulus component of drift rate -- the drift rate is the product of variable and
+        rate
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <OrnsteinUhlenbeckIntegrator.default_variable>` (see `rate <OrnsteinUhlenbeckIntegrator.rate>` for
-        details).
+        specifies  the attentional component of drift rate -- the drift rate is the product of variable and rate
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <OrnsteinUhlenbeckIntegrator.function>`. (see
+        scales random value to be added in each call to `function <OrnsteinUhlenbeckIntegrator.function>`. (see
         `noise <OrnsteinUhlenbeckIntegrator.noise>` for details).
 
     time_step_size : float : default 0.0
@@ -5872,7 +5871,7 @@ class OrnsteinUhlenbeckIntegrator(
         `default_variable <OrnsteinUhlenbeckIntegrator.default_variable>` (see `initializer
         <OrnsteinUhlenbeckIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -5890,7 +5889,7 @@ class OrnsteinUhlenbeckIntegrator(
     ----------
 
     variable : number or np.array
-        current input value which represents the stimulus component of drift. The product of
+        represents the stimulus component of drift. The product of
         `variable <OrnsteinUhlenbeckIntegrator.variable>` and `rate <OrnsteinUhlenbeckIntegrator.rate>` is multiplied
         by `time_step_size <OrnsteinUhlenbeckIntegrator.time_step_size>` to model the accumulation of evidence during
         one step.
@@ -6018,7 +6017,7 @@ class OrnsteinUhlenbeckIntegrator(
            the stimulus component of drift rate in the Drift Diffusion Model.
 
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -6046,9 +6045,8 @@ class OrnsteinUhlenbeckIntegrator(
         previous_value = self.previous_value
 
         previous_value = np.atleast_2d(previous_value)
-        new_value = variable
         # dx = (lambda*x + A)dt + c*dW
-        value = previous_value + decay * (previous_value -  rate * new_value) * time_step_size + np.sqrt(
+        value = previous_value + (decay * previous_value - rate * variable) * time_step_size + np.sqrt(
             time_step_size * noise) * np.random.normal()
 
         # If this NOT an initialization run, update the old value and time
@@ -6065,15 +6063,13 @@ class OrnsteinUhlenbeckIntegrator(
 class FHNIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
-    FHNIntegrator(              \
-        default_variable=None,          \
-        rate=1.0,                       \
-        noise=0.0,                      \
+    FHNIntegrator(                      \
+        default_variable=1.0,           \
         scale: parameter_spec = 1.0,    \
         offset: parameter_spec = 0.0,   \
         initial_w=0.0,                  \
         initial_v=0.0,                  \
-        time_step_size=0.1,             \
+        time_step_size=0.05,          \
         t_0=0.0,                        \
         a_v=-1/3,                       \
         b_v=0.0,                        \
@@ -6081,6 +6077,7 @@ class FHNIntegrator(
         d_v=0.0,                        \
         e_v=-1.0,                       \
         f_v=1.0,                        \
+        threshold=-1.0                  \
         time_constant_v=1.0,            \
         a_w=1.0,                        \
         b_w=-0.8,                       \
@@ -6088,6 +6085,7 @@ class FHNIntegrator(
         mode=1.0,                       \
         uncorrelated_activity=0.0       \
         time_constant_w = 12.5,         \
+        integration_method="RK4"        \
         params=None,                    \
         owner=None,                     \
         prefs=None,                     \
@@ -6095,127 +6093,170 @@ class FHNIntegrator(
 
     .. _FHNIntegrator:
 
-    Implements the Fitzhugh-Nagumo model using the 4th order Runge Kutta method of numerical integration.
+    The FHN Integrator function in PsyNeuLink implements the Fitzhugh-Nagumo model using a choice of Euler or 4th Order
+    Runge-Kutta numerical integration.
 
     In order to support several common representations of the model, the FHNIntegrator includes many parameters, some of
-    which would not be sensible to use in combination.
+    which would not be sensible to use in combination. The equations of the Fitzhugh-Nagumo model are expressed below in
+    terms of all of the parameters exposed in PsyNeuLink:
 
-    The most general form of the FHNIntegrator function, with all of its arguments, is:
-
-        *time_constant_v* :math:`* \\frac{dv}{dt}` =
-
-            *a_v* :math:`* v^3` + *((1+threshold)* :math:`*` *b_v* :math:`* v^2)` *- threshold* :math:`*` *c_v* \
-            :math:`* v^2`) *+ d_v + (e_v* :math:`*` *w) + (f_v* :math:`* I_{ext})`
-
-        *time_constant_w* :math:`* \\frac{dw}{dt}` =
-
-          *mode* :math:`*` *a_w* :math:`*` *(v + b_w)* :math:`*` *(w + c_w + (1 - self.mode))* :math:`*`
-          *self.uncorrelated_activity*
-
-    The three formulations that the FHNIntegrator was designed to allow are:
-
-    **Fitzhugh-Nagumo Model**
-
-            :math:`\\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}`
-
-            :math:`T*\\frac{dw}{dt} = v + a - b*w`
-
-        where :math:`\\frac{dw}{dt}` often has the following parameters:
-
-            :math:`\\frac{dw}{dt} = 0.08(v + 0.7 - 0.8*w)`
-
-        The FHNIntegrator's default parameter values map the above equations and parameters onto the PsyNeuLink
-        implementation.
+    **Fast, Excitatory Variable:**
 
 
-    **Modified FHN Model**
+    .. math::
 
-            :math:`\\frac{dv}{dt} = v*(a-v)(v-1) - w + I_{ext}`
+        \\frac{dv}{dt} = \\frac{a_v v^{3} + b_v v^{2} (1+threshold) - c_v v\\, threshold + d_v + e_v\\, previous_w + f_v\\, variable)}{time\\, constant_v}
 
-            :math:`\\frac{dw}{dt} = b*v - c*w`
 
-        In order to reproduce the modified FHN equation for :math:`\\frac{dv}{dt},
-        the following FHNIntegrator parameters must be set:
+    **Slow, Inactivating Variable:**
 
-            *b_v = c_v = f_v = time_constant_v = 1.0*
 
-            *a_v = e_v = -1.0*
+    .. math::
 
-            *d_v = 0.0;*
+        \\frac{dw}{dt} = \\frac{a_w\\, mode\\, previous_v + b_w w + c_w +
+                    uncorrelated\\,activity\\,(1-mode)}{time\\, constant_w}
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for
-        dv/dt then correspond to the modified FHN equation for :math:`\\frac{dv}{dt} as follows:
+    *The three formulations that the FHNIntegrator was designed to allow are:*
 
-            (modified FHN representation --> PsyNeuLink representation)
+    (1) **Fitzhugh-Nagumo Model**
 
-            *a* --> `threshold <FHNIntegrator.threshold>`
+        **Fast, Excitatory Variable:**
 
-            :math:`I_{ext}` --> `variable <FHNIntegrator.variable>`
+        .. math::
 
-        In order to reproduce the modified FHN equation for dw/dt, the following FHNIntegrator parameters must be set:
+            \\frac{dv}{dt} = v - \\frac{v^3}{3} - w + I_{ext}
 
-            *mode = time_constant_w = 1.0*
+        **Slow, Inactivating Variable:**
 
-            *c_w = uncorrelated_activity = 0.0;*
+        .. math::
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the modified FHN equation for dw/dt as follows:
+            \\frac{dw}{dt} = \\frac{v + a - bw}{T}
 
-            (modified FHN representation --> PsyNeuLink representation)
+        :math:`\\frac{dw}{dt}` often has the following parameter values:
 
-            *b* --> `a_w <FHNIntegrator.a_w>`
+        .. math::
 
-            *c --> NEGATIVE* `b_w <FHNIntegrator.b_w>`
+            \\frac{dw}{dt} = 0.08\\,(v + 0.7 - 0.8 w)
+
+        *How to implement this model in PsyNeuLink:*
+
+            In PsyNeuLink, the default parameter values of the FHNIntegrator function implement the above equations.
+
+
+    (2) **Modified FHN Model**
+
+        **Fast, Excitatory Variable:**
+
+        .. math::
+
+            \\frac{dv}{dt} = v(a-v)(v-1) - w + I_{ext}
+
+        **Slow, Inactivating Variable:**
+
+        .. math::
+
+            \\frac{dw}{dt} = bv - cw
 
         `Mahbub Khan (2013) <http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf>`_ provides a nice summary
         of why this formulation is useful.
 
+        *How to implement this model in PsyNeuLink:*
 
-    `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ **Implementation
-    of the Modified FHN Model**
+            In order to implement the modified FHN model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dv}{dt}`:
 
-            *tau_v* :math:`* \\frac{dv}{dt} = v*(a-v)(v-1) - w + b *` *f(X_1)*
+            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
+            |**PNL Parameter**| a_v | b_v | c_v | d_v | e_v | f_v |time_constant_v|
+            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
+            |**Value**        |-1.0 |1.0  |1.0  |0.0  |-1.0 |1.0  |1.0            |
+            +-----------------+-----+-----+-----+-----+-----+-----+---------------+
 
-            *tau_w* :math:`* \\frac{dw}{dt} = c*v + (1-c)*d - w`
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dv}{dt}`
+            reduces to the Modified FHN formulation, and the remaining parameters in the :math:`\\frac{dv}{dt}` equation
+            correspond as follows:
 
-        In order to reproduce the Gilzenrat equation for dv/dt, the following FHNIntegrator parameters must be set:
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**PNL Parameter**         |`threshold <FHNIntegrator.threshold>`  |`variable <FHNIntegrator.variable>`    |
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**Modified FHN Parameter**|a                                      |:math:`I_{ext}`                        |
+            +--------------------------+---------------------------------------+---------------------------------------+
 
-            *b_v = c_v = 1.0*
+            In order to implement the modified FHN model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dw}{dt}`:
 
-            *a_v = e_v = -1.0*
+            +-----------------+-----+------+---------------+----------------------+
+            |**PNL Parameter**|c_w  | mode |time_constant_w|uncorrelated_activity |
+            +-----------------+-----+------+---------------+----------------------+
+            |**Value**        | 0.0 | 1.0  |1.0            | 0.0                  |
+            +-----------------+-----+------+---------------+----------------------+
 
-            *d_v = 0.0;*
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dw}{dt}`
+            reduces to the Modified FHN formulation, and the remaining parameters in the :math:`\\frac{dw}{dt}` equation
+            correspond as follows:
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dv/dt then correspond to the Gilzenrat equation for dv/dt as follows:
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**PNL Parameter**         |`a_w <FHNIntegrator.a_w>`              |*NEGATIVE* `b_w <FHNIntegrator.b_w>`   |
+            +--------------------------+---------------------------------------+---------------------------------------+
+            |**Modified FHN Parameter**|b                                      |c                                      |
+            +--------------------------+---------------------------------------+---------------------------------------+
 
-            (Gilzenrat representation --> PsyNeuLink representation)
+    (3) **Modified FHN Model as implemented in** `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_
 
-            *a* --> `threshold <FHNIntegrator.threshold>`
+        **Fast, Excitatory Variable:**
 
-            *b* --> `f_v <FHNIntegrator.f_v>`
+        [Eq. (6) in `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ ]
 
-            *f(X_1)* --> `variable <FHNIntegrator.variable>`
+        .. math::
 
-            *tau_v* --> `time_constant_v <FHNIntegrator.time_constant_v>`
+            \\tau_v \\frac{dv}{dt} = v(a-v)(v-1) - u + w_{vX_1}\\, f(X_1)
 
+        **Slow, Inactivating Variable:**
 
-        In order to reproduce the Gilzenrat equation for dw/dt, the following FHNIntegrator parameters must be set:
+        [Eq. (7) & Eq. (8) in `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ ]
 
-            *a_w = 1.0*
+        .. math::
 
-            *b_w = -1.0*
+            \\tau_u \\frac{du}{dt} = Cv + (1-C)\\, d - u
 
-            *c_w = 0.0;*
+        *How to implement this model in PsyNeuLink:*
 
-        When the parameters above are set to the listed values, the remaining FHNIntegrator parameters for dw/dt then correspond to the Gilzenrat equation for dw/dt as follows:
+            In order to implement the Gilzenrat 2002 model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dv}{dt}`:
 
-            (Gilzenrat representation --> PsyNeuLink representation)
+            +-----------------+-----+-----+-----+-----+-----+
+            |**PNL Parameter**| a_v | b_v | c_v | d_v | e_v |
+            +-----------------+-----+-----+-----+-----+-----+
+            |**Value**        |-1.0 |1.0  |1.0  |0.0  |-1.0 |
+            +-----------------+-----+-----+-----+-----+-----+
 
-            *c* --> `mode <FHNIntegrator.mode>`
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dv}{dt}`
+            reduces to the Gilzenrat formulation, and the remaining parameters in the :math:`\\frac{dv}{dt}` equation
+            correspond as follows:
 
-            *d* --> `uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`
+            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
+            |**PNL Parameter**      |`threshold <FHNIntegrator.threshold>`|`variable <FHNIntegrator.variable>`|`f_v <FHNIntegrator.f_v>`|`time_constant_v <FHNIntegrator.time_constant_v>`   |
+            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
+            |**Gilzenrat Parameter**|a                                    |:math:`f(X_1)`                     |:math:`w_{vX_1}`         |:math:`T_{v}`                                       |
+            +-----------------------+-------------------------------------+-----------------------------------+-------------------------+----------------------------------------------------+
 
-            *tau_w* --> `time_constant_w <FHNIntegrator.time_constant_w>`
+            In order to implement the Gilzenrat 2002 model, the following PsyNeuLink parameter values must be set in the
+            equation for :math:`\\frac{dw}{dt}`:
 
+            +-----------------+-----+-----+-----+
+            |**PNL Parameter**| a_w | b_w | c_w |
+            +-----------------+-----+-----+-----+
+            |**Value**        | 1.0 |-1.0 |0.0  |
+            +-----------------+-----+-----+-----+
+
+            When the parameters above are set to the listed values, the PsyNeuLink equation for :math:`\\frac{dw}{dt}`
+            reduces to the Gilzenrat formulation, and the remaining parameters in the :math:`\\frac{dw}{dt}` equation
+            correspond as follows:
+
+            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
+            |**PNL Parameter**         |`mode <FHNIntegrator.mode>`            |`uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`|`time_constant_v <FHNIntegrator.time_constant_w>`   |
+            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
+            |**Gilzenrat Parameter**   |C                                      |d                                                            |:math:`T_{u}`                                       |
+            +--------------------------+---------------------------------------+-------------------------------------------------------------+----------------------------------------------------+
 
     Arguments
     ---------
@@ -6281,7 +6322,11 @@ class FHNIntegrator(
     time_constant_w : float : default 12.5
         scaling factor on the dv/dt equation
 
-    params : Dict[param keyword, param value] : default None
+    integration_method: str : default "RK4"
+        selects the numerical integration method. Currently, the choices are: "RK4" (4th Order Runge-Kutta) or "EULER"
+        (Forward Euler)
+
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -6343,7 +6388,7 @@ class FHNIntegrator(
         coefficient on the w term in the dv/dt equation
 
     f_v : float : default  1.0
-        coefficient on the external stimulus ('variable <FHNIntegrator.variable>`) term in the dv/dt equation
+        coefficient on the external stimulus (`variable <FHNIntegrator.variable>`) term in the dv/dt equation
 
     time_constant_v : float : default 1.0
         scaling factor on the dv/dt equation
@@ -6497,7 +6542,7 @@ class FHNIntegrator(
                                  target_set=target_set,
                                  context=context)
         if self.integration_method not in {"RK4", "EULER"}:
-            raise FunctionError("Invalid integration method ({}) selected for {}".
+            raise FunctionError("Invalid integration method ({}) selected for {}. Choose 'RK4' or 'EULER'".
                                 format(self.integration_method, self.name))
 
     def _euler_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size):
@@ -6597,7 +6642,7 @@ class FHNIntegrator(
         Arguments
         ---------
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -6707,7 +6752,7 @@ class AccumulatorIntegrator(
         `default_variable <AccumulatorIntegrator.default_variable>` (see `initializer
         <AccumulatorIntegrator.initializer>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -6927,7 +6972,7 @@ class AccumulatorIntegrator(
         Arguments
         ---------
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -7050,7 +7095,7 @@ class AGTUtilityIntegrator(
     long_term_rate : float : default 1.0
         specifies smoothing factor of EWMA filter applied to long_term_utility
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7277,7 +7322,7 @@ class AGTUtilityIntegrator(
         variable : number, list or np.array : default ClassDefaults.variable
            a single value or array of values to be integrated.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -7403,7 +7448,7 @@ class BogaczEtAl(
         list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
         elements must be floats from 0 to 1.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7508,7 +7553,7 @@ class BogaczEtAl(
         variable : 2d np.array
             ignored.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -7537,32 +7582,32 @@ class BogaczEtAl(
             bias = 1 - 1e-8
 
         # drift_rate close to or at 0 (avoid float comparison)
-        if abs(drift_rate) < 1e-8:
+        if np.abs(drift_rate) < 1e-8:
             # back to absolute bias in order to apply limit
             bias_abs = bias * 2 * threshold - threshold
             # use expression for limit a->0 from Srivastava et al. 2016
             rt = t0 + (threshold ** 2 - bias_abs ** 2) / (noise ** 2)
             er = (threshold - bias_abs) / (2 * threshold)
         else:
-            drift_rate_normed = abs(drift_rate)
+            drift_rate_normed = np.abs(drift_rate)
             ztilde = threshold / drift_rate_normed
             atilde = (drift_rate_normed / noise) ** 2
 
             is_neg_drift = drift_rate < 0
             bias_adj = (is_neg_drift == 1) * (1 - bias) + (is_neg_drift == 0) * bias
             y0tilde = ((noise ** 2) / 2) * np.log(bias_adj / (1 - bias_adj))
-            if abs(y0tilde) > threshold:
+            if np.abs(y0tilde) > threshold:
                 y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
             x0tilde = y0tilde / drift_rate_normed
 
             old_settings = np.seterr(over='raise', under='raise')
 
             try:
-                rt = ztilde * tanh(ztilde * atilde) + \
-                     ((2 * ztilde * (1 - exp(-2 * x0tilde * atilde))) / (
-                     exp(2 * ztilde * atilde) - exp(-2 * ztilde * atilde)) - x0tilde) + t0
-                er = 1 / (1 + exp(2 * ztilde * atilde)) - \
-                     ((1 - exp(-2 * x0tilde * atilde)) / (exp(2 * ztilde * atilde) - exp(-2 * ztilde * atilde)))
+                rt = ztilde *np.tanh(ztilde * atilde) + \
+                     ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
+                     np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
+                er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
+                     ((1 - np.exp(-2 * x0tilde * atilde)) / (np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
 
             except FloatingPointError:
                 # Per Mike Shvartsman:
@@ -7628,7 +7673,7 @@ class BogaczEtAl(
         A = input or self.drift_rate
         c = self.noise
         c_sq = c**2
-        E = exp(-2*Z*A/c_sq)
+        E = np.exp(-2*Z*A/c_sq)
         D_iti = 0
         D_pen = 0
         D = D_iti + D_pen
@@ -7641,14 +7686,13 @@ class BogaczEtAl(
 
 
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)
-class NF_Results(AutoNumber):
-    RESULT = ()
-    MEAN_ER = ()
-    MEAN_DT = ()
-    PLACEMARKER = ()
-    MEAN_CORRECT_RT = ()
-    MEAN_CORRECT_VARIANCE = ()
-    MEAN_CORRECT_SKEW_RT = ()
+class NF_Results(IntEnum):
+    MEAN_ER = 0
+    MEAN_RT = 1
+    MEAN_DT = 2
+    COND_RTS = 3
+    COND_VAR_RTS = 4
+    COND_SKEW_RTS = 5
 
 # ----------------------------------------------------------------------------
 class NavarroAndFuss(IntegratorFunction):
@@ -7703,7 +7747,7 @@ class NavarroAndFuss(IntegratorFunction):
         list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
         elements must be floats from 0 to 1.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7793,10 +7837,22 @@ class NavarroAndFuss(IntegratorFunction):
                          context=context)
 
     def _instantiate_function(self, context=None):
-        print("\nimporting matlab...")
-        import matlab.engine
-        self.eng1 = matlab.engine.start_matlab('-nojvm')
-        print("matlab imported\n")
+        import os
+        import sys
+        try:
+            import matlab.engine
+        except ImportError as e:
+            raise ImportError(
+                'python failed to import matlab. Ensure that MATLAB and the python API is installed. See'
+                ' https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html'
+                ' for more info'
+            )
+
+        ddm_functions_path = os.path.abspath(sys.modules['psyneulink'].__path__[0] + '/../Matlab/DDMFunctions')
+
+        # must add the package-included MATLAB files to the engine path to run when not running from the path
+        # MATLAB is very finnicky about the formatting here to actually add the path so be careful if you modify
+        self.eng1 = matlab.engine.start_matlab("-r 'addpath(char(\"{0}\"))' -nojvm".format(ddm_functions_path))
 
         super()._instantiate_function(context=context)
 
@@ -7815,7 +7871,7 @@ class NavarroAndFuss(IntegratorFunction):
         variable : 2d np.array
             ignored.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -7836,11 +7892,14 @@ class NavarroAndFuss(IntegratorFunction):
         noise = float(self.noise)
         t0 = float(self.t0)
 
-        # print("\nimporting matlab...")
-        # import matlab.engine
-        # eng1 = matlab.engine.start_matlab('-nojvm')
-        # print("matlab imported\n")
-        results = self.eng1.ddmSim(drift_rate, starting_point, threshold, noise, t0, 1, nargout=5)
+        # used to pass values in a way that the matlab script can handle
+        ddm_struct = {
+            'z': threshold,
+            'c': noise,
+            'T0': t0
+        }
+
+        results = self.eng1.ddmSimFRG(drift_rate, starting_point, ddm_struct, 1, nargout=6)
 
         return results
 
@@ -7872,9 +7931,138 @@ class NormalDist(DistributionFunction):
         The mean or center of the normal distribution
 
     standard_dev : float : default 1.0
+        Standard deviation of the normal distribution. Must be > 0.0
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    mean : float : default 0.0
+        The mean or center of the normal distribution
+
+    standard_dev : float : default 1.0
+        Standard deviation of the normal distribution. Must be > 0.0
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    """
+
+    componentName = NORMAL_DIST_FUNCTION
+
+    class ClassDefaults(DistributionFunction.ClassDefaults):
+        variable = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=ClassDefaults.variable,
+                 mean=0.0,
+                 standard_dev=1.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context=componentName + INITIALIZING):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(mean=mean,
+                                                  standard_dev=standard_dev,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if STANDARD_DEVIATION in target_set:
+            if target_set[STANDARD_DEVIATION] <= 0.0:
+                raise FunctionError("The standard_dev parameter ({}) of {} must be greater than zero.".
+                                            format(target_set[STANDARD_DEVIATION], self.name))
+
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        # Validate variable and validate params
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        mean = self.paramsCurrent[DIST_MEAN]
+        standard_dev = self.paramsCurrent[STANDARD_DEVIATION]
+
+        result = np.random.normal(mean, standard_dev)
+
+        return result
+
+
+class UniformToNormalDist(DistributionFunction):
+    """
+    UniformToNormalDist(            \
+             mean=0.0,              \
+             standard_dev=1.0,      \
+             params=None,           \
+             owner=None,            \
+             prefs=None             \
+             )
+
+    .. _UniformToNormalDist:
+
+    Return a random sample from a normal distribution using first np.random.rand(1) to generate a sample from a uniform
+    distribution, and then converting that sample to a sample from a normal distribution with the following equation:
+
+    .. math::
+
+        normal\\_sample = \\sqrt{2} \\cdot standard\\_dev \\cdot scipy.special.erfinv(2 \\cdot uniform\\_sample - 1)  + mean
+
+    The uniform --> normal conversion allows for a more direct comparison with MATLAB scripts.
+
+    .. note::
+
+        This function requires `SciPy <https://pypi.python.org/pypi/scipy>`_.
+
+    (https://github.com/jonasrauber/randn-matlab-python)
+
+    Arguments
+    ---------
+
+    mean : float : default 0.0
+        The mean or center of the normal distribution
+
+    standard_dev : float : default 1.0
         Standard deviation of the normal distribution
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7897,7 +8085,7 @@ class NormalDist(DistributionFunction):
     standard_dev : float : default 1.0
         Standard deviation of the normal distribution
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7947,16 +8135,20 @@ class NormalDist(DistributionFunction):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
+
+        try:
+            from scipy.special import erfinv
+        except:
+            raise FunctionError("The UniformToNormalDist function requires the SciPy package.")
+
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         mean = self.paramsCurrent[DIST_MEAN]
         standard_dev = self.paramsCurrent[STANDARD_DEVIATION]
 
-        result = np.random.normal(mean, standard_dev)
-
-        return result
-
+        sample = np.random.rand(1)[0]
+        return ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_dev) + mean
 
 class ExponentialDist(DistributionFunction):
     """
@@ -7977,7 +8169,7 @@ class ExponentialDist(DistributionFunction):
     beta : float : default 1.0
         The scale parameter of the exponential distribution
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -7997,7 +8189,7 @@ class ExponentialDist(DistributionFunction):
     beta : float : default 1.0
         The scale parameter of the exponential distribution
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8077,7 +8269,7 @@ class UniformDist(DistributionFunction):
     high : float : default 1.0
         Upper bound of the uniform distribution
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8100,7 +8292,7 @@ class UniformDist(DistributionFunction):
     high : float : default 1.0
         Upper bound of the uniform distribution
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8183,7 +8375,7 @@ class GammaDist(DistributionFunction):
     dist_shape : float : default 1.0
         The shape of the gamma distribution. Should be greater than zero.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8206,7 +8398,7 @@ class GammaDist(DistributionFunction):
     dist_shape : float : default 1.0
         The scale of the gamma distribution. Should be greater than zero.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8290,7 +8482,7 @@ class WaldDist(DistributionFunction):
      mean : float : default 1.0
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
-     params : Dict[param keyword, param value] : default None
+     params : Dict[param keyword: param value] : default None
          a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
@@ -8312,7 +8504,7 @@ class WaldDist(DistributionFunction):
      mean : float : default 1.0
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
-     params : Dict[param keyword, param value] : default None
+     params : Dict[param keyword: param value] : default None
          a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
@@ -8454,7 +8646,7 @@ COMMENT
     normalize : bool : Default False
         specifies whether to normalize the stability value by the length of `variable <Stability.variable>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8489,7 +8681,7 @@ COMMENT
     normalize : bool
         if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8728,7 +8920,7 @@ class Distance(ObjectiveFunction):
     normalize : bool : Default False
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -8755,7 +8947,7 @@ class Distance(ObjectiveFunction):
     normalize : bool
         determines whether the distance is normalized by the length of `variable <Distance.variable>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -9205,7 +9397,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         `Process` and/or `System` to which the function's `owner <Function.owner>` belongs (see `learning_rate
         <Hebbian.learning_rate>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments
         of the constructor.
@@ -9323,7 +9515,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         variable : List[number] or 1d np.array : default ClassDefaults.variable
             array of activity values, the pairwise products of which are used to generate a weight change matrix.
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
             Values specified for parameters in the dictionary override any assigned to those parameters in arguments
             of the constructor.
@@ -9428,7 +9620,7 @@ class Reinforcement(
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <Reinforcement.learning_rate>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -9577,7 +9769,7 @@ class Reinforcement(
            `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
            `error_signal <Reinforcement.error_signal>` (1d np.array).
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
@@ -9685,7 +9877,7 @@ class BackPropagation(LearningFunction):
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -9905,7 +10097,7 @@ class BackPropagation(LearningFunction):
            `activation_output <BackPropagation.activation_output>` (1d np.array),
            `error_signal <BackPropagation.error_signal>` (1d np.array).
 
-        params : Dict[param keyword, param value] : default None
+        params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.

@@ -457,7 +457,7 @@ from psyneulink.components.states.state import \
     StateError, State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import \
-    NAME, DEFERRED_INITIALIZATION, EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
+    INPUT_STATES, EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
     MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
     OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER, COMMAND_LINE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -573,7 +573,7 @@ class InputState(State_Base):
     exponent : number : default 1
         specifies the value of the `exponent <InputState.exponent>` attribute of the InputState.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the InputState or its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -947,7 +947,16 @@ class InputState(State_Base):
                             # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
                             # FIX:           USING _get_state_for_socket
                             # from psyneulink.components.projections.projection import _parse_projection_spec
-                            sender_dim = projection_spec.state.value.ndim
+                            try:
+                                sender_dim = projection_spec.state.value.ndim
+                            except AttributeError:
+                                if projection_spec.state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                    continue
+                                else:
+                                    raise StateError("PROGRAM ERROR: indeterminate value for {} "
+                                                     "specified to project to {} of {}".
+                                                     format(projection_spec.state.name, self.__name__, owner.name))
+
                             projection = projection_spec.projection
                             if isinstance(projection, dict):
                                 # # MODIFIED 11/25/17 OLD:

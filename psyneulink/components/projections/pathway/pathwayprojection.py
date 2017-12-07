@@ -86,9 +86,10 @@ class PathwayProjection_Base(Projection_Base):
                          prefs=prefs,
                          context=context)
 
-    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 
         from psyneulink.components.mechanisms.mechanism import Mechanism
+
 
         name_template = "{}[{}]"
         projection_name_template = "{} from {} to {}"
@@ -114,9 +115,9 @@ class PathwayProjection_Base(Projection_Base):
 
         elif self.init_status is InitStatus.INITIALIZED:
             if self.sender.owner:
-                sender_name = name_template.format(self.sender.owner.name, sender_name)
+                sender_name = name_template.format(self.sender.owner.name, self.sender.name)
             if self.receiver.owner:
-                receiver_name = name_template.format(self.receiver.owner.name, receiver_name)
+                receiver_name = name_template.format(self.receiver.owner.name, self.receiver.name)
             self.name = projection_name_template.format(self.className, sender_name, receiver_name)
 
         else:

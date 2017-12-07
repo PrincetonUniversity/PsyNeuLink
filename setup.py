@@ -12,6 +12,13 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+
+def get_requirements(require_name=None):
+    prefix = require_name + '_' if require_name is not None else ''
+    with open(path.join(here, prefix + 'requirements.txt'), encoding='utf-8') as f:
+        return f.read().strip().split('\n')
+
+
 setup(
     name='psyneulink',
 
@@ -65,27 +72,10 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=[
-        'toposort==1.4',
-        'numpy',
-        'typecheck-decorator==1.2',
-        # mpi4py only if MPI_IMPLEMENTATION becomes True
-    ],
+    install_requires=get_requirements(),
 
     extras_require={
-        'dev': [
-            'pytest',
-            'pytest-profiling',
-            'pytest-helpers-namespace',
-            'jupyter',
-            'sphinx',
-            'sphinx_rtd_theme',
-            'matplotlib',
-            'ipykernel>=4.6.1',
-        ],
-        'tutorial': [
-            'jupyter',
-            'matplotlib',
-        ]
+        'dev': get_requirements('dev'),
+        'tutorial': get_requirements('tutorial'),
     }
 )

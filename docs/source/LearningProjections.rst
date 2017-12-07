@@ -1,7 +1,7 @@
 Learning Projections
 ====================
 
-**Base class**:
+**Core class**:
 
 * `LearningProjection`
 

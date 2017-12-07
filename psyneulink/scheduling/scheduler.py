@@ -134,8 +134,8 @@ considered as executing simultaneously.
           ↗ ↖
          A   B
 
-        scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
-        scheduler.add_condition(C, pnl.scheduling.condition.EveryNCalls(B, 1))
+        scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
+        scheduler.add_condition(C, pnl.EveryNCalls(B, 1))
 
         time steps: [{A}, {A, B}, {C}, ...]
 
@@ -206,8 +206,8 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> my_scheduler = pnl.Scheduler(system=s)
 
     >>> # implicit condition of Always for A
-    >>> my_scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
-    >>> my_scheduler.add_condition(C, pnl.scheduling.condition.EveryNCalls(B, 3))
+    >>> my_scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
+    >>> my_scheduler.add_condition(C, pnl.EveryNCalls(B, 3))
 
     >>> # implicit AllHaveRun Termination condition
     >>> execution_sequence = list(my_scheduler.run())
@@ -224,23 +224,31 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     ...     name = 'p'
     ... )
     >>> s = pnl.System(
-    ...    processes=[p],
-    ...    name='s'
+    ...     processes=[p],
+    ...     name='s'
     ... )
     >>> my_scheduler = pnl.Scheduler(system=s)
 
-    >>> my_scheduler.add_condition(A,
-    ...                            pnl.scheduling.condition.Any(pnl.scheduling.condition.AtPass(0),
-    ...                                                         pnl.scheduling.condition.EveryNCalls(B, 2)))
-    >>> my_scheduler.add_condition(B,
-    ...                            pnl.scheduling.condition.Any(pnl.scheduling.condition.EveryNCalls(A, 1),
-    ...                            pnl.scheduling.condition.EveryNCalls(B, 1)))
+    >>> my_scheduler.add_condition(
+    ...     A,
+    ...     pnl.Any(
+    ...         pnl.AtPass(0),
+    ...         pnl.EveryNCalls(B, 2)
+    ...     )
+    ... )
 
-    >>> termination_conds = {ts: None for ts in pnl.TimeScale}
-    >>> termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(B,
-    ...                                                                               4,
-    ...                                                                               time_scale=pnl.TimeScale.TRIAL)
-    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds)) # doctest: +SKIP
+    >>> my_scheduler.add_condition(
+    ...     B,
+    ...     pnl.Any(
+    ...         pnl.EveryNCalls(A, 1),
+    ...         pnl.EveryNCalls(B, 1)
+    ...     )
+    ... )
+
+    >>> termination_conds = {
+    ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(B, 4, time_scale=pnl.TimeScale.TRIAL)
+    ... }
+    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
 
     COMMENT:
         TODO: Add output for execution sequence
@@ -267,17 +275,20 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     ... )
     >>> my_scheduler = pnl.Scheduler(system=s)
 
-    >>> my_scheduler.add_condition(A, pnl.scheduling.condition.EveryNPasses(1))
-    >>> my_scheduler.add_condition(B, pnl.scheduling.condition.EveryNCalls(A, 2))
-    >>> my_scheduler.add_condition(C,
-    ...                            pnl.scheduling.condition.Any(pnl.scheduling.condition.AfterNCalls(A, 3),
-    ...                                                         pnl.scheduling.condition.AfterNCalls(B, 3)))
+    >>> my_scheduler.add_condition(A, pnl.EveryNPasses(1))
+    >>> my_scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
+    >>> my_scheduler.add_condition(
+    ...     C,
+    ...     pnl.Any(
+    ...         pnl.AfterNCalls(A, 3),
+    ...         pnl.AfterNCalls(B, 3)
+    ...     )
+    ... )
 
-    >>> termination_conds = {ts: None for ts in pnl.TimeScale}
-    >>> termination_conds[pnl.TimeScale.TRIAL] = pnl.scheduling.condition.AfterNCalls(C,
-    ...                                                                               4,
-    ...                                                                               time_scale=pnl.TimeScale.TRIAL)
-    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds)) # doctest: +SKIP
+    >>> termination_conds = {
+    ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(C, 4, time_scale=pnl.TimeScale.TRIAL)
+    ... }
+    >>> execution_sequence = list(my_scheduler.run(termination_conds=termination_conds))
 
     execution_sequence: [A, {A,B}, A, C, {A,B}, C, A, C, {A,B}, C]
 
@@ -292,7 +303,7 @@ import logging
 
 from toposort import toposort
 
-from psyneulink.scheduling.condition import AllHaveRun, Always, ConditionSet, Never
+from psyneulink.scheduling.condition import AllHaveRun, Always, Condition, ConditionSet, Never
 from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
@@ -336,7 +347,7 @@ class Scheduler(object):
         set of `Conditions <Condition>` that specify when individual Components in **system**
         execute and any dependencies among them
 
-    graph : dict{Component: set(Component)}
+    graph : Dict[Component: set(Component)]
         a graph specification dictionary - each entry of the dictionary must be a Component,
         and the value of each entry must be a set of zero or more Components that project directly to the key.
 
@@ -352,11 +363,11 @@ class Scheduler(object):
     consideration_queue: list
         a list form of the Scheduler's toposort ordering of its nodes
 
-    termination_conds : dict{TimeScale: Condition}
+    termination_conds : Dict[TimeScale: Condition]
         a mapping from `TimeScales <TimeScale>` to `Conditions <Condition>` that, when met, terminate the execution
         of the specified `TimeScale`.
 
-    times: dict{TimeScale: dict{TimeScale: int}}
+    times: Dict[TimeScale: Dict[TimeScale: int]]
         a structure counting the number of occurrences of a certain `TimeScale` within the scope of another `TimeScale`.
         For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`\\ es that have occurred in the
         current `RUN` that the Scheduler is scheduling at the time it is accessed
@@ -472,6 +483,15 @@ class Scheduler(object):
         for ts in self.termination_conds:
             self.termination_conds[ts].scheduler = self
 
+    def _parse_termination_conditions(self, termination_conds):
+        if termination_conds is None:
+            return None
+
+        try:
+            return {k: termination_conds[k] for k in termination_conds if isinstance(k, TimeScale) and isinstance(termination_conds[k], Condition)}
+        except TypeError:
+            raise TypeError('termination_conditions must be a dictionary of the form {TimeScale: Condition, ...}')
+
     ################################################################################
     # Wrapper methods
     #   to allow the user to ignore the ConditionSet internals
@@ -522,7 +542,7 @@ class Scheduler(object):
                terminate the execution of the specified `TimeScale`
         '''
         self._validate_run_state()
-        self.update_termination_conditions(termination_conds)
+        self.update_termination_conditions(self._parse_termination_conditions(termination_conds))
 
         self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
         self._reset_counts_total(TimeScale.TRIAL)

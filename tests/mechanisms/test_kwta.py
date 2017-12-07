@@ -425,7 +425,6 @@ class TestKWTALongTerm:
             size=10,
             k_value=3,
             threshold=1,
-            decay=0.3,
             time_scale=TimeScale.TIME_STEP
         )
         p = Process(pathway=[K], prefs=TestKWTALongTerm.simple_prefs)

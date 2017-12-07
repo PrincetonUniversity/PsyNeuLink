@@ -1133,8 +1133,8 @@ class State_Base(State):
                                          prefs=prefs,
                                          context=context.__class__.__name__)
 
+        # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
-        # FIX: 10/3/17 - ??MOVE TO COMPOSITION THAT IS IMPELEMENTED (INSTEAD OF BEING HANDLED BY STATE ITSELF)
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
             self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
@@ -1146,7 +1146,7 @@ class State_Base(State):
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
         if context is COMMAND_LINE:
-            state_list = getattr(owner, owner.state_list_attr[self.__class__])
+            state_list = getattr(owner, owner.stateListAttr[self.__class__])
             if state_list and not self in state_list:
                 owner.add_states(self)
 
@@ -1215,11 +1215,6 @@ class State_Base(State):
 
         variable = self._update_variable(super(State, self)._validate_variable(variable, context))
 
-        if not context:
-            context = kwAssign + ' Base Value'
-        else:
-            context = context + kwAssign + ' Base Value'
-
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1237,14 +1232,13 @@ class State_Base(State):
             # + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
             #     ParameterState, projection, 2-item tuple or value
         """
-
-        # FIX: 10/3/17 SHOULD ADD CHECK THAT PROJECTION_TYPE IS CONSISTENT WITH TYPE SPECIFIED BY THE
-        # FIX:         RECEIVER/SENDER SOCKET SPECIFICATIONS OF CORRESPONDING PROJECTION TYPES (FOR API)
+        # FIX: PROJECTION_REFACTOR
+        #      SHOULD ADD CHECK THAT PROJECTION_TYPE IS CONSISTENT WITH TYPE SPECIFIED BY THE
+        #      RECEIVER/SENDER SOCKET SPECIFICATIONS OF CORRESPONDING PROJECTION TYPES (FOR API)
 
         if PROJECTIONS in request_set and request_set[PROJECTIONS] is not None:
             # if projection specification is an object or class reference, needs to be wrapped in a list
-            # - to be consistent with paramClassDefaults
-            # - for consistency of treatment below
+            #    to be consistent with paramClassDefaults and for consistency of treatment below
             projections = request_set[PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
@@ -1331,12 +1325,13 @@ class State_Base(State):
                 )
             )
 
-    # FIX: 10/3/17 - MOVE THESE TO Projection, WITH self (State) AS ADDED ARG
-    # FIX:           BOTH _instantiate_projections_to_state AND _instantiate_projections_to_state
-    # FIX:               CAN USE self AS connectee STATE, since _parse_connection_specs USES SOCKET TO RESOLVE
-    # FIX:           ALTERNATIVE: BREAK STATE FIELD OF ProjectionTuple INTO sender AND receiver FIELDS, THEN COMBINE
-    # FIX:               _instantiate_projections_to_state AND _instantiate_projections_to_state INTO ONE METHOD
-    # FIX:               MAKING CORRESPONDING ASSIGNMENTS TO send AND receiver FIELDS (WOULD BE CLEARER)
+    # FIX: PROJECTION_REFACTOR
+    #      - MOVE THESE TO Projection, WITH self (State) AS ADDED ARG
+    #          BOTH _instantiate_projections_to_state AND _instantiate_projections_from_state
+    #          CAN USE self AS connectee STATE, since _parse_connection_specs USES SOCKET TO RESOLVE
+    #      - ALTERNATIVE: BREAK STATE FIELD OF ProjectionTuple INTO sender AND receiver FIELDS, THEN COMBINE
+    #          _instantiate_projections_to_state AND _instantiate_projections_to_state INTO ONE METHOD
+    #          MAKING CORRESPONDING ASSIGNMENTS TO send AND receiver FIELDS (WOULD BE CLEARER)
 
     def _instantiate_projections(self, projections, context=None):
         """Implement any Projection(s) to/from State specified in PROJECTIONS entry of params arg
@@ -1357,8 +1352,7 @@ class State_Base(State):
                          format(self.__class__.__name__,
                                 self.name))
 
-    # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED??
-    # FIX: 10/3/17 - ADD senders ARG THAT IS THEN PROCESSED BY _parse_connections_specs
+    # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a State and assign them to self.path_afferents
 
@@ -1403,7 +1397,7 @@ class State_Base(State):
 
         # For Projection in each ProjectionTuple:
         # - instantiate the Projection if necessary, and initialize if possible
-        # - insure its value is compatible with self.value FIX: 10/3/17 ??and variable is compatible with sender's value
+        # - insure its value is compatible with self.value FIX: ??and variable is compatible with sender's value
         # - assign it to self.path_afferents or .mod_afferents
         for connection in projection_tuples:
 
@@ -1439,15 +1433,19 @@ class State_Base(State):
                 proj_sender = projection.init_args[SENDER]
                 proj_receiver = projection.init_args[RECEIVER]
 
+                # validate receiver
+                if proj_receiver is not None and proj_receiver != self:
+                    raise StateError("Projection ({}) assigned to {} of {} already has a receiver ({})".
+                                     format(projection_type.__name__, self.name, self.owner.name, proj_receiver.name))
                 projection.init_args[RECEIVER] = self
 
-                # validate/parse sender
+                # parse/validate sender
                 if proj_sender:
                     # If the Projection already has State as its sender,
                     #    it must be the same as the one specified in the connection spec
                     if isinstance(proj_sender, State) and proj_sender != state:
                         raise StateError("Projection assigned to {} of {} from {} already has a sender ({})".
-                                         format(self.name, self.owner.name, state.name, sender.name))
+                                         format(self.name, self.owner.name, state.name, proj_sender.name))
                     # If the Projection has a Mechanism specified as its sender:
                     elif isinstance(state, State):
                         #    Connection spec (state) is specified as a State,
@@ -1468,11 +1466,6 @@ class State_Base(State):
                 else:
                     sender = state
                 projection.init_args[SENDER] = sender
-
-                # validate receiver
-                if proj_receiver and not proj_receiver != self:
-                    raise StateError("Projection assigned to {} of {} already has a receiver ({})".
-                                     format(self.name, self.owner.name, proj_receiver.name))
 
                 # Construct and assign name
                 if isinstance(sender, State):
@@ -1615,9 +1608,6 @@ class State_Base(State):
         for connection, receiver in zip(projection_tuples, receiver_list):
 
             # VALIDATE CONNECTION AND RECEIVER SPECS
-
-            # FIX: 10/3/17
-            # FIX: CLEAN UP THE FOLLOWING WITH REGARD TO RECEIVER, CONNECTION, RECEIVER_STATE, CONNECTION_STATE ETC.
 
             # Validate that State to be connected to specified in receiver is same as any one specified in connection
             def _get_receiver_state(spec):
@@ -2063,10 +2053,7 @@ class State_Base(State):
 
         self._value = assignment
 
-        # Store value in log if specified
-        # Get logPref
-        if self.prefs:
-            log_pref = self.prefs.logPref
+        # STORE value IN log IF SPECIFIED
 
         # Get context
         try:
@@ -2076,12 +2063,17 @@ class State_Base(State):
         except KeyError:
             context = ""
 
+        # Get logPref
+        log_pref = self.prefs.logPref if self.prefs else None
+
+
         # If context is consistent with log_pref, record value to log
         if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-                (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
-                (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
-            self.owner.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
-            # self.owner.log.entries[self.name] = LogEntry(CentralClock, context, assignment)
+                (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
+                ((EXECUTING in context and not LEARNING in context) and log_pref is LogLevel.EXECUTION) or
+                (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)
+        ):
+            self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
 
     @property
     def projections(self):
@@ -2500,6 +2492,7 @@ def _parse_state_spec(state_type=None,
     from psyneulink.components.projections.projection \
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
     from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
+    from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
@@ -2567,7 +2560,12 @@ def _parse_state_spec(state_type=None,
     if isinstance(state_specification, function_type):
         state_specification = state_specification()
 
+    # ModulatorySpecification of some kind
     if _is_modulatory_spec(state_specification):
+        # If it is an AdaptiveMechanism specification, get its ModulatorySignal class
+        # (so it is recognized by _is_projection_spec below (Mechanisms are not for secondary reasons)
+        if isinstance(state_specification, type) and issubclass(state_specification, AdaptiveMechanism_Base):
+            state_specification = state_specification.outputStateType
         projection = state_type
 
     # State or Mechanism object specification:
@@ -2841,12 +2839,12 @@ def _parse_state_spec(state_type=None,
             state_dict[PARAMS].update(params)
 
     else:
-        if owner.verbosePref:
-            warnings.warn("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
-                         format(state_type_name, owner.name, state_spec))
-        return
-        # raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+        # if owner.verbosePref:
+        #     warnings.warn("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
         #                  format(state_type_name, owner.name, state_spec))
+        # return
+        raise StateError("PROGRAM ERROR: state_spec for {} of {} is an unrecognized specification ({})".
+                         format(state_type_name, owner.name, state_specification))
 
     # If variable is none, use value:
     if state_dict[VARIABLE] is None:
@@ -2987,15 +2985,15 @@ def _get_state_for_socket(owner,
                              format(mech.name, state_spec))
         for attr in mech_state_attribute:
             try:
-                state_list_attribute = getattr(mech, attr)
-                state = state_list_attribute[state_spec]
+                stateListAttribute = getattr(mech, attr)
+                state = stateListAttribute[state_spec]
             except AttributeError:
-                state_list_attribute = None
+                stateListAttribute = None
             except (KeyError, TypeError):
                 state = None
             else:
                 break
-        if state_list_attribute is None:
+        if stateListAttribute is None:
             raise StateError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
                              format(mech_state_attribute, mech.name, mech.__class__.__name__))
         if state is None:
@@ -3005,7 +3003,6 @@ def _get_state_for_socket(owner,
                 attr_name = " or ".join(", ".format(attr) for (attr) in mech_state_attribute) + " attributes."
             raise StateError("{} does not have a {} named \'{}\' in its {}".
                              format(mech.name, State.__name__, state_spec, attr_name))
-
 
     # Get primary State of specified type
     elif isinstance(state_spec, Mechanism):
@@ -3032,6 +3029,10 @@ def _get_state_for_socket(owner,
                 if state is None:
                     raise StateError("PROGRAM ERROR: {} attribute(s) not found on {}'s type ({})".
                                      format(mech_state_attribute, mech.name, mech.__class__.__name__))
+
+    # # Get
+    # elif isinstance(state_spec, type) and issubclass(state_spec, Mechanism):
+
 
     # Get state from Projection specification (exclude matrix spec in test as it can't be used to determine the state)
     elif _is_projection_spec(state_spec, include_matrix_spec=False):

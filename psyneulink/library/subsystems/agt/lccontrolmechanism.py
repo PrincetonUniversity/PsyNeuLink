@@ -16,7 +16,7 @@ Overview
 An LCControlMechanism is a `ControlMechanism <ControlMechanism>` that multiplicatively modulates the `function
 <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>` (usually `TransferMechanisms <TransferMechanism>`).
 It implements an abstract model of the `locus coeruleus (LC)  <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that
-uses an `FHNIntegrator` Function to generate its output.  This is modulated by a `mode <LCControlMechanisms.mode>`
+uses an `FHNIntegrator` Function to generate its output.  This is modulated by a `mode <LCControlMechanism.mode_FHN>`
 parameter that regulates its functioning between `"tonic" and "phasic" modes of operation
 <LCControlMechanism_Modes_Of_Operation>`.  The Mechanisms modulated by an LCControlMechanism can be listed using
 its `show <LCControlMechanism.show>` method.  When used with an `AGTControlMechanism` to regulate the `mode
@@ -39,7 +39,7 @@ Mechanisms that it controls.
 ObjectiveMechanism and Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Like all ControlMechanisms, an LCControlMechanism it receives its `input <LCControlMechanism_Input>` from an
+Like all ControlMechanisms, an LCControlMechanism receives its `input <LCControlMechanism_Input>` from an
 `ObjectiveMechanism` that, in turn, receives its input from a specified list of `OutputStates <OutputState>`.  These
 are used to drive the `phasic response <LCControlMechanism_Modes_Of_Operation>` of the LCControlMechanism.  The
 ObjectiveMechanism and/or the OutputStates from which it gets its input can be `specified in the standard way for a
@@ -186,7 +186,8 @@ An LCControlMechanism uses the `FHNIntegrator` as its `function <LCControlMechan
 model <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ often used to describe the spiking of a neuron,
 but in this case the population activity of the LC (see `Gilzenrat et al., 2002
 <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_). The `FHNIntegrator` Function
-takes the `input <LCControlMechanism_Input>` to the LCControlMechanism as its `variable <FHNIntegrator.variable>`.
+takes the `input <LCControlMechanism_Input>` to the LCControlMechanism as its `variable <FHNIntegrator.variable>`. All
+of the `FHNIntegrator` function parameters are exposed on the LCControlMechanism.
 
 .. _LCControlMechanism_Modes_Of_Operation:
 
@@ -378,13 +379,34 @@ class LCControlMechanismError(Exception):
 
 class LCControlMechanism(ControlMechanism):
     """
-    LCControlMechanism(                    \
-        system=None,                \
-        objective_mechanism=None,   \
-        modulated_mechanisms=None,  \
-        modulation=None,            \
-        params=None,                \
-        name=None,                  \
+    LCControlMechanism(                     \
+        system=None,                        \
+        objective_mechanism=None,           \
+        modulated_mechanisms=None,          \
+        initial_w_FHN=0.0,                  \
+        initial_v_FHN=0.0,                  \
+        time_step_size_FHN=0.05,            \
+        t_0_FHN=0.0,                        \
+        a_v_FHN=-1/3,                       \
+        b_v_FHN=0.0,                        \
+        c_v_FHN=1.0,                        \
+        d_v_FHN=0.0,                        \
+        e_v_FHN=-1.0,                       \
+        f_v_FHN=1.0,                        \
+        threshold_FHN=-1.0                  \
+        time_constant_v_FHN=1.0,            \
+        a_w_FHN=1.0,                        \
+        b_w_FHN=-0.8,                       \
+        c_w_FHN=0.7,                        \
+        mode_FHN=1.0,                       \
+        uncorrelated_activity_FHN=0.0       \
+        time_constant_w_FHN = 12.5,         \
+        integration_method_FHN="RK4"        \
+        base_level_gain=0.5,                \
+        scaling_factor_gain=3.0,            \
+        modulation=None,                    \
+        params=None,                        \
+        name=None,                          \
         prefs=None)
 
     Subclass of `ControlMechanism <AdaptiveMechanism>` that modulates the `multiplicative_param
@@ -412,7 +434,84 @@ class LCControlMechanism(ControlMechanism):
         `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCControlMechanism
         belongs.
 
-    params : Dict[param keyword, param value] : default None
+    initial_w_FHN : float : default 0.0
+        sets `initial_w <initial_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    initial_v_FHN : float : default 0.0
+        sets `initial_v <initial_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_step_size_FHN : float : default 0.0
+        sets `time_step_size <time_step_size.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    t_0_FHN : float : default 0.0
+        sets `t_0 <t_0.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    a_v_FHN : float : default -1/3
+        sets `a_v <a_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    b_v_FHN : float : default 0.0
+        sets `b_v <b_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    c_v_FHN : float : default 1.0
+        sets `c_v <c_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    d_v_FHN : float : default 0.0
+        sets `d_v <d_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    e_v_FHN : float : default -1.0
+        sets `e_v <e_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    f_v_FHN : float : default 1.0
+        sets `f_v <f_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    threshold_FHN : float : default -1.0
+        sets `threshold <threshold.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_constant_v_FHN : float : default 1.0
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    a_w_FHN : float : default 1.0
+        sets `a_w <a_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    b_w_FHN : float : default -0.8,
+        sets `b_w <b_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    c_w_FHN : float : default 0.7
+        sets `c_w <c_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    mode_FHN : float : default 1.0
+        sets `mode <mode.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    uncorrelated_activity_FHN : float : default 0.0
+        sets `uncorrelated_activity <uncorrelated_activity.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_constant_w_FHN  : float : default  12.5
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    integration_method_FHN : float : default "RK4"
+        sets `integration_method <integration_method.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    base_level_gain : float : default 0.5
+        sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
+        to each of the mechanisms it modulates
+
+        .. math::
+
+            g(t) = G + k w(t)
+
+        base_level_gain = G
+
+    scaling_factor_gain : float : default 3.0
+        sets the scaling factor in the equation used to compute the time-dependent gain value that the LCControl
+        applies to each of the mechanisms it modulates
+
+        .. math::
+
+            g(t) = G + k w(t)
+
+        scaling_factor_gain = k
+
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
@@ -486,6 +585,83 @@ class LCControlMechanism(ControlMechanism):
     modulated_mechanisms : List[Mechanism]
         list of `Mechanisms <Mechanism>` modulated by the LCControlMechanism.
 
+        initial_w_FHN : float : default 0.0
+        sets `initial_w <initial_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    initial_v_FHN : float : default 0.0
+        sets `initial_v <initial_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_step_size_FHN : float : default 0.0
+        sets `time_step_size <time_step_size.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    t_0_FHN : float : default 0.0
+        sets `t_0 <t_0.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    a_v_FHN : float : default -1/3
+        sets `a_v <a_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    b_v_FHN : float : default 0.0
+        sets `b_v <b_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    c_v_FHN : float : default 1.0
+        sets `c_v <c_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    d_v_FHN : float : default 0.0
+        sets `d_v <d_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    e_v_FHN : float : default -1.0
+        sets `e_v <e_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    f_v_FHN : float : default 1.0
+        sets `f_v <f_v.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    threshold_FHN : float : default -1.0
+        sets `threshold <threshold.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_constant_v_FHN : float : default 1.0
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    a_w_FHN : float : default 1.0
+        sets `a_w <a_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    b_w_FHN : float : default -0.8,
+        sets `b_w <b_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    c_w_FHN : float : default 0.7
+        sets `c_w <c_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    mode_FHN : float : default 1.0
+        sets `mode <mode.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    uncorrelated_activity_FHN : float : default 0.0
+        sets `uncorrelated_activity <uncorrelated_activity.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    time_constant_w_FHN  : float : default  12.5
+        sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    integration_method_FHN : float : default "RK4"
+        sets `integration_method <integration_method.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
+
+    base_level_gain : float : default 0.5
+        sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
+        to each of the mechanisms it modulates
+
+        .. math::
+
+            g(t) = G + k w(t)
+
+        base_level_gain = G
+
+    scaling_factor_gain : float : default 3.0
+        sets the scaling factor in the equation used to compute the time-dependent gain value that the LCControl
+        applies to each of the mechanisms it modulates
+
+        .. math::
+
+            g(t) = G + k w(t)
+
+        scaling_factor_gain = k
+
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         the default value of `ModulationParam` that specifies the form of modulation used by the LCControlMechanism's
         `ControlProjections <ControlProjection>` unless they are `individually specified <ControlSignal_Specification>`.
@@ -532,9 +708,9 @@ class LCControlMechanism(ControlMechanism):
                  integration_method="RK4",
                  initial_w_FHN=0.0,
                  initial_v_FHN=0.0,
-                 time_step_size_FHN=0.1,
+                 time_step_size_FHN=0.05,
                  t_0_FHN=0.0,
-                 a_v_FHN=-1 / 3,
+                 a_v_FHN=-1/3,
                  b_v_FHN=0.0,
                  c_v_FHN=1.0,
                  d_v_FHN=0.0,
@@ -548,6 +724,8 @@ class LCControlMechanism(ControlMechanism):
                  time_constant_w_FHN=12.5,
                  mode_FHN=1.0,
                  uncorrelated_activity_FHN=0.0,
+                 base_level_gain=0.5,
+                 scaling_factor_gain=3.0,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -577,6 +755,8 @@ class LCControlMechanism(ControlMechanism):
                                                   mode_FHN=mode_FHN,
                                                   uncorrelated_activity_FHN=uncorrelated_activity_FHN,
                                                   time_constant_w_FHN=time_constant_w_FHN,
+                                                  base_level_gain=base_level_gain,
+                                                  scaling_factor_gain=scaling_factor_gain,
                                                   params=params)
 
         super().__init__(system=system,
@@ -651,7 +831,7 @@ class LCControlMechanism(ControlMechanism):
         from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
         # *ALL* is specified for modulated_mechanisms:
-        #    assign all Processing Mechanisms in the LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
+        # assign all Processing Mechanisms in the LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
             self.modulated_mechanisms = []
             for system in self.systems:
@@ -699,7 +879,7 @@ class LCControlMechanism(ControlMechanism):
                              params=runtime_params,
                              time_scale=time_scale,
                              context=context)
-        gain_t = 3*output_values[1] + 0.5
+        gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
         return gain_t, gain_t, output_values[0], output_values[1], output_values[2]
 
 
