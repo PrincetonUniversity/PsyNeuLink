@@ -741,7 +741,7 @@ from psyneulink.globals.keywords import DEFERRED_INITIALIZATION, \
     PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, \
     SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, \
     kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
-from psyneulink.globals.log import LogEntry, LogLevel
+from psyneulink.globals.log import LogEntry, LogLevel, _get_log_context
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -2052,28 +2052,7 @@ class State_Base(State):
         # MODIFIED 7/8/17 END
 
         self._value = assignment
-
-        # STORE value IN log IF SPECIFIED
-
-        # Get context
-        try:
-            curr_frame = inspect.currentframe()
-            prev_frame = inspect.getouterframes(curr_frame, 2)
-            context = inspect.getargvalues(prev_frame[1][0]).locals['context']
-        except KeyError:
-            context = ""
-
-        # Get logPref
-        log_pref = self.prefs.logPref if self.prefs else None
-
-
-        # If context is consistent with log_pref, record value to log
-        if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-                (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
-                ((EXECUTING in context and not LEARNING in context) and log_pref is LogLevel.EXECUTION) or
-                (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)
-        ):
-            self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
+        self.log._log_value(assignment)
 
     @property
     def projections(self):

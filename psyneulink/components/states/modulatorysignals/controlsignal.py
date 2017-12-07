@@ -1271,6 +1271,8 @@ class ControlSignal(ModulatorySignal):
             # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
             return self._intensity
 
+
     @value.setter
     def value(self, assignment):
         self._value = assignment
+        self.log._log_value(assignment)

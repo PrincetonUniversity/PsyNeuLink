@@ -442,9 +442,14 @@ from psyneulink.components.process import ProcessList, ProcessTuple, Process
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, WEIGHT, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
+    EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, \
+    INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, \
+    SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, WEIGHT, kwSeparator, \
+    kwSystemComponentCategory, SEPARATOR_BAR
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.log import Log
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
@@ -2533,7 +2538,9 @@ class System(System_Base):
 
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context and self.learning:
-            self._execute_learning(clock=clock, context=context + ' ' + LEARNING)
+            self._execute_learning(clock=clock, context=context + SEPARATOR_BAR + LEARNING)
+            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
+            # self._execute_learning(clock=clock, context=context.replace(EXECUTING, LEARNING + ' '))
         # endregion
 
 
@@ -3571,6 +3578,8 @@ class SystemInputState(OutputState):
         else:
             self.name = owner.name + "_" + name
         self.prefs = prefs
+        self.log = Log(owner=self)
+        self.recording = False
         self.efferents = []
         self.owner = owner
         self.value = variable

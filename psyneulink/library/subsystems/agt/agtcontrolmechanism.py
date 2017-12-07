@@ -148,7 +148,7 @@ class AGTControlMechanismError(Exception):
 
 class AGTControlMechanism(ControlMechanism):
     """
-    AGTControlMechanism(                       \
+    AGTControlMechanism(                \
         system=None,                    \
         monitored_output_states=None,   \
         function=Linear,                \
