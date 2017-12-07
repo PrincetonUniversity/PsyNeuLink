@@ -350,7 +350,7 @@ class ConditionSet(object):
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
         evaluate the `Conditions <Condition>`
 
-    conditions : dict{`Component <Component>`: `Condition`}
+    conditions : Dict[`Component <Component>`: `Condition`]
         specifies an iterable collection of `Components <Component>` and the `Conditions <Condition>` associated
         with each.
 
@@ -361,7 +361,7 @@ class ConditionSet(object):
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
         evaluate the `Conditions <Condition>`
 
-    conditions : dict{`Component <Component>`: `Condition`}
+    conditions : Dict[`Component <Component>`: `Condition`]
         the key of each entry is a `Component <Component>`, and its value is the `Condition <Condition>` associated
         with that Component.  Conditions can be added to the
         ConditionSet using the ConditionSet's `add_condition` method.
@@ -412,7 +412,7 @@ class ConditionSet(object):
         Arguments
         ---------
 
-        conditions : dict{`Component <Component>`: `Condition`}
+        conditions : Dict[`Component <Component>`: `Condition`]
             specifies an iterable collection of Conditions to be added to the ConditionSet, in the form of a dict
             each entry of which maps a `Component <Component>` (the key) to a `Condition <Condition>` (the value).
 

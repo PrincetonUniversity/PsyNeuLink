@@ -292,7 +292,7 @@ class KWTA(RecurrentTransferMechanism):
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <KWTA.clip>` that it exceeds.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.

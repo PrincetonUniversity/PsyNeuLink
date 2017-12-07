@@ -204,10 +204,10 @@ class Graph(object):
         Attributes
         ----------
 
-        comp_to_vertex : dict{`Component <Component>` : `Vertex`}
+        comp_to_vertex : Dict[`Component <Component>` : `Vertex`]
             maps `Component` in the graph to the `Vertices <Vertex>` that represent them.
 
-        vertices : list[Vertex]
+        vertices : List[Vertex]
             the `Vertices <Vertex>` contained in this Graph.
 
     '''

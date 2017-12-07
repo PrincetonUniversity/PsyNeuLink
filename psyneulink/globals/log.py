@@ -24,12 +24,12 @@ when they are created, validated, and/or executed).  Every Component has a Log o
 Components that belong to it.  These are stored in `entries <Log.entries>` of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
 recorded is specified by the `logPref <Component.logPref>` property of a Component.  While these can be set directly,
-they are most easily managed using three convenience methods assigned to every Component along with its `log
-<Component.log>` -- `loggable_items <Log.loggable_items>`, `log_items <Log.log_items>` and `logged_items
-<Log.logged_items>` -- that identify, specify and track items the items being logged, respectively.  This can be
-useful not only for observing the behavior of Components in a model, but also in debugging them during construction.
-The entries of a Log can be displayed in a "human readable" table using its `print_entries <Log.print_entries>`
-method, and returned in CSV and numpy array formats using its `csv <Log.csv>` and `nparray <Log.nparray>` methods.
+they are most easily specified using the Log's `log_items <Log.log_items>` method, together with its `loggable_items
+<Log.loggable_items>` and <Log.logged_items>` attributes that identify and track the items to be logged. These can be
+useful not only for observing the behavior of a Component in a model, but also in debugging the model during
+construction. The entries of a Log can be displayed in a "human readable" table using its `print_entries
+<Log.print_entries>` method, and returned in CSV and numpy array formats using its `csv <Log.csv>` and `nparray
+<Log.nparray>` methods.
 
 COMMENT:
 Entries can also be made by the user programmatically. Each entry contains the time at
@@ -60,33 +60,31 @@ of `LogEntry` tuples recording its values.  Each `LogEntry` tuple has three item
        `TIME_STEP` of execution.  This will be corrected in a future release.
 
 
-A Log has several methods that make it easy to manage when it values are recorded and accessing its `entries
-<Log.entries>`:
+A Log has several attributes and methods that make it easy to manage when it values are recorded and accessing its
+`entries <Log.entries>`:
 
-    * `loggable_items <Log.loggable_items>` -- reports, in dictionary format, the items that can be logged in a
-      Component's `log <Component.log>` and their `LogLevel`\\s;  the key to each entry is the name of the
-      item (another Component), and its currently assigned `LogLevel`.
+    * `loggable_items <Log.loggable_items>` -- a dictionary with the items that can be logged in a Component's `log
+      <Component.log>`;  the key for each entry is the name of a Component,  and the value is it current `LogLevel`.
     ..
     * `log_items <Log.log_items>` -- used to assign the LogLevel for one or more Components.  Components can be
       specified by their names, a reference to the Component object, in a tuple that specifies the `LogLevel` to
       assign to that Component, or in a list with a `LogLevel` to be applied to multiple items at once.
     ..
-    * `logged_items <Log.logg_items>` -- returns a list with the name of Components that currently have `entries <Log>`
-      in the Log.
+    * `logged_items <Log.logged_items>` -- a dictionary with the items that currently have entries in a Component's
+      `log <Component.log>`; the key for each entry is the name of a Component, and the value is its current `LogLevel`.
     ..
     * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
     ..
-    * `csv <Log.csv>` -- this returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
+    * `csv <Log.csv>` -- returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
     ..
-    * `nparray <Log.csv>` -- this returns a 2d np.array with the `entries <Log.entries>` in the Log.
+    * `nparray <Log.csv>` -- returns a 2d np.array with the `entries <Log.entries>` in the Log.
 
 Loggable Items
 ~~~~~~~~~~~~~~
 
-Although every Component is assigned a Log, and entries for any Component can be assigned to the Log of any other
-Component, logging is structured by default to make it easy to maintain and access information about the `value
-<State_Base.value>`\\s of the `States <State>` of Mechanisms and Projections, which are automatically assigned the
-following `loggable_items <Log.loggable_items>`:
+Although every Component is assigned its own Log, that records the `value <Component.value>` of that Component,
+the Logs for `Mechanisms <Mechanism>` and `MappingProjections <MappingProjection>` also  provide access to and control
+the Logs of their `States <State>`.  Specifically the Logs of these Components contain the following information:
 
 * **Mechanisms**
 
@@ -99,16 +97,10 @@ following `loggable_items <Log.loggable_items>`:
   |
   * *OutputStates* -- the `value <OutputState.value>` of any `OutputState` (listed in the Mechanism's `output_states
     <Mechanism_Base.output_states>` attribute).
-  |
-  * *Afferent Projections* -- the relevant value any `MappingProjection` that projects to any of the Mechanism's
-    `input_states <Mechanism_Base.input_states>`, or any `ModulatoryProjection` that projects to any of its `states
-    <Mechanism_Base.states>` (see Projections below for the values that are logged).
 ..
 * **Projections**
 
   * *MappingProjections* -- the value of its `matrix <MappingProjection.matrix>` parameter.
-  |
-  * *ModulatoryProjectcions* -- the `value <ModulatoryProjection.value>` of the Projection.
 
 
 Execution
@@ -127,49 +119,47 @@ The following example creates a Process with two `TransferMechanisms <TransferMe
 another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputState` of the first and the
 `MappingProjection` from the first to the second::
 
-    # Create a Process with two TransferMechanisms:
+    # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
     >>> import psyneulink as pnl
-    >>> my_mech_A = pnl.TransferMechanism(name='mech_A')
-    >>> my_mech_B = pnl.TransferMechanism(name='mech_B')
+    >>> my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
+    >>> my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
     >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
-
-    # Show the loggable items for each Mechanism:
-    >>> my_mech_A.loggable_items # doctest: +SKIP
-    {'Process-0_Input Projection': 'OFF', 'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
-    >>> my_mech_B.loggable_items # doctest: +SKIP
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'MappingProjection from mech_A to mech_B': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
-
-Notice that ``my_mech_B`` includes its `MappingProjection` from ``my_mech_A`` (created by the `Process`) in its list of
-`loggable_items <Log.loggable_items>`. The first line belows gets a reference to it, and then assigns it to be logged
-with ``my_mech_B``, and the `noise <TransferMechanism.noise>` parameter and *RESULTS* OutputState to be logged for
-``my_mech_A``::
-
-    # Get the MapppingProjection to my_mech_B from my_mech_A
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 
-    # Assign the proj_A_to_B to be logged with my_mech_B:
-    >>> my_mech_B.log_items(proj_A_to_B)
+    # Show the loggable items (and their current LogLevels) of each Mechanism and the Projection between them:
+    >>> my_mech_A.loggable_items # doctest: +SKIP
+    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
+    >>> my_mech_B.loggable_items # doctest: +SKIP
+    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
+    >>> proj_A_to_B.loggable_items # doctest: +SKIP
+    {'matrix': 'OFF'}
 
-    # Assign the noise parameter and RESULTS OutputState of my_mech_A to be logged:
-    >>> my_mech_A.log_items('noise')
-    >>> my_mech_A.log_items('RESULTS')
+    # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
+    >>> my_mech_A.log_items([pnl.NOISE, pnl.RESULTS])
+    >>> proj_A_to_B.log_items(pnl.MATRIX)
 
 
 Executing the Process generates entries in the Logs, that can then be displayed in several ways::
 
     # Execute each Process twice (to generate some values in the logs):
     >>> my_process.execute()
-    array([ 0.])
+    array([ 0.,  0.,  0.])
     >>> my_process.execute()
-    array([ 0.])
+    array([ 0.,  0.,  0.])
 
-    # Print the logged items of each Mechanism:
+    # List the items of each Mechanism and the Projection that were actually logged:
     >>> my_mech_A.logged_items  # doctest: +SKIP
     {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
-    >>> my_mech_B.logged_items  # doctest: +SKIP
-    {'MappingProjection from mech_A to mech_B': 'EXECUTION'}
+    >>> my_mech_B.logged_items
+    {}
+    >>> proj_A_to_B.logged_items
+    {'matrix': 'EXECUTION'}
 
-    # Print the Logs for each Mechanism:
+Notice that entries dictionary of the Log for ``my_mech_B`` is empty, since no items were specified to be logged for
+it.  The results of the two other logs can be printed to the console using the `print_entries <Log.print_entries>`
+method of a Log::
+
+    # Print the Log for ``my_mech_A``:
     >>> my_mech_A.log.print_entries() # doctest: +SKIP
     Log for mech_A:
 
@@ -182,25 +172,33 @@ Executing the Process generates entries in the Logs, that can then be displayed 
     0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
     1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
 
-    >>> my_mech_B.log.print_entries() # doctest: +SKIP
-    Log for mech_B:
 
-    Entry     Logged Item:                                       Context                                                                 Value
+They can also be exported in csv and numpy array formats.  The following shows the csv-formatted output of the Logs
+for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
-    0         'MappingProjection from mech_A to mech_B'.........' EXECUTING  PROCESS Process-0'.......................................     1.
-    1         'MappingProjection from mech_A to mech_B'.........' EXECUTING  PROCESS Process-0'.......................................     1.
+    # Display the csv formatted entry of Log for ``my_mech_A`` without quotes around values:
+    >>> my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None) # doctest: +SKIP
+    'Entry', 'noise', 'RESULTS'
+    0,  0.,  0.
+    1,  0.,  0.
 
-    # Display the csv formatted entries of each Log (``my_mech_A`` without quotes around values, and ``my_mech_B``
-    with quotes)::
+    # Display the csv formatted entry of Log for ``proj_A_to_B``
+    #    with quotes around values and the Projection's name included in the header:
+    >>> proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True) # doctest: +SKIP
+    # 'Entry', 'MappingProjection from mech_A to mech_B[matrix]'
+    # 0, ' 1.  1.  1.'
+    #  ' 1.  1.  1.'
+    # 1, ' 1.  1.  1.'
+    #  ' 1.  1.  1.'
 
-    >>> my_mech_A.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None) # doctest: +SKIP
-    'Entry', 'noise'
-    0,  0.
-    1,  0.
-    >>> my_mech_B.log.csv(entries=proj_A_to_B.name, owner_name=False, quotes=True) # doctest: +SKIP
-    'Entry', 'MappingProjection from mech_A to mech_B'
-    0, ' 1.'
-    1, ' 1.'
+Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
+reported.
+
+The following shows the Log of ``proj_A_to_B`` in numpy array format::
+
+    >>> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False) # doctest: +SKIP
+    [[[0] [1]]
+     [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
 
 
 COMMENT:
@@ -289,6 +287,7 @@ from enum import IntEnum
 import numpy as np
 
 from psyneulink.globals.keywords import kwContext, kwTime, kwValue
+from psyneulink.globals.utilities import ContentAddressableList
 
 __all__ = [
     'ALL_ENTRIES', 'EntriesDict', 'kpCentralClock', 'Log', 'LogEntry', 'LogError', 'LogLevel', 'SystemLogEntries',
@@ -321,10 +320,18 @@ SystemLogEntries = [kpCentralClock]
 # Modified from: http://stackoverflow.com/questions/7760916/correct-useage-of-getter-setter-for-dictionary-values
 from collections import MutableMapping
 class EntriesDict(MutableMapping,dict):
-    """Add setter method for entries that checks owner Mechanism's prefs to see whether entry is currently recording
+    """Maintains a Dict of Log entries; assignment of a LogEntry to an entry appends it to the list for that entry.
 
-    If entry is in owner Mechanism's prefs.logPref.setting list, then append attribute value to entry's list
-    Otherwise, either initialize or just update entry with value
+    The key for each entry is the name of an attribute being logged (usually the `value <Component.value>` of
+    the Log's `owner <Log.owner>`.
+
+    The value of each entry is a list, each item of which is a LogEntry.
+
+    When a LogEntry is assigned to an entry:
+       - if the entry does not already exist, it is created and assigned a list with the LogEntry as its first item;
+       - if it exists, the LogEntry is appended to the list;
+       - assigning anything other than a LogEntry raises and LogError exception.
+
     """
     def __init__(self, owner):
 
@@ -348,6 +355,8 @@ class EntriesDict(MutableMapping,dict):
 
     def __setitem__(self, key, value):
 
+        if not isinstance(value, LogEntry):
+            raise LogError("Object other than a {} assigned to Log for {}".format(LogEntry.__name__, self.owner.name))
         try:
         # If the entry already exists, use its value and append current value to it
             self._ownerLog.entries[key].append(value)
@@ -381,7 +390,7 @@ class LogError(Exception):
 #endregion
 
 class Log:
-    """Maintain a Log for an object, which contains a dictionary of attributes being logged and their value(s).
+    """Maintain a Log for an object, which contains a dictionary of logged value(s).
 
     COMMENT:
     Description:
@@ -455,6 +464,28 @@ class Log:
         - [TBI: save_log - save log to disk]
     COMMENT
 
+    Attributes
+    ----------
+
+    owner : Compoment
+        the `Component <Component>` to which the Log belongs (and assigned as its `log <Component.log>` attribute).
+
+    loggable_components : ContentAddressableList
+        each item is a Component that is loggable for the Log's `owner <Log.owner>`
+
+    loggable_items : Dict[Component.name: List[LogEntry]]
+        identifies Components that can be logged in the Log; the key of each entry is the name of a Component,
+        and the value is its currently assigned `LogLevel`.
+
+    entries : Dict[Component.name: List[LogEntry]]
+        contains the logged information for `loggable_components <Log.loggable_components>`; the key of each entry
+        is the name of a Component, and its value is a list of `LogEntry` items for that Component.  Only Components
+        for which information has been logged appear in the `entries <Log.entries>` dict.
+
+    logged_items : Dict[Component.name: List[LogEntry]]
+        identifies Components for which information has been entered in the Log; the key for each entry is the name
+        of a Component, and the value is its currently assigned `LogLevel`.
+
     """
 
     ALL_LOG_ENTRIES = 'all_log_entries'
@@ -506,13 +537,14 @@ class Log:
 
         The loggable items of a Component are specified in in the _logable_items property of its class
         """
+        from psyneulink.components.component import Component
+
         try:
-            loggable_items = self.owner._loggable_items
+            loggable_items = ContentAddressableList(component_type=Component, list=self.owner._loggable_items)
         except AttributeError:
             return []
         return loggable_items
 
-    # FIX: MOVE TO Log WITH CALL TO self._log_items FOR HANDLING OF RCLASS-SPECIFIC ATTRIBUTES (STATES AND PROJECTIONS)
     @property
     def logged_items(self):
         """Dict of items that have logged `entries <Log.entries>`, indicating their specified `LogLevel`.
@@ -521,14 +553,11 @@ class Log:
         # Return LogLevel for items in log.entries
         logged_items = {key: value for (key, value) in
                         [(l, self.loggable_items[l])
-                         for l in self.entries.keys()]}
+                         for l in self.logged_entries.keys()]}
         return logged_items
 
-    def log_items(self, items, log_level=LogLevel.EXECUTION, param_sets=None):
-        """Specifies items to be logged at the specified `LogLevel`.
-
-        Note:  this calls the `owner <Log.owner>``s _log_items method to allow it to add param_sets to
-               `loggable_items <Log.loggable_items>`.
+    def log_items(self, items, log_level=LogLevel.EXECUTION):
+        """Specifies items to be logged at the specified `LogLevel`\\(s).
 
         Arguments
         ---------
@@ -552,7 +581,7 @@ class Log:
         from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
         from psyneulink.globals.keywords import ALL
 
-        def assign_log_level(item, level, param_set):
+        def assign_log_level(item, level):
 
             if not item in self.loggable_items:
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
@@ -564,10 +593,10 @@ class Log:
                 raise LogError("PROGRAM ERROR: Unable to set LogLevel for {} of {}".format(item, self.owner.name))
 
         if items is ALL:
-            self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
+            for component in self.loggable_components:
+                component.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
+            # self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
             return
-
-        param_sets = param_sets or [self.owner.user_params]
 
         if not isinstance(items, list):
             items = [items]
@@ -577,10 +606,10 @@ class Log:
                 # self.add_entries(item)
                 if isinstance(item, Component):
                     item = item.name
-                assign_log_level(item, log_level, param_sets)
+                assign_log_level(item, log_level)
             else:
                 # self.add_entries(item[0])
-                assign_log_level(item[0], item[1], param_sets)
+                assign_log_level(item[0], item[1])
 
     def print_entries(self, entries=None, csv=False, synch_time=False, *args):
         """
@@ -596,9 +625,9 @@ class Log:
         Issue a warning if an entry is not in the Log dict
         """
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
         if entries is ALL_ENTRIES or entries is None:
-            entries = self.entries.keys()
+            entries = self.logged_entries.keys()
 
         # If entries is a single entry, put in list for processing below
         if isinstance(entries, str):
@@ -639,12 +668,12 @@ class Log:
         print('\n'+header+'\n')
 
         # Sort for consistency of reporting
-        attrib_names_sorted = sorted(self.entries.keys())
+        attrib_names_sorted = sorted(self.logged_entries.keys())
         kwSpacer = '.'
-        # for attrib_name in self.entries:
+        # for attrib_name in self.logged_entries:
         for attrib_name in attrib_names_sorted:
             try:
-                datum = self.entries[attrib_name]
+                datum = self.logged_entries[attrib_name]
             except KeyError:
                 warnings.warn("{0} is not an entry in the Log for {1}".
                       format(attrib_name, self.owner.name))
@@ -727,9 +756,10 @@ class Log:
         """
         from psyneulink.components.component import Component
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
         if entries is ALL_ENTRIES or entries is None:
-            entries = self.entries.keys()
+            # entries = self.logged_entries.keys()
+            entries = self.logged_entries.keys()
 
         # If entries is a single entry, put in list for processing below
         if isinstance(entries, (str, Component)):
@@ -742,14 +772,14 @@ class Log:
         for entry in entries:
             if entry not in self.loggable_items:
                 raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
-            if entry not in self.entries:
+            if entry not in self.logged_entries:
                 raise LogError("{} is not currently being logged by {} (try using log_items)".
                                format(repr(entry), self.owner.name))
 
-        max_len = max([len(self.entries[e]) for e in entries])
+        max_len = max([len(self.logged_entries[e]) for e in entries])
 
         # Currently only supports entries of the same length
-        if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
+        if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
             raise LogError("CSV output currently only supported for Log entries of equal length")
 
         if not quotes:
@@ -770,7 +800,7 @@ class Log:
         # Records
         for i in range(max_len):
             csv += "{}, {}\n".format(i, ", ".
-                                     join(str(self.entries[entry][i][2]) for entry in entries).
+                                     join(str(self.logged_entries[entry][i].value) for entry in entries).
                                      replace("[[",quotes)).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
         return(csv)
 
@@ -831,9 +861,9 @@ class Log:
         """
         from psyneulink.components.component import Component
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
         if entries is ALL_ENTRIES or entries is None:
-            entries = self.entries.keys()
+            entries = self.logged_entries.keys()
 
         # If entries is a single entry, put in list for processing below
         if isinstance(entries, (str, Component)):
@@ -846,14 +876,14 @@ class Log:
         for entry in entries:
             if entry not in self.loggable_items:
                 raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
-            if entry not in self.entries:
+            if entry not in self.logged_entries:
                 raise LogError("{} is not currently being logged by {} (try using log_items)".
                                format(repr(entry), self.owner.name))
 
-        max_len = max([len(self.entries[e]) for e in entries])
+        max_len = max([len(self.logged_entries[e]) for e in entries])
 
         # Currently only supports entries of the same length
-        if not all(len(self.entries[e])==len(self.entries[entries[0]])for e in entries):
+        if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
             raise LogError("CSV output currently only supported for Log entries of equal length")
 
         if owner_name is True:
@@ -873,15 +903,21 @@ class Log:
             npa = [npa]
 
         for i, entry in enumerate(entries):
-            row = [e[2] for e in self.entries[entry]]
+            row = [e.value.tolist() for e in self.logged_entries[entry]]
             if header:
                 entry = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
                 row = [entry] + row
             npa.append(row)
-        npa = np.array(npa)
+        npa = np.array(npa, dtype=object)
 
         return(npa)
 
+    @property
+    def logged_entries(self):
+        entries = {}
+        for i in self.loggable_components:
+            entries.update(i.log.entries)
+        return entries
 
     # ******************************************************************************************************
     # ******************************************************************************************************
@@ -906,7 +942,7 @@ class Log:
 
         # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
         if entries is Log.ALL_LOG_ENTRIES:
-            entries = self.entries.keys()
+            entries = self.logged_entries.keys()
             msg = Log.ALL_LOG_ENTRIES
 
         # If entries is a single entry, put in list for processing below
@@ -917,7 +953,7 @@ class Log:
         if not msg is Log.ALL_LOG_ENTRIES:
             for entry in entries:
                 try:
-                    self.entries[entry]
+                    self.logged_entries[entry]
                 except KeyError:
                     warnings.warn("Warning: {0} is not an entry in Log of {1}".
                                   format(entry,self.owner.name))
@@ -938,7 +974,7 @@ class Log:
 
             # Reset entries
             for entry in entries:
-                self.entries[entry]=[]
+                self.logged_entries[entry]=[]
                 if entry in self.owner.prefs.logPref:
                     del(self.owner.prefs.logPref, entry)
 
