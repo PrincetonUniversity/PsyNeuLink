@@ -290,12 +290,14 @@ Class Reference
 
 """
 import warnings
+import inspect
 import typecheck as tc
 from collections import namedtuple
 from enum import IntEnum, unique
 
 import numpy as np
 
+from psyneulink.scheduling.timescale import CurrentTime
 from psyneulink.globals.keywords import kwContext, kwTime, kwValue
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, CONTROL
@@ -1076,6 +1078,26 @@ class Log:
                 if self.owner.prefs.verbosePref:
                     warnings.warn("Started logging of {0}".format(entry))
 
-
     def save_log(self):
         print("Saved")
+
+    # def _log_value(self, curr_frame, value):
+    def _log_value(self, value):
+
+        # Get context
+        try:
+            curr_frame = inspect.currentframe()
+            prev_frame = inspect.getouterframes(curr_frame, 2)
+            context = inspect.getargvalues(prev_frame[2][0]).locals['context']
+        except KeyError:
+            context = ""
+        if not isinstance(context, str):
+            context = ""
+
+        # Get logPref and context
+        log_pref = self.owner.prefs.logPref if self.owner.prefs else None
+        context_flag = _get_log_context(context)
+
+        # Log value if logging condition is satisfied
+        if log_pref and log_pref == context_flag:
+            self.entries[self.owner.name] = LogEntry(CurrentTime(), context, value)

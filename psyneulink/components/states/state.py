@@ -2052,22 +2052,7 @@ class State_Base(State):
         # MODIFIED 7/8/17 END
 
         self._value = assignment
-
-        # STORE value IN log IF SPECIFIED
-
-        # Get context
-        try:
-            curr_frame = inspect.currentframe()
-            prev_frame = inspect.getouterframes(curr_frame, 2)
-            context = inspect.getargvalues(prev_frame[1][0]).locals['context']
-        except KeyError:
-            context = ""
-
-        # Get logPref
-        log_pref = self.prefs.logPref if self.prefs else None
-        context_flag = _get_log_context(context)
-        if log_pref and log_pref == context_flag:
-            self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
+        self.log._log_value(assignment)
 
     @property
     def projections(self):
