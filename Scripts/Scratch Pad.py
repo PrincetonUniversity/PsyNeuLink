@@ -2227,7 +2227,7 @@ print ("TEST Log")
 # T.execute()
 # # print(T.logged_items)
 # print(T.log.csv(entries=['RESULTS'], owner_name=False, quotes=None))
-
+#
 # # ------------------------------------------
 # T1 = pnl.TransferMechanism(name='T1', size=2)
 # T2 = pnl.TransferMechanism(name='T2', size=2)
@@ -2262,8 +2262,38 @@ print ("TEST Log")
 # print("NPARRAY:")
 # print(T1.log.nparray(entries=['noise', 'RESULTS'], header=False, owner_name=True))
 # print(PJ.log.nparray(entries=['matrix'], header=False, owner_name=True))
-
-# # ---------------------------------------------
+#
+#
+# import psyneulink as pnl
+# my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
+# my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
+# my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
+# proj_A_to_B = my_mech_B.path_afferents[0]
+#
+# print(my_mech_A.loggable_items) # doctest: +SKIP
+# print(my_mech_B.loggable_items) # doctest: +SKIP
+# print(proj_A_to_B.loggable_items) # doctest: +SKIP
+#
+# my_mech_A.log_items('noise')
+# my_mech_A.log_items('RESULTS')
+# proj_A_to_B.log_items(pnl.MATRIX)
+#
+#
+# my_process.execute()
+# my_process.execute()
+#
+# print(my_mech_A.logged_items)  # doctest: +SKIP
+# print(my_mech_B.logged_items)  # doctest: +SKIP
+# print(proj_A_to_B.logged_items)
+#
+# my_mech_A.log.print_entries() # doctest: +SKIP
+#
+#
+# print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None)) # doctest: +SKIP
+# print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=True, quotes=True)) # doctest: +SKIP
+#
+# print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)) # doctest: +SKIP
+# #----------------------------------------------------------------------------------------------------------------
 
 Input_Layer = pnl.TransferMechanism(
     name='Input Layer',
@@ -2431,17 +2461,15 @@ expected_output = [
     ]),
 ]
 
-# for i in range(len(expected_output)):
-#     val, expected = expected_output[i]
-#     # setting absolute tolerance to be in accordance with reference_output precision
-#     # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
-#     # which WILL FAIL unless you gather higher precision values to use as reference
-#     np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+for i in range(len(expected_output)):
+    val, expected = expected_output[i]
+    # setting absolute tolerance to be in accordance with reference_output precision
+    # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
+    # which WILL FAIL unless you gather higher precision values to use as reference
+    np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
-# print(Hidden_Layer_2.log.nparray(entries='Middle Weights', header=False))
-result = Middle_Weights.log.nparray(entries='matrix', header=False)
-print(result)
-expected = np.array(
+log_val = Middle_Weights.log.nparray(entries='matrix', header=False)
+expected_log_val = np.array(
         [
             [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]],
             [ [[ 0.05,  0.1 ,  0.15,  0.2 ],
@@ -2494,43 +2522,16 @@ expected = np.array(
                [ 0.49318268,  0.50159531,  0.51632339,  0.5377435 ],
                [ 0.69471052,  0.70164382,  0.71511777,  0.73552215],
                [ 0.8961628 ,  0.90169281,  0.91397691,  0.93341744]]]
-        ]
+        ], dtype=object
 )
 
-np.testing.assert_allclose(result, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format('TEST'))
-#-------------------------------------------------------------------------------------------------------------------
+for i in range(len(log_val)):
+    np.testing.assert_allclose(log_val[i], expected_log_val[i],
+                               atol=1e-08,
+                               err_msg='Failed on test of logged values')
 
 
-# import psyneulink as pnl
-# my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
-# my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
-# my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
-# proj_A_to_B = my_mech_B.path_afferents[0]
-#
-# print(my_mech_A.loggable_items) # doctest: +SKIP
-# print(my_mech_B.loggable_items) # doctest: +SKIP
-# print(proj_A_to_B.loggable_items) # doctest: +SKIP
-#
-# my_mech_A.log_items('noise')
-# my_mech_A.log_items('RESULTS')
-# proj_A_to_B.log_items(pnl.MATRIX)
-#
-#
-# my_process.execute()
-# my_process.execute()
-#
-# print(my_mech_A.logged_items)  # doctest: +SKIP
-# print(my_mech_B.logged_items)  # doctest: +SKIP
-# print(proj_A_to_B.logged_items)
-#
-# my_mech_A.log.print_entries() # doctest: +SKIP
-#
-#
-# print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None)) # doctest: +SKIP
-# print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=True, quotes=True)) # doctest: +SKIP
-#
-# print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)) # doctest: +SKIP
-#
+# #-----------------------------------------------------------------------------------------------------------------
 
 #endregion
 

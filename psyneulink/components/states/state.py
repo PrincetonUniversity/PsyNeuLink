@@ -741,7 +741,7 @@ from psyneulink.globals.keywords import DEFERRED_INITIALIZATION, \
     PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, \
     SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, \
     kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
-from psyneulink.globals.log import LogEntry, LogLevel
+from psyneulink.globals.log import LogEntry, LogLevel, _get_log_context
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -2065,8 +2065,8 @@ class State_Base(State):
 
         # Get logPref
         log_pref = self.prefs.logPref if self.prefs else None
-
-
+        context_flag = _get_log_context(context)
+        # if log_pref and log_pref == context_flag:
         # If context is consistent with log_pref, record value to log
         if (log_pref is LogLevel.ALL_ASSIGNMENTS or
                 (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or

@@ -281,12 +281,13 @@ Class Reference
 import warnings
 import typecheck as tc
 from collections import namedtuple
-from enum import IntEnum
+from enum import IntEnum, unique
 
 import numpy as np
 
 from psyneulink.globals.keywords import kwContext, kwTime, kwValue
 from psyneulink.globals.utilities import ContentAddressableList
+from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, CONTROL
 
 __all__ = [
     'ALL_ENTRIES', 'EntriesDict', 'kpCentralClock', 'Log', 'LogEntry', 'LogError', 'LogLevel', 'SystemLogEntries',
@@ -297,17 +298,23 @@ class LogLevel(IntEnum):
     """Specifies levels of logging, as descrdibed below."""
     OFF = 0
     """No recording."""
-    INITIALIZATION = 1
-    """Record only initial assignment."""
-    VALUE_ASSIGNMENT = 2
-    """Record only final value assignments during execution."""
-    EXECUTION = 4
-    """Record all value assignments during execution."""
-    LEARNING = 8
-    """Record all value assignments during learning."""
-    VALIDATION = 16
-    """Record all value assignments during validation and execution."""
-    ALL_ASSIGNMENTS = 31
+    INITIALIZATION = 1<<1
+    """Record during initial assignment."""
+    VALIDATION = 1<<2
+    """Record value during validation."""
+    EXECUTION = 1<<3
+    """Record all value assignments during any execution of the Component."""
+    PROCESSING = 1<<4
+    """Record all value assignments during processing phase of Composition execution."""
+    LEARNING = 1<<5
+    """Record all value assignments during learning phase of Composition execution."""
+    CONTROL = 1<<6
+    """Record all value assignment during control phase of Composition execution."""
+    VALUE_ASSIGNMENT = 1<<7
+    """Record final value assignments during Composition execution."""
+    FINAL = 1<<8
+    """Synonym of VALUE_ASSIGNMENT."""
+    ALL_ASSIGNMENTS = INITIALIZATION | FINAL | VALIDATION | EXECUTION | LEARNING | CONTROL
     """Record all value assignments during initialization, validation and execution."""
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
@@ -389,6 +396,20 @@ class LogError(Exception):
     def __str__(self):
         return repr(self.error_value)
 #endregion
+
+def _get_log_context(context):
+
+    context_flag = LogLevel.OFF
+    if INITIALIZING in context:
+        context_flag |= LogLevel.INITIALIZATION
+    if VALIDATE in context:
+        context_flag |= LogLevel.VALIDATION
+    if EXECUTING in context:
+        context_flag |= LogLevel.EXECUTION
+    if LEARNING in context:
+        context_flag |= LogLevel.LEARNING
+    return context_flag
+
 
 class Log:
     """Maintain a Log for an object, which contains a dictionary of logged value(s).
