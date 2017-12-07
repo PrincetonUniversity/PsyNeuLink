@@ -2434,6 +2434,7 @@ class Mechanism_Base(Mechanism):
     @value.setter
     def value(self, assignment):
         self._value = assignment
+        self.log._log_value(assignment)
 
         # # MODIFIED 1/28/17 NEW: [COPIED FROM State]
         # # Store value in log if specified

@@ -300,7 +300,7 @@ import numpy as np
 from psyneulink.scheduling.timescale import CurrentTime
 from psyneulink.globals.keywords import kwContext, kwTime, kwValue
 from psyneulink.globals.utilities import ContentAddressableList
-from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, CONTROL
+from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, CONTROL, VALUE
 
 __all__ = [
     'ALL_ENTRIES', 'EntriesDict', 'kpCentralClock', 'Log', 'LogEntry', 'LogError', 'LogLevel', 'SystemLogEntries',
@@ -557,12 +557,15 @@ class Log:
 
         Keys are names of the items, values the items themselves
         """
-        # Crashes during init as prefs have not all been assigned:
+        # FIX: The following crashes during init as prefs have not all been assigned
         # return {key: value for (key, value) in [(c.name, c.logPref.name) for c in self.loggable_components]}
 
         loggable_items = {}
         for c in self.loggable_components:
-            name = c.name
+            if c is self.owner:
+                name = VALUE
+            else:
+                name = c.name
             try:
                 log_pref = c.logPref.name
             except:
@@ -575,12 +578,13 @@ class Log:
     def loggable_components(self):
         """Return a list of owner's Components that are loggable
 
-        The loggable items of a Component are specified in in the _logable_items property of its class
+        The loggable items of a Component are specified in the _logagble_items property of its class
         """
         from psyneulink.components.component import Component
 
         try:
             loggable_items = ContentAddressableList(component_type=Component, list=self.owner._loggable_items)
+            loggable_items[self.owner.name] = self.owner
         except AttributeError:
             return []
         return loggable_items
