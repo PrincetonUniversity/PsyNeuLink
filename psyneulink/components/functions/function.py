@@ -2666,7 +2666,6 @@ class TransferFunction(Function_Base):
                          prefs=prefs,
                          context=context)
 
-
     @property
     def multiplicative(self):
         return getattr(self, self.multiplicative_param)
@@ -3321,6 +3320,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   bias=bias,
+                                                  offset=offset,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -3334,7 +3334,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
         with pnlvm.LLVMBuilderContext() as ctx:
             param_type = ir.LiteralStructType((ctx.float_ty, ctx.float_ty))
         return param_type
-
 
     def get_param_initializer(self):
         return tuple([self.gain, self.bias])
@@ -3419,7 +3418,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: 1 / (1 + e**( (`gain <Logistic.gain>` * `variable <Logistic.variable>`) + `bias <Logistic.bias>`))
+        Return:
+
+        .. math::
+
+           \\fract{1}{1 + e^{ - gain ( variable - bias ) + offset}}
 
         Arguments
         ---------
@@ -3432,8 +3435,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -3445,14 +3446,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
+        offset = self.paramsCurrent[OFFSET]
 
-        try:
-            return_val = 1 / (1 + np.exp(-(gain * variable) + bias))
-        except (Warning):
-            # handle RuntimeWarning: overflow in exp
-            return_val = 0
-
-        return return_val
+        return 1 / (1 + np.exp(-gain*(variable-bias) + offset))
 
     def derivative(self, output, input=None):
         """
