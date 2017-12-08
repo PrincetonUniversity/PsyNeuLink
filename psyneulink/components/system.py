@@ -1520,7 +1520,7 @@ class System(System_Base):
         # MODIFIED 6/27/17 END
 
         # Instantiate StimulusInputStates
-        self._instantiate_stimulus_inputs()
+        self._instantiate_stimulus_inputs(context=context)
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
@@ -1566,9 +1566,11 @@ class System(System_Base):
                 # MODIFIED 6/27/17 END
                 # MODIFIED 6/27/17 END
                 stimulus_input_state = SystemInputState(owner=self,
-                                                            variable=origin_mech.input_states[j].instance_defaults.variable,
-                                                            prefs=self.prefs,
-                                                            name="System Input State to Mechansism {}, Input State {}".format(origin_mech.name,j))
+                                                        variable=origin_mech.input_states[j].instance_defaults.variable,
+                                                        prefs=self.prefs,
+                                                        name="System Input State to Mechansism {}, Input State {}".
+                                                        format(origin_mech.name,j),
+                                                        context=context)
                 self.stimulusInputStates.append(stimulus_input_state)
                 self.inputs.append(stimulus_input_state.value)
 
@@ -1894,7 +1896,8 @@ class System(System_Base):
                                                    owner=self,
                                                    variable=target_mech_TARGET_input_state.instance_defaults.variable,
                                                    prefs=self.prefs,
-                                                   name="System Target {}".format(i))
+                                                   name="System Target {}".format(i),
+                                                   context=context)
             self.target_input_states.append(system_target_input_state)
 
             # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
@@ -3568,7 +3571,7 @@ class SystemInputState(OutputState):
 
     """
 
-    def __init__(self, owner=None, variable=None, name=None, prefs=None):
+    def __init__(self, owner=None, variable=None, name=None, prefs=None, context=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
 
         :param variable:

@@ -663,6 +663,60 @@ class Log:
                 # self.add_entries(item[0])
                 assign_log_level(item[0], item[1])
 
+    def _log_value(self, value, context=None):
+        """Add LogEntry to an entry in the Log
+
+        Identifies the context in which the call is being made, which is assigned to the context field of the
+        `LogEntry`, along with the current time stamp and value itself
+
+        .. note::
+            Since _log_value is usually called by the setter for the `value <Component.value>` property of a Component
+            (which doesn't/can't receive a context argument), it does not pass a **context** argument to _log_value;
+            in that case, _log_value searches the stack for the most recent frame with a context specification, and
+            uses that.
+
+        """
+        from psyneulink.components.component import Component
+
+        # Get context
+        if context is None:
+            curr_frame = inspect.currentframe()
+            prev_frame = inspect.getouterframes(curr_frame, 2)
+            i = 1
+            # Search stack for first frame (most recent call) with a context specification
+            while context is None:
+                try:
+                    context = inspect.getargvalues(prev_frame[i][0]).locals['context']
+                except KeyError:
+                    # Try earlier frame
+                    i += 1
+                except IndexError:
+                    # Ran out of frames, so just set context to empty string
+                    context = ""
+                else:
+                    break
+
+        if context is None:
+            # No context was specified in any frame
+            raise LogError("PROGRAM ERROR: No context specification found in any frame")
+
+        # If context is a Component object, it must be during its initialization, so assign accordingly:
+        if isinstance(context, Component):
+            context = "{} of {}".format(INITIALIZING, context.name)
+
+        if not isinstance(context, str):
+            raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
+
+        # Get logPref, and context flags (from context)
+        log_pref = self.owner.prefs.logPref if self.owner.prefs else None
+        context_flags = _get_log_context(context)
+
+        # Log value if logging condition is satisfied
+        if log_pref and log_pref == context_flags:
+        # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
+        # if log_pref and log_pref | context_flags:
+            self.entries[self.owner.name] = LogEntry(CurrentTime(), context, value)
+
     def print_entries(self, entries=None, csv=False, synch_time=False, *args):
         """
         print_entries(          \
@@ -790,7 +844,7 @@ class Log:
         Arguments
         ---------
 
-        entries : string or Component
+        entries : string, Component or list of them
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
             If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
@@ -886,7 +940,7 @@ class Log:
         Arguments
         ---------
 
-        entries : string or Component
+        entries : string, Component or list of them
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
             If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
@@ -1021,21 +1075,32 @@ class Log:
                 if entry in self.owner.prefs.logPref:
                     del(self.owner.prefs.logPref, entry)
 
-    def clear_entries(self, entries=None, delete_entry=True, confirm=True):
-        """Clear one or more entries by removing by either deleting the entry or just removing its data.
+    def clear_entries(self, entries=ALL_LOG_ENTRIES, delete_entry=True, confirm=False):
+        """Clear one or more entries either by deleting the entry or just removing its data.
 
         Arguments
         ---------
 
-        If confirm is True, user will be asked to confirm the reset;  otherwise it will simply be done
-        Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
-        Notes:
-        * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
-        * resetting an entry deletes ALL the data recorded within it
+        entries : string, Component or list of them : default None
+            specifies the entries of the Log to be cleared;  they must be `loggable_items
+            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
+            If **entries** is `ALL`, `None` or omitted, then all `logged_items <Log.logged_items>` are cleared.
 
-        :param entries: (list, str or Log.ALL_LOG_ENTRIES)
-        :param confirm: (bool)
-        :return:
+        delete_entry : bool : default True
+            specifies whether to delete the entry (if `True`) from the log to which it belongs, or just
+            delete the data, but leave the entry itself (if `False`).
+
+            .. note::
+                This option is included for generality and potential future features, but is not advised;
+                the Log interface (e.g., the `logged_items <Log.logged_items>` interface generally assumes that
+                the only `entries <Log.entries>` in a log are ones with data.
+
+        confirm : bool : default False
+            specifies whether user confirmation is required before clearing the entries.
+
+            .. note::
+                If **confirm** is `True`, only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
+
         """
 
         # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
@@ -1070,62 +1135,12 @@ class Log:
             for entry in entries:
                 self.logged_entries[entry]=[]
                 if delete_entry:
-                # Delete the entire entry in the log to which it belongs
+                # Delete the entire entry from the log to which it belongs
                     del self.loggable_components[entry].log.entries[entry]
                 else:
-                    # Delete the date for the entry but leave the entry itself in the log to which it belongs
+                    # Delete the data for the entry but leave the entry itself in the log to which it belongs
                     del self.logged_entries[entry][0:]
                 assert True
 
-    def suspend_entries(self, entries):
-        """Suspend recording the values of attributes corresponding to entries even if logging is on
-
-        Remove entries from self.owner.prefs.logPref (but leave in Log dict, i.e., self.entries)
-
-        :param entries: (str or list)
-        :return:
-        """
-
-        # If entries is a single entry, put in list for processing below
-        if isinstance(entries, str):
-            entries = [entries]
-
-        # Check whether each entry is already in self.entries and, if not, validate and add it
-        for entry in entries:
-            try:
-                self.owner.prefs.logPref.remove(entry)
-            except ValueError:
-                if not entry in SystemLogEntries and not entry in self.owner.__dict__:
-                    warnings.warn("{0} is not an attribute of {1} or in SystemLogEntries".
-                                  format(entry, self.owner.name))
-                elif self.owner.prefs.verbosePref:
-                    warnings.warn("{0} was not being recorded")
-            else:
-                if self.owner.prefs.verbosePref:
-                    warnings.warn("Started logging of {0}".format(entry))
-
     def save_log(self):
         print("Saved")
-
-    # def _log_value(self, curr_frame, value):
-    def _log_value(self, value):
-
-        # Get context
-        try:
-            curr_frame = inspect.currentframe()
-            prev_frame = inspect.getouterframes(curr_frame, 2)
-            context = inspect.getargvalues(prev_frame[2][0]).locals['context']
-        except KeyError:
-            context = ""
-        if not isinstance(context, str):
-            context = ""
-
-        # Get logPref and context
-        log_pref = self.owner.prefs.logPref if self.owner.prefs else None
-        context_flags = _get_log_context(context)
-
-        # Log value if logging condition is satisfied
-        if log_pref and log_pref == context_flags:
-        # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-        # if log_pref and log_pref | context_flags:
-            self.entries[self.owner.name] = LogEntry(CurrentTime(), context, value)
