@@ -1425,6 +1425,8 @@ class Component(object):
 
         # Create property on self for each parameter in user_params:
         #    these WILL be validated whenever they are assigned a new value
+        print("-----------------\nUSER PARAMS \n")
+        print(self.user_params)
         self._create_attributes_for_params(make_as_properties=True, **self.user_params)
 
         # Create attribute on self for each parameter in paramClassDefaults not in user_params:
@@ -1438,6 +1440,8 @@ class Component(object):
         params_class_defaults_only = dict(item for item in self.paramClassDefaults.items()
                                           if not any(hasattr(parent_class, item[0])
                                                      for parent_class in self.__class__.mro()))
+        print("-----------------\nUSER PARAMS \n")
+        print(params_class_defaults_only)
         self._create_attributes_for_params(make_as_properties=False, **params_class_defaults_only)
 
         # Return params only for args:
@@ -2861,9 +2865,14 @@ class Component(object):
 COMPONENT_BASE_CLASS = Component
 
 def make_property(name):
+    print("make property was called on ", name)
     backing_field = '_' + name
 
     def getter(self):
+        print("******")
+        print(self)
+        print(backing_field)
+        print("******")
         return getattr(self, backing_field)
 
     def setter(self, val):
@@ -2871,6 +2880,7 @@ def make_property(name):
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
             val_type = val.__class__.__name__
             curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
+            print("curr context = ", curr_context)
             # self.prev_context = "nonsense" + str(curr_context)
             # self._assign_params(request_set={name:val}, context=curr_context)
             setattr(self, backing_field, val)
