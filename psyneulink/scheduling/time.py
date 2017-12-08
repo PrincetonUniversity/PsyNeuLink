@@ -6,11 +6,11 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# ********************************************* TimeScale ***************************************************************
+# ********************************************* Time ***************************************************************
 
 """
 
-.. _TimeScale_Overview:
+.. _Time_Overview:
 
 Overview
 --------

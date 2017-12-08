@@ -13,7 +13,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.composition import Composition, CompositionError, MechanismRole
 from psyneulink.scheduling.condition import EveryNCalls
 from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 logger = logging.getLogger(__name__)
 

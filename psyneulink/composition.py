@@ -59,7 +59,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.globals.keywords import EXECUTING
 from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'Composition', 'CompositionError', 'MechanismRole',

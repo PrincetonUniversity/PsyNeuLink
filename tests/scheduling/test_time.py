@@ -1,6 +1,6 @@
 import pytest
 
-from psyneulink.scheduling.timescale import Time, TimeHistoryTree, TimeScale
+from psyneulink.scheduling.time import Time, TimeHistoryTree, TimeScale
 
 
 class TestTime:

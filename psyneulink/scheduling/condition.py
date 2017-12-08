@@ -319,7 +319,7 @@ Class Reference
 
 import logging
 
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTrials', 'AfterPass', 'AfterTrial', 'All',

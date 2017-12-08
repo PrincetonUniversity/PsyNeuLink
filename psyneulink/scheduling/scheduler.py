@@ -304,7 +304,7 @@ import logging
 from toposort import toposort
 
 from psyneulink.scheduling.condition import AllHaveRun, Always, Condition, ConditionSet, Never
-from psyneulink.scheduling.timescale import Clock, TimeScale
+from psyneulink.scheduling.time import Clock, TimeScale
 
 __all__ = [
     'Scheduler', 'SchedulerError',
