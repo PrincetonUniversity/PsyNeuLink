@@ -1065,8 +1065,8 @@ class Log:
 
             # Reset entries
             for entry in entries:
-                self.logged_entries[entry]=[]
-                # del self.logged_entries[entry]
+                # self.logged_entries[entry]=[]
+                del self.logged_entries[entry][0:]
                 assert True
 
     def suspend_entries(self, entries):
