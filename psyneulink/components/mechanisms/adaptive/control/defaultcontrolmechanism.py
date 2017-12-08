@@ -44,7 +44,7 @@ from psyneulink.globals.keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPU
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
     'DefaultControlMechanism', 'DefaultControlMechanismError'
@@ -126,7 +126,6 @@ class DefaultControlMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
 

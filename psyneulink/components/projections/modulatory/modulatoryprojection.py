@@ -83,11 +83,10 @@ Class Reference
 
 import inspect
 
-from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import MODULATORY_PROJECTION, NAME, INITIALIZING, EXECUTING, kwAssign
 from psyneulink.components.component import InitStatus
-from psyneulink.globals.log import LogLevel, LogEntry
-from psyneulink.scheduling.timescale import CurrentTime
+from psyneulink.components.projections.projection import Projection_Base
+from psyneulink.globals.keywords import EXECUTING, INITIALIZING, MODULATORY_PROJECTION, NAME, kwAssign
+from psyneulink.globals.log import LogEntry, LogLevel
 
 
 __all__ = [
@@ -145,11 +144,11 @@ class ModulatoryProjection_Base(Projection_Base):
         parameters in arguments of the constructor.
 
     name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
-        specifies the name of the ModulatoryProjection; see ModulatoryProjection `name <ModulatoryProjection.name>` 
+        specifies the name of the ModulatoryProjection; see ModulatoryProjection `name <ModulatoryProjection.name>`
         for details.
 
     prefs : PreferenceSet or specification dict : default Projection.classPreferences
-        specifies the `PreferenceSet` for the ModulatoryProjection; see `prefs <ModulatoryProjection.prefs>` for 
+        specifies the `PreferenceSet` for the ModulatoryProjection; see `prefs <ModulatoryProjection.prefs>` for
         details.
 
     context : str : default None

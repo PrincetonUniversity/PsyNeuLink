@@ -88,7 +88,7 @@ from psyneulink.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.timescale import TimeScale
 
 __all__ = [
     'AutoAssociativeLearningMechanism', 'AutoAssociativeLearningMechanismError', 'DefaultTrainingMechanism',
@@ -346,7 +346,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     def _execute(self,
                 variable=None,
                 runtime_params=None,
-                clock=CentralClock,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute AutoAssociativeLearningMechanism. function and return learning_signal

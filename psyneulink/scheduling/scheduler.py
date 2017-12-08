@@ -304,7 +304,7 @@ import logging
 from toposort import toposort
 
 from psyneulink.scheduling.condition import AllHaveRun, Always, Condition, ConditionSet, Never
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.timescale import Clock, TimeScale
 
 __all__ = [
     'Scheduler', 'SchedulerError',
@@ -371,6 +371,10 @@ class Scheduler(object):
         a structure counting the number of occurrences of a certain `TimeScale` within the scope of another `TimeScale`.
         For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`\\ es that have occurred in the
         current `RUN` that the Scheduler is scheduling at the time it is accessed
+
+    clock : `Clock`
+        a `Clock` object that stores the current time in this Scheduler
+
     """
     def __init__(
         self,
@@ -416,6 +420,7 @@ class Scheduler(object):
                                  'or a graph dependency dict (kwarg graph)')
 
         self._init_counts()
+        self.clock = Clock()
 
     # the consideration queue is the ordered list of sets of nodes in the graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
@@ -439,8 +444,6 @@ class Scheduler(object):
         self.consideration_queue = list(toposort(dependencies))
 
     def _init_counts(self):
-        # self.times[p][q] stores the number of TimeScale q ticks that have happened in the current TimeScale p
-        self.times = {ts: {ts: 0 for ts in TimeScale} for ts in TimeScale}
         # stores total the number of occurrences of a node through the time scale
         # i.e. the number of times node has ran/been queued to run in a trial
         self.counts_total = {ts: None for ts in TimeScale}
@@ -462,18 +465,6 @@ class Scheduler(object):
                 for c in self.counts_total[ts]:
                     logger.debug('resetting counts_total[{0}][{1}] to 0'.format(ts, c))
                     self.counts_total[ts][c] = 0
-
-    def _increment_time(self, time_scale):
-        for ts in TimeScale:
-            self.times[ts][time_scale] += 1
-
-    def _reset_time(self, time_scale):
-        for ts_scope in TimeScale:
-            # reset all the times for the time scale scope up to time_scale
-            # this works because the enum is set so that higher granularities of time have lower values
-            if ts_scope.value <= time_scale.value:
-                for ts_count in TimeScale:
-                    self.times[ts_scope][ts_count] = 0
 
     def update_termination_conditions(self, termination_conds):
         if termination_conds is not None:
@@ -546,11 +537,9 @@ class Scheduler(object):
 
         self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
         self._reset_counts_total(TimeScale.TRIAL)
-        self._reset_time(TimeScale.TRIAL)
 
         while not self.termination_conds[TimeScale.TRIAL].is_satisfied() and not self.termination_conds[TimeScale.RUN].is_satisfied():
             self._reset_counts_total(TimeScale.PASS)
-            self._reset_time(TimeScale.PASS)
 
             execution_list_has_changed = False
             cur_index_consideration_queue = 0
@@ -568,7 +557,6 @@ class Scheduler(object):
                     iter(cur_consideration_set)
                 except TypeError as e:
                     raise SchedulerError('cur_consideration_set is not iterable, did you ensure that this Scheduler was instantiated with an actual toposort output for param toposort_ordering? err: {0}'.format(e))
-                logger.debug('trial, num passes in trial {0}, consideration_queue {1}'.format(self.times[TimeScale.TRIAL][TimeScale.PASS], ' '.join([str(x) for x in cur_consideration_set])))
 
                 # do-while, on cur_consideration_set_has_changed
                 # we check whether each node in the current consideration set is allowed to run,
@@ -612,7 +600,7 @@ class Scheduler(object):
                     self.execution_list.append(cur_time_step_exec)
                     yield self.execution_list[-1]
 
-                    self._increment_time(TimeScale.TIME_STEP)
+                    self.clock._increment_time(TimeScale.TIME_STEP)
 
                 cur_index_consideration_queue += 1
 
@@ -621,10 +609,10 @@ class Scheduler(object):
                 self.execution_list.append(set())
                 yield self.execution_list[-1]
 
-                self._increment_time(TimeScale.TIME_STEP)
+                self.clock._increment_time(TimeScale.TIME_STEP)
 
-            self._increment_time(TimeScale.PASS)
+            self.clock._increment_time(TimeScale.PASS)
 
-        self._increment_time(TimeScale.TRIAL)
+        self.clock._increment_time(TimeScale.TRIAL)
 
         return self.execution_list
