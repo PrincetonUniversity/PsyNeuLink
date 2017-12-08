@@ -1021,10 +1021,13 @@ class Log:
                 if entry in self.owner.prefs.logPref:
                     del(self.owner.prefs.logPref, entry)
 
-    def clear_entries(self, entries=None, confirm=True):
-        """Reset one or more entries by removing all data, but leaving entries in Log dict
+    def clear_entries(self, entries=None, delete_entry=True, confirm=True):
+        """Clear one or more entries by removing by either deleting the entry or just removing its data.
 
-        If verify is True, user will be asked to confirm the reset;  otherwise it will simply be done
+        Arguments
+        ---------
+
+        If confirm is True, user will be asked to confirm the reset;  otherwise it will simply be done
         Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
         Notes:
         * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
@@ -1065,8 +1068,13 @@ class Log:
 
             # Reset entries
             for entry in entries:
-                # self.logged_entries[entry]=[]
-                del self.logged_entries[entry][0:]
+                self.logged_entries[entry]=[]
+                if delete_entry:
+                # Delete the entire entry in the log to which it belongs
+                    del self.loggable_components[entry].log.entries[entry]
+                else:
+                    # Delete the date for the entry but leave the entry itself in the log to which it belongs
+                    del self.logged_entries[entry][0:]
                 assert True
 
     def suspend_entries(self, entries):
