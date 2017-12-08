@@ -958,8 +958,8 @@ class Log:
     @property
     def logged_entries(self):
         entries = {}
-        for i in self.loggable_components:
-            entries.update(i.log.entries)
+        for e in self.loggable_components:
+            entries.update(e.log.entries)
         return entries
 
     # ******************************************************************************************************
@@ -1021,7 +1021,7 @@ class Log:
                 if entry in self.owner.prefs.logPref:
                     del(self.owner.prefs.logPref, entry)
 
-    def reset_entries(self, entries, confirm=True):
+    def clear_entries(self, entries=None, confirm=True):
         """Reset one or more entries by removing all data, but leaving entries in Log dict
 
         If verify is True, user will be asked to confirm the reset;  otherwise it will simply be done
@@ -1036,8 +1036,8 @@ class Log:
         """
 
         # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
-        if entries is Log.ALL_LOG_ENTRIES:
-            entries = self.entries.keys()
+        if entries in {None, Log.ALL_LOG_ENTRIES}:
+            entries = self.logged_items.keys()
 
         # If entries is a single entry, put in list for processing below
         if isinstance(entries, str):
@@ -1046,10 +1046,11 @@ class Log:
         # Validate each entry and delete bad ones from entries
         for entry in entries:
             try:
-                self.entries[entry]
+                self.logged_items[entry]
             except KeyError:
-                warnings.warn("Warning: {0} is not an entry in Log of {1}".
-                              format(entry,self.owner.name))
+                if self.owner.verbosePref:
+                    warnings.warn("Warning: {0} is not an entry in Log of {1}".
+                                  format(entry,self.owner.name))
                 del(entries, entry)
 
         # If any entries remain
@@ -1064,7 +1065,9 @@ class Log:
 
             # Reset entries
             for entry in entries:
-                self.entries[entry]=[]
+                self.logged_entries[entry]=[]
+                # del self.logged_entries[entry]
+                assert True
 
     def suspend_entries(self, entries):
         """Suspend recording the values of attributes corresponding to entries even if logging is on
