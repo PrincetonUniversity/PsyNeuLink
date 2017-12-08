@@ -216,7 +216,8 @@ from psyneulink.globals.keywords import \
     USER_DEFINED_FUNCTION, \
     USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, \
     WEIGHTS, NORMALIZING_FUNCTION_TYPE, \
-    kwComponentCategory, kwPreferenceSetName, TDLEARNING_FUNCTION
+    kwComponentCategory, kwPreferenceSetName, TDLEARNING_FUNCTION, \
+    PREDICTION_ERROR_DELTA_FUNCTION
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -242,11 +243,11 @@ __all__ = [
     'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM',
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
-    'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY', 'Reduce',
-    'Reinforcement', 'ReturnVal', 'SimpleIntegrator', 'SoftMax', 'Stability',
-    'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'TDLearning', 'THRESHOLD',
-    'TransferFunction', 'THRESHOLD_VARIABILITY', 'UniformDist',
-    'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
+    'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
+    'PROPENSITY', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
+    'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
+    'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
+    'UniformDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
     'WT_MATRIX_SENDERS_DIM'
 ]
 
@@ -255,6 +256,7 @@ EPSILON = np.finfo(float).eps
 FunctionRegistry = {}
 
 function_keywords = {FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION}
+
 
 class FunctionError(Exception):
     def __init__(self, error_value):
@@ -2207,6 +2209,8 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         variable = [[1], [1]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    multiplicative_param = None
+    additive_param = None
 
     @tc.typecheck
     def __init__(self,
@@ -2216,7 +2220,8 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                  owner=None,
                  prefs: is_pref_set = None,
                  context=componentName + INITIALIZING):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # Assign args to params and functionParams dicts
+        # (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gamma=gamma,
                                                   params=params)
 
@@ -2318,7 +2323,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
         params : Dict[param keyword, param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that
-            specifices the parameters for the function. Values specified for
+            specifies the parameters for the function. Values specified for
             parameters in the dictionary override any assigned to those
             parameters in arguments of the constructor.
 
@@ -2326,7 +2331,8 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         Returns
         -------
         delta values : 1d np.array
-            the result of :math: \\delta{t} = r(t) + \\gamma sample(t) - sample(t - 1)
+            the result of
+                :math: `\\delta(t) = r(t) + \\gamma sample(t) - sample(t - 1)`
 
         """
         variable = self._update_variable(self._check_args(variable=variable,
@@ -2337,9 +2343,11 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         reward = variable[1]
         delta = np.zeros_like(sample)
 
-        for t in range(len(sample) - 1):
-            delta[t] = reward[t] + gamma * sample[t + 1] - sample[t]
-
+        # for t in range(len(sample) - 1):
+        #     delta[t] = reward[t] + gamma * sample[t + 1] - sample[t]
+            # delta[t] = reward[t] + gamma * sample[t] - sample[t - 1]
+        for t in range(1, len(sample) - 1):
+            delta[t] = reward[t] + gamma * sample[t] - sample[t - 1]
         return delta
 
 
@@ -2444,7 +2452,7 @@ class SoftMax(NormalizingFunction):
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
         determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
-        in the array returned by `function <SoftMax.funtion>`:
+        in the array returned by `function <SoftMax.function>`:
             * **ALL**: array of all SoftMax-transformed values (the default);
             * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
             * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;

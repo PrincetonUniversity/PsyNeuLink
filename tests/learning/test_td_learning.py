@@ -3,9 +3,13 @@ from mpl_toolkits import mplot3d
 import numpy as np
 import seaborn
 
+from library.mechanisms.processing.objective.predictionerrormechanism import \
+    PredictionErrorMechanism
 from psyneulink import LearningProjection, Process, SAMPLE, System, \
-    TransferMechanism, PROB, MappingProjection, HOLLOW_MATRIX, IDENTITY_MATRIX
-from psyneulink.components.functions.function import TDLearning, SoftMax
+    TransferMechanism, PROB, MappingProjection, HOLLOW_MATRIX, IDENTITY_MATRIX, \
+    MAX_VAL, MAX_INDICATOR
+from psyneulink.components.functions.function import TDLearning, SoftMax, \
+    Linear, LinearMatrix
 from psyneulink.scheduling.timescale import CentralClock
 
 
@@ -13,15 +17,16 @@ def test_td_learning(capsys):
     with capsys.disabled():
         sample = TransferMechanism(
                 default_variable=np.zeros(60),
-                name=SAMPLE,
+                name=SAMPLE
         )
 
         action_selection = TransferMechanism(
                 default_variable=np.zeros(60),
-                name='Action Selection',
+                function=Linear(slope=1.0, intercept=1.0),
+                name='Action Selection'
         )
 
-        stimulus_onset = 42
+        stimulus_onset = 41
         reward_delivery = 54
 
         samples = np.zeros(60)
@@ -41,7 +46,7 @@ def test_td_learning(capsys):
 
         projection = MappingProjection(sender=sample,
                                        receiver=action_selection,
-                                       matrix=np.zeros((60, 60)))
+                                       matrix=np.full((60, 60), 0.0))
 
         learning_projection = LearningProjection(learning_function=TDLearning(learning_rate=0.3))
 
@@ -59,7 +64,6 @@ def test_td_learning(capsys):
 
         def show_weights():
             nonlocal trial
-            # if timestep < 120:
             delta_vals[trial] = s.mechanisms[2].value
             trial += 1
 
@@ -89,6 +93,7 @@ def test_td_learning(capsys):
                 call_after_trial=show_weights
         )
 
+        seaborn.set_style('whitegrid')
         plt.plot(delta_vals[0], "-o", label="Trial 1")
         plt.plot(delta_vals[29], "-8", label="Trial 30")
         plt.plot(delta_vals[49], "-s", label="Trial 50")
@@ -100,6 +105,7 @@ def test_td_learning(capsys):
         plt.xticks()
         plt.show()
 
+        seaborn.set_style('white')
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         x_vals, y_vals = np.meshgrid(np.arange(100), np.arange(40, 60, step=1))
@@ -159,16 +165,6 @@ def test_td_learning_response_extinction():
     def print_header():
         print("\n\n*** EPISODE: {}".format(CentralClock.trial))
 
-    def show_weights():
-        nonlocal trial
-        delta_vals[trial] = s.mechanisms[2].value
-        trial += 1
-
-        print('Reward prediction weights: \n',
-              np.diag(action_selection.input_state.path_afferents[0].matrix))
-        print("\nAction selection value: {}".format(
-                action_selection.value[0][0]))
-
     input_list = {
         sample: samples
     }
@@ -192,9 +188,11 @@ def test_td_learning_response_extinction():
             inputs=input_list,
             targets=target_list,
             learning=True,
+            call_before_trial=print_header,
             call_after_trial=store_delta_vals
     )
 
+    seaborn.set_style('white')
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     x_vals, y_vals = np.meshgrid(np.arange(150), np.arange(40, 60, step=1))

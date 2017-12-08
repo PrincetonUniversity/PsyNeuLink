@@ -137,7 +137,8 @@ from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism
     import PredictionErrorMechanism
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import BackPropagation, Hebbian, \
-    Linear, Reinforcement, TDLearning, LinearCombination, LinearMatrix
+    Linear, Reinforcement, TDLearning, LinearCombination, LinearMatrix, \
+    PredictionErrorDeltaFunction
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
@@ -535,7 +536,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                 PROJECTIONS: [lc.activation_mech_output]},
                         target={NAME: TARGET,
                                 VARIABLE: target_input},
-                        gamma=1.0,
+                        function=PredictionErrorDeltaFunction(gamma=1.0),
                         name="{} {}".format(lc.activation_mech.name,
                                             PREDICTION_ERROR_MECHANISM),
                         context=context)
