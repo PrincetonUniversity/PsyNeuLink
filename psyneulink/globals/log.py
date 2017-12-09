@@ -310,23 +310,23 @@ class LogLevel(IntEnum):
     """Specifies levels of logging, as descrdibed below."""
     OFF = 0
     """No recording."""
-    INITIALIZATION = 1<<1
+    INITIALIZATION = 1<<1           # 2
     """Record during initial assignment."""
-    VALIDATION = 1<<2
+    VALIDATION = 1<<2               # 4
     """Record value during validation."""
-    EXECUTION = 1<<3
+    EXECUTION = 1<<3                # 8
     """Record all value assignments during any execution of the Component."""
-    PROCESSING = 1<<4
+    PROCESSING = 1<<4               # 16
     """Record all value assignments during processing phase of Composition execution."""
     # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-    # LEARNING = 1<<5
-    LEARNING = (1<<5) + EXECUTION
+    # LEARNING = 1<<5               # 32
+    LEARNING = (1<<5) + EXECUTION   # 40
     """Record all value assignments during learning phase of Composition execution."""
-    CONTROL = 1<<6
+    CONTROL = 1<<6                  # 64
     """Record all value assignment during control phase of Composition execution."""
-    VALUE_ASSIGNMENT = 1<<7
+    VALUE_ASSIGNMENT = 1<<7         # 128
     """Record final value assignments during Composition execution."""
-    FINAL = 1<<8
+    FINAL = 1<<8                    # 256
     """Synonym of VALUE_ASSIGNMENT."""
     ALL_ASSIGNMENTS = \
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL | VALUE_ASSIGNMENT | FINAL
@@ -335,7 +335,7 @@ class LogLevel(IntEnum):
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
 ALL_ENTRIES = 'all entries'
-
+TIME_NOT_SPECIFIED = 'Time Not Specified'
 
 def _get_log_context(context):
 
@@ -349,7 +349,6 @@ def _get_log_context(context):
     if LEARNING in context:
         context_flag |= LogLevel.LEARNING
     return context_flag
-
 
 kpCentralClock = 'CentralClock'
 SystemLogEntries = [kpCentralClock]
@@ -706,15 +705,58 @@ class Log:
         if not isinstance(context, str):
             raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
 
-        # Get logPref, and context flags (from context)
-        log_pref = self.owner.prefs.logPref if self.owner.prefs else None
         context_flags = _get_log_context(context)
+
+        log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 
         # Log value if logging condition is satisfied
         if log_pref and log_pref == context_flags:
         # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
         # if log_pref and log_pref | context_flags:
-            self.entries[self.owner.name] = LogEntry('Time Place Marker', context, value)
+
+            self.entries[self.owner.name] = LogEntry(self._get_time(context, context_flags), context, value)
+
+    def _get_time(self, context, context_flags):
+
+        # FIX: what if it doesn't belong to a System?
+        # FIX: what about time for INIT and/or VALIDATE?
+        # FIX: what if it belongs to a System but is being run in a Process?
+        # FIX: what if it belongs to more than one System... how does it know which one is currently being run?
+
+        from psyneulink.components.mechanisms.mechanism import Mechanism
+        from psyneulink.components.states.state import State
+        from psyneulink.components.projections.projection import Projection
+
+
+        if isinstance(self.owner, Mechanism):
+            ref_mech = self.owner
+        elif isinstance(self.owner, State):
+            if isinstance(self.owner.owner, Mechanism):
+                ref_mech = self.owner.owner
+            elif isinstance(self.owner.owner, Projection):
+                ref_mech = self.owner.owner.receiver.owner
+            else:
+                raise LogError("Logging currently does not support {} (only {}s, {}s, and {}s).".
+                               format(self.owner.__class__.__name__,
+                                      Mechanism.__name__, State.__name__, Projection.__name__))
+        elif isinstance(self.owner, Projection):
+            ref_mech = self.owner.receiver.owner
+        else:
+            raise LogError("Logging currently does not support {} (only {}s, {}s, and {}s).".
+                           format(self.owner.__class__.__name__,
+                                  Mechanism.__name__, State.__name__, Projection.__name__))
+
+        systems = list(ref_mech.systems.keys())
+        # for system in systems:
+        system = systems[0]
+        if context_flags == LogLevel.EXECUTION:
+            time = system.scheduler_processing.clock.simple_time
+        elif context_flags == LogLevel.LEARNING:
+            time = system.scheduler_learning.clock.simple_time
+        else:
+            time = TIME_NOT_SPECIFIED
+
+        return time
 
     def print_entries(self, entries=None, csv=False, synch_time=False, *args):
         """
