@@ -1097,7 +1097,6 @@ class Log:
         if all(all(i for i in t) for t in time_values):
             for time_scale in LogTimeScaleIndices:
                 time_values.sort(key=lambda tup: tup[time_scale])
-        # FIX: ADD HANDLING OF None IN TIME POINTS HERE
 
         npa = []
 
@@ -1109,9 +1108,20 @@ class Log:
                     time_header = [TIME_SCALE_NAMES[i].capitalize()]
                     row = [time_header] + row
                 npa.append(row)
+        # If any time values are empty, revert to indexing the entries;
+        #    this requires that all entries have the same length
         else:
-            # FIX: ADD HANDLING OF None IN TIME POINTS HERE: GET FROM OLD VERSION
-            pass
+            max_len = max([len(self.logged_entries[e]) for e in entries])
+
+            # If there are no  only supports entries of the same length
+            if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
+                raise LogError("nparray output currently only supported for Log entries of equal length")
+
+            npa = np.arange(max_len).reshape(max_len,1).tolist()
+            if header:
+                npa = [[["Index"]] + npa]
+            else:
+                npa = [npa]
 
         # For each entry, iterate through its LogEntry tuples:
         #    for each LogEntry tuple, check whether its time matches that of the next column:
