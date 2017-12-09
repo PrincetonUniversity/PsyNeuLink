@@ -748,6 +748,17 @@ class Log:
 
         systems = list(ref_mech.systems.keys())
         # for system in systems:
+        if len(systems) != 1:
+            error_msg = "Logging is currently supported only when running a System "
+            if len(systems) >1:
+                error_msg = error_msg + " and the Component being logged (or its owner; in this case, a {} [{}]) " \
+                                        "belongs to a single System".\
+                                         format(self.owner.__class__.__name__, self.owner.name)
+            else:
+                error_msg = error_msg + " (logging attempted for: {} [{}]) ".\
+                                         format(self.owner.__class__.__name__, self.owner.name)
+            raise LogError(error_msg)
+
         system = systems[0]
         if context_flags == LogLevel.EXECUTION:
             time = system.scheduler_processing.clock.simple_time
