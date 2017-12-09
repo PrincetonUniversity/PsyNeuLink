@@ -1088,13 +1088,19 @@ class Log:
 
         header = 1 if header is True else 0
 
-        # Get and sort time values for all entries
+        # Get time values for all entries and sort them
         time_values = []
         for entry in entries:
-            time_values.extend([item.time for item in self.logged_entries[entry]])
-        time_values.sort(key=lambda tup: tup[0])
-        time_values.sort(key=lambda tup: tup[1])
-        time_values.sort(key=lambda tup: tup[2])
+            time_values.extend([item.time
+                                for item in self.logged_entries[entry]
+                                if all(i is not None for i in item.time)])
+        if all(all(i for i in t) for t in time_values):
+            for time_scale in LogTimeScaleIndices:
+                time_values.sort(key=lambda tup: tup[time_scale])
+        else:
+            pass
+            # FIX: ADD HANDLING OF None IN TIME POINTS HERE
+
         num_time_points = len(time_values)
 
         # Create time rows (one for each time scale)
@@ -1105,6 +1111,7 @@ class Log:
                 time_header = [TIME_SCALE_NAMES[i].capitalize()]
                 row = [time_header] + row
             npa.append(row)
+            # FIX: ADD HANDLING OF None IN TIME POINTS HERE
 
         # For each entry, iterate through its LogEntry tuples:
         #    for each LogEntry tuple, check whether its time matches that of the next column:
