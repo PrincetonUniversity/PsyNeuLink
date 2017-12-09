@@ -1097,21 +1097,21 @@ class Log:
         if all(all(i for i in t) for t in time_values):
             for time_scale in LogTimeScaleIndices:
                 time_values.sort(key=lambda tup: tup[time_scale])
-        else:
-            pass
-            # FIX: ADD HANDLING OF None IN TIME POINTS HERE
+        # FIX: ADD HANDLING OF None IN TIME POINTS HERE
 
-        num_time_points = len(time_values)
+        npa = []
 
         # Create time rows (one for each time scale)
-        npa = []
-        for i in range(NUM_TIME_SCALES):
-            row = [[t[i]] for t in time_values]
-            if header:
-                time_header = [TIME_SCALE_NAMES[i].capitalize()]
-                row = [time_header] + row
-            npa.append(row)
-            # FIX: ADD HANDLING OF None IN TIME POINTS HERE
+        if time_values:
+            for i in range(NUM_TIME_SCALES):
+                row = [[t[i]] for t in time_values]
+                if header:
+                    time_header = [TIME_SCALE_NAMES[i].capitalize()]
+                    row = [time_header] + row
+                npa.append(row)
+        else:
+            # FIX: ADD HANDLING OF None IN TIME POINTS HERE: GET FROM OLD VERSION
+            pass
 
         # For each entry, iterate through its LogEntry tuples:
         #    for each LogEntry tuple, check whether its time matches that of the next column:
@@ -1121,8 +1121,9 @@ class Log:
             row = []
             time_col = iter(time_values)
             for datum in self.logged_entries[entry]:
-                while datum.time != next(time_col,None):
-                    row.append(None)
+                if time_values:
+                    while datum.time != next(time_col,None):
+                        row.append(None)
                 row.append(datum.value)
             if header:
                 entry_header = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
