@@ -1073,12 +1073,6 @@ class Log:
                 raise LogError("{} is not currently being logged by {} (try using log_items)".
                                format(repr(entry), self.owner.name))
 
-        max_len = max([len(self.logged_entries[e]) for e in entries])
-
-        # Currently only supports entries of the same length
-        if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
-            raise LogError("CSV output currently only supported for Log entries of equal length")
-
         if owner_name is True:
             owner_name_str = self.owner.name
             lb = "["
@@ -1115,7 +1109,7 @@ class Log:
 
             # If there are no  only supports entries of the same length
             if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
-                raise LogError("nparray output currently only supported for Log entries of equal length")
+                raise LogError("nparray output requires that all entries have time values or are of equal length")
 
             npa = np.arange(max_len).reshape(max_len,1).tolist()
             if header:
@@ -1134,7 +1128,7 @@ class Log:
                 if time_values:
                     while datum.time != next(time_col,None):
                         row.append(None)
-                row.append(datum.value)
+                row.append(datum.value.tolist())
             if header:
                 entry_header = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
                 row = [entry_header] + row
