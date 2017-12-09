@@ -6,7 +6,7 @@ from psyneulink.components.functions.function import AccumulatorIntegrator, Cons
 from psyneulink.components.functions.function import FunctionError
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 
 # ======================================= FUNCTION TESTS ============================================

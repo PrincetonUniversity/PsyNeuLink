@@ -383,28 +383,20 @@ COMMENT
 
 """
 import inspect
-import typecheck as tc
 import warnings
+
+import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
-from psyneulink.components.states.state import StateError
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
-from psyneulink.globals.keywords import \
-    NAME, PARAMS, CONTEXT, INITIALIZING, EXECUTING, PATHWAY, kwAssign, \
-    MECHANISM, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, \
-    STANDARD_ARGS, STATE, STATES, WEIGHT, EXPONENT, \
-    PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
-    MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
-    LEARNING, LEARNING_SIGNAL, LEARNING_PROJECTION, \
-    CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, \
-    GATING, GATING_SIGNAL, GATING_PROJECTION, \
-    kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from psyneulink.components.states.state import StateError
+from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
+from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
 from psyneulink.globals.utilities import ContentAddressableList, iscompatible, is_numeric, is_matrix, type_match
 from psyneulink.globals.log import LogLevel, LogEntry, _get_log_context
-from psyneulink.scheduling.timescale import CurrentTime
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -795,8 +787,6 @@ class Projection_Base(Projection):
         If self.value / self.instance_defaults.variable is None, set to sender.value
         """
         from psyneulink.components.states.outputstate import OutputState
-        from psyneulink.components.states.parameterstate import ParameterState
-
 
         # ASSIGN sender specification
 
@@ -1270,7 +1260,6 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.components.states.outputstate import OutputState
     from psyneulink.components.states.parameterstate import ParameterState
     from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-    from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, _is_control_spec
     from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 
 
