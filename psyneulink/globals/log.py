@@ -753,14 +753,16 @@ class Log:
             offender = "\'{}\'".format(self.owner.name)
             if ref_mech is not self.owner:
                 offender += " [{} of {}]".format(self.owner.__class__.__name__, ref_mech.name)
-            if num_systems >1:
-                error_msg = "Logging is not currently supported {} as it belongs to more than one System "
+            if num_systems > 1:
+                error_msg = "Logging is not supported for {} as it belongs to more than one System " \
+                            "(logging is not currently supported only for Components that belong to a single System"
             elif num_systems == 0:
                 error_msg = "Attempt to log {} which is not in a System " \
                             "(logging is currently supported only when running Components within a System"
             raise LogError(error_msg.format(offender))
 
         system = systems[0]
+
         if context_flags == LogLevel.EXECUTION:
             time = system.scheduler_processing.clock.simple_time
         elif context_flags == LogLevel.LEARNING:
