@@ -748,16 +748,17 @@ class Log:
 
         systems = list(ref_mech.systems.keys())
         # for system in systems:
-        if len(systems) != 1:
-            error_msg = "Logging is currently supported only when running a System "
-            if len(systems) >1:
-                error_msg = error_msg + " and the Component being logged (or its owner; in this case, a {} [{}]) " \
-                                        "belongs to a single System".\
-                                         format(self.owner.__class__.__name__, self.owner.name)
-            else:
-                error_msg = error_msg + " (logging attempted for: {} [{}]) ".\
-                                         format(self.owner.__class__.__name__, self.owner.name)
-            raise LogError(error_msg)
+        num_systems = len(systems)
+        if num_systems != 1:
+            offender = "\'{}\'".format(self.owner.name)
+            if ref_mech is not self.owner:
+                offender += " [{} of {}]".format(self.owner.__class__.__name__, ref_mech.name)
+            if num_systems >1:
+                error_msg = "Logging is not currently supported {} as it belongs to more than one System "
+            elif num_systems == 0:
+                error_msg = "Attempt to log {} which is not in a System " \
+                            "(logging is currently supported only when running Components within a System"
+            raise LogError(error_msg.format(offender))
 
         system = systems[0]
         if context_flags == LogLevel.EXECUTION:
