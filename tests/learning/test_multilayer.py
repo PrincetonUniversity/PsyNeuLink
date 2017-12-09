@@ -189,7 +189,9 @@ def test_multilayer():
     log_val = Middle_Weights.log.nparray(entries='matrix', header=False)
     expected_log_val = np.array(
             [
+                [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
                 [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]],
+                [[2], [2], [2], [2], [2], [2], [2], [2], [2], [2]],
                 [ [[ 0.05,  0.1 ,  0.15,  0.2 ],
                    [ 0.25,  0.3 ,  0.35,  0.4 ],
                    [ 0.45,  0.5 ,  0.55,  0.6 ],
@@ -252,6 +254,8 @@ def test_multilayer():
                                            atol=1e-08,
                                            err_msg='Failed on test of logged values')
 
+    Middle_Weights.log.print_entries()
+
     # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
     Middle_Weights.log.clear_entries(entries=None, confirm=False)
     Middle_Weights.log_items(('matrix', LEARNING))
@@ -263,7 +267,9 @@ def test_multilayer():
     log_val = Middle_Weights.log.nparray(entries='matrix', header=False)
     expected_log_val = np.array(
                 [
-                    [[0], [1], [2], [3], [4]],
+                    [[0], [0], [0], [0], [0]],
+                    [[21], [23], [25], [27], [29]],
+                    [[3], [3], [3], [3], [3]],
                     [  [[0.09925812411381937, 0.1079522130303428, 0.12252820028789306, 0.14345816973727732],
                         [0.30131473371328343, 0.30827285172236585, 0.3213609999139731, 0.3410707131678078],
                         [0.5032924245149345, 0.5085833053183328, 0.5202423523987703, 0.5387798509126243],

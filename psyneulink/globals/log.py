@@ -293,13 +293,16 @@ import warnings
 import inspect
 import typecheck as tc
 from collections import namedtuple
+# from enum import IntEnum, unique, auto
 from enum import IntEnum, unique
 
 import numpy as np
 
-from psyneulink.globals.keywords import kwContext, kwTime, kwValue
-from psyneulink.globals.utilities import ContentAddressableList
-from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, CONTROL, VALUE
+from psyneulink.scheduling.time import TimeScale
+from psyneulink.globals.utilities import ContentAddressableList, AutoNumber
+from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, CONTROL, VALUE, \
+    kwContext, kwTime, kwValue
+
 
 __all__ = [
     'ALL_ENTRIES', 'EntriesDict', 'kpCentralClock', 'Log', 'LogEntry', 'LogError', 'LogLevel', 'SystemLogEntries',
@@ -351,11 +354,25 @@ def _get_log_context(context):
     return context_flag
 
 
+class LogTimeScaleIndices(AutoNumber):
+    RUN = ()
+    TRIAL = ()
+    TIME_STEP = ()
+NUM_TIME_SCALES = len(LogTimeScaleIndices.__members__)
+TIME_SCALE_NAMES = list(LogTimeScaleIndices.__members__)
+
+
 def _time_string(time):
 
-    if any(t is not None for t in time ):
-        run, trial, time_step = time
-        time_str = "{}:{}:{}".format(run, trial, time_step)
+    # if any(t is not None for t in time ):
+    #     run, trial, time_step = time
+    #     time_str = "{}:{}:{}".format(run, trial, time_step)
+    # else:
+    #     time_str = "None"
+    # return time_str
+
+    if all(t is not None for t in time ):
+        time_str = ":".join([str(i) for i in time])
     else:
         time_str = "None"
     return time_str
@@ -784,12 +801,15 @@ class Log:
 
         return time or no_time
 
-    def print_entries(self, entries=None, csv=False, synch_time=False, *args):
+    def print_entries(self,
+                      entries=None,
+                      csv=False,
+                      # synch_time=False,
+                      *args):
         """
         print_entries(          \
               entries=None,     \
               csv=False,        \
-              synch_time=False  \
             )
 
         Print values of entries
@@ -982,9 +1002,11 @@ class Log:
 
     @tc.typecheck
     def nparray(self,
-                    entries=None,
-                    header:bool=True,
-                    owner_name:bool=False):
+                entries=None,
+                # time:TimeScale=TimeScale.TIME_STEP,
+                header:bool=True,
+                owner_name:bool=False
+                ):
         """
         nparray(                 \
             entries=None,        \
@@ -1011,6 +1033,13 @@ class Log:
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
             If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
+
+        COMMENT:
+        time : TimeScale or ALL : default ALL
+            specifies the "granularity" of how the time of an entry is reported.  *ALL* (same as `TIME_STEP
+            <TimeScale.TIME_STEP>) reports every entry in the Log in a separate column (axis 1) of the np.array
+            returned.
+        COMMENT
 
         header : bool : default True
             specifies whether or not to include a header in each row with the name of the Component for that entry.
@@ -1059,20 +1088,41 @@ class Log:
 
         header = 1 if header is True else 0
 
-        npa = np.arange(max_len).reshape(max_len,1).tolist()
-        if header:
-            npa = [[["Index"]] + npa]
-        else:
-            npa = [npa]
+        # Get and sort time values for all entries
+        time_values = []
+        for entry in entries:
+            time_values.extend([item.time for item in self.logged_entries[entry]])
+        time_values.sort(key=lambda tup: tup[0])
+        time_values.sort(key=lambda tup: tup[1])
+        time_values.sort(key=lambda tup: tup[2])
+        num_time_points = len(time_values)
 
-        for i, entry in enumerate(entries):
-            row = [e.value.tolist() for e in self.logged_entries[entry]]
+        # Create time rows (one for each time scale)
+        npa = []
+        for i in range(NUM_TIME_SCALES):
+            row = [[t[i]] for t in time_values]
             if header:
-                entry = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
-                row = [entry] + row
+                time_header = [TIME_SCALE_NAMES[i].capitalize()]
+                row = [time_header] + row
             npa.append(row)
-        npa = np.array(npa, dtype=object)
 
+        # For each entry, iterate through its LogEntry tuples:
+        #    for each LogEntry tuple, check whether its time matches that of the next column:
+        #        if so, enter it in the entry's list
+        #        if not, enter `None` and check for a match in the next time column
+        for entry in entries:
+            row = []
+            time_col = iter(time_values)
+            for datum in self.logged_entries[entry]:
+                while datum.time != next(time_col,None):
+                    row.append(None)
+                row.append(datum.value)
+            if header:
+                entry_header = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
+                row = [entry_header] + row
+            npa.append(row)
+
+        npa = np.array(npa, dtype=object)
         return(npa)
 
     @property
@@ -1081,65 +1131,6 @@ class Log:
         for e in self.loggable_components:
             entries.update(e.log.entries)
         return entries
-
-    # ******************************************************************************************************
-    # ******************************************************************************************************
-    # DEPRECATED OR IN NEED OF REFACTORING:
-
-    def delete_entry(self, entries, confirm=True):
-        """Delete entry for attribute from self.entries
-
-        If verify is True, user will be asked to confirm deletion;  otherwise it will simply be done
-        Note: deleting the entry will delete all the data recorded within it
-        Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
-        Notes:
-        * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
-        * deleting entries removes them from Log dict, owner.prefs.logPref, and deletes ALL data recorded in them
-
-        :param entries: (str, list, or Log.ALL_LOG_ENTRIES)
-        :param confirm: (bool)
-        :return:
-        """
-
-        msg = ""
-
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
-        if entries is Log.ALL_LOG_ENTRIES:
-            entries = self.logged_entries.keys()
-            msg = Log.ALL_LOG_ENTRIES
-
-        # If entries is a single entry, put in list for processing below
-        elif isinstance(entries, str):
-            entries = [entries]
-
-        # Validate each entry and delete bad ones from entries
-        if not msg is Log.ALL_LOG_ENTRIES:
-            for entry in entries:
-                try:
-                    self.logged_entries[entry]
-                except KeyError:
-                    warnings.warn("Warning: {0} is not an entry in Log of {1}".
-                                  format(entry,self.owner.name))
-                    del(entries, entry)
-            if len(entries) > 1:
-                msg = ', '.join(str(entry) for entry in entries)
-
-        # If any entries remain
-        if entries:
-            if confirm:
-                delete = input("\n{0} will be deleted (along with any recorded date) from Log for {1}.  Proceed? (y/n)".
-                               format(msg, self.owner.name))
-                while delete != 'y' and delete != 'y':
-                    input("\nRemove entries from Log for {0}? (y/n)".format(self.owner.name))
-                if delete == 'n':
-                    warnings.warn("No entries deleted")
-                    return
-
-            # Reset entries
-            for entry in entries:
-                self.logged_entries[entry]=[]
-                if entry in self.owner.prefs.logPref:
-                    del(self.owner.prefs.logPref, entry)
 
     def clear_entries(self, entries=ALL_LOG_ENTRIES, delete_entry=True, confirm=False):
         """Clear one or more entries either by deleting the entry or just removing its data.
@@ -1208,5 +1199,5 @@ class Log:
                     del self.logged_entries[entry][0:]
                 assert True
 
-    def save_log(self):
-        print("Saved")
+    # def save_log(self):
+    #     print("Saved")
