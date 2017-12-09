@@ -2213,6 +2213,13 @@ class ScratchPadError(Exception):
 #region TEST Log @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 print ("TEST Log")
 
+
+T = pnl.TransferMechanism(
+        prefs=pnl.ComponentPreferenceSet(prefs={pnl.LOG_PREF:(pnl.LogLevel.INITIALIZATION)},
+                                         level=pnl.PreferenceLevel.INSTANCE)
+)
+assert True
+
 # T = pnl.TransferMechanism(size=3, name='My_T'
 #     # prefs={pnl.LOG_PREF:pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
 # )
@@ -2293,8 +2300,7 @@ print ("TEST Log")
 # print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=True, quotes=True)) # doctest: +SKIP
 #
 # print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)) # doctest: +SKIP
-
-# #-----------------------------------------------------------------------------------------------------------------
+# #----------------------------------------------------------------------------------------------------------------
 
 #endregion
 
