@@ -297,7 +297,6 @@ from enum import IntEnum, unique
 
 import numpy as np
 
-from psyneulink.scheduling.timescale import CurrentTime
 from psyneulink.globals.keywords import kwContext, kwTime, kwValue
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, CONTROL, VALUE
@@ -715,7 +714,7 @@ class Log:
         if log_pref and log_pref == context_flags:
         # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
         # if log_pref and log_pref | context_flags:
-            self.entries[self.owner.name] = LogEntry(CurrentTime(), context, value)
+            self.entries[self.owner.name] = LogEntry('Time Place Marker', context, value)
 
     def print_entries(self, entries=None, csv=False, synch_time=False, *args):
         """
