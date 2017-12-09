@@ -350,6 +350,17 @@ def _get_log_context(context):
         context_flag |= LogLevel.LEARNING
     return context_flag
 
+
+def _time_string(time):
+
+    if any(t is not None for t in time ):
+        run, trial, time_step = time
+        time_str = "{}:{}:{}".format(run, trial, time_step)
+    else:
+        time_str = "None"
+    return time_str
+
+
 kpCentralClock = 'CentralClock'
 SystemLogEntries = [kpCentralClock]
 
@@ -717,16 +728,18 @@ class Log:
             self.entries[self.owner.name] = LogEntry(self._get_time(context, context_flags), context, value)
 
     def _get_time(self, context, context_flags):
+        """Get time from Scheduler of System in which Component is being executed.
 
-        # FIX: what if it doesn't belong to a System?
-        # FIX: what about time for INIT and/or VALIDATE?
-        # FIX: what if it belongs to a System but is being run in a Process?
-        # FIX: what if it belongs to more than one System... how does it know which one is currently being run?
+        Returns tuple with (run, trial, time_step) if being executed during Processing or Learning
+        Otherwise, returns (None, None, None)
+
+        """
 
         from psyneulink.components.mechanisms.mechanism import Mechanism
         from psyneulink.components.states.state import State
         from psyneulink.components.projections.projection import Projection
 
+        no_time = (None, None, None)
 
         if isinstance(self.owner, Mechanism):
             ref_mech = self.owner
@@ -747,30 +760,29 @@ class Log:
                                   Mechanism.__name__, State.__name__, Projection.__name__))
 
         systems = list(ref_mech.systems.keys())
-        # for system in systems:
-        num_systems = len(systems)
-        if num_systems != 1:
-            offender = "\'{}\'".format(self.owner.name)
-            if ref_mech is not self.owner:
-                offender += " [{} of {}]".format(self.owner.__class__.__name__, ref_mech.name)
-            if num_systems > 1:
-                error_msg = "Logging is not supported for {} as it belongs to more than one System " \
-                            "(logging is not currently supported only for Components that belong to a single System"
-            elif num_systems == 0:
-                error_msg = "Attempt to log {} which is not in a System " \
-                            "(logging is currently supported only when running Components within a System"
-            raise LogError(error_msg.format(offender))
+        system = next((s for s in systems if s.name in context), None)
 
-        system = systems[0]
+        if system:
+            # FIX: Add INIT and VALIDATE?
+            if context_flags == LogLevel.EXECUTION:
+                time = system.scheduler_processing.clock.simple_time
+                time = (time.run, time.trial, time.time_step)
+            elif context_flags == LogLevel.LEARNING:
+                time = system.scheduler_learning.clock.simple_time
+                time = (time.run, time.trial, time.time_step)
+            else:
+                time = None
 
-        if context_flags == LogLevel.EXECUTION:
-            time = system.scheduler_processing.clock.simple_time
-        elif context_flags == LogLevel.LEARNING:
-            time = system.scheduler_learning.clock.simple_time
         else:
-            time = TIME_NOT_SPECIFIED
+            if self.owner.verbosePref:
+                offender = "\'{}\'".format(self.owner.name)
+                if ref_mech is not self.owner:
+                    offender += " [{} of {}]".format(self.owner.__class__.__name__, ref_mech.name)
+                warnings.warn("Attempt to log {} which is not in a System (logging is currently supported only "
+                              "when running Components within a System".format(offender))
+            time = None
 
-        return time
+        return time or no_time
 
     def print_entries(self, entries=None, csv=False, synch_time=False, *args):
         """
@@ -818,7 +830,7 @@ class Log:
         # MODIFIED 12/4/17 NEW: [USES entry]
         header = "Logged Item:".ljust(variable_width, kwSpacer)
         if not args or kwTime in args:
-            header = "Index".ljust(time_width, kwSpacer) + header
+            header = "Time".ljust(time_width, kwSpacer) + header
         if not args or kwContext in args:
             header = header + " " + kwContext.ljust(context_width, kwSpacer)
         if not args or kwValue in args:
@@ -860,7 +872,7 @@ class Log:
                     time, context, value = item
                     if isinstance(value, np.ndarray):
                         value = value[0]
-                    time_str = str(i)
+                    time_str = _time_string(time)
                     data_str = repr(attrib_name).ljust(variable_width, kwSpacer)
                     if not args or kwTime in args:
                         data_str = time_str.ljust(time_width) + data_str
@@ -1044,7 +1056,6 @@ class Log:
             rb = "]"
         else:
             owner_name_str = lb = rb = ""
-
 
         header = 1 if header is True else 0
 

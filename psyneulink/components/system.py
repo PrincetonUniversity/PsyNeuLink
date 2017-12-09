@@ -818,6 +818,8 @@ class System(System_Base):
         self.status = INITIALIZING
 
         processes = processes or []
+        if not isinstance(processes, list):
+            processes = [processes]
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
