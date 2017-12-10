@@ -334,7 +334,7 @@ from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARN
 
 
 __all__ = [
-    'ALL_ENTRIES', 'EntriesDict', 'kpCentralClock', 'Log', 'LogEntry', 'LogError', 'LogLevel', 'SystemLogEntries',
+    'ALL_ENTRIES', 'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogLevel',
 ]
 
 
@@ -406,9 +406,6 @@ def _time_string(time):
         time_str = "None"
     return time_str
 
-
-kpCentralClock = 'CentralClock'
-SystemLogEntries = [kpCentralClock]
 
 #region Custom Entries Dict
 # Modified from: http://stackoverflow.com/questions/7760916/correct-useage-of-getter-setter-for-dictionary-values
