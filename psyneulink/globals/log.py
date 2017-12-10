@@ -11,10 +11,6 @@
 
 """
 
-.. note::
-   This is a provisional implementation of logging.  It has the functionality described below; additional features
-   will be added and some may be subject to modification in future versions.
-
 Overview
 --------
 
@@ -28,8 +24,8 @@ they are most easily specified using the Log's `log_items <Log.log_items>` metho
 <Log.loggable_items>` and `logged_items <Log.logged_items>` attributes that identify and track the items to be logged.
 These can be useful not only for observing the behavior of a Component in a model, but also in debugging the model
 during construction. The entries of a Log can be displayed in a "human readable" table using its `print_entries
-<Log.print_entries>` method, and returned in CSV and numpy array formats using its `csv <Log.csv>` and `nparray
-<Log.nparray>` methods.
+<Log.print_entries>` method, and returned in CSV and numpy array formats using its and `nparray <Log.nparray>` and
+`csv <Log.csv>`  methods.
 
 COMMENT:
 Entries can also be made by the user programmatically. Each entry contains the time at
@@ -50,14 +46,10 @@ Structure
 A Log is composed of `entries <Log.entries>`, each of which is a dictionary that maintains a record of the logged
 values of a Component.  The key for each entry is a string that is the name of the Component, and its value is a list
 of `LogEntry` tuples recording its values.  Each `LogEntry` tuple has three items:
-    * *time* -- the `TIME_STEP` of the trial in which the value of the item was recorded;
+    * *time* -- the `RUN`, `TRIAL` and `TIME_STEP` in which the value of the item was recorded;
     * *context* -- a string indicating the context in which the value was recorded;
     * *value* -- the value of the item.
-
-    .. note::
-       Currently the "time" field of the entry is not used, and reports indicate the entry number
-       (corresonding to the number of executions of the Component), which may or may not correspond to the
-       `TIME_STEP` of execution.  This will be corrected in a future release.
+The time is recorded only if the Component is executed within a `System`;  otherwise, the time field is `None`.
 
 A Log has several attributes and methods that make it easy to manage how and when it values are recorded, and
 to access its `entries <Log.entries>`:
@@ -74,9 +66,9 @@ to access its `entries <Log.entries>`:
     ..
     * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
     ..
-    * `csv <Log.csv>` -- returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
-    ..
     * `nparray <Log.csv>` -- returns a 2d np.array with the `entries <Log.entries>` in the Log.
+    ..
+    * `csv <Log.csv>` -- returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
 
 Loggable Items
 ~~~~~~~~~~~~~~
@@ -87,6 +79,8 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
 
 * **Mechanisms**
 
+  * *value* -- the `value <Mechanism_Base.value>` of the Mechanism.
+  |
   * *InputStates* -- the `value <InputState.value>` of any `InputState` (listed in the Mechanism's `input_states
     <Mechanism_Base.input_states>` attribute).
   |
@@ -99,7 +93,10 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
 ..
 * **Projections**
 
-  * *MappingProjections* -- the value of its `matrix <MappingProjection.matrix>` parameter.
+  * *value* -- the `value <Projection_Base.value>` of the Projection.
+  |
+  * *matrix* -- the value of the `matrix <MappingProjection.matrix>` parameter (for `MappingProjections
+    <MappingProjection>` only).
 
 LogLevels
 ~~~~~~~~~
@@ -137,12 +134,12 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 
     # Show the loggable items (and their current LogLevels) of each Mechanism and the Projection between them:
-    >>> my_mech_A.loggable_items # doctest: +SKIP
+    >> my_mech_A.loggable_items
     {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
-    >>> my_mech_B.loggable_items # doctest: +SKIP
+    >> my_mech_B.loggable_items
     {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
-    >>> proj_A_to_B.loggable_items # doctest: +SKIP
-    {'matrix': 'OFF'}
+    >> proj_A_to_B.loggable_items
+    {'value': 'OFF', 'matrix': 'OFF'}
 
     # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
     >>> my_mech_A.log_items([pnl.NOISE, pnl.RESULTS])
@@ -158,48 +155,48 @@ Executing the Process generates entries in the Logs, that can then be displayed 
     array([ 0.,  0.,  0.])
 
     # List the items of each Mechanism and the Projection that were actually logged:
-    >>> my_mech_A.logged_items  # doctest: +SKIP
+    >> my_mech_A.logged_items
     {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
-    >>> my_mech_B.logged_items
+    >> my_mech_B.logged_items
     {}
-    >>> proj_A_to_B.logged_items
+    >> proj_A_to_B.logged_items
     {'matrix': 'EXECUTION'}
 
 Notice that entries dictionary of the Log for ``my_mech_B`` is empty, since no items were specified to be logged for
 it.  The results of the two other logs can be printed to the console using the `print_entries <Log.print_entries>`
 method of a Log::
 
-    # Print the Log for ``my_mech_A``:
-    >>> my_mech_A.log.print_entries() # doctest: +SKIP
-    Log for mech_A:
+        # Print the Log for ``my_mech_A``:
+        >> my_mech_A.log.print_entries()
 
-    Index     Logged Item:                                       Context                                                                 Value
+        Log for mech_A:
 
-    0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-    1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+        Time      Logged Item:                                       Context                                                                 Value
 
-
-    0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-    1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+        None      'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+        None      'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
 
 
-They can also be exported in csv and numpy array formats.  The following shows the csv-formatted output of the Logs
+        None      'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+        None      'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+
+
+They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
-    # Display the csv formatted entry of Log for ``my_mech_A`` without quotes around values:
-    >>> my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None) # doctest: +SKIP
+    >>> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
     'Index', 'noise', 'RESULTS'
-    0,  0.,  0.
-    1,  0.,  0.
+    0, 0.0, 0.0 0.0
+    1, 0.0, 0.0 0.0
+    <BLANKLINE>
 
     # Display the csv formatted entry of Log for ``proj_A_to_B``
     #    with quotes around values and the Projection's name included in the header:
-    >>> proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True) # doctest: +SKIP
-    # 'Index', 'MappingProjection from mech_A to mech_B[matrix]'
-    # 0, ' 1.  1.  1.'
-    #  ' 1.  1.  1.'
-    # 1, ' 1.  1.  1.'
-    #  ' 1.  1.  1.'
+    >>> print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
+    'Index', 'matrix'
+    '0', '1.0 1.0 1.0' '1.0 1.0 1.0'
+    '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
+    <BLANKLINE>
 
 Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
 reported.
@@ -207,9 +204,37 @@ reported.
 The following shows the Log of ``proj_A_to_B`` in numpy array format::
 
     >>> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False) # doctest: +SKIP
+    array([[[0], [1]],
+           [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
+            [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
+
+COMMENT:
+ MY MACHINE:
+    >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
+    array([[[0], [1]],
+           [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
+            [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
+
+
+JENKINS:
+    >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
+    array([[list([0]), list([1])],
+           [list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]),
+            list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])]], dtype=object)
+
+OR
+
+    print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False))
+Expected:
     [[[0] [1]]
      [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
+Got:
+    [[list([0]) list([1])]
+     [list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
+      list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])]]
 
+
+COMMENT
 
 COMMENT:
 
@@ -1091,14 +1116,14 @@ class Log:
         """
 
         if not quotes:
-            quotes = ""
+            quotes = ''
         elif quotes is True:
-            quotes = "\'"
+            quotes = '\''
 
         try:
             npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
         except LogError as e:
-            raise LogError(e.args[0].replace("nparray", "csv"))
+            raise LogError(e.args[0].replace('nparray', 'csv'))
 
         npaT = npa.T
 
@@ -1106,8 +1131,8 @@ class Log:
         csv = "\'" + "\', \'".join(npaT[0]) + "\'"
         # Data
         for i in range(1, len(npaT)):
-            csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in npaT[i]]]).\
-                replace("[[",quotes).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
+            csv += '\n' + ', '.join([str(j) for j in [str(k).replace(',','') for k in npaT[i]]]).\
+                replace('[[',quotes).replace(']]',quotes).replace('[',quotes).replace(']',quotes)
         csv += '\n'
 
         return(csv)

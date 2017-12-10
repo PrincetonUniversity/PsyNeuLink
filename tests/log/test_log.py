@@ -57,6 +57,8 @@ class TestLog:
         assert T_1.logged_items == {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
         assert PJ.logged_items == {'matrix': 'EXECUTION'}
 
+        T_1.log.print_entries()
+
         # assert T_1.log.print_entries() ==
         # # Log for mech_A:
         # #
