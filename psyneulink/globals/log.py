@@ -814,8 +814,11 @@ class Log:
                            format(self.owner.__class__.__name__,
                                   Mechanism.__name__, State.__name__, Projection.__name__))
 
-        systems = list(ref_mech.systems.keys())
-        system = next((s for s in systems if s.name in context), None)
+        try:
+            systems = list(ref_mech.systems.keys())
+            system = next((s for s in systems if s.name in context), None)
+        except AttributeError:
+            system = None
 
         if system:
             # FIX: Add INIT and VALIDATE?
