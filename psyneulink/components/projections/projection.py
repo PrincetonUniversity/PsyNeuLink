@@ -395,6 +395,8 @@ from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CO
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
+from psyneulink.globals.utilities import ContentAddressableList, iscompatible, is_numeric, is_matrix, type_match
+from psyneulink.globals.log import LogLevel, LogEntry, _get_log_context
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',

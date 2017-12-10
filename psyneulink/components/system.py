@@ -448,6 +448,7 @@ from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPE
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.log import Log
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
@@ -817,6 +818,8 @@ class System(System_Base):
         self.status = INITIALIZING
 
         processes = processes or []
+        if not isinstance(processes, list):
+            processes = [processes]
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -1518,7 +1521,7 @@ class System(System_Base):
         # MODIFIED 6/27/17 END
 
         # Instantiate StimulusInputStates
-        self._instantiate_stimulus_inputs()
+        self._instantiate_stimulus_inputs(context=context)
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
@@ -1564,9 +1567,11 @@ class System(System_Base):
                 # MODIFIED 6/27/17 END
                 # MODIFIED 6/27/17 END
                 stimulus_input_state = SystemInputState(owner=self,
-                                                            variable=origin_mech.input_states[j].instance_defaults.variable,
-                                                            prefs=self.prefs,
-                                                            name="System Input State to Mechansism {}, Input State {}".format(origin_mech.name,j))
+                                                        variable=origin_mech.input_states[j].instance_defaults.variable,
+                                                        prefs=self.prefs,
+                                                        name="System Input State to Mechansism {}, Input State {}".
+                                                        format(origin_mech.name,j),
+                                                        context=context)
                 self.stimulusInputStates.append(stimulus_input_state)
                 self.inputs.append(stimulus_input_state.value)
 
@@ -1892,7 +1897,8 @@ class System(System_Base):
                                                    owner=self,
                                                    variable=target_mech_TARGET_input_state.instance_defaults.variable,
                                                    prefs=self.prefs,
-                                                   name="System Target {}".format(i))
+                                                   name="System Target {}".format(i),
+                                                   context=context)
             self.target_input_states.append(system_target_input_state)
 
             # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
@@ -2534,7 +2540,7 @@ class System(System_Base):
         if not EVC_SIMULATION in context and self.learning:
             self._execute_learning(context=context + SEPARATOR_BAR + LEARNING)
             # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-            # self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
+            # self._execute_learning(clock=clock, context=context.replace(EXECUTING, LEARNING + ' '))
         # endregion
 
 
@@ -3542,7 +3548,7 @@ class SystemInputState(OutputState):
 
     """
 
-    def __init__(self, owner=None, variable=None, name=None, prefs=None):
+    def __init__(self, owner=None, variable=None, name=None, prefs=None, context=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
 
         :param variable:
