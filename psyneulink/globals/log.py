@@ -1108,19 +1108,18 @@ class Log:
         except LogError as e:
             raise LogError(e.args[0].replace("nparray", "csv"))
 
-
-        # Records
         npaT = npa.T
 
-        # csv = "\'" + "\', \'".join(x[0]) + "\'"
+        # MODIFIED 12/9/17 WORKING
+        # Headers
         csv = "\'" + "\', \'".join(npaT[0]) + "\'"
+        # Data
         for i in range(1, len(npaT)):
             csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in npaT[i]]]).\
                 replace("[[",quotes).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
         csv += '\n'
-        # MODIFIED 12/9/17 END
 
-
+        # # MODIFIED 12/9/17 NEW
         # # Headers:
         # csv = "\'" + "\', \'".join(npaT[0]) + "\'"
         # # Times:
@@ -1131,6 +1130,7 @@ class Log:
         #     csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in npaT[i]]]).\
         #                        replace("[[",quotes).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
         # csv += '\n'
+        # MODIFIED 12/9/17 END
 
 
 
