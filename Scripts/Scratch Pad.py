@@ -2307,46 +2307,20 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST LOG DOCS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST LOG DURING INITIALIZATION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+print("TEST LOG DURING INITIALIZATION")
 
-print("TEST LOG DOCS")
+T = pnl.TransferMechanism(
+        prefs=pnl.ComponentPreferenceSet(prefs={pnl.LOG_PREF:(pnl.LogLevel.INITIALIZATION)},
+                                         level=pnl.PreferenceLevel.INSTANCE)
+)
 
-def test_log_docs():
-
-    my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
-    my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
-    my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
-    proj_A_to_B = my_mech_B.path_afferents[0]
-
-    print(my_mech_A.loggable_items)
-    print(my_mech_B.loggable_items)
-    print(proj_A_to_B.loggable_items)
-
-    my_mech_A.log_items([pnl.NOISE, pnl.RESULTS])
-    proj_A_to_B.log_items(pnl.MATRIX)
-
-    my_process.execute()
-    my_process.execute()
-
-    print(my_mech_A.logged_items)
-    print(my_mech_B.logged_items)
-    print(proj_A_to_B.logged_items)
-
-    my_mech_A.log.print_entries()
-    x = my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None)
-    print(x)
-    print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
-    print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False))
-
-test_log_docs()
+#endregion
 
 #region TEST LOG MISC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST LOG MISC")
 
-# T = pnl.TransferMechanism(
-#         # prefs=pnl.ComponentPreferenceSet(prefs={pnl.LOG_PREF:(pnl.LogLevel.INITIALIZATION)},
-#         #                                  level=pnl.PreferenceLevel.INSTANCE)
-# )
+# T = pnl.TransferMechanism()
 #
 # P = pnl.Process(pathway=[T])
 # S = pnl.System(processes=P)

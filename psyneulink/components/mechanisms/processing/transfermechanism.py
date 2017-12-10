@@ -506,6 +506,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   time_scale=time_scale,
                                                   clip=clip,
                                                   params=params)
+        x = prefs.logPref
 
         self.integrator_function = None
 
@@ -523,7 +524,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             context=self,
             input_states=input_states,
         )
-        assert True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and Mechanism params
