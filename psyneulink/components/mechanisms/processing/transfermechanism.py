@@ -506,7 +506,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   time_scale=time_scale,
                                                   clip=clip,
                                                   params=params)
-        x = prefs.logPref
 
         self.integrator_function = None
 

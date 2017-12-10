@@ -2311,9 +2311,10 @@ class ScratchPadError(Exception):
 print("TEST LOG DURING INITIALIZATION")
 
 T = pnl.TransferMechanism(
-        prefs=pnl.ComponentPreferenceSet(prefs={pnl.LOG_PREF:(pnl.LogLevel.INITIALIZATION)},
-                                         level=pnl.PreferenceLevel.INSTANCE)
+        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
 )
+print(T.logged_items)
+T.log.print_entries()
 
 #endregion
 

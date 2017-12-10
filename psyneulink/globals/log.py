@@ -647,9 +647,21 @@ class Log:
         """
         log_level = 'LogLevel.'
         # Return LogLevel for items in log.entries
-        logged_items = {key: value for (key, value) in
-                        [(l, self.loggable_items[l])
-                         for l in self.logged_entries.keys()]}
+        # THIS VERSION FAILS AS IT ASSUMES THAT VALUE OF LOG'S OWNER IS UNDER ITS OWNER'S NAME, RATHER THAN "VALUE":
+        # logged_items = {key: value for (key, value) in
+        #                 [(l, self.loggable_items[l])
+        #                  for l in self.logged_entries.keys()]}
+        logged_items = {}
+        for l in self.logged_entries.keys():
+            try:
+                logged_items[l] = (l, self.loggable_items[l])
+            except KeyError:
+                if l is self.owner.name:
+                    try:
+                        logged_items[l] = (VALUE, self.loggable_items[VALUE])
+                    except:
+                        raise LogError("PROGRAM ERROR: Could not find {} from logged_entries in loggable_items "
+                                       "for {} of {}".format(l, Log.__name__, self.owner.name))
         return logged_items
 
     def log_items(self, items, log_level=LogLevel.EXECUTION):
