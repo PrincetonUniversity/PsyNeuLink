@@ -203,10 +203,10 @@ reported.
 
 The following shows the Log of ``proj_A_to_B`` in numpy array format::
 
-    >>> print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False))
-    [[[0] [1]]
-     [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
-
+    >>> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False) # doctest: +SKIP
+    array([[[0], [1]],
+           [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
+            [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
 
 COMMENT:
  MY MACHINE:
@@ -221,6 +221,19 @@ JENKINS:
     array([[list([0]), list([1])],
            [list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]),
             list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])]], dtype=object)
+
+OR
+
+    print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False))
+Expected:
+    [[[0] [1]]
+     [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
+Got:
+    [[list([0]) list([1])]
+     [list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
+      list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])]]
+
+
 COMMENT
 
 COMMENT:
