@@ -2296,9 +2296,9 @@ def test_log():
 
     assert PJ.log.csv(entries='matrix', owner_name=True, quotes=True) == \
            "\'Index\', \'MappingProjection from T_1 to T_2[matrix]\'\n" \
-           "\'0\', \'1.0 0.0\'\n \'0.0 1.0\'\n" \
-           "\'1\', \'1.0 0.0\'\n \'0.0 1.0\'\n" \
-           "\'2\', \'1.0 0.0\'\n \'0.0 1.0\'\n"
+           "\'0\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+           "\'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+           "\'2\', \'1.0 0.0\' \'0.0 1.0\'\n"
 
     result = T_1.log.nparray(entries=['noise', 'RESULTS'], header=False, owner_name=True)
     print (result)
