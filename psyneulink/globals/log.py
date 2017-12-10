@@ -168,6 +168,7 @@ method of a Log::
 
         # Print the Log for ``my_mech_A``:
         >>> my_mech_A.log.print_entries()
+        <BLANKLINE>
         Log for mech_A:
         <BLANKLINE>
         Time      Logged Item:                                       Context                                                                 Value
@@ -184,7 +185,6 @@ method of a Log::
 They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
-    # Display the csv formatted entry of Log for ``my_mech_A`` without quotes around values:
     >>> my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None) # doctest: +SKIP
     'Index', 'noise', 'RESULTS'
     0,  0.0,  0.0
@@ -194,10 +194,8 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     #    with quotes around values and the Projection's name included in the header:
     >>> proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True) # doctest: +SKIP
     'Index', 'MappingProjection from mech_A to mech_B[matrix]'
-    0, '1.0 1.0 1.0'
-     '1.0 1.0 1.0'
-    1, '1.0 1.0 1.0'
-     '1.0 1.0 1.0'
+    '0', '1.0 1.0 1.0' '1.0 1.0 1.0'
+    '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
 
 Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
 reported.
@@ -856,7 +854,7 @@ class Log:
             header = header + "  " + kwValue
         # MODIFIED 12/4/17 END
 
-        print("Log for {0}:".format(self.owner.name))
+        print("\nLog for {0}:".format(self.owner.name))
         print('\n'+header+'\n')
 
         # Sort for consistency of reporting
@@ -1090,14 +1088,14 @@ class Log:
         """
 
         if not quotes:
-            quotes = ""
+            quotes = ''
         elif quotes is True:
-            quotes = "\'"
+            quotes = '\''
 
         try:
             npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
         except LogError as e:
-            raise LogError(e.args[0].replace("nparray", "csv"))
+            raise LogError(e.args[0].replace('nparray', 'csv'))
 
         npaT = npa.T
 
@@ -1105,8 +1103,8 @@ class Log:
         csv = "\'" + "\', \'".join(npaT[0]) + "\'"
         # Data
         for i in range(1, len(npaT)):
-            csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in npaT[i]]]).\
-                replace("[[",quotes).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
+            csv += '\n' + ', '.join([str(j) for j in [str(k).replace(',','') for k in npaT[i]]]).\
+                replace('[[',quotes).replace(']]',quotes).replace('[',quotes).replace(']',quotes)
         csv += '\n'
 
         return(csv)
