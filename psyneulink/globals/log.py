@@ -184,26 +184,30 @@ method of a Log::
 They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
-    >>> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
+    >> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
     'Index', 'noise', 'RESULTS'
     0, 0.0, 0.0 0.0
     1, 0.0, 0.0 0.0
+    COMMENT:
     <BLANKLINE>
+    COMMENT
 
     # Display the csv formatted entry of Log for ``proj_A_to_B``
     #    with quotes around values and the Projection's name included in the header:
-    >>> print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
+    >> print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
     'Index', 'matrix'
     '0', '1.0 1.0 1.0' '1.0 1.0 1.0'
     '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
+    COMMENT:
     <BLANKLINE>
+    COMMENT
 
 Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
 reported.
 
 The following shows the Log of ``proj_A_to_B`` in numpy array format::
 
-    >>> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False) # doctest: +SKIP
+    >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
     array([[[0], [1]],
            [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
             [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
@@ -565,7 +569,7 @@ class Log:
         each item is a Component that is loggable for the Log's `owner <Log.owner>`
 
     loggable_items : Dict[Component.name: List[LogEntry]]
-        identifies Components that can be logged in the Log; the key of each entry is the name of a Component,
+        identifies Components that can be logged by the owner; the key of each entry is the name of a Component,
         and the value is its currently assigned `LogLevel`.
 
     entries : Dict[Component.name: List[LogEntry]]
@@ -574,7 +578,7 @@ class Log:
         for which information has been logged appear in the `entries <Log.entries>` dict.
 
     logged_items : Dict[Component.name: List[LogEntry]]
-        identifies Components for which information has been entered in the Log; the key for each entry is the name
+        identifies Components that currently have entries in the Log; the key for each entry is the name
         of a Component, and the value is its currently assigned `LogLevel`.
 
     """

@@ -137,8 +137,11 @@ corresponding arguments of its constructor, or by assigning them directly (see `
 
 .. _Component_Log:
 
-* **log** - the `log <Component.log>` attribute contains the Component's `Log`, in which its `value <Component.value>`
-  can be recorded during initialization, validation and/or execution.
+* **log** - the `log <Component.log>` attribute contains the Component's `Log`, that can be used to record its
+  `value <Component.value>`, as well as that of Components that belong to it, during initialization, validation,
+  execution and learning.  It also has three convenience methods -- `loggable_items <Log.loggable_items>`, `log_items
+  <Log.log_items>`, and `logged_items <Log.logged_items>` -- that provide access to the corresponding methods of its
+  Log, used to identify, configure and track items for logging.
 ..
 
 .. _Component_Name:
@@ -2831,20 +2834,30 @@ class Component(object):
 
     @property
     def loggable_items(self):
-        """List of names of all items that can be logged
-        This is a convenience method that calls self.log
+        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `LogLevel`.
+        This is a convenience method that calls the `loggable_items <Log.loggable_items>` property of the Component's
+        `log <Component.log>`.
         """
         return self.log.loggable_items
 
     from psyneulink.globals.log import LogLevel
     def log_items(self, items, log_level=LogLevel.EXECUTION):
-        # Overriden by subclasses to add param_sets (see Mechanism_Base for an example)
+        """
+        log_items(               \
+            items                \
+            log_level=EXECUTION  \
+        )
+
+        Specifies items to be logged. This is a convenience method that calls the `log_items <Log.logged_items>` method
+        of the Component's `log <Component.log>`.
+        """
         self.log.log_items(items=items, log_level=log_level)
 
     @property
     def logged_items(self):
-        """List of names of all the items being logged
-        This is a convenience method that calls self.log.entries
+        """Dictionary of all items that have entries in the log, and their currently assigned `LogLevel`\\s
+        This is a convenience method that calls the `logged_items <Log.logged_items>` property of the Component's
+        `log <Component.log>`.
         """
         return self.log.logged_items
 
