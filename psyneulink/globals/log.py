@@ -1097,46 +1097,11 @@ class Log:
         Returns:
             CSV-formatted string
         """
-        from psyneulink.components.component import Component
-
-        # # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
-        # if entries is ALL_ENTRIES or entries is None:
-        #     # entries = self.logged_entries.keys()
-        #     entries = self.logged_entries.keys()
-        #
-        # # If entries is a single entry, put in list for processing below
-        # if isinstance(entries, (str, Component)):
-        #     entries = [entries]
-        #
-        # # Make sure all entries are the names of Components
-        # entries = [entry.name if isinstance(entry, Component) else entry for entry in entries ]
-        #
-        # # Validate entries
-        # for entry in entries:
-        #     if entry not in self.loggable_items:
-        #         raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
-        #     if entry not in self.logged_entries:
-        #         raise LogError("{} is not currently being logged by {} (try using log_items)".
-        #                        format(repr(entry), self.owner.name))
-        #
-        # max_len = max([len(self.logged_entries[e]) for e in entries])
-        #
-        # # Currently only supports entries of the same length
-        # if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
-        #     raise LogError("CSV output currently only supported for Log entries of equal length")
-
 
         if not quotes:
             quotes = ""
         elif quotes is True:
             quotes = "\'"
-
-        # if owner_name is True:
-        #     owner_name_str = self.owner.name
-        #     lb = "["
-        #     rb = "]"
-        # else:
-        #     owner_name_str = lb = rb = ""
 
         try:
             npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
@@ -1144,26 +1109,37 @@ class Log:
             raise LogError(e.args[0].replace("nparray", "csv"))
 
 
-        # MODIFIED 12/9/17 OLD:
-        # # Header
-        # csv = "\'Index', {}\n".format(", ".join(repr("{}{}{}{}".format(owner_name_str, lb, entry, rb))
-        #                                              for entry in entries))
-        # # Records
-        # for i in range(max_len):
-        #     csv += "{}, {}\n".format(i, ", ".
-        #                              join(str(self.logged_entries[entry][i].value) for entry in entries).
-        #                              replace("[[",quotes)).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
-        # MODIFIED 12/9/17 NEW:
-
         # Records
-        x = npa.T
+        npaT = npa.T
+
         # csv = "\'" + "\', \'".join(x[0]) + "\'"
-        csv = "\'" + "\', \'".join(x[0]) + "\'"
-        for i in range(1, len(x)):
-            csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in x[i]]]).\
+        csv = "\'" + "\', \'".join(npaT[0]) + "\'"
+        for i in range(1, len(npaT)):
+            csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in npaT[i]]]).\
                 replace("[[",quotes).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
         csv += '\n'
         # MODIFIED 12/9/17 END
+
+
+        # # Headers:
+        # csv = "\'" + "\', \'".join(npaT[0]) + "\'"
+        # # Times:
+        # csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in npaT[1]]]).\
+        #                    replace("[[",'').replace("]]",'').replace("[",'').replace("]",'')
+        # # Data:
+        # for i in range(2, len(npaT)):
+        #     csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in npaT[i]]]).\
+        #                        replace("[[",quotes).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
+        # csv += '\n'
+
+
+
+
+
+
+
+
+
 
         return(csv)
 
