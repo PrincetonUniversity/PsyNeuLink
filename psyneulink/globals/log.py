@@ -910,100 +910,8 @@ class Log:
                     print("\n")
 
     @tc.typecheck
-    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'"):
-        """
-        csv(                           \
-            entries=None,              \
-            owner_name=False,          \
-            quotes=\"\'\"              \
-            )
-
-        Returns a CSV-formatted string with headers and values for the specified entries.
-
-        The first record (row) begins with "Index" and is followed by the header for each field (column).
-        Subsequent records begin with the record number, and are followed by the value for that entry.
-        Records are ordered in the same order as the Components specified in the **entries** argument.
-
-        .. note::
-           Currently only supports reports of entries with the same length.  A future version will allow
-           entries of differing lengths in the same report.
-
-        Arguments
-        ---------
-
-        entries : string, Component or list of them
-            specifies the entries of the Log to be included in the output;  they must be `loggable_items
-            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
-
-        owner_name : bool : default False
-            specifies whether or not to include the Component's `owner <Log.owner>` in the header of each field;
-            if it is True, the format of the header for each field is "<Owner name>[<entry name>]"; otherwise,
-            it is "<entry name>".
-
-        quotes : bool, str : default '
-            specifies whether or not to use quotes around values (useful if they are arrays);
-            if not specified or `True`, single quotes are used;
-            if `False` or `None`, no quotes are used;
-            if specified with a string, that is used.
-
-        Returns:
-            CSV-formatted string
-        """
-        from psyneulink.components.component import Component
-
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
-        if entries is ALL_ENTRIES or entries is None:
-            # entries = self.logged_entries.keys()
-            entries = self.logged_entries.keys()
-
-        # If entries is a single entry, put in list for processing below
-        if isinstance(entries, (str, Component)):
-            entries = [entries]
-
-        # Make sure all entries are the names of Components
-        entries = [entry.name if isinstance(entry, Component) else entry for entry in entries ]
-
-        # Validate entries
-        for entry in entries:
-            if entry not in self.loggable_items:
-                raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
-            if entry not in self.logged_entries:
-                raise LogError("{} is not currently being logged by {} (try using log_items)".
-                               format(repr(entry), self.owner.name))
-
-        max_len = max([len(self.logged_entries[e]) for e in entries])
-
-        # Currently only supports entries of the same length
-        if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
-            raise LogError("CSV output currently only supported for Log entries of equal length")
-
-        if not quotes:
-            quotes = ""
-        elif quotes is True:
-            quotes = "\'"
-
-        if owner_name is True:
-            owner_name_str = self.owner.name
-            lb = "["
-            rb = "]"
-        else:
-            owner_name_str = lb = rb = ""
-
-        # Header
-        csv = "\'Index', {}\n".format(", ".join(repr("{}{}{}{}".format(owner_name_str, lb, entry, rb))
-                                                     for entry in entries))
-        # Records
-        for i in range(max_len):
-            csv += "{}, {}\n".format(i, ", ".
-                                     join(str(self.logged_entries[entry][i].value) for entry in entries).
-                                     replace("[[",quotes)).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
-        return(csv)
-
-    @tc.typecheck
     def nparray(self,
                 entries=None,
-                # time:TimeScale=TimeScale.TIME_STEP,
                 header:bool=True,
                 owner_name:bool=False
                 ):
@@ -1016,15 +924,26 @@ class Log:
 
         Return a 2d numpy array with headers (optional) and values for the specified entries.
 
-        First row (axis 0) is a sequential index (starting with 0), and each subsequent row is the
-        sequence ("time series") of logged values for given Component. Rows are ordered in the same order as
-        Components are specified in the **entries** argument.  If header is `True`, the first item of each row is
-        a header field: for the first row, it is "Index", and for subsequent rows it is the name of the
-        Component logged in that entry.
+        Each row (axis 0) is a time series, with each item in each row the data for the corresponding time point.
+        Rows are ordered in the same order as Components are specified in the **entries** argument.
+
+        If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not `None`),
+        then the first three rows are time indices for the run, trial and time_step of each data item, respectively.
+        Each subsequent row is the times series of data for a given entry.  If there is no data for a given entry
+        at a given time point, it is entered as `None`.
+
+        If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
+        System), then all of the entries must have the same number of data (LogEntry) items, and the first row is a
+        sequential index (starting with 0) that simply designates the data item number.
 
         .. note::
-           Currently only supports entries with the same length.  A future version will allow entries of differing
-           lengths in the same report.
+           For data without time stamps, the nth items in each entry correspond (i.e., ones in the same column)
+           are not guaranteed to have been logged at the same time point.
+
+        If header is `True`, the first item of each row is a header field: for time indices it is either "Run",
+        "Trial", and "Time_step", or "Index" if any data are missing time stamps.  For subsequent rows it is the name
+        of the Component logged in that entry (see **owner_name** argument below for formatting).
+
 
         Arguments
         ---------
@@ -1113,7 +1032,7 @@ class Log:
 
             npa = np.arange(max_len).reshape(max_len,1).tolist()
             if header:
-                npa = [[["Index"]] + npa]
+                npa = [["Index"] + npa]
             else:
                 npa = [npa]
 
@@ -1136,6 +1055,117 @@ class Log:
 
         npa = np.array(npa, dtype=object)
         return(npa)
+
+    @tc.typecheck
+    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'"):
+        """
+        csv(                           \
+            entries=None,              \
+            owner_name=False,          \
+            quotes=\"\'\"              \
+            )
+
+        Returns a CSV-formatted string with headers and values for the specified entries.
+
+        The first record (row) begins with "Index" and is followed by the header for each field (column).
+        Subsequent records begin with the record number, and are followed by the value for that entry.
+        Records are ordered in the same order as the Components specified in the **entries** argument.
+
+        .. note::
+           Currently only supports reports of entries with the same length.  A future version will allow
+           entries of differing lengths in the same report.
+
+        Arguments
+        ---------
+
+        entries : string, Component or list of them
+            specifies the entries of the Log to be included in the output;  they must be `loggable_items
+            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
+            If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
+
+        owner_name : bool : default False
+            specifies whether or not to include the Component's `owner <Log.owner>` in the header of each field;
+            if it is True, the format of the header for each field is "<Owner name>[<entry name>]"; otherwise,
+            it is "<entry name>".
+
+        quotes : bool, str : default '
+            specifies whether or not to use quotes around values (useful if they are arrays);
+            if not specified or `True`, single quotes are used;
+            if `False` or `None`, no quotes are used;
+            if specified with a string, that is used.
+
+        Returns:
+            CSV-formatted string
+        """
+        from psyneulink.components.component import Component
+
+        # # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
+        # if entries is ALL_ENTRIES or entries is None:
+        #     # entries = self.logged_entries.keys()
+        #     entries = self.logged_entries.keys()
+        #
+        # # If entries is a single entry, put in list for processing below
+        # if isinstance(entries, (str, Component)):
+        #     entries = [entries]
+        #
+        # # Make sure all entries are the names of Components
+        # entries = [entry.name if isinstance(entry, Component) else entry for entry in entries ]
+        #
+        # # Validate entries
+        # for entry in entries:
+        #     if entry not in self.loggable_items:
+        #         raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
+        #     if entry not in self.logged_entries:
+        #         raise LogError("{} is not currently being logged by {} (try using log_items)".
+        #                        format(repr(entry), self.owner.name))
+        #
+        # max_len = max([len(self.logged_entries[e]) for e in entries])
+        #
+        # # Currently only supports entries of the same length
+        # if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
+        #     raise LogError("CSV output currently only supported for Log entries of equal length")
+
+
+        if not quotes:
+            quotes = ""
+        elif quotes is True:
+            quotes = "\'"
+
+        # if owner_name is True:
+        #     owner_name_str = self.owner.name
+        #     lb = "["
+        #     rb = "]"
+        # else:
+        #     owner_name_str = lb = rb = ""
+
+        try:
+            npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
+        except LogError as e:
+            raise LogError(e.args[0].replace("nparray", "csv"))
+
+
+        # MODIFIED 12/9/17 OLD:
+        # # Header
+        # csv = "\'Index', {}\n".format(", ".join(repr("{}{}{}{}".format(owner_name_str, lb, entry, rb))
+        #                                              for entry in entries))
+        # # Records
+        # for i in range(max_len):
+        #     csv += "{}, {}\n".format(i, ", ".
+        #                              join(str(self.logged_entries[entry][i].value) for entry in entries).
+        #                              replace("[[",quotes)).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
+        # MODIFIED 12/9/17 NEW:
+
+        # Records
+        x = npa.T
+        # csv = "\'" + "\', \'".join(x[0]) + "\'"
+        csv = "\'" + "\', \'".join(x[0]) + "\'"
+        for i in range(1, len(x)):
+            csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in x[i]]]).\
+                replace("[[",quotes).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
+        csv += '\n'
+        # MODIFIED 12/9/17 END
+
+        return(csv)
 
     @property
     def logged_entries(self):
