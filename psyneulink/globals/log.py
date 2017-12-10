@@ -24,8 +24,8 @@ they are most easily specified using the Log's `log_items <Log.log_items>` metho
 <Log.loggable_items>` and `logged_items <Log.logged_items>` attributes that identify and track the items to be logged.
 These can be useful not only for observing the behavior of a Component in a model, but also in debugging the model
 during construction. The entries of a Log can be displayed in a "human readable" table using its `print_entries
-<Log.print_entries>` method, and returned in CSV and numpy array formats using its `csv <Log.csv>` and `nparray
-<Log.nparray>` methods.
+<Log.print_entries>` method, and returned in CSV and numpy array formats using its and `nparray <Log.nparray>` and
+`csv <Log.csv>`  methods.
 
 COMMENT:
 Entries can also be made by the user programmatically. Each entry contains the time at
