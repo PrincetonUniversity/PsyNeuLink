@@ -1067,13 +1067,22 @@ class Log:
 
         Returns a CSV-formatted string with headers and values for the specified entries.
 
-        The first record (row) begins with "Index" and is followed by the header for each field (column).
-        Subsequent records begin with the record number, and are followed by the value for that entry.
-        Records are ordered in the same order as the Components specified in the **entries** argument.
+        Each row (axis 0) is a time point, beginning with the time stamp and followed by the data for each
+        Component at that time point, in the order they are specified in the **entries** argument. If all of the data
+        for every Component have time values, then the first three items of each row are the time indices for the run,
+        trial and time_step of that time point, respectively, followed by the data for each Component at that time
+        point;  if a Component has no data for a time point, `None` is entered.
+
+        If any of the data for any Component does not have a time value (i.e., it has `None` in the time field of
+        its `LogEntry`) then all of the entries must have the same number of data (LogEntry) items, and the first item
+        of each row is a sequential index (starting with 0) that designates the data item number.
 
         .. note::
-           Currently only supports reports of entries with the same length.  A future version will allow
-           entries of differing lengths in the same report.
+           For data without time stamps, items in the same row are not guaranteed to refer to the same time point.
+
+        The **owner_name** argument can be used to prepend the header for each Component with its owner.
+        The **quotes** argument can be used to suppress or specifiy quotes to use around values.
+
 
         Arguments
         ---------
@@ -1089,10 +1098,10 @@ class Log:
             it is "<entry name>".
 
         quotes : bool, str : default '
-            specifies whether or not to use quotes around values (useful if they are arrays);
-            if not specified or `True`, single quotes are used;
-            if `False` or `None`, no quotes are used;
-            if specified with a string, that is used.
+            specifies whether or not to enclose values other than quotes (useful if they are arrays);
+            if not specified or `True`, single quotes are used for *all* items;
+            if specified with a string, that is used to enclose *all* items;
+            if `False` or `None`, single quotes are used for headers (the items in the first row), but no others.
 
         Returns:
             CSV-formatted string
@@ -1110,7 +1119,6 @@ class Log:
 
         npaT = npa.T
 
-        # MODIFIED 12/9/17 WORKING
         # Headers
         csv = "\'" + "\', \'".join(npaT[0]) + "\'"
         # Data
@@ -1118,28 +1126,6 @@ class Log:
             csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in npaT[i]]]).\
                 replace("[[",quotes).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
         csv += '\n'
-
-        # # MODIFIED 12/9/17 NEW
-        # # Headers:
-        # csv = "\'" + "\', \'".join(npaT[0]) + "\'"
-        # # Times:
-        # csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in npaT[1]]]).\
-        #                    replace("[[",'').replace("]]",'').replace("[",'').replace("]",'')
-        # # Data:
-        # for i in range(2, len(npaT)):
-        #     csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in npaT[i]]]).\
-        #                        replace("[[",quotes).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
-        # csv += '\n'
-        # MODIFIED 12/9/17 END
-
-
-
-
-
-
-
-
-
 
         return(csv)
 
