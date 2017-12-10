@@ -2214,9 +2214,6 @@ class ScratchPadError(Exception):
 # print ("TEST Log")
 
 
-
-
-
 def test_log():
 
     T_1 = pnl.TransferMechanism(name='T_1', size=2)
