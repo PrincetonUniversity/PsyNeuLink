@@ -110,7 +110,15 @@ binary "flags", and can be combined to permit logging under more than one contac
 using bitwise operators (e.g., LogLevel.EXECUTION | LogLevel.LEARNING).
 
 .. note::
-   Currently, the only `LogLevels <LogLevel>` supported are `OFF`, `EXECUTION` and `LEARNING`.
+   Currently, the only `LogLevels <LogLevel>` supported are: `OFF`, `INITIALIZATION`, `EXECUTION` and `LEARNING`.
+
+.. note::
+   Using the `INITIALIZATION` LogLevel to log the `value <Component.value>` of a Component during its initialization
+   requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
+
+    >>> import psyneulink as pnl
+    >>> T = pnl.TransferMechanism(
+    ...          prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION,pnl.PreferenceLevel.INSTANCE)})
 
 
 Execution
@@ -127,7 +135,6 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
-    >>> import psyneulink as pnl
     >>> my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
     >>> my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
     >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
