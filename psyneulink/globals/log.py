@@ -134,11 +134,11 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 
     # Show the loggable items (and their current LogLevels) of each Mechanism and the Projection between them:
-    >>> my_mech_A.loggable_items # doctest: +SKIP
+    >> my_mech_A.loggable_items
     {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
-    >>> my_mech_B.loggable_items # doctest: +SKIP
+    >> my_mech_B.loggable_items
     {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
-    >>> proj_A_to_B.loggable_items # doctest: +SKIP
+    >> proj_A_to_B.loggable_items
     {'value': 'OFF', 'matrix': 'OFF'}
 
     # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
@@ -155,11 +155,11 @@ Executing the Process generates entries in the Logs, that can then be displayed 
     array([ 0.,  0.,  0.])
 
     # List the items of each Mechanism and the Projection that were actually logged:
-    >>> my_mech_A.logged_items  # doctest: +SKIP
+    >> my_mech_A.logged_items
     {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
-    >>> my_mech_B.logged_items
+    >> my_mech_B.logged_items
     {}
-    >>> proj_A_to_B.logged_items
+    >> proj_A_to_B.logged_items
     {'matrix': 'EXECUTION'}
 
 Notice that entries dictionary of the Log for ``my_mech_B`` is empty, since no items were specified to be logged for
@@ -167,20 +167,19 @@ it.  The results of the two other logs can be printed to the console using the `
 method of a Log::
 
         # Print the Log for ``my_mech_A``:
-        >>> my_mech_A.log.print_entries()
-        <BLANKLINE>
+        >> my_mech_A.log.print_entries()
+
         Log for mech_A:
-        <BLANKLINE>
+
         Time      Logged Item:                                       Context                                                                 Value
-        <BLANKLINE>
+
         None      'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         None      'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        <BLANKLINE>
-        <BLANKLINE>
+
+
         None      'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         None      'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        <BLANKLINE>
-        <BLANKLINE>
+
 
 They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
