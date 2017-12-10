@@ -208,7 +208,6 @@ The following shows the Log of ``proj_A_to_B`` in numpy array format::
            [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
             [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
 
-
 COMMENT:
 
 Entries are made to the Log based on the `LogLevel` specified in the
