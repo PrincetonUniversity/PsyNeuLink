@@ -9,7 +9,7 @@ from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVI
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.library.mechanisms.processing.transfer.kwta import KWTA, KWTAError
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 import numpy as np
 
 class TestKWTAInputs:

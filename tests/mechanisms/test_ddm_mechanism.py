@@ -4,7 +4,7 @@ import numpy as np
 from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DDMError
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 
 # ======================================= FUNCTION TESTS ============================================

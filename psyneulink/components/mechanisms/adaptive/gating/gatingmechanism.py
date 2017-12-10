@@ -167,13 +167,11 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.components.states.state import State_Base, _parse_state_spec
 from psyneulink.globals.defaults import defaultGatingPolicy
-from psyneulink.globals.keywords import \
-    GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, \
-    INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, PROJECTION_TYPE
+from psyneulink.globals.keywords import GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, PROJECTION_TYPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
 from psyneulink.globals.utilities import ContentAddressableList
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'GatingMechanism', 'GatingMechanismError', 'GatingMechanismRegistry'
@@ -341,8 +339,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the GatingMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the GatingMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
     """
 
@@ -557,7 +555,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
         """Updates GatingSignals based on inputs
@@ -568,7 +565,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,
-                                clock=clock,
                                 time_scale=time_scale,
                                 context=context)
         # gating_policy = self.function(variable=variable,

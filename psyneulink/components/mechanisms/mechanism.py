@@ -779,26 +779,20 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, InitStatus, ExecutionStatus, function_type, method_type
+from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
-from psyneulink.components.states.state import _parse_state_spec, ADD_STATES
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.components.states.state import ADD_STATES, _parse_state_spec
 from psyneulink.globals.defaults import timeScaleSystemDefault
-from psyneulink.globals.keywords import \
-    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, \
-    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
-    INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, \
-    SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, VALUE, REFERENCE_VALUE, \
-    kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.globals.log import LogLevel
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
-from psyneulink.globals.log import LogLevel
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'Mechanism_Base', 'MechanismError'
@@ -1089,8 +1083,8 @@ class Mechanism_Base(Mechanism):
         assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
         .. _stateRegistry : Registry
@@ -1836,7 +1830,6 @@ class Mechanism_Base(Mechanism):
     def execute(self,
                 input=None,
                 runtime_params=None,
-                clock=CentralClock,
                 time_scale=TimeScale.TRIAL,
                 ignore_execution_id = False,
                 context=None):
@@ -1913,7 +1906,6 @@ class Mechanism_Base(Mechanism):
                 return_value =  self._execute(
                     variable=self.instance_defaults.variable,
                     runtime_params=runtime_params,
-                    clock=clock,
                     time_scale=time_scale,
                     context=context,
                 )
@@ -2021,7 +2013,6 @@ class Mechanism_Base(Mechanism):
         self.value = self._execute(
             variable=variable,
             runtime_params=runtime_params,
-            clock=clock,
             time_scale=time_scale,
             context=context,
         )
@@ -2228,7 +2219,6 @@ class Mechanism_Base(Mechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    clock=CentralClock,
                     time_scale=None,
                     context=None):
         return self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)
@@ -2434,27 +2424,7 @@ class Mechanism_Base(Mechanism):
     @value.setter
     def value(self, assignment):
         self._value = assignment
-
-        # # MODIFIED 1/28/17 NEW: [COPIED FROM State]
-        # # Store value in log if specified
-        # # Get logPref
-        # if self.prefs:
-        #     log_pref = self.prefs.logPref
-        #
-        # # Get context
-        # try:
-        #     curr_frame = inspect.currentframe()
-        #     prev_frame = inspect.getouterframes(curr_frame, 2)
-        #     context = inspect.getargvalues(prev_frame[1][0]).locals['context']
-        # except KeyError:
-        #     context = ""
-        #
-        # # If context is consistent with log_pref, record value to log
-        # if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-        #         (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
-        #         (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
-        #     self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
-        # # MODIFIED 1/28/17 END
+        self.log._log_value(assignment)
 
     @property
     def default_value(self):
