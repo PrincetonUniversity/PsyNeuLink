@@ -873,22 +873,6 @@ class Log:
             else:
                 import numpy as np
                 for i, item in enumerate(datum):
-                    # MODIFIED 12/4/17 OLD: [USES CentralClock FOR TIME]
-                    # time, context, value = item
-                    # if isinstance(value, np.ndarray):
-                    #     value = value[0]
-                    # time_str = str(time.task) +":"+ str(time.block) +":"+ str(time.trial) +":"+ str(time.time_step)
-                    # data_str = attrib_name.ljust(variable_width, kwSpacer)
-                    # if not args or kwTime in args:
-                    #     data_str = data_str + " " + time_str.ljust(time_width)
-                    # if not args or kwContext in args:
-                    #     data_str = data_str + context.ljust(context_width, kwSpacer)
-                    # if not args or kwValue in args:
-                    #     # data_str = data_str + " " + str(value).rjust(value_width) # <- WORKS
-                    #     # data_str = data_str + " " + "{:10.5}".format(str(value).strip("[]"))  # <- WORKS
-                    #     data_str = data_str + "{:2.5}".format(str(value).strip("[]")).rjust(value_width) # <- WORKS
-                    #     # data_str = data_str + "{:10.5}".format(str(value).strip("[]")) # <- WORKS
-                    # MODIFIED 12/4/17 NEW [USES entry index RATHER THAN CentralClock]
                     time, context, value = item
                     if isinstance(value, np.ndarray):
                         value = value[0]
@@ -900,7 +884,6 @@ class Log:
                         data_str = data_str + repr(context).ljust(context_width, kwSpacer)
                     if not args or kwValue in args:
                         data_str = data_str + "{:2.5}".format(str(value).strip("[]")).rjust(value_width) # <- WORKS
-                    # MODIFIED 12/4/17 END
 
         # {time:{width}}: {part[0]:>3}{part[1]:1}{part[2]:<3} {unit:3}".format(
         #     jid=jid, width=width, part=str(mem).partition('.'), unit=unit))
