@@ -246,7 +246,7 @@ Each entry of `entries <Log.entries>` has:
     + a key that is the name of the attribute being logged
     + a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began
     + each tuple has three items:
-        - time (`Time.SimpleTime`): when it was recorded in the run
+        - time (CentralClock): when it was recorded in the run
         - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
         - value (value): the value assigned to the attribute
 
@@ -289,20 +289,23 @@ Class Reference
 ---------------
 
 """
-import inspect
 import warnings
-
+import inspect
+import typecheck as tc
 from collections import namedtuple
-from enum import IntEnum
+# from enum import IntEnum, unique, auto
+from enum import IntEnum, unique
 
 import numpy as np
-import typecheck as tc
 
-from psyneulink.globals.keywords import EXECUTING, INITIALIZING, LEARNING, VALIDATE, VALUE, kwContext, kwTime, kwValue
-from psyneulink.globals.utilities import ContentAddressableList
+from psyneulink.scheduling.time import TimeScale
+from psyneulink.globals.utilities import ContentAddressableList, AutoNumber
+from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, CONTROL, VALUE, \
+    kwContext, kwTime, kwValue
+
 
 __all__ = [
-    'ALL_ENTRIES', 'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogLevel', 'SystemLogEntries',
+    'ALL_ENTRIES', 'EntriesDict', 'kpCentralClock', 'Log', 'LogEntry', 'LogError', 'LogLevel', 'SystemLogEntries',
 ]
 
 
@@ -310,23 +313,23 @@ class LogLevel(IntEnum):
     """Specifies levels of logging, as descrdibed below."""
     OFF = 0
     """No recording."""
-    INITIALIZATION = 1<<1
+    INITIALIZATION = 1<<1           # 2
     """Record during initial assignment."""
-    VALIDATION = 1<<2
+    VALIDATION = 1<<2               # 4
     """Record value during validation."""
-    EXECUTION = 1<<3
+    EXECUTION = 1<<3                # 8
     """Record all value assignments during any execution of the Component."""
-    PROCESSING = 1<<4
+    PROCESSING = 1<<4               # 16
     """Record all value assignments during processing phase of Composition execution."""
     # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-    # LEARNING = 1<<5
-    LEARNING = (1<<5) + EXECUTION
+    # LEARNING = 1<<5               # 32
+    LEARNING = (1<<5) + EXECUTION   # 40
     """Record all value assignments during learning phase of Composition execution."""
-    CONTROL = 1<<6
+    CONTROL = 1<<6                  # 64
     """Record all value assignment during control phase of Composition execution."""
-    VALUE_ASSIGNMENT = 1<<7
+    VALUE_ASSIGNMENT = 1<<7         # 128
     """Record final value assignments during Composition execution."""
-    FINAL = 1<<8
+    FINAL = 1<<8                    # 256
     """Synonym of VALUE_ASSIGNMENT."""
     ALL_ASSIGNMENTS = \
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL | VALUE_ASSIGNMENT | FINAL
@@ -335,7 +338,7 @@ class LogLevel(IntEnum):
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
 ALL_ENTRIES = 'all entries'
-
+TIME_NOT_SPECIFIED = 'Time Not Specified'
 
 def _get_log_context(context):
 
@@ -351,7 +354,32 @@ def _get_log_context(context):
     return context_flag
 
 
-SystemLogEntries = []
+class LogTimeScaleIndices(AutoNumber):
+    RUN = ()
+    TRIAL = ()
+    TIME_STEP = ()
+NUM_TIME_SCALES = len(LogTimeScaleIndices.__members__)
+TIME_SCALE_NAMES = list(LogTimeScaleIndices.__members__)
+
+
+def _time_string(time):
+
+    # if any(t is not None for t in time ):
+    #     run, trial, time_step = time
+    #     time_str = "{}:{}:{}".format(run, trial, time_step)
+    # else:
+    #     time_str = "None"
+    # return time_str
+
+    if all(t is not None for t in time ):
+        time_str = ":".join([str(i) for i in time])
+    else:
+        time_str = "None"
+    return time_str
+
+
+kpCentralClock = 'CentralClock'
+SystemLogEntries = [kpCentralClock]
 
 #region Custom Entries Dict
 # Modified from: http://stackoverflow.com/questions/7760916/correct-useage-of-getter-setter-for-dictionary-values
@@ -437,7 +465,7 @@ class Log:
             + a key that is the name of the attribute being logged
             + a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began
             + each tuple has three items:
-                - time (`Time.SimpleTime`): when it was recorded in the run
+                - time (CentralClock): when it was recorded in the run
                 - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
                 - value (value): the value assigned to the attribute
         An attribute is recorded if:
@@ -661,12 +689,127 @@ class Log:
                 # self.add_entries(item[0])
                 assign_log_level(item[0], item[1])
 
-    def print_entries(self, entries=None, csv=False, synch_time=False, *args):
+    def _log_value(self, value, context=None):
+        """Add LogEntry to an entry in the Log
+
+        Identifies the context in which the call is being made, which is assigned to the context field of the
+        `LogEntry`, along with the current time stamp and value itself
+
+        .. note::
+            Since _log_value is usually called by the setter for the `value <Component.value>` property of a Component
+            (which doesn't/can't receive a context argument), it does not pass a **context** argument to _log_value;
+            in that case, _log_value searches the stack for the most recent frame with a context specification, and
+            uses that.
+
+        """
+        from psyneulink.components.component import Component
+
+        # Get context
+        if context is None:
+            curr_frame = inspect.currentframe()
+            prev_frame = inspect.getouterframes(curr_frame, 2)
+            i = 1
+            # Search stack for first frame (most recent call) with a context specification
+            while context is None:
+                try:
+                    context = inspect.getargvalues(prev_frame[i][0]).locals['context']
+                except KeyError:
+                    # Try earlier frame
+                    i += 1
+                except IndexError:
+                    # Ran out of frames, so just set context to empty string
+                    context = ""
+                else:
+                    break
+
+        if context is None:
+            # No context was specified in any frame
+            raise LogError("PROGRAM ERROR: No context specification found in any frame")
+
+        # If context is a Component object, it must be during its initialization, so assign accordingly:
+        if isinstance(context, Component):
+            context = "{} of {}".format(INITIALIZING, context.name)
+
+        if not isinstance(context, str):
+            raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
+
+        context_flags = _get_log_context(context)
+
+        log_pref = self.owner.prefs.logPref if self.owner.prefs else None
+
+        # Log value if logging condition is satisfied
+        if log_pref and log_pref == context_flags:
+        # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
+        # if log_pref and log_pref | context_flags:
+
+            self.entries[self.owner.name] = LogEntry(self._get_time(context, context_flags), context, value)
+
+    def _get_time(self, context, context_flags):
+        """Get time from Scheduler of System in which Component is being executed.
+
+        Returns tuple with (run, trial, time_step) if being executed during Processing or Learning
+        Otherwise, returns (None, None, None)
+
+        """
+
+        from psyneulink.components.mechanisms.mechanism import Mechanism
+        from psyneulink.components.states.state import State
+        from psyneulink.components.projections.projection import Projection
+
+        no_time = (None, None, None)
+
+        if isinstance(self.owner, Mechanism):
+            ref_mech = self.owner
+        elif isinstance(self.owner, State):
+            if isinstance(self.owner.owner, Mechanism):
+                ref_mech = self.owner.owner
+            elif isinstance(self.owner.owner, Projection):
+                ref_mech = self.owner.owner.receiver.owner
+            else:
+                raise LogError("Logging currently does not support {} (only {}s, {}s, and {}s).".
+                               format(self.owner.__class__.__name__,
+                                      Mechanism.__name__, State.__name__, Projection.__name__))
+        elif isinstance(self.owner, Projection):
+            ref_mech = self.owner.receiver.owner
+        else:
+            raise LogError("Logging currently does not support {} (only {}s, {}s, and {}s).".
+                           format(self.owner.__class__.__name__,
+                                  Mechanism.__name__, State.__name__, Projection.__name__))
+
+        systems = list(ref_mech.systems.keys())
+        system = next((s for s in systems if s.name in context), None)
+
+        if system:
+            # FIX: Add INIT and VALIDATE?
+            if context_flags == LogLevel.EXECUTION:
+                time = system.scheduler_processing.clock.simple_time
+                time = (time.run, time.trial, time.time_step)
+            elif context_flags == LogLevel.LEARNING:
+                time = system.scheduler_learning.clock.simple_time
+                time = (time.run, time.trial, time.time_step)
+            else:
+                time = None
+
+        else:
+            if self.owner.verbosePref:
+                offender = "\'{}\'".format(self.owner.name)
+                if ref_mech is not self.owner:
+                    offender += " [{} of {}]".format(self.owner.__class__.__name__, ref_mech.name)
+                warnings.warn("Attempt to log {} which is not in a System (logging is currently supported only "
+                              "when running Components within a System".format(offender))
+            time = None
+
+        return time or no_time
+
+    def print_entries(self,
+                      entries=None,
+                      csv=False,
+                      # synch_time=False,
+                      *args):
         """
         print_entries(          \
               entries=None,     \
               csv=False,        \
-              synch_time=False  \
             )
 
         Print values of entries
@@ -707,7 +850,7 @@ class Log:
         # MODIFIED 12/4/17 NEW: [USES entry]
         header = "Logged Item:".ljust(variable_width, kwSpacer)
         if not args or kwTime in args:
-            header = "Index".ljust(time_width, kwSpacer) + header
+            header = "Time".ljust(time_width, kwSpacer) + header
         if not args or kwContext in args:
             header = header + " " + kwContext.ljust(context_width, kwSpacer)
         if not args or kwValue in args:
@@ -730,26 +873,10 @@ class Log:
             else:
                 import numpy as np
                 for i, item in enumerate(datum):
-                    # MODIFIED 12/4/17 OLD: [USES CentralClock FOR TIME]
-                    # time, context, value = item
-                    # if isinstance(value, np.ndarray):
-                    #     value = value[0]
-                    # time_str = str(time.task) +":"+ str(time.block) +":"+ str(time.trial) +":"+ str(time.time_step)
-                    # data_str = attrib_name.ljust(variable_width, kwSpacer)
-                    # if not args or kwTime in args:
-                    #     data_str = data_str + " " + time_str.ljust(time_width)
-                    # if not args or kwContext in args:
-                    #     data_str = data_str + context.ljust(context_width, kwSpacer)
-                    # if not args or kwValue in args:
-                    #     # data_str = data_str + " " + str(value).rjust(value_width) # <- WORKS
-                    #     # data_str = data_str + " " + "{:10.5}".format(str(value).strip("[]"))  # <- WORKS
-                    #     data_str = data_str + "{:2.5}".format(str(value).strip("[]")).rjust(value_width) # <- WORKS
-                    #     # data_str = data_str + "{:10.5}".format(str(value).strip("[]")) # <- WORKS
-                    # MODIFIED 12/4/17 NEW [USES entry index RATHER THAN CentralClock]
                     time, context, value = item
                     if isinstance(value, np.ndarray):
                         value = value[0]
-                    time_str = str(i)
+                    time_str = _time_string(time)
                     data_str = repr(attrib_name).ljust(variable_width, kwSpacer)
                     if not args or kwTime in args:
                         data_str = time_str.ljust(time_width) + data_str
@@ -757,7 +884,6 @@ class Log:
                         data_str = data_str + repr(context).ljust(context_width, kwSpacer)
                     if not args or kwValue in args:
                         data_str = data_str + "{:2.5}".format(str(value).strip("[]")).rjust(value_width) # <- WORKS
-                    # MODIFIED 12/4/17 END
 
         # {time:{width}}: {part[0]:>3}{part[1]:1}{part[2]:<3} {unit:3}".format(
         #     jid=jid, width=width, part=str(mem).partition('.'), unit=unit))
@@ -767,101 +893,11 @@ class Log:
                     print("\n")
 
     @tc.typecheck
-    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'"):
-        """
-        csv(                           \
-            entries=None,              \
-            owner_name=False,          \
-            quotes=\"\'\"              \
-            )
-
-        Returns a CSV-formatted string with headers and values for the specified entries.
-
-        The first record (row) begins with "Index" and is followed by the header for each field (column).
-        Subsequent records begin with the record number, and are followed by the value for that entry.
-        Records are ordered in the same order as the Components specified in the **entries** argument.
-
-        .. note::
-           Currently only supports reports of entries with the same length.  A future version will allow
-           entries of differing lengths in the same report.
-
-        Arguments
-        ---------
-
-        entries : string or Component
-            specifies the entries of the Log to be included in the output;  they must be `loggable_items
-            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
-
-        owner_name : bool : default False
-            specifies whether or not to include the Component's `owner <Log.owner>` in the header of each field;
-            if it is True, the format of the header for each field is "<Owner name>[<entry name>]"; otherwise,
-            it is "<entry name>".
-
-        quotes : bool, str : default '
-            specifies whether or not to use quotes around values (useful if they are arrays);
-            if not specified or `True`, single quotes are used;
-            if `False` or `None`, no quotes are used;
-            if specified with a string, that is used.
-
-        Returns:
-            CSV-formatted string
-        """
-        from psyneulink.components.component import Component
-
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
-        if entries is ALL_ENTRIES or entries is None:
-            # entries = self.logged_entries.keys()
-            entries = self.logged_entries.keys()
-
-        # If entries is a single entry, put in list for processing below
-        if isinstance(entries, (str, Component)):
-            entries = [entries]
-
-        # Make sure all entries are the names of Components
-        entries = [entry.name if isinstance(entry, Component) else entry for entry in entries ]
-
-        # Validate entries
-        for entry in entries:
-            if entry not in self.loggable_items:
-                raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
-            if entry not in self.logged_entries:
-                raise LogError("{} is not currently being logged by {} (try using log_items)".
-                               format(repr(entry), self.owner.name))
-
-        max_len = max([len(self.logged_entries[e]) for e in entries])
-
-        # Currently only supports entries of the same length
-        if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
-            raise LogError("CSV output currently only supported for Log entries of equal length")
-
-        if not quotes:
-            quotes = ""
-        elif quotes is True:
-            quotes = "\'"
-
-        if owner_name is True:
-            owner_name_str = self.owner.name
-            lb = "["
-            rb = "]"
-        else:
-            owner_name_str = lb = rb = ""
-
-        # Header
-        csv = "\'Index', {}\n".format(", ".join(repr("{}{}{}{}".format(owner_name_str, lb, entry, rb))
-                                                     for entry in entries))
-        # Records
-        for i in range(max_len):
-            csv += "{}, {}\n".format(i, ", ".
-                                     join(str(self.logged_entries[entry][i].value) for entry in entries).
-                                     replace("[[",quotes)).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
-        return(csv)
-
-    @tc.typecheck
     def nparray(self,
-                    entries=None,
-                    header:bool=True,
-                    owner_name:bool=False):
+                entries=None,
+                header:bool=True,
+                owner_name:bool=False
+                ):
         """
         nparray(                 \
             entries=None,        \
@@ -871,23 +907,41 @@ class Log:
 
         Return a 2d numpy array with headers (optional) and values for the specified entries.
 
-        First row (axis 0) is a sequential index (starting with 0), and each subsequent row is the
-        sequence ("time series") of logged values for given Component. Rows are ordered in the same order as
-        Components are specified in the **entries** argument.  If header is `True`, the first item of each row is
-        a header field: for the first row, it is "Index", and for subsequent rows it is the name of the
-        Component logged in that entry.
+        Each row (axis 0) is a time series, with each item in each row the data for the corresponding time point.
+        Rows are ordered in the same order as Components are specified in the **entries** argument.
+
+        If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not `None`),
+        then the first three rows are time indices for the run, trial and time_step of each data item, respectively.
+        Each subsequent row is the times series of data for a given entry.  If there is no data for a given entry
+        at a given time point, it is entered as `None`.
+
+        If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
+        System), then all of the entries must have the same number of data (LogEntry) items, and the first row is a
+        sequential index (starting with 0) that simply designates the data item number.
 
         .. note::
-           Currently only supports entries with the same length.  A future version will allow entries of differing
-           lengths in the same report.
+           For data without time stamps, the nth items in each entry correspond (i.e., ones in the same column)
+           are not guaranteed to have been logged at the same time point.
+
+        If header is `True`, the first item of each row is a header field: for time indices it is either "Run",
+        "Trial", and "Time_step", or "Index" if any data are missing time stamps.  For subsequent rows it is the name
+        of the Component logged in that entry (see **owner_name** argument below for formatting).
+
 
         Arguments
         ---------
 
-        entries : string or Component
+        entries : string, Component or list of them
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
             If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
+
+        COMMENT:
+        time : TimeScale or ALL : default ALL
+            specifies the "granularity" of how the time of an entry is reported.  *ALL* (same as `TIME_STEP
+            <TimeScale.TIME_STEP>) reports every entry in the Log in a separate column (axis 1) of the np.array
+            returned.
+        COMMENT
 
         header : bool : default True
             specifies whether or not to include a header in each row with the name of the Component for that entry.
@@ -921,12 +975,6 @@ class Log:
                 raise LogError("{} is not currently being logged by {} (try using log_items)".
                                format(repr(entry), self.owner.name))
 
-        max_len = max([len(self.logged_entries[e]) for e in entries])
-
-        # Currently only supports entries of the same length
-        if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
-            raise LogError("CSV output currently only supported for Log entries of equal length")
-
         if owner_name is True:
             owner_name_str = self.owner.name
             lb = "["
@@ -934,108 +982,174 @@ class Log:
         else:
             owner_name_str = lb = rb = ""
 
-
         header = 1 if header is True else 0
 
-        npa = np.arange(max_len).reshape(max_len,1).tolist()
-        if header:
-            npa = [[["Index"]] + npa]
+        # Get time values for all entries and sort them
+        time_values = []
+        for entry in entries:
+            time_values.extend([item.time
+                                for item in self.logged_entries[entry]
+                                if all(i is not None for i in item.time)])
+        if all(all(i for i in t) for t in time_values):
+            for time_scale in LogTimeScaleIndices:
+                time_values.sort(key=lambda tup: tup[time_scale])
+
+        npa = []
+
+        # Create time rows (one for each time scale)
+        if time_values:
+            for i in range(NUM_TIME_SCALES):
+                row = [[t[i]] for t in time_values]
+                if header:
+                    time_header = [TIME_SCALE_NAMES[i].capitalize()]
+                    row = [time_header] + row
+                npa.append(row)
+        # If any time values are empty, revert to indexing the entries;
+        #    this requires that all entries have the same length
         else:
-            npa = [npa]
+            max_len = max([len(self.logged_entries[e]) for e in entries])
 
-        for i, entry in enumerate(entries):
-            row = [e.value.tolist() for e in self.logged_entries[entry]]
+            # If there are no  only supports entries of the same length
+            if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
+                raise LogError("nparray output requires that all entries have time values or are of equal length")
+
+            npa = np.arange(max_len).reshape(max_len,1).tolist()
             if header:
-                entry = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
-                row = [entry] + row
-            npa.append(row)
-        npa = np.array(npa, dtype=object)
+                npa = [["Index"] + npa]
+            else:
+                npa = [npa]
 
+        # For each entry, iterate through its LogEntry tuples:
+        #    for each LogEntry tuple, check whether its time matches that of the next column:
+        #        if so, enter it in the entry's list
+        #        if not, enter `None` and check for a match in the next time column
+        for entry in entries:
+            row = []
+            time_col = iter(time_values)
+            for datum in self.logged_entries[entry]:
+                if time_values:
+                    while datum.time != next(time_col,None):
+                        row.append(None)
+                row.append(datum.value.tolist())
+            if header:
+                entry_header = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
+                row = [entry_header] + row
+            npa.append(row)
+
+        npa = np.array(npa, dtype=object)
         return(npa)
+
+    @tc.typecheck
+    def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'"):
+        """
+        csv(                           \
+            entries=None,              \
+            owner_name=False,          \
+            quotes=\"\'\"              \
+            )
+
+        Returns a CSV-formatted string with headers and values for the specified entries.
+
+        Each row (axis 0) is a time point, beginning with the time stamp and followed by the data for each
+        Component at that time point, in the order they are specified in the **entries** argument. If all of the data
+        for every Component have time values, then the first three items of each row are the time indices for the run,
+        trial and time_step of that time point, respectively, followed by the data for each Component at that time
+        point;  if a Component has no data for a time point, `None` is entered.
+
+        If any of the data for any Component does not have a time value (i.e., it has `None` in the time field of
+        its `LogEntry`) then all of the entries must have the same number of data (LogEntry) items, and the first item
+        of each row is a sequential index (starting with 0) that designates the data item number.
+
+        .. note::
+           For data without time stamps, items in the same row are not guaranteed to refer to the same time point.
+
+        The **owner_name** argument can be used to prepend the header for each Component with its owner.
+        The **quotes** argument can be used to suppress or specifiy quotes to use around values.
+
+
+        Arguments
+        ---------
+
+        entries : string, Component or list of them
+            specifies the entries of the Log to be included in the output;  they must be `loggable_items
+            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
+            If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
+
+        owner_name : bool : default False
+            specifies whether or not to include the Component's `owner <Log.owner>` in the header of each field;
+            if it is True, the format of the header for each field is "<Owner name>[<entry name>]"; otherwise,
+            it is "<entry name>".
+
+        quotes : bool, str : default '
+            specifies whether or not to enclose values other than quotes (useful if they are arrays);
+            if not specified or `True`, single quotes are used for *all* items;
+            if specified with a string, that is used to enclose *all* items;
+            if `False` or `None`, single quotes are used for headers (the items in the first row), but no others.
+
+        Returns:
+            CSV-formatted string
+        """
+
+        if not quotes:
+            quotes = ""
+        elif quotes is True:
+            quotes = "\'"
+
+        try:
+            npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
+        except LogError as e:
+            raise LogError(e.args[0].replace("nparray", "csv"))
+
+        npaT = npa.T
+
+        # Headers
+        csv = "\'" + "\', \'".join(npaT[0]) + "\'"
+        # Data
+        for i in range(1, len(npaT)):
+            csv += "\n" + ", ".join([str(j) for j in [str(k).replace(",","") for k in npaT[i]]]).\
+                replace("[[",quotes).replace("]]",quotes).replace("[",quotes).replace("]",quotes)
+        csv += '\n'
+
+        return(csv)
 
     @property
     def logged_entries(self):
         entries = {}
-        for i in self.loggable_components:
-            entries.update(i.log.entries)
+        for e in self.loggable_components:
+            entries.update(e.log.entries)
         return entries
 
-    # ******************************************************************************************************
-    # ******************************************************************************************************
-    # DEPRECATED OR IN NEED OF REFACTORING:
+    def clear_entries(self, entries=ALL_LOG_ENTRIES, delete_entry=True, confirm=False):
+        """Clear one or more entries either by deleting the entry or just removing its data.
 
-    def delete_entry(self, entries, confirm=True):
-        """Delete entry for attribute from self.entries
+        Arguments
+        ---------
 
-        If verify is True, user will be asked to confirm deletion;  otherwise it will simply be done
-        Note: deleting the entry will delete all the data recorded within it
-        Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
-        Notes:
-        * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
-        * deleting entries removes them from Log dict, owner.prefs.logPref, and deletes ALL data recorded in them
+        entries : string, Component or list of them : default None
+            specifies the entries of the Log to be cleared;  they must be `loggable_items
+            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
+            If **entries** is `ALL`, `None` or omitted, then all `logged_items <Log.logged_items>` are cleared.
 
-        :param entries: (str, list, or Log.ALL_LOG_ENTRIES)
-        :param confirm: (bool)
-        :return:
-        """
+        delete_entry : bool : default True
+            specifies whether to delete the entry (if `True`) from the log to which it belongs, or just
+            delete the data, but leave the entry itself (if `False`).
 
-        msg = ""
+            .. note::
+                This option is included for generality and potential future features, but is not advised;
+                the Log interface (e.g., the `logged_items <Log.logged_items>` interface generally assumes that
+                the only `entries <Log.entries>` in a log are ones with data.
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
-        if entries is Log.ALL_LOG_ENTRIES:
-            entries = self.logged_entries.keys()
-            msg = Log.ALL_LOG_ENTRIES
+        confirm : bool : default False
+            specifies whether user confirmation is required before clearing the entries.
 
-        # If entries is a single entry, put in list for processing below
-        elif isinstance(entries, str):
-            entries = [entries]
+            .. note::
+                If **confirm** is `True`, only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
 
-        # Validate each entry and delete bad ones from entries
-        if not msg is Log.ALL_LOG_ENTRIES:
-            for entry in entries:
-                try:
-                    self.logged_entries[entry]
-                except KeyError:
-                    warnings.warn("Warning: {0} is not an entry in Log of {1}".
-                                  format(entry,self.owner.name))
-                    del(entries, entry)
-            if len(entries) > 1:
-                msg = ', '.join(str(entry) for entry in entries)
-
-        # If any entries remain
-        if entries:
-            if confirm:
-                delete = input("\n{0} will be deleted (along with any recorded date) from Log for {1}.  Proceed? (y/n)".
-                               format(msg, self.owner.name))
-                while delete != 'y' and delete != 'y':
-                    input("\nRemove entries from Log for {0}? (y/n)".format(self.owner.name))
-                if delete == 'n':
-                    warnings.warn("No entries deleted")
-                    return
-
-            # Reset entries
-            for entry in entries:
-                self.logged_entries[entry]=[]
-                if entry in self.owner.prefs.logPref:
-                    del(self.owner.prefs.logPref, entry)
-
-    def reset_entries(self, entries, confirm=True):
-        """Reset one or more entries by removing all data, but leaving entries in Log dict
-
-        If verify is True, user will be asked to confirm the reset;  otherwise it will simply be done
-        Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
-        Notes:
-        * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
-        * resetting an entry deletes ALL the data recorded within it
-
-        :param entries: (list, str or Log.ALL_LOG_ENTRIES)
-        :param confirm: (bool)
-        :return:
         """
 
         # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
-        if entries is Log.ALL_LOG_ENTRIES:
-            entries = self.entries.keys()
+        if entries in {None, Log.ALL_LOG_ENTRIES}:
+            entries = self.logged_items.keys()
 
         # If entries is a single entry, put in list for processing below
         if isinstance(entries, str):
@@ -1044,10 +1158,11 @@ class Log:
         # Validate each entry and delete bad ones from entries
         for entry in entries:
             try:
-                self.entries[entry]
+                self.logged_items[entry]
             except KeyError:
-                warnings.warn("Warning: {0} is not an entry in Log of {1}".
-                              format(entry,self.owner.name))
+                if self.owner.verbosePref:
+                    warnings.warn("Warning: {0} is not an entry in Log of {1}".
+                                  format(entry,self.owner.name))
                 del(entries, entry)
 
         # If any entries remain
@@ -1062,57 +1177,14 @@ class Log:
 
             # Reset entries
             for entry in entries:
-                self.entries[entry]=[]
+                self.logged_entries[entry]=[]
+                if delete_entry:
+                # Delete the entire entry from the log to which it belongs
+                    del self.loggable_components[entry].log.entries[entry]
+                else:
+                    # Delete the data for the entry but leave the entry itself in the log to which it belongs
+                    del self.logged_entries[entry][0:]
+                assert True
 
-    def suspend_entries(self, entries):
-        """Suspend recording the values of attributes corresponding to entries even if logging is on
-
-        Remove entries from self.owner.prefs.logPref (but leave in Log dict, i.e., self.entries)
-
-        :param entries: (str or list)
-        :return:
-        """
-
-        # If entries is a single entry, put in list for processing below
-        if isinstance(entries, str):
-            entries = [entries]
-
-        # Check whether each entry is already in self.entries and, if not, validate and add it
-        for entry in entries:
-            try:
-                self.owner.prefs.logPref.remove(entry)
-            except ValueError:
-                if not entry in SystemLogEntries and not entry in self.owner.__dict__:
-                    warnings.warn("{0} is not an attribute of {1} or in SystemLogEntries".
-                                  format(entry, self.owner.name))
-                elif self.owner.prefs.verbosePref:
-                    warnings.warn("{0} was not being recorded")
-            else:
-                if self.owner.prefs.verbosePref:
-                    warnings.warn("Started logging of {0}".format(entry))
-
-    def save_log(self):
-        print("Saved")
-
-    # def _log_value(self, curr_frame, value):
-    def _log_value(self, value):
-
-        # Get context
-        try:
-            curr_frame = inspect.currentframe()
-            prev_frame = inspect.getouterframes(curr_frame, 2)
-            context = inspect.getargvalues(prev_frame[2][0]).locals['context']
-        except KeyError:
-            context = ""
-        if not isinstance(context, str):
-            context = ""
-
-        # Get logPref and context
-        log_pref = self.owner.prefs.logPref if self.owner.prefs else None
-        context_flags = _get_log_context(context)
-
-        # Log value if logging condition is satisfied
-        if log_pref and log_pref == context_flags:
-        # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-        # if log_pref and log_pref | context_flags:
-            self.entries[self.owner.name] = LogEntry('time_placeholder', context, value)
+    # def save_log(self):
+    #     print("Saved")

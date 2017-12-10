@@ -5,7 +5,7 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import System
-from psyneulink.globals.keywords import LEARNING, SOFT_CLAMP
+from psyneulink.globals.keywords import LEARNING, SOFT_CLAMP, EXECUTION, LEARNING
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.library.mechanisms.processing.objective.comparatormechanism import MSE
 
@@ -98,7 +98,7 @@ def test_multilayer():
         },
     )
 
-    Middle_Weights.log_items('matrix')
+    Middle_Weights.log_items(('matrix', EXECUTION))
 
     stim_list = {Input_Layer: [[-1, 30]]}
     target_list = {Output_Layer: [[0, 0, 1]]}
@@ -122,13 +122,13 @@ def test_multilayer():
         learning_rate=1.0,
     )
 
-    s.reportOutputPref = True
+    # s.reportOutputPref = True
 
     results = s.run(
         num_trials=10,
         inputs=stim_list,
         targets=target_list,
-        call_after_trial=show_target,
+        # call_after_trial=show_target,
     )
 
     objective_output_layer = s.mechanisms[4]
@@ -177,6 +177,8 @@ def test_multilayer():
         ]),
     ]
 
+    # Test nparray output of log for Middle_Weights
+
     for i in range(len(expected_output)):
         val, expected = expected_output[i]
         # setting absolute tolerance to be in accordance with reference_output precision
@@ -187,7 +189,9 @@ def test_multilayer():
     log_val = Middle_Weights.log.nparray(entries='matrix', header=False)
     expected_log_val = np.array(
             [
+                [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
                 [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9]],
+                [[2], [2], [2], [2], [2], [2], [2], [2], [2], [2]],
                 [ [[ 0.05,  0.1 ,  0.15,  0.2 ],
                    [ 0.25,  0.3 ,  0.35,  0.4 ],
                    [ 0.45,  0.5 ,  0.55,  0.6 ],
@@ -241,6 +245,60 @@ def test_multilayer():
             ], dtype=object
     )
 
+    for i in range(len(log_val)):
+        try:
+            np.testing.assert_array_equal(log_val[i], expected_log_val[i])
+        except:
+            for j in range(len(log_val[i])):
+                np.testing.assert_allclose(np.array(log_val[i][j]), np.array(expected_log_val[i][j]),
+                                           atol=1e-08,
+                                           err_msg='Failed on test of logged values')
+
+    Middle_Weights.log.print_entries()
+
+    # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
+    Middle_Weights.log.clear_entries(entries=None, confirm=False)
+    Middle_Weights.log_items(('matrix', LEARNING))
+    s.run(
+            num_trials=5,
+            inputs=stim_list,
+            targets=target_list,
+    )
+    log_val = Middle_Weights.log.nparray(entries='matrix', header=False)
+    expected_log_val = np.array(
+                [
+                    [[0], [0], [0], [0], [0]],
+                    [[21], [23], [25], [27], [29]],
+                    [[3], [3], [3], [3], [3]],
+                    [  [[0.09925812411381937, 0.1079522130303428, 0.12252820028789306, 0.14345816973727732],
+                        [0.30131473371328343, 0.30827285172236585, 0.3213609999139731, 0.3410707131678078],
+                        [0.5032924245149345, 0.5085833053183328, 0.5202423523987703, 0.5387798509126243],
+                        [0.70518251216691, 0.7088822116145151, 0.7191771716324874, 0.7365956448426355],
+                        [0.9069777724600303, 0.9091682860319945, 0.9181692763668221, 0.93452610920817]],
+                       [[0.103113468050986, 0.11073719161508278, 0.12424368674464399, 0.14415219181047598],
+                        [0.3053351724284921, 0.3111770895557729, 0.3231499474835138, 0.341794454877438],
+                        [0.5074709829757806, 0.5116017638574931, 0.5221016574478528, 0.5395320566440044],
+                        [0.7095115080472698, 0.7120093413898914, 0.7211034158081356, 0.7373749316571768],
+                        [0.9114489813353512, 0.9123981459792809, 0.9201588001021687, 0.935330996581107]],
+                      [[0.10656261740658036, 0.11328192907953168, 0.12587702586370172, 0.14490737831188183],
+                       [0.30893272045369513, 0.31383131362555394, 0.32485356055342113, 0.3425821330631872],
+                       [0.5112105492674988, 0.5143607671543178, 0.5238725230390068, 0.5403508295336265],
+                       [0.7133860755337162, 0.7148679468096026, 0.7229382109974996, 0.7382232628724675],
+                       [0.9154510531345043, 0.9153508224199809, 0.9220539747533424, 0.936207244690072]],
+                      [[0.10967776822419642, 0.11562091141141007, 0.12742795007904037, 0.14569308665620523],
+                       [0.3121824816018084, 0.316271366885665, 0.3264715025259811, 0.34340179304134666],
+                       [0.5145890402653069, 0.5168974760377518, 0.5255545550838675, 0.5412029579613059],
+                       [0.7168868378231593, 0.7174964619674593, 0.7246811176253708, 0.7391062307617761],
+                       [0.9190671994078436, 0.9180659725806082, 0.923854327015523, 0.9371193149131859]],
+                      [[0.11251466428344682, 0.11778293740676549, 0.12890014813698167, 0.14649079441816393],
+                       [0.31514245505635713, 0.3185271913574249, 0.328007571201157, 0.3442341089776976],
+                       [0.5176666356203712, 0.5192429413004418, 0.5271516632648602, 0.5420683480396268],
+                       [0.7200760707077265, 0.7199270072739019, 0.7263361597421493, 0.7400030122347587],
+                       [0.922361699102421, 0.9205767427437028, 0.9255639970037588, 0.9380456963960624]]]
+        ], dtype=object
+    )
+
+    assert log_val.shape == expected_log_val.shape
     for i in range(len(log_val)):
         try:
             np.testing.assert_array_equal(log_val[i], expected_log_val[i])
