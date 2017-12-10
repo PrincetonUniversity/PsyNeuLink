@@ -139,7 +139,7 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     >>> my_mech_B.loggable_items # doctest: +SKIP
     {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
     >>> proj_A_to_B.loggable_items # doctest: +SKIP
-    {'matrix': 'OFF'}
+    {'value': 'OFF', 'matrix': 'OFF'}
 
     # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
     >>> my_mech_A.log_items([pnl.NOISE, pnl.RESULTS])
