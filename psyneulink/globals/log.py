@@ -185,17 +185,19 @@ method of a Log::
 They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
-    >>> my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None) # doctest: +SKIP
+    >>> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
     'Index', 'noise', 'RESULTS'
-    0,  0.0,  0.0
-    1,  0.0,  0.0
+    0, 0.0, 0.0 0.0
+    1, 0.0, 0.0 0.0
+    <BLANKLINE>
 
     # Display the csv formatted entry of Log for ``proj_A_to_B``
     #    with quotes around values and the Projection's name included in the header:
-    >>> proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True) # doctest: +SKIP
-    'Index', 'MappingProjection from mech_A to mech_B[matrix]'
+    >>> print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
+    'Index', 'matrix'
     '0', '1.0 1.0 1.0' '1.0 1.0 1.0'
     '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
+    <BLANKLINE>
 
 Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
 reported.

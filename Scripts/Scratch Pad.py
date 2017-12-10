@@ -2333,7 +2333,8 @@ def test_log_docs():
     print(proj_A_to_B.logged_items)
 
     my_mech_A.log.print_entries()
-    print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
+    x = my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None)
+    print(x)
     print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
     print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False))
 
