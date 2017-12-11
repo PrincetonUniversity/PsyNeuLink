@@ -6145,7 +6145,7 @@ class FHNIntegrator(
         if not context or INITIALIZING not in context:
             self.previous_v = approximate_values[0]
             self.previous_w = approximate_values[1]
-            self.previous_t += self.time_step_size[0]
+            self.previous_t += self.time_step_size
 
         return self.previous_v, self.previous_w, self.previous_t
 
