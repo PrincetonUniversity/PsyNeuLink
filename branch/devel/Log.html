@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.0rc1+37.g20b5a07.dirty documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.0rc1+48.ga35c7d1.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+37.g20b5a07.dirty documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+48.ga35c7d1.dirty documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+37
+                0.4.0rc1+48
               </div>
             
           
@@ -166,11 +166,6 @@
             
   <div class="section" id="module-psyneulink.globals.log">
 <span id="log"></span><h1>Log<a class="headerlink" href="#module-psyneulink.globals.log" title="Permalink to this headline">¶</a></h1>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This is a provisional implementation of logging.  It has the functionality described below; additional features
-will be added and some may be subject to modification in future versions.</p>
-</div>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Log object is used to record the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of PsyNeuLink Components during their “life cycle” (i.e.,
@@ -178,9 +173,10 @@ when they are created, validated, and/or executed).  Every Component has a Log o
 Components that belong to it.  These are stored in <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
 recorded is specified by the <code class="xref any docutils literal"><span class="pre">logPref</span></code> property of a Component.  While these can be set directly,
-they are most easily specified using the Log’s <a class="reference internal" href="#psyneulink.globals.log.Log.log_items" title="psyneulink.globals.log.Log.log_items"><code class="xref any py py-meth docutils literal"><span class="pre">log_items</span></code></a> method, together with its <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> and &lt;Log.logged_items&gt;` attributes that identify and track the items to be logged. These can be
-useful not only for observing the behavior of a Component in a model, but also in debugging the model during
-construction. The entries of a Log can be displayed in a “human readable” table using its <a class="reference internal" href="#psyneulink.globals.log.Log.print_entries" title="psyneulink.globals.log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a> method, and returned in CSV and numpy array formats using its <a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">csv</span></code></a> and <a class="reference internal" href="#psyneulink.globals.log.Log.nparray" title="psyneulink.globals.log.Log.nparray"><code class="xref any py py-meth docutils literal"><span class="pre">nparray</span></code></a> methods.</p>
+they are most easily specified using the Log’s <a class="reference internal" href="#psyneulink.globals.log.Log.log_items" title="psyneulink.globals.log.Log.log_items"><code class="xref any py py-meth docutils literal"><span class="pre">log_items</span></code></a> method, together with its <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> and <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> attributes that identify and track the items to be logged.
+These can be useful not only for observing the behavior of a Component in a model, but also in debugging the model
+during construction. The entries of a Log can be displayed in a “human readable” table using its <a class="reference internal" href="#psyneulink.globals.log.Log.print_entries" title="psyneulink.globals.log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a> method, and returned in CSV and numpy array formats using its and <a class="reference internal" href="#psyneulink.globals.log.Log.nparray" title="psyneulink.globals.log.Log.nparray"><code class="xref any py py-meth docutils literal"><span class="pre">nparray</span></code></a> and
+<a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">csv</span></code></a>  methods.</p>
 </div>
 <div class="section" id="creating-logs-and-entries">
 <h2>Creating Logs and Entries<a class="headerlink" href="#creating-logs-and-entries" title="Permalink to this headline">¶</a></h2>
@@ -195,19 +191,14 @@ values of a Component.  The key for each entry is a string that is the name of t
 of <code class="xref any docutils literal"><span class="pre">LogEntry</span></code> tuples recording its values.  Each <code class="xref any docutils literal"><span class="pre">LogEntry</span></code> tuple has three items:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>time</em> – the <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> of the trial in which the value of the item was recorded;</li>
+<li><em>time</em> – the <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.RUN" title="psyneulink.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> and <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> in which the value of the item was recorded;</li>
 <li><em>context</em> – a string indicating the context in which the value was recorded;</li>
 <li><em>value</em> – the value of the item.</li>
 </ul>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Currently the “time” field of the entry is not used, and reports indicate the entry number
-(corresonding to the number of executions of the Component), which may or may not correspond to the
-<a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> of execution.  This will be corrected in a future release.</p>
-</div>
 </div></blockquote>
-<p>A Log has several attributes and methods that make it easy to manage when it values are recorded and accessing its
-<a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a>:</p>
+<p>The time is recorded only if the Component is executed within a <a class="reference internal" href="System.html"><span class="doc">System</span></a>;  otherwise, the time field is <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
+<p>A Log has several attributes and methods that make it easy to manage how and when it values are recorded, and
+to access its <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a>:</p>
 <blockquote>
 <div><ul class="simple">
 <li><a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> – a dictionary with the items that can be logged in a Component’s <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>;  the key for each entry is the name of a Component,  and the value is it current <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>.</li>
@@ -225,10 +216,10 @@ assign to that Component, or in a list with a <a class="reference internal" href
 <li><a class="reference internal" href="#psyneulink.globals.log.Log.print_entries" title="psyneulink.globals.log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a> – this prints a formatted list of the <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> in the Log.</li>
 </ul>
 <ul class="simple">
-<li><a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">csv</span></code></a> – returns a CSV-formatted string with the <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> in the Log.</li>
+<li><a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">nparray</span></code></a> – returns a 2d np.array with the <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> in the Log.</li>
 </ul>
 <ul class="simple">
-<li><a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">nparray</span></code></a> – returns a 2d np.array with the <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> in the Log.</li>
+<li><a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">csv</span></code></a> – returns a CSV-formatted string with the <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> in the Log.</li>
 </ul>
 </div></blockquote>
 <div class="section" id="loggable-items">
@@ -238,6 +229,12 @@ the Logs for <a class="reference internal" href="Mechanism.html"><span class="do
 the Logs of their <a class="reference internal" href="State.html"><span class="doc">States</span></a>.  Specifically the Logs of these Components contain the following information:</p>
 <ul>
 <li><p class="first"><strong>Mechanisms</strong></p>
+<ul class="simple">
+<li><em>value</em> – the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism.</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
 <ul class="simple">
 <li><em>InputStates</em> – the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of any <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> (listed in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute).</li>
 </ul>
@@ -256,40 +253,66 @@ the Logs of their <a class="reference internal" href="State.html"><span class="d
 </ul>
 </li>
 </ul>
+<ul>
+<li><p class="first"><strong>Projections</strong></p>
 <ul class="simple">
-<li><strong>Projections</strong><ul>
-<li><em>MappingProjections</em> – the value of its <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter.</li>
+<li><em>value</em> – the <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.value" title="psyneulink.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Projection.</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li><em>matrix</em> – the value of the <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter (for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> only).</li>
 </ul>
 </li>
 </ul>
+</div>
+<div class="section" id="loglevels">
+<h3>LogLevels<a class="headerlink" href="#loglevels" title="Permalink to this headline">¶</a></h3>
+<p>Configuring a Component to be logged is done using a <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>, that specifies the conditions under which its
+<a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> should be entered in its Log.  These can be specified in the <a class="reference internal" href="#psyneulink.globals.log.Log.log_items" title="psyneulink.globals.log.Log.log_items"><code class="xref any py py-meth docutils literal"><span class="pre">log_items</span></code></a>
+method of a Log, or directly by specifying a LogLevel for the value a Component’s <code class="xref any docutils literal"><span class="pre">logPref</span></code> item
+of its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.prefs" title="psyneulink.components.component.Component.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> attribute.  The former is easier, and allows multiple Components to be specied at
+once, while the latter affords more control over the specification (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>).  LogLevels are treated as
+binary “flags”, and can be combined to permit logging under more than one contact or boolean combinations of LogLevels
+using bitwise operators (e.g., LogLevel.EXECUTION | LogLevel.LEARNING).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently, the only <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevels</span></code></a> supported are: <a class="reference internal" href="#psyneulink.globals.log.LogLevel.OFF" title="psyneulink.globals.log.LogLevel.OFF"><code class="xref any py py-attr docutils literal"><span class="pre">OFF</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.LogLevel.INITIALIZATION" title="psyneulink.globals.log.LogLevel.INITIALIZATION"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZATION</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.LogLevel.EXECUTION" title="psyneulink.globals.log.LogLevel.EXECUTION"><code class="xref any py py-attr docutils literal"><span class="pre">EXECUTION</span></code></a> and <a class="reference internal" href="#psyneulink.globals.log.LogLevel.LEARNING" title="psyneulink.globals.log.LogLevel.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Using the <a class="reference internal" href="#psyneulink.globals.log.LogLevel.INITIALIZATION" title="psyneulink.globals.log.LogLevel.INITIALIZATION"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZATION</span></code></a> LogLevel to log the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Component during its initialization
+requires that it be assigned in the <strong>prefs</strong> argument of the Component’s constructor.  For example:</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span>
+<span class="gp">... </span>         <span class="n">prefs</span><span class="o">=</span><span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">LOG_PREF</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">PreferenceEntry</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">LogLevel</span><span class="o">.</span><span class="n">INITIALIZATION</span><span class="p">,</span><span class="n">pnl</span><span class="o">.</span><span class="n">PreferenceLevel</span><span class="o">.</span><span class="n">INSTANCE</span><span class="p">)})</span>
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The value of a Component is recorded to a Log when the condition assigned to its <code class="xref any docutils literal"><span class="pre">logPref</span></code> is met.
 This specified as a <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>.  The default LogLevel is <a class="reference internal" href="#psyneulink.globals.log.LogLevel.OFF" title="psyneulink.globals.log.LogLevel.OFF"><code class="xref any py py-attr docutils literal"><span class="pre">OFF</span></code></a>.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Currently, the only <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevels</span></code></a> supported are <a class="reference internal" href="#psyneulink.globals.log.LogLevel.OFF" title="psyneulink.globals.log.LogLevel.OFF"><code class="xref any py py-attr docutils literal"><span class="pre">OFF</span></code></a> and and <a class="reference internal" href="#psyneulink.globals.log.LogLevel.EXECUTION" title="psyneulink.globals.log.LogLevel.EXECUTION"><code class="xref any py py-attr docutils literal"><span class="pre">EXECUTION</span></code></a>.</p>
-</div>
 <p class="rubric">Examples</p>
 <p>The following example creates a Process with two <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a>, one that projects to
 another, and logs the <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <em>RESULTS</em> <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of the first and the
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the first to the second:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mech_A&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_B</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mech_B&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">my_process</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech_A</span><span class="p">,</span> <span class="n">my_mech_B</span><span class="p">])</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">proj_A_to_B</span> <span class="o">=</span> <span class="n">my_mech_B</span><span class="o">.</span><span class="n">path_afferents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
 <span class="c1"># Show the loggable items (and their current LogLevels) of each Mechanism and the Projection between them:</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">loggable_items</span> <span class="c1"># doctest: +SKIP</span>
+<span class="o">&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">loggable_items</span>
 <span class="p">{</span><span class="s1">&#39;InputState-0&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;time_constant&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;intercept&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">}</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_B</span><span class="o">.</span><span class="n">loggable_items</span> <span class="c1"># doctest: +SKIP</span>
+<span class="o">&gt;&gt;</span> <span class="n">my_mech_B</span><span class="o">.</span><span class="n">loggable_items</span>
 <span class="p">{</span><span class="s1">&#39;InputState-0&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;intercept&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;time_constant&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">}</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">loggable_items</span> <span class="c1"># doctest: +SKIP</span>
-<span class="p">{</span><span class="s1">&#39;matrix&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">}</span>
+<span class="o">&gt;&gt;</span> <span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">loggable_items</span>
+<span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">,</span> <span class="s1">&#39;matrix&#39;</span><span class="p">:</span> <span class="s1">&#39;OFF&#39;</span><span class="p">}</span>
 
 <span class="c1"># Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">log_items</span><span class="p">([</span><span class="n">pnl</span><span class="o">.</span><span class="n">NOISE</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">])</span>
@@ -304,11 +327,11 @@ another, and logs the <a class="reference internal" href="TransferMechanism.html
 <span class="n">array</span><span class="p">([</span> <span class="mf">0.</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">])</span>
 
 <span class="c1"># List the items of each Mechanism and the Projection that were actually logged:</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">logged_items</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="o">&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">logged_items</span>
 <span class="p">{</span><span class="s1">&#39;RESULTS&#39;</span><span class="p">:</span> <span class="s1">&#39;EXECUTION&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">:</span> <span class="s1">&#39;EXECUTION&#39;</span><span class="p">}</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_B</span><span class="o">.</span><span class="n">logged_items</span>
+<span class="o">&gt;&gt;</span> <span class="n">my_mech_B</span><span class="o">.</span><span class="n">logged_items</span>
 <span class="p">{}</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">logged_items</span>
+<span class="o">&gt;&gt;</span> <span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">logged_items</span>
 <span class="p">{</span><span class="s1">&#39;matrix&#39;</span><span class="p">:</span> <span class="s1">&#39;EXECUTION&#39;</span><span class="p">}</span>
 </pre></div>
 </div>
@@ -316,43 +339,42 @@ another, and logs the <a class="reference internal" href="TransferMechanism.html
 it.  The results of the two other logs can be printed to the console using the <a class="reference internal" href="#psyneulink.globals.log.Log.print_entries" title="psyneulink.globals.log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a>
 method of a Log:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Print the Log for ``my_mech_A``:</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">()</span> <span class="c1"># doctest: +SKIP</span>
+<span class="o">&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">()</span>
+
 <span class="n">Log</span> <span class="k">for</span> <span class="n">mech_A</span><span class="p">:</span>
 
-<span class="n">Entry</span>     <span class="n">Logged</span> <span class="n">Item</span><span class="p">:</span>                                       <span class="n">Context</span>                                                                 <span class="n">Value</span>
+<span class="n">Time</span>      <span class="n">Logged</span> <span class="n">Item</span><span class="p">:</span>                                       <span class="n">Context</span>                                                                 <span class="n">Value</span>
 
-<span class="mi">0</span>         <span class="s1">&#39;RESULTS&#39;</span><span class="o">.........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
-<span class="mi">1</span>         <span class="s1">&#39;RESULTS&#39;</span><span class="o">.........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
+<span class="kc">None</span>      <span class="s1">&#39;RESULTS&#39;</span><span class="o">.........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
+<span class="kc">None</span>      <span class="s1">&#39;RESULTS&#39;</span><span class="o">.........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
 
 
-<span class="mi">0</span>         <span class="s1">&#39;noise&#39;</span><span class="o">...........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
-<span class="mi">1</span>         <span class="s1">&#39;noise&#39;</span><span class="o">...........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
+<span class="kc">None</span>      <span class="s1">&#39;noise&#39;</span><span class="o">...........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
+<span class="kc">None</span>      <span class="s1">&#39;noise&#39;</span><span class="o">...........................................</span><span class="s1">&#39; EXECUTING  PROCESS Process-0&#39;</span><span class="o">.......................................</span>    <span class="mf">0.0</span>
 </pre></div>
 </div>
-<p>They can also be exported in csv and numpy array formats.  The following shows the csv-formatted output of the Logs
+<p>They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for <code class="docutils literal"><span class="pre">my_mech_A</span></code> and  <code class="docutils literal"><span class="pre">proj_A_to_B</span></code>, using different formatting options:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Display the csv formatted entry of Log for ``my_mech_A`` without quotes around values:</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">my_mech_A</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">NOISE</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">],</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quotes</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="c1"># doctest: +SKIP</span>
-<span class="s1">&#39;Entry&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span>
-<span class="mi">0</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">,</span>  <span class="mf">0.</span>
-<span class="mi">1</span><span class="p">,</span>  <span class="mf">0.</span><span class="p">,</span>  <span class="mf">0.</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">my_mech_A</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">NOISE</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">],</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quotes</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+<span class="s1">&#39;Index&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">,</span> <span class="s1">&#39;RESULTS&#39;</span>
+<span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span> <span class="mf">0.0</span>
+<span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span> <span class="mf">0.0</span>
 
 <span class="c1"># Display the csv formatted entry of Log for ``proj_A_to_B``</span>
 <span class="c1">#    with quotes around values and the Projection&#39;s name included in the header:</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">,</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quotes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># doctest: +SKIP</span>
-<span class="c1"># &#39;Entry&#39;, &#39;MappingProjection from mech_A to mech_B[matrix]&#39;</span>
-<span class="c1"># 0, &#39; 1.  1.  1.&#39;</span>
-<span class="c1">#  &#39; 1.  1.  1.&#39;</span>
-<span class="c1"># 1, &#39; 1.  1.  1.&#39;</span>
-<span class="c1">#  &#39; 1.  1.  1.&#39;</span>
+<span class="o">&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">,</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quotes</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="s1">&#39;Index&#39;</span><span class="p">,</span> <span class="s1">&#39;matrix&#39;</span>
+<span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1.0 1.0 1.0&#39;</span> <span class="s1">&#39;1.0 1.0 1.0&#39;</span>
+<span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;1.0 1.0 1.0&#39;</span> <span class="s1">&#39;1.0 1.0 1.0&#39;</span>
 </pre></div>
 </div>
 <p>Note that since the <code class="xref any docutils literal"><span class="pre">name</span></code> attribute of the Projection was not assigned, its default name is
 reported.</p>
 <p>The following shows the Log of <code class="docutils literal"><span class="pre">proj_A_to_B</span></code> in numpy array format:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">nparray</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">],</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> 
-<span class="go">[[[0] [1]]</span>
-<span class="go"> [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">proj_A_to_B</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">nparray</span><span class="p">(</span><span class="n">entries</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">MATRIX</span><span class="p">],</span> <span class="n">owner_name</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">array</span><span class="p">([[[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+       <span class="p">[[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span>
+        <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]]]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -370,32 +392,56 @@ reported.</p>
 
 <dl class="attribute">
 <dt id="psyneulink.globals.log.LogLevel.INITIALIZATION">
-<code class="descname">INITIALIZATION</code><em class="property"> = 1</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.INITIALIZATION" title="Permalink to this definition">¶</a></dt>
-<dd><p>Record only initial assignment.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.globals.log.LogLevel.VALUE_ASSIGNMENT">
-<code class="descname">VALUE_ASSIGNMENT</code><em class="property"> = 2</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.VALUE_ASSIGNMENT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Record only final value assignments during execution.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.globals.log.LogLevel.EXECUTION">
-<code class="descname">EXECUTION</code><em class="property"> = 3</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.EXECUTION" title="Permalink to this definition">¶</a></dt>
-<dd><p>Record all value assignments during execution.</p>
+<code class="descname">INITIALIZATION</code><em class="property"> = 2</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.INITIALIZATION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record during initial assignment.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.globals.log.LogLevel.VALIDATION">
-<code class="descname">VALIDATION</code><em class="property"> = 5</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.VALIDATION" title="Permalink to this definition">¶</a></dt>
-<dd><p>Record all value assignments during validation and execution.</p>
+<code class="descname">VALIDATION</code><em class="property"> = 4</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.VALIDATION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record value during validation.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.log.LogLevel.EXECUTION">
+<code class="descname">EXECUTION</code><em class="property"> = 8</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.EXECUTION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record all value assignments during any execution of the Component.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.log.LogLevel.PROCESSING">
+<code class="descname">PROCESSING</code><em class="property"> = 16</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.PROCESSING" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record all value assignments during processing phase of Composition execution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.log.LogLevel.LEARNING">
+<code class="descname">LEARNING</code><em class="property"> = 40</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.LEARNING" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record all value assignments during learning phase of Composition execution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.log.LogLevel.CONTROL">
+<code class="descname">CONTROL</code><em class="property"> = 64</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.CONTROL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record all value assignment during control phase of Composition execution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.log.LogLevel.VALUE_ASSIGNMENT">
+<code class="descname">VALUE_ASSIGNMENT</code><em class="property"> = 128</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.VALUE_ASSIGNMENT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record final value assignments during Composition execution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.log.LogLevel.FINAL">
+<code class="descname">FINAL</code><em class="property"> = 256</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.FINAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synonym of VALUE_ASSIGNMENT.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.globals.log.LogLevel.ALL_ASSIGNMENTS">
-<code class="descname">ALL_ASSIGNMENTS</code><em class="property"> = 5</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Record all value assignments during initialization, validation and execution.</p>
+<code class="descname">ALL_ASSIGNMENTS</code><em class="property"> = 510</em><a class="headerlink" href="#psyneulink.globals.log.LogLevel.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record all value assignments.</p>
 </dd></dl>
 
 </dd></dl>
@@ -419,7 +465,7 @@ reported.</p>
 <dl class="attribute">
 <dt id="psyneulink.globals.log.Log.loggable_items">
 <code class="descname">loggable_items</code><a class="headerlink" href="#psyneulink.globals.log.Log.loggable_items" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[Component.name: List[LogEntry]]</em> – identifies Components that can be logged in the Log; the key of each entry is the name of a Component,
+<dd><p><em>Dict[Component.name: List[LogEntry]]</em> – identifies Components that can be logged by the owner; the key of each entry is the name of a Component,
 and the value is its currently assigned <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>.</p>
 </dd></dl>
 
@@ -434,33 +480,13 @@ for which information has been logged appear in the <a class="reference internal
 <dl class="attribute">
 <dt id="psyneulink.globals.log.Log.logged_items">
 <code class="descname">logged_items</code><a class="headerlink" href="#psyneulink.globals.log.Log.logged_items" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[Component.name: List[LogEntry]]</em> – identifies Components for which information has been entered in the Log; the key for each entry is the name
+<dd><p><em>Dict[Component.name: List[LogEntry]]</em> – identifies Components that currently have entries in the Log; the key for each entry is the name
 of a Component, and the value is its currently assigned <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">loggable_items</code></dt>
-<dd><p>Return dict of loggable items</p>
-<p>Keys are names of the items, values the items themselves</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">loggable_components</code></dt>
-<dd><p>Return a list of owner’s Components that are loggable</p>
-<p>The loggable items of a Component are specified in in the _logable_items property of its class</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">logged_items</code></dt>
-<dd><p>Dict of items that have logged <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a>, indicating their specified <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="psyneulink.globals.log.Log.log_items">
-<code class="descname">log_items</code><span class="sig-paren">(</span><em>items</em>, <em>log_level=&lt;LogLevel.EXECUTION: 3&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.log_items" title="Permalink to this definition">¶</a></dt>
+<code class="descname">log_items</code><span class="sig-paren">(</span><em>items</em>, <em>log_level=&lt;LogLevel.EXECUTION: 8&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.log_items" title="Permalink to this definition">¶</a></dt>
 <dd><p>Specifies items to be logged at the specified <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>(s).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -472,7 +498,9 @@ Each item must be a:
 * string that is the name of a <code class="xref any docutils literal"><span class="pre">loggable_item</span></code> &lt;Log.loggable_item&gt;` of the Log’s <a class="reference internal" href="#psyneulink.globals.log.Log.owner" title="psyneulink.globals.log.Log.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>;
 * a reference to a Component;
 * tuple, the first item of which is one of the above, and the second a <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a> to use for the item.</li>
-<li><strong>log_level</strong> (<em>LogLevel : default LogLevel.EXECUTION</em>) – specifies <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a> to use as the default for items not specified in tuples (see above).</li>
+<li><strong>log_level</strong> (<em>LogLevel : default LogLevel.EXECUTION</em>) – specifies <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a> to use as the default for items not specified in tuples (see above).
+For convenience, the name of a LogLevel can be used in place of its full specification
+(e.g., <em>EXECUTION</em> instead of <a class="reference internal" href="#psyneulink.globals.log.LogLevel.EXECUTION" title="psyneulink.globals.log.LogLevel.EXECUTION"><code class="xref any py py-attr docutils literal"><span class="pre">LogLevel.EXECUTION</span></code></a>).</li>
 <li><strong>params_set</strong> (<em>list : default None</em>) – list of parameters to include as loggable items;  these must be attributes of the <a class="reference internal" href="#psyneulink.globals.log.Log.owner" title="psyneulink.globals.log.Log.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>
 (for example, Mechanism</li>
 </ul>
@@ -483,38 +511,47 @@ Each item must be a:
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.globals.log.Log.print_entries">
-<code class="descname">print_entries</code><span class="sig-paren">(</span><em>entries=None</em>, <em>csv=False</em>, <em>synch_time=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.print_entries" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print values of entries</p>
-<p>If entries is the keyword <em>ALL_ENTRIES</em>, print all entries in the self.owner.prefs.logPref list
-Issue a warning if an entry is not in the Log dict</p>
+<dt id="psyneulink.globals.log.Log.log_value">
+<code class="descname">log_value</code><span class="sig-paren">(</span><em>entries</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.log_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log the value of a Component.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a><em> or </em><em>list of them : default None</em>) – specifies the Components, the current <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of which should be added to the Log.
+they must be <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the owner’s Log. If <strong>entries</strong> is <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL"><code class="xref any py py-attr docutils literal"><span class="pre">ALL</span></code></a>, <code class="xref any docutils literal"><span class="pre">None</span></code>
+or omitted, then the <code class="xref any docutils literal"><span class="pre">value</span></code> are logged.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.globals.log.Log.csv">
-<code class="descname">csv</code><span class="sig-paren">(</span><em>entries=None</em>, <em>owner_name=False</em>, <em>quotes=&quot;'&quot;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.csv" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a csv formatted string with headers and values for the specified entries.</p>
-<p>The first record (row) begins with “Entry” and is followed by the header for each field (column).
-Subsequent records begin with the record number, and are followed by the value for each entry.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Currently only supports reports of entries with the same length.  A future version will allow
-entries of differing lengths in the same report.</p>
-</div>
+<dt id="psyneulink.globals.log.Log.clear_entries">
+<code class="descname">clear_entries</code><span class="sig-paren">(</span><em>entries='all_log_entries'</em>, <em>delete_entry=True</em>, <em>confirm=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.clear_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear one or more entries either by deleting the entry or just removing its data.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a>) – specifies the entries to be included;  they must be <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Log.</li>
-<li><strong>owner_name</strong> (<em>bool : default False</em>) – specified whether or not to include the Log’s <a class="reference internal" href="#psyneulink.globals.log.Log.owner" title="psyneulink.globals.log.Log.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> in the header of each field;
-if it is True, the format of the header for each field is “&lt;Owner name&gt;[&lt;entry name&gt;]”;
-otherwise, it is “&lt;entry name&gt;”.</li>
-<li><strong>quotes</strong> (<em>bool</em><em>, </em><em>str : default '</em>) – specifies whether or not to use quotes around values (e.g., arrays);
-if not specified or True, single quotes are used;
-if <code class="xref any docutils literal"><span class="pre">False</span></code> or <code class="xref any docutils literal"><span class="pre">None</span></code>, no quotes are used;
-if specified with a string, that is used.</li>
-<li><strong>Returns</strong> – csv formatted string</li>
+<li><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a><em> or </em><em>list of them : default None</em>) – specifies the entries of the Log to be cleared;  they must be <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Log that have been logged (i.e., are also <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a>).
+If <strong>entries</strong> is <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL"><code class="xref any py py-attr docutils literal"><span class="pre">ALL</span></code></a>, <code class="xref any docutils literal"><span class="pre">None</span></code> or omitted, then all <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> are cleared.</li>
+<li><strong>delete_entry</strong> (<em>bool : default True</em>) – <p>specifies whether to delete the entry (if <code class="xref any docutils literal"><span class="pre">True</span></code>) from the log to which it belongs, or just
+delete the data, but leave the entry itself (if <code class="xref any docutils literal"><span class="pre">False</span></code>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This option is included for generality and potential future features, but is not advised;
+the Log interface (e.g., the <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> interface generally assumes that
+the only <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> in a log are ones with data.</p>
+</div>
+</li>
+<li><strong>confirm</strong> (<em>bool : default False</em>) – <p>specifies whether user confirmation is required before clearing the entries.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If <strong>confirm</strong> is <code class="xref any docutils literal"><span class="pre">True</span></code>, only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES</p>
+</div>
+</li>
 </ul>
 </td>
 </tr>
@@ -523,24 +560,42 @@ if specified with a string, that is used.</li>
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.globals.log.Log.print_entries">
+<code class="descname">print_entries</code><span class="sig-paren">(</span><em>entries=None</em>, <em>csv=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.print_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print values of entries</p>
+<p>If entries is the keyword <em>ALL_ENTRIES</em>, print all entries in the self.owner.prefs.logPref list
+Issue a warning if an entry is not in the Log dict</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.globals.log.Log.nparray">
 <code class="descname">nparray</code><span class="sig-paren">(</span><em>entries=None</em>, <em>header:bool=True</em>, <em>owner_name=False):</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.nparray" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a 2d numpy array with (optional) headers and values for the specified entries.</p>
-<p>First row (axis 0) is entry number, and subsequent rows are data for each entry, in the ordered listed in
-the <strong>entries</strong> argument.  If header is <code class="xref any docutils literal"><span class="pre">True</span></code>, the first item of each row is the header field: in the first
-row, it is the string “Entry” and in subsequent rows the name of the entry.</p>
+<dd><p>Return a 2d numpy array with headers (optional) and values for the specified entries.</p>
+<p>Each row (axis 0) is a time series, with each item in each row the data for the corresponding time point.
+Rows are ordered in the same order as Components are specified in the <strong>entries</strong> argument.</p>
+<p>If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not <code class="xref any docutils literal"><span class="pre">None</span></code>),
+then the first three rows are time indices for the run, trial and time_step of each data item, respectively.
+Each subsequent row is the times series of data for a given entry.  If there is no data for a given entry
+at a given time point, it is entered as <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
+<p>If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
+System), then all of the entries must have the same number of data (LogEntry) items, and the first row is a
+sequential index (starting with 0) that simply designates the data item number.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Currently only supports reports of entries with the same length.  A future version will allow
-entries of differing lengths in the same report.</p>
+<p class="last">For data without time stamps, the nth items in each entry correspond (i.e., ones in the same column)
+are not guaranteed to have been logged at the same time point.</p>
 </div>
+<p>If header is <code class="xref any docutils literal"><span class="pre">True</span></code>, the first item of each row is a header field: for time indices it is either “Run”,
+“Trial”, and “Time_step”, or “Index” if any data are missing time stamps.  For subsequent rows it is the name
+of the Component logged in that entry (see <strong>owner_name</strong> argument below for formatting).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a>) – specifies the entries to be included;  they must be <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Log.</li>
-<li><strong>header</strong> (<em>bool : default True</em>) – specifies whether or not to a header row, with the names of the entries.</li>
+<li><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a><em> or </em><em>list of them</em>) – specifies the entries of the Log to be included in the output;  they must be <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Log that have been logged (i.e., are also <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a>).
+If <strong>entries</strong> is <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL"><code class="xref any py py-attr docutils literal"><span class="pre">ALL</span></code></a> or <code class="xref any docutils literal"><span class="pre">None</span></code>, then all <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> are included.</li>
+<li><strong>header</strong> (<em>bool : default True</em>) – specifies whether or not to include a header in each row with the name of the Component for that entry.</li>
 <li><strong>owner_name</strong> (<em>bool : default False</em>) – specifies whether or not to include the Log’s <a class="reference internal" href="#psyneulink.globals.log.Log.owner" title="psyneulink.globals.log.Log.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> in the header of each field;
 if it is True, the format of the header for each field is “&lt;Owner name&gt;[&lt;entry name&gt;]”;
 otherwise, it is “&lt;entry name&gt;”.</li>
@@ -550,6 +605,67 @@ otherwise, it is “&lt;entry name&gt;”.</li>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.globals.log.Log.csv">
+<code class="descname">csv</code><span class="sig-paren">(</span><em>entries=None</em>, <em>owner_name=False</em>, <em>quotes=&quot;'&quot;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a CSV-formatted string with headers and values for the specified entries.</p>
+<p>Each row (axis 0) is a time point, beginning with the time stamp and followed by the data for each
+Component at that time point, in the order they are specified in the <strong>entries</strong> argument. If all of the data
+for every Component have time values, then the first three items of each row are the time indices for the run,
+trial and time_step of that time point, respectively, followed by the data for each Component at that time
+point;  if a Component has no data for a time point, <code class="xref any docutils literal"><span class="pre">None</span></code> is entered.</p>
+<p>If any of the data for any Component does not have a time value (i.e., it has <code class="xref any docutils literal"><span class="pre">None</span></code> in the time field of
+its <code class="xref any docutils literal"><span class="pre">LogEntry</span></code>) then all of the entries must have the same number of data (LogEntry) items, and the first item
+of each row is a sequential index (starting with 0) that designates the data item number.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For data without time stamps, items in the same row are not guaranteed to refer to the same time point.</p>
+</div>
+<p>The <strong>owner_name</strong> argument can be used to prepend the header for each Component with its owner.
+The <strong>quotes</strong> argument can be used to suppress or specifiy quotes to use around values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a><em> or </em><em>list of them</em>) – specifies the entries of the Log to be included in the output;  they must be <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Log that have been logged (i.e., are also <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a>).
+If <strong>entries</strong> is <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL"><code class="xref any py py-attr docutils literal"><span class="pre">ALL</span></code></a> or <code class="xref any docutils literal"><span class="pre">None</span></code>, then all <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> are included.</li>
+<li><strong>owner_name</strong> (<em>bool : default False</em>) – specifies whether or not to include the Component’s <a class="reference internal" href="#psyneulink.globals.log.Log.owner" title="psyneulink.globals.log.Log.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> in the header of each field;
+if it is True, the format of the header for each field is “&lt;Owner name&gt;[&lt;entry name&gt;]”; otherwise,
+it is “&lt;entry name&gt;”.</li>
+<li><strong>quotes</strong> (<em>bool</em><em>, </em><em>str : default '</em>) – specifies whether or not to enclose values other than quotes (useful if they are arrays);
+if not specified or <code class="xref any docutils literal"><span class="pre">True</span></code>, single quotes are used for <em>all</em> items;
+if specified with a string, that is used to enclose <em>all</em> items;
+if <code class="xref any docutils literal"><span class="pre">False</span></code> or <code class="xref any docutils literal"><span class="pre">None</span></code>, single quotes are used for headers (the items in the first row), but no others.</li>
+<li><strong>Returns</strong> – CSV-formatted string</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">loggable_items</code></dt>
+<dd><p>Return dict of loggable items.</p>
+<p>Keys are names of the Components, values their LogLevels</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">loggable_components</code></dt>
+<dd><p>Return a list of owner’s Components that are loggable</p>
+<p>The loggable items of a Component are the Components (typically States) specified in the _logagble_items
+property of its class, and its own <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">logged_items</code></dt>
+<dd><p>Dict of items that have logged <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a>, indicating their specified <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -601,7 +717,7 @@ otherwise, it is “&lt;entry name&gt;”.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+37.g20b5a07.dirty',
+            VERSION:'0.4.0rc1+48.ga35c7d1.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

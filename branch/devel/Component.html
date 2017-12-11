@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Components &mdash; PsyNeuLink 0.4.0rc1+37.g20b5a07.dirty documentation</title>
+  <title>Components &mdash; PsyNeuLink 0.4.0rc1+48.ga35c7d1.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+37.g20b5a07.dirty documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+48.ga35c7d1.dirty documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Core" href="Core.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+37
+                0.4.0rc1+48
               </div>
             
           
@@ -297,8 +297,10 @@ specifications above as its value, as in the following example:</p>
 <a class="reference internal" href="#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> after the function is called.</li>
 </ul>
 <ul class="simple" id="component-log">
-<li><strong>log</strong> - the <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> attribute contains the Component’s <a class="reference internal" href="Log.html"><span class="doc">Log</span></a>, in which its <a class="reference internal" href="#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
-can be recorded during initialization, validation and/or execution.</li>
+<li><strong>log</strong> - the <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> attribute contains the Component’s <a class="reference internal" href="Log.html"><span class="doc">Log</span></a>, that can be used to record its
+<a class="reference internal" href="#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, as well as that of Components that belong to it, during initialization, validation,
+execution and learning.  It also has three convenience methods – <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a>, <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.log_items" title="psyneulink.globals.log.Log.log_items"><code class="xref any py py-meth docutils literal"><span class="pre">log_items</span></code></a>, and <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> – that provide access to the corresponding methods of its
+Log, used to identify, configure and track items for logging.</li>
 </ul>
 <ul class="simple" id="component-name">
 <li><strong>name</strong> - the <a class="reference internal" href="#psyneulink.components.component.Component.name" title="psyneulink.components.component.Component.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> attribute contains the name assigned to the Component when it was created.
@@ -535,15 +537,24 @@ Instantiate any items in request set that require it (i.e., function or states).
 <dl class="attribute">
 <dt id="psyneulink.components.component.Component.loggable_items">
 <code class="descname">loggable_items</code><a class="headerlink" href="#psyneulink.components.component.Component.loggable_items" title="Permalink to this definition">¶</a></dt>
-<dd><p>List of names of all items that can be logged
-This is a convenience method that calls self.log</p>
+<dd><p>Diciontary of items that can be logged in the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> and their current <a class="reference internal" href="Log.html#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>.
+This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> property of the Component’s
+<a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.components.component.Component.log_items">
+<code class="descname">log_items</code><span class="sig-paren">(</span><em>items                            log_level=EXECUTION</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.component.Component.log_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies items to be logged. This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">log_items</span></code></a> method
+of the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.components.component.Component.logged_items">
 <code class="descname">logged_items</code><a class="headerlink" href="#psyneulink.components.component.Component.logged_items" title="Permalink to this definition">¶</a></dt>
-<dd><p>List of names of all the items being logged
-This is a convenience method that calls self.log.entries</p>
+<dd><p>Dictionary of all items that have entries in the log, and their currently assigned <a class="reference internal" href="Log.html#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a>s
+This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> property of the Component’s
+<a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -595,7 +606,7 @@ This is a convenience method that calls self.log.entries</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+37.g20b5a07.dirty',
+            VERSION:'0.4.0rc1+48.ga35c7d1.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
