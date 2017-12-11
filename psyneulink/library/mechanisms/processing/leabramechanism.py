@@ -102,7 +102,8 @@ from psyneulink.components.functions.function import Function_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.globals.keywords import FUNCTION, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, kwPreferenceSetName
+from psyneulink.globals.keywords import FUNCTION, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE,\
+    LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.time import TimeScale
@@ -411,7 +412,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
     componentType = LEABRA_MECHANISM
 
-    is_self_learner = True  # CW 11/27/17: a flag; "True" if the mechanism learns on its own. Declared in ProcessingMechanism
+    is_self_learner = True  # CW 11/27/17: a flag; "True" if the mechanism self-learns. Declared in ProcessingMechanism
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences

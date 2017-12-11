@@ -793,7 +793,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.output_states[ENERGY]._calculate = energy.function
 
         if ENTROPY in self.output_states.names:
-            if self.function_object.bounds == (0,1) or clip == (0,1):
+            # MODIFIED CW 12/11/17: changed "clip" to "self.clip" since "clip" is failed reference
+            if self.function_object.bounds == (0,1) or self.clip == (0,1):
                 entropy = Stability(self.instance_defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
