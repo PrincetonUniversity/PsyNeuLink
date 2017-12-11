@@ -257,7 +257,7 @@ def test_multilayer():
     Middle_Weights.log.print_entries()
 
     # Test Programatic logging
-    Hidden_Layer_2.log.log_value(VALUE)
+    Hidden_Layer_2.log.log_values(VALUE)
     log_val = Hidden_Layer_2.log.nparray(header=False)
     expected_log_val = np.array(
             [
