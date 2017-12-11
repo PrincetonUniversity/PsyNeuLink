@@ -2721,7 +2721,6 @@ def test_multilayer():
                 np.testing.assert_allclose(np.array(log_val[i][j]), np.array(expected_log_val[i][j]),
                                            atol=1e-08,
                                            err_msg='Failed on test of logged values')
-
 test_multilayer()
 
 #endregion
