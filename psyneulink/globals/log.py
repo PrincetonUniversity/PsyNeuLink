@@ -661,7 +661,7 @@ class Log:
         logged_items = {}
         for l in self.logged_entries.keys():
             try:
-                logged_items[l] = (l, self.loggable_items[l])
+                logged_items[l] = self.loggable_items[l]
             except KeyError:
                 if l is self.owner.name:
                     try:
