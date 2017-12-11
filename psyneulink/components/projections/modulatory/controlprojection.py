@@ -97,8 +97,8 @@ Class Reference
 
 """
 
-import typecheck as tc
 import inspect
+import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
 from psyneulink.components.functions.function import Linear
@@ -107,11 +107,9 @@ from psyneulink.components.projections.modulatory.modulatoryprojection import Mo
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Process_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, PROJECTION_SENDER, \
-    PROJECTION_SENDER_VALUE, PARAMETER_STATE
+from psyneulink.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock
 
 __all__ = [
     'CONTROL_SIGNAL_PARAMS', 'ControlProjection', 'ControlProjectionError',
@@ -386,8 +384,8 @@ class ControlProjection(ModulatoryProjection_Base):
         # else:
         super(ControlProjection, self)._instantiate_receiver(context=context)
 
-    def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
-    # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+    def execute(self, params=None, time_scale=None, context=None):
+    # def execute(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         self.value = self.function(variable=self.sender.value, params=params, time_scale=time_scale, context=context)
         return self.value
 

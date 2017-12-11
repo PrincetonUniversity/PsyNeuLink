@@ -341,7 +341,7 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction
-from psyneulink.scheduling.timescale import CentralClock, Clock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'EVCControlMechanism', 'EVCError',
@@ -662,8 +662,8 @@ class EVCControlMechanism(ControlMechanism):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the EVCControlMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the EVCControlMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
     """
@@ -876,7 +876,6 @@ class EVCControlMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
         """Determine `allocation_policy <EVCControlMechanism.allocation_policy>` for next run of System
@@ -992,10 +991,7 @@ class EVCControlMechanism(ControlMechanism):
             self.value[i] = np.atleast_1d(allocation_vector[i])
         self._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
-        # Execute simulation run of system for the current allocation_policy
-        sim_clock = Clock('EVC SIMULATION CLOCK')
-
-        self.system.run(inputs=inputs, clock=sim_clock, time_scale=time_scale, context=context)
+        self.system.run(inputs=inputs, time_scale=time_scale, context=context)
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)

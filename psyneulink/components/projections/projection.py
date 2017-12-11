@@ -383,28 +383,20 @@ COMMENT
 
 """
 import inspect
-import typecheck as tc
 import warnings
+
+import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
-from psyneulink.components.states.state import StateError
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
-from psyneulink.globals.keywords import \
-    NAME, PARAMS, CONTEXT, INITIALIZING, EXECUTING, PATHWAY, kwAssign, \
-    MECHANISM, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, \
-    STANDARD_ARGS, STATE, STATES, WEIGHT, EXPONENT, \
-    PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
-    MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
-    LEARNING, LEARNING_SIGNAL, LEARNING_PROJECTION, \
-    CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, \
-    GATING, GATING_SIGNAL, GATING_PROJECTION, \
-    kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from psyneulink.components.states.state import StateError
+from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
+from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
 from psyneulink.globals.utilities import ContentAddressableList, iscompatible, is_numeric, is_matrix, type_match
-from psyneulink.globals.log import LogLevel, LogEntry
-from psyneulink.scheduling.timescale import CurrentTime
+from psyneulink.globals.log import LogLevel, LogEntry, _get_log_context
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -795,8 +787,6 @@ class Projection_Base(Projection):
         If self.value / self.instance_defaults.variable is None, set to sender.value
         """
         from psyneulink.components.states.outputstate import OutputState
-        from psyneulink.components.states.parameterstate import ParameterState
-
 
         # ASSIGN sender specification
 
@@ -965,33 +955,8 @@ class Projection_Base(Projection):
 
     @value.setter
     def value(self, assignment):
-
         self._value = assignment
-
-        # STORE value IN log IF SPECIFIED
-
-        # Get context
-        try:
-            curr_frame = inspect.currentframe()
-            prev_frame = inspect.getouterframes(curr_frame, 2)
-            # context = inspect.getargvalues(prev_frame[1][0]).locals['context']
-            context = inspect.getargvalues(prev_frame[2][0]).locals['context']
-        except KeyError:
-            context = ""
-        if not isinstance(context, str):
-            context = ""
-
-        # Get logPref
-        log_pref = self.prefs.logPref if self.prefs else None
-
-        # If context is consistent with log_pref, record value to log
-        if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-                (INITIALIZING in context and log_pref is LogLevel.INITIALIZATION) or
-                (EXECUTING in context and log_pref is LogLevel.EXECUTION) or
-                (all(c in context for c in {EXECUTING, kwAssign}) and log_pref is LogLevel.VALUE_ASSIGNMENT)
-        ):
-            self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
-
+        self.log._log_value(assignment)
 
 @tc.typecheck
 def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
@@ -1295,7 +1260,6 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.components.states.outputstate import OutputState
     from psyneulink.components.states.parameterstate import ParameterState
     from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-    from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, _is_control_spec
     from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 
 
