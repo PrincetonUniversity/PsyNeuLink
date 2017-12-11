@@ -1465,8 +1465,8 @@ class Component(object):
                 if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
                     # create property
                     setattr(self.__class__, arg_name, make_property(arg_name))
-                    # assign default value
-                    setattr(self,  "_"+arg_name, arg_value)
+                # assign default value
+                setattr(self,  "_"+arg_name, arg_value)
                     # setattr(self, "_"+arg_name, arg_value)
         else:
             for arg_name, arg_value in kwargs.items():
@@ -2875,8 +2875,7 @@ def make_property(name):
             val_type = val.__class__.__name__
             curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
             # self.prev_context = "nonsense" + str(curr_context)
-            # self._assign_params(request_set={name:val}, context=curr_context)
-            setattr(self, backing_field, val)
+            self._assign_params(request_set={name:val}, context=curr_context)
         else:
             setattr(self, backing_field, val)
 
@@ -2893,14 +2892,14 @@ def make_property(name):
             param_state_owner = self
 
         # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
-        if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
-            param_state = param_state_owner._parameter_states[name]
-
-            # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
-            # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
-            # 'reset_initializer'
-            if hasattr(param_state.function_object, 'initializer'):
-                param_state.function_object.reset_initializer = val
+        # if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
+        #     param_state = param_state_owner._parameter_states[name]
+        #
+        #     # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
+        #     # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
+        #     # 'reset_initializer'
+        #     if hasattr(param_state.function_object, 'initializer'):
+        #         param_state.function_object.reset_initializer = val
 
     # Create the property
     prop = property(getter).setter(setter)
