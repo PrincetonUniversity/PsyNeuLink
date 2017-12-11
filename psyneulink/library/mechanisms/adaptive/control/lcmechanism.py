@@ -233,21 +233,16 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.components.functions.function import Integrator, \
-    MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
-from psyneulink.components.mechanisms.adaptive.adaptivemechanism import \
-    AdaptiveMechanism_Base
-from psyneulink.components.mechanisms.adaptive.control.controlmechanism import \
-    ControlMechanism
-from psyneulink.components.projections.modulatory.controlprojection import \
-    ControlProjection
+from psyneulink.components.functions.function import Integrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
+from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, \
-    CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
+from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCMechanism', 'LCMechanismError', 'MODULATED_MECHANISMS',
@@ -296,7 +291,7 @@ class LCMechanism(ControlMechanism):
         specify all of the `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCMechanism
         belongs.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
@@ -367,8 +362,8 @@ class LCMechanism(ControlMechanism):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LCMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the LCMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
 
@@ -570,7 +565,6 @@ class LCMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
         """Updates LCMechanism's ControlSignal based on input and mode parameter value

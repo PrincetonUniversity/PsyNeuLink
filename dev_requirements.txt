@@ -1,4 +1,5 @@
 pytest
+pytest-benchmark
 pytest-profiling
 pytest-helpers-namespace
 jupyter

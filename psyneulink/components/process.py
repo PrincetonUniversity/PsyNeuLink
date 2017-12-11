@@ -445,6 +445,7 @@ import inspect
 import numbers
 import re
 import warnings
+
 from collections import UserList, namedtuple
 
 import numpy as np
@@ -455,8 +456,8 @@ from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism_
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import _add_projection_to, _is_projection_spec
 from psyneulink.components.projections.projection import Projection_Base
+from psyneulink.components.projections.projection import _add_projection_to, _is_projection_spec
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, System_Base
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.parameterstate import ParameterState
@@ -466,7 +467,7 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import append_type_to_name, convert_to_np_array, iscompatible
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'DEFAULT_PHASE_SPEC', 'DEFAULT_PROJECTION_MATRIX', 'defaultInstanceCount', 'kwProcessInputState', 'kwTarget',
@@ -2070,19 +2071,17 @@ class Process(Process_Base):
         for mech, value in self.initial_values.items():
             mech.initialize(value)
 
-    def execute(self,
-                input=None,
-                # params=None,
-                target=None,
-                execution_id=None,
-                clock=CentralClock,
-                time_scale=None,
-                # time_scale=TimeScale.TRIAL,
-                runtime_params=None,
-                termination_processing=None,
-                termination_learning=None,
-                context=None
-                ):
+    def execute(
+        self,
+        input=None,
+        target=None,
+        execution_id=None,
+        time_scale=None,
+        runtime_params=None,
+        termination_processing=None,
+        termination_learning=None,
+        context=None
+    ):
         """Execute the Mechanisms specified in the process` `pathway` attribute.
 
         COMMENT:
@@ -2111,7 +2110,7 @@ class Process(Process_Base):
         time_scale : TimeScale :  default TimeScale.TRIAL
             specifies whether Mechanisms are executed for a single time step or a trial.
 
-        params : Dict[param keyword, param value] :  default None
+        params : Dict[param keyword: param value] :  default None
             a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters used
             as arguments to instantiate the object. Use parameter's name as the keyword for its entry.  Values specified
             for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -2180,11 +2179,7 @@ class Process(Process_Base):
                 continue
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.execute(clock=clock,
-                              time_scale=self.timeScale,
-                              # time_scale=time_scale,
-                              # runtime_params=params,
-                              context=context)
+            mechanism.execute(time_scale=self.timeScale, context=context)
             if report_output:
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
                 self._report_mechanism_execution(mechanism)
@@ -2196,9 +2191,7 @@ class Process(Process_Base):
 
         # Execute LearningMechanism
         if self._learning_enabled:
-
-            self._execute_learning(target=target, clock=clock, context=context)
-            # self._execute_learning(clock=clock, time_scale=time_scale, context=context)
+            self._execute_learning(target=target, context=context)
 
         if report_output:
             self._report_process_completion(separator=True)
@@ -2207,8 +2200,8 @@ class Process(Process_Base):
         return self.output_state.value
         # return self.output
 
-    def _execute_learning(self, target=None, clock=CentralClock, context=None):
-    # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+    def _execute_learning(self, target=None, context=None):
+
         """ Update each LearningProjection for mechanisms in _mechs of process
 
         # Begin with Projection(s) to last Mechanism in _mechs, and work backwards
@@ -2249,10 +2242,7 @@ class Process(Process_Base):
 
         # THEN, execute ComparatorMechanism and LearningMechanism
         for mechanism in self._learning_mechs:
-            mechanism.execute(clock=clock,
-                              time_scale=self.timeScale,
-                              # runtime_params=params,
-                              context=context)
+            mechanism.execute(time_scale=self.timeScale, context=context)
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
@@ -2289,6 +2279,8 @@ class Process(Process_Base):
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context + SEPARATOR_BAR + LEARNING
+                            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
+                            # context = context.replace(EXECUTING, LEARNING + ' ')
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
@@ -2301,7 +2293,6 @@ class Process(Process_Base):
     def run(self,
             inputs,
             num_trials=None,
-            reset_clock=True,
             initialize=False,
             initial_values=None,
             targets=None,
@@ -2333,9 +2324,6 @@ class Process(Process_Base):
         num_trials : int : default None
             number of `TRIAL`\\s to execute.  If the number exceeds the number of **inputs** specified, they are cycled
             until the number of `TRIALS`\\s specified in **num_trials** has been executed.
-
-        reset_clock : bool : default True
-            reset `CentralClock <TimeScale.CentralClock>` to 0 before a sequence of executions.
 
         initialize : bool default False
             specifies whether to call the Process` `initialize <Process.initialize>` method before executing
@@ -2398,7 +2386,6 @@ class Process(Process_Base):
         return run(self,
                    inputs=inputs,
                    num_trials=num_trials,
-                   reset_clock=reset_clock,
                    initialize=initialize,
                    initial_values=initial_values,
                    targets=targets,

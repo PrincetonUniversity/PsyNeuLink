@@ -161,6 +161,7 @@ Class Reference
 """
 
 import numbers
+
 from collections import Iterable
 
 import numpy as np
@@ -179,7 +180,7 @@ from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, FUL
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
@@ -360,7 +361,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         takes a list or 1d array of numeric values as its `variable <Function_Base.variable>` and returns a sqaure
         matrix of numeric values with the same dimensions as the length of the input.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -369,7 +370,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies the name of the RecurrentTransferMechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the RecurrentTransferMechanism; see `prefs <RecurrentTransferMechanism.prefs>` 
+        specifies the `PreferenceSet` for the RecurrentTransferMechanism; see `prefs <RecurrentTransferMechanism.prefs>`
         for details.
 
     context : str : default componentType+INITIALIZING
@@ -458,7 +459,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             and the first item of ``output_values``.
     COMMENT
 
-    output_states : Dict[str, OutputState]
+    output_states : Dict[str: OutputState]
         an OrderedDict with the following `OutputStates <OutputState>`:
 
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <RecurrentTransferMechanism.function>`;
@@ -485,8 +486,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the RecurrentTransferMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the RecurrentTransferMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
 
@@ -792,7 +793,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.output_states[ENERGY]._calculate = energy.function
 
         if ENTROPY in self.output_states.names:
-            if self.function_object.bounds == (0,1) or clip == (0,1):
+            if self.function_object.bounds == (0,1) or self.clip == (0,1):
                 entropy = Stability(self.instance_defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
@@ -804,7 +805,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 clock=CentralClock,
                  time_scale = TimeScale.TRIAL,
                  context=None):
         """Implement decay
@@ -817,7 +817,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,
-                                clock=CentralClock,
                                 time_scale=time_scale,
                                 context=context)
 

@@ -99,7 +99,6 @@ from psyneulink.globals.defaults import defaultGatingPolicy
 from psyneulink.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INITIALIZING, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock
 
 __all__ = [
     'GATING_SIGNAL_PARAMS', 'GatingProjection', 'GatingProjectionError',
@@ -185,12 +184,12 @@ class GatingProjection(ModulatoryProjection_Base):
        specifies the value by which to exponentiate the GatingProjection's `value <GatingProjection.value>`
        before combining it with others (see `exponent <GatingProjection.exponent>` for additional details).
 
-    gating_signal_params : Dict[param keyword, param value]
+    gating_signal_params : Dict[param keyword: param value]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
         GatingProjection's `sender <ControlProjection.sender>` (see `GatingSignal_Structure` for a description
         of GatingSignal parameters).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the GatingProjection, its `function <GatingProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
@@ -356,8 +355,8 @@ class GatingProjection(ModulatoryProjection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
-    # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+    def execute(self, params=None, time_scale=None, context=None):
+    # def execute(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         self.value = self.function(variable=self.sender.value, params=params, time_scale=time_scale, context=context)
         return self.value
 
