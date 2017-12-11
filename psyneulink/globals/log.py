@@ -349,8 +349,8 @@ import numpy as np
 
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.utilities import ContentAddressableList, AutoNumber
-from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, COMMAND_LINE, CONTEXT, VALUE, \
-    kwContext, kwTime, kwValue
+from psyneulink.globals.keywords \
+    import INITIALIZING, EXECUTING, VALIDATE, LEARNING, COMMAND_LINE, CONTEXT, VALUE, TIME
 
 
 __all__ = [
@@ -920,15 +920,15 @@ class Log:
         context_width = 70
         value_width = 30
         value_spacer_width = 3
-        kwSpacer = ' '
+        spacer = ' '
         value_spacer = " ".ljust(value_spacer_width)
 
 
-        header = "Logged Item:".ljust(variable_width, kwSpacer)
-        if not args or kwTime in args:
-            header = "Time".ljust(time_width, kwSpacer) + header
+        header = "Logged Item:".ljust(variable_width, spacer)
+        if not args or TIME in args:
+            header = TIME.capitalize().ljust(time_width, spacer) + header
         if not args or CONTEXT in args:
-            header = header + " " + CONTEXT.capitalize().ljust(context_width, kwSpacer)
+            header = header + " " + CONTEXT.capitalize().ljust(context_width, spacer)
         if not args or VALUE in args:
             header = header + value_spacer + " " + VALUE.capitalize()
 
@@ -937,7 +937,7 @@ class Log:
 
         # Sort for consistency of reporting
         attrib_names_sorted = sorted(self.logged_entries.keys())
-        # kwSpacer = '_'
+        # spacer = '_'
         # for attrib_name in self.logged_entries:
         for attrib_name in attrib_names_sorted:
             try:
@@ -958,12 +958,12 @@ class Log:
                     #     value = value[0]
                     time_str = _time_string(time)
                     attrib_name = self._alias_owner_name(attrib_name)
-                    data_str = repr(attrib_name).ljust(variable_width, kwSpacer)
-                    if not args or kwTime in args:
+                    data_str = repr(attrib_name).ljust(variable_width, spacer)
+                    if not args or TIME in args:
                         data_str = time_str.ljust(time_width) + data_str
-                    if not args or kwContext in args:
-                        data_str = data_str + repr(context).ljust(context_width, kwSpacer)
-                    if not args or kwValue in args:
+                    if not args or CONTEXT in args:
+                        data_str = data_str + repr(context).ljust(context_width, spacer)
+                    if not args or VALUE in args:
                         # data_str = data_str + "{:2.35}".format(value.strip("[]")).ljust(value_width)
                         data_str = data_str + value_spacer + "{:1.35}".format(value).ljust(value_width)
 
