@@ -8276,7 +8276,7 @@ COMMENT
         # MODIFIED 11/12/17 NEW:
         if self.metric is ENTROPY:
             self._metric_fct = Distance(metric=CROSS_ENTROPY, normalize=self.normalize)
-        elif self.metric in DISTANCE_METRICS:
+        elif self.metric in DISTANCE_METRICS._set():
             self._metric_fct = Distance(metric=self.metric, normalize=self.normalize)
         # MODIFIED 11/12/17 END
 
