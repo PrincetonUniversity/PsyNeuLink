@@ -2310,11 +2310,16 @@ class ScratchPadError(Exception):
 #region TEST LOG DURING INITIALIZATION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST LOG DURING INITIALIZATION")
 #
-# T = pnl.TransferMechanism(
-#         prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
-# )
-# print(T.logged_items)
-# T.log.print_entries()
+# def test_log_initialization():
+#     T = pnl.TransferMechanism(
+#             prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
+#     )
+#     print(T.logged_items)
+#     print(T.log.nparray())
+#     T.log.print_entries()
+#     assert True
+#
+# test_log_initialization()
 
 #endregion
 
@@ -2421,7 +2426,7 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST Multilayer-Learning Log @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# region TEST Multilayer-Learning Log @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 print("TEST Multilayer-Learning Log")
 
 def test_multilayer():
@@ -2670,6 +2675,27 @@ def test_multilayer():
 
     Middle_Weights.log.print_entries()
 
+    # Test Programatic logging
+    # Test Programatic logging
+    Hidden_Layer_2.log.log_value(pnl.VALUE)
+    log_val = Hidden_Layer_2.log.nparray(header=False)
+    expected_log_val = np.array(
+            [
+                [[0]],
+                [[[0.8565238418942037, 0.8601053239957609, 0.8662098921116546, 0.8746933736954071]]]
+            ], dtype=object
+    )
+    for i in range(len(log_val)):
+        try:
+            np.testing.assert_array_equal(log_val[i], expected_log_val[i])
+        except:
+            for j in range(len(log_val[i])):
+                np.testing.assert_allclose(np.array(log_val[i][j]), np.array(expected_log_val[i][j]),
+                                           atol=1e-08,
+                                           err_msg='Failed on test of logged values')
+
+    Hidden_Layer_2.log.print_entries()
+
     # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
     Middle_Weights.log.clear_entries(entries=None, confirm=False)
     Middle_Weights.log_items(('matrix', pnl.LEARNING))
@@ -2721,13 +2747,11 @@ def test_multilayer():
                 np.testing.assert_allclose(np.array(log_val[i][j]), np.array(expected_log_val[i][j]),
                                            atol=1e-08,
                                            err_msg='Failed on test of logged values')
-
 test_multilayer()
 
 #endregion
 
 #region TEST OVER-WRITING OF LOG @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-#
 
 # class a:
 #
