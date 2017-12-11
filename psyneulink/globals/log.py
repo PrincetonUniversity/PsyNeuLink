@@ -949,8 +949,8 @@ class Log:
                 import numpy as np
                 for i, item in enumerate(datum):
                     time, context, value = item
-                    if isinstance(value, np.ndarray):
-                        value = value[0]
+                    # if isinstance(value, np.ndarray):
+                    #     value = value[0]
                     time_str = _time_string(time)
                     attrib_name = self._alias_owner_name(attrib_name)
                     data_str = repr(attrib_name).ljust(variable_width, kwSpacer)
