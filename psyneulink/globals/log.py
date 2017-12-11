@@ -249,6 +249,9 @@ COMMENT
 
 COMMENT:
 
+IMPLEMENTATION NOTE: Name of owner Component is aliases to VALUE in loggable_items and logged_items,
+but is the Component's actual name in log_entries
+
 Entries are made to the Log based on the `LogLevel` specified in the
 `logPref` item of the component's `prefs <Component.prefs>` attribute.
 
@@ -492,6 +495,10 @@ class Log:
     """Maintain a Log for an object, which contains a dictionary of logged value(s).
 
     COMMENT:
+
+    IMPLEMENTATION NOTE: Name of owner Component is aliases to VALUE in loggable_items and logged_items,
+    but is the Component's actual name in log_entries
+
     Description:
         Log maintains a dict (self.entries), with an entry for each attribute of the owner object being logged
         Each entry of self.entries has:
@@ -605,6 +612,12 @@ class Log:
         if entries is None:
             return
 
+    def _alias_owner_name(self, name):
+        """Alias name of owner Component to VALUE in loggable_items and logged_items
+        Component's actual name is preserved and used in log_entries (i.e., as entered by _log_value)
+        """
+        return VALUE if name is self.owner.name else name
+
     @property
     def loggable_items(self):
         """Return dict of loggable items.
@@ -616,10 +629,7 @@ class Log:
 
         loggable_items = {}
         for c in self.loggable_components:
-            if c is self.owner:
-                name = VALUE
-            else:
-                name = c.name
+            name = self._alias_owner_name(c.name)
             try:
                 log_pref = c.logPref.name
             except:
@@ -651,28 +661,10 @@ class Log:
         log_level = 'LogLevel.'
         # Return LogLevel for items in log.entries
 
-        # # IMPLEMENTATION NOTE:
-        # #    THIS VERSION, THOUGH SUCCINCT, FAILS AS IT ASSUMES THAT VALUE OF LOG'S OWNER IS UNDER ITS OWNER'S NAME,
-        # #    RATHER THAN "VALUE" in loggable_items
-        # logged_items = {key: value for (key, value) in
-        #                 [(l, self.loggable_components[l].logPref.name)
-        #                  for l in self.logged_entries.keys()]}
-
-
-        # IMPLEMENTATION NOTE:  Need to expand for loop (rather than use list comprehension) is that the
-        #                       the owner Component's name (from logged.logged_entries.keys() needs to be
-        #                       aliases as *VALUE* when searching loggable_items
-        logged_items = {}
-        for l in self.logged_entries.keys():
-            try:
-                logged_items[l] = self.loggable_items[l]
-            except KeyError:
-                if l is self.owner.name:
-                    try:
-                        logged_items[VALUE] = self.loggable_items[VALUE]
-                    except:
-                        raise LogError("PROGRAM ERROR: Could not find {} from logged_entries in loggable_items "
-                                       "for {} of {}".format(l, Log.__name__, self.owner.name))
+        logged_items = {key: value for (key, value) in
+                        # [(l, self.loggable_components[l].logPref.name)
+                        [(self._alias_owner_name(l), self.loggable_items[self._alias_owner_name(l)])
+                         for l in self.logged_entries.keys()]}
 
         return logged_items
 
@@ -930,7 +922,7 @@ class Log:
                     if isinstance(value, np.ndarray):
                         value = value[0]
                     time_str = _time_string(time)
-                    attrib_name = attrib_name if attrib_name != self.owner.name else VALUE
+                    attrib_name = self._alias_owner_name(attrib_name)
                     data_str = repr(attrib_name).ljust(variable_width, kwSpacer)
                     if not args or kwTime in args:
                         data_str = time_str.ljust(time_width) + data_str
@@ -1023,7 +1015,7 @@ class Log:
 
         # Validate entries
         for entry in entries:
-            if entry not in self.loggable_items:
+            if self._alias_owner_name(entry) not in self.loggable_items:
                 raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
             if entry not in self.logged_entries:
                 raise LogError("{} is not currently being logged by {} (try using log_items)".
@@ -1084,9 +1076,10 @@ class Log:
                 if time_values:
                     while datum.time != next(time_col,None):
                         row.append(None)
-                row.append(datum.value.tolist())
+                value = None if datum.value is None else datum.value.tolist()
+                row.append(value)
             if header:
-                entry_header = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
+                entry_header = "{}{}{}{}".format(owner_name_str, lb, self._alias_owner_name(entry), rb)
                 row = [entry_header] + row
             npa.append(row)
 
