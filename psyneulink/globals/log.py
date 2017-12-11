@@ -777,6 +777,7 @@ class Log:
 
         no_time = (None, None, None)
 
+        # Get mechanism to which Component being logged belongs
         if isinstance(self.owner, Mechanism):
             ref_mech = self.owner
         elif isinstance(self.owner, State):
@@ -795,6 +796,7 @@ class Log:
                            format(self.owner.__class__.__name__,
                                   Mechanism.__name__, State.__name__, Projection.__name__))
 
+        # Get System in which it is being executed (if any)
         try:
             systems = list(ref_mech.systems.keys())
             system = next((s for s in systems if s.name in context), None)
@@ -802,7 +804,7 @@ class Log:
             system = None
 
         if system:
-            # FIX: Add INIT and VALIDATE?
+            # FIX: Add VALIDATE?
             if context_flags == LogLevel.EXECUTION:
                 time = system.scheduler_processing.clock.simple_time
                 time = (time.run, time.trial, time.time_step)
@@ -892,15 +894,18 @@ class Log:
                     del self.logged_entries[entry][0:]
                 assert True
 
+    @tc.typecheck
     def print_entries(self,
                       entries=None,
                       csv=False,
-                      # synch_time=False,
-                      *args):
+                      width:int=120,
+                      options:tc.any(tc.enum(TIME, CONTEXT, VALUE), list)=[TIME, CONTEXT, VALUE]):
         """
         print_entries(          \
               entries=None,     \
               csv=False,        \
+              width=120,        \
+              options=None      \
             )
 
         Print values of entries
@@ -915,21 +920,66 @@ class Log:
             print(self.csv(entries))
             return
 
-        variable_width = 15
+        class options_mask(IntEnum):
+            NONE = 0
+            TIME = 2
+            CONTEXT = 4
+            VALUE = 8
+            ALL = TIME + CONTEXT + VALUE
+
+        if not isinstance(options, list):
+            options = list(options)
+
+        option_flags = options_mask.NONE
+        if TIME in options:
+            option_flags |= options_mask.TIME
+        if CONTEXT in options:
+            option_flags |= options_mask.CONTEXT
+        if VALUE in options:
+            option_flags |= options_mask.VALUE
+
+        full_width = width
+        item_name_width = 15
         time_width = 10
         context_width = 70
         value_width = 30
-        value_spacer_width = 3
         spacer = ' '
+        value_spacer_width = 3
         value_spacer = " ".ljust(value_spacer_width)
+        base_width = item_name_width + value_spacer_width
 
+        # FIX: COULD "ALGORITHMIZE" THIS:
+        if option_flags == options_mask.TIME:
+            pass
 
-        header = "Logged Item:".ljust(variable_width, spacer)
-        if not args or TIME in args:
+        elif option_flags == options_mask.CONTEXT:
+            context_width = full_width - base_width
+
+        elif option_flags == options_mask.VALUE:
+            value_width = full_width - base_width
+
+        elif option_flags == options_mask.TIME + options_mask.CONTEXT:
+            context_width = full_width - time_width - base_width
+
+        elif option_flags == options_mask.TIME + options_mask.VALUE:
+            value_width = full_width - time_width - base_width
+
+        elif option_flags == options_mask.CONTEXT + options_mask.VALUE:
+            context_width = full_width - value_width
+            value_width = full_width - context_width
+
+        elif option_flags == options_mask.ALL:
+            pass
+
+        else:
+            raise LogError("PROGRAM ERROR:  unrecognized state of option_flags: {}".format(option_flags))
+
+        header = "Logged Item:".ljust(item_name_width, spacer)
+        if not options or TIME in options:
             header = TIME.capitalize().ljust(time_width, spacer) + header
-        if not args or CONTEXT in args:
+        if not options or CONTEXT in options:
             header = header + " " + CONTEXT.capitalize().ljust(context_width, spacer)
-        if not args or VALUE in args:
+        if not options or VALUE in options:
             header = header + value_spacer + " " + VALUE.capitalize()
 
         print("\nLog for {0}:".format(self.owner.name))
@@ -951,21 +1001,23 @@ class Log:
                     time, context, value = item
                     if len(context) > context_width:
                         context = context[:context_width-3] + "..."
-                    value = str(value)
+                    value = str(value).replace('\n',',')
                     if len(value) > value_width:
                         value = value[:value_width-3].rstrip() + "..."
                     # if isinstance(value, np.ndarray):
                     #     value = value[0]
                     time_str = _time_string(time)
                     attrib_name = self._alias_owner_name(attrib_name)
-                    data_str = repr(attrib_name).ljust(variable_width, spacer)
-                    if not args or TIME in args:
+                    data_str = repr(attrib_name).ljust(item_name_width, spacer)
+                    if not options or TIME in options:
                         data_str = time_str.ljust(time_width) + data_str
-                    if not args or CONTEXT in args:
+                    if not options or CONTEXT in options:
                         data_str = data_str + repr(context).ljust(context_width, spacer)
-                    if not args or VALUE in args:
+                    if not options or VALUE in options:
                         # data_str = data_str + "{:2.35}".format(value.strip("[]")).ljust(value_width)
-                        data_str = data_str + value_spacer + "{:1.35}".format(value).ljust(value_width)
+                        # data_str = data_str + value_spacer + "{:1.30}".format(value).ljust(value_width)
+                        format_str = "{{:2.{0}}}".format(value_width)
+                        data_str = data_str + value_spacer + format_str.format(value).ljust(value_width)
 
         # {time:{width}}: {part[0]:>3}{part[1]:1}{part[2]:<3} {unit:3}".format(
         #     jid=jid, width=width, part=str(mem).partition('.'), unit=unit))
