@@ -349,7 +349,7 @@ import numpy as np
 
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.utilities import ContentAddressableList, AutoNumber
-from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, COMMAND_LINE, VALUE, \
+from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, COMMAND_LINE, CONTEXT, VALUE, \
     kwContext, kwTime, kwValue
 
 
@@ -915,39 +915,29 @@ class Log:
             print(self.csv(entries))
             return
 
-        variable_width = 50
+        variable_width = 15
         time_width = 10
-        # time_width = 5
         context_width = 70
-        value_width = 7
+        value_width = 30
+        value_spacer_width = 3
         kwSpacer = ' '
+        value_spacer = " ".ljust(value_spacer_width)
 
 
-        # MODIFIED 12/4/17 OLD: [USES Time]
-        # header = "Variable:".ljust(variable_width, kwSpacer)
-        # if not args or kwTime in args:
-        #     header = header + " " + kwTime.ljust(time_width, kwSpacer)
-        # if not args or kwContext in args:
-        #     header = header + " " + kwContext.ljust(context_width, kwSpacer)
-        # if not args or kwValue in args:
-        #     # header = header + "   " + kwValue.rjust(value_width)
-        #     header = header + "  " + kwValue
-        # MODIFIED 12/4/17 NEW: [USES entry]
         header = "Logged Item:".ljust(variable_width, kwSpacer)
         if not args or kwTime in args:
             header = "Time".ljust(time_width, kwSpacer) + header
-        if not args or kwContext in args:
-            header = header + " " + kwContext.ljust(context_width, kwSpacer)
-        if not args or kwValue in args:
-            header = header + "  " + kwValue
-        # MODIFIED 12/4/17 END
+        if not args or CONTEXT in args:
+            header = header + " " + CONTEXT.capitalize().ljust(context_width, kwSpacer)
+        if not args or VALUE in args:
+            header = header + value_spacer + " " + VALUE.capitalize()
 
         print("\nLog for {0}:".format(self.owner.name))
         print('\n'+header+'\n')
 
         # Sort for consistency of reporting
         attrib_names_sorted = sorted(self.logged_entries.keys())
-        kwSpacer = '.'
+        # kwSpacer = '_'
         # for attrib_name in self.logged_entries:
         for attrib_name in attrib_names_sorted:
             try:
@@ -959,6 +949,11 @@ class Log:
                 import numpy as np
                 for i, item in enumerate(datum):
                     time, context, value = item
+                    if len(context) > context_width:
+                        context = context[:context_width-3] + "..."
+                    value = str(value)
+                    if len(value) > value_width:
+                        value = value[:value_width-3].rstrip() + "..."
                     # if isinstance(value, np.ndarray):
                     #     value = value[0]
                     time_str = _time_string(time)
@@ -969,7 +964,8 @@ class Log:
                     if not args or kwContext in args:
                         data_str = data_str + repr(context).ljust(context_width, kwSpacer)
                     if not args or kwValue in args:
-                        data_str = data_str + "{:2.5}".format(str(value).strip("[]")).rjust(value_width) # <- WORKS
+                        # data_str = data_str + "{:2.35}".format(value.strip("[]")).ljust(value_width)
+                        data_str = data_str + value_spacer + "{:1.35}".format(value).ljust(value_width)
 
         # {time:{width}}: {part[0]:>3}{part[1]:1}{part[2]:<3} {unit:3}".format(
         #     jid=jid, width=width, part=str(mem).partition('.'), unit=unit))
