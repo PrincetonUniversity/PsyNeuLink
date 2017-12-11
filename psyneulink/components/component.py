@@ -2848,7 +2848,8 @@ class Component(object):
             log_level=EXECUTION  \
         )
 
-        Specifies items to be logged. This is a convenience method that calls the `log_items <Log.log_items>` method
+        Specifies items to be logged; these must be be `loggable_items <Component.loggable_items>` of the Component's
+        `log <Component.log>`. This is a convenience method that calls the `log_items <Log.log_items>` method
         of the Component's `log <Component.log>`.
         """
         self.log.log_items(items=items, log_level=log_level)
@@ -2859,7 +2860,8 @@ class Component(object):
             entries              \
         )
 
-        Specifies items to be logged. This is a convenience method that calls the `log_values <Log.log_values>` method
+        Specifies items to be logged; ; these must be be `loggable_items <Component.loggable_items>` of the Component's
+        `log <Component.log>`. This is a convenience method that calls the `log_values <Log.log_values>` method
         of the Component's `log <Component.log>`.
         """
         self.log.log_values(entries)
