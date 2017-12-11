@@ -118,7 +118,7 @@ using bitwise operators (e.g., LogLevel.EXECUTION | LogLevel.LEARNING).
 
     >>> import psyneulink as pnl
     >>> T = pnl.TransferMechanism(
-    ...          prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION,pnl.PreferenceLevel.INSTANCE)})
+    ...          prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
 
 Execution
