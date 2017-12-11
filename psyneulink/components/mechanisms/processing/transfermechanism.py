@@ -523,7 +523,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             context=self,
             input_states=input_states,
         )
-        assert True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and Mechanism params
