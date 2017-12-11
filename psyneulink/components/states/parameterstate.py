@@ -1023,7 +1023,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                   context=context)
         if state:
             owner._parameter_states[param_name] = state
-        setattr(owner.__class__, "mod_"+param_name, make_property_mod(param_name, owner))
+        setattr(owner, "mod_"+param_name, make_property_mod(param_name, owner))
         # assign default value
 
 def _is_legal_param_value(owner, value):
