@@ -1,7 +1,7 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.functions.function import Linear
-
+from psyneulink.components.functions.function import Logistic
 class TestParameterStates:
     def test_inspect_function_params_slope(self):
         # A = IntegratorMechanism(function=Linear)
@@ -51,7 +51,10 @@ class TestParameterStates:
 
     def test_inspect_mechanism_params_noise(self):
         print("\n\n========================== starting second test ==========================\n\n")
-        C = TransferMechanism(function=Linear(slope=2.0))
+        C = TransferMechanism(function=Linear(slope=2.5))
+        print(C.function_object)
+        print(C.paramClassDefaults)
+        print(C.function_object.paramClassDefaults)
         # C = TransferMechanism()
         print("C.function_object.slope --> ", C.function_object.slope)
         print("C.function_object._slope --> ", C.function_object._slope)
@@ -77,3 +80,11 @@ class TestParameterStates:
         print("C.noise --> ", C.noise)
         print("C._noise --> ", C._noise)
         # print("C.mod_noise --> ", C.mod_noise)
+
+    def test_make_property(self):
+        print("making mechanism A")
+        A = TransferMechanism(function=Logistic)
+        print(A.function_object.gain)
+        print("\n\n ============================== \n\n")
+        print("making mechanism B")
+        B = TransferMechanism()

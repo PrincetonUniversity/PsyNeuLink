@@ -1466,7 +1466,7 @@ class Component(object):
                     # create property
                     setattr(self.__class__, arg_name, make_property(arg_name))
                     # assign default value
-                    setattr(self.__class__,  "_"+arg_name, arg_value)
+                    setattr(self,  "_"+arg_name, arg_value)
                     # setattr(self, "_"+arg_name, arg_value)
         else:
             for arg_name, arg_value in kwargs.items():
@@ -2067,6 +2067,7 @@ class Component(object):
         :return none:
         """
         for param_name, param_value in request_set.items():
+            setattr(self, "_"+param_name, param_value)
 
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
@@ -2074,6 +2075,7 @@ class Component(object):
                 if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES}:  # added SIZE here (7/5/17, CW)
                     continue
                 # function is a class, so function_params has not yet been implemented
+                self._function = request_set[FUNCTION]
                 if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
                     continue
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
