@@ -249,6 +249,9 @@ COMMENT
 
 COMMENT:
 
+IMPLEMENTATION NOTE: Name of owner Component is aliases to VALUE in loggable_items and logged_items,
+but is the Component's actual name in log_entries
+
 Entries are made to the Log based on the `LogLevel` specified in the
 `logPref` item of the component's `prefs <Component.prefs>` attribute.
 
@@ -336,7 +339,7 @@ import numpy as np
 
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.utilities import ContentAddressableList, AutoNumber
-from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, CONTROL, VALUE, \
+from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, COMMAND_LINE, VALUE, \
     kwContext, kwTime, kwValue
 
 
@@ -345,6 +348,7 @@ __all__ = [
 ]
 
 
+# FIX: REPLACE WITH Flags and auto IF/WHEN MOVE TO Python 3.6
 class LogLevel(IntEnum):
     """Specifies levels of logging, as descrdibed below."""
     OFF = 0
@@ -367,9 +371,15 @@ class LogLevel(IntEnum):
     """Record final value assignments during Composition execution."""
     FINAL = 1<<8                    # 256
     """Synonym of VALUE_ASSIGNMENT."""
+    COMMAND_LINE = 1 << 9           # 512
     ALL_ASSIGNMENTS = \
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL | VALUE_ASSIGNMENT | FINAL
     """Record all value assignments."""
+
+    # @classmethod
+    # def _log_level_max(cls):
+    #     return max([cls[i].value for i in list(cls.__members__) if cls[i] is not LogLevel.ALL_ASSIGNMENTS])
+
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
@@ -387,6 +397,8 @@ def _get_log_context(context):
         context_flag |= LogLevel.EXECUTION
     if LEARNING in context:
         context_flag |= LogLevel.LEARNING
+    if COMMAND_LINE in context:
+        context_flag |= LogLevel.COMMAND_LINE
     return context_flag
 
 
@@ -492,6 +504,10 @@ class Log:
     """Maintain a Log for an object, which contains a dictionary of logged value(s).
 
     COMMENT:
+
+    IMPLEMENTATION NOTE: Name of owner Component is aliases to VALUE in loggable_items and logged_items,
+    but is the Component's actual name in log_entries
+
     Description:
         Log maintains a dict (self.entries), with an entry for each attribute of the owner object being logged
         Each entry of self.entries has:
@@ -594,11 +610,8 @@ class Log:
 
         Each item of the entries list should be a string designating a Component to be logged;
         Initialize self.entries dict, each entry of which has a:
-        - key corresponding to an attribute of the object to be logged
-        - value that is a list of sequentially logged values
-
-        :parameter owner: (object in Function hierarchy) - parent object that owns the Log object)
-        :parameter entries: (list) - list of keypaths used as keys for entries in the Log dict
+            - key corresponding to a State of the Component to which the Log belongs
+            - value that is a list of sequentially logged LogEntry items
         """
 
         self.owner = owner
@@ -607,69 +620,6 @@ class Log:
 
         if entries is None:
             return
-
-        # self.add_entries(entries)
-
-    @property
-    def loggable_items(self):
-        """Return dict of loggable items
-
-        Keys are names of the items, values the items themselves
-        """
-        # FIX: The following crashes during init as prefs have not all been assigned
-        # return {key: value for (key, value) in [(c.name, c.logPref.name) for c in self.loggable_components]}
-
-        loggable_items = {}
-        for c in self.loggable_components:
-            if c is self.owner:
-                name = VALUE
-            else:
-                name = c.name
-            try:
-                log_pref = c.logPref.name
-            except:
-                log_pref = None
-            loggable_items[name] = log_pref
-        return loggable_items
-
-
-    @property
-    def loggable_components(self):
-        """Return a list of owner's Components that are loggable
-
-        The loggable items of a Component are specified in the _logagble_items property of its class
-        """
-        from psyneulink.components.component import Component
-
-        try:
-            loggable_items = ContentAddressableList(component_type=Component, list=self.owner._loggable_items)
-            loggable_items[self.owner.name] = self.owner
-        except AttributeError:
-            return []
-        return loggable_items
-
-    @property
-    def logged_items(self):
-        """Dict of items that have logged `entries <Log.entries>`, indicating their specified `LogLevel`.
-        """
-        log_level = 'LogLevel.'
-        # Return LogLevel for items in log.entries
-        # THIS VERSION FAILS AS IT ASSUMES THAT VALUE OF LOG'S OWNER IS UNDER ITS OWNER'S NAME, RATHER THAN "VALUE":
-        # logged_items = {key: value for (key, value) in
-        #                 [(l, self.loggable_items[l])
-        #                  for l in self.logged_entries.keys()]}
-        logged_items = {}
-        for l in self.logged_entries.keys():
-            try:
-                logged_items[l] = self.loggable_items[l]
-            except KeyError:
-                if l is self.owner.name:
-                    try:
-                        logged_items[l] = (VALUE, self.loggable_items[VALUE])
-                    except:
-                        raise LogError("PROGRAM ERROR: Could not find {} from logged_entries in loggable_items "
-                                       "for {} of {}".format(l, Log.__name__, self.owner.name))
-        return logged_items
 
     def log_items(self, items, log_level=LogLevel.EXECUTION):
         """Specifies items to be logged at the specified `LogLevel`\\(s).
@@ -740,6 +690,8 @@ class Log:
         Identifies the context in which the call is being made, which is assigned to the context field of the
         `LogEntry`, along with the current time stamp and value itself
 
+        If value is None, uses owner's `value <Component.value>` attribute.
+
         .. note::
             Since _log_value is usually called by the setter for the `value <Component.value>` property of a Component
             (which doesn't/can't receive a context argument), it does not pass a **context** argument to _log_value;
@@ -748,8 +700,16 @@ class Log:
 
         """
         from psyneulink.components.component import Component
+        programmatic = False
 
-        # Get context
+
+        if context is COMMAND_LINE:
+            # If _log_value is being called programmatically,
+            #    flag for later and set context to None to get context from the stack
+            programmatic = True
+            context = None
+
+        # Get context from the stack
         if context is None:
             curr_frame = inspect.currentframe()
             prev_frame = inspect.getouterframes(curr_frame, 2)
@@ -767,23 +727,27 @@ class Log:
                 else:
                     break
 
-        if context is None:
-            # No context was specified in any frame
-            raise LogError("PROGRAM ERROR: No context specification found in any frame")
-
         # If context is a Component object, it must be during its initialization, so assign accordingly:
         if isinstance(context, Component):
             context = "{} of {}".format(INITIALIZING, context.name)
 
+        # No context was specified in any frame
+        if context is None:
+            raise LogError("PROGRAM ERROR: No context specification found in any frame")
+
         if not isinstance(context, str):
             raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
+
+        # Context is an empty string, but called programatically
+        if not context and programmatic:
+            context = COMMAND_LINE
 
         context_flags = _get_log_context(context)
 
         log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 
-        # Log value if logging condition is satisfied
-        if log_pref and log_pref == context_flags:
+        # Log value if logging condition is satisfied or called for programmatically
+        if (log_pref and log_pref == context_flags) or context_flags & LogLevel.COMMAND_LINE:
         # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
         # if log_pref and log_pref | context_flags:
 
@@ -849,6 +813,75 @@ class Log:
 
         return time or no_time
 
+    @tc.typecheck
+    def log_value(self, entries):
+        """Log the value of a Component.
+
+        Arguments
+        ---------
+
+        entries : string, Component or list of them : default None
+            specifies the Components, the current `value <Component.value>`\\s of which should be added to the Log.
+            they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is `ALL`, `None`
+            or omitted, then the `value <Component.value> of all `loggable_items <Log.loggable_items>` are logged.
+        """
+        entries = self._validate_entries_arg(entries)
+
+        # Validate the Component field of each LogEntry
+        for entry in entries:
+            self._log_value(self.loggable_components[self._dealias_owner_name(entry)].value, context=COMMAND_LINE)
+
+    def clear_entries(self, entries=ALL_LOG_ENTRIES, delete_entry=True, confirm=False):
+        """Clear one or more entries either by deleting the entry or just removing its data.
+
+        Arguments
+        ---------
+
+        entries : string, Component or list of them : default None
+            specifies the entries of the Log to be cleared;  they must be `loggable_items
+            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
+            If **entries** is `ALL`, `None` or omitted, then all `logged_items <Log.logged_items>` are cleared.
+
+        delete_entry : bool : default True
+            specifies whether to delete the entry (if `True`) from the log to which it belongs, or just
+            delete the data, but leave the entry itself (if `False`).
+
+            .. note::
+                This option is included for generality and potential future features, but is not advised;
+                the Log interface (e.g., the `logged_items <Log.logged_items>` interface generally assumes that
+                the only `entries <Log.entries>` in a log are ones with data.
+
+        confirm : bool : default False
+            specifies whether user confirmation is required before clearing the entries.
+
+            .. note::
+                If **confirm** is `True`, only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
+
+        """
+
+        entries = self._validate_entries_arg(entries)
+
+        # If any entries remain
+        if entries:
+            if confirm:
+                delete = input("\nAll data will be deleted from {0} in the Log for {1}.  Proceed? (y/n)".
+                               format(entries,self.owner.name))
+                while delete != 'y' and delete != 'y':
+                    input("\nDelete all data from entries? (y/n)")
+                if delete == 'n':
+                    return
+
+            # Reset entries
+            for entry in entries:
+                self.logged_entries[entry]=[]
+                if delete_entry:
+                # Delete the entire entry from the log to which it belongs
+                    del self.loggable_components[entry].log.entries[entry]
+                else:
+                    # Delete the data for the entry but leave the entry itself in the log to which it belongs
+                    del self.logged_entries[entry][0:]
+                assert True
+
     def print_entries(self,
                       entries=None,
                       csv=False,
@@ -866,13 +899,7 @@ class Log:
         Issue a warning if an entry is not in the Log dict
         """
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
-        if entries is ALL_ENTRIES or entries is None:
-            entries = self.logged_entries.keys()
-
-        # If entries is a single entry, put in list for processing below
-        if isinstance(entries, str):
-            entries = [entries]
+        entries = self._validate_entries_arg(entries, logged=True)
 
         if csv is True:
             print(self.csv(entries))
@@ -922,9 +949,10 @@ class Log:
                 import numpy as np
                 for i, item in enumerate(datum):
                     time, context, value = item
-                    if isinstance(value, np.ndarray):
-                        value = value[0]
+                    # if isinstance(value, np.ndarray):
+                    #     value = value[0]
                     time_str = _time_string(time)
+                    attrib_name = self._alias_owner_name(attrib_name)
                     data_str = repr(attrib_name).ljust(variable_width, kwSpacer)
                     if not args or kwTime in args:
                         data_str = time_str.ljust(time_width) + data_str
@@ -1002,26 +1030,8 @@ class Log:
         Returns:
             2d np.array
         """
-        from psyneulink.components.component import Component
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
-        if entries is ALL_ENTRIES or entries is None:
-            entries = self.logged_entries.keys()
-
-        # If entries is a single entry, put in list for processing below
-        if isinstance(entries, (str, Component)):
-            entries = [entries]
-
-        # Make sure all entries are the names of Components
-        entries = [entry.name if isinstance(entry, Component) else entry for entry in entries ]
-
-        # Validate entries
-        for entry in entries:
-            if entry not in self.loggable_items:
-                raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
-            if entry not in self.logged_entries:
-                raise LogError("{} is not currently being logged by {} (try using log_items)".
-                               format(repr(entry), self.owner.name))
+        entries = self._validate_entries_arg(entries, logged=True)
 
         if owner_name is True:
             owner_name_str = self.owner.name
@@ -1078,9 +1088,10 @@ class Log:
                 if time_values:
                     while datum.time != next(time_col,None):
                         row.append(None)
-                row.append(datum.value.tolist())
+                value = None if datum.value is None else datum.value.tolist()
+                row.append(value)
             if header:
-                entry_header = "{}{}{}{}".format(owner_name_str, lb, entry, rb)
+                entry_header = "{}{}{}{}".format(owner_name_str, lb, self._alias_owner_name(entry), rb)
                 row = [entry_header] + row
             npa.append(row)
 
@@ -1160,79 +1171,98 @@ class Log:
 
         return(csv)
 
+    def _validate_entries_arg(self, entries, loggable=True, logged=False):
+        from psyneulink.components.component import Component
+
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
+        if entries is ALL_ENTRIES or entries is None:
+            entries = self.logged_entries.keys()
+
+        # If entries is a single entry, put in list for processing below
+        if isinstance(entries, (str, Component)):
+            entries = [entries]
+
+        # Make sure all entries are the names of Components
+        entries = [entry.name if isinstance(entry, Component) else entry for entry in entries ]
+
+        # Validate entries
+        for entry in entries:
+            if loggable:
+                if self._alias_owner_name(entry) not in self.loggable_items:
+                    raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
+            if logged:
+                if entry not in self.logged_entries:
+                    raise LogError("{} is not currently being logged by {} (try using log_items)".
+                                   format(repr(entry), self.owner.name))
+        return entries
+
+    def _alias_owner_name(self, name):
+        """Alias name of owner Component to VALUE in loggable_items and logged_items
+        Component's actual name is preserved and used in log_entries (i.e., as entered by _log_value)
+        """
+        return VALUE if name is self.owner.name else name
+
+
+    def _dealias_owner_name(self, name):
+        """De-alias VALUE to name of owner
+        """
+        return self.owner.name if name is VALUE else name
+
+    @property
+    def loggable_items(self):
+        """Return dict of loggable items.
+
+        Keys are names of the Components, values their LogLevels
+        """
+        # FIX: The following crashes during init as prefs have not all been assigned
+        # return {key: value for (key, value) in [(c.name, c.logPref.name) for c in self.loggable_components]}
+
+        loggable_items = {}
+        for c in self.loggable_components:
+            name = self._alias_owner_name(c.name)
+            try:
+                log_pref = c.logPref.name
+            except:
+                log_pref = None
+            loggable_items[name] = log_pref
+        return loggable_items
+
+    @property
+    def loggable_components(self):
+        """Return a list of owner's Components that are loggable
+
+        The loggable items of a Component are the Components (typically States) specified in the _logagble_items
+        property of its class, and its own `value <Component.value>` attribute.
+        """
+        from psyneulink.components.component import Component
+
+        try:
+            loggable_items = ContentAddressableList(component_type=Component, list=self.owner._loggable_items)
+            loggable_items[self.owner.name] = self.owner
+        except AttributeError:
+            return []
+        return loggable_items
+
+    @property
+    def logged_items(self):
+        """Dict of items that have logged `entries <Log.entries>`, indicating their specified `LogLevel`.
+        """
+        log_level = 'LogLevel.'
+        # Return LogLevel for items in log.entries
+
+        logged_items = {key: value for (key, value) in
+                        # [(l, self.loggable_components[l].logPref.name)
+                        [(self._alias_owner_name(l), self.loggable_items[self._alias_owner_name(l)])
+                         for l in self.logged_entries.keys()]}
+
+        return logged_items
+
     @property
     def logged_entries(self):
         entries = {}
         for e in self.loggable_components:
             entries.update(e.log.entries)
         return entries
-
-    def clear_entries(self, entries=ALL_LOG_ENTRIES, delete_entry=True, confirm=False):
-        """Clear one or more entries either by deleting the entry or just removing its data.
-
-        Arguments
-        ---------
-
-        entries : string, Component or list of them : default None
-            specifies the entries of the Log to be cleared;  they must be `loggable_items
-            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL`, `None` or omitted, then all `logged_items <Log.logged_items>` are cleared.
-
-        delete_entry : bool : default True
-            specifies whether to delete the entry (if `True`) from the log to which it belongs, or just
-            delete the data, but leave the entry itself (if `False`).
-
-            .. note::
-                This option is included for generality and potential future features, but is not advised;
-                the Log interface (e.g., the `logged_items <Log.logged_items>` interface generally assumes that
-                the only `entries <Log.entries>` in a log are ones with data.
-
-        confirm : bool : default False
-            specifies whether user confirmation is required before clearing the entries.
-
-            .. note::
-                If **confirm** is `True`, only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
-
-        """
-
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
-        if entries in {None, Log.ALL_LOG_ENTRIES}:
-            entries = self.logged_items.keys()
-
-        # If entries is a single entry, put in list for processing below
-        if isinstance(entries, str):
-            entries = [entries]
-
-        # Validate each entry and delete bad ones from entries
-        for entry in entries:
-            try:
-                self.logged_items[entry]
-            except KeyError:
-                if self.owner.verbosePref:
-                    warnings.warn("Warning: {0} is not an entry in Log of {1}".
-                                  format(entry,self.owner.name))
-                del(entries, entry)
-
-        # If any entries remain
-        if entries:
-            if confirm:
-                delete = input("\nAll data will be deleted from {0} in the Log for {1}.  Proceed? (y/n)".
-                               format(entries,self.owner.name))
-                while delete != 'y' and delete != 'y':
-                    input("\nDelete all data from entries? (y/n)")
-                if delete == 'n':
-                    return
-
-            # Reset entries
-            for entry in entries:
-                self.logged_entries[entry]=[]
-                if delete_entry:
-                # Delete the entire entry from the log to which it belongs
-                    del self.loggable_components[entry].log.entries[entry]
-                else:
-                    # Delete the data for the entry but leave the entry itself in the log to which it belongs
-                    del self.logged_entries[entry][0:]
-                assert True
 
     # def save_log(self):
     #     print("Saved")

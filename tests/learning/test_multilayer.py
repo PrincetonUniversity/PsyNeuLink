@@ -5,7 +5,7 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import System
-from psyneulink.globals.keywords import LEARNING, SOFT_CLAMP, EXECUTION, LEARNING
+from psyneulink.globals.keywords import SOFT_CLAMP, EXECUTION, LEARNING, VALUE
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.library.mechanisms.processing.objective.comparatormechanism import MSE
 
@@ -255,6 +255,26 @@ def test_multilayer():
                                            err_msg='Failed on test of logged values')
 
     Middle_Weights.log.print_entries()
+
+    # Test Programatic logging
+    Hidden_Layer_2.log.log_value(VALUE)
+    log_val = Hidden_Layer_2.log.nparray(header=False)
+    expected_log_val = np.array(
+            [
+                [[0]],
+                [[[0.8565238418942037, 0.8601053239957609, 0.8662098921116546, 0.8746933736954071]]]
+            ], dtype=object
+    )
+    for i in range(len(log_val)):
+        try:
+            np.testing.assert_array_equal(log_val[i], expected_log_val[i])
+        except:
+            for j in range(len(log_val[i])):
+                np.testing.assert_allclose(np.array(log_val[i][j]), np.array(expected_log_val[i][j]),
+                                           atol=1e-08,
+                                           err_msg='Failed on test of logged values')
+    Hidden_Layer_2.log.print_entries()
+
 
     # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
     Middle_Weights.log.clear_entries(entries=None, confirm=False)

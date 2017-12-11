@@ -97,6 +97,12 @@ class TestLog:
                                                 [[ 0.], [ 0.], [ 0.]],
                                                 [[ 0.,  0.], [ 0.,  0.],[ 0., 0.]]]))
 
+    def test_log_initialization(self):
+        T = pnl.TransferMechanism(
+                prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
+        )
+        assert T.logged_items == {'value': 'INITIALIZATION'}
+
 
 
 
