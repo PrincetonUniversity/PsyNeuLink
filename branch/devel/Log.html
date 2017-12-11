@@ -91,11 +91,23 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Condition.html">Condition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Time.html">Time</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Log</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -278,7 +290,7 @@ binary “flags”, and can be combined to permit logging under more than one co
 using bitwise operators (e.g., LogLevel.EXECUTION | LogLevel.LEARNING).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Currently, the only <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevels</span></code></a> supported are: <a class="reference internal" href="#psyneulink.globals.log.LogLevel.OFF" title="psyneulink.globals.log.LogLevel.OFF"><code class="xref any py py-attr docutils literal"><span class="pre">OFF</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.LogLevel.INITIALIZATION" title="psyneulink.globals.log.LogLevel.INITIALIZATION"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZATION</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.LogLevel.EXECUTION" title="psyneulink.globals.log.LogLevel.EXECUTION"><code class="xref any py py-attr docutils literal"><span class="pre">EXECUTION</span></code></a> and <a class="reference internal" href="#psyneulink.globals.log.LogLevel.LEARNING" title="psyneulink.globals.log.LogLevel.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>.</p>
+<p class="last">Currently, the only <a class="reference internal" href="#psyneulink.globals.log.LogLevel" title="psyneulink.globals.log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevels</span></code></a> supported are: <a class="reference internal" href="#psyneulink.globals.log.LogLevel.OFF" title="psyneulink.globals.log.LogLevel.OFF"><code class="xref any py py-attr docutils literal"><span class="pre">OFF</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.LogLevel.INITIALIZATION" title="psyneulink.globals.log.LogLevel.INITIALIZATION"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZATION</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.LogLevel.EXECUTION" title="psyneulink.globals.log.LogLevel.EXECUTION"><code class="xref any py py-attr docutils literal"><span class="pre">EXECUTION</span></code></a> and <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.LEARNING" title="psyneulink.globals.keywords.MechanismRoles.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
