@@ -2315,7 +2315,8 @@ def test_log_initialization():
             prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
     )
     print(T.logged_items)
-    T.log.print_entries()
+    x= T.log.print_entries()
+    assert True
 
 test_log_initialization()
 
