@@ -2237,9 +2237,9 @@ class ScratchPadError(Exception):
 #     assert PJ.loggable_items == {'matrix': 'OFF',
 #                                  'value': 'OFF'}
 #
-#     T_1.log_items(pnl.NOISE)
-#     T_1.log_items(pnl.RESULTS)
-#     PJ.log_items(pnl.MATRIX)
+#     T_1.set_log_levels(pnl.NOISE)
+#     T_1.set_log_levels(pnl.RESULTS)
+#     PJ.set_log_levels(pnl.MATRIX)
 #
 #     assert T_1.loggable_items == {'InputState-0': 'OFF',
 #                                  'slope': 'OFF',
@@ -2330,7 +2330,7 @@ class ScratchPadError(Exception):
 #
 # P = pnl.Process(pathway=[T])
 # S = pnl.System(processes=P)
-# T.log_items(pnl.RESULTS)
+# T.set_log_levels(pnl.RESULTS)
 # S.execute()
 # S.execute()
 # S.execute()
@@ -2347,8 +2347,8 @@ class ScratchPadError(Exception):
 # T2 = pnl.TransferMechanism(size=4, input_states=[T])
 # # T.parameter_states['slope'].logPref=pnl.PreferenceEntry(pnl.LogLevel.EXECUTION, pnl.PreferenceLevel.INSTANCE)
 # print(T.loggable_items)
-# T.log_items(('noise'))
-# T.log_items('RESULTS')
+# T.set_log_levels(('noise'))
+# T.set_log_levels('RESULTS')
 # print(T.loggable_items)
 #
 # T.execute()
@@ -2369,9 +2369,9 @@ class ScratchPadError(Exception):
 # PJ = T2.path_afferents[0]
 # print(PJ.loggable_items)
 #
-# T1.log_items('noise')
-# T1.log_items('RESULTS')
-# PJ.log_items('matrix')
+# T1.set_log_levels('noise')
+# T1.set_log_levels('RESULTS')
+# PJ.set_log_levels('matrix')
 #
 # # Execute each Process twice (to generate some values in the logs):
 # PS.execute()
@@ -2403,9 +2403,9 @@ class ScratchPadError(Exception):
 # print(my_mech_B.loggable_items) # doctest: +SKIP
 # print(proj_A_to_B.loggable_items) # doctest: +SKIP
 #
-# my_mech_A.log_items('noise')
-# my_mech_A.log_items('RESULTS')
-# proj_A_to_B.log_items(pnl.MATRIX)
+# my_mech_A.set_log_levels('noise')
+# my_mech_A.set_log_levels('RESULTS')
+# proj_A_to_B.set_log_levels(pnl.MATRIX)
 #
 #
 # my_process.execute()
@@ -2517,7 +2517,7 @@ def test_multilayer():
         },
     )
 
-    Middle_Weights.log_items(('matrix', pnl.EXECUTION))
+    Middle_Weights.set_log_levels(('matrix', pnl.EXECUTION))
 
     stim_list = {Input_Layer: [[-1, 30]]}
     target_list = {Output_Layer: [[0, 0, 1]]}
@@ -2698,7 +2698,7 @@ def test_multilayer():
 
     # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
     Middle_Weights.log.clear_entries(entries=None, confirm=False)
-    Middle_Weights.log_items(('matrix', pnl.LEARNING))
+    Middle_Weights.set_log_levels(('matrix', pnl.LEARNING))
     s.run(
             num_trials=5,
             inputs=stim_list,

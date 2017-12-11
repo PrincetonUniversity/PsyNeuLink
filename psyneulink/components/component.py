@@ -139,8 +139,8 @@ corresponding arguments of its constructor, or by assigning them directly (see `
 
 * **log** - the `log <Component.log>` attribute contains the Component's `Log`, that can be used to record its
   `value <Component.value>`, as well as that of Components that belong to it, during initialization, validation,
-  execution and learning.  It also has four convenience methods -- `loggable_items <Log.loggable_items>`, `log_items
-  <Log.log_items>`, `log_values <Log.log_values>` and `logged_items <Log.logged_items>` -- that provide access to the
+  execution and learning.  It also has four convenience methods -- `loggable_items <Log.loggable_items>`, `set_log_levels
+  <Log.set_log_levels>`, `log_values <Log.log_values>` and `logged_items <Log.logged_items>` -- that provide access to the
   corresponding methods of its Log, used to identify, configure and track items for logging.
 ..
 
@@ -2841,18 +2841,18 @@ class Component(object):
         return self.log.loggable_items
 
     from psyneulink.globals.log import LogLevel
-    def log_items(self, items, log_level=LogLevel.EXECUTION):
+    def set_log_levels(self, items, log_level=LogLevel.EXECUTION):
         """
-        log_items(               \
+        set_log_levels(               \
             items                \
             log_level=EXECUTION  \
         )
 
         Specifies items to be logged; these must be be `loggable_items <Component.loggable_items>` of the Component's
-        `log <Component.log>`. This is a convenience method that calls the `log_items <Log.log_items>` method
+        `log <Component.log>`. This is a convenience method that calls the `set_log_levels <Log.set_log_levels>` method
         of the Component's `log <Component.log>`.
         """
-        self.log.log_items(items=items, log_level=log_level)
+        self.log.set_log_levels(items=items, log_level=log_level)
 
     def log_values(self, entries):
         """

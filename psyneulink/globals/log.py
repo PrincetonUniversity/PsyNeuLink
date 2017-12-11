@@ -20,7 +20,7 @@ when they are created, validated, and/or executed).  Every Component has a Log o
 Components that belong to it.  These are stored in `entries <Log.entries>` of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
 recorded is specified by the `logPref <Component.logPref>` property of a Component.  While these can be set directly,
-they are most easily specified using the Log's `log_items <Log.log_items>` method, together with its `loggable_items
+they are most easily specified using the Log's `set_log_levels <Log.set_log_levels>` method, together with its `loggable_items
 <Log.loggable_items>` and `logged_items <Log.logged_items>` attributes that identify and track the items to be logged.
 Entries can also be made by the user programmatically, using the `log_values <Log.log_values>` method. Logging can be
 useful not only for observing the behavior of a Component in a model, but also in debugging the model during
@@ -56,7 +56,7 @@ to access its `entries <Log.entries>`:
     * `loggable_items <Log.loggable_items>` -- a dictionary with the items that can be logged in a Component's `log
       <Component.log>`;  the key for each entry is the name of a Component,  and the value is it current `LogLevel`.
     ..
-    * `log_items <Log.log_items>` -- used to assign the LogLevel for one or more Components.  Components can be
+    * `set_log_levels <Log.set_log_levels>` -- used to assign the LogLevel for one or more Components.  Components can be
       specified by their names, a reference to the Component object, in a tuple that specifies the `LogLevel` to
       assign to that Component, or in a list with a `LogLevel` to be applied to multiple items at once.
     ..
@@ -108,7 +108,7 @@ LogLevels
 ~~~~~~~~~
 
 Configuring a Component to be logged is done using a `LogLevel`, that specifies the conditions under which its
-`value <Component.value>` should be entered in its Log.  These can be specified in the `log_items <Log.log_items>`
+`value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_levels <Log.set_log_levels>`
 method of a Log, or directly by specifying a LogLevel for the value a Component's `logPref  <Compnent.logPref>` item
 of its `prefs <Component.prefs>` attribute.  The former is easier, and allows multiple Components to be specied at
 once, while the latter affords more control over the specification (see `Preferences`).  LogLevels are treated as
@@ -159,8 +159,8 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     {'value': 'OFF', 'matrix': 'OFF'}
 
     # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
-    >>> my_mech_A.log_items([pnl.NOISE, pnl.RESULTS])
-    >>> proj_A_to_B.log_items(pnl.MATRIX)
+    >>> my_mech_A.set_log_levels([pnl.NOISE, pnl.RESULTS])
+    >>> proj_A_to_B.set_log_levels(pnl.MATRIX)
 
 
 Executing the Process generates entries in the Logs, that can then be displayed in several ways::
@@ -631,7 +631,7 @@ class Log:
         if entries is None:
             return
 
-    def log_items(self, items, log_level=LogLevel.EXECUTION):
+    def set_log_levels(self, items, log_level=LogLevel.EXECUTION):
         """Specifies items to be logged at the specified `LogLevel`\\(s).
 
         Arguments
@@ -1202,7 +1202,7 @@ class Log:
                     raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
             if logged:
                 if entry not in self.logged_entries:
-                    raise LogError("{} is not currently being logged by {} (try using log_items)".
+                    raise LogError("{} is not currently being logged by {} (try using set_log_levels)".
                                    format(repr(entry), self.owner.name))
         return entries
 

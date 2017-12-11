@@ -29,9 +29,9 @@ class TestLog:
         assert PJ.loggable_items == {'matrix': 'OFF',
                                      'value': 'OFF'}
 
-        T_1.log_items(pnl.NOISE)
-        T_1.log_items(pnl.RESULTS)
-        PJ.log_items(pnl.MATRIX)
+        T_1.set_log_levels(pnl.NOISE)
+        T_1.set_log_levels(pnl.RESULTS)
+        PJ.set_log_levels(pnl.MATRIX)
 
         assert T_1.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',

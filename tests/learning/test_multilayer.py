@@ -98,7 +98,7 @@ def test_multilayer():
         },
     )
 
-    Middle_Weights.log_items(('matrix', EXECUTION))
+    Middle_Weights.set_log_levels(('matrix', EXECUTION))
 
     stim_list = {Input_Layer: [[-1, 30]]}
     target_list = {Output_Layer: [[0, 0, 1]]}
@@ -278,7 +278,7 @@ def test_multilayer():
 
     # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
     Middle_Weights.log.clear_entries(entries=None, confirm=False)
-    Middle_Weights.log_items(('matrix', LEARNING))
+    Middle_Weights.set_log_levels(('matrix', LEARNING))
     s.run(
             num_trials=5,
             inputs=stim_list,
