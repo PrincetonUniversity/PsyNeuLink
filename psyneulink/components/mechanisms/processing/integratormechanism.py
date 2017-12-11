@@ -27,7 +27,8 @@ An IntegratorMechanism can be created directly by calling its constructor, or us
 specifying *INTEGRATOR_MECHANISM* as its **mech_spec** argument.  Its function is specified in the **function**
 argument, which can be parametrized by calling its constructor with parameter values::
 
-    my_time_averaging_mechanism = IntegratorMechanism(function=AdaptiveIntegrator(rate=0.5))
+    >>> import psyneulink as pnl
+    >>> my_time_averaging_mechanism = pnl.IntegratorMechanism(function=pnl.AdaptiveIntegrator(rate=0.5))
 
 The **default_variable** argument specifies the format of its input (i.e., whether it is a single scalar or an
 array), as well as the value to use if none is provided when Mechanism is executed.  Alternatively, the **size**
@@ -72,7 +73,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.globals.keywords import INTEGRATOR_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'DEFAULT_RATE', 'IntegratorMechanism', 'IntegratorMechanismError'
@@ -143,7 +144,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, parameters for its `function <IntegratorMechanism.function>`, and/or a custom function and its
         parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in

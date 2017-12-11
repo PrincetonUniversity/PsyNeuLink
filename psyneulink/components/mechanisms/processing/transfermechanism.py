@@ -42,8 +42,9 @@ A TransferMechanism is created by calling its constructor.  Its `function <Trans
 the **function** argument, which can be the name of a `Function <Function>` class (first example below), or a call to
 a Function constructor that can include arguments specifying the Function's parameters (second example)::
 
-    my_linear_transfer_mechanism = TransferMechanism(function=Linear)
-    my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
+    >>> import psyneulink as pnl
+    >>> my_linear_transfer_mechanism = pnl.TransferMechanism(function=pnl.Linear)
+    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
 
 In addition to Function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant
 <TransferMechanism.time_constant>` parameters can be specified for the Mechanism (see `Transfer_Execution`).
@@ -147,6 +148,7 @@ Class Reference
 """
 import inspect
 import numbers
+
 from collections import Iterable
 
 import numpy as np
@@ -154,17 +156,16 @@ import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
 from psyneulink.components.functions.function import AdaptiveIntegrator, Linear, TransferFunction
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.globals.keywords import NAME, INDEX, FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, \
-    RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, NORMALIZING_FUNCTION_TYPE, TRANSFER_MECHANISM, \
-    VARIANCE, kwPreferenceSetName
+from psyneulink.globals.keywords import FUNCTION, INDEX, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NAME, NOISE, NORMALIZING_FUNCTION_TYPE, RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'INITIAL_VALUE', 'CLIP', 'TIME_CONSTANT', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH',
@@ -351,7 +352,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         specified in **input_states**;  see `note <TransferMechanism_OutputStates_Note>`, and `output_states
         <TransferMechanism.output_states>` for additional details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its `function <Mechanism_Base.function>`, and/or a custom function and its parameters.  Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
@@ -444,8 +445,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the TransferMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the TransferMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
     """
@@ -511,8 +512,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
-                                                               indices=PRIMARY
-                                                               )
+                                                               indices=PRIMARY)
 
         super(TransferMechanism, self).__init__(
             variable=default_variable,
@@ -619,11 +619,14 @@ class TransferMechanism(ProcessingMechanism_Base):
                             "The elements of a noise list or array must be floats or functions. {} is not a valid noise"
                             " element for {}".format(noise_item, self.name))
 
+        elif _is_control_spec(noise):
+            pass
+
         # Otherwise, must be a float, int or function
         elif not isinstance(noise, (float, int)) and not callable(noise):
-            raise MechanismError(
-                "Noise parameter ({}) for {} must be a float, function, or array/list of these."
-                    .format(noise, self.name))
+            raise MechanismError("Noise parameter ({}) for {} must be a float, "
+                                 "function, or array/list of these.".format(noise,
+                                                                            self.name))
 
     def _try_execute_param(self, param, var):
 
@@ -679,7 +682,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 clock=CentralClock,
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """Execute TransferMechanism function and return transform of input

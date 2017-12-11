@@ -206,16 +206,22 @@ def parameter_spec(param):
     from psyneulink.components.functions.function import function_type
     from psyneulink.components.shellclasses import Projection
     from psyneulink.components.component import parameter_keywords
+    from psyneulink.globals.keywords import MODULATORY_SPEC_KEYWORDS
+    from psyneulink.components.component import Component
 
+    if inspect.isclass(param):
+        param = param.__name__
+    elif isinstance(param, Component):
+        param = param.__class__.__name__
     if (isinstance(param, (numbers.Number,
                            np.ndarray,
                            list,
                            tuple,
                            dict,
                            function_type,
-                           Projection)) or
-        (inspect.isclass(param) and issubclass(param, Projection)) or
-        param in parameter_keywords):
+                           Projection))
+        or param in MODULATORY_SPEC_KEYWORDS
+        or param in parameter_keywords):
         return True
     return False
 
@@ -730,7 +736,21 @@ class ContentAddressableList(UserList):
     """
     ContentAddressableList( component_type, key=None, list=None)
 
-    Implements dict-like list, that can be keyed by the names of the `compoments <Component>` in its entries.
+    Implements dict-like list, that can be keyed by a specified attribute of the `Compoments <Component>` in its
+    entries.
+
+    The key with which it is created is also assigned as a property of the class, that returns a list
+    with the keyed attribute of its entries.  For example, the `output_states <Mechanism_Base.output_states>` attribute
+    of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputStates <OutputState>`, keyed by their
+    names.  Therefore, ``my_mech.output_states.names`` returns the names of all of the Mechanism's OutputStates::
+
+        >>> print(pnl.DDM().output_states.names)
+        ['DECISION_VARIABLE', 'RESPONSE_TIME']
+
+    The keyed attribute can also be used to access an item of the list.  For examples::
+
+        >>> print(pnl.DDM().output_states['DECISION_VARIABLE'])
+        (OutputState DECISION_VARIABLE)
 
     Supports:
       * getting and setting entries in the list using keys (string), in addition to numeric indices.
@@ -851,18 +871,18 @@ class ContentAddressableList(UserList):
         except TypeError:
             # It must be a string
             if not isinstance(key, str):
-                raise UtilitiesError("Non-numeric key used for {} ({})must be a string)".
-                                      format(self.name, key))
+                raise UtilitiesError("Non-numeric key used for {} ({}) must be "
+                                     "a string)".format(self.name, key))
             # The specified string must also match the value of the attribute of the class used for addressing
             if not key == value.name:
             # if not key == type(value).__name__:
                 raise UtilitiesError("The key of the entry for {} {} ({}) "
-                                     "must match the value of its {} attribute ({})".
-                                      format(self.name,
-                                             value.__class__.__name__,
-                                             key,
-                                             self.key,
-                                             getattr(value, self.key)))
+                                     "must match the value of its {} attribute "
+                                     "({})".format(self.name,
+                                                   value.__class__.__name__,
+                                                   key,
+                                                   self.key,
+                                                   getattr(value, self.key)))
             key_num = self._get_key_for_item(key)
             if key_num is not None:
                 self.data[key_num] = value
@@ -885,8 +905,9 @@ class ContentAddressableList(UserList):
         elif isinstance(key, self.component_type):
             return self.data.index(key)
         else:
-            raise UtilitiesError("{} is not a legal key for {} (must be number, string or State)".
-                                  format(key, self.key))
+            raise UtilitiesError("{} is not a legal key for {} (must be "
+                                 "number, string or State)".format(key,
+                                                                   self.key))
 
     def __delitem__(self, key):
         if key is None:

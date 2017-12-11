@@ -428,31 +428,35 @@ import math
 import numbers
 import re
 import warnings
+
 from collections import OrderedDict, namedtuple
 
 import numpy as np
 import typecheck as tc
+
 from toposort import toposort, toposort_flatten
 
 from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
-from psyneulink.components.process import ProcessList, ProcessTuple, Process
+from psyneulink.components.process import Process, ProcessList, ProcessTuple
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, WEIGHT, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, WEIGHT, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.log import Log
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
-    'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'NUM_PHASES_PER_TRIAL', 'ORIGIN_MECHANISMS',
+    'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple', 'NUM_PHASES_PER_TRIAL', 'ORIGIN_MECHANISMS',
     'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY', 'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS', 'SCHEDULER',
     'System', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
     'SystemWarning', 'TARGET_MECHANISMS', 'TERMINAL_MECHANISMS',
@@ -502,7 +506,7 @@ OUTPUT_STATE_INDEX = 0
 WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
 MATRIX_INDEX = 3
-MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state, weight exponent matrix")
+MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state weight exponent matrix")
 
 
 class SystemWarning(Warning):
@@ -645,7 +649,7 @@ class System(System_Base):
 
         .. property that points to _all_mechanisms.mechanisms (see below)
 
-    mechanismsDict : Dict[Mechanism:Process]
+    mechanismsDict : Dict[Mechanism: Process]
         contains a dictionary of all Mechanisms in the System, listing the Processes to which they belong. The key of
         each entry is a `Mechanism <Mechanism>` object, and the value of each entry is a list of `Processes <Process>`.
 
@@ -814,6 +818,8 @@ class System(System_Base):
         self.status = INITIALIZING
 
         processes = processes or []
+        if not isinstance(processes, list):
+            processes = [processes]
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -1052,7 +1058,7 @@ class System(System_Base):
 
             # Assign the Process a reference to this System
             process.systems.append(self)
-            if process.learning:
+            if process._learning_enabled:
                 self.learning = True
 
             # Get max of Process phaseSpecs
@@ -1515,7 +1521,7 @@ class System(System_Base):
         # MODIFIED 6/27/17 END
 
         # Instantiate StimulusInputStates
-        self._instantiate_stimulus_inputs()
+        self._instantiate_stimulus_inputs(context=context)
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
@@ -1561,9 +1567,11 @@ class System(System_Base):
                 # MODIFIED 6/27/17 END
                 # MODIFIED 6/27/17 END
                 stimulus_input_state = SystemInputState(owner=self,
-                                                            variable=origin_mech.input_states[j].instance_defaults.variable,
-                                                            prefs=self.prefs,
-                                                            name="System Input State to Mechansism {}, Input State {}".format(origin_mech.name,j))
+                                                        variable=origin_mech.input_states[j].instance_defaults.variable,
+                                                        prefs=self.prefs,
+                                                        name="System Input State to Mechansism {}, Input State {}".
+                                                        format(origin_mech.name,j),
+                                                        context=context)
                 self.stimulusInputStates.append(stimulus_input_state)
                 self.inputs.append(stimulus_input_state.value)
 
@@ -1889,7 +1897,8 @@ class System(System_Base):
                                                    owner=self,
                                                    variable=target_mech_TARGET_input_state.instance_defaults.variable,
                                                    prefs=self.prefs,
-                                                   name="System Target {}".format(i))
+                                                   name="System Target {}".format(i),
+                                                   context=context)
             self.target_input_states.append(system_target_input_state)
 
             # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
@@ -2377,7 +2386,6 @@ class System(System_Base):
                 input=None,
                 target=None,
                 execution_id=None,
-                clock=CentralClock,
                 time_scale=None,
                 termination_processing=None,
                 termination_learning=None,
@@ -2387,9 +2395,6 @@ class System(System_Base):
         specified by the :py:data:`execution_graph <System.execution_graph>` attribute.
 
         Assign items of input to `ORIGIN` mechanisms
-
-        Execute mechanisms in the order specified in execution_list and with phases equal to
-        ``CentralClock.time_step % numPhases``.
 
         Execute any learning components specified at the appropriate phase.
 
@@ -2410,6 +2415,14 @@ class System(System_Base):
         ---------
         input : list or ndarray
             a list or array of input value arrays, one for each `ORIGIN` Mechanism in the System.
+
+        termination_processing : Dict[TimeScale: Condition]
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`processing
+            phase of execution <System_Execution_Processing>`
+
+        termination_learning : Dict[TimeScale: Condition]
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
+            phase of execution <System_Execution_Learning>`
 
             .. context : str
 
@@ -2507,7 +2520,7 @@ class System(System_Base):
         #endregion
 
         if self._report_system_output:
-            self._report_system_initiation(clock=clock)
+            self._report_system_initiation()
 
 
         #region EXECUTE MECHANISMS
@@ -2518,14 +2531,16 @@ class System(System_Base):
         # sorted_list = list(object_item[0].name for object_item in self.execution_list)
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
-        self._execute_processing(clock=clock, context=context)
+        self._execute_processing(context=context)
         #endregion
 
         # region EXECUTE LEARNING FOR EACH PROCESS
 
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context and self.learning:
-            self._execute_learning(clock=clock, context=context + ' ' + LEARNING)
+            self._execute_learning(context=context + SEPARATOR_BAR + LEARNING)
+            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
+            # self._execute_learning(clock=clock, context=context.replace(EXECUTING, LEARNING + ' '))
         # endregion
 
 
@@ -2536,13 +2551,13 @@ class System(System_Base):
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if not EVC_SIMULATION in context and self.enable_controller:
             try:
-                if self.controller.phaseSpec == (clock.time_step % self.numPhases):
-                    self.controller.execute(clock=clock,
-                                            time_scale=TimeScale.TRIAL,
-                                            runtime_params=None,
-                                            context=context)
-                    if self._report_system_output:
-                        print("{0}: {1} executed".format(self.name, self.controller.name))
+                self.controller.execute(
+                    time_scale=TimeScale.TRIAL,
+                    runtime_params=None,
+                    context=context
+                )
+                if self._report_system_output:
+                    print("{0}: {1} executed".format(self.name, self.controller.name))
 
             except AttributeError as error_msg:
                 if not 'INIT' in context:
@@ -2552,12 +2567,12 @@ class System(System_Base):
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
-            self._report_system_completion(clock=clock)
+            self._report_system_completion()
 
         return self.terminal_mechanisms.outputStateValues
 
-    # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
-    def _execute_processing(self, clock=CentralClock, context=None):
+    # def _execute_processing(self, time_scale=TimeScale.Trial, context=None):
+    def _execute_processing(self, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
         # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update())
@@ -2581,13 +2596,11 @@ class System(System_Base):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                mechanism.execute(clock=clock,
-                                  time_scale=self.timeScale,
-                                  # time_scale=time_scale,
-                                  runtime_params=rt_params,
-                                  context=context +
-                                          "| Mechanism: " + mechanism.name +
-                                          " [in processes: " + str(process_names) + "]")
+                mechanism.execute(
+                    time_scale=self.timeScale,
+                    runtime_params=rt_params,
+                    context=context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
+                )
 
 
                 if self._report_system_output and  self._report_process_output:
@@ -2619,7 +2632,7 @@ class System(System_Base):
                 pass
             i += 1
 
-    def _execute_learning(self, clock=CentralClock, context=None):
+    def _execute_learning(self, context=None):
         # Execute each LearningMechanism as well as LearningProjections in self.learningexecution_list
 
         # FIRST, if targets were specified as a function, call the function now
@@ -2670,13 +2683,7 @@ class System(System_Base):
                                          re.sub(r'[\[,\],\n]','',str(process_names))))
 
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                component.execute(
-                    clock=clock,
-                    time_scale=self.timeScale,
-                    runtime_params=params,
-                    # time_scale=time_scale,
-                    context=context_str
-                )
+                component.execute(time_scale=self.timeScale, runtime_params=params, context=context_str)
                 # # TEST PRINT:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
@@ -2732,7 +2739,6 @@ class System(System_Base):
     def run(self,
             inputs,
             num_trials=None,
-            reset_clock=True,
             initialize=False,
             initial_values=None,
             targets=None,
@@ -2741,7 +2747,6 @@ class System(System_Base):
             call_after_trial=None,
             call_before_time_step=None,
             call_after_time_step=None,
-            clock=CentralClock,
             time_scale=None,
             termination_processing=None,
             termination_learning=None,
@@ -2758,14 +2763,11 @@ class System(System_Base):
             the input for each in a sequence of executions (see :doc:`Run` for detailed description of formatting
             requirements and options).
 
-        reset_clock : bool : default `True`
-            if True, resets the :py:class:`CentralClock <TimeScale.CentralClock>` to 0 before a sequence of executions.
-
         initialize : bool default :keyword:`False`
             if `True`, calls the :py:meth:`initialize <System.initialize>` method of the System before a
             sequence of executions.
 
-        initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default None
+        initial_values : Dict[Mechanism: List[input] or np.ndarray(input)] : default None
             the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
         targets : List[input] or np.ndarray(input) : default `None`
@@ -2789,6 +2791,14 @@ class System(System_Base):
 
         call_after_time_step : Function : default= `None`
             called after each time_step of each trial is executed.
+
+        termination_processing : Dict[TimeScale: Condition]
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`processing
+            phase of execution <System_Execution_Processing>`
+
+        termination_learning : Dict[TimeScale: Condition]
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
+            phase of execution <System_Execution_Learning>`
 
         Returns
         -------
@@ -2814,7 +2824,6 @@ class System(System_Base):
         return run(self,
                    inputs=inputs,
                    num_trials=num_trials,
-                   reset_clock=reset_clock,
                    initialize=initialize,
                    initial_values=initial_values,
                    targets=targets,
@@ -2826,10 +2835,9 @@ class System(System_Base):
                    time_scale=time_scale,
                    termination_processing=termination_processing,
                    termination_learning=termination_learning,
-                   clock=clock,
                    context=context)
 
-    def _report_system_initiation(self, clock=CentralClock):
+    def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of Processes in System being executed
         """
 
@@ -2838,9 +2846,10 @@ class System(System_Base):
         else:
             system_string = ' system'
 
-        if clock.time_step == 0:
-            print("\n\'{}\'{} executing with: **** (time_step {}) ".
-                  format(self.name, system_string, clock.time_step))
+        # replace this with updated Clock
+        if False:
+            print("\n\'{}\'{} executing with: **** (Time: {}) ".
+                  format(self.name, system_string, self.scheduler_processing.clock.simple_time))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
             print("self.input = ", self.input)
@@ -2851,10 +2860,10 @@ class System(System_Base):
             print("- input{}: {}".format(input_string, self.input))
 
         else:
-            print("\n\'{}\'{} executing ********** (time_step {}) ".
-                  format(self.name, system_string, clock.time_step))
+            print("\n\'{}\'{} executing ********** (Time: {}) ".
+                  format(self.name, system_string, self.scheduler_processing.clock.simple_time))
 
-    def _report_system_completion(self, clock=CentralClock):
+    def _report_system_completion(self):
         """Prints completion message and output_values of system
         """
 
@@ -2865,13 +2874,7 @@ class System(System_Base):
 
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
-        print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, clock.time_step))
-        # for object_item in self._terminal_mechs:
-        #     if object_item.mechanism.phaseSpec == (clock.time_step % self.numPhases):
-        #         print("- output for {0}: {1}".
-        #               format(object_item.mechanism.name,
-        #                      re.sub('[\[,\],\n]','',str(["{:0.3}".
-        #                                         format(float(i)) for i in object_item.mechanism.output_state.value]))))
+        print("\n\'{}\'{} completed ***********(Time: {})".format(self.name, system_string, self.scheduler_processing.clock.simple_time))
         if self.learning:
             from psyneulink.library.mechanisms.processing.objective.comparatormechanism import MSE
             for mech in self.target_mechanisms:
@@ -3185,6 +3188,7 @@ class System(System_Base):
                    direction = 'BT',
                    show_learning = False,
                    show_control = False,
+                   show_dimensions = False,
                    origin_color = 'green',
                    terminal_color = 'red',
                    origin_and_terminal_color = 'brown',
@@ -3193,6 +3197,10 @@ class System(System_Base):
                    output_fmt='pdf',
                    ):
         """Generate a display of the graph structure of mechanisms and projections in the system.
+
+        .. note::
+           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
+           (standard with PsyNeuLink pip install)
 
         Displays a graph showing the structure of the System (based on the `System's graph <System.graph>`).
         By default, only the primary processing Components are shown.  However,the **show_learning** and
@@ -3204,6 +3212,12 @@ class System(System_Base):
         `LearningProjection` are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism
         node indicate its dimensionality.
 
+        COMMENT:
+        node shapes: https://graphviz.gitlab.io/_pages/doc/info/shapes.html
+        arrow shapes: https://graphviz.gitlab.io/_pages/doc/info/arrows.html
+        colors: https://graphviz.gitlab.io/_pages/doc/info/colors.html
+        COMMENT
+
         Arguments
         ---------
 
@@ -3214,13 +3228,29 @@ class System(System_Base):
             specifies whether or not to show the learning components of the system;
             they will all be displayed in the color specified for **learning_color**.
             Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
-            if set to `ALL`, all Projections associated with learning will be shown:  the LearningProjections
+            if set to *ALL*, all Projections associated with learning will be shown:  the LearningProjections
             as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
             that convey error and activation information;  if set to `True`, only the LearningPojections are shown.
 
         show_control :  bool : default False
             specifies whether or not to show the control components of the system;
             they will all be displayed in the color specified for **control_color**.
+
+        show_dimensions : bool, MECHANISMS, PROJECTIONS or ALL : default False
+            specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
+            is `True`);  can have the following settings:
+
+            * *ALL* -- shows dimensions for both Mechanisms and Projections (see below for formats).
+
+            * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
+              below the name of the Mechanism; each number represents the dimension of the `variable
+              <InputState.variable>` for each `InputState` of the Mechanism; Output dimensions are shown above
+              the name of the Mechanism; each number represents the dimension for `value <OutputState.value>` of each
+              of `OutputState` of the Mechanism;
+
+            * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
+              shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
+              rows (input dimension) and the second the number of columns (output dimension).
 
         origin_color : keyword : default 'green',
             specifies the color in which the `ORIGIN` Mechanisms of the System are displayed.
@@ -3257,52 +3287,122 @@ class System(System_Base):
 
         """
 
-        from psyneulink.components.mechanisms.processing.objectivemechanism \
-            import ObjectiveMechanism
-        from psyneulink.components.mechanisms.adaptive.learning.learningmechanism \
-            import LearningMechanism
+        from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.components.projections.projection import Projection
 
         import graphviz as gv
 
         system_graph = self.graph
         learning_graph=self.learningGraph
+        if show_dimensions == True:
+            show_dimensions = ALL
 
         default_node_color = 'black'
+        mechanism_shape = 'oval'
+        projection_shape = 'diamond'
+        # projection_shape = 'Mdiamond'
+        # projection_shape = 'hexagon'
+
+        def _get_label(item):
+
+
+            # For Mechanisms, show length of each InputState and OutputState
+            if isinstance(item, Mechanism):
+                if show_dimensions in {ALL, MECHANISMS}:
+                    input_str = "in ({})".format(",".join(str(len(input_state.variable))
+                                                       for input_state in item.input_states))
+                    output_str = "out ({})".format(",".join(str(len(output_state.value))
+                                                        for output_state in item.output_states))
+                    return "{}\n{}\n{}".format(output_str, item.name, input_str)
+                else:
+                    return item.name
+
+            # For Projection, show dimensions of matrix
+            elif isinstance(item, Projection):
+                if show_dimensions in {ALL, PROJECTIONS}:
+                    # MappingProjections use matrix
+                    if isinstance(item, MappingProjection):
+                        value = np.array(item.matrix)
+                        dim_string = "({})".format("x".join([str(i) for i in value.shape]))
+                        return "{}\n{}".format(item.name, dim_string)
+                    # ModulatoryProjections use value
+                    else:
+                        value = np.array(item.value)
+                        dim_string = "({})".format(len(value))
+                        return "{}\n{}".format(item.name, dim_string)
+                else:
+                    return item.name
+
+            else:
+                raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
+
+
 
         # build graph and configure visualisation settings
         G = gv.Digraph(engine = "dot",
-                       node_attr  = {'fontsize':'12', 'fontname':'arial', 'shape':'oval', 'color':default_node_color},
-                       edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
-                       graph_attr = {"rankdir" : direction} )
+                       node_attr  = {
+                           'fontsize':'12',
+                           'fontname':'arial',
+                           'shape':mechanism_shape,
+                           'color':default_node_color
+                       },
+                       edge_attr  = {
+                           # 'arrowhead':'halfopen',
+                           'fontsize': '10',
+                           'fontname': 'arial'
+                       },
+                       graph_attr = {
+                           "rankdir" : direction
+                       } )
 
 
         # work with system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
-            rcvr_name = rcvr.name
+            rcvr_name = _get_label(rcvr)
             # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
             rcvr_label = rcvr_name
+            G.node(rcvr_label, shape=mechanism_shape)
 
+            # handle auto-recurrent projections
+            for input_state in rcvr.input_states:
+                for proj in input_state.path_afferents:
+                    if proj.sender.owner is not rcvr:
+                        continue
+                    edge_label = _get_label(proj)
+                    try:
+                        has_learning = proj.has_learning_projection
+                    except AttributeError:
+                        has_learning = None
+                    if show_learning and has_learning:
+                        G.node(edge_label, shape=projection_shape)
+                        G.edge(rcvr_label, edge_label, arrowhead='none')
+                        G.edge(edge_label, rcvr_label)
+                    else:
+                        # render normally
+                        G.edge(rcvr_label, rcvr_label, label=edge_label)
 
             # loop through senders
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
-                sndr_name = sndr.name
+                sndr_name = _get_label(sndr)
                 # sndr_shape = sndr.instance_defaults.variable.shape[1]
                 sndr_label = sndr_name
 
                 # find edge name
-                projs = sndr.output_state.efferents
-                for proj in projs:
-                    if proj.receiver.owner == rcvr:
-                        edge_name = proj.name
-                        # edge_shape = proj.matrix.shape
-                        try:
-                            has_learning = proj.has_learning_projection
-                        except AttributeError:
-                            has_learning = None
+                for output_state in sndr.output_states:
+                    projs = output_state.efferents
+                    for proj in projs:
+                        if proj.receiver.owner == rcvr:
+                            edge_name = _get_label(proj)
+                            # edge_shape = proj.matrix.shape
+                            try:
+                                has_learning = proj.has_learning_projection
+                            except AttributeError:
+                                has_learning = None
                 edge_label = edge_name
 
                 # if rcvr is learning mechanism, draw arrow with learning color
@@ -3314,9 +3414,9 @@ class System(System_Base):
                 arrow_color="black"
                 if show_learning and has_learning:
                     # expand
-                    G.node(sndr_label, shape="oval")
-                    G.node(edge_label, shape="diamond")
-                    G.node(rcvr_label, shape="oval")
+                    G.node(sndr_label, shape=mechanism_shape)
+                    G.node(edge_label, shape=projection_shape)
+                    G.node(rcvr_label, shape=mechanism_shape)
                     G.edge(sndr_label, edge_label, arrowhead='none')
                     G.edge(edge_label, rcvr_label)
                 else:
@@ -3341,36 +3441,34 @@ class System(System_Base):
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
                         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
-                        G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
+                        G.edge(_get_label(sndr), _get_label(rcvr), color=learning_color, label = edge_label)
                 else:
-                    # FIX THIS TO INCLUDE Projections FROM ProcessingMechanisms TO LearningMechanisms
                     # Implement edges for Projections to each LearningMechanism from other LearningMechanisms
-                    # Show Projections to LearningComponents
+                    # and from ProcessingMechanisms if 'ALL' is set
                     for input_state in rcvr.input_states:
                         for proj in input_state.path_afferents:
                             sndr = proj.sender.owner
-                            G.node(rcvr.name, color=learning_color)
-                            # If Projection is not from another learning component,
-                            #    don't color and only show if ALL is set
+                            G.node(_get_label(rcvr), color=learning_color)
+                            # If Projection is not from another learning component
+                            #    only show if ALL is set, and don't color
                             if (isinstance(sndr, LearningMechanism) or
                                 (isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING)):
-                                G.node(sndr.name, color=learning_color)
+                                G.node(_get_label(sndr), color=learning_color)
                             else:
                                 if show_learning is True:
                                     continue
-                            G.edge(sndr.name, rcvr.name, color=learning_color, label=proj.name)
+                            G.edge(_get_label(sndr), _get_label(rcvr), color=learning_color, label=proj.name)
 
                             # Get Projections to ComparatorMechanism as well
                             if isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING and show_learning is ALL:
                                 for input_state in sndr.input_states:
                                     for proj in input_state.path_afferents:
-                                        # Skip any Projections from ProcesInputStates
-                                        if isinstance(proj.sender.owner, Process):
+                                        # Skip any Projections from ProcesInputStates or SystemInputStates
+                                        if isinstance(proj.sender.owner, (Process, System)):
                                             continue
                                         output_mech = proj.sender.owner
-                                        G.edge(output_mech.name, sndr.name, color=learning_color, label=proj.name)
-
-
+                                        G.edge(_get_label(output_mech), _get_label(sndr), color=learning_color,
+                                               label=proj.name)
 
 
         # add control graph if show_control
@@ -3386,9 +3484,9 @@ class System(System_Base):
             objmech = connector.sender.owner
 
             # main edge
-            G.node(controller.name, color=control_color)
-            G.node(objmech.name, color=control_color)
-            G.edge(objmech.name, controller.name, label=connector.name, color=control_color)
+            G.node(_get_label(controller), color=control_color)
+            G.node(_get_label(objmech), color=control_color)
+            G.edge(_get_label(objmech), _get_label(controller), label=connector.name, color=control_color)
 
             # outgoing edges
             for output_state in controller.control_signals:
@@ -3396,22 +3494,22 @@ class System(System_Base):
                     # MODIFIED 7/21/17 CW: this edge_name statement below didn't do anything and caused errors, so
                     # I commented it out.
                     # edge_name
-                    rcvr_name = projection.receiver.owner.name
-                    G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
+                    rcvr_name = _get_label(projection.receiver.owner)
+                    G.edge(_get_label(controller), rcvr_name, label=projection.name, color=control_color)
 
             # incoming edges
             for istate in objmech.input_states:
                 for proj in istate.path_afferents:
-                    sndr_name = proj.sender.owner.name
-                    G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
+                    sndr_name = _get_label(proj.sender.owner)
+                    G.edge(sndr_name, _get_label(objmech), label=proj.name, color=control_color)
 
             # prediction mechanisms
             for object_item in self.execution_list:
                 mech = object_item
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-                    G.node(mech.name, color='purple')
+                    G.node(_get_label(mech), color='purple')
                     recvr = mech.origin_mech
-                    G.edge(mech.name, recvr.name, label=' prediction assignment', color='purple')
+                    G.edge(_get_label(mech), _get_label(recvr), label=' prediction assignment', color='purple')
                     pass
 
         # return
@@ -3450,7 +3548,7 @@ class SystemInputState(OutputState):
 
     """
 
-    def __init__(self, owner=None, variable=None, name=None, prefs=None):
+    def __init__(self, owner=None, variable=None, name=None, prefs=None, context=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
 
         :param variable:
@@ -3460,6 +3558,8 @@ class SystemInputState(OutputState):
         else:
             self.name = owner.name + "_" + name
         self.prefs = prefs
+        self.log = Log(owner=self)
+        self.recording = False
         self.efferents = []
         self.owner = owner
         self.value = variable

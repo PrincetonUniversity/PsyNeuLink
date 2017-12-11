@@ -1,7 +1,7 @@
 Transfer Mechanisms
 ===================
 
-**Base class**:
+**Core class**:
 
 * `TransferMechanism`
 

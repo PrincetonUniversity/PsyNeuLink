@@ -66,7 +66,7 @@ CategoryDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
-    kpLogPref: PreferenceEntry(LogLevel.VALUE_ASSIGNMENT, PreferenceLevel.CATEGORY),
+    kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.CATEGORY),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.CATEGORY)}
 
@@ -131,7 +131,7 @@ class ComponentPreferenceSet(PreferenceSet):
             - verbose (bool): enables/disables reporting of (non-exception) warnings and system function
             - paramValidation (bool):  enables/disables run-time validation of the execute method of a Function object
             - reportOutput (bool): enables/disables reporting of execution of execute method
-            - log (bool): enables/disables logging for a given object
+            - log (bool): sets LogLevel for a given Component
             - functionRunTimeParams (Modulation): uses run-time params to modulate execute method params
         Implement the following preference levels:
             - SYSTEM: System level default settings (Function.classPreferences)

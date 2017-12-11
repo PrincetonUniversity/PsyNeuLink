@@ -241,6 +241,8 @@ should project to the InputState. Each of these is described below:
     * **InputState specification tuples** -- these are convenience formats that can be used to compactly specify an
       InputState and Projections to it any of the following ways:
 
+        .. _InputState_State_Mechanism_Tuple:
+
         * **2-item tuple:** *(<State name or list of State names>, Mechanism)* -- 1st item must be the name of an
           `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
@@ -260,10 +262,10 @@ should project to the InputState. Each of these is described below:
             |
             * **value, State specification, or list of State specifications** -- specifies either the `variable
               <InputState.variable>` of the InputState, or one or more States that should project to it.  The State
-              specification(s) can include Mechanisms, in which case their `primary OutputState <OutputStatePrimary>`
-              is used.  All of the State specifications must be consistent with (that is, their `value
-              <State_Base.value>` must be compatible with the `variable <Projection_Base.variable>` of) the
-              Projection specified in the fourth item if that is included;
+              specification(s) can be a (State name, Mechanism) tuple (see above), and/or include Mechanisms (in which
+              case their `primary OutputState <OutputStatePrimary>` is used.  All of the State specifications must be
+              consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
+              <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included;
             |
             * **weight** -- must be an integer or a float; multiplies the `value <InputState.value>` of the InputState
               before it is combined with others by the Mechanism's `function <Mechanism.function>` (see
@@ -455,7 +457,7 @@ from psyneulink.components.states.state import \
     StateError, State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import \
-    NAME, DEFERRED_INITIALIZATION, EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
+    INPUT_STATES, EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
     MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
     OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER, COMMAND_LINE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -571,7 +573,7 @@ class InputState(State_Base):
     exponent : number : default 1
         specifies the value of the `exponent <InputState.exponent>` attribute of the InputState.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the InputState or its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -770,9 +772,8 @@ class InputState(State_Base):
         """
         if reference_value is not None and not iscompatible(reference_value, self.value):
             name = self.name or ""
-            raise InputStateError("Value specified for {} {} of {} ({}) is not compatible "
-                                  "with its expected format ({})".
-                                  format(name, self.componentName, self.owner.name, self.value, reference_value))
+            raise InputStateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
+                                  .format(name, self.componentName, self.owner.name, self.value, reference_value))
 
     def _instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.instance_defaults.variable
@@ -878,15 +879,21 @@ class InputState(State_Base):
             # FIX:                       IS APPLIED TO ALL THE OutputStates SPECIFIED IN OUTPUT_STATES
             # FIX:                       UNLESS THEY THEMSELVES USE A State specification dict WITH ANY OF THOSE ENTRIES
             # FIX:           USE ObjectiveMechanism EXAMPLES
+            # if MECHANISM in state_specific_spec:
+            #     if OUTPUT_STATES in state_specific_spec
             return None, state_specific_spec
 
         elif isinstance(state_specific_spec, tuple):
 
+            # GET STATE_SPEC AND ASSIGN PROJECTIONS_SPEC **********************************************************
+
             tuple_spec = state_specific_spec
 
+            # 2-item tuple specification
             if len(tuple_spec) == 2:
-                # FIX: 11/12/17 - ??GENERALIZE FOR ALL STATES AND MOVE TO _parse_state_spec
+
                 # 1st item is a value, so treat as State spec (and return to _parse_state_spec to be parsed)
+                #   and treat 2nd item as Projection specification
                 if is_numeric(tuple_spec[0]):
                     state_spec = tuple_spec[0]
                     reference_value = state_dict[REFERENCE_VALUE]
@@ -900,9 +907,10 @@ class InputState(State_Base):
                                          format(InputState.__name__, owner.name, state_spec,
                                                 REFERENCE_VALUE, reference_value))
                     projections_spec = tuple_spec[1]
+
+                # Tuple is Projection specification that is used to specify the State,
                 else:
-                    # Tuple is projection specification that is used to specify the State,
-                    #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
+                    # return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
                     state_spec = None
                     if tuple_spec[0] != self:
                         # If 1st item is not the current state (self), treat as part of the projection specification
@@ -911,14 +919,23 @@ class InputState(State_Base):
                         # Otherwise, just use 2nd item as projection spec
                         state_spec = None
                         projections_spec = tuple_spec[1]
-            elif len(tuple_spec) == 4:
+
+            # 3- or 4-item tuple specification
+            elif len(tuple_spec) in {3,4}:
                 # Tuple is projection specification that is used to specify the State,
                 #    so return None in state_spec to suppress further, recursive parsing of it in _parse_state_spec
                 state_spec = None
-                projections_spec = tuple_spec
+                # Reduce to 2-item tuple Projection specification
+                projection_item = tuple_spec[3] if len(tuple_spec)==4 else None
+                projections_spec = (tuple_spec[0],projection_item)
 
-            if projections_spec is not None:
+            # GET PROJECTIONS IF SPECIFIED *************************************************************************
 
+            try:
+                projections_spec
+            except UnboundLocalError:
+                pass
+            else:
                 try:
                     params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                        owner=owner,
@@ -930,10 +947,29 @@ class InputState(State_Base):
                             # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
                             # FIX:           USING _get_state_for_socket
                             # from psyneulink.components.projections.projection import _parse_projection_spec
-                            sender_dim = projection_spec.state.value.ndim
+                            try:
+                                sender_dim = projection_spec.state.value.ndim
+                            except AttributeError:
+                                if projection_spec.state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                    continue
+                                else:
+                                    raise StateError("PROGRAM ERROR: indeterminate value for {} "
+                                                     "specified to project to {} of {}".
+                                                     format(projection_spec.state.name, self.__name__, owner.name))
+
                             projection = projection_spec.projection
                             if isinstance(projection, dict):
-                                matrix = projection[MATRIX]
+                                # # MODIFIED 11/25/17 OLD:
+                                # matrix = projection[MATRIX]
+                                # MODIFIED 11/25/17 NEW:
+                                # Don't try to get MATRIX from projection without checking,
+                                #    since projection is a defaultDict,
+                                #    which will add a matrix entry and assign it to None if it is not there
+                                if MATRIX in projection:
+                                    matrix = projection[MATRIX]
+                                else:
+                                    matrix = None
+                                # MODIFIED 11/25/17 END
                             elif isinstance(projection, Projection):
                                 if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                                     continue
@@ -950,7 +986,7 @@ class InputState(State_Base):
                                 if VARIABLE not in state_dict or state_dict[VARIABLE] is None:
                                     state_dict[VARIABLE] = variable
                                 # If variable HAS been assigned, make sure value is the same for this sender
-                                elif state_dict[VARIABLE].shape != variable.shape:
+                                elif np.array(state_dict[VARIABLE]).shape != variable.shape:
                                     # If values for senders differ, assign None so that State's default is used
                                     state_dict[VARIABLE] = None
                                     # No need to check any more Projections
@@ -972,7 +1008,8 @@ class InputState(State_Base):
                                                  OutputState.__name__,
                                                  Projection.__name__))
 
-            # Get weights and exponents if specified
+            # GET WEIGHT AND EXPONENT IF SPECIFIED ***************************************************************
+
             if len(tuple_spec) == 2:
                 pass
 

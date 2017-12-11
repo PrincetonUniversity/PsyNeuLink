@@ -18,13 +18,13 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import Function_Base
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
-from psyneulink.globals.keywords import CLOCK, COMBINE_OUTCOME_AND_COST_FUNCTION, CONTEXT, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, PARAMS, SAVE_ALL_VALUES_AND_POLICIES, TIME_SCALE, VALUE_FUNCTION, VARIABLE, kwPreferenceSetName, kwProgressBarChar
+from psyneulink.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
-    'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch', 'COSTS', 'EVCAuxiliaryError',
+    'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch', 'EVCAuxiliaryError',
     'EVCAuxiliaryFunction', 'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction', 'OUTCOME', 'PY_MULTIPROCESSING',
     'ValueFunction',
 ]
@@ -44,7 +44,6 @@ kwValueFunction = "EVC VALUE FUNCTION"
 CONTROL_SIGNAL_GRID_SEARCH_FUNCTION = "EVC CONTROL SIGNAL GRID SEARCH FUNCTION"
 CONTROLLER = 'controller'
 OUTCOME = 'outcome'
-COSTS = 'costs'
 
 
 class EVCAuxiliaryError(Exception):
@@ -128,7 +127,15 @@ class ValueFunction(EVCAuxiliaryFunction):
         super().__init__(function=function,
                          context=self.componentName+INITIALIZING)
 
-    def function(self, **kwargs):
+    def function(
+        self,
+        controller=None,
+        outcome=None,
+        costs=None,
+        variable=None,
+        params=None,
+        context=None
+    ):
         """
         function (controller, outcome, costs)
 
@@ -169,14 +176,8 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         """
 
-        context = kwargs['context']
-
         if INITIALIZING in context:
             return (np.array([0]), np.array([0]), np.array([0]))
-
-        controller = kwargs[CONTROLLER]
-        outcome = kwargs[OUTCOME]
-        costs = kwargs[COSTS]
 
         cost_function = controller.paramsCurrent[COST_FUNCTION]
         combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
@@ -263,7 +264,15 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                          owner=owner,
                          context=self.componentName+INITIALIZING)
 
-    def function(self, **kwargs):
+    def function(
+        self,
+        controller=None,
+        variable=None,
+        runtime_params=None,
+        time_scale=TimeScale.TRIAL,
+        params=None,
+        context=None,
+    ):
         """Grid search combinations of control_signals in specified allocation ranges to find one that maximizes EVC
 
         Description
@@ -287,36 +296,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         """
 
-        context = kwargs[CONTEXT]
-
         if INITIALIZING in context:
             return defaultControlAllocation
 
         # Get value of, or set default for standard args
-        try:
-            controller = kwargs[CONTROLLER]
-        except KeyError:
+        if controller is None:
             raise EVCAuxiliaryError("Call to ControlSignalGridSearch() missing controller argument")
-        try:
-            variable = self._update_variable(kwargs[VARIABLE])
-        except KeyError:
-            variable = self._update_variable(None)
-        try:
-            runtime_params = kwargs[PARAMS]
-        except KeyError:
-            runtime_params = None
-        try:
-            clock = kwargs[CLOCK]
-        except KeyError:
-            clock = CentralClock
-        try:
-            time_scale = kwargs[TIME_SCALE]
-        except KeyError:
-            time_scale = TimeScale.TRIAL
-        try:
-            context = kwargs[CONTEXT]
-        except KeyError:
-            context = None
 
         #region RUN SIMULATION
 

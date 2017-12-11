@@ -31,7 +31,7 @@ that modulate different types of Components and their States:
     `function <State_Base.function>` in modulating its `value <State_Base.value>`.
 ..
 * `ControlProjection`
-    takes the `value of a <ControlSignal.value> of a `ControlSignal` belonging to a `ControlMechanism`,
+    takes the `value of a <ControlSignal.value>` of a `ControlSignal` belonging to a `ControlMechanism`,
     and conveys it to the `ParameterState` for the parameter of a `Mechanism <Mechanism>` or its
     `function <Mechanism_Base.function>`, for use in modulating the value of the parameter.
 
@@ -81,9 +81,13 @@ Class Reference
 
 """
 
-from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import MODULATORY_PROJECTION, NAME
+import inspect
+
 from psyneulink.components.component import InitStatus
+from psyneulink.components.projections.projection import Projection_Base
+from psyneulink.globals.keywords import EXECUTING, INITIALIZING, MODULATORY_PROJECTION, NAME, kwAssign
+from psyneulink.globals.log import LogEntry, LogLevel
+
 
 __all__ = [
     'MODULATORY_SIGNAL_PARAMS'
@@ -132,7 +136,7 @@ class ModulatoryProjection_Base(Projection_Base):
        specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection.value>`
        before combining it with others (see `exponent <ModulatoryProjection.exponent>` for additional details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         ModulatoryProjection, its `function <ModulatoryProject.function>`, and/or a custom function and its parameters.
         By default, it contains an entry for the ModulatoryProjection's default `function <ModulatoryProject.function>`
@@ -140,11 +144,11 @@ class ModulatoryProjection_Base(Projection_Base):
         parameters in arguments of the constructor.
 
     name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
-        specifies the name of the ModulatoryProjection; see ModulatoryProjection `name <ModulatoryProjection.name>` 
+        specifies the name of the ModulatoryProjection; see ModulatoryProjection `name <ModulatoryProjection.name>`
         for details.
 
     prefs : PreferenceSet or specification dict : default Projection.classPreferences
-        specifies the `PreferenceSet` for the ModulatoryProjection; see `prefs <ModulatoryProjection.prefs>` for 
+        specifies the `PreferenceSet` for the ModulatoryProjection; see `prefs <ModulatoryProjection.prefs>` for
         details.
 
     context : str : default None
@@ -221,7 +225,7 @@ class ModulatoryProjection_Base(Projection_Base):
                          prefs=prefs,
                          context=context)
 
-    def _assign_default_projection_name(self, state, sender_name=None, receiver_name=None):
+    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 
         template = "{} for {}[{}]"
 

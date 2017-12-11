@@ -211,6 +211,21 @@ __all__ = [
 ]
 
 
+def _is_modulatory_spec(spec, include_matrix_spec=True):
+    from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import _is_learning_spec
+    from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
+    from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
+    from psyneulink.components.projections.projection import ProjectionTuple
+
+    if (_is_learning_spec(spec, include_matrix_spec=include_matrix_spec)
+        or _is_control_spec(spec)
+        or _is_gating_spec(spec)
+        ):
+        return True
+    else:
+        return False
+
+
 class ModulatorySignalError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -278,7 +293,7 @@ class ModulatorySignal(OutputState):
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.

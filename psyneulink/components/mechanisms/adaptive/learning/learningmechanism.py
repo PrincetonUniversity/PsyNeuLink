@@ -138,8 +138,8 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
 
 .. _LearningMechanism_Input_Error_Signal:
 
-* *ERROR_SIGNAL* - receives the `value <OutputState.value> from the *OUTCOME* `OutputState
-  <ComparatorMechanism_Structure> of a `ComparatorMechanism` or the *ERROR_SIGNAL* OutputState of another
+* *ERROR_SIGNAL* - receives the `value <OutputState.value>` from the *OUTCOME* `OutputState
+  <ComparatorMechanism_Structure>` of a `ComparatorMechanism` or the *ERROR_SIGNAL* OutputState of another
   `LearningMechanism <LearningMechanism_Output_Error_Signal>`. If the
   `primary_learned_projection` projects to the `TERMINAL` Mechanism of the Process or System being learned,
   or is not part of a `multilayer learning sequence <LearningMechanism_Multilayer_Learning>`,
@@ -522,16 +522,15 @@ import typecheck as tc
 from psyneulink.components.component import InitStatus, parameter_keywords
 from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import CONTROL_PROJECTIONS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
-    INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, \
-    LEARNING_SIGNALS, MATRIX, NAME, PARAMS, OUTPUT_STATES, PROJECTIONS, ENABLED
+from psyneulink.globals.keywords import CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATES, PARAMS, PROJECTIONS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import is_numeric, parameter_spec, ContentAddressableList
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
@@ -543,19 +542,45 @@ __all__ = [
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
 
-def _is_learning_spec(spec):
+
+def _is_learning_spec(spec, include_matrix_spec=True):
     """Evaluate whether spec is a valid learning specification
 
     Return `True` if spec is LEARNING or a valid projection_spec (see Projection_Base._is_projection_spec)
     Otherwise, return `False`
 
     """
+    # MODIFIED 11/28/17 OLD:
     from psyneulink.components.projections.projection import _is_projection_spec
 
-    if spec in {LEARNING, ENABLED}:
-        return True
-    else:
-        return _is_projection_spec(spec)
+    try:
+        if spec in {LEARNING, ENABLED}:
+            return True
+        else:
+            return _is_projection_spec(spec=spec,
+                                       type=LEARNING_PROJECTION,
+                                       include_matrix_spec=include_matrix_spec)
+    except:
+        return False
+    # # MODIFIED 11/28/17 NEW:
+    # from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+    # if isinstance(spec, tuple):
+    #     return _is_learning_spec(spec[1])
+    # elif isinstance(spec, (LearningMechanism, LearningSignal, LearningProjection)):
+    #     return True
+    # elif isinstance(spec, type) and issubclass(spec, LearningSignal):
+    #     return True
+    # elif isinstance(spec, str) and spec in {LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL}:
+    #     return True
+    # elif include_matrix_spec:
+    #     if isinstance(spec, str) and spec in MATRIX_KEYWORD_SET:
+    #         return True
+    #     from psyneulink.components.functions.function import get_matrix
+    #     if get_matrix(spec) is not None:
+    #         return True
+    # else:
+    #     return False
+    # # MODIFIED 11/28/17 END:
 
 
 # Used to index variable:
@@ -680,7 +705,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         specifies the learning rate for the LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
         for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
@@ -817,7 +842,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
     className = componentType
     suffix = " " + className
 
-    output_state_type = LearningSignal
+    outputStateType = LearningSignal
+
+    stateListAttr = Mechanism_Base.stateListAttr.copy()
+    stateListAttr.update({LearningSignal:LEARNING_SIGNALS})
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -1108,7 +1136,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _execute(self,
                 variable=None,
                 runtime_params=None,
-                clock=CentralClock,
+
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute LearningMechanism function and return learning_signal

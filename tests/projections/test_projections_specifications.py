@@ -143,7 +143,94 @@ class TestProjectionSpecificationFormats:
         G = pnl.GatingMechanism(gating_signals=['a','b'])
         T = pnl.TransferMechanism(name='T',
                      input_states=[(3,G)],
-                     output_states=[(2,G.gating_signals['b'])])
-
+                     output_states=[(2,G.gating_signals['b'])]
+                                  )
         assert T.input_states[0].mod_afferents[0].sender==G.gating_signals[0]
         assert T.output_states[0].mod_afferents[0].sender==G.gating_signals[1]
+
+    def test_formats_for_control_specification_for_mechanism_and_function_params(self):
+
+        control_spec_list = [
+            pnl.CONTROL,
+            pnl.CONTROL_SIGNAL,
+            pnl.CONTROL_PROJECTION,
+            pnl.ControlSignal,
+            pnl.ControlSignal(),
+            pnl.ControlProjection,
+            "CP_OBJECT",
+            pnl.ControlMechanism,
+            pnl.ControlMechanism(),
+            (0.3, pnl.CONTROL),
+            (0.3, pnl.CONTROL_SIGNAL),
+            (0.3, pnl.CONTROL_PROJECTION),
+            (0.3, pnl.ControlSignal),
+            (0.3, pnl.ControlSignal()),
+            (0.3, pnl.ControlProjection),
+            (0.3, "CP_OBJECT"),
+            (0.3, pnl.ControlMechanism),
+            (0.3, pnl.ControlMechanism())
+        ]
+        for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(control_spec_list))]):
+            C1, C2 = ctl_tuple
+
+            # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
+            if C1 is 'CP_OBJECT':
+                C1 = pnl.ControlProjection()
+            elif isinstance(C1, tuple) and C1[1] is 'CP_OBJECT':
+                C1 = (C1[0], pnl.ControlProjection())
+            if C2 is 'CP_OBJECT':
+                C2 = pnl.ControlProjection()
+            elif isinstance(C2, tuple) and C2[1] is 'CP_OBJECT':
+                C2 = (C2[0], pnl.ControlProjection())
+            
+            R = pnl.RecurrentTransferMechanism(noise=C1,
+                                               function=pnl.Logistic(gain=C2))
+            assert R.parameter_states[pnl.NOISE].mod_afferents[0].name in \
+                   'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
+            assert R.parameter_states[pnl.GAIN].mod_afferents[0].name in \
+                   'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
+
+
+    def test_formats_for_gating_specification_of_input_and_output_states(self):
+
+        gating_spec_list = [
+            pnl.GATING,
+            pnl.GATING_SIGNAL,
+            pnl.GATING_PROJECTION,
+            pnl.GatingSignal,
+            pnl.GatingSignal(),
+            pnl.GatingProjection,
+            "GP_OBJECT",
+            pnl.GatingMechanism,
+            pnl.GatingMechanism(),
+            (0.3, pnl.GATING),
+            (0.3, pnl.GATING_SIGNAL),
+            (0.3, pnl.GATING_PROJECTION),
+            (0.3, pnl.GatingSignal),
+            (0.3, pnl.GatingSignal()),
+            (0.3, pnl.GatingProjection),
+            (0.3, "GP_OBJECT"),
+            (0.3, pnl.GatingMechanism),
+            (0.3, pnl.GatingMechanism())
+        ]
+        for i, gating_tuple in enumerate([j for j in zip(gating_spec_list, reversed(gating_spec_list))]):
+            G1, G2 = gating_tuple
+
+            # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
+            if G1 is 'GP_OBJECT':
+                G1 = pnl.GatingProjection()
+            elif isinstance(G1, tuple) and G1[1] is 'GP_OBJECT':
+                G1 = (G1[0], pnl.GatingProjection())
+            if G2 is 'GP_OBJECT':
+                G2 = pnl.GatingProjection()
+            elif isinstance(G2, tuple) and G2[1] is 'GP_OBJECT':
+                G2 = (G2[0], pnl.GatingProjection())
+            
+            T = pnl.TransferMechanism(name='T-GATING-{}'.format(i),
+                                      input_states=[G1],
+                                      output_states=[G2])
+            assert T.input_states[0].mod_afferents[0].name in \
+                   'GatingProjection for T-GATING-{}[InputState-0]'.format(i)
+
+            assert T.output_states[0].mod_afferents[0].name in \
+                   'GatingProjection for T-GATING-{}[OutputState-0]'.format(i)

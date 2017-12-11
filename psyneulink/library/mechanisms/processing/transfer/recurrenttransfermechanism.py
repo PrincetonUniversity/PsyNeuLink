@@ -22,22 +22,48 @@ Overview
 A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent
 network, in which each element is connected to every other element (instantiated in a recurrent
 `AutoAssociativeProjection` referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).
-It allows its previous input to be decayed, can report the energy and, if appropriate, the entropy of its output,
-and can be configured to implement autoassociative (e.g., Hebbian) learning.
+It can report the energy and, if appropriate, the entropy of its output, and can be configured to implement
+autoassociative (e.g., Hebbian) learning.
 
 .. _Recurrent_Transfer_Creation:
 
 Creating a RecurrentTransferMechanism
 -------------------------------------
 
-A RecurrentTransferMechanism can be created directly by calling its constructor, or using the `mechanism` command and
-specifying RECURRENT_TRANSFER_MECHANISM as its **mech_spec** argument.  The recurrent projection is automatically
-created using the **matrix** (or **auto** and **hetero**) argument of the Mechanism's constructor, and assigned to
-its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` attribute. If used the **matrix** is used,
-it must specify either a square matrix or a `AutoAssociativeProjection` that uses one (the default is
-`FULL_CONNECTIVITY_MATRIX`). Alternatively, **auto** and **hetero** can be specified: these set the diagonal and
-off-diagonal terms, respectively. In all other respects, a RecurrentTransferMechanism is specified in the same way as a
-standard `TransferMechanism`.
+A RecurrentTransferMechanism is created directly by calling its constructor.::
+
+    import psyneulink as pnl
+    my_linear_recurrent_transfer_mechanism = pnl.RecurrentTransferMechanism(function=pnl.Linear)
+    my_logistic_recurrent_transfer_mechanism = pnl.RecurrentTransferMechanism(function=pnl.Logistic(gain=1.0,
+                                                                                                    bias=-4.0))
+
+The recurrent projection is automatically created using (1) the **matrix** argument or (2) the **auto** and **hetero**
+arguments of the Mechanism's constructor, and is assigned to the mechanism's `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` attribute.
+
+If the **matrix** argument is used to create the recurrent projection, it must specify either a square matrix or an
+`AutoAssociativeProjection` that uses one (the default is `FULL_CONNECTIVITY_MATRIX`).::
+
+    recurrent_mech_1 = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                                                      matrix=[[1.0, 2.0, 2.0],
+                                                              [2.0, 1.0, 2.0],
+                                                              [2.0, 2.0, 1.0]])
+
+    recurrent_mech_2 = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                                                      matrix=pnl.AutoAssociativeProjection)
+
+If the **auto** and **hetero** arguments are used to create the recurrent projection, they set the diagonal and
+off-diagonal terms, respectively.::
+
+    recurrent_mech_3 = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                                                      auto=1.0,
+                                                      hetero=2.0)
+
+.. note::
+
+    In the examples above, recurrent_mech_1 and recurrent_mech_3 are identical.
+
+In all other respects, a RecurrentTransferMechanism is specified in the same way as a standard `TransferMechanism`.
 
 .. _Recurrent_Transfer_Learning:
 
@@ -82,16 +108,18 @@ is, one that projects from the Mechanism's `primary OutputState <OutputState_Pri
 InputState <InputState_Primary>`.  This can be parametrized using its `matrix <RecurrentTransferMechanism.matrix>`,
 `auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is
 stored in its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` attribute.
-A RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' attribute, that multiplies its
-`previous_input <RecurrentTransferMechanism.previous_input>` value by the specified factor each time it
-is executed.  It also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its `function
-<RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
+
+A RecurrentTransferMechanism also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its
+`function <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
 OutputState.  Each of these report the respective values of the vector in it its *RESULTS* (`primary
-<OutputState_Primary>`) OutputState. Finally, if it has been `specified for learning <Recurrent_Transfer_Learning>`,
-it is associated with a `AutoAssociativeLearningMechanism` that is used to train its `AutoAssociativeProjection`.
+<OutputState_Primary>`) OutputState.
+
+Finally, if it has been `specified for learning <Recurrent_Transfer_Learning>`, the RecurrentTransferMechanism is
+associated with an `AutoAssociativeLearningMechanism` that is used to train its `AutoAssociativeProjection`.
 The `learning_enabled <RecurrentTransferMechanism.learning_enabled>` attribute indicates whether learning
-is enabled or disabled for the Mechanism.  If learning was not configure when the Mechanism was created, then it cannot
+is enabled or disabled for the Mechanism.  If learning was not configured when the Mechanism was created, then it cannot
 be enabled until the Mechanism is `configured for learning <Recurrent_Transfer_Learning>`.
+
 In all other respects the Mechanism is identical to a standard  `TransferMechanism`.
 
 .. _Recurrent_Transfer_Execution:
@@ -99,9 +127,10 @@ In all other respects the Mechanism is identical to a standard  `TransferMechani
 Execution
 ---------
 
-When a RecurrentTransferMechanism executes, it includes in its input the value of its
-`primary OutputState <OutputState_Primary>` (after multiplication by the `matrix` of the recurrent projection) from its
-last execution.
+When a RecurrentTransferMechanism executes, its variable, as is the case with all mechanisms, is determined by the
+projections the mechanism receives. This means that a RecurrentTransferMechanism's variable is determined in part by the
+value of its own `primary OutputState <OutputState_Primary>` on the previous execution, and the `matrix` of the
+recurrent projection.
 
 COMMENT:
 Previous version of sentence above: "When a RecurrentTransferMechanism executes, it includes in its input the value of
@@ -109,14 +138,18 @@ its `primary OutputState <OutputState_Primary>` from its last execution."
 8/9/17 CW: Changed the sentence above. Rationale: If we're referring to the fact that the recurrent projection
 takes the previous output before adding it to the next input, we should specifically mention the matrix transformation
 that occurs along the way.
+
+12/1/17 KAM: Changed the above to describe the RecurrentTransferMechanism's variable on this execution in terms of
+projections received, which happens to include a recurrent projection from its own primary output state on the previous
+execution
 COMMENT
 
 Like a `TransferMechanism`, the function used to update each element can be assigned using its `function
-<RecurrentTransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed, if its `decay
-<RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it decays the value of its `previous_input
-<RecurrentTransferMechanism.previous_input>` parameter by the specified factor.  It then transforms its input
+<RecurrentTransferMechanism.function>` parameter. It then transforms its input
 (including from the recurrent projection) using the specified function and parameters (see `Transfer_Execution`),
-and returns the results in its OutputStates.  If it has been `configured for learning <Recurrent_Transfer_Learning>`
+and returns the results in its OutputStates.
+
+If it has been `configured for learning <Recurrent_Transfer_Learning>`
 and is executed as part of a `System`, then its associated `LearningMechanism` is executed during the `learning phase
 <System_Learning>` of the `System's execution <System_Execution>`.
 
@@ -128,6 +161,7 @@ Class Reference
 """
 
 import numbers
+
 from collections import Iterable
 
 import numpy as np
@@ -146,7 +180,7 @@ from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, FUL
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
@@ -222,12 +256,12 @@ class RecurrentTransferMechanism(TransferMechanism):
     auto=None,                         \
     hetero=None,                       \
     initial_value=None,                \
-    decay=None,                        \
     noise=0.0,                         \
     time_constant=1.0,                 \
     clip=(float:min, float:max),      \
     learning_rate=None,                \
     learning_function=Hebbian,         \
+    integrator_mode=False,             \
     params=None,                       \
     name=None,                         \
     prefs=None)
@@ -287,14 +321,10 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
-        `time_constant <RecurrentTransferMechanism.time_constant>` is not 1.0).
+        `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is True).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
-
-    decay : number : default 1.0
-        specifies the amount by which to decrement its `previous_input <RecurrentTransferMechanism.previous_input>`
-        each time it is executed.
 
     noise : float or function : default 0.0
         a stochastically-sampled value added to the result of the `function <RecurrentTransferMechanism.function>`:
@@ -305,8 +335,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         the time constant for exponential time averaging of input when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
-         result = (time_constant * current input) +
-         (1-time_constant * result on previous time_step)
+         result = (time_constant * variable) +
+         (1-time_constant * input to mechanism's function on the previous time step)
 
     clip : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`:
@@ -331,7 +361,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         takes a list or 1d array of numeric values as its `variable <Function_Base.variable>` and returns a sqaure
         matrix of numeric values with the same dimensions as the length of the input.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -340,7 +370,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies the name of the RecurrentTransferMechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the RecurrentTransferMechanism; see `prefs <RecurrentTransferMechanism.prefs>` 
+        specifies the `PreferenceSet` for the RecurrentTransferMechanism; see `prefs <RecurrentTransferMechanism.prefs>`
         for details.
 
     context : str : default componentType+INITIALIZING
@@ -361,10 +391,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     recurrent_projection : AutoAssociativeProjection
         an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
         back to its `primary inputState <Mechanism_InputStates>`.
-
-    decay : float : default 1.0
-        determines the amount by which to multiply the `previous_input <RecurrentTransferMechanism.previous_input>`
-        value each time it is executed.
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
@@ -433,7 +459,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             and the first item of ``output_values``.
     COMMENT
 
-    output_states : Dict[str, OutputState]
+    output_states : Dict[str: OutputState]
         an OrderedDict with the following `OutputStates <OutputState>`:
 
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <RecurrentTransferMechanism.function>`;
@@ -460,8 +486,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the RecurrentTransferMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the RecurrentTransferMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
 
@@ -488,7 +514,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                  auto=None,
                  hetero=None,
                  initial_value=None,
-                 decay: is_numeric_or_none=None,
                  noise=0.0,
                  time_constant: is_numeric_or_none=1.0,
                  integrator_mode=False,
@@ -521,7 +546,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   initial_value=initial_value,
                                                   matrix=matrix,
-                                                  decay=decay,
                                                   integrator_mode=integrator_mode,
                                                   learning_rate=learning_rate,
                                                   learning_function=learning_function,
@@ -554,7 +578,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate shape and size of auto, hetero, matrix and decay.
+        """Validate shape and size of auto, hetero, matrix.
         """
         from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
@@ -630,12 +654,12 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError(err_msg)
 
         # Validate DECAY
-        if DECAY in target_set and target_set[DECAY] is not None:
-
-            decay = target_set[DECAY]
-            if not (0.0 <= decay and decay <= 1.0):
-                raise RecurrentTransferError("{} argument for {} ({}) must be from 0.0 to 1.0".
-                                             format(DECAY, self.name, decay))
+        # if DECAY in target_set and target_set[DECAY] is not None:
+        #
+        #     decay = target_set[DECAY]
+        #     if not (0.0 <= decay and decay <= 1.0):
+        #         raise RecurrentTransferError("{} argument for {} ({}) must be from 0.0 to 1.0".
+        #                                      format(DECAY, self.name, decay))
 
         # FIX: validate learning_function and learning_rate here (use Hebbian as template for learning_rate
 
@@ -781,7 +805,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 clock=CentralClock,
                  time_scale = TimeScale.TRIAL,
                  context=None):
         """Implement decay
@@ -794,7 +817,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,
-                                clock=CentralClock,
                                 time_scale=time_scale,
                                 context=context)
 

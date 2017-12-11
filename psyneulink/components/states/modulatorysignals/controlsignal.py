@@ -30,7 +30,7 @@ Creating a ControlSignal
 A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is `specified for
 control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the **control_signals** argument
 of the constructor for a `ControlMechanism <ControlMechanism>`.  Although a ControlSignal can be created directly
-using its constructor (or any of the other ways for `creating an outputState <OutputStates_Creation>`), this is usually
+using its constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is usually
 not necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration
 that must be met for it to function properly.
 
@@ -210,7 +210,8 @@ Examples
 *Modulate the parameter of a Mechanism's function*.  The following example assigns a
 ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
 
-    My_Mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
+    >>> import psyneulink as pnl
+    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(bias=(1.0, pnl.ControlSignal)))
 
 Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
 with a ControlProjection that projects to the TransferMechanism's `ParameterState` for the `bias <Logistic.bias>`
@@ -224,7 +225,8 @@ In the example below, this is changed by specifying the `modulation <ControlSign
 ControlSignal adds to, rather than multiplies, the value of the `gain <Logistic.gain>` parameter of the Logistic
 function::
 
-    My_Mech = TransferMechanism(function=Logistic(gain=(1.0, ControlSignal(modulation=ModulationParam.ADDITIVE))))
+    >>> my_mech = pnl.TransferMechanism(function=pnl.Logistic(gain=(1.0,
+    ...                                                             pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))))
 
 Note that the `ModulationParam` specified for the `ControlSignal` pertains to the function of a *ParameterState*
 for the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and *not* the Logistic function
@@ -260,20 +262,21 @@ COMMENT
 the `gain <Logistic.gain>` parameter of the `Logistic` function for ``My_Mech_A`` and the `intercept
 <Logistic.intercept>` parameter of the `Linear` function for ``My_Mech_B``::
 
-    My_Mech_A = TransferMechanism(function=Logistic)
-    My_Mech_B = TransferMechanism(function=Linear,
-                                 output_states=[RESULT, MEAN])
-    Process_A = Process(pathway=[My_Mech_A])
-    Process_B = Process(pathway=[My_Mech_B])
+    >>> my_mech_a = pnl.TransferMechanism(function=pnl.Logistic)
+    >>> my_mech_b = pnl.TransferMechanism(function=pnl.Linear,
+    ...                                   output_states=[pnl.RESULT, pnl.MEAN])
 
-    My_System = System(processes=[Process_A, Process_B],
-                                    monitor_for_control=[My_Mech_A.output_states[RESULT],
-                                                         My_Mech_B.output_states[MEAN]],
-                                    control_signals=[(GAIN, My_Mech_A),
-                                                     {NAME: INTERCEPT,
-                                                      MECHANISM: My_Mech_B,
-                                                      MODULATION: ModulationParam.ADDITIVE}],
-                       name='My Test System')
+    >>> process_a = pnl.Process(pathway=[my_mech_a])
+    >>> process_b = pnl.Process(pathway=[my_mech_b])
+
+    >>> my_system = pnl.System(processes=[process_a, process_b],
+    ...                        monitor_for_control=[my_mech_a.output_states[pnl.RESULTS],
+    ...                                             my_mech_b.output_states[pnl.MEAN]],
+    ...                        control_signals=[(pnl.GAIN, my_mech_a),
+    ...                                         {pnl.NAME: pnl.INTERCEPT,
+    ...                                          pnl.MECHANISM: my_mech_b,
+    ...                                          pnl.MODULATION: pnl.ModulationParam.ADDITIVE}],
+    ...                        name='My Test System')
 
 
 Class Reference
@@ -283,6 +286,7 @@ Class Reference
 
 import inspect
 import warnings
+
 from enum import IntEnum
 
 import numpy as np
@@ -292,24 +296,19 @@ from psyneulink.components.component import InitStatus, function_type, method_ty
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from psyneulink.components.functions.function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
-    LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
+from psyneulink.components.functions.function import CombinationFunction, Exponential, IntegratorFunction, Linear, LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
 from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.components.states.outputstate import PRIMARY, SEQUENTIAL
 from psyneulink.components.states.parameterstate import _get_parameter_state
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import \
-    ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, \
-    FUNCTION, FUNCTION_PARAMS, INTERCEPT, COMMAND_LINE, OFF, ON, \
-    PARAMETER_STATE, PARAMETER_STATES, OUTPUT_STATE_PARAMS, \
-    PROJECTION_TYPE, RECEIVER, SEPARATOR_BAR, SLOPE, SUM, kwAssign
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, COMMAND_LINE, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SEPARATOR_BAR, SLOPE, SUM, kwAssign
 from psyneulink.globals.log import LogEntry, LogLevel
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
-from psyneulink.scheduling.timescale import CurrentTime, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
@@ -414,7 +413,7 @@ class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                       \
         owner,                                           \
-\       index=SEQUENTIAL,                                \
+        index=SEQUENTIAL,                                \
         function=LinearCombination(operation=SUM),       \
         costs_options=ControlSignalCosts.DEFAULTS,       \
         intensity_cost_function=Exponential,             \
@@ -501,7 +500,7 @@ class ControlSignal(ModulatorySignal):
         listed in its `efferents <ControlSignal.efferents>` attribute (see `ControlSignal_Projections` for additional
         details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
@@ -983,21 +982,21 @@ class ControlSignal(ModulatorySignal):
 
 # FIX: ENCODE ALL OF THIS AS 1D ARRAYS IN 2D PROJECTION VALUE, AND PASS TO .value FOR LOGGING
             controller.log.entries[self.name + " " +
-                                      kpIntensity] = LogEntry(CurrentTime(), context, float(self.intensity))
+                                      kpIntensity] = LogEntry('time_placeholder', context, float(self.intensity))
             if not self.ignoreIntensityFunction:
-                controller.log.entries[self.name + " " + kpAllocation] = LogEntry(CurrentTime(),
+                controller.log.entries[self.name + " " + kpAllocation] = LogEntry('time_placeholder',
                                                                                   context,
                                                                                   float(self.allocation))
-                controller.log.entries[self.name + " " + kpIntensityCost] =  LogEntry(CurrentTime(),
+                controller.log.entries[self.name + " " + kpIntensityCost] =  LogEntry('time_placeholder',
                                                                                       context,
                                                                                       float(self.intensity_cost))
-                controller.log.entries[self.name + " " + kpAdjustmentCost] = LogEntry(CurrentTime(),
+                controller.log.entries[self.name + " " + kpAdjustmentCost] = LogEntry('time_placeholder',
                                                                                       context,
                                                                                       float(self.adjustment_cost))
-                controller.log.entries[self.name + " " + kpDurationCost] = LogEntry(CurrentTime(),
+                controller.log.entries[self.name + " " + kpDurationCost] = LogEntry('time_placeholder',
                                                                                     context,
                                                                                     float(self.duration_cost))
-                controller.log.entries[self.name + " " + kpCost] = LogEntry(CurrentTime(),
+                controller.log.entries[self.name + " " + kpCost] = LogEntry('time_placeholder',
                                                                             context,
                                                                             float(self.cost))
     #endregion
@@ -1268,6 +1267,8 @@ class ControlSignal(ModulatorySignal):
             # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
             return self._intensity
 
+
     @value.setter
     def value(self, assignment):
         self._value = assignment
+        self.log._log_value(assignment)
