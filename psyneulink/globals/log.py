@@ -336,7 +336,7 @@ import numpy as np
 
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.utilities import ContentAddressableList, AutoNumber
-from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, CONTROL, VALUE, \
+from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, VALUE, \
     kwContext, kwTime, kwValue
 
 
@@ -594,11 +594,8 @@ class Log:
 
         Each item of the entries list should be a string designating a Component to be logged;
         Initialize self.entries dict, each entry of which has a:
-        - key corresponding to an attribute of the object to be logged
-        - value that is a list of sequentially logged values
-
-        :parameter owner: (object in Function hierarchy) - parent object that owns the Log object)
-        :parameter entries: (list) - list of keypaths used as keys for entries in the Log dict
+            - key corresponding to a State of the Component to which the Log belongs
+            - value that is a list of sequentially logged LogEntry items
         """
 
         self.owner = owner
@@ -608,13 +605,11 @@ class Log:
         if entries is None:
             return
 
-        # self.add_entries(entries)
-
     @property
     def loggable_items(self):
-        """Return dict of loggable items
+        """Return dict of loggable items.
 
-        Keys are names of the items, values the items themselves
+        Keys are names of the Components, values their LogLevels
         """
         # FIX: The following crashes during init as prefs have not all been assigned
         # return {key: value for (key, value) in [(c.name, c.logPref.name) for c in self.loggable_components]}
@@ -637,7 +632,8 @@ class Log:
     def loggable_components(self):
         """Return a list of owner's Components that are loggable
 
-        The loggable items of a Component are specified in the _logagble_items property of its class
+        The loggable items of a Component are the Components (typically States) specified in the _logagble_items
+        property of its class, and its own `value <Component.value>` attribute.
         """
         from psyneulink.components.component import Component
 
@@ -654,10 +650,18 @@ class Log:
         """
         log_level = 'LogLevel.'
         # Return LogLevel for items in log.entries
-        # THIS VERSION FAILS AS IT ASSUMES THAT VALUE OF LOG'S OWNER IS UNDER ITS OWNER'S NAME, RATHER THAN "VALUE":
+
+        # # IMPLEMENTATION NOTE:
+        # #    THIS VERSION, THOUGH SUCCINCT, FAILS AS IT ASSUMES THAT VALUE OF LOG'S OWNER IS UNDER ITS OWNER'S NAME,
+        # #    RATHER THAN "VALUE" in loggable_items
         # logged_items = {key: value for (key, value) in
-        #                 [(l, self.loggable_items[l])
+        #                 [(l, self.loggable_components[l].logPref.name)
         #                  for l in self.logged_entries.keys()]}
+
+
+        # IMPLEMENTATION NOTE:  Need to expand for loop (rather than use list comprehension) is that the
+        #                       the owner Component's name (from logged.logged_entries.keys() needs to be
+        #                       aliases as *VALUE* when searching loggable_items
         logged_items = {}
         for l in self.logged_entries.keys():
             try:
@@ -665,10 +669,11 @@ class Log:
             except KeyError:
                 if l is self.owner.name:
                     try:
-                        logged_items[l] = (VALUE, self.loggable_items[VALUE])
+                        logged_items[VALUE] = self.loggable_items[VALUE]
                     except:
                         raise LogError("PROGRAM ERROR: Could not find {} from logged_entries in loggable_items "
                                        "for {} of {}".format(l, Log.__name__, self.owner.name))
+
         return logged_items
 
     def log_items(self, items, log_level=LogLevel.EXECUTION):
@@ -925,6 +930,7 @@ class Log:
                     if isinstance(value, np.ndarray):
                         value = value[0]
                     time_str = _time_string(time)
+                    attrib_name = attrib_name if attrib_name != self.owner.name else VALUE
                     data_str = repr(attrib_name).ljust(variable_width, kwSpacer)
                     if not args or kwTime in args:
                         data_str = time_str.ljust(time_width) + data_str
