@@ -139,9 +139,9 @@ corresponding arguments of its constructor, or by assigning them directly (see `
 
 * **log** - the `log <Component.log>` attribute contains the Component's `Log`, that can be used to record its
   `value <Component.value>`, as well as that of Components that belong to it, during initialization, validation,
-  execution and learning.  It also has three convenience methods -- `loggable_items <Log.loggable_items>`, `log_items
-  <Log.log_items>`, and `logged_items <Log.logged_items>` -- that provide access to the corresponding methods of its
-  Log, used to identify, configure and track items for logging.
+  execution and learning.  It also has four convenience methods -- `loggable_items <Log.loggable_items>`, `log_items
+  <Log.log_items>`, `log_values <Log.log_values>` and `logged_items <Log.logged_items>` -- that provide access to the
+  corresponding methods of its Log, used to identify, configure and track items for logging.
 ..
 
 .. _Component_Name:
@@ -2848,10 +2848,22 @@ class Component(object):
             log_level=EXECUTION  \
         )
 
-        Specifies items to be logged. This is a convenience method that calls the `log_items <Log.logged_items>` method
+        Specifies items to be logged. This is a convenience method that calls the `log_items <Log.log_items>` method
         of the Component's `log <Component.log>`.
         """
         self.log.log_items(items=items, log_level=log_level)
+
+    def log_values(self, entries):
+        """
+        log_values(              \
+            entries              \
+        )
+
+        Specifies items to be logged. This is a convenience method that calls the `log_values <Log.log_values>` method
+        of the Component's `log <Component.log>`.
+        """
+        self.log.log_values(entries)
+
 
     @property
     def logged_items(self):

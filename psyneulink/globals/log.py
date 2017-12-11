@@ -22,16 +22,13 @@ of the recorded values, along with the time and context of the recording.  The c
 recorded is specified by the `logPref <Component.logPref>` property of a Component.  While these can be set directly,
 they are most easily specified using the Log's `log_items <Log.log_items>` method, together with its `loggable_items
 <Log.loggable_items>` and `logged_items <Log.logged_items>` attributes that identify and track the items to be logged.
-These can be useful not only for observing the behavior of a Component in a model, but also in debugging the model
-during construction. The entries of a Log can be displayed in a "human readable" table using its `print_entries
+Entries can also be made by the user programmatically, using the `log_values <Log.log_values>` method. Logging can be
+useful not only for observing the behavior of a Component in a model, but also in debugging the model during
+construction. The entries of a Log can be displayed in a "human readable" table using its `print_entries
 <Log.print_entries>` method, and returned in CSV and numpy array formats using its and `nparray <Log.nparray>` and
 `csv <Log.csv>`  methods.
 
-COMMENT:
-Entries can also be made by the user programmatically. Each entry contains the time at
-which a value was assigned to the attribute, the context in which this occurred, and the value assigned.  This
-information can be displayed using the log's `print_entries` method.
-COMMENT
+.. _Log_Creation:
 
 Creating Logs and Entries
 -------------------------
@@ -39,6 +36,8 @@ Creating Logs and Entries
 A log object is automatically created for and assigned to a Component's `log <Component.log>` attribute when the
 Component is created.  An entry is automatically created and added to the Log's `entries <Log.entries>` attribute
 when its `value <Component.value>` or that of a Component that belongs to it is recorded in the Log.
+
+.. _Log_Structure:
 
 Structure
 ---------
@@ -61,6 +60,9 @@ to access its `entries <Log.entries>`:
       specified by their names, a reference to the Component object, in a tuple that specifies the `LogLevel` to
       assign to that Component, or in a list with a `LogLevel` to be applied to multiple items at once.
     ..
+    * `log_values <Log.log_values>` -- used to the `value <Component.value>` of one or more Components in the Log
+      programmatically ("manually").  Components can be specified by their names or references to the object.
+    ..
     * `logged_items <Log.logged_items>` -- a dictionary with the items that currently have entries in a Component's
       `log <Component.log>`; the key for each entry is the name of a Component, and the value is its current `LogLevel`.
     ..
@@ -69,6 +71,8 @@ to access its `entries <Log.entries>`:
     * `nparray <Log.csv>` -- returns a 2d np.array with the `entries <Log.entries>` in the Log.
     ..
     * `csv <Log.csv>` -- returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
+
+.. _Log_Loggable_Items:
 
 Loggable Items
 ~~~~~~~~~~~~~~
@@ -98,6 +102,8 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
   * *matrix* -- the value of the `matrix <MappingProjection.matrix>` parameter (for `MappingProjections
     <MappingProjection>` only).
 
+.. _Log_LogLevels:
+
 LogLevels
 ~~~~~~~~~
 
@@ -121,11 +127,15 @@ using bitwise operators (e.g., LogLevel.EXECUTION | LogLevel.LEARNING).
     ...          prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION,pnl.PreferenceLevel.INSTANCE)})
 
 
+.. _Log_Execution:
+
 Execution
 ---------
 
 The value of a Component is recorded to a Log when the condition assigned to its `logPref <Component.logPref>` is met.
 This specified as a `LogLevel`.  The default LogLevel is `OFF`.
+
+.. _Log_Examples:
 
 Examples
 --------
@@ -814,8 +824,8 @@ class Log:
         return time or no_time
 
     @tc.typecheck
-    def log_value(self, entries):
-        """Log the value of a Component.
+    def log_values(self, entries):
+        """Log the value of one or more Components programmatically.
 
         Arguments
         ---------
@@ -823,7 +833,7 @@ class Log:
         entries : string, Component or list of them : default None
             specifies the Components, the current `value <Component.value>`\\s of which should be added to the Log.
             they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is `ALL`, `None`
-            or omitted, then the `value <Component.value> of all `loggable_items <Log.loggable_items>` are logged.
+            or omitted, then the `value <Component.value>`\\s of all `loggable_items <Log.loggable_items>` are logged.
         """
         entries = self._validate_entries_arg(entries)
 
