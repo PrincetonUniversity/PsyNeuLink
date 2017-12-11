@@ -5265,6 +5265,8 @@ class DriftDiffusionIntegrator(
             self.previous_value = adjusted_value
             self.previous_time += time_step_size
 
+        # FIX?
+        # Current output format is [[[decision_variable]], time]
         return adjusted_value
 
 class OrnsteinUhlenbeckIntegrator(

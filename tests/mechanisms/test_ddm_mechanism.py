@@ -432,9 +432,11 @@ def test_DDM_size_int_check_var():
 # size = float, variable = [.4], check output after execution
 
 def test_DDM_size_int_inputs_():
+    # FIX?
+    # Current output format is [[[decision_variable]], time]
     T = DDM(
         name='DDM',
-        size=1.0,
+        size=1,
         function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
@@ -443,7 +445,7 @@ def test_DDM_size_int_inputs_():
         time_scale=TimeScale.TIME_STEP
     )
     val = T.execute([.4]).tolist()
-    assert val == [[-2.0], [1.0]]
+    assert val == [[[-2.0]], 1.0]
 
 # ------------------------------------------------------------------------------------------------
 
@@ -537,13 +539,15 @@ def test_DDM_time():
             t0=0.5
         )
     )
+    # FIX?
+    # Current output format is [[[decision_variable]], time]
     time_0 = D.function_object.previous_time                # t_0  = 0.5
     np.testing.assert_allclose(time_0, [0.5], atol=1e-08)
 
-    time_1 = D.execute(10)[1][0]                            # t_1  = 0.5 + 0.2 = 0.7
+    time_1 = D.execute(10)[1]                               # t_1  = 0.5 + 0.2 = 0.7
     np.testing.assert_allclose(time_1, [0.7], atol=1e-08)
 
     for i in range(10):                                     # t_11 = 0.7 + 10*0.2 = 2.7
         D.execute(10)
-    time_12 = D.execute(10)[1][0]                           # t_12 = 2.7 + 0.2 = 2.9
+    time_12 = D.execute(10)[1]                              # t_12 = 2.7 + 0.2 = 2.9
     np.testing.assert_allclose(time_12, [2.9], atol=1e-08)
