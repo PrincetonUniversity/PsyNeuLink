@@ -2243,11 +2243,13 @@ proj_A_to_B.logged_items
 # Print the Log for ``my_mech_A``:
 my_mech_A.log.print_entries(width=80)
 
-print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
+print('CSV NO QUOTES my_mech_A NOISE & RESULTS:\n',
+      my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False,quotes=None))
 
 # Display the csv formatted entry of Log for ``proj_A_to_B``
 #    with quotes around values and the Projection's name included in the header:
-print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
+print('CSV QUOTES my_mech_A NOISE & RESULTS:\n',
+      proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
 
 proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
 

@@ -1265,7 +1265,7 @@ class Log:
            For data without time stamps, items in the same row are not guaranteed to refer to the same time point.
 
         The **owner_name** argument can be used to prepend the header for each Component with its owner.
-        The **quotes** argument can be used to suppress or specifiy quotes to use around values.
+        The **quotes** argument can be used to suppress or specifiy quotes to use around numeric values.
 
 
         Arguments
@@ -1282,9 +1282,9 @@ class Log:
             it is "<entry name>".
 
         quotes : bool, str : default '
-            specifies whether or not to enclose values other than quotes (useful if they are arrays);
+            specifies whether or not to enclose numeric values in quotes (may be useful for arrays);
             if not specified or `True`, single quotes are used for *all* items;
-            if specified with a string, that is used to enclose *all* items;
+            if specified with a string, that is used in place of single quotes to enclose *all* items;
             if `False` or `None`, single quotes are used for headers (the items in the first row), but no others.
 
         Returns:
