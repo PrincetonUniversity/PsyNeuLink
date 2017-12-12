@@ -29,9 +29,9 @@ class TestLog:
         assert PJ.loggable_items == {'matrix': 'OFF',
                                      'value': 'OFF'}
 
-        T_1.log_items(pnl.NOISE)
-        T_1.log_items(pnl.RESULTS)
-        PJ.log_items(pnl.MATRIX)
+        T_1.set_log_conditions(pnl.NOISE)
+        T_1.set_log_conditions(pnl.RESULTS)
+        PJ.set_log_conditions(pnl.MATRIX)
 
         assert T_1.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
@@ -99,7 +99,7 @@ class TestLog:
 
     def test_log_initialization(self):
         T = pnl.TransferMechanism(
-                prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
+                prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
         )
         assert T.logged_items == {'value': 'INITIALIZATION'}
 

@@ -140,6 +140,15 @@ After each execution of the Mechanism the result of `function <TransferMechanism
 <OutputState.value>` of each of its `OutputStates <OutputState>`, and to the 1st item of the Mechanism's
 `output_values <TransferMechanism.output_values>` attribute.
 
+COMMENT:
+.. _Transfer_Examples:
+
+Examples
+--------
+
+EXAMPLES HERE
+COMMENT
+
 .. _Transfer_Class_Reference:
 
 Class Reference

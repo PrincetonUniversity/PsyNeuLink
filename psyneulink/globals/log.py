@@ -20,18 +20,15 @@ when they are created, validated, and/or executed).  Every Component has a Log o
 Components that belong to it.  These are stored in `entries <Log.entries>` of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
 recorded is specified by the `logPref <Component.logPref>` property of a Component.  While these can be set directly,
-they are most easily specified using the Log's `log_items <Log.log_items>` method, together with its `loggable_items
-<Log.loggable_items>` and `logged_items <Log.logged_items>` attributes that identify and track the items to be logged.
-These can be useful not only for observing the behavior of a Component in a model, but also in debugging the model
-during construction. The entries of a Log can be displayed in a "human readable" table using its `print_entries
-<Log.print_entries>` method, and returned in CSV and numpy array formats using its and `nparray <Log.nparray>` and
-`csv <Log.csv>`  methods.
+they are most easily specified using the Log's `set_log_conditions <Log.set_log_conditions>` method, together with its
+`loggable_items <Log.loggable_items>` and `logged_items <Log.logged_items>` attributes that identify and track the
+items to be logged, respectively. Entries can also be made by the user programmatically, using the `log_values
+<Log.log_values>` method. Logging can be useful not only for observing the behavior of a Component in a model, but also
+in debugging the model during construction. The entries of a Log can be displayed in a "human readable" table using
+its `print_entries <Log.print_entries>` method, and returned in CSV and numpy array formats using its and `nparray
+<Log.nparray>` and `csv <Log.csv>`  methods.
 
-COMMENT:
-Entries can also be made by the user programmatically. Each entry contains the time at
-which a value was assigned to the attribute, the context in which this occurred, and the value assigned.  This
-information can be displayed using the log's `print_entries` method.
-COMMENT
+.. _Log_Creation:
 
 Creating Logs and Entries
 -------------------------
@@ -39,6 +36,8 @@ Creating Logs and Entries
 A log object is automatically created for and assigned to a Component's `log <Component.log>` attribute when the
 Component is created.  An entry is automatically created and added to the Log's `entries <Log.entries>` attribute
 when its `value <Component.value>` or that of a Component that belongs to it is recorded in the Log.
+
+.. _Log_Structure:
 
 Structure
 ---------
@@ -55,20 +54,25 @@ A Log has several attributes and methods that make it easy to manage how and whe
 to access its `entries <Log.entries>`:
 
     * `loggable_items <Log.loggable_items>` -- a dictionary with the items that can be logged in a Component's `log
-      <Component.log>`;  the key for each entry is the name of a Component,  and the value is it current `LogLevel`.
+      <Component.log>`;  the key for each entry is the name of a Component,  and the value is it current `LogCondition`.
     ..
-    * `log_items <Log.log_items>` -- used to assign the LogLevel for one or more Components.  Components can be
-      specified by their names, a reference to the Component object, in a tuple that specifies the `LogLevel` to
-      assign to that Component, or in a list with a `LogLevel` to be applied to multiple items at once.
+    * `set_log_conditions <Log.set_log_conditions>` -- used to assign the LogCondition for one or more Components.  Components can be
+      specified by their names, a reference to the Component object, in a tuple that specifies the `LogCondition` to
+      assign to that Component, or in a list with a `LogCondition` to be applied to multiple items at once.
+    ..
+    * `log_values <Log.log_values>` -- used to the `value <Component.value>` of one or more Components in the Log
+      programmatically ("manually").  Components can be specified by their names or references to the objects.
     ..
     * `logged_items <Log.logged_items>` -- a dictionary with the items that currently have entries in a Component's
-      `log <Component.log>`; the key for each entry is the name of a Component, and the value is its current `LogLevel`.
+      `log <Component.log>`; the key for each entry is the name of a Component, and the value is its current `LogCondition`.
     ..
     * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
     ..
     * `nparray <Log.csv>` -- returns a 2d np.array with the `entries <Log.entries>` in the Log.
     ..
     * `csv <Log.csv>` -- returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
+
+.. _Log_Loggable_Items:
 
 Loggable Items
 ~~~~~~~~~~~~~~
@@ -98,34 +102,43 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
   * *matrix* -- the value of the `matrix <MappingProjection.matrix>` parameter (for `MappingProjections
     <MappingProjection>` only).
 
-LogLevels
+.. _Log_LogLevels:
+
+LogConditions
 ~~~~~~~~~
 
-Configuring a Component to be logged is done using a `LogLevel`, that specifies the conditions under which its
-`value <Component.value>` should be entered in its Log.  These can be specified in the `log_items <Log.log_items>`
-method of a Log, or directly by specifying a LogLevel for the value a Component's `logPref  <Compnent.logPref>` item
+Configuring a Component to be logged is done using a `LogCondition`, that specifies the conditions under which its
+`value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_conditions <Log.set_log_conditions>`
+method of a Log, or directly by specifying a LogCondition for the value a Component's `logPref  <Compnent.logPref>` item
 of its `prefs <Component.prefs>` attribute.  The former is easier, and allows multiple Components to be specied at
-once, while the latter affords more control over the specification (see `Preferences`).  LogLevels are treated as
-binary "flags", and can be combined to permit logging under more than one contact or boolean combinations of LogLevels
-using bitwise operators (e.g., LogLevel.EXECUTION | LogLevel.LEARNING).
+once, while the latter affords more control over the specification (see `Preferences`).  LogConditions are treated as
+binary "flags", and can be combined to permit logging under more than one contact or boolean combinations of LogConditions
+using bitwise operators (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
 
 .. note::
-   Currently, the only `LogLevels <LogLevel>` supported are: `OFF`, `INITIALIZATION`, `EXECUTION` and `LEARNING`.
+   Currently, the only `LogConditions <LogCondition>` supported are: `OFF`, `INITIALIZATION`, `EXECUTION` and `LEARNING`.
 
 .. note::
-   Using the `INITIALIZATION` LogLevel to log the `value <Component.value>` of a Component during its initialization
+   Using the `INITIALIZATION` LogCondition to log the `value <Component.value>` of a Component during its initialization
    requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
 
-    >>> import psyneulink as pnl
-    >>> T = pnl.TransferMechanism(
-    ...          prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION,pnl.PreferenceLevel.INSTANCE)})
+   COMMENT:
+   FIX: THIS EXAMPLE CAN'T CURRENTLY BE EXECUTED AS IT PERMANENTLY SETS THE LogPref FOR ALL TransferMechanism
+   COMMENT
+    >> import psyneulink as pnl
+    >> T = pnl.TransferMechanism(
+    ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
+
+.. _Log_Execution:
 
 Execution
 ---------
 
 The value of a Component is recorded to a Log when the condition assigned to its `logPref <Component.logPref>` is met.
-This specified as a `LogLevel`.  The default LogLevel is `OFF`.
+This specified as a `LogCondition`.  The default LogCondition is `OFF`.
+
+.. _Log_Examples:
 
 Examples
 --------
@@ -135,12 +148,17 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
+    >>> import psyneulink as pnl
     >>> my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
     >>> my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
     >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
+    >>> my_system = pnl.System(processes=[my_process])
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 
-    # Show the loggable items (and their current LogLevels) of each Mechanism and the Projection between them:
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN DICT ENTRIES IN UNRELIABLE ORDERS
+    COMMENT
+    # Show the loggable items (and their current LogConditions) of each Mechanism and the Projection between them:
     >> my_mech_A.loggable_items
     {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
     >> my_mech_B.loggable_items
@@ -149,18 +167,21 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     {'value': 'OFF', 'matrix': 'OFF'}
 
     # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
-    >>> my_mech_A.log_items([pnl.NOISE, pnl.RESULTS])
-    >>> proj_A_to_B.log_items(pnl.MATRIX)
+    >>> my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULTS])
+    >>> proj_A_to_B.set_log_conditions(pnl.MATRIX)
 
+Note that since no LogCondition was specified, the default (LogCondition.EXECUTION) is used. Executing the Process
+generates entries in the Logs, that can then be displayed in several ways::
 
-Executing the Process generates entries in the Logs, that can then be displayed in several ways::
+    # Execute the System twice (to generate some values in the logs):
+    >>> my_system.execute()
+    [array([ 0.,  0.,  0.])]
+    >>> my_system.execute()
+    [array([ 0.,  0.,  0.])]
 
-    # Execute each Process twice (to generate some values in the logs):
-    >>> my_process.execute()
-    array([ 0.,  0.,  0.])
-    >>> my_process.execute()
-    array([ 0.,  0.,  0.])
-
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN DICT ENTRIES IN UNRELIABLE ORDERS
+    COMMENT
     # List the items of each Mechanism and the Projection that were actually logged:
     >> my_mech_A.logged_items
     {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
@@ -173,28 +194,35 @@ Notice that entries dictionary of the Log for ``my_mech_B`` is empty, since no i
 it.  The results of the two other logs can be printed to the console using the `print_entries <Log.print_entries>`
 method of a Log::
 
-        # Print the Log for ``my_mech_A``:
-        >> my_mech_A.log.print_entries()
+    COMMENT:
+    FIX: THIS EXAMPLE CAN'T BE EXECUTED AS IT REQUIRES INSERTION OF "<BLANKLINE>"'S THAT CAN'T BE SUPPRESSED IN HTML
+    COMMENT
+    # Print the Log for ``my_mech_A``:
+    >> my_mech_A.log.print_entries()
 
-        Log for mech_A:
+    Log for mech_A:
 
-        Time      Logged Item:                                       Context                                                                 Value
+    Logged Item:   Time       Context                                                                   Value
 
-        None      'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        None      'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+    'RESULTS'      0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
+    'RESULTS'      0:1:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
 
 
-        None      'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        None      'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+    'noise'        0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.]
+    'noise'        0:1:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.]
 
 
 They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
+
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN FORMATS ON JENKINS THAT DON'T MATCH THOSE ON LOCAL MACHINE(S)
+    COMMENT
     >> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
-    'Index', 'noise', 'RESULTS'
-    0, 0.0, 0.0 0.0
-    1, 0.0, 0.0 0.0
+    'Run', 'Trial', 'Time_step', 'noise', 'RESULTS'
+    0, 0, 0, 0.0, 0.0 0.0
+    0, 1, 0, 0.0, 0.0 0.0
     COMMENT:
     <BLANKLINE>
     COMMENT
@@ -202,9 +230,9 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     # Display the csv formatted entry of Log for ``proj_A_to_B``
     #    with quotes around values and the Projection's name included in the header:
     >> print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
-    'Index', 'matrix'
-    '0', '1.0 1.0 1.0' '1.0 1.0 1.0'
-    '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
+    'Run', 'Trial', 'Time_step', 'matrix'
+    '0', '0', '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
+    '0', '1', '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
     COMMENT:
     <BLANKLINE>
     COMMENT
@@ -212,12 +240,22 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
 reported.
 
-The following shows the Log of ``proj_A_to_B`` in numpy array format::
+The following shows the Log of ``proj_A_to_B`` in numpy array format, with and without header information::
+
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN FORMATS ON JENKINS THAT DON'T MATCH THOSE ON LOCAL MACHINE(S)
+    COMMENT
+    >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=True)
+    [[['Run'] [0] [0]]
+     [['Trial'] [0] [1]]
+     [['Time_step'] [1] [1]]
+     ['matrix' [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
 
     >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
-    array([[[0], [1]],
-           [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
-            [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
+    [[[0] [0]]
+     [[0] [1]]
+     [[1] [1]]
+     [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
 
 COMMENT:
  MY MACHINE:
@@ -252,7 +290,7 @@ COMMENT:
 IMPLEMENTATION NOTE: Name of owner Component is aliases to VALUE in loggable_items and logged_items,
 but is the Component's actual name in log_entries
 
-Entries are made to the Log based on the `LogLevel` specified in the
+Entries are made to the Log based on the `LogCondition` specified in the
 `logPref` item of the component's `prefs <Component.prefs>` attribute.
 
 Adding an item to prefs.logPref will validate and add an entry for that attribute to the Log dict
@@ -264,7 +302,7 @@ An attribute is logged if:
 * it is included in the *LOG_ENTRIES* entry of a `parameter specification dictionary <ParameterState_Specification>`
   assigned to the **params** argument of the constructor for the Component;
 ..
-* the context of the assignment is above the LogLevel specified in the logPref setting of the owner Component
+* the context of the assignment is above the LogCondition specified in the logPref setting of the owner Component
 
 Entry values are added by the setter method for the attribute being logged.
 
@@ -275,7 +313,7 @@ The following entries are automatically included in self.entries for a `Mechanis
     - any variables listed in the params[LOG_ENTRIES] of a Mechanism
 
 
-DEFAULT LogLevel FOR ALL COMPONENTS IS *OFF*
+DEFAULT LogCondition FOR ALL COMPONENTS IS *OFF*
 
 
 Structure
@@ -289,13 +327,13 @@ Each entry of `entries <Log.entries>` has:
         - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
         - value (value): the value assigned to the attribute
 
-The LogLevel class (see declaration above) defines six levels of logging:
+The LogCondition class (see declaration above) defines six levels of logging:
     + OFF: No logging for attributes of the owner object
     + VALUE_ASSIGNMENT: Log values only when final value assignment has been made during execution
     + EXECUTION: Log values for all assignments during execution (e.g., including aggregation of projections)
     + VALIDATION: Log value assignments during validation as well as execution and initialization
     + ALL_ASSIGNMENTS:  Log all value assignments (e.g., including initialization)
-    Note: LogLevel is an IntEnum, and thus its values can be used directly in numerical comparisons
+    Note: LogCondition is an IntEnum, and thus its values can be used directly in numerical comparisons
 
 Entries can also be added programmatically by:
     - including them in the logPref of a PreferenceSet
@@ -338,18 +376,18 @@ from enum import IntEnum, unique
 import numpy as np
 
 from psyneulink.scheduling.time import TimeScale
-from psyneulink.globals.utilities import ContentAddressableList, AutoNumber
-from psyneulink.globals.keywords import INITIALIZING, EXECUTING, VALIDATE, LEARNING, COMMAND_LINE, VALUE, \
-    kwContext, kwTime, kwValue
+from psyneulink.globals.utilities import ContentAddressableList, AutoNumber, is_component
+from psyneulink.globals.keywords \
+    import INITIALIZING, EXECUTING, VALIDATE, LEARNING, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
 
 
 __all__ = [
-    'ALL_ENTRIES', 'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogLevel',
+    'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogCondition',
 ]
 
 
 # FIX: REPLACE WITH Flags and auto IF/WHEN MOVE TO Python 3.6
-class LogLevel(IntEnum):
+class LogCondition(IntEnum):
     """Specifies levels of logging, as descrdibed below."""
     OFF = 0
     """No recording."""
@@ -378,27 +416,26 @@ class LogLevel(IntEnum):
 
     # @classmethod
     # def _log_level_max(cls):
-    #     return max([cls[i].value for i in list(cls.__members__) if cls[i] is not LogLevel.ALL_ASSIGNMENTS])
+    #     return max([cls[i].value for i in list(cls.__members__) if cls[i] is not LogCondition.ALL_ASSIGNMENTS])
 
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
-ALL_ENTRIES = 'all entries'
 TIME_NOT_SPECIFIED = 'Time Not Specified'
 
 def _get_log_context(context):
 
-    context_flag = LogLevel.OFF
+    context_flag = LogCondition.OFF
     if INITIALIZING in context:
-        context_flag |= LogLevel.INITIALIZATION
+        context_flag |= LogCondition.INITIALIZATION
     if VALIDATE in context:
-        context_flag |= LogLevel.VALIDATION
+        context_flag |= LogCondition.VALIDATION
     if EXECUTING in context:
-        context_flag |= LogLevel.EXECUTION
+        context_flag |= LogCondition.EXECUTION
     if LEARNING in context:
-        context_flag |= LogLevel.LEARNING
+        context_flag |= LogCondition.LEARNING
     if COMMAND_LINE in context:
-        context_flag |= LogLevel.COMMAND_LINE
+        context_flag |= LogCondition.COMMAND_LINE
     return context_flag
 
 
@@ -520,20 +557,20 @@ class Log:
         An attribute is recorded if:
             - it is one automatically included in logging (see below)
             - it is included in params[LOG_ENTRIES] of the owner object
-            - the context of the assignment is above the LogLevel specified in the logPref setting of the owner object
+            - the context of the assignment is above the LogCondition specified in the logPref setting of the owner object
         Entry values are added by the setter method for the attribute being logged
         The following entries are automatically included in self.entries for a Mechanism object:
             - the value attribute of every State for which the Mechanism is an owner
             [TBI: - value of every projection that sends to those States]
             - the system variables defined in SystemLogEntries (see declaration above)
             - any variables listed in the params[LOG_ENTRIES] of a Mechanism
-        The LogLevel class (see declaration above) defines five levels of logging:
+        The LogCondition class (see declaration above) defines five levels of logging:
             + OFF: No logging for attributes of the owner object
             + VALUE_ASSIGNMENT: Log values only when final value assignment has been during execution
             + EXECUTION: Log values for all assignments during exeuction (e.g., including aggregation of projections)
             + VALIDATION: Log value assignments during validation as well as execution
             + ALL_ASSIGNMENTS:  Log all value assignments (e.g., including initialization)
-            Note: LogLevel is an IntEnum, and thus its values can be used directly in numerical comparisons
+            Note: LogCondition is an IntEnum, and thus its values can be used directly in numerical comparisons
 
         # Entries can also be added programmtically by:
         #     - including them in the logPref of a PreferenceSet
@@ -590,7 +627,7 @@ class Log:
 
     loggable_items : Dict[Component.name: List[LogEntry]]
         identifies Components that can be logged by the owner; the key of each entry is the name of a Component,
-        and the value is its currently assigned `LogLevel`.
+        and the value is its currently assigned `LogCondition`.
 
     entries : Dict[Component.name: List[LogEntry]]
         contains the logged information for `loggable_components <Log.loggable_components>`; the key of each entry
@@ -599,11 +636,9 @@ class Log:
 
     logged_items : Dict[Component.name: List[LogEntry]]
         identifies Components that currently have entries in the Log; the key for each entry is the name
-        of a Component, and the value is its currently assigned `LogLevel`.
+        of a Component, and the value is its currently assigned `LogCondition`.
 
     """
-
-    ALL_LOG_ENTRIES = 'all_log_entries'
 
     def __init__(self, owner, entries=None):
         """Initialize Log with list of entries
@@ -621,8 +656,8 @@ class Log:
         if entries is None:
             return
 
-    def log_items(self, items, log_level=LogLevel.EXECUTION):
-        """Specifies items to be logged at the specified `LogLevel`\\(s).
+    def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
+        """Specifies items to be logged at the specified `LogCondition`\\(s).
 
         Arguments
         ---------
@@ -632,12 +667,12 @@ class Log:
             Each item must be a:
             * string that is the name of a `loggable_item` <Log.loggable_item>` of the Log's `owner <Log.owner>`;
             * a reference to a Component;
-            * tuple, the first item of which is one of the above, and the second a `LogLevel` to use for the item.
+            * tuple, the first item of which is one of the above, and the second a `LogCondition` to use for the item.
 
-        log_level : LogLevel : default LogLevel.EXECUTION
-            specifies `LogLevel` to use as the default for items not specified in tuples (see above).
-            For convenience, the name of a LogLevel can be used in place of its full specification
-            (e.g., *EXECUTION* instead of `LogLevel.EXECUTION`).
+        log_condition : LogCondition : default LogCondition.EXECUTION
+            specifies `LogCondition` to use as the default for items not specified in tuples (see above).
+            For convenience, the name of a LogCondition can be used in place of its full specification
+            (e.g., *EXECUTION* instead of `LogCondition.EXECUTION`).
 
         params_set : list : default None
             list of parameters to include as loggable items;  these must be attributes of the `owner <Log.owner>`
@@ -651,10 +686,10 @@ class Log:
         def assign_log_level(item, level):
 
             try:
-                level = LogLevel[level] if isinstance(level, str) else level
+                level = LogCondition[level] if isinstance(level, str) else level
             except KeyError:
                 raise LogError("\'{}\' is not a value of {}".
-                               format(level, LogLevel.__name__))
+                               format(level, LogCondition.__name__))
 
             if not item in self.loggable_items:
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
@@ -663,12 +698,12 @@ class Log:
                 component = next(c for c in self.loggable_components if c.name == item)
                 component.logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
             except AttributeError:
-                raise LogError("PROGRAM ERROR: Unable to set LogLevel for {} of {}".format(item, self.owner.name))
+                raise LogError("PROGRAM ERROR: Unable to set LogCondition for {} of {}".format(item, self.owner.name))
 
         if items is ALL:
             for component in self.loggable_components:
-                component.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
-            # self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
+                component.logPref = PreferenceEntry(log_condition, PreferenceLevel.INSTANCE)
+            # self.logPref = PreferenceEntry(log_condition, PreferenceLevel.INSTANCE)
             return
 
         if not isinstance(items, list):
@@ -679,7 +714,7 @@ class Log:
                 # self.add_entries(item)
                 if isinstance(item, Component):
                     item = item.name
-                assign_log_level(item, log_level)
+                assign_log_level(item, log_condition)
             else:
                 # self.add_entries(item[0])
                 assign_log_level(item[0], item[1])
@@ -741,17 +776,21 @@ class Log:
         # Context is an empty string, but called programatically
         if not context and programmatic:
             context = COMMAND_LINE
+            # context = self.owner.prev_context + "FROM " + COMMAND_LINE
+            # context = self.owner.prev_context
 
         context_flags = _get_log_context(context)
 
         log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 
         # Log value if logging condition is satisfied or called for programmatically
-        if (log_pref and log_pref == context_flags) or context_flags & LogLevel.COMMAND_LINE:
+        if (log_pref and log_pref == context_flags) or context_flags & LogCondition.COMMAND_LINE:
         # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
         # if log_pref and log_pref | context_flags:
-
             self.entries[self.owner.name] = LogEntry(self._get_time(context, context_flags), context, value)
+
+        if context is not COMMAND_LINE:
+            self.owner.prev_context = context
 
     def _get_time(self, context, context_flags):
         """Get time from Scheduler of System in which Component is being executed.
@@ -767,6 +806,7 @@ class Log:
 
         no_time = (None, None, None)
 
+        # Get mechanism to which Component being logged belongs
         if isinstance(self.owner, Mechanism):
             ref_mech = self.owner
         elif isinstance(self.owner, State):
@@ -785,22 +825,60 @@ class Log:
                            format(self.owner.__class__.__name__,
                                   Mechanism.__name__, State.__name__, Projection.__name__))
 
+        # MODIFIED 12/11/17 OLD:
+        # # Get System in which it is being executed (if any)
+        # try:
+        #     systems = list(ref_mech.systems.keys())
+        #     system = next(s for s in systems if s.name in context)
+        # except AttributeError:
+        #     # ref_mech has not been assigned to a System
+        #     systems = None
+        #     system = None
+        # except StopIteration:
+        #     # ref_mech is assigned to one or more Systems, but not currently being executed within one of them
+        #     system = None
+        # MODIFIED 12/11/17 NEW:
+        # Get System in which it is being (or was last) executed (if any):
+
+        # If called from COMMAND_LINE, get context for last time value was assigned:
+        if context_flags & LogCondition.COMMAND_LINE:
+            execution_context = self.owner.prev_context
+            context_flags = _get_log_context(execution_context)
+        else:
+            execution_context = context
         try:
             systems = list(ref_mech.systems.keys())
-            system = next((s for s in systems if s.name in context), None)
+            system = next(s for s in systems if s.name in execution_context)
         except AttributeError:
+            # ref_mech has not been assigned to a System
+            systems = None
             system = None
+        except StopIteration:
+            # ref_mech is assigned to one or more Systems, but not currently being executed within one of them
+            system = None
+        # MODIFIED 12/11/17 END
 
         if system:
-            # FIX: Add INIT and VALIDATE?
-            if context_flags == LogLevel.EXECUTION:
+            # FIX: Add VALIDATE?
+            if context_flags == LogCondition.EXECUTION:
                 time = system.scheduler_processing.clock.simple_time
                 time = (time.run, time.trial, time.time_step)
-            elif context_flags == LogLevel.LEARNING:
+            elif context_flags == LogCondition.LEARNING:
                 time = system.scheduler_learning.clock.simple_time
                 time = (time.run, time.trial, time.time_step)
             else:
                 time = None
+
+        # GETS TIME OF LAST RUN OF SYSTEM, BUT NOT NECESSARILY THE COMPONENT (E.G., MECHANISM AND LEARNING)
+        # elif systems and (context_flags & LogCondition.COMMAND_LINE):
+        #     # # Search for the most recently run Scheduler within any of the Systems to which the ref_mech belongs
+        #     # # and get its time
+        #     # run_times = []
+        #     # for s in systems:
+        #     #     run_times.append((s.scheduler_processing.date_last_run_end, s.scheduler_processing.clock.simple_time))
+        #     #     run_times.append((s.scheduler_learning.date_last_run_end, s.scheduler_learning.clock.simple_time))
+        #     # gmt, time = max(run_times, key=lambda x : x[0])
+        #     # time = (time.run, time.trial, time.time_step)
 
         else:
             if self.owner.verbosePref:
@@ -814,16 +892,24 @@ class Log:
         return time or no_time
 
     @tc.typecheck
-    def log_value(self, entries):
-        """Log the value of a Component.
+    def log_values(self, entries):
+        """Log the value of one or more Components programmatically.
+
+        This can be used to "manually" enter the `value <Component.value>` of any of a Component's `loggable_items
+        <Component.loggable_items>` (including its own `value <Component.value>`) in its `log <Component.log>`.
+        The context item of its `LogEntry` is assigned *COMMAND_LINE*.  If the call to log_values is made while a
+        System to which the Component belongs is being run (e.g., in a **call_before..** or **call_after...** argument
+        of its `run <System_Base.run>` method), then the time of the LogEntry is assigned the value of the `Clock` of
+        the System's `scheduler_processing` or `scheduler_learning`, whichever is currently executing
+        (see `System_Scheduler`).
 
         Arguments
         ---------
 
-        entries : string, Component or list of them : default None
+        entries : string, Component or list containing either : default ALL
             specifies the Components, the current `value <Component.value>`\\s of which should be added to the Log.
-            they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is `ALL`, `None`
-            or omitted, then the `value <Component.value> of all `loggable_items <Log.loggable_items>` are logged.
+            they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is *ALL* or is not
+            specified, then the `value <Component.value>`\\s of all `loggable_items <Log.loggable_items>` are logged.
         """
         entries = self._validate_entries_arg(entries)
 
@@ -831,16 +917,16 @@ class Log:
         for entry in entries:
             self._log_value(self.loggable_components[self._dealias_owner_name(entry)].value, context=COMMAND_LINE)
 
-    def clear_entries(self, entries=ALL_LOG_ENTRIES, delete_entry=True, confirm=False):
+    def clear_entries(self, entries=ALL, delete_entry=True, confirm=False):
         """Clear one or more entries either by deleting the entry or just removing its data.
 
         Arguments
         ---------
 
-        entries : string, Component or list of them : default None
+        entries : string, Component or list containing either : default ALL
             specifies the entries of the Log to be cleared;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL`, `None` or omitted, then all `logged_items <Log.logged_items>` are cleared.
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are cleared.
 
         delete_entry : bool : default True
             specifies whether to delete the entry (if `True`) from the log to which it belongs, or just
@@ -855,7 +941,7 @@ class Log:
             specifies whether user confirmation is required before clearing the entries.
 
             .. note::
-                If **confirm** is `True`, only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
+                If **confirm** is `True`, only a single confirmation will occur for a list or *ALL*
 
         """
 
@@ -871,7 +957,7 @@ class Log:
                 if delete == 'n':
                     return
 
-            # Reset entries
+            # Clear entries
             for entry in entries:
                 self.logged_entries[entry]=[]
                 if delete_entry:
@@ -882,88 +968,139 @@ class Log:
                     del self.logged_entries[entry][0:]
                 assert True
 
+    @tc.typecheck
     def print_entries(self,
-                      entries=None,
-                      csv=False,
-                      # synch_time=False,
-                      *args):
+                      entries:tc.optional(tc.any(str, list, is_component))=ALL,
+                      width:int=120,
+                      display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
+                      ):
         """
         print_entries(          \
-              entries=None,     \
-              csv=False,        \
+              entries=ALL,      \
+              width=120,        \
+              display=None      \
             )
 
-        Print values of entries
+        Print summary of the Log's entries in a (human-readable) table format.
 
-        If entries is the keyword *ALL_ENTRIES*, print all entries in the self.owner.prefs.logPref list
-        Issue a warning if an entry is not in the Log dict
+        Arguments
+        ---------
+
+        entries : string, Component or list containing either : default ALL
+            specifies the entries of the Log to printed;  they must be `loggable_items <Log.loggable_items>` of the
+            Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are printed.
+
+        width : int : default 120
+            specifies the width of the display. The widths of each column are adjusted accordingly, and based
+            on which items are displayed (see **display** below);  information that does not fit within its column's
+            width is truncated and suffixes with an ellipsis.
+
+        display : TIME, CONTEXT, VALUE, a list containing any of these, or ALL : default ALL
+            specifies the information items to display.  The name of the entry is always displayed, followed by the 
+            specified items;  the widths of the columns for the items is dynamically adjusted, based on how many
+            are specified, allowing more information about one to be shown by omitting others (this is useful 
+            if the context strings are long and/or the values are arrays).
+            
         """
 
         entries = self._validate_entries_arg(entries, logged=True)
 
-        if csv is True:
-            print(self.csv(entries))
-            return
+        if not entries:
+            return None
 
-        variable_width = 50
+        class options(IntEnum):
+            NONE = 0
+            TIME = 2
+            CONTEXT = 4
+            VALUE = 8
+            ALL = TIME + CONTEXT + VALUE
+
+        display = display or ALL
+        if not isinstance(display, list):
+            display = [display]
+
+        option_flags = options.NONE
+        if TIME in display:
+            option_flags |= options.TIME
+        if CONTEXT in display:
+            option_flags |= options.CONTEXT
+        if VALUE in display:
+            option_flags |= options.VALUE
+        if ALL in display:
+            option_flags = options.ALL
+
+        full_width = width
+        item_name_width = 15
         time_width = 10
-        # time_width = 5
         context_width = 70
-        value_width = 7
-        kwSpacer = ' '
+        value_width = 30
+        spacer = ' '
+        value_spacer_width = 3
+        value_spacer = " ".ljust(value_spacer_width)
+        base_width = item_name_width
 
+        # FIX: COULD "ALGORITHMIZE" THIS:
+        if option_flags == options.TIME:
+            pass
+        elif option_flags == options.CONTEXT:
+            context_width = full_width - base_width
+        elif option_flags == options.VALUE:
+            value_width = full_width - base_width
+        elif option_flags == options.TIME + options.CONTEXT:
+            context_width = full_width - time_width - base_width
+        elif option_flags == options.TIME + options.VALUE:
+            value_width = full_width - time_width - base_width
+        elif option_flags == options.CONTEXT + options.VALUE:
+            context_width = full_width - value_width
+            value_width = full_width - context_width
+        elif option_flags == options.ALL:
+            pass
+        else:
+            raise LogError("PROGRAM ERROR:  unrecognized state of option_flags: {}".format(option_flags))
 
-        # MODIFIED 12/4/17 OLD: [USES Time]
-        # header = "Variable:".ljust(variable_width, kwSpacer)
-        # if not args or kwTime in args:
-        #     header = header + " " + kwTime.ljust(time_width, kwSpacer)
-        # if not args or kwContext in args:
-        #     header = header + " " + kwContext.ljust(context_width, kwSpacer)
-        # if not args or kwValue in args:
-        #     # header = header + "   " + kwValue.rjust(value_width)
-        #     header = header + "  " + kwValue
-        # MODIFIED 12/4/17 NEW: [USES entry]
-        header = "Logged Item:".ljust(variable_width, kwSpacer)
-        if not args or kwTime in args:
-            header = "Time".ljust(time_width, kwSpacer) + header
-        if not args or kwContext in args:
-            header = header + " " + kwContext.ljust(context_width, kwSpacer)
-        if not args or kwValue in args:
-            header = header + "  " + kwValue
-        # MODIFIED 12/4/17 END
+        header = "Logged Item:".ljust(item_name_width, spacer)
+        if options.TIME & option_flags:
+            header = header + TIME.capitalize().ljust(time_width, spacer)
+        if options.CONTEXT & option_flags:
+            header = header + " " + CONTEXT.capitalize().ljust(context_width, spacer)
+        if options.VALUE & option_flags:
+            header = header + value_spacer + " " + VALUE.capitalize()
+            # header = header + value_spacer + VALUE.capitalize()
 
         print("\nLog for {0}:".format(self.owner.name))
         print('\n'+header+'\n')
 
         # Sort for consistency of reporting
-        attrib_names_sorted = sorted(self.logged_entries.keys())
-        kwSpacer = '.'
-        # for attrib_name in self.logged_entries:
-        for attrib_name in attrib_names_sorted:
+        # entry_names_sorted = sorted(self.logged_entries.keys())
+        entry_names_sorted = sorted(entries)
+        # spacer = '_'
+        # for entry_name in self.logged_entries:
+        for entry_name in entry_names_sorted:
             try:
-                datum = self.logged_entries[attrib_name]
+                datum = self.logged_entries[entry_name]
             except KeyError:
                 warnings.warn("{0} is not an entry in the Log for {1}".
-                      format(attrib_name, self.owner.name))
+                      format(entry_name, self.owner.name))
             else:
                 import numpy as np
                 for i, item in enumerate(datum):
                     time, context, value = item
-                    # if isinstance(value, np.ndarray):
-                    #     value = value[0]
+                    if len(context) > context_width:
+                        context = context[:context_width-3] + "..."
+                    value = str(value).replace('\n',',')
+                    if len(value) > value_width:
+                        value = value[:value_width-3].rstrip() + "..."
                     time_str = _time_string(time)
-                    attrib_name = self._alias_owner_name(attrib_name)
-                    data_str = repr(attrib_name).ljust(variable_width, kwSpacer)
-                    if not args or kwTime in args:
-                        data_str = time_str.ljust(time_width) + data_str
-                    if not args or kwContext in args:
-                        data_str = data_str + repr(context).ljust(context_width, kwSpacer)
-                    if not args or kwValue in args:
-                        data_str = data_str + "{:2.5}".format(str(value).strip("[]")).rjust(value_width) # <- WORKS
-
-        # {time:{width}}: {part[0]:>3}{part[1]:1}{part[2]:<3} {unit:3}".format(
-        #     jid=jid, width=width, part=str(mem).partition('.'), unit=unit))
-
+                    entry_name = self._alias_owner_name(entry_name)
+                    data_str = repr(entry_name).ljust(item_name_width, spacer)
+                    if options.TIME & option_flags:
+                        data_str = data_str + time_str.ljust(time_width)
+                    if options.CONTEXT & option_flags:
+                        data_str = data_str + repr(context).ljust(context_width, spacer)
+                    if options.VALUE & option_flags:
+                        format_str = "{{:2.{0}}}".format(value_width)
+                        data_str = data_str + value_spacer + format_str.format(value).ljust(value_width)
                     print(data_str)
                 if len(datum) > 1:
                     print("\n")
@@ -1007,10 +1144,10 @@ class Log:
         Arguments
         ---------
 
-        entries : string, Component or list of them
+        entries : string, Component or list containing either : default ALL
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are included.
 
         COMMENT:
         time : TimeScale or ALL : default ALL
@@ -1033,6 +1170,9 @@ class Log:
 
         entries = self._validate_entries_arg(entries, logged=True)
 
+        if not entries:
+            return None
+
         if owner_name is True:
             owner_name_str = self.owner.name
             lb = "["
@@ -1048,10 +1188,9 @@ class Log:
             time_values.extend([item.time
                                 for item in self.logged_entries[entry]
                                 if all(i is not None for i in item.time)])
-        if all(all(i for i in t) for t in time_values):
-            for time_scale in LogTimeScaleIndices:
-                time_values.sort(key=lambda tup: tup[time_scale])
-
+        # Insure that all time values are assigned, get rid of duplicates, and sort
+        if all(all(i is not None for i in t) for t in time_values):
+            time_values = sorted(list(set(time_values)))
         npa = []
 
         # Create time rows (one for each time scale)
@@ -1067,7 +1206,7 @@ class Log:
         else:
             max_len = max([len(self.logged_entries[e]) for e in entries])
 
-            # If there are no  only supports entries of the same length
+            # If there are no time values, only support entries of the same length
             if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
                 raise LogError("nparray output requires that all entries have time values or are of equal length")
 
@@ -1123,16 +1262,16 @@ class Log:
            For data without time stamps, items in the same row are not guaranteed to refer to the same time point.
 
         The **owner_name** argument can be used to prepend the header for each Component with its owner.
-        The **quotes** argument can be used to suppress or specifiy quotes to use around values.
+        The **quotes** argument can be used to suppress or specifiy quotes to use around numeric values.
 
 
         Arguments
         ---------
 
-        entries : string, Component or list of them
+        entries : string, Component or list containing either : default ALL
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or `None`, then all `logged_items <Log.logged_items>` are included.
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are included.
 
         owner_name : bool : default False
             specifies whether or not to include the Component's `owner <Log.owner>` in the header of each field;
@@ -1140,29 +1279,30 @@ class Log:
             it is "<entry name>".
 
         quotes : bool, str : default '
-            specifies whether or not to enclose values other than quotes (useful if they are arrays);
+            specifies whether or not to enclose numeric values in quotes (may be useful for arrays);
             if not specified or `True`, single quotes are used for *all* items;
-            if specified with a string, that is used to enclose *all* items;
+            if specified with a string, that is used in place of single quotes to enclose *all* items;
             if `False` or `None`, single quotes are used for headers (the items in the first row), but no others.
 
         Returns:
             CSV-formatted string
         """
 
+        # Get and transpose nparray of entries
+        try:
+            npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
+        except LogError as e:
+            raise LogError(e.args[0].replace('nparray', 'csv'))
+        npaT = npa.T
+
         if not quotes:
             quotes = ''
         elif quotes is True:
             quotes = '\''
 
-        try:
-            npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
-        except LogError as e:
-            raise LogError(e.args[0].replace('nparray', 'csv'))
-
-        npaT = npa.T
-
         # Headers
-        csv = "\'" + "\', \'".join(npaT[0]) + "\'"
+        csv = "\'" + "\', \'".join(i[0] if isinstance(i, list) else i for i in npaT[0]) + "\'"
+        # csv = "\'" + "\', \'".join(npaT[0]) + "\'"
         # Data
         for i in range(1, len(npaT)):
             csv += '\n' + ', '.join([str(j) for j in [str(k).replace(',','') for k in npaT[i]]]).\
@@ -1174,8 +1314,8 @@ class Log:
     def _validate_entries_arg(self, entries, loggable=True, logged=False):
         from psyneulink.components.component import Component
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
-        if entries is ALL_ENTRIES or entries is None:
+        # If ALL, set entries to all entries in self.logged_entries
+        if entries is ALL or entries is None:
             entries = self.logged_entries.keys()
 
         # If entries is a single entry, put in list for processing below
@@ -1192,7 +1332,7 @@ class Log:
                     raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
             if logged:
                 if entry not in self.logged_entries:
-                    raise LogError("{} is not currently being logged by {} (try using log_items)".
+                    raise LogError("{} is not currently being logged by {} (try using set_log_conditions)".
                                    format(repr(entry), self.owner.name))
         return entries
 
@@ -1212,7 +1352,7 @@ class Log:
     def loggable_items(self):
         """Return dict of loggable items.
 
-        Keys are names of the Components, values their LogLevels
+        Keys are names of the Components, values their LogConditions
         """
         # FIX: The following crashes during init as prefs have not all been assigned
         # return {key: value for (key, value) in [(c.name, c.logPref.name) for c in self.loggable_components]}
@@ -1245,10 +1385,10 @@ class Log:
 
     @property
     def logged_items(self):
-        """Dict of items that have logged `entries <Log.entries>`, indicating their specified `LogLevel`.
+        """Dict of items that have logged `entries <Log.entries>`, indicating their specified `LogCondition`.
         """
-        log_level = 'LogLevel.'
-        # Return LogLevel for items in log.entries
+        log_condition = 'LogCondition.'
+        # Return LogCondition for items in log.entries
 
         logged_items = {key: value for (key, value) in
                         # [(l, self.loggable_components[l].logPref.name)

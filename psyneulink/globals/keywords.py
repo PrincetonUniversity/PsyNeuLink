@@ -52,7 +52,7 @@ __all__ = [
     'INTEGRATOR_MECHANISM', 'INTERCEPT', 'INTERNAL', 'K_VALUE', 'kpMechanismControlAllocationsLogEntry',
     'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry', 'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry',
     'kwAddInputState', 'kwAddOutputState', 'kwAggregate', 'kwAssign', 'kwComponentCategory', 'kwComponentPreferenceSet',
-    'kwContext', 'kwDefaultPreferenceSetOwner', 'kwInitialPoint', 'kwInstantiate', 'kwMechanismAdjustFunction',
+    'kwDefaultPreferenceSetOwner', 'kwInitialPoint', 'kwInstantiate', 'kwMechanismAdjustFunction',
     'kwMechanismComponentCategory', 'kwMechanismConfidence', 'kwMechanismDefault', 'kwMechanismDefaultInputValue',
     'kwMechanismDefaultParams', 'kwMechanismDuration', 'kwMechanismExecuteFunction', 'kwMechanismExecutionSequenceTemplate',
     'kwMechanismInterrogateFunction', 'kwMechanismName', 'kwMechanismOutputValue', 'kwMechanismParams',
@@ -61,7 +61,7 @@ __all__ = [
     'kwPrefsOwner', 'kwProcessComponentCategory', 'kwProcessDefaultMechanism', 'kwProcessDefaultProjectionFunction',
     'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
     'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory', 'kwStateContext', 'kwStateName', 'kwStatePrefs',
-    'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'kwTime', 'kwValue', 'LCA', 'LEARNED_PARAM', 'LEARNING',
+    'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'LCA', 'LEARNED_PARAM', 'LEARNING',
     'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE',
     'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION',
     'LINEAR_FUNCTION', 'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'LOW',
@@ -84,7 +84,7 @@ __all__ = [
     'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION',
     'STABILITY_FUNCTION', 'STANDARD_ARGS','STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES', 'STATE', 'STATE_PARAMS',
     'STATE_TYPE', 'STATE_VALUE', 'STATES', 'SUBTRACTION', 'SUM', 'SYSTEM', 'SYSTEM_DEFAULT_CONTROLLER',
-    'SYSTEM_INIT', 'TARGET', 'TERMINAL', 'THRESHOLD', 'TIME_SCALE', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
+    'SYSTEM_INIT', 'TARGET', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_SCALE', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
     'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIALS_DIM', 'UNCHANGED', 'UNIFORM_DIST_FUNCTION',
     'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS', 'UTILITY_INTEGRATOR_FUNCTION',
     'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE', 'VECTOR',
@@ -378,9 +378,7 @@ kwComponentPreferenceSet = 'PreferenceSet'
 
 #region ------------------------------------------------   LOG    ------------------------------------------------------
 
-kwTime = 'Time'
-kwContext = 'Context'
-kwValue = 'Value'
+TIME = 'time'
 LOG_ENTRIES = 'LOG_ENTRIES'
 INITIALIZATION = 'INITIALIZATION'
 VALIDATION = 'VALIDATION'

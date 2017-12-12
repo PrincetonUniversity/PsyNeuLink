@@ -299,6 +299,7 @@ Class Reference
 
 """
 
+import datetime
 import logging
 
 from toposort import toposort
@@ -421,6 +422,8 @@ class Scheduler(object):
 
         self._init_counts()
         self.clock = Clock()
+        self.date_creation = datetime.datetime.now()
+        self.date_last_run_end = None
 
     # the consideration queue is the ordered list of sets of nodes in the graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
@@ -614,5 +617,8 @@ class Scheduler(object):
             self.clock._increment_time(TimeScale.PASS)
 
         self.clock._increment_time(TimeScale.TRIAL)
+
+        if self.termination_conds[TimeScale.RUN].is_satisfied():
+            self.date_last_run_end = datetime.datetime.now()
 
         return self.execution_list
