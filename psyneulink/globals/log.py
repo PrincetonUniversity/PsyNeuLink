@@ -378,7 +378,7 @@ import numpy as np
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.utilities import ContentAddressableList, AutoNumber, is_component
 from psyneulink.globals.keywords \
-    import INITIALIZING, EXECUTING, VALIDATE, LEARNING, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
+    import INITIALIZING, EXECUTING, VALIDATE, CONTROL, LEARNING, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
 
 
 __all__ = [
@@ -432,6 +432,8 @@ def _get_log_context(context):
         context_flag |= LogCondition.VALIDATION
     if EXECUTING in context:
         context_flag |= LogCondition.EXECUTION
+    if CONTROL in context:
+        context_flag |= LogCondition.CONTROL
     if LEARNING in context:
         context_flag |= LogCondition.LEARNING
     if COMMAND_LINE in context:
@@ -861,6 +863,9 @@ class Log:
         if system:
             # FIX: Add VALIDATE?
             if context_flags == LogCondition.EXECUTION:
+                time = system.scheduler_processing.clock.simple_time
+                time = (time.run, time.trial, time.time_step)
+            elif context_flags == LogCondition.CONTROL:
                 time = system.scheduler_processing.clock.simple_time
                 time = (time.run, time.trial, time.time_step)
             elif context_flags == LogCondition.LEARNING:
@@ -1332,8 +1337,10 @@ class Log:
                     raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
             if logged:
                 if entry not in self.logged_entries:
-                    raise LogError("{} is not currently being logged by {} (try using set_log_conditions)".
-                                   format(repr(entry), self.owner.name))
+                    # raise LogError("{} is not currently being logged by {} (try using set_log_conditions)".
+                    #                format(repr(entry), self.owner.name))
+                    print("\n{} is not currently being logged by {} (try using set_log_conditions)".
+                          format(repr(entry), self.owner.name))
         return entries
 
     def _alias_owner_name(self, name):
