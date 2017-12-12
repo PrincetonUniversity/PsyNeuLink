@@ -2029,22 +2029,6 @@ class State_Base(State):
         self._owner = assignment
 
     @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, assignment):
-
-        # MODIFIED 7/8/17 OLD:
-        # from math import isnan
-        # if isinstance(assignment, np.ndarray) and assignment.ndim == 2 and isnan(assignment[0][0]):
-        #             TEST = True
-        # MODIFIED 7/8/17 END
-
-        self._value = assignment
-        self.log._log_value(assignment)
-
-    @property
     def projections(self):
         return self._projections
 

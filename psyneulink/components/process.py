@@ -2573,7 +2573,6 @@ class ProcessInputState(OutputState):
         # self.index = PRIMARY
         # self.calculate = Linear
 
-    # MODIFIED 2/1717 NEW:
     @property
     def value(self):
         return self._value
@@ -2582,8 +2581,6 @@ class ProcessInputState(OutputState):
     def value(self, assignment):
         self._value = assignment
         self.owner._update_input()
-    # MODIFIED 2/1717 END
-
 
 ProcessTuple = namedtuple('ProcessTuple', 'process, input')
 
