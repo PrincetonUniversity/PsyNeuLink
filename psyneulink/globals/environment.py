@@ -411,6 +411,7 @@ Class Reference
 
 """
 
+import datetime
 import warnings
 
 from collections import Iterable
@@ -679,6 +680,13 @@ def run(object,
 
         if call_after_trial:
             call_after_trial()
+
+    try:
+        # this will fail on processes, which do not have schedulers
+        object.scheduler_processing.date_last_run_end = datetime.datetime.now()
+        object.scheduler_learning.date_last_run_end = datetime.datetime.now()
+    except AttributeError:
+        pass
 
     # Restore learning state
     try:

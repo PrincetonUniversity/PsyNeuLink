@@ -5048,6 +5048,7 @@ class DriftDiffusionIntegrator(
         time_step_size=1.0,             \
         t0=0.0,                         \
         decay=0.0,                      \
+        threshold=1.0                   \
         initializer,                    \
         params=None,                    \
         owner=None,                     \
@@ -5056,7 +5057,8 @@ class DriftDiffusionIntegrator(
 
     .. _DriftDiffusionIntegrator:
 
-    Accumulate evidence overtime based on a stimulus, rate, previous position, and noise.
+    Accumulates evidence over time based on a stimulus, rate, previous position, and noise. Stops accumulating at a
+    threshold.
 
     Arguments
     ---------
@@ -5082,6 +5084,17 @@ class DriftDiffusionIntegrator(
     initializer : float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
+
+    threshold : float : default 0.0
+        specifies the threshold (boundaries) of the drift diffusion process (i.e., at which the
+        integration process is assumed to terminate).
+
+        Once the magnitude of the decision variable has exceeded the threshold, the function will simply return the
+        threshold magnitude (with the appropriate sign) for that execution and any future executions.
+
+        If the function is in a `DDM mechanism <DDM>`, crossing the threshold will also switch the `is_finished`
+        attribute from False to True. This attribute may be important for the `Scheduler <Scheduler>` when using
+         `Conditions <Condition>` such as `WhenFinished <WhenFinished>`.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5136,6 +5149,20 @@ class DriftDiffusionIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
+    threshold : float : default 0.0
+        when used properly determines the threshold (boundaries) of the drift diffusion process (i.e., at which the
+        integration process is assumed to terminate).
+
+        If the system is assembled as follows, then the DriftDiffusionIntegrator function stops accumulating when its
+        value reaches +threshold or -threshold
+
+            (1) the function is used in the `DDM mechanism <DDM>`
+
+            (2) the mechanism is part of a `System <System>` with a `Scheduler <Scheduler>` which applies the
+            `WhenFinished <WhenFinished>` `Condition <Condition>` to the mechanism
+
+        Otherwise, `threshold <DriftDiffusionIntegrator.threshold>` does not influence the function at all.
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -5173,6 +5200,7 @@ class DriftDiffusionIntegrator(
                  time_step_size=1.0,
                  t0=0.0,
                  initializer=ClassDefaults.variable,
+                 threshold=100.0,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -5183,6 +5211,7 @@ class DriftDiffusionIntegrator(
                                                   time_step_size=time_step_size,
                                                   t0=t0,
                                                   initializer=initializer,
+                                                  threshold=threshold,
                                                   noise=noise,
                                                   offset=offset,
                                                   params=params)
@@ -5254,10 +5283,16 @@ class DriftDiffusionIntegrator(
         previous_value = np.atleast_2d(previous_value)
         new_value = variable
 
+
         value = previous_value + rate * new_value * time_step_size  \
                 + np.sqrt(time_step_size * noise) * np.random.normal()
 
-        adjusted_value = value + offset
+        if np.all(abs(value) < self.threshold):
+            adjusted_value = value + offset
+        else:
+            adjusted_value = self.threshold
+            for i in range(len(value)):
+                adjusted_value[i] = self.threshold[i]*np.sign(value[i][0])
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
@@ -8276,7 +8311,7 @@ COMMENT
         # MODIFIED 11/12/17 NEW:
         if self.metric is ENTROPY:
             self._metric_fct = Distance(metric=CROSS_ENTROPY, normalize=self.normalize)
-        elif self.metric in DISTANCE_METRICS:
+        elif self.metric in DISTANCE_METRICS._set():
             self._metric_fct = Distance(metric=self.metric, normalize=self.normalize)
         # MODIFIED 11/12/17 END
 
