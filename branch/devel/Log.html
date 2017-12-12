@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.0rc1+62.gb0f3828.dirty documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.0rc1+63.g9cff8ef.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+62.gb0f3828.dirty documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+63.g9cff8ef.dirty documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+62
+                0.4.0rc1+63
               </div>
             
           
@@ -279,16 +279,16 @@ the Logs of their <a class="reference internal" href="State.html"><span class="d
 method of a Log, or directly by specifying a LogCondition for the value a Component’s <code class="xref any docutils literal"><span class="pre">logPref</span></code> item
 of its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.prefs" title="psyneulink.components.component.Component.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> attribute.  The former is easier, and allows multiple Components to be specied at
 once, while the latter affords more control over the specification (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>).  LogConditions are treated as
-binary “flags”, and can be combined to permit logging under more than one contact or boolean combinations of LogConditions
-using bitwise operators (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).</p>
+binary “flags”, and can be combined to permit logging under more than one condition, using bitwise operators on
+LogConditions (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Currently, the only <a class="reference internal" href="#psyneulink.globals.log.LogCondition" title="psyneulink.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogConditions</span></code></a> supported are: <a class="reference internal" href="#psyneulink.globals.log.LogCondition.OFF" title="psyneulink.globals.log.LogCondition.OFF"><code class="xref any py py-attr docutils literal"><span class="pre">OFF</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.LogCondition.INITIALIZATION" title="psyneulink.globals.log.LogCondition.INITIALIZATION"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZATION</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.LogCondition.EXECUTION" title="psyneulink.globals.log.LogCondition.EXECUTION"><code class="xref any py py-attr docutils literal"><span class="pre">EXECUTION</span></code></a> and <a class="reference internal" href="#psyneulink.globals.log.LogCondition.LEARNING" title="psyneulink.globals.log.LogCondition.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>.</p>
+<p class="last">Currently, the <a class="reference internal" href="#psyneulink.globals.log.LogCondition.VALIDATION" title="psyneulink.globals.log.LogCondition.VALIDATION"><code class="xref any py py-attr docutils literal"><span class="pre">VALIDATION</span></code></a> <a class="reference internal" href="#psyneulink.globals.log.LogCondition" title="psyneulink.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a> is not implemented.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Using the <a class="reference internal" href="#psyneulink.globals.log.LogCondition.INITIALIZATION" title="psyneulink.globals.log.LogCondition.INITIALIZATION"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZATION</span></code></a> LogCondition to log the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Component during its initialization
-requires that it be assigned in the <strong>prefs</strong> argument of the Component’s constructor.  For example:</p>
+<p>Using the <a class="reference internal" href="#psyneulink.globals.log.LogCondition.INITIALIZATION" title="psyneulink.globals.log.LogCondition.INITIALIZATION"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZATION</span></code></a> <a class="reference internal" href="#psyneulink.globals.log.LogCondition" title="psyneulink.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a> to log the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Component during its
+initialization requires that it be assigned in the <strong>prefs</strong> argument of the Component’s constructor.  For example:</p>
 <div class="last highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="o">&gt;&gt;</span> <span class="n">T</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span>
 <span class="o">...</span>        <span class="n">prefs</span><span class="o">=</span><span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">LOG_PREF</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">PreferenceEntry</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">LogCondition</span><span class="o">.</span><span class="n">INITIALIZATION</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">PreferenceLevel</span><span class="o">.</span><span class="n">INSTANCE</span><span class="p">)})</span>
@@ -438,18 +438,6 @@ reported.</p>
 <dt id="psyneulink.globals.log.LogCondition.CONTROL">
 <code class="descname">CONTROL</code><em class="property"> = 64</em><a class="headerlink" href="#psyneulink.globals.log.LogCondition.CONTROL" title="Permalink to this definition">¶</a></dt>
 <dd><p>Record all value assignment during control phase of Composition execution.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.globals.log.LogCondition.VALUE_ASSIGNMENT">
-<code class="descname">VALUE_ASSIGNMENT</code><em class="property"> = 128</em><a class="headerlink" href="#psyneulink.globals.log.LogCondition.VALUE_ASSIGNMENT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Record final value assignments during Composition execution.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.globals.log.LogCondition.FINAL">
-<code class="descname">FINAL</code><em class="property"> = 256</em><a class="headerlink" href="#psyneulink.globals.log.LogCondition.FINAL" title="Permalink to this definition">¶</a></dt>
-<dd><p>Synonym of VALUE_ASSIGNMENT.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -755,7 +743,7 @@ property of its class, and its own <a class="reference internal" href="Component
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+62.gb0f3828.dirty',
+            VERSION:'0.4.0rc1+63.g9cff8ef.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
