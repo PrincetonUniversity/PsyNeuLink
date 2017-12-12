@@ -203,9 +203,11 @@ They can also be exported in numpy array and CSV formats.  The following shows t
 for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
     >> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
-    'Index', 'noise', 'RESULTS'
-    0, 0.0, 0.0 0.0
-    1, 0.0, 0.0 0.0
+    '['Run']', '[0]', '[0]', '[0]', '[0]'
+    'Trial', 0, 1, 0, 1
+    'Time_step', 0, 0, 0, 0
+    noise, 0.0, 0.0
+    RESULTS, 0.0 0.0, 0.0 0.0
     COMMENT:
     <BLANKLINE>
     COMMENT
@@ -213,9 +215,9 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     # Display the csv formatted entry of Log for ``proj_A_to_B``
     #    with quotes around values and the Projection's name included in the header:
     >> print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
-    'Index', 'matrix'
-    '0', '1.0 1.0 1.0' '1.0 1.0 1.0'
-    '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
+    '['Run']', '['Trial']', '['Time_step']', 'matrix'
+    '0', '0', '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
+    '0', '1', '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
     COMMENT:
     <BLANKLINE>
     COMMENT
@@ -226,9 +228,11 @@ reported.
 The following shows the Log of ``proj_A_to_B`` in numpy array format::
 
     >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
-    array([[[0], [1]],
-           [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
-            [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
+    array[[[0] [0]]
+          [[0] [1]]
+          [[1] [1]]
+           [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
+
 
 COMMENT:
  MY MACHINE:
@@ -613,8 +617,6 @@ class Log:
 
     """
 
-    ALL_LOG_ENTRIES = 'all_log_entries'
-
     def __init__(self, owner, entries=None):
         """Initialize Log with list of entries
 
@@ -891,7 +893,7 @@ class Log:
         for entry in entries:
             self._log_value(self.loggable_components[self._dealias_owner_name(entry)].value, context=COMMAND_LINE)
 
-    def clear_entries(self, entries=ALL_LOG_ENTRIES, delete_entry=True, confirm=False):
+    def clear_entries(self, entries=ALL, delete_entry=True, confirm=False):
         """Clear one or more entries either by deleting the entry or just removing its data.
 
         Arguments
@@ -915,7 +917,7 @@ class Log:
             specifies whether user confirmation is required before clearing the entries.
 
             .. note::
-                If **confirm** is `True`, only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
+                If **confirm** is `True`, only a single confirmation will occur for a list or `ALL`
 
         """
 
@@ -931,7 +933,7 @@ class Log:
                 if delete == 'n':
                     return
 
-            # Reset entries
+            # Clear entries
             for entry in entries:
                 self.logged_entries[entry]=[]
                 if delete_entry:
@@ -1288,7 +1290,7 @@ class Log:
     def _validate_entries_arg(self, entries, loggable=True, logged=False):
         from psyneulink.components.component import Component
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
+        # If ALL, set entries to all entries in self.logged_entries
         if entries is ALL or entries is None:
             entries = self.logged_entries.keys()
 
