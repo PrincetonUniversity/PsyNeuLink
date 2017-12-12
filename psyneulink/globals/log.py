@@ -162,8 +162,8 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     >>> my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULTS])
     >>> proj_A_to_B.set_log_conditions(pnl.MATRIX)
 
-
-Executing the Process generates entries in the Logs, that can then be displayed in several ways::
+Note that since no LogCondition was specified, the default (LogCondition.EXECUTION) is used. Executing the Process
+generates entries in the Logs, that can then be displayed in several ways::
 
     # Execute each Process twice (to generate some values in the logs):
     >>> my_process.execute()
@@ -183,19 +183,23 @@ Notice that entries dictionary of the Log for ``my_mech_B`` is empty, since no i
 it.  The results of the two other logs can be printed to the console using the `print_entries <Log.print_entries>`
 method of a Log::
 
-        # Print the Log for ``my_mech_A``:
-        >> my_mech_A.log.print_entries()
+    # Print the Log for ``my_mech_A``:
+    >> my_mech_A.log.print_entries()
 
-        Log for mech_A:
+    Log for mech_A:
 
-        Time      Logged Item:                                       Context                                                                 Value
+    Logged Item:   Time       Context                                                                   Value
 
-        None      'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        None      'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+    'RESULTS'      None      ' EXECUTING  PROCESS Process-0'                                          [ 0.  0.]
+    'RESULTS'      None      ' EXECUTING  PROCESS Process-0'                                          [ 0.  0.]
 
 
-        None      'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        None      'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+    'value'        None      ' INITIALIZING mech_A | TransferMechanism INITIALIZING : Component._...'   [[ 0.  0.]]
+    'value'        None      ' INITIALIZING mech_A | TransferMechanism'                               None
+
+
+    'noise'        None      ' EXECUTING  PROCESS Process-0'                                          [ 0.]
+    'noise'        None      ' EXECUTING  PROCESS Process-0'                                          [ 0.]
 
 
 They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
@@ -1139,6 +1143,9 @@ class Log:
 
         entries = self._validate_entries_arg(entries, logged=True)
 
+        if not entries:
+            return None
+
         if owner_name is True:
             owner_name_str = self.owner.name
             lb = "["
@@ -1173,7 +1180,7 @@ class Log:
         else:
             max_len = max([len(self.logged_entries[e]) for e in entries])
 
-            # If there are no  only supports entries of the same length
+            # If there are no time values, only support entries of the same length
             if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
                 raise LogError("nparray output requires that all entries have time values or are of equal length")
 
