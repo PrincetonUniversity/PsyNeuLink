@@ -799,8 +799,13 @@ class Log:
         # Get System in which it is being executed (if any)
         try:
             systems = list(ref_mech.systems.keys())
-            system = next((s for s in systems if s.name in context), None)
+            system = next(s for s in systems if s.name in context)
         except AttributeError:
+            # ref_mech has not been assigned to a System
+            systems = None
+            system = None
+        except StopIteration:
+            # ref_mech is assigned to one or more Systems, but not currently being executed within one of them
             system = None
 
         if system:
@@ -813,6 +818,17 @@ class Log:
                 time = (time.run, time.trial, time.time_step)
             else:
                 time = None
+
+        elif systems and (context_flags & LogCondition.COMMAND_LINE):
+            # Search for the most recently run Scheduler within any of the Systems to which the ref_mech belongs
+            # and get its time
+            run_times = []
+            for s in systems:
+                run_times.append((s.scheduler_processing.data_last_run_end, s.process_scheduler.simple_time))
+                run_times.append((s.scheduler_learning.data_last_run_end, s.learning_scheduler.simple_time))
+            gmt, time = max(run_times.append, key=lambda x : x[1])
+            assert True
+
 
         else:
             if self.owner.verbosePref:
