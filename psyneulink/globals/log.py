@@ -949,7 +949,7 @@ class Log:
                       ):
         """
         print_entries(          \
-              entries=None,     \
+              entries=ALL,      \
               width=120,        \
               display=None      \
             )
