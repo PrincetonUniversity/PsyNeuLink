@@ -148,6 +148,7 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
+    >>> import psyneulink as pnl
     >>> my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
     >>> my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
     >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
@@ -174,9 +175,9 @@ generates entries in the Logs, that can then be displayed in several ways::
 
     # Execute the System twice (to generate some values in the logs):
     >>> my_system.execute()
-    array([ 0.,  0.,  0.])
+    [array([ 0.,  0.,  0.])]
     >>> my_system.execute()
-    array([ 0.,  0.,  0.])
+    [array([ 0.,  0.,  0.])]
 
     COMMENT:
     FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN DICT ENTRIES IN UNRELIABLE ORDERS
@@ -1187,14 +1188,9 @@ class Log:
             time_values.extend([item.time
                                 for item in self.logged_entries[entry]
                                 if all(i is not None for i in item.time)])
-        # Insure that all time values are assigned
+        # Insure that all time values are assigned, get rid of duplicates, and sort
         if all(all(i is not None for i in t) for t in time_values):
-            # FIX: GET RID OF DUPLICATES
-            time_values = list(set(time_values))
-            for time_scale in LogTimeScaleIndices:
-                time_values.sort(key=lambda tup: tup[time_scale])
-            time_values = list(reversed(time_values))
-
+            time_values = sorted(list(set(time_values)))
         npa = []
 
         # Create time rows (one for each time scale)
