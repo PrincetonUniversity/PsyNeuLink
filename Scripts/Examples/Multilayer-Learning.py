@@ -79,7 +79,7 @@ z = pnl.Process(
 
 
 def print_header(system):
-    print("\n\n**** TRIAL: ", system.scheduler_processing.times[pnl.TimeScale.RUN][pnl.TimeScale.TRIAL])
+    print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
 
 
 def show_target(system):
@@ -104,8 +104,8 @@ mySystem = pnl.System(
 )
 
 # Log Middle_Weights of MappingProjection to Hidden_Layer_2
-# Hidden_Layer_2.log_items('Middle Weights')
-Middle_Weights.log_items('matrix')
+# Hidden_Layer_2.set_log_conditions('Middle Weights')
+Middle_Weights.set_log_conditions('matrix')
 
 mySystem.reportOutputPref = True
 # Shows graph will full information:

@@ -304,7 +304,7 @@ from psyneulink.components.states.parameterstate import _get_parameter_state
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, COMMAND_LINE, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SEPARATOR_BAR, SLOPE, SUM, kwAssign
-from psyneulink.globals.log import LogEntry, LogLevel
+from psyneulink.globals.log import LogEntry, LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
@@ -975,9 +975,9 @@ class ControlSignal(ModulatorySignal):
             context = context + SEPARATOR_BAR + self.name + kwAssign
 
         # If context is consistent with log_pref:
-        if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-                (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
-                (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context))):
+        if (log_pref is LogCondition.ALL_ASSIGNMENTS or
+                (log_pref is LogCondition.EXECUTION and EXECUTING in context) or
+                (log_pref is LogCondition.VALUE_ASSIGNMENT and (EXECUTING in context))):
             # record info in log
 
 # FIX: ENCODE ALL OF THIS AS 1D ARRAYS IN 2D PROJECTION VALUE, AND PASS TO .value FOR LOGGING
