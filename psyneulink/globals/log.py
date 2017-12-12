@@ -105,7 +105,7 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
 .. _Log_LogLevels:
 
 LogConditions
-~~~~~~~~~
+~~~~~~~~~~~~~
 
 Configuring a Component to be logged is done using a `LogCondition`, that specifies the conditions under which its
 `value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_conditions <Log.set_log_conditions>`
@@ -116,7 +116,10 @@ binary "flags", and can be combined to permit logging under more than one contac
 using bitwise operators (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
 
 .. note::
-   Currently, the only `LogConditions <LogCondition>` supported are: `OFF`, `INITIALIZATION`, `EXECUTION` and `LEARNING`.
+   Currently, the `VALIDATION` `LogCondition <LogCondition>` is not implemented.
+   COMMENT:
+   `VALUE_ASSIGNMENT` AND `FINAL` are also not yet implemented, but these do not appear in the HTML documentation
+   COMMENT
 
 .. note::
    Using the `INITIALIZATION` LogCondition to log the `value <Component.value>` of a Component during its initialization
@@ -406,9 +409,9 @@ class LogCondition(IntEnum):
     CONTROL = 1<<6                  # 64
     """Record all value assignment during control phase of Composition execution."""
     VALUE_ASSIGNMENT = 1<<7         # 128
-    """Record final value assignments during Composition execution."""
+    # """Record final value assignments during Composition execution."""
     FINAL = 1<<8                    # 256
-    """Synonym of VALUE_ASSIGNMENT."""
+    # """Synonym of VALUE_ASSIGNMENT."""
     COMMAND_LINE = 1 << 9           # 512
     ALL_ASSIGNMENTS = \
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL | VALUE_ASSIGNMENT | FINAL
