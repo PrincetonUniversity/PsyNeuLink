@@ -945,15 +945,13 @@ class Log:
     def print_entries(self,
                       entries:tc.optional(tc.any(str, list, is_component))=ALL,
                       width:int=120,
-                      options:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
-                      csv:bool=False,
+                      display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
                       ):
         """
         print_entries(          \
               entries=None,     \
               width=120,        \
-              options=None      \
-              csv=False,        \
+              display=None      \
             )
 
         Print summary of the Log's entries in a (human-readable) table format.
@@ -967,39 +965,40 @@ class Log:
             If **entries** is `ALL` or is not specified, then all `logged_items <Log.logged_items>` are printed.
 
         width : int : default 120
-            specifies the width of the display;  fields within it are adjusted accordingly (see **options**).
+            specifies the width of the display. The widths of each column are adjusted accordingly, and based
+            on which items are displayed (see **display** below);  information that does not fit within its column's
+            width is truncated and suffixes with an ellipsis.
 
-        options : TIME, CONTEXT, VALUE, a list containing any of these, or ALL : default ALL
-            specifies the information to display.  The name of the entry is always displayed.
-
+        display : TIME, CONTEXT, VALUE, a list containing any of these, or ALL : default ALL
+            specifies the information items to display.  The name of the entry is always displayed, followed by the 
+            specified items;  the widths of the columns for the items is dynamically adjusted, based on how many
+            are specified, allowing more information about one to be shown by omitting others (this is useful 
+            if the context strings are long and/or the values are arrays).
+            
         """
 
         entries = self._validate_entries_arg(entries, logged=True)
 
-        if csv is True:
-            print(self.csv(entries))
-            return
-
-        class options_mask(IntEnum):
+        class options(IntEnum):
             NONE = 0
             TIME = 2
             CONTEXT = 4
             VALUE = 8
             ALL = TIME + CONTEXT + VALUE
 
-        options = options or ALL
-        if not isinstance(options, list):
-            options = [options]
+        display = display or ALL
+        if not isinstance(display, list):
+            display = [display]
 
-        option_flags = options_mask.NONE
-        if TIME in options:
-            option_flags |= options_mask.TIME
-        if CONTEXT in options:
-            option_flags |= options_mask.CONTEXT
-        if VALUE in options:
-            option_flags |= options_mask.VALUE
-        if ALL in options:
-            option_flags = options_mask.ALL
+        option_flags = options.NONE
+        if TIME in display:
+            option_flags |= options.TIME
+        if CONTEXT in display:
+            option_flags |= options.CONTEXT
+        if VALUE in display:
+            option_flags |= options.VALUE
+        if ALL in display:
+            option_flags = options.ALL
 
         full_width = width
         item_name_width = 15
@@ -1012,37 +1011,38 @@ class Log:
         base_width = item_name_width + value_spacer_width
 
         # FIX: COULD "ALGORITHMIZE" THIS:
-        if option_flags == options_mask.TIME:
+        if option_flags == options.TIME:
             pass
-        elif option_flags == options_mask.CONTEXT:
+        elif option_flags == options.CONTEXT:
             context_width = full_width - base_width
-        elif option_flags == options_mask.VALUE:
+        elif option_flags == options.VALUE:
             value_width = full_width - base_width
-        elif option_flags == options_mask.TIME + options_mask.CONTEXT:
+        elif option_flags == options.TIME + options.CONTEXT:
             context_width = full_width - time_width - base_width
-        elif option_flags == options_mask.TIME + options_mask.VALUE:
+        elif option_flags == options.TIME + options.VALUE:
             value_width = full_width - time_width - base_width
-        elif option_flags == options_mask.CONTEXT + options_mask.VALUE:
+        elif option_flags == options.CONTEXT + options.VALUE:
             context_width = full_width - value_width
             value_width = full_width - context_width
-        elif option_flags == options_mask.ALL:
+        elif option_flags == options.ALL:
             pass
         else:
             raise LogError("PROGRAM ERROR:  unrecognized state of option_flags: {}".format(option_flags))
 
         header = "Logged Item:".ljust(item_name_width, spacer)
-        if options_mask.TIME & option_flags:
-            header = TIME.capitalize().ljust(time_width, spacer) + header
-        if options_mask.CONTEXT & option_flags:
+        if options.TIME & option_flags:
+            header = header + TIME.capitalize().ljust(time_width, spacer)
+        if options.CONTEXT & option_flags:
             header = header + " " + CONTEXT.capitalize().ljust(context_width, spacer)
-        if options_mask.VALUE & option_flags:
+        if options.VALUE & option_flags:
             header = header + value_spacer + " " + VALUE.capitalize()
 
         print("\nLog for {0}:".format(self.owner.name))
         print('\n'+header+'\n')
 
         # Sort for consistency of reporting
-        entry_names_sorted = sorted(self.logged_entries.keys())
+        # entry_names_sorted = sorted(self.logged_entries.keys())
+        entry_names_sorted = sorted(entries)
         # spacer = '_'
         # for entry_name in self.logged_entries:
         for entry_name in entry_names_sorted:
@@ -1063,11 +1063,11 @@ class Log:
                     time_str = _time_string(time)
                     entry_name = self._alias_owner_name(entry_name)
                     data_str = repr(entry_name).ljust(item_name_width, spacer)
-                    if options_mask.TIME & option_flags:
-                        data_str = time_str.ljust(time_width) + data_str
-                    if options_mask.CONTEXT & option_flags:
+                    if options.TIME & option_flags:
+                        data_str = data_str + time_str.ljust(time_width)
+                    if options.CONTEXT & option_flags:
                         data_str = data_str + repr(context).ljust(context_width, spacer)
-                    if options_mask.VALUE & option_flags:
+                    if options.VALUE & option_flags:
                         format_str = "{{:2.{0}}}".format(value_width)
                         data_str = data_str + value_spacer + format_str.format(value).ljust(value_width)
                     print(data_str)

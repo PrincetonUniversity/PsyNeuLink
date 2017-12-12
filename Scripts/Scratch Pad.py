@@ -2673,7 +2673,7 @@ def test_multilayer():
                                            atol=1e-08,
                                            err_msg='Failed on test of logged values')
 
-    Middle_Weights.log.print_entries(width=200, options=[pnl.TIME, pnl.CONTEXT, pnl.VALUE])
+    Middle_Weights.log.print_entries(width=200, display=[pnl.TIME, pnl.CONTEXT, pnl.VALUE])
 
     # Test Programatic logging
     Hidden_Layer_2.log.log_values(pnl.VALUE)
