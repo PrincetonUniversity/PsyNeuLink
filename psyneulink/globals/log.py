@@ -20,7 +20,7 @@ when they are created, validated, and/or executed).  Every Component has a Log o
 Components that belong to it.  These are stored in `entries <Log.entries>` of the Log, that contain a sequential list
 of the recorded values, along with the time and context of the recording.  The conditions under which values are
 recorded is specified by the `logPref <Component.logPref>` property of a Component.  While these can be set directly,
-they are most easily specified using the Log's `set_log_levels <Log.set_log_levels>` method, together with its `loggable_items
+they are most easily specified using the Log's `set_log_conditions <Log.set_log_conditions>` method, together with its `loggable_items
 <Log.loggable_items>` and `logged_items <Log.logged_items>` attributes that identify and track the items to be logged.
 Entries can also be made by the user programmatically, using the `log_values <Log.log_values>` method. Logging can be
 useful not only for observing the behavior of a Component in a model, but also in debugging the model during
@@ -54,17 +54,17 @@ A Log has several attributes and methods that make it easy to manage how and whe
 to access its `entries <Log.entries>`:
 
     * `loggable_items <Log.loggable_items>` -- a dictionary with the items that can be logged in a Component's `log
-      <Component.log>`;  the key for each entry is the name of a Component,  and the value is it current `LogLevel`.
+      <Component.log>`;  the key for each entry is the name of a Component,  and the value is it current `LogCondition`.
     ..
-    * `set_log_levels <Log.set_log_levels>` -- used to assign the LogLevel for one or more Components.  Components can be
-      specified by their names, a reference to the Component object, in a tuple that specifies the `LogLevel` to
-      assign to that Component, or in a list with a `LogLevel` to be applied to multiple items at once.
+    * `set_log_conditions <Log.set_log_conditions>` -- used to assign the LogCondition for one or more Components.  Components can be
+      specified by their names, a reference to the Component object, in a tuple that specifies the `LogCondition` to
+      assign to that Component, or in a list with a `LogCondition` to be applied to multiple items at once.
     ..
     * `log_values <Log.log_values>` -- used to the `value <Component.value>` of one or more Components in the Log
       programmatically ("manually").  Components can be specified by their names or references to the object.
     ..
     * `logged_items <Log.logged_items>` -- a dictionary with the items that currently have entries in a Component's
-      `log <Component.log>`; the key for each entry is the name of a Component, and the value is its current `LogLevel`.
+      `log <Component.log>`; the key for each entry is the name of a Component, and the value is its current `LogCondition`.
     ..
     * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
     ..
@@ -104,27 +104,27 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
 
 .. _Log_LogLevels:
 
-LogLevels
+LogConditions
 ~~~~~~~~~
 
-Configuring a Component to be logged is done using a `LogLevel`, that specifies the conditions under which its
-`value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_levels <Log.set_log_levels>`
-method of a Log, or directly by specifying a LogLevel for the value a Component's `logPref  <Compnent.logPref>` item
+Configuring a Component to be logged is done using a `LogCondition`, that specifies the conditions under which its
+`value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_conditions <Log.set_log_conditions>`
+method of a Log, or directly by specifying a LogCondition for the value a Component's `logPref  <Compnent.logPref>` item
 of its `prefs <Component.prefs>` attribute.  The former is easier, and allows multiple Components to be specied at
-once, while the latter affords more control over the specification (see `Preferences`).  LogLevels are treated as
-binary "flags", and can be combined to permit logging under more than one contact or boolean combinations of LogLevels
-using bitwise operators (e.g., LogLevel.EXECUTION | LogLevel.LEARNING).
+once, while the latter affords more control over the specification (see `Preferences`).  LogConditions are treated as
+binary "flags", and can be combined to permit logging under more than one contact or boolean combinations of LogConditions
+using bitwise operators (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
 
 .. note::
-   Currently, the only `LogLevels <LogLevel>` supported are: `OFF`, `INITIALIZATION`, `EXECUTION` and `LEARNING`.
+   Currently, the only `LogConditions <LogCondition>` supported are: `OFF`, `INITIALIZATION`, `EXECUTION` and `LEARNING`.
 
 .. note::
-   Using the `INITIALIZATION` LogLevel to log the `value <Component.value>` of a Component during its initialization
+   Using the `INITIALIZATION` LogCondition to log the `value <Component.value>` of a Component during its initialization
    requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
 
     >>> import psyneulink as pnl
     >>> T = pnl.TransferMechanism(
-    ...          prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION,pnl.PreferenceLevel.INSTANCE)})
+    ...          prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION,pnl.PreferenceLevel.INSTANCE)})
 
 
 .. _Log_Execution:
@@ -133,7 +133,7 @@ Execution
 ---------
 
 The value of a Component is recorded to a Log when the condition assigned to its `logPref <Component.logPref>` is met.
-This specified as a `LogLevel`.  The default LogLevel is `OFF`.
+This specified as a `LogCondition`.  The default LogCondition is `OFF`.
 
 .. _Log_Examples:
 
@@ -150,7 +150,7 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 
-    # Show the loggable items (and their current LogLevels) of each Mechanism and the Projection between them:
+    # Show the loggable items (and their current LogConditions) of each Mechanism and the Projection between them:
     >> my_mech_A.loggable_items
     {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
     >> my_mech_B.loggable_items
@@ -159,8 +159,8 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     {'value': 'OFF', 'matrix': 'OFF'}
 
     # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
-    >>> my_mech_A.set_log_levels([pnl.NOISE, pnl.RESULTS])
-    >>> proj_A_to_B.set_log_levels(pnl.MATRIX)
+    >>> my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULTS])
+    >>> proj_A_to_B.set_log_conditions(pnl.MATRIX)
 
 
 Executing the Process generates entries in the Logs, that can then be displayed in several ways::
@@ -262,7 +262,7 @@ COMMENT:
 IMPLEMENTATION NOTE: Name of owner Component is aliases to VALUE in loggable_items and logged_items,
 but is the Component's actual name in log_entries
 
-Entries are made to the Log based on the `LogLevel` specified in the
+Entries are made to the Log based on the `LogCondition` specified in the
 `logPref` item of the component's `prefs <Component.prefs>` attribute.
 
 Adding an item to prefs.logPref will validate and add an entry for that attribute to the Log dict
@@ -274,7 +274,7 @@ An attribute is logged if:
 * it is included in the *LOG_ENTRIES* entry of a `parameter specification dictionary <ParameterState_Specification>`
   assigned to the **params** argument of the constructor for the Component;
 ..
-* the context of the assignment is above the LogLevel specified in the logPref setting of the owner Component
+* the context of the assignment is above the LogCondition specified in the logPref setting of the owner Component
 
 Entry values are added by the setter method for the attribute being logged.
 
@@ -285,7 +285,7 @@ The following entries are automatically included in self.entries for a `Mechanis
     - any variables listed in the params[LOG_ENTRIES] of a Mechanism
 
 
-DEFAULT LogLevel FOR ALL COMPONENTS IS *OFF*
+DEFAULT LogCondition FOR ALL COMPONENTS IS *OFF*
 
 
 Structure
@@ -299,13 +299,13 @@ Each entry of `entries <Log.entries>` has:
         - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
         - value (value): the value assigned to the attribute
 
-The LogLevel class (see declaration above) defines six levels of logging:
+The LogCondition class (see declaration above) defines six levels of logging:
     + OFF: No logging for attributes of the owner object
     + VALUE_ASSIGNMENT: Log values only when final value assignment has been made during execution
     + EXECUTION: Log values for all assignments during execution (e.g., including aggregation of projections)
     + VALIDATION: Log value assignments during validation as well as execution and initialization
     + ALL_ASSIGNMENTS:  Log all value assignments (e.g., including initialization)
-    Note: LogLevel is an IntEnum, and thus its values can be used directly in numerical comparisons
+    Note: LogCondition is an IntEnum, and thus its values can be used directly in numerical comparisons
 
 Entries can also be added programmatically by:
     - including them in the logPref of a PreferenceSet
@@ -354,12 +354,12 @@ from psyneulink.globals.keywords \
 
 
 __all__ = [
-    'ALL_ENTRIES', 'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogLevel',
+    'ALL_ENTRIES', 'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogCondition',
 ]
 
 
 # FIX: REPLACE WITH Flags and auto IF/WHEN MOVE TO Python 3.6
-class LogLevel(IntEnum):
+class LogCondition(IntEnum):
     """Specifies levels of logging, as descrdibed below."""
     OFF = 0
     """No recording."""
@@ -388,7 +388,7 @@ class LogLevel(IntEnum):
 
     # @classmethod
     # def _log_level_max(cls):
-    #     return max([cls[i].value for i in list(cls.__members__) if cls[i] is not LogLevel.ALL_ASSIGNMENTS])
+    #     return max([cls[i].value for i in list(cls.__members__) if cls[i] is not LogCondition.ALL_ASSIGNMENTS])
 
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
@@ -398,17 +398,17 @@ TIME_NOT_SPECIFIED = 'Time Not Specified'
 
 def _get_log_context(context):
 
-    context_flag = LogLevel.OFF
+    context_flag = LogCondition.OFF
     if INITIALIZING in context:
-        context_flag |= LogLevel.INITIALIZATION
+        context_flag |= LogCondition.INITIALIZATION
     if VALIDATE in context:
-        context_flag |= LogLevel.VALIDATION
+        context_flag |= LogCondition.VALIDATION
     if EXECUTING in context:
-        context_flag |= LogLevel.EXECUTION
+        context_flag |= LogCondition.EXECUTION
     if LEARNING in context:
-        context_flag |= LogLevel.LEARNING
+        context_flag |= LogCondition.LEARNING
     if COMMAND_LINE in context:
-        context_flag |= LogLevel.COMMAND_LINE
+        context_flag |= LogCondition.COMMAND_LINE
     return context_flag
 
 
@@ -530,20 +530,20 @@ class Log:
         An attribute is recorded if:
             - it is one automatically included in logging (see below)
             - it is included in params[LOG_ENTRIES] of the owner object
-            - the context of the assignment is above the LogLevel specified in the logPref setting of the owner object
+            - the context of the assignment is above the LogCondition specified in the logPref setting of the owner object
         Entry values are added by the setter method for the attribute being logged
         The following entries are automatically included in self.entries for a Mechanism object:
             - the value attribute of every State for which the Mechanism is an owner
             [TBI: - value of every projection that sends to those States]
             - the system variables defined in SystemLogEntries (see declaration above)
             - any variables listed in the params[LOG_ENTRIES] of a Mechanism
-        The LogLevel class (see declaration above) defines five levels of logging:
+        The LogCondition class (see declaration above) defines five levels of logging:
             + OFF: No logging for attributes of the owner object
             + VALUE_ASSIGNMENT: Log values only when final value assignment has been during execution
             + EXECUTION: Log values for all assignments during exeuction (e.g., including aggregation of projections)
             + VALIDATION: Log value assignments during validation as well as execution
             + ALL_ASSIGNMENTS:  Log all value assignments (e.g., including initialization)
-            Note: LogLevel is an IntEnum, and thus its values can be used directly in numerical comparisons
+            Note: LogCondition is an IntEnum, and thus its values can be used directly in numerical comparisons
 
         # Entries can also be added programmtically by:
         #     - including them in the logPref of a PreferenceSet
@@ -600,7 +600,7 @@ class Log:
 
     loggable_items : Dict[Component.name: List[LogEntry]]
         identifies Components that can be logged by the owner; the key of each entry is the name of a Component,
-        and the value is its currently assigned `LogLevel`.
+        and the value is its currently assigned `LogCondition`.
 
     entries : Dict[Component.name: List[LogEntry]]
         contains the logged information for `loggable_components <Log.loggable_components>`; the key of each entry
@@ -609,7 +609,7 @@ class Log:
 
     logged_items : Dict[Component.name: List[LogEntry]]
         identifies Components that currently have entries in the Log; the key for each entry is the name
-        of a Component, and the value is its currently assigned `LogLevel`.
+        of a Component, and the value is its currently assigned `LogCondition`.
 
     """
 
@@ -631,8 +631,8 @@ class Log:
         if entries is None:
             return
 
-    def set_log_levels(self, items, log_level=LogLevel.EXECUTION):
-        """Specifies items to be logged at the specified `LogLevel`\\(s).
+    def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
+        """Specifies items to be logged at the specified `LogCondition`\\(s).
 
         Arguments
         ---------
@@ -642,12 +642,12 @@ class Log:
             Each item must be a:
             * string that is the name of a `loggable_item` <Log.loggable_item>` of the Log's `owner <Log.owner>`;
             * a reference to a Component;
-            * tuple, the first item of which is one of the above, and the second a `LogLevel` to use for the item.
+            * tuple, the first item of which is one of the above, and the second a `LogCondition` to use for the item.
 
-        log_level : LogLevel : default LogLevel.EXECUTION
-            specifies `LogLevel` to use as the default for items not specified in tuples (see above).
-            For convenience, the name of a LogLevel can be used in place of its full specification
-            (e.g., *EXECUTION* instead of `LogLevel.EXECUTION`).
+        log_condition : LogCondition : default LogCondition.EXECUTION
+            specifies `LogCondition` to use as the default for items not specified in tuples (see above).
+            For convenience, the name of a LogCondition can be used in place of its full specification
+            (e.g., *EXECUTION* instead of `LogCondition.EXECUTION`).
 
         params_set : list : default None
             list of parameters to include as loggable items;  these must be attributes of the `owner <Log.owner>`
@@ -661,10 +661,10 @@ class Log:
         def assign_log_level(item, level):
 
             try:
-                level = LogLevel[level] if isinstance(level, str) else level
+                level = LogCondition[level] if isinstance(level, str) else level
             except KeyError:
                 raise LogError("\'{}\' is not a value of {}".
-                               format(level, LogLevel.__name__))
+                               format(level, LogCondition.__name__))
 
             if not item in self.loggable_items:
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
@@ -673,12 +673,12 @@ class Log:
                 component = next(c for c in self.loggable_components if c.name == item)
                 component.logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
             except AttributeError:
-                raise LogError("PROGRAM ERROR: Unable to set LogLevel for {} of {}".format(item, self.owner.name))
+                raise LogError("PROGRAM ERROR: Unable to set LogCondition for {} of {}".format(item, self.owner.name))
 
         if items is ALL:
             for component in self.loggable_components:
-                component.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
-            # self.logPref = PreferenceEntry(log_level, PreferenceLevel.INSTANCE)
+                component.logPref = PreferenceEntry(log_condition, PreferenceLevel.INSTANCE)
+            # self.logPref = PreferenceEntry(log_condition, PreferenceLevel.INSTANCE)
             return
 
         if not isinstance(items, list):
@@ -689,7 +689,7 @@ class Log:
                 # self.add_entries(item)
                 if isinstance(item, Component):
                     item = item.name
-                assign_log_level(item, log_level)
+                assign_log_level(item, log_condition)
             else:
                 # self.add_entries(item[0])
                 assign_log_level(item[0], item[1])
@@ -757,7 +757,7 @@ class Log:
         log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 
         # Log value if logging condition is satisfied or called for programmatically
-        if (log_pref and log_pref == context_flags) or context_flags & LogLevel.COMMAND_LINE:
+        if (log_pref and log_pref == context_flags) or context_flags & LogCondition.COMMAND_LINE:
         # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
         # if log_pref and log_pref | context_flags:
 
@@ -805,10 +805,10 @@ class Log:
 
         if system:
             # FIX: Add VALIDATE?
-            if context_flags == LogLevel.EXECUTION:
+            if context_flags == LogCondition.EXECUTION:
                 time = system.scheduler_processing.clock.simple_time
                 time = (time.run, time.trial, time.time_step)
-            elif context_flags == LogLevel.LEARNING:
+            elif context_flags == LogCondition.LEARNING:
                 time = system.scheduler_learning.clock.simple_time
                 time = (time.run, time.trial, time.time_step)
             else:
@@ -1250,7 +1250,7 @@ class Log:
                     raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
             if logged:
                 if entry not in self.logged_entries:
-                    raise LogError("{} is not currently being logged by {} (try using set_log_levels)".
+                    raise LogError("{} is not currently being logged by {} (try using set_log_conditions)".
                                    format(repr(entry), self.owner.name))
         return entries
 
@@ -1270,7 +1270,7 @@ class Log:
     def loggable_items(self):
         """Return dict of loggable items.
 
-        Keys are names of the Components, values their LogLevels
+        Keys are names of the Components, values their LogConditions
         """
         # FIX: The following crashes during init as prefs have not all been assigned
         # return {key: value for (key, value) in [(c.name, c.logPref.name) for c in self.loggable_components]}
@@ -1303,10 +1303,10 @@ class Log:
 
     @property
     def logged_items(self):
-        """Dict of items that have logged `entries <Log.entries>`, indicating their specified `LogLevel`.
+        """Dict of items that have logged `entries <Log.entries>`, indicating their specified `LogCondition`.
         """
-        log_level = 'LogLevel.'
-        # Return LogLevel for items in log.entries
+        log_condition = 'LogCondition.'
+        # Return LogCondition for items in log.entries
 
         logged_items = {key: value for (key, value) in
                         # [(l, self.loggable_components[l].logPref.name)

@@ -2237,9 +2237,9 @@ class ScratchPadError(Exception):
 #     assert PJ.loggable_items == {'matrix': 'OFF',
 #                                  'value': 'OFF'}
 #
-#     T_1.set_log_levels(pnl.NOISE)
-#     T_1.set_log_levels(pnl.RESULTS)
-#     PJ.set_log_levels(pnl.MATRIX)
+#     T_1.set_log_conditions(pnl.NOISE)
+#     T_1.set_log_conditions(pnl.RESULTS)
+#     PJ.set_log_conditions(pnl.MATRIX)
 #
 #     assert T_1.loggable_items == {'InputState-0': 'OFF',
 #                                  'slope': 'OFF',
@@ -2312,7 +2312,7 @@ class ScratchPadError(Exception):
 #
 # def test_log_initialization():
 #     T = pnl.TransferMechanism(
-#             prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
+#             prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
 #     )
 #     print(T.logged_items)
 #     print(T.log.nparray())
@@ -2330,7 +2330,7 @@ class ScratchPadError(Exception):
 #
 # P = pnl.Process(pathway=[T])
 # S = pnl.System(processes=P)
-# T.set_log_levels(pnl.RESULTS)
+# T.set_log_conditions(pnl.RESULTS)
 # S.execute()
 # S.execute()
 # S.execute()
@@ -2342,13 +2342,13 @@ class ScratchPadError(Exception):
 # assert True
 
 # T = pnl.TransferMechanism(size=3, name='My_T'
-#     # prefs={pnl.LOG_PREF:pnl.PreferenceEntry(pnl.LogLevel.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
+#     # prefs={pnl.LOG_PREF:pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
 # )
 # T2 = pnl.TransferMechanism(size=4, input_states=[T])
-# # T.parameter_states['slope'].logPref=pnl.PreferenceEntry(pnl.LogLevel.EXECUTION, pnl.PreferenceLevel.INSTANCE)
+# # T.parameter_states['slope'].logPref=pnl.PreferenceEntry(pnl.LogCondition.EXECUTION, pnl.PreferenceLevel.INSTANCE)
 # print(T.loggable_items)
-# T.set_log_levels(('noise'))
-# T.set_log_levels('RESULTS')
+# T.set_log_conditions(('noise'))
+# T.set_log_conditions('RESULTS')
 # print(T.loggable_items)
 #
 # T.execute()
@@ -2369,9 +2369,9 @@ class ScratchPadError(Exception):
 # PJ = T2.path_afferents[0]
 # print(PJ.loggable_items)
 #
-# T1.set_log_levels('noise')
-# T1.set_log_levels('RESULTS')
-# PJ.set_log_levels('matrix')
+# T1.set_log_conditions('noise')
+# T1.set_log_conditions('RESULTS')
+# PJ.set_log_conditions('matrix')
 #
 # # Execute each Process twice (to generate some values in the logs):
 # PS.execute()
@@ -2403,9 +2403,9 @@ class ScratchPadError(Exception):
 # print(my_mech_B.loggable_items) # doctest: +SKIP
 # print(proj_A_to_B.loggable_items) # doctest: +SKIP
 #
-# my_mech_A.set_log_levels('noise')
-# my_mech_A.set_log_levels('RESULTS')
-# proj_A_to_B.set_log_levels(pnl.MATRIX)
+# my_mech_A.set_log_conditions('noise')
+# my_mech_A.set_log_conditions('RESULTS')
+# proj_A_to_B.set_log_conditions(pnl.MATRIX)
 #
 #
 # my_process.execute()
@@ -2517,7 +2517,7 @@ def test_multilayer():
         },
     )
 
-    Middle_Weights.set_log_levels(('matrix', pnl.EXECUTION))
+    Middle_Weights.set_log_conditions(('matrix', pnl.EXECUTION))
 
     stim_list = {Input_Layer: [[-1, 30]]}
     target_list = {Output_Layer: [[0, 0, 1]]}
@@ -2697,7 +2697,7 @@ def test_multilayer():
 
     # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
     Middle_Weights.log.clear_entries(entries=None, confirm=False)
-    Middle_Weights.set_log_levels(('matrix', pnl.LEARNING))
+    Middle_Weights.set_log_conditions(('matrix', pnl.LEARNING))
     s.run(
             num_trials=5,
             inputs=stim_list,
