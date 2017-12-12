@@ -219,11 +219,9 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN FORMATS ON JENKINS THAT DON'T MATCH THOSE ON LOCAL MACHINE(S)
     COMMENT
     >> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
-    '['Run']', '[0]', '[0]', '[0]', '[0]'
-    'Trial', 0, 1, 0, 1
-    'Time_step', 0, 0, 0, 0
-    noise, 0.0, 0.0
-    RESULTS, 0.0 0.0, 0.0 0.0
+    'Run', 'Trial', 'Time_step', 'noise', 'RESULTS'
+    0, 0, 0, 0.0, 0.0 0.0
+    0, 1, 0, 0.0, 0.0 0.0
     COMMENT:
     <BLANKLINE>
     COMMENT
@@ -231,7 +229,7 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     # Display the csv formatted entry of Log for ``proj_A_to_B``
     #    with quotes around values and the Projection's name included in the header:
     >> print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
-    '['Run']', '['Trial']', '['Time_step']', 'matrix'
+    'Run', 'Trial', 'Time_step', 'matrix'
     '0', '0', '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
     '0', '1', '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
     COMMENT:
@@ -257,7 +255,6 @@ The following shows the Log of ``proj_A_to_B`` in numpy array format, with and w
      [[0] [1]]
      [[1] [1]]
      [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
-
 
 COMMENT:
  MY MACHINE:
