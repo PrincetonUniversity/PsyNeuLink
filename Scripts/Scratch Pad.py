@@ -2211,50 +2211,51 @@ class ScratchPadError(Exception):
 # #endregion
 
 #region TEST Log Doc @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# print ("TEST Log Doc")
-#
+print ("TEST Log Doc")
+
 # T = pnl.TransferMechanism(
 #         prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION,pnl.PreferenceLevel.INSTANCE)})
-#
-# my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
-# my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
-# my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
-# proj_A_to_B = my_mech_B.path_afferents[0]
-#
-# # Show the loggable items (and their current LogConditions) of each Mechanism and the Projection between them:
-# my_mech_A.loggable_items
-# my_mech_B.loggable_items
-# proj_A_to_B.loggable_items
-#
-# # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
-# my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULTS])
-# proj_A_to_B.set_log_conditions(pnl.MATRIX)
-#
-# # Execute each Process twice (to generate some values in the logs):
-# my_process.execute()
-# my_process.execute()
-#
-# # List the items of each Mechanism and the Projection that were actually logged:
-# my_mech_A.logged_items
-# my_mech_B.logged_items
-# proj_A_to_B.logged_items
-#
-# # Print the Log for ``my_mech_A``:
-# my_mech_A.log.print_entries()
-#
-# print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
-#
-# # Display the csv formatted entry of Log for ``proj_A_to_B``
-# #    with quotes around values and the Projection's name included in the header:
-# print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
-#
-# proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
-#
-# # MY MACHINE:
-# proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
-#
-#
-# print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False))
+
+my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
+my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
+my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
+my_system = pnl.System(processes=[my_process])
+proj_A_to_B = my_mech_B.path_afferents[0]
+
+# Show the loggable items (and their current LogConditions) of each Mechanism and the Projection between them:
+my_mech_A.loggable_items
+my_mech_B.loggable_items
+proj_A_to_B.loggable_items
+
+# Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
+my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULTS])
+proj_A_to_B.set_log_conditions(pnl.MATRIX)
+
+# Execute each Process twice (to generate some values in the logs):
+my_system.execute()
+my_system.execute()
+
+# List the items of each Mechanism and the Projection that were actually logged:
+my_mech_A.logged_items
+my_mech_B.logged_items
+proj_A_to_B.logged_items
+
+# Print the Log for ``my_mech_A``:
+my_mech_A.log.print_entries(width=80)
+
+print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
+
+# Display the csv formatted entry of Log for ``proj_A_to_B``
+#    with quotes around values and the Projection's name included in the header:
+print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
+
+proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
+
+# MY MACHINE:
+proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
+
+
+print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False))
 
 #endregion
 
@@ -2355,18 +2356,21 @@ class ScratchPadError(Exception):
 #endregion
 
 #region TEST LOG DURING INITIALIZATION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-print("TEST LOG DURING INITIALIZATION")
-
-def test_log_initialization():
-    T = pnl.TransferMechanism(
-            # prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
-            # prefs={pnl.LOG_PREF: pnl.LogCondition.INITIALIZATION}
-    )
-    print(T.logged_items)
-    print(T.log.nparray())
-    T.log.print_entries()
-
-test_log_initialization()
+# print("TEST LOG DURING INITIALIZATION")
+#
+# def test_log_initialization():
+#     T = pnl.TransferMechanism(
+#             # prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
+#             prefs={pnl.LOG_PREF: pnl.LogCondition.INITIALIZATION}
+#     )
+#     print(T.logged_items)
+#     print(T.log.nparray())
+#     T.log.print_entries()
+#
+#     T2 = pnl.TransferMechanism()
+#     T2.log.print_entries()
+#
+# test_log_initialization()
 
 #endregion
 

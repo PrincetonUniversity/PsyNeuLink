@@ -122,9 +122,9 @@ using bitwise operators (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
    Using the `INITIALIZATION` LogCondition to log the `value <Component.value>` of a Component during its initialization
    requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
 
-    >>> import psyneulink as pnl
-    >>> T = pnl.TransferMechanism(
-    ...          prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION,pnl.PreferenceLevel.INSTANCE)})
+    >> import psyneulink as pnl
+    >> T = pnl.TransferMechanism(
+    ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
 
 .. _Log_Execution:
@@ -148,6 +148,7 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     >>> my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
     >>> my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
     >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
+    >>> my_system = pnl.System(processes=[my_process])
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 
     # Show the loggable items (and their current LogConditions) of each Mechanism and the Projection between them:
@@ -165,10 +166,10 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
 Note that since no LogCondition was specified, the default (LogCondition.EXECUTION) is used. Executing the Process
 generates entries in the Logs, that can then be displayed in several ways::
 
-    # Execute each Process twice (to generate some values in the logs):
-    >>> my_process.execute()
+    # Execute the System twice (to generate some values in the logs):
+    >>> my_system.execute()
     array([ 0.,  0.,  0.])
-    >>> my_process.execute()
+    >>> my_system.execute()
     array([ 0.,  0.,  0.])
 
     # List the items of each Mechanism and the Projection that were actually logged:
@@ -190,16 +191,12 @@ method of a Log::
 
     Logged Item:   Time       Context                                                                   Value
 
-    'RESULTS'      None      ' EXECUTING  PROCESS Process-0'                                          [ 0.  0.]
-    'RESULTS'      None      ' EXECUTING  PROCESS Process-0'                                          [ 0.  0.]
+    'RESULTS'      0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
+    'RESULTS'      0:1:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
 
 
-    'value'        None      ' INITIALIZING mech_A | TransferMechanism INITIALIZING : Component._...'   [[ 0.  0.]]
-    'value'        None      ' INITIALIZING mech_A | TransferMechanism'                               None
-
-
-    'noise'        None      ' EXECUTING  PROCESS Process-0'                                          [ 0.]
-    'noise'        None      ' EXECUTING  PROCESS Process-0'                                          [ 0.]
+    'noise'        0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.]
+    'noise'        0:1:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.]
 
 
 They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
@@ -983,6 +980,9 @@ class Log:
 
         entries = self._validate_entries_arg(entries, logged=True)
 
+        if not entries:
+            return None
+
         class options(IntEnum):
             NONE = 0
             TIME = 2
@@ -1012,7 +1012,7 @@ class Log:
         spacer = ' '
         value_spacer_width = 3
         value_spacer = " ".ljust(value_spacer_width)
-        base_width = item_name_width + value_spacer_width
+        base_width = item_name_width
 
         # FIX: COULD "ALGORITHMIZE" THIS:
         if option_flags == options.TIME:
@@ -1040,6 +1040,7 @@ class Log:
             header = header + " " + CONTEXT.capitalize().ljust(context_width, spacer)
         if options.VALUE & option_flags:
             header = header + value_spacer + " " + VALUE.capitalize()
+            # header = header + value_spacer + VALUE.capitalize()
 
         print("\nLog for {0}:".format(self.owner.name))
         print('\n'+header+'\n')
@@ -1275,7 +1276,7 @@ class Log:
         npaT = npa.T
 
         # Headers
-        csv = "\'" + "\', \'".join(npaT[0]) + "\'"
+        csv = "\'" + "\', \'".join([str(i) if isinstance(i, list) else i for i in npaT[0]]) + "\'"
         # Data
         for i in range(1, len(npaT)):
             csv += '\n' + ', '.join([str(j) for j in [str(k).replace(',','') for k in npaT[i]]]).\
