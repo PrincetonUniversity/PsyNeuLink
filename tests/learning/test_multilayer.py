@@ -98,7 +98,7 @@ def test_multilayer():
         },
     )
 
-    Middle_Weights.log_items(('matrix', EXECUTION))
+    Middle_Weights.set_log_conditions(('matrix', EXECUTION))
 
     stim_list = {Input_Layer: [[-1, 30]]}
     target_list = {Output_Layer: [[0, 0, 1]]}
@@ -257,10 +257,12 @@ def test_multilayer():
     Middle_Weights.log.print_entries()
 
     # Test Programatic logging
-    Hidden_Layer_2.log.log_value(VALUE)
+    Hidden_Layer_2.log.log_values(VALUE)
     log_val = Hidden_Layer_2.log.nparray(header=False)
     expected_log_val = np.array(
             [
+                [[0]],
+                [[10]],
                 [[0]],
                 [[[0.8565238418942037, 0.8601053239957609, 0.8662098921116546, 0.8746933736954071]]]
             ], dtype=object
@@ -278,7 +280,7 @@ def test_multilayer():
 
     # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
     Middle_Weights.log.clear_entries(entries=None, confirm=False)
-    Middle_Weights.log_items(('matrix', LEARNING))
+    Middle_Weights.set_log_conditions(('matrix', LEARNING))
     s.run(
             num_trials=5,
             inputs=stim_list,
