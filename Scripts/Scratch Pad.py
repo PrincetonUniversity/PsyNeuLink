@@ -2677,9 +2677,12 @@ def test_multilayer():
 
     # Test Programatic logging
     Hidden_Layer_2.log.log_values(pnl.VALUE)
+
     log_val = Hidden_Layer_2.log.nparray(header=False)
     expected_log_val = np.array(
             [
+                [[0]],
+                [[10]],
                 [[0]],
                 [[[0.8565238418942037, 0.8601053239957609, 0.8662098921116546, 0.8746933736954071]]]
             ], dtype=object

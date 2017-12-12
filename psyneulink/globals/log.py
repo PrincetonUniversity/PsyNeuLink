@@ -751,6 +751,8 @@ class Log:
         # Context is an empty string, but called programatically
         if not context and programmatic:
             context = COMMAND_LINE
+            # context = self.owner.prev_context + "FROM " + COMMAND_LINE
+            # context = self.owner.prev_context
 
         context_flags = _get_log_context(context)
 
@@ -760,8 +762,10 @@ class Log:
         if (log_pref and log_pref == context_flags) or context_flags & LogCondition.COMMAND_LINE:
         # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
         # if log_pref and log_pref | context_flags:
-
             self.entries[self.owner.name] = LogEntry(self._get_time(context, context_flags), context, value)
+
+        if context is not COMMAND_LINE:
+            self.owner.prev_context = context
 
     def _get_time(self, context, context_flags):
         """Get time from Scheduler of System in which Component is being executed.
@@ -796,10 +800,30 @@ class Log:
                            format(self.owner.__class__.__name__,
                                   Mechanism.__name__, State.__name__, Projection.__name__))
 
-        # Get System in which it is being executed (if any)
+        # MODIFIED 12/11/17 OLD:
+        # # Get System in which it is being executed (if any)
+        # try:
+        #     systems = list(ref_mech.systems.keys())
+        #     system = next(s for s in systems if s.name in context)
+        # except AttributeError:
+        #     # ref_mech has not been assigned to a System
+        #     systems = None
+        #     system = None
+        # except StopIteration:
+        #     # ref_mech is assigned to one or more Systems, but not currently being executed within one of them
+        #     system = None
+        # MODIFIED 12/11/17 NEW:
+        # Get System in which it is being (or was last) executed (if any):
+
+        # If called from COMMAND_LINE, get context for last time value was assigned:
+        if context_flags & LogCondition.COMMAND_LINE:
+            execution_context = self.owner.prev_context
+            context_flags = _get_log_context(execution_context)
+        else:
+            execution_context = context
         try:
             systems = list(ref_mech.systems.keys())
-            system = next(s for s in systems if s.name in context)
+            system = next(s for s in systems if s.name in execution_context)
         except AttributeError:
             # ref_mech has not been assigned to a System
             systems = None
@@ -807,6 +831,7 @@ class Log:
         except StopIteration:
             # ref_mech is assigned to one or more Systems, but not currently being executed within one of them
             system = None
+        # MODIFIED 12/11/17 END
 
         if system:
             # FIX: Add VALIDATE?
@@ -819,16 +844,16 @@ class Log:
             else:
                 time = None
 
-        elif systems and (context_flags & LogCondition.COMMAND_LINE):
-            # Search for the most recently run Scheduler within any of the Systems to which the ref_mech belongs
-            # and get its time
-            run_times = []
-            for s in systems:
-                run_times.append((s.scheduler_processing.data_last_run_end, s.process_scheduler.simple_time))
-                run_times.append((s.scheduler_learning.data_last_run_end, s.learning_scheduler.simple_time))
-            gmt, time = max(run_times.append, key=lambda x : x[1])
-            assert True
-
+        # GETS TIME OF LAST RUN OF SYSTEM, BUT NOT NECESSARILY THE COMPONENT (E.G., MECHANISM AND LEARNING)
+        # elif systems and (context_flags & LogCondition.COMMAND_LINE):
+        #     # # Search for the most recently run Scheduler within any of the Systems to which the ref_mech belongs
+        #     # # and get its time
+        #     # run_times = []
+        #     # for s in systems:
+        #     #     run_times.append((s.scheduler_processing.date_last_run_end, s.scheduler_processing.clock.simple_time))
+        #     #     run_times.append((s.scheduler_learning.date_last_run_end, s.scheduler_learning.clock.simple_time))
+        #     # gmt, time = max(run_times, key=lambda x : x[0])
+        #     # time = (time.run, time.trial, time.time_step)
 
         else:
             if self.owner.verbosePref:
