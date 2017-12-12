@@ -646,7 +646,6 @@ class DDM(ProcessingMechanism_Base):
                  name=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs: is_pref_set = None,
-                 thresh=0,
                  context=componentType + INITIALIZING
     ):
 
@@ -676,7 +675,6 @@ class DDM(ProcessingMechanism_Base):
 
         # # Conflict with above
         # self.size = size
-        self.threshold = thresh
 
         super(DDM, self).__init__(variable=default_variable,
                                   output_states=output_states,
@@ -876,8 +874,9 @@ class DDM(ProcessingMechanism_Base):
             result = self.function(variable, context=context)
             if INITIALIZING not in context:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
-            if abs(result) >= self.threshold:
-                logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
+            if abs(result) >= self.function_object.threshold:
+                logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name,
+                                                                       self.function_object.threshold))
                 self.is_finished = True
 
             return np.array([result, self.function_object.previous_time])
