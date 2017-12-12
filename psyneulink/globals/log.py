@@ -1190,9 +1190,13 @@ class Log:
             time_values.extend([item.time
                                 for item in self.logged_entries[entry]
                                 if all(i is not None for i in item.time)])
-        if all(all(i for i in t) for t in time_values):
+        # Insure that all time values are assigned
+        if all(all(i is not None for i in t) for t in time_values):
+            # FIX: GET RID OF DUPLICATES
+            time_values = list(set(time_values))
             for time_scale in LogTimeScaleIndices:
                 time_values.sort(key=lambda tup: tup[time_scale])
+            time_values = list(reversed(time_values))
 
         npa = []
 
@@ -1291,20 +1295,21 @@ class Log:
             CSV-formatted string
         """
 
+        # Get and transpose nparray of entries
+        try:
+            npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
+        except LogError as e:
+            raise LogError(e.args[0].replace('nparray', 'csv'))
+        npaT = npa.T
+
         if not quotes:
             quotes = ''
         elif quotes is True:
             quotes = '\''
 
-        try:
-            npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
-        except LogError as e:
-            raise LogError(e.args[0].replace('nparray', 'csv'))
-
-        npaT = npa.T
-
         # Headers
-        csv = "\'" + "\', \'".join([str(i) if isinstance(i, list) else i for i in npaT[0]]) + "\'"
+        csv = "\'" + "\', \'".join(i[0] if isinstance(i, list) else i for i in npaT[0]) + "\'"
+        # csv = "\'" + "\', \'".join(npaT[0]) + "\'"
         # Data
         for i in range(1, len(npaT)):
             csv += '\n' + ', '.join([str(j) for j in [str(k).replace(',','') for k in npaT[i]]]).\
