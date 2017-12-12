@@ -949,15 +949,6 @@ class Projection_Base(Projection):
         #    but averts exception when setting paramsCurrent in Component (around line 850)
         pass
 
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-        self.log._log_value(assignment)
-
 @tc.typecheck
 def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification

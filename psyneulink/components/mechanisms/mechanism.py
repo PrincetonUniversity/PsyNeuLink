@@ -2417,15 +2417,6 @@ class Mechanism_Base(Mechanism):
                     if isinstance(value, ParameterState) )
 
     @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-        self.log._log_value(assignment)
-
-    @property
     def default_value(self):
         return self._default_value
 

@@ -2785,6 +2785,15 @@ class Component(object):
             #    TO THE CORRESPONDING ATTRIBUTES OF THE OWNER OBJECT
 
     @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, assignment):
+        self._value = assignment
+        self.log._log_value(assignment)
+
+    @property
     def verbosePref(self):
         return self.prefs.verbosePref
 
