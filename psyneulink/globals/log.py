@@ -267,7 +267,6 @@ COMMENT:
            [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
             [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
 
-
 JENKINS:
     >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
     array([[list([0]), list([1])],
