@@ -122,9 +122,12 @@ using bitwise operators (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
    Using the `INITIALIZATION` LogCondition to log the `value <Component.value>` of a Component during its initialization
    requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
 
-    >>> import psyneulink as pnl
-    >>> T = pnl.TransferMechanism(
-    ...          prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION,pnl.PreferenceLevel.INSTANCE)})
+   COMMENT:
+   FIX: THIS EXAMPLE CAN'T CURRENTLY BE EXECUTED AS IT PERMANENTLY SETS THE LogPref FOR ALL TransferMechanism
+   COMMENT
+    >> import psyneulink as pnl
+    >> T = pnl.TransferMechanism(
+    ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
 
 .. _Log_Execution:
@@ -145,11 +148,16 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
+    >>> import psyneulink as pnl
     >>> my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
     >>> my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
     >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
+    >>> my_system = pnl.System(processes=[my_process])
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN DICT ENTRIES IN UNRELIABLE ORDERS
+    COMMENT
     # Show the loggable items (and their current LogConditions) of each Mechanism and the Projection between them:
     >> my_mech_A.loggable_items
     {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
@@ -162,15 +170,18 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     >>> my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULTS])
     >>> proj_A_to_B.set_log_conditions(pnl.MATRIX)
 
+Note that since no LogCondition was specified, the default (LogCondition.EXECUTION) is used. Executing the Process
+generates entries in the Logs, that can then be displayed in several ways::
 
-Executing the Process generates entries in the Logs, that can then be displayed in several ways::
+    # Execute the System twice (to generate some values in the logs):
+    >>> my_system.execute()
+    [array([ 0.,  0.,  0.])]
+    >>> my_system.execute()
+    [array([ 0.,  0.,  0.])]
 
-    # Execute each Process twice (to generate some values in the logs):
-    >>> my_process.execute()
-    array([ 0.,  0.,  0.])
-    >>> my_process.execute()
-    array([ 0.,  0.,  0.])
-
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN DICT ENTRIES IN UNRELIABLE ORDERS
+    COMMENT
     # List the items of each Mechanism and the Projection that were actually logged:
     >> my_mech_A.logged_items
     {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
@@ -183,28 +194,35 @@ Notice that entries dictionary of the Log for ``my_mech_B`` is empty, since no i
 it.  The results of the two other logs can be printed to the console using the `print_entries <Log.print_entries>`
 method of a Log::
 
-        # Print the Log for ``my_mech_A``:
-        >> my_mech_A.log.print_entries()
+    COMMENT:
+    FIX: THIS EXAMPLE CAN'T BE EXECUTED AS IT REQUIRES INSERTION OF "<BLANKLINE>"'S THAT CAN'T BE SUPPRESSED IN HTML
+    COMMENT
+    # Print the Log for ``my_mech_A``:
+    >> my_mech_A.log.print_entries()
 
-        Log for mech_A:
+    Log for mech_A:
 
-        Time      Logged Item:                                       Context                                                                 Value
+    Logged Item:   Time       Context                                                                   Value
 
-        None      'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        None      'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+    'RESULTS'      0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
+    'RESULTS'      0:1:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
 
 
-        None      'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        None      'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+    'noise'        0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.]
+    'noise'        0:1:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.]
 
 
 They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
+
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN FORMATS ON JENKINS THAT DON'T MATCH THOSE ON LOCAL MACHINE(S)
+    COMMENT
     >> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
-    'Index', 'noise', 'RESULTS'
-    0, 0.0, 0.0 0.0
-    1, 0.0, 0.0 0.0
+    'Run', 'Trial', 'Time_step', 'noise', 'RESULTS'
+    0, 0, 0, 0.0, 0.0 0.0
+    0, 1, 0, 0.0, 0.0 0.0
     COMMENT:
     <BLANKLINE>
     COMMENT
@@ -212,9 +230,9 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     # Display the csv formatted entry of Log for ``proj_A_to_B``
     #    with quotes around values and the Projection's name included in the header:
     >> print(proj_A_to_B.log.csv(entries=pnl.MATRIX, owner_name=False, quotes=True))
-    'Index', 'matrix'
-    '0', '1.0 1.0 1.0' '1.0 1.0 1.0'
-    '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
+    'Run', 'Trial', 'Time_step', 'matrix'
+    '0', '0', '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
+    '0', '1', '1', '1.0 1.0 1.0' '1.0 1.0 1.0'
     COMMENT:
     <BLANKLINE>
     COMMENT
@@ -222,12 +240,22 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
 reported.
 
-The following shows the Log of ``proj_A_to_B`` in numpy array format::
+The following shows the Log of ``proj_A_to_B`` in numpy array format, with and without header information::
+
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN FORMATS ON JENKINS THAT DON'T MATCH THOSE ON LOCAL MACHINE(S)
+    COMMENT
+    >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=True)
+    [[['Run'] [0] [0]]
+     [['Trial'] [0] [1]]
+     [['Time_step'] [1] [1]]
+     ['matrix' [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
 
     >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
-    array([[[0], [1]],
-           [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
-            [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
+    [[[0] [0]]
+     [[0] [1]]
+     [[1] [1]]
+     [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
 
 COMMENT:
  MY MACHINE:
@@ -612,8 +640,6 @@ class Log:
 
     """
 
-    ALL_LOG_ENTRIES = 'all_log_entries'
-
     def __init__(self, owner, entries=None):
         """Initialize Log with list of entries
 
@@ -874,14 +900,15 @@ class Log:
         The context item of its `LogEntry` is assigned *COMMAND_LINE*.  If the call to log_values is made while a
         System to which the Component belongs is being run (e.g., in a **call_before..** or **call_after...** argument
         of its `run <System_Base.run>` method), then the time of the LogEntry is assigned the value of the `Clock` of
-        the System's `scheduler <System.scheduler>` tat is currently executing (see `System_Scheduler`).
+        the System's `scheduler_processing` or `scheduler_learning`, whichever is currently executing
+        (see `System_Scheduler`).
 
         Arguments
         ---------
 
         entries : string, Component or list containing either : default ALL
             specifies the Components, the current `value <Component.value>`\\s of which should be added to the Log.
-            they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is `ALL` or is not
+            they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is *ALL* or is not
             specified, then the `value <Component.value>`\\s of all `loggable_items <Log.loggable_items>` are logged.
         """
         entries = self._validate_entries_arg(entries)
@@ -890,7 +917,7 @@ class Log:
         for entry in entries:
             self._log_value(self.loggable_components[self._dealias_owner_name(entry)].value, context=COMMAND_LINE)
 
-    def clear_entries(self, entries=ALL_LOG_ENTRIES, delete_entry=True, confirm=False):
+    def clear_entries(self, entries=ALL, delete_entry=True, confirm=False):
         """Clear one or more entries either by deleting the entry or just removing its data.
 
         Arguments
@@ -899,7 +926,7 @@ class Log:
         entries : string, Component or list containing either : default ALL
             specifies the entries of the Log to be cleared;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or is not specified, then all `logged_items <Log.logged_items>` are cleared.
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are cleared.
 
         delete_entry : bool : default True
             specifies whether to delete the entry (if `True`) from the log to which it belongs, or just
@@ -914,7 +941,7 @@ class Log:
             specifies whether user confirmation is required before clearing the entries.
 
             .. note::
-                If **confirm** is `True`, only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
+                If **confirm** is `True`, only a single confirmation will occur for a list or *ALL*
 
         """
 
@@ -930,7 +957,7 @@ class Log:
                 if delete == 'n':
                     return
 
-            # Reset entries
+            # Clear entries
             for entry in entries:
                 self.logged_entries[entry]=[]
                 if delete_entry:
@@ -962,7 +989,7 @@ class Log:
         entries : string, Component or list containing either : default ALL
             specifies the entries of the Log to printed;  they must be `loggable_items <Log.loggable_items>` of the
             Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or is not specified, then all `logged_items <Log.logged_items>` are printed.
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are printed.
 
         width : int : default 120
             specifies the width of the display. The widths of each column are adjusted accordingly, and based
@@ -978,6 +1005,9 @@ class Log:
         """
 
         entries = self._validate_entries_arg(entries, logged=True)
+
+        if not entries:
+            return None
 
         class options(IntEnum):
             NONE = 0
@@ -1008,7 +1038,7 @@ class Log:
         spacer = ' '
         value_spacer_width = 3
         value_spacer = " ".ljust(value_spacer_width)
-        base_width = item_name_width + value_spacer_width
+        base_width = item_name_width
 
         # FIX: COULD "ALGORITHMIZE" THIS:
         if option_flags == options.TIME:
@@ -1036,6 +1066,7 @@ class Log:
             header = header + " " + CONTEXT.capitalize().ljust(context_width, spacer)
         if options.VALUE & option_flags:
             header = header + value_spacer + " " + VALUE.capitalize()
+            # header = header + value_spacer + VALUE.capitalize()
 
         print("\nLog for {0}:".format(self.owner.name))
         print('\n'+header+'\n')
@@ -1116,7 +1147,7 @@ class Log:
         entries : string, Component or list containing either : default ALL
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or is not specified, then all `logged_items <Log.logged_items>` are included.
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are included.
 
         COMMENT:
         time : TimeScale or ALL : default ALL
@@ -1139,6 +1170,9 @@ class Log:
 
         entries = self._validate_entries_arg(entries, logged=True)
 
+        if not entries:
+            return None
+
         if owner_name is True:
             owner_name_str = self.owner.name
             lb = "["
@@ -1154,10 +1188,9 @@ class Log:
             time_values.extend([item.time
                                 for item in self.logged_entries[entry]
                                 if all(i is not None for i in item.time)])
-        if all(all(i for i in t) for t in time_values):
-            for time_scale in LogTimeScaleIndices:
-                time_values.sort(key=lambda tup: tup[time_scale])
-
+        # Insure that all time values are assigned, get rid of duplicates, and sort
+        if all(all(i is not None for i in t) for t in time_values):
+            time_values = sorted(list(set(time_values)))
         npa = []
 
         # Create time rows (one for each time scale)
@@ -1173,7 +1206,7 @@ class Log:
         else:
             max_len = max([len(self.logged_entries[e]) for e in entries])
 
-            # If there are no  only supports entries of the same length
+            # If there are no time values, only support entries of the same length
             if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
                 raise LogError("nparray output requires that all entries have time values or are of equal length")
 
@@ -1229,7 +1262,7 @@ class Log:
            For data without time stamps, items in the same row are not guaranteed to refer to the same time point.
 
         The **owner_name** argument can be used to prepend the header for each Component with its owner.
-        The **quotes** argument can be used to suppress or specifiy quotes to use around values.
+        The **quotes** argument can be used to suppress or specifiy quotes to use around numeric values.
 
 
         Arguments
@@ -1238,7 +1271,7 @@ class Log:
         entries : string, Component or list containing either : default ALL
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or is not specified, then all `logged_items <Log.logged_items>` are included.
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are included.
 
         owner_name : bool : default False
             specifies whether or not to include the Component's `owner <Log.owner>` in the header of each field;
@@ -1246,29 +1279,30 @@ class Log:
             it is "<entry name>".
 
         quotes : bool, str : default '
-            specifies whether or not to enclose values other than quotes (useful if they are arrays);
+            specifies whether or not to enclose numeric values in quotes (may be useful for arrays);
             if not specified or `True`, single quotes are used for *all* items;
-            if specified with a string, that is used to enclose *all* items;
+            if specified with a string, that is used in place of single quotes to enclose *all* items;
             if `False` or `None`, single quotes are used for headers (the items in the first row), but no others.
 
         Returns:
             CSV-formatted string
         """
 
+        # Get and transpose nparray of entries
+        try:
+            npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
+        except LogError as e:
+            raise LogError(e.args[0].replace('nparray', 'csv'))
+        npaT = npa.T
+
         if not quotes:
             quotes = ''
         elif quotes is True:
             quotes = '\''
 
-        try:
-            npa = self.nparray(entries=entries, header=True, owner_name=owner_name)
-        except LogError as e:
-            raise LogError(e.args[0].replace('nparray', 'csv'))
-
-        npaT = npa.T
-
         # Headers
-        csv = "\'" + "\', \'".join(npaT[0]) + "\'"
+        csv = "\'" + "\', \'".join(i[0] if isinstance(i, list) else i for i in npaT[0]) + "\'"
+        # csv = "\'" + "\', \'".join(npaT[0]) + "\'"
         # Data
         for i in range(1, len(npaT)):
             csv += '\n' + ', '.join([str(j) for j in [str(k).replace(',','') for k in npaT[i]]]).\
@@ -1280,7 +1314,7 @@ class Log:
     def _validate_entries_arg(self, entries, loggable=True, logged=False):
         from psyneulink.components.component import Component
 
-        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.logged_entries
+        # If ALL, set entries to all entries in self.logged_entries
         if entries is ALL or entries is None:
             entries = self.logged_entries.keys()
 
