@@ -24,6 +24,8 @@ test_data = [
     (test_var, kw.PEARSON, True,  None, np.corrcoef(v1, v2)/norm),
     (test_var, kw.CROSS_ENTROPY, False, None, -np.sum(v1*np.log(v2))),
     (test_var, kw.CROSS_ENTROPY, True,  None, -np.sum(v1*np.log(v2))/norm),
+    (test_var, kw.ENERGY, False, None, -np.sum(v1*v2)/2),
+    (test_var, kw.ENERGY, True, None, (-np.sum(v1*v2)/2)/norm**2),
 ]
 
 # use list, naming function produces ugly names
@@ -40,6 +42,8 @@ names = [
     "PEARSON NORMALIZED",
     "CROSS_ENTROPY",
     "CROSS_ENTROPY NORMALIZED",
+    "ENERGY",
+    "ENERGY NORMALIZED",
 ]
 
 @pytest.mark.function

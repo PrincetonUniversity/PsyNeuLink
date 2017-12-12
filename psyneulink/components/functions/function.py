@@ -9041,6 +9041,20 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fsub(acc_val, prod)
         builder.store(new_acc, acc)
 
+
+    def __gen_llvm_energy(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        prod = builder.fmul(val1, val2)
+        prod = builder.fmul(prod, ctx.float_ty(0.5))
+
+        acc_val = builder.load(acc)
+        new_acc = builder.fsub(acc_val, prod)
+        builder.store(new_acc, acc)
+
     def __gen_llvm_correlate(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
         ptr2 = builder.gep(v2, [index])
@@ -9119,6 +9133,8 @@ class Distance(ObjectiveFunction):
                 inner = functools.partial(self.__gen_llvm_euclidean, **kwargs)
             elif (self.metric == CROSS_ENTROPY):
                 inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
+            elif (self.metric == ENERGY):
+                inner = functools.partial(self.__gen_llvm_energy, **kwargs)
             elif (self.metric == CORRELATION):
                 inner = functools.partial(self.__gen_llvm_correlate, **kwargs)
             elif (self.metric == PEARSON):
@@ -9171,10 +9187,11 @@ class Distance(ObjectiveFunction):
 
                 ret = builder.fdiv(numerator, denominator)
 
-            # len(self.argument) is always 2, perhaps the size of vector
-            # should be used instead
             if self.normalize:
-                ret = builder.fdiv(ret, ctx.float_ty(self._variable_length), name="sqrt")
+                norm_factor = self._variable_length
+                if self.metric == ENERGY:
+                    norm_factor = norm_factor ** 2
+                ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
             builder.ret(ret)
         return func_name
 
