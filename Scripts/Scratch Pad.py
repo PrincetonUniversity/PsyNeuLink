@@ -2255,6 +2255,7 @@ proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
 proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
 
 
+print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=True))
 print(proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False))
 
 #endregion

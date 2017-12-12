@@ -225,13 +225,19 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
 reported.
 
-The following shows the Log of ``proj_A_to_B`` in numpy array format::
+The following shows the Log of ``proj_A_to_B`` in numpy array format, with and without header information::
 
+    >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=True)
+    [[['Run'] [0] [0]]
+     [['Trial'] [0] [1]]
+     [['Time_step'] [1] [1]]
+     ['matrix' [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]
+      [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
     >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
-    array[[[0] [0]]
-          [[0] [1]]
-          [[1] [1]]
-           [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
+    [[[0] [0]]
+     [[0] [1]]
+     [[1] [1]]
+     [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
 
 
 COMMENT:
@@ -877,14 +883,15 @@ class Log:
         The context item of its `LogEntry` is assigned *COMMAND_LINE*.  If the call to log_values is made while a
         System to which the Component belongs is being run (e.g., in a **call_before..** or **call_after...** argument
         of its `run <System_Base.run>` method), then the time of the LogEntry is assigned the value of the `Clock` of
-        the System's `scheduler <System.scheduler>` tat is currently executing (see `System_Scheduler`).
+        the System's `scheduler_processing` or `scheduler_learning`, whichever is currently executing
+        (see `System_Scheduler`).
 
         Arguments
         ---------
 
         entries : string, Component or list containing either : default ALL
             specifies the Components, the current `value <Component.value>`\\s of which should be added to the Log.
-            they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is `ALL` or is not
+            they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is *ALL* or is not
             specified, then the `value <Component.value>`\\s of all `loggable_items <Log.loggable_items>` are logged.
         """
         entries = self._validate_entries_arg(entries)
@@ -902,7 +909,7 @@ class Log:
         entries : string, Component or list containing either : default ALL
             specifies the entries of the Log to be cleared;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or is not specified, then all `logged_items <Log.logged_items>` are cleared.
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are cleared.
 
         delete_entry : bool : default True
             specifies whether to delete the entry (if `True`) from the log to which it belongs, or just
@@ -917,7 +924,7 @@ class Log:
             specifies whether user confirmation is required before clearing the entries.
 
             .. note::
-                If **confirm** is `True`, only a single confirmation will occur for a list or `ALL`
+                If **confirm** is `True`, only a single confirmation will occur for a list or *ALL*
 
         """
 
@@ -965,7 +972,7 @@ class Log:
         entries : string, Component or list containing either : default ALL
             specifies the entries of the Log to printed;  they must be `loggable_items <Log.loggable_items>` of the
             Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or is not specified, then all `logged_items <Log.logged_items>` are printed.
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are printed.
 
         width : int : default 120
             specifies the width of the display. The widths of each column are adjusted accordingly, and based
@@ -1123,7 +1130,7 @@ class Log:
         entries : string, Component or list containing either : default ALL
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or is not specified, then all `logged_items <Log.logged_items>` are included.
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are included.
 
         COMMENT:
         time : TimeScale or ALL : default ALL
@@ -1248,7 +1255,7 @@ class Log:
         entries : string, Component or list containing either : default ALL
             specifies the entries of the Log to be included in the output;  they must be `loggable_items
             <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
-            If **entries** is `ALL` or is not specified, then all `logged_items <Log.logged_items>` are included.
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are included.
 
         owner_name : bool : default False
             specifies whether or not to include the Component's `owner <Log.owner>` in the header of each field;
