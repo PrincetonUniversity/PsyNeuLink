@@ -112,18 +112,18 @@ Configuring a Component to be logged is done using a `LogCondition`, that specif
 method of a Log, or directly by specifying a LogCondition for the value a Component's `logPref  <Compnent.logPref>` item
 of its `prefs <Component.prefs>` attribute.  The former is easier, and allows multiple Components to be specied at
 once, while the latter affords more control over the specification (see `Preferences`).  LogConditions are treated as
-binary "flags", and can be combined to permit logging under more than one contact or boolean combinations of LogConditions
-using bitwise operators (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
+binary "flags", and can be combined to permit logging under more than one condition, using bitwise operators on
+LogConditions (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
 
 .. note::
-   Currently, the `VALIDATION` `LogCondition <LogCondition>` is not implemented.
+   Currently, the `VALIDATION` `LogCondition` is not implemented.
    COMMENT:
    `VALUE_ASSIGNMENT` AND `FINAL` are also not yet implemented, but these do not appear in the HTML documentation
    COMMENT
 
 .. note::
-   Using the `INITIALIZATION` LogCondition to log the `value <Component.value>` of a Component during its initialization
-   requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
+   Using the `INITIALIZATION` `LogCondition` to log the `value <Component.value>` of a Component during its
+   initialization requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
 
    COMMENT:
    FIX: THIS EXAMPLE CAN'T CURRENTLY BE EXECUTED AS IT PERMANENTLY SETS THE LogPref FOR ALL TransferMechanism
@@ -284,9 +284,8 @@ Got:
     [[list([0]) list([1])]
      [list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
       list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])]]
-
-
 COMMENT
+
 
 COMMENT:
 
@@ -359,7 +358,6 @@ The owner.prefs.logPref setting contains a list of entries to actively record
 
     Notes:
     * A list of viable entries should be defined as the classLogEntries class attribute of a Function subclass
-
 COMMENT
 
 
