@@ -198,10 +198,11 @@ does the same for `learning <System_Execution_Learning>` (assigned to its `sched
 The `scheduler_processing` can be assigned in the **scheduler** argument of the System's constructor;  if it is not
 specified, a default `Scheduler` is created automatically.   The `scheduler_learning` is always assigned automatically.
 The System's Schedulers base the ordering of execution of its Components based on the order in which they are listed
-in the `pathway <Process.pathway>`\\s of the `Proceses <Process>` used to construct the System, constrained by any
+in the `pathway <Process.pathway>`\\s of the `Processes <Process>` used to construct the System, constrained by any
 `Conditions <Condition>` that have been created for individual Components and assigned to the System's Schedulers (see
 `Scheduler`, `Condition <Condition_Creation>`, `System_Execution_Processing`, and `System_Execution_Learning` for
-additional details).
+additional details).  Both schedulers maintain a `Clock` that can be used to access their current `time
+<Time_Overview>`.
 
 .. _System_Control:
 

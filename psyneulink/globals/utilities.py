@@ -36,6 +36,7 @@ TYPE CHECKING VALUE COMPARISON
 * `is_value_spec`
 * `is_unit_interval`
 * `is_same_function_spec`
+* `is_component`
 
 ENUM
 ~~~~
@@ -86,7 +87,8 @@ from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES,
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'convert_all_elements_to_np_array', 'get_class_attributes',
-    'get_modulationOperation_name', 'get_value_from_array', 'is_distance_metric', 'is_matrix', 'is_matrix_spec',
+    'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
+    'is_matrix_spec',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
@@ -1017,6 +1019,11 @@ def is_same_function_spec(fct_spec_1, fct_spec_2):
     else:
         return False
 
+def is_component(val):
+    """This allows type-checking for Component definitions where Component module can't be imported
+    """
+    from psyneulink.components.component import Component
+    return isinstance(val, Component)
 
 def make_readonly_property(val):
     """Return property that provides read-only access to its value
