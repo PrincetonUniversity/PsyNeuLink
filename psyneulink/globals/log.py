@@ -122,6 +122,9 @@ using bitwise operators (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
    Using the `INITIALIZATION` LogCondition to log the `value <Component.value>` of a Component during its initialization
    requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
 
+   COMMENT:
+   FIX: THIS EXAMPLE CAN'T CURRENTLY BE EXECUTED AS IT PERMANENTLY SETS THE LogPref FOR ALL TransferMechanism
+   COMMENT
     >> import psyneulink as pnl
     >> T = pnl.TransferMechanism(
     ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
@@ -151,6 +154,9 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     >>> my_system = pnl.System(processes=[my_process])
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN DICT ENTRIES IN UNRELIABLE ORDERS
+    COMMENT
     # Show the loggable items (and their current LogConditions) of each Mechanism and the Projection between them:
     >> my_mech_A.loggable_items
     {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
@@ -172,6 +178,9 @@ generates entries in the Logs, that can then be displayed in several ways::
     >>> my_system.execute()
     array([ 0.,  0.,  0.])
 
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN DICT ENTRIES IN UNRELIABLE ORDERS
+    COMMENT
     # List the items of each Mechanism and the Projection that were actually logged:
     >> my_mech_A.logged_items
     {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
@@ -184,6 +193,9 @@ Notice that entries dictionary of the Log for ``my_mech_B`` is empty, since no i
 it.  The results of the two other logs can be printed to the console using the `print_entries <Log.print_entries>`
 method of a Log::
 
+    COMMENT:
+    FIX: THIS EXAMPLE CAN'T BE EXECUTED AS IT REQUIRES INSERTION OF "<BLANKLINE>"'S THAT CAN'T BE SUPPRESSED IN HTML
+    COMMENT
     # Print the Log for ``my_mech_A``:
     >> my_mech_A.log.print_entries()
 
@@ -202,6 +214,10 @@ method of a Log::
 They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
+
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN FORMATS ON JENKINS THAT DON'T MATCH THOSE ON LOCAL MACHINE(S)
+    COMMENT
     >> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
     '['Run']', '[0]', '[0]', '[0]', '[0]'
     'Trial', 0, 1, 0, 1
@@ -227,12 +243,15 @@ reported.
 
 The following shows the Log of ``proj_A_to_B`` in numpy array format, with and without header information::
 
+    COMMENT:
+    FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN FORMATS ON JENKINS THAT DON'T MATCH THOSE ON LOCAL MACHINE(S)
+    COMMENT
     >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=True)
     [[['Run'] [0] [0]]
      [['Trial'] [0] [1]]
      [['Time_step'] [1] [1]]
-     ['matrix' [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]
-      [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
+     ['matrix' [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]] [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]]
+
     >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
     [[[0] [0]]
      [[0] [1]]
