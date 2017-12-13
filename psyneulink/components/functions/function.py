@@ -2658,8 +2658,13 @@ class Linear(TransferFunction):  # ---------------------------------------------
         """
 
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-        slope = self.paramsCurrent[SLOPE]
-        intercept = self.paramsCurrent[INTERCEPT]
+        # slope = self.paramsCurrent[SLOPE]
+        # intercept = self.paramsCurrent[INTERCEPT]
+
+        # KAM 12/13 replacing paramCurrent look-ups with call to get_current_param (on Function_Base)
+        slope = self.get_current_param(SLOPE)
+        intercept = self.get_current_param(INTERCEPT)
+
         outputType = self.functionOutputType
 
         # MODIFIED 11/9/17 NEW:
@@ -2872,8 +2877,12 @@ class Exponential(TransferFunction):  # ----------------------------------------
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         # Assign the params and return the result
-        rate = self.paramsCurrent[RATE]
-        scale = self.paramsCurrent[SCALE]
+        # rate = self.paramsCurrent[RATE]
+        # scale = self.paramsCurrent[SCALE]
+
+        # KAM 12/13 replacing paramCurrent look-ups with call to get_current_param (on Function_Base)
+        rate = self.get_current_param(RATE)
+        scale = self.get_current_param(SCALE)
 
         return scale * np.exp(rate * variable)
 
@@ -3034,9 +3043,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
         """
 
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-        gain = self.paramsCurrent[GAIN]
-        bias = self.paramsCurrent[BIAS]
-        offset = self.paramsCurrent[OFFSET]
+        # gain = self.paramsCurrent[GAIN]
+        # bias = self.paramsCurrent[BIAS]
+        # offset = self.paramsCurrent[OFFSET]
+        #
+        # KAM 12/13 replacing paramCurrent look-ups with call to get_current_param (on Function_Base)
+        gain = self.get_current_param(GAIN)
+        bias = self.get_current_param(BIAS)
+        offset = self.get_current_param(OFFSET)
 
         return 1 / (1 + np.exp(-gain*(variable-bias) + offset))
 
