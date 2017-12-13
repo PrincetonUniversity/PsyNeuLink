@@ -705,7 +705,7 @@ class Log:
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
                                format(item, self.owner.name))
             try:
-                component = next(c for c in self.loggable_components if c.name == item)
+                component = next(c for c in self.loggable_components if self._alias_owner_name(c.name) == item)
                 component.logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
             except AttributeError:
                 raise LogError("PROGRAM ERROR: Unable to set LogCondition for {} of {}".format(item, self.owner.name))
