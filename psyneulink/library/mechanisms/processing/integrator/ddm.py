@@ -879,7 +879,7 @@ class DDM(ProcessingMechanism_Base):
                                                                        self.function_object.threshold))
                 self.is_finished = True
 
-            return np.array([result, self.function_object.previous_time])
+            return np.array([result, [self.function_object.previous_time]])
 
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------

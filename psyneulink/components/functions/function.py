@@ -5290,8 +5290,8 @@ class DriftDiffusionIntegrator(
         if np.all(abs(value) < self.threshold):
             adjusted_value = value + offset
         else:
-            adjusted_value = self.threshold
-            
+            adjusted_value = np.atleast_2d(self.threshold)
+
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
