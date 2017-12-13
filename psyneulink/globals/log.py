@@ -132,6 +132,10 @@ LogConditions (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
     >> T = pnl.TransferMechanism(
     ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
+.. hint::
+   To log the `value <Component.value>` of a Component at the start or end of a `TRIAL`, use its `log_values
+   <Component.log_values>` method in the **call_before_trial** or **call_after_trial** arguments of the System's
+   `run <System.run>` method.
 
 .. _Log_Execution:
 
