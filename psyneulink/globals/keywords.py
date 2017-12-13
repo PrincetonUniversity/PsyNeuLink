@@ -568,7 +568,8 @@ CONTROLLER = "controller"
 ENABLE_CONTROLLER = "enable_controller"
 CONROLLER_PHASE_SPEC = 'ControllerPhaseSpec'
 
-RUN = 'Run'
+RUN = 'run'
+TRIAL = 'trial'
 
 #endregion
 

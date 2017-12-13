@@ -2781,16 +2781,16 @@ class System(System_Base):
             If it is not specified, the current state is left intact.
             If it is `True`, learning is forced on; if it is :keyword:`False`, learning is forced off.
 
-        call_before_trial : Function : default= `None`
+        call_before_trial : Function : default `None`
             called before each trial in the sequence is executed.
 
-        call_after_trial : Function : default= `None`
+        call_after_trial : Function : default `None`
             called after each trial in the sequence is executed.
 
-        call_before_time_step : Function : default= `None`
+        call_before_time_step : Function : default `None`
             called before each time_step of each trial is executed.
 
-        call_after_time_step : Function : default= `None`
+        call_after_time_step : Function : default `None`
             called after each time_step of each trial is executed.
 
         termination_processing : Dict[TimeScale: Condition]
