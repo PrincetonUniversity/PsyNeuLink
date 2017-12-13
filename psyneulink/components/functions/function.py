@@ -5291,8 +5291,7 @@ class DriftDiffusionIntegrator(
             adjusted_value = value + offset
         else:
             adjusted_value = self.threshold
-            for i in range(len(value)):
-                adjusted_value[i] = self.threshold[i]*np.sign(value[i][0])
+            
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
