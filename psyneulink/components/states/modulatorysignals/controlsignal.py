@@ -1264,9 +1264,7 @@ class ControlSignal(ModulatorySignal):
         if self.init_status in {InitStatus.DEFERRED_INITIALIZATION, InitStatus.INITIALIZING}:
             return None
         else:
-            # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
             return self._intensity
-
 
     @value.setter
     def value(self, assignment):

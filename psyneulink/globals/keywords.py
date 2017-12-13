@@ -676,7 +676,7 @@ COMBINE_OUTCOME_AND_COST_FUNCTION = 'combine_outcome_and_cost_function'
 VALUE_FUNCTION = 'value_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 SYSTEM_DEFAULT_CONTROLLER = "DefaultController"
-EVC_SIMULATION = 'SIMULATING'
+EVC_SIMULATION = 'CONTROL SIMULATION'
 ALLOCATION_SAMPLES = "allocation_samples"
 
 

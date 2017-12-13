@@ -105,22 +105,25 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
 .. _Log_LogLevels:
 
 LogConditions
-~~~~~~~~~
+~~~~~~~~~~~~~
 
 Configuring a Component to be logged is done using a `LogCondition`, that specifies the conditions under which its
 `value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_conditions <Log.set_log_conditions>`
 method of a Log, or directly by specifying a LogCondition for the value a Component's `logPref  <Compnent.logPref>` item
 of its `prefs <Component.prefs>` attribute.  The former is easier, and allows multiple Components to be specied at
 once, while the latter affords more control over the specification (see `Preferences`).  LogConditions are treated as
-binary "flags", and can be combined to permit logging under more than one contact or boolean combinations of LogConditions
-using bitwise operators (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
+binary "flags", and can be combined to permit logging under more than one condition, using bitwise operators on
+LogConditions (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
 
 .. note::
-   Currently, the only `LogConditions <LogCondition>` supported are: `OFF`, `INITIALIZATION`, `EXECUTION` and `LEARNING`.
+   Currently, the `VALIDATION` `LogCondition` is not implemented.
+   COMMENT:
+   `VALUE_ASSIGNMENT` AND `FINAL` are also not yet implemented, but these do not appear in the HTML documentation
+   COMMENT
 
 .. note::
-   Using the `INITIALIZATION` LogCondition to log the `value <Component.value>` of a Component during its initialization
-   requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
+   Using the `INITIALIZATION` `LogCondition` to log the `value <Component.value>` of a Component during its
+   initialization requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
 
    COMMENT:
    FIX: THIS EXAMPLE CAN'T CURRENTLY BE EXECUTED AS IT PERMANENTLY SETS THE LogPref FOR ALL TransferMechanism
@@ -215,7 +218,6 @@ method of a Log::
 They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
-
     COMMENT:
     FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN FORMATS ON JENKINS THAT DON'T MATCH THOSE ON LOCAL MACHINE(S)
     COMMENT
@@ -281,9 +283,8 @@ Got:
     [[list([0]) list([1])]
      [list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])
       list([[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]])]]
-
-
 COMMENT
+
 
 COMMENT:
 
@@ -356,7 +357,6 @@ The owner.prefs.logPref setting contains a list of entries to actively record
 
     Notes:
     * A list of viable entries should be defined as the classLogEntries class attribute of a Function subclass
-
 COMMENT
 
 
@@ -378,7 +378,7 @@ import numpy as np
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.utilities import ContentAddressableList, AutoNumber, is_component
 from psyneulink.globals.keywords \
-    import INITIALIZING, EXECUTING, VALIDATE, LEARNING, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
+    import INITIALIZING, EXECUTING, VALIDATE, CONTROL, LEARNING, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
 
 
 __all__ = [
@@ -406,9 +406,9 @@ class LogCondition(IntEnum):
     CONTROL = 1<<6                  # 64
     """Record all value assignment during control phase of Composition execution."""
     VALUE_ASSIGNMENT = 1<<7         # 128
-    """Record final value assignments during Composition execution."""
+    # """Record final value assignments during Composition execution."""
     FINAL = 1<<8                    # 256
-    """Synonym of VALUE_ASSIGNMENT."""
+    # """Synonym of VALUE_ASSIGNMENT."""
     COMMAND_LINE = 1 << 9           # 512
     ALL_ASSIGNMENTS = \
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL | VALUE_ASSIGNMENT | FINAL
@@ -432,6 +432,8 @@ def _get_log_context(context):
         context_flag |= LogCondition.VALIDATION
     if EXECUTING in context:
         context_flag |= LogCondition.EXECUTION
+    if CONTROL in context:
+        context_flag |= LogCondition.CONTROL
     if LEARNING in context:
         context_flag |= LogCondition.LEARNING
     if COMMAND_LINE in context:
@@ -861,6 +863,9 @@ class Log:
         if system:
             # FIX: Add VALIDATE?
             if context_flags == LogCondition.EXECUTION:
+                time = system.scheduler_processing.clock.simple_time
+                time = (time.run, time.trial, time.time_step)
+            elif context_flags == LogCondition.CONTROL:
                 time = system.scheduler_processing.clock.simple_time
                 time = (time.run, time.trial, time.time_step)
             elif context_flags == LogCondition.LEARNING:
@@ -1332,8 +1337,10 @@ class Log:
                     raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
             if logged:
                 if entry not in self.logged_entries:
-                    raise LogError("{} is not currently being logged by {} (try using set_log_conditions)".
-                                   format(repr(entry), self.owner.name))
+                    # raise LogError("{} is not currently being logged by {} (try using set_log_conditions)".
+                    #                format(repr(entry), self.owner.name))
+                    print("\n{} is not currently being logged by {} (try using set_log_conditions)".
+                          format(repr(entry), self.owner.name))
         return entries
 
     def _alias_owner_name(self, name):
