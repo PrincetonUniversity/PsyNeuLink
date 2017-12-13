@@ -386,29 +386,59 @@ __all__ = [
 
 
 # FIX: REPLACE WITH Flags and auto IF/WHEN MOVE TO Python 3.6
+# class LogCondition(IntEnum):
+#     """Specifies levels of logging, as descrdibed below."""
+#     OFF = 0
+#     """No recording."""
+#     INITIALIZATION = 1<<1           # 2
+#     """Record during initial assignment."""
+#     VALIDATION = 1<<2               # 4
+#     """Record value during validation."""
+#     EXECUTION = 1<<3                # 8
+#     """Record all value assignments during any execution of the Component."""
+#     PROCESSING = 1<<4               # 16
+#     """Record all value assignments during processing phase of Composition execution."""
+#     # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
+#     # LEARNING = 1<<5               # 32
+#     LEARNING = (1<<5) + EXECUTION   # 40
+#     """Record all value assignments during learning phase of Composition execution."""
+#     CONTROL = 1<<6                  # 64
+#     """Record all value assignment during control phase of Composition execution."""
+#     VALUE_ASSIGNMENT = 1<<7         # 128
+#     # """Record final value assignments during Composition execution."""
+#     FINAL = 1<<8                    # 256
+#     # """Synonym of VALUE_ASSIGNMENT."""
+#     COMMAND_LINE = 1 << 9           # 512
+#     ALL_ASSIGNMENTS = \
+#         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL | VALUE_ASSIGNMENT | FINAL
+#     """Record all value assignments."""
 class LogCondition(IntEnum):
     """Specifies levels of logging, as descrdibed below."""
     OFF = 0
     """No recording."""
-    INITIALIZATION = 1<<1           # 2
+    INITIALIZATION =     1<<1       # 2
     """Record during initial assignment."""
-    VALIDATION = 1<<2               # 4
+    VALIDATION =         1<<2       # 4
     """Record value during validation."""
-    EXECUTION = 1<<3                # 8
+    EXECUTION =          1<<3       # 8
     """Record all value assignments during any execution of the Component."""
-    PROCESSING = 1<<4               # 16
+    PROCESSING =         1<<4       # 16
     """Record all value assignments during processing phase of Composition execution."""
     # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-    # LEARNING = 1<<5               # 32
+    # LEARNING =         1<<5       # 32
     LEARNING = (1<<5) + EXECUTION   # 40
     """Record all value assignments during learning phase of Composition execution."""
-    CONTROL = 1<<6                  # 64
-    """Record all value assignment during control phase of Composition execution."""
-    VALUE_ASSIGNMENT = 1<<7         # 128
+    CONTROL =            1<<6       # 64
+    """Record all value assignments during control phase of Composition execution."""
+    TRIAL =              1<<7       # 128
+    """Record value at the end of a TRIAL."""
+    RUN =                1<<8       # 256
+    """Record value at the end of a RUN."""
+    VALUE_ASSIGNMENT =   1<<9       # 512
     # """Record final value assignments during Composition execution."""
-    FINAL = 1<<8                    # 256
+    FINAL =             1<<10       # 1024
     # """Synonym of VALUE_ASSIGNMENT."""
-    COMMAND_LINE = 1 << 9           # 512
+    COMMAND_LINE =      1<<11       # 2048
     ALL_ASSIGNMENTS = \
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL | VALUE_ASSIGNMENT | FINAL
     """Record all value assignments."""
