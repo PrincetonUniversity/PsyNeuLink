@@ -1063,4 +1063,15 @@ def convert_all_elements_to_np_array(arr):
         else:
             return arr
 
-    return np.asarray([convert_all_elements_to_np_array(x) for x in arr])
+    subarr = [convert_all_elements_to_np_array(x) for x in arr]
+    try:
+        return np.array(subarr)
+    except ValueError:
+        # numpy cannot easily create arrays with subarrays of certain dimensions, workaround here
+        # https://stackoverflow.com/q/26885508/3131666
+        len_subarr = len(subarr)
+        elementwise_subarr = np.empty(len_subarr, dtype=np.ndarray)
+        for i in range(len_subarr):
+            elementwise_subarr[i] = subarr[i]
+
+        return elementwise_subarr

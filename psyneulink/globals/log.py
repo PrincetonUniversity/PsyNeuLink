@@ -218,7 +218,6 @@ method of a Log::
 They can also be exported in numpy array and CSV formats.  The following shows the CSV-formatted output of the Logs
 for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
 
-
     COMMENT:
     FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN FORMATS ON JENKINS THAT DON'T MATCH THOSE ON LOCAL MACHINE(S)
     COMMENT
