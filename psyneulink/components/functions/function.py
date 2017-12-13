@@ -641,6 +641,13 @@ class Function_Base(Function):
     def execute(self, variable=None, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
 
+    def get_current_param(self, param_name):
+
+        try:
+            return getattr(self, "mod_"+param_name)
+        except AttributeError:
+            return getattr(self, param_name)
+
     @property
     def functionOutputType(self):
         if hasattr(self, FUNCTION_OUTPUT_TYPE_CONVERSION):
@@ -5218,7 +5225,6 @@ class DriftDiffusionIntegrator(
 
         # Assign here as default, for use in initialization of function
         self.previous_value = self.paramClassDefaults[INITIALIZER]
-
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -5268,15 +5274,12 @@ class DriftDiffusionIntegrator(
         """
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        rate = np.array(self.paramsCurrent[RATE]).astype(float)
-        offset = self.paramsCurrent[OFFSET]
+        rate = np.array(self.get_current_param(RATE)).astype(float)
+        offset = self.get_current_param(OFFSET)
+        noise = self.get_current_param(NOISE)
+        threshold = self.get_current_param(THRESHOLD)
+        time_step_size = self.get_current_param(TIME_STEP_SIZE)
 
-        time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
-
-        noise = self.noise
-
-        # try:
-        #     previous_value = params[INITIALIZER]
         # except (TypeError, KeyError):
         previous_value = self.previous_value
 

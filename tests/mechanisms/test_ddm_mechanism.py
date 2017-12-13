@@ -48,8 +48,8 @@ class TestThreshold:
         time_points = []
         for i in range(5):
             output = D.execute(2.0)
-            decision_variables.append(output[0][0])
-            time_points.append(output[1][0])
+            decision_variables.append(output[0][0][0])
+            time_points.append(output[1][0][0])
 
         # decision variable accumulation stops
         assert np.allclose(decision_variables, [2.0, 4.0, 5.0, 5.0, 5.0])
