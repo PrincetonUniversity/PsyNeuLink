@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Reference &mdash; PsyNeuLink 0.4.0rc1+2.g98367cb documentation</title>
+  <title>Quick Reference &mdash; PsyNeuLink 0.4.0rc1+67.gfb53232.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+2.g98367cb documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+67.gfb53232.dirty documentation" href="index.html"/>
         <link rel="next" title="Core" href="Core.html"/>
         <link rel="prev" title="Basics and Sampler" href="BasicsAndSampler.html"/> 
 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.4.0rc1+2
+                0.4.0rc1+67
               </div>
             
           
@@ -446,26 +446,27 @@ example, and <a class="reference internal" href="ModulatorySignal.html#modulator
 <span id="quick-reference-scheduling"></span><h2><a class="reference internal" href="Scheduler.html"><span class="doc">Scheduling</span></a><a class="headerlink" href="#scheduling" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
 they belong is executed, under the control of the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>.  The Schedule executes Compositions iteratively
-in rounds of execution referred to as <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.PASS" title="psyneulink.scheduling.timescale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> es, in which each Mechanism in the Composition is given an opportunity
-to execute;  By default, each Mechanism in a Composition executes exactly once per <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.PASS" title="psyneulink.scheduling.timescale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>.  However, the Scheduler
+in rounds of execution referred to as <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.PASS" title="psyneulink.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> es, in which each Mechanism in the Composition is given an opportunity
+to execute;  By default, each Mechanism in a Composition executes exactly once per <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.PASS" title="psyneulink.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>.  However, the Scheduler
 can be used to specify one or more <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> for each Mechanism that determine whether it executes in
-a given <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.PASS" title="psyneulink.scheduling.timescale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>.  This can be used to determine when a Mechanism begins and/or ends executing, how many times it
+a given <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.PASS" title="psyneulink.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>.  This can be used to determine when a Mechanism begins and/or ends executing, how many times it
 executes or the frequency with which it executes relative to other Mechanisms, and any other dependency that can be
 expressed in terms of the attributes of other Components in PsyNeuLink. Using a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> and a combination of
 <a class="reference internal" href="Condition.html#condition-pre-specified"><span class="std std-ref">pre-specified</span></a> and <a class="reference internal" href="Condition.html#condition-custom"><span class="std std-ref">custom</span></a> Conditions, any pattern of execution can be</p>
 <blockquote>
 <div>configured that is logically possible.</div></blockquote>
-<p>Using a Scheduler, a Composition continues to execute <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.PASS" title="psyneulink.scheduling.timescale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> es until its <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination Condition</span></a> is met, which constitutes a <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of executions.  This is associated with a
-single input to the System. Multiple <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TRIAL" title="psyneulink.scheduling.timescale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s (corresponding to a sequences of inputs) can be executed using a
+<p>Using a Scheduler, a Composition continues to execute <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.PASS" title="psyneulink.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> es until its <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination Condition</span></a> is met, which constitutes a <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of executions.  This is associated with a
+single input to the System. Multiple <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s (corresponding to a sequences of inputs) can be executed using a
 Composition’s <a class="reference internal" href="Composition.html#psyneulink.composition.Composition.run" title="psyneulink.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
 </div>
 <div class="section" id="logging">
 <span id="quick-reference-logging"></span><h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
-<p>PsyNeuLink supports logging of any attribute of any Component or Composition at any <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> of execution.
-Logs are dictionaries, with an entry for each attribute being logged.  The key for each entry is the name of
-the attribute, and its value is a record of the attribute’s value recorded at the frequency specified by the
-<a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> parameter for the entry;  each record is a tuple, the first item of which is a time stamp (the
-<a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> of the <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.RUN" title="psyneulink.scheduling.timescale.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>), and the second is the value of the attribute at that <a class="reference internal" href="TimeScale.html#psyneulink.scheduling.timescale.TimeScale.TIME_STEP" title="psyneulink.scheduling.timescale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>.</p>
+<p>PsyNeuLink supports logging of any attribute of any <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> or <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> under various specified
+conditions.  <a class="reference internal" href="Log.html"><span class="doc">Logs</span></a> are dictionaries, with an entry for each Component being logged.  The key for each entry is
+the name of the Component, and the value is a record of the Component’s <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> recorded under the
+conditions specified by its <code class="xref any docutils literal"><span class="pre">logPref</span></code> attribute, specified as a <code class="xref any docutils literal"><span class="pre">LogLevel</span></code>; each record is a
+tuple, the first item of which is a time stamp (the <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> of the <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.RUN" title="psyneulink.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>), the second a string indicating the
+context in which the value was recorded, and the third the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> itself.</p>
 </div>
 <div class="section" id="graphic-displays">
 <span id="quick-reference-graphic-displays"></span><h2>Graphic Displays<a class="headerlink" href="#graphic-displays" title="Permalink to this headline">¶</a></h2>
@@ -531,7 +532,7 @@ debugging, but suppressible for efficiency of execution).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+2.g98367cb',
+            VERSION:'0.4.0rc1+67.gfb53232.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

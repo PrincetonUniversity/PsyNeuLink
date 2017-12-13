@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.4.0rc1+2.g98367cb documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.4.0rc1+67.gfb53232.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+2.g98367cb documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+67.gfb53232.dirty documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.0rc1+2
+                0.4.0rc1+67
               </div>
             
           
@@ -194,6 +194,7 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <li><code class="xref any docutils literal"><span class="pre">is_value_spec</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">is_unit_interval</span></code></li>
 <li><a class="reference internal" href="#psyneulink.globals.utilities.is_same_function_spec" title="psyneulink.globals.utilities.is_same_function_spec"><code class="xref any py py-func docutils literal"><span class="pre">is_same_function_spec</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.globals.utilities.is_component" title="psyneulink.globals.utilities.is_component"><code class="xref any py py-func docutils literal"><span class="pre">is_component</span></code></a></li>
 </ul>
 </div>
 <div class="section" id="enum">
@@ -496,7 +497,21 @@ it, an exception is raised when a missing attribute is encountered.</p>
 <dl class="class">
 <dt id="psyneulink.globals.utilities.ContentAddressableList">
 <em class="property">class </em><code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">ContentAddressableList</code><span class="sig-paren">(</span><em>component_type</em>, <em>key=None</em>, <em>list=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.ContentAddressableList" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements dict-like list, that can be keyed by the names of the <a class="reference internal" href="Component.html"><span class="doc">compoments</span></a> in its entries.</p>
+<dd><p>Implements dict-like list, that can be keyed by a specified attribute of the <a class="reference internal" href="Component.html"><span class="doc">Compoments</span></a> in its
+entries.</p>
+<p>The key with which it is created is also assigned as a property of the class, that returns a list
+with the keyed attribute of its entries.  For example, the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute
+of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> is a ContentAddressableList of the Mechanism’s <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, keyed by their
+names.  Therefore, <code class="docutils literal"><span class="pre">my_mech.output_states.names</span></code> returns the names of all of the Mechanism’s OutputStates:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">()</span><span class="o">.</span><span class="n">output_states</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+<span class="go">[&#39;DECISION_VARIABLE&#39;, &#39;RESPONSE_TIME&#39;]</span>
+</pre></div>
+</div>
+<p>The keyed attribute can also be used to access an item of the list.  For examples:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">()</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="s1">&#39;DECISION_VARIABLE&#39;</span><span class="p">])</span>
+<span class="go">(OutputState DECISION_VARIABLE)</span>
+</pre></div>
+</div>
 <dl class="docutils">
 <dt>Supports:</dt>
 <dd><ul class="first last">
@@ -654,6 +669,12 @@ Return True only if both are instances or classes of a PsyNeuLink Function;  oth
 </dd></dl>
 
 <dl class="function">
+<dt id="psyneulink.globals.utilities.is_component">
+<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">is_component</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.is_component" title="Permalink to this definition">¶</a></dt>
+<dd><p>This allows type-checking for Component definitions where Component module can’t be imported</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="psyneulink.globals.utilities.make_readonly_property">
 <code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">make_readonly_property</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.make_readonly_property" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return property that provides read-only access to its value</p>
@@ -704,7 +725,7 @@ Return True only if both are instances or classes of a PsyNeuLink Function;  oth
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+2.g98367cb',
+            VERSION:'0.4.0rc1+67.gfb53232.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

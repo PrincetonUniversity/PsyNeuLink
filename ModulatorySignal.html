@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Modulatory Signals &mdash; PsyNeuLink 0.4.0rc1+2.g98367cb documentation</title>
+  <title>Modulatory Signals &mdash; PsyNeuLink 0.4.0rc1+67.gfb53232.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.0rc1+2.g98367cb documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.0rc1+67.gfb53232.dirty documentation" href="index.html"/>
         <link rel="up" title="States" href="State.html"/>
         <link rel="next" title="LearningSignal" href="LearningSignal.html"/>
         <link rel="prev" title="OutputState" href="OutputState.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.0rc1+2
+                0.4.0rc1+67
               </div>
             
           
@@ -257,7 +257,7 @@ the documentation for each type of ModulatorySignal).</p>
 <span id="modulatorysignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatorySignal is associated with one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> of the
 corresponding type, that project to the State(s), the value(s) of which it modulates.  The ModulatoryProjections
-received by a <a class="reference internal" href="State.html"><span class="doc">State</span></a> are listed in its <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.mod_afferents" title="psyneulink.components.states.outputstate.OutputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. The method by which a ModulatorySignal
+received by a <a class="reference internal" href="State.html"><span class="doc">State</span></a> are listed in its <a class="reference internal" href="ParameterState.html#psyneulink.components.states.parameterstate.ParameterState.mod_afferents" title="psyneulink.components.states.parameterstate.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. The method by which a ModulatorySignal
 modulates a State’s <a class="reference internal" href="State.html#psyneulink.components.states.state.State_Base.value" title="psyneulink.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is determined by the ModulatorySignal’s
 <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, as described below.</p>
 <div class="section" id="projections">
@@ -398,7 +398,7 @@ It should be instantiated using the constructor for a <a class="reference intern
 <li><strong>function</strong> (<em>Function</em><em> or </em><em>method : default Linear</em>) – specifies the function used to determine the value of the ModulatorySignal from the value of its
 <code class="xref any docutils literal"><span class="pre">owner</span></code>.</li>
 <li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.MULTIPLICATIVE</em>) – specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</li>
 <li><strong>name</strong> (str : default see <a class="reference internal" href="#psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name" title="psyneulink.components.states.modulatorysignals.modulatorysignal.ModulatorySignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the name of the ModulatorySignal.</li>
@@ -536,7 +536,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.0rc1+2.g98367cb',
+            VERSION:'0.4.0rc1+67.gfb53232.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
