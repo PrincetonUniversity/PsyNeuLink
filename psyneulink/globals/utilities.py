@@ -36,6 +36,7 @@ TYPE CHECKING VALUE COMPARISON
 * `is_value_spec`
 * `is_unit_interval`
 * `is_same_function_spec`
+* `is_component`
 
 ENUM
 ~~~~
@@ -86,7 +87,8 @@ from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES,
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'convert_all_elements_to_np_array', 'get_class_attributes',
-    'get_modulationOperation_name', 'get_value_from_array', 'is_distance_metric', 'is_matrix', 'is_matrix_spec',
+    'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
+    'is_matrix_spec',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
@@ -736,7 +738,21 @@ class ContentAddressableList(UserList):
     """
     ContentAddressableList( component_type, key=None, list=None)
 
-    Implements dict-like list, that can be keyed by the names of the `compoments <Component>` in its entries.
+    Implements dict-like list, that can be keyed by a specified attribute of the `Compoments <Component>` in its
+    entries.
+
+    The key with which it is created is also assigned as a property of the class, that returns a list
+    with the keyed attribute of its entries.  For example, the `output_states <Mechanism_Base.output_states>` attribute
+    of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputStates <OutputState>`, keyed by their
+    names.  Therefore, ``my_mech.output_states.names`` returns the names of all of the Mechanism's OutputStates::
+
+        >>> print(pnl.DDM().output_states.names)
+        ['DECISION_VARIABLE', 'RESPONSE_TIME']
+
+    The keyed attribute can also be used to access an item of the list.  For examples::
+
+        >>> print(pnl.DDM().output_states['DECISION_VARIABLE'])
+        (OutputState DECISION_VARIABLE)
 
     Supports:
       * getting and setting entries in the list using keys (string), in addition to numeric indices.
@@ -1003,6 +1019,11 @@ def is_same_function_spec(fct_spec_1, fct_spec_2):
     else:
         return False
 
+def is_component(val):
+    """This allows type-checking for Component definitions where Component module can't be imported
+    """
+    from psyneulink.components.component import Component
+    return isinstance(val, Component)
 
 def make_readonly_property(val):
     """Return property that provides read-only access to its value
@@ -1042,4 +1063,15 @@ def convert_all_elements_to_np_array(arr):
         else:
             return arr
 
-    return np.asarray([convert_all_elements_to_np_array(x) for x in arr])
+    subarr = [convert_all_elements_to_np_array(x) for x in arr]
+    try:
+        return np.array(subarr)
+    except ValueError:
+        # numpy cannot easily create arrays with subarrays of certain dimensions, workaround here
+        # https://stackoverflow.com/q/26885508/3131666
+        len_subarr = len(subarr)
+        elementwise_subarr = np.empty(len_subarr, dtype=np.ndarray)
+        for i in range(len_subarr):
+            elementwise_subarr[i] = subarr[i]
+
+        return elementwise_subarr

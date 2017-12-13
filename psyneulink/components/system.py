@@ -198,10 +198,11 @@ does the same for `learning <System_Execution_Learning>` (assigned to its `sched
 The `scheduler_processing` can be assigned in the **scheduler** argument of the System's constructor;  if it is not
 specified, a default `Scheduler` is created automatically.   The `scheduler_learning` is always assigned automatically.
 The System's Schedulers base the ordering of execution of its Components based on the order in which they are listed
-in the `pathway <Process.pathway>`\\s of the `Proceses <Process>` used to construct the System, constrained by any
+in the `pathway <Process.pathway>`\\s of the `Processes <Process>` used to construct the System, constrained by any
 `Conditions <Condition>` that have been created for individual Components and assigned to the System's Schedulers (see
 `Scheduler`, `Condition <Condition_Creation>`, `System_Execution_Processing`, and `System_Execution_Learning` for
-additional details).
+additional details).  Both schedulers maintain a `Clock` that can be used to access their current `time
+<Time_Overview>`.
 
 .. _System_Control:
 
@@ -428,27 +429,31 @@ import math
 import numbers
 import re
 import warnings
+
 from collections import OrderedDict, namedtuple
 
 import numpy as np
 import typecheck as tc
+
 from toposort import toposort, toposort_flatten
 
 from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
-from psyneulink.components.process import ProcessList, ProcessTuple, Process
+from psyneulink.components.process import Process, ProcessList, ProcessTuple
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, WEIGHT, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, WEIGHT, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.log import Log
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
@@ -645,7 +650,7 @@ class System(System_Base):
 
         .. property that points to _all_mechanisms.mechanisms (see below)
 
-    mechanismsDict : Dict[Mechanism:Process]
+    mechanismsDict : Dict[Mechanism: Process]
         contains a dictionary of all Mechanisms in the System, listing the Processes to which they belong. The key of
         each entry is a `Mechanism <Mechanism>` object, and the value of each entry is a list of `Processes <Process>`.
 
@@ -814,6 +819,8 @@ class System(System_Base):
         self.status = INITIALIZING
 
         processes = processes or []
+        if not isinstance(processes, list):
+            processes = [processes]
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -1515,7 +1522,7 @@ class System(System_Base):
         # MODIFIED 6/27/17 END
 
         # Instantiate StimulusInputStates
-        self._instantiate_stimulus_inputs()
+        self._instantiate_stimulus_inputs(context=context)
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
@@ -1561,9 +1568,11 @@ class System(System_Base):
                 # MODIFIED 6/27/17 END
                 # MODIFIED 6/27/17 END
                 stimulus_input_state = SystemInputState(owner=self,
-                                                            variable=origin_mech.input_states[j].instance_defaults.variable,
-                                                            prefs=self.prefs,
-                                                            name="System Input State to Mechansism {}, Input State {}".format(origin_mech.name,j))
+                                                        variable=origin_mech.input_states[j].instance_defaults.variable,
+                                                        prefs=self.prefs,
+                                                        name="System Input State to Mechansism {}, Input State {}".
+                                                        format(origin_mech.name,j),
+                                                        context=context)
                 self.stimulusInputStates.append(stimulus_input_state)
                 self.inputs.append(stimulus_input_state.value)
 
@@ -1889,7 +1898,8 @@ class System(System_Base):
                                                    owner=self,
                                                    variable=target_mech_TARGET_input_state.instance_defaults.variable,
                                                    prefs=self.prefs,
-                                                   name="System Target {}".format(i))
+                                                   name="System Target {}".format(i),
+                                                   context=context)
             self.target_input_states.append(system_target_input_state)
 
             # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
@@ -2377,7 +2387,6 @@ class System(System_Base):
                 input=None,
                 target=None,
                 execution_id=None,
-                clock=CentralClock,
                 time_scale=None,
                 termination_processing=None,
                 termination_learning=None,
@@ -2387,9 +2396,6 @@ class System(System_Base):
         specified by the :py:data:`execution_graph <System.execution_graph>` attribute.
 
         Assign items of input to `ORIGIN` mechanisms
-
-        Execute mechanisms in the order specified in execution_list and with phases equal to
-        ``CentralClock.time_step % numPhases``.
 
         Execute any learning components specified at the appropriate phase.
 
@@ -2410,6 +2416,14 @@ class System(System_Base):
         ---------
         input : list or ndarray
             a list or array of input value arrays, one for each `ORIGIN` Mechanism in the System.
+
+        termination_processing : Dict[TimeScale: Condition]
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`processing
+            phase of execution <System_Execution_Processing>`
+
+        termination_learning : Dict[TimeScale: Condition]
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
+            phase of execution <System_Execution_Learning>`
 
             .. context : str
 
@@ -2507,7 +2521,7 @@ class System(System_Base):
         #endregion
 
         if self._report_system_output:
-            self._report_system_initiation(clock=clock)
+            self._report_system_initiation()
 
 
         #region EXECUTE MECHANISMS
@@ -2518,14 +2532,16 @@ class System(System_Base):
         # sorted_list = list(object_item[0].name for object_item in self.execution_list)
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
-        self._execute_processing(clock=clock, context=context)
+        self._execute_processing(context=context)
         #endregion
 
         # region EXECUTE LEARNING FOR EACH PROCESS
 
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context and self.learning:
-            self._execute_learning(clock=clock, context=context + ' ' + LEARNING)
+            self._execute_learning(context=context + SEPARATOR_BAR + LEARNING)
+            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
+            # self._execute_learning(clock=clock, context=context.replace(EXECUTING, LEARNING + ' '))
         # endregion
 
 
@@ -2536,13 +2552,13 @@ class System(System_Base):
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if not EVC_SIMULATION in context and self.enable_controller:
             try:
-                if self.controller.phaseSpec == (clock.time_step % self.numPhases):
-                    self.controller.execute(clock=clock,
-                                            time_scale=TimeScale.TRIAL,
-                                            runtime_params=None,
-                                            context=context)
-                    if self._report_system_output:
-                        print("{0}: {1} executed".format(self.name, self.controller.name))
+                self.controller.execute(
+                    time_scale=TimeScale.TRIAL,
+                    runtime_params=None,
+                    context=context
+                )
+                if self._report_system_output:
+                    print("{0}: {1} executed".format(self.name, self.controller.name))
 
             except AttributeError as error_msg:
                 if not 'INIT' in context:
@@ -2552,12 +2568,12 @@ class System(System_Base):
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
-            self._report_system_completion(clock=clock)
+            self._report_system_completion()
 
         return self.terminal_mechanisms.outputStateValues
 
-    # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
-    def _execute_processing(self, clock=CentralClock, context=None):
+    # def _execute_processing(self, time_scale=TimeScale.Trial, context=None):
+    def _execute_processing(self, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
         # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update())
@@ -2581,13 +2597,11 @@ class System(System_Base):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                mechanism.execute(clock=clock,
-                                  time_scale=self.timeScale,
-                                  # time_scale=time_scale,
-                                  runtime_params=rt_params,
-                                  context=context +
-                                          "| Mechanism: " + mechanism.name +
-                                          " [in processes: " + str(process_names) + "]")
+                mechanism.execute(
+                    time_scale=self.timeScale,
+                    runtime_params=rt_params,
+                    context=context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
+                )
 
 
                 if self._report_system_output and  self._report_process_output:
@@ -2619,7 +2633,7 @@ class System(System_Base):
                 pass
             i += 1
 
-    def _execute_learning(self, clock=CentralClock, context=None):
+    def _execute_learning(self, context=None):
         # Execute each LearningMechanism as well as LearningProjections in self.learningexecution_list
 
         # FIRST, if targets were specified as a function, call the function now
@@ -2670,13 +2684,7 @@ class System(System_Base):
                                          re.sub(r'[\[,\],\n]','',str(process_names))))
 
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                component.execute(
-                    clock=clock,
-                    time_scale=self.timeScale,
-                    runtime_params=params,
-                    # time_scale=time_scale,
-                    context=context_str
-                )
+                component.execute(time_scale=self.timeScale, runtime_params=params, context=context_str)
                 # # TEST PRINT:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
@@ -2732,7 +2740,6 @@ class System(System_Base):
     def run(self,
             inputs,
             num_trials=None,
-            reset_clock=True,
             initialize=False,
             initial_values=None,
             targets=None,
@@ -2741,7 +2748,6 @@ class System(System_Base):
             call_after_trial=None,
             call_before_time_step=None,
             call_after_time_step=None,
-            clock=CentralClock,
             time_scale=None,
             termination_processing=None,
             termination_learning=None,
@@ -2758,14 +2764,11 @@ class System(System_Base):
             the input for each in a sequence of executions (see :doc:`Run` for detailed description of formatting
             requirements and options).
 
-        reset_clock : bool : default `True`
-            if True, resets the :py:class:`CentralClock <TimeScale.CentralClock>` to 0 before a sequence of executions.
-
         initialize : bool default :keyword:`False`
             if `True`, calls the :py:meth:`initialize <System.initialize>` method of the System before a
             sequence of executions.
 
-        initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default None
+        initial_values : Dict[Mechanism: List[input] or np.ndarray(input)] : default None
             the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
         targets : List[input] or np.ndarray(input) : default `None`
@@ -2789,6 +2792,14 @@ class System(System_Base):
 
         call_after_time_step : Function : default= `None`
             called after each time_step of each trial is executed.
+
+        termination_processing : Dict[TimeScale: Condition]
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`processing
+            phase of execution <System_Execution_Processing>`
+
+        termination_learning : Dict[TimeScale: Condition]
+            a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
+            phase of execution <System_Execution_Learning>`
 
         Returns
         -------
@@ -2814,7 +2825,6 @@ class System(System_Base):
         return run(self,
                    inputs=inputs,
                    num_trials=num_trials,
-                   reset_clock=reset_clock,
                    initialize=initialize,
                    initial_values=initial_values,
                    targets=targets,
@@ -2826,10 +2836,9 @@ class System(System_Base):
                    time_scale=time_scale,
                    termination_processing=termination_processing,
                    termination_learning=termination_learning,
-                   clock=clock,
                    context=context)
 
-    def _report_system_initiation(self, clock=CentralClock):
+    def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of Processes in System being executed
         """
 
@@ -2838,9 +2847,10 @@ class System(System_Base):
         else:
             system_string = ' system'
 
-        if clock.time_step == 0:
-            print("\n\'{}\'{} executing with: **** (time_step {}) ".
-                  format(self.name, system_string, clock.time_step))
+        # replace this with updated Clock
+        if False:
+            print("\n\'{}\'{} executing with: **** (Time: {}) ".
+                  format(self.name, system_string, self.scheduler_processing.clock.simple_time))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
             print("self.input = ", self.input)
@@ -2851,10 +2861,10 @@ class System(System_Base):
             print("- input{}: {}".format(input_string, self.input))
 
         else:
-            print("\n\'{}\'{} executing ********** (time_step {}) ".
-                  format(self.name, system_string, clock.time_step))
+            print("\n\'{}\'{} executing ********** (Time: {}) ".
+                  format(self.name, system_string, self.scheduler_processing.clock.simple_time))
 
-    def _report_system_completion(self, clock=CentralClock):
+    def _report_system_completion(self):
         """Prints completion message and output_values of system
         """
 
@@ -2865,13 +2875,7 @@ class System(System_Base):
 
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
-        print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, clock.time_step))
-        # for object_item in self._terminal_mechs:
-        #     if object_item.mechanism.phaseSpec == (clock.time_step % self.numPhases):
-        #         print("- output for {0}: {1}".
-        #               format(object_item.mechanism.name,
-        #                      re.sub('[\[,\],\n]','',str(["{:0.3}".
-        #                                         format(float(i)) for i in object_item.mechanism.output_state.value]))))
+        print("\n\'{}\'{} completed ***********(Time: {})".format(self.name, system_string, self.scheduler_processing.clock.simple_time))
         if self.learning:
             from psyneulink.library.mechanisms.processing.objective.comparatormechanism import MSE
             for mech in self.target_mechanisms:
@@ -3233,18 +3237,18 @@ class System(System_Base):
             specifies whether or not to show the control components of the system;
             they will all be displayed in the color specified for **control_color**.
 
-        show_dimensions : bool or ALL or MECHANISMS or PROJECTIONS: default False
-            specifies whether or not to show dimemsions of Mechanisms (and/or MappingProjections when show_learning is
-            `True`);  can have the following settings:
+        show_dimensions : bool, MECHANISMS, PROJECTIONS or ALL : default False
+            specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
+            is `True`);  can have the following settings:
 
             * *ALL* -- shows dimensions for both Mechanisms and Projections (see below for formats).
-            |
+
             * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
               below the name of the Mechanism; each number represents the dimension of the `variable
               <InputState.variable>` for each `InputState` of the Mechanism; Output dimensions are shown above
               the name of the Mechanism; each number represents the dimension for `value <OutputState.value>` of each
               of `OutputState` of the Mechanism;
-            |
+
             * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
               shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
               rows (input dimension) and the second the number of columns (output dimension).
@@ -3545,7 +3549,7 @@ class SystemInputState(OutputState):
 
     """
 
-    def __init__(self, owner=None, variable=None, name=None, prefs=None):
+    def __init__(self, owner=None, variable=None, name=None, prefs=None, context=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
 
         :param variable:
@@ -3555,6 +3559,8 @@ class SystemInputState(OutputState):
         else:
             self.name = owner.name + "_" + name
         self.prefs = prefs
+        self.log = Log(owner=self)
+        self.recording = False
         self.efferents = []
         self.owner = owner
         self.value = variable

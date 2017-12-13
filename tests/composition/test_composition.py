@@ -13,7 +13,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.composition import Composition, CompositionError, MechanismRole
 from psyneulink.scheduling.condition import EveryNCalls
 from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 logger = logging.getLogger(__name__)
 
@@ -1078,7 +1078,7 @@ class TestCallBeforeAfterTimescale:
         def cb_timestep(scheduler, arr):
             def record_timestep():
 
-                arr.append(scheduler.times[TimeScale.TIME_STEP][TimeScale.TIME_STEP])
+                arr.append(scheduler.clock.get_total_times_relative(TimeScale.TIME_STEP, TimeScale.TRIAL))
 
             return record_timestep
 
@@ -1086,7 +1086,7 @@ class TestCallBeforeAfterTimescale:
 
             def record_pass():
 
-                arr.append(scheduler.times[TimeScale.RUN][TimeScale.PASS])
+                arr.append(scheduler.clock.get_total_times_relative(TimeScale.PASS, TimeScale.RUN))
 
             return record_pass
 
@@ -1094,7 +1094,7 @@ class TestCallBeforeAfterTimescale:
 
             def record_trial():
 
-                arr.append(scheduler.times[TimeScale.LIFE][TimeScale.TRIAL])
+                arr.append(scheduler.clock.get_total_times_relative(TimeScale.TRIAL, TimeScale.LIFE))
 
             return record_trial
 

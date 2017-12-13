@@ -150,6 +150,7 @@ Class Reference
 import logging
 import numbers
 import warnings
+
 from collections import Iterable
 
 import numpy as np
@@ -160,7 +161,7 @@ from psyneulink.globals.keywords import INITIALIZING, KWTA, K_VALUE, RATIO, RESU
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'KWTA', 'KWTAError',
@@ -292,7 +293,7 @@ class KWTA(RecurrentTransferMechanism):
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <KWTA.clip>` that it exceeds.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -616,20 +617,18 @@ class KWTA(RecurrentTransferMechanism):
     def execute(self,
                 input=None,
                 runtime_params=None,
-                clock=CentralClock,
                 time_scale=TimeScale.TRIAL,
                 ignore_execution_id=False,
                 context=None):
         if isinstance(input, str) or (isinstance(input, (list, np.ndarray)) and isinstance(input[0], str)):
             raise KWTAError("input ({}) to {} was a string, which is not supported for {}".
                             format(input, self, self.__class__.__name__))
-        return super().execute(input=input, runtime_params=runtime_params, clock=clock, time_scale=time_scale,
+        return super().execute(input=input, runtime_params=runtime_params, time_scale=time_scale,
                                ignore_execution_id=ignore_execution_id, context=context)
 
     def _execute(self,
                 variable=None,
                 runtime_params=None,
-                clock=CentralClock,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
@@ -637,7 +636,6 @@ class KWTA(RecurrentTransferMechanism):
 
         return super()._execute(variable=variable,
                        runtime_params=runtime_params,
-                       clock=clock,
                        time_scale=time_scale,
                        context=context)
 

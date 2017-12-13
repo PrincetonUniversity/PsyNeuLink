@@ -494,8 +494,8 @@ class PreferenceSet(object):
             owner_name = self.owner.__name__
         else:
             # FIX: SHOULDN"T THIS BE self.owner.name??
-            # MODIFIED 9/16/16 OLD:
-            owner_name = self.name
+            # # MODIFIED 9/16/16 OLD:
+            # owner_name = self.name
             # MODIFIED 9/16/16 NEW:
             owner_name = self.owner.name
             # MODIFIED 9/16/16 END

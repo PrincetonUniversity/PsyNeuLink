@@ -135,6 +135,15 @@ corresponding arguments of its constructor, or by assigning them directly (see `
   `function <Component.function>` after the function is called.
 ..
 
+.. _Component_Log:
+
+* **log** - the `log <Component.log>` attribute contains the Component's `Log`, that can be used to record its
+  `value <Component.value>`, as well as that of Components that belong to it, during initialization, validation,
+  execution and learning.  It also has four convenience methods -- `loggable_items <Log.loggable_items>`, `set_log_conditions
+  <Log.set_log_conditions>`, `log_values <Log.log_values>` and `logged_items <Log.logged_items>` -- that provide access to the
+  corresponding methods of its Log, used to identify, configure and track items for logging.
+..
+
 .. _Component_Name:
 
 * **name** - the `name <Component.name>` attribute contains the name assigned to the Component when it was created.
@@ -348,11 +357,11 @@ import typecheck as tc
 
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, \
+    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, LOG_ENTRIES, \
     INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
     SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
-from psyneulink.globals.log import Log
+# from psyneulink.globals.log import Log, LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
@@ -361,7 +370,7 @@ __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
     'InitStatus', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
 ]
-
+# Testing pull request 
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
 DeferredInitRegistry = {}
@@ -467,7 +476,6 @@ class ParamsDict(UserDict):
         super().__setitem__(key, item)
         # assign value to attrib
         setattr(self.owner, key, item)
-
 
 parameter_keywords = set()
 
@@ -662,6 +670,9 @@ class Component(object):
     value : 2d np.array
         see `value <Component_Value>`
 
+    log : Log
+        see `log <Component_Log>`
+
     name : str
         see `name <Component_Name>`
 
@@ -676,6 +687,7 @@ class Component(object):
 # IMPLEMENTATION NOTE:  *** CHECK THAT THIS DOES NOT CAUSE ANY CHANGES AT SUBORDNIATE LEVELS TO PROPOGATE EVERYWHERE
     componentCategory = None
     componentType = None
+
 
     class Defaults(object):
         def _attributes(obj):
@@ -830,6 +842,7 @@ class Component(object):
 
         # ASSIGN LOG
 
+        from psyneulink.globals.log import Log
         self.log = Log(owner=self)
         self.recording = False
         # Used by run to store return value of execute
@@ -2066,7 +2079,7 @@ class Component(object):
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
                 # these are always allowable since they are attribs of every Component
-                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE}:  # added SIZE here (7/5/17, CW)
+                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES}:  # added SIZE here (7/5/17, CW)
                     continue
                 # function is a class, so function_params has not yet been implemented
                 if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
@@ -2772,6 +2785,15 @@ class Component(object):
             #    TO THE CORRESPONDING ATTRIBUTES OF THE OWNER OBJECT
 
     @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, assignment):
+        self._value = assignment
+        self.log._log_value(assignment)
+
+    @property
     def verbosePref(self):
         return self.prefs.verbosePref
 
@@ -2818,6 +2840,49 @@ class Component(object):
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
+
+    @property
+    def loggable_items(self):
+        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `LogCondition`.
+        This is a convenience method that calls the `loggable_items <Log.loggable_items>` property of the Component's
+        `log <Component.log>`.
+        """
+        return self.log.loggable_items
+
+    from psyneulink.globals.log import LogCondition
+    def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
+        """
+        set_log_conditions(               \
+            items                \
+            log_condition=EXECUTION  \
+        )
+
+        Specifies items to be logged; these must be be `loggable_items <Component.loggable_items>` of the Component's
+        `log <Component.log>`. This is a convenience method that calls the `set_log_conditions <Log.set_log_conditions>` method
+        of the Component's `log <Component.log>`.
+        """
+        self.log.set_log_conditions(items=items, log_condition=log_condition)
+
+    def log_values(self, entries):
+        """
+        log_values(              \
+            entries              \
+        )
+
+        Specifies items to be logged; ; these must be be `loggable_items <Component.loggable_items>` of the Component's
+        `log <Component.log>`. This is a convenience method that calls the `log_values <Log.log_values>` method
+        of the Component's `log <Component.log>`.
+        """
+        self.log.log_values(entries)
+
+
+    @property
+    def logged_items(self):
+        """Dictionary of all items that have entries in the log, and their currently assigned `LogCondition`\\s
+        This is a convenience method that calls the `logged_items <Log.logged_items>` property of the Component's
+        `log <Component.log>`.
+        """
+        return self.log.logged_items
 
     @property
     def auto_dependent(self):

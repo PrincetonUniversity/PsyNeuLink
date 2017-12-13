@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ResetInterpreter" type="PythonConfigurationType" factoryName="Python" singleton="true">
+  <configuration default="false" name="ResetInterpreter" type="PythonConfigurationType" factoryName="Python" folderName="Interpreter" singleton="true">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>

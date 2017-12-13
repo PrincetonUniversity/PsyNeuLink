@@ -94,7 +94,7 @@ mySystem.show_graph(
 
 
 def print_header(system):
-    print("\n\n**** TRIAL: ", system.scheduler_processing.times[pnl.TimeScale.RUN][pnl.TimeScale.TRIAL])
+    print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
 
 
 def show_target():

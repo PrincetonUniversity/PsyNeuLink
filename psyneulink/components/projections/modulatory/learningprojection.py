@@ -175,13 +175,10 @@ from psyneulink.components.projections.projection import Projection_Base, _is_pr
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.globals.keywords import ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, \
-    LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE, NAME, \
-    CONTEXT
+from psyneulink.globals.keywords import CONTEXT, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, NAME, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import iscompatible, parameter_spec
-from psyneulink.scheduling.timescale import CentralClock
 
 __all__ = [
     'DefaultTrainingMechanism', 'LearningProjection', 'LearningProjectionError', 'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDER_DIM',
@@ -292,7 +289,7 @@ class LearningProjection(ModulatoryProjection_Base):
        specifies the value by which to exponentiate the LearningProjection's `value <LearningProjection.value>`
        before combining it with others (see `exponent <LearningProjection.exponent>` for additional details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
@@ -598,7 +595,7 @@ class LearningProjection(ModulatoryProjection_Base):
         learned_projection.has_learning_projection = True
 
 
-    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
+    def execute(self, input=None, time_scale=None, params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
@@ -622,13 +619,6 @@ class LearningProjection(ModulatoryProjection_Base):
 
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.weight_change_matrix))
-
-        # TEST PRINT
-        # print("\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
-        # print("\n@@@ WEIGHT CHANGES CALCULATED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
-        # TEST DEBUG MULTILAYER
-        # print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
-        #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.value))
 
         return self.value
 

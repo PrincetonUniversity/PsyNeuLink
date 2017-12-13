@@ -636,6 +636,23 @@ attributes are listed below by their argument names / keywords, along with a des
     * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for
       learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
 
+A Mechanism also has several convenience properties, listed brelow, that list its `Projections <Projection>` and the
+Mechanisms that send/receive these:
+
+    * `projections <Mechanism_Base.projections>` -- all of the Projections sent or received by the Mechanism;
+    * `afferents <Mechanism_Base.afferents>` -- all of the Projections received by the Mechanism;
+    * `path_afferents <Mechanism_Base.afferents>` -- all of the PathwayProjections received by the Mechanism;
+    * `mod_afferents <Mechanism_Base.afferents>` -- all of the ModulatoryProjections received by the Mechanism;
+    * `efferents <Mechanism_Base.efferents>` -- all of the Projections sent by the Mechanism;
+    * `senders <Mechanism_Base.senders>` -- all of the Mechanisms that send a Projection to the Mechanism
+    * `modulators <Mechanism_Base.modulators>` -- all of the AdaptiveMechanisms that send a ModulatoryProjection to the
+      Mechanism
+    * `receivers <Mechanism_Base.receivers>` -- all of the Mechanisms that receive a Projection from the Mechanism
+
+Each of these is a `ContentAddressableList`, which means that the names of the Components in each list can be listed by
+appending ``.names`` to the property.  For examples, the names of all of the Mechanisms that receive a Projection from
+``my_mech`` can be accessed by ``my_mech.receivers.names``.
+
 
 .. _Mechanism_Role_In_Processes_And_Systems:
 
@@ -762,25 +779,19 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, InitStatus, ExecutionStatus, function_type, method_type
+from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
-from psyneulink.components.states.state import _parse_state_spec, ADD_STATES
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.components.states.state import ADD_STATES, _parse_state_spec
 from psyneulink.globals.defaults import timeScaleSystemDefault
-from psyneulink.globals.keywords import \
-    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, \
-    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
-    INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, \
-    SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, VALUE, REFERENCE_VALUE, \
-    kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'Mechanism_Base', 'MechanismError'
@@ -935,7 +946,7 @@ class Mechanism_Base(Mechanism):
         contains the parameters for the Mechanism's `function <Mechanism_Base.function>`.  The key of each entry is the
         name of a parameter of the function, and its value is the parameter's value.
 
-    value : ndarray : default None
+    value : ndarray
         output of the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array, with the
         items of axis 0 corresponding to the values referenced by the corresponding `index <OutputState.index>`
         attribute of the Mechanism's `OutputStates <OutputState>`.  The first item is generally referenced by the
@@ -948,11 +959,11 @@ class Mechanism_Base(Mechanism):
            `output_values <Mechanism_Base.output_values>` attribute, which lists the `value <OutputState.value>`\\s
            of its `OutputStates <Mechanism_Base.output_states>`.
 
-    default_value : ndarray : default None
+    default_value : ndarray
         set equal to the `value <Mechanism_Base.value>` attribute when the Mechanism is first initialized; maintains
         its value even when `value <Mechanism_Base.value>` is reset to None when (re-)initialized prior to execution.
 
-    output_state : OutputState : default default OutputState
+    output_state : OutputState
         `primary OutputState <OutputState_Primary>` for the Mechanism;  same as first entry of its `output_states
         <Mechanism_Base.output_states>` attribute.
 
@@ -966,7 +977,7 @@ class Mechanism_Base(Mechanism):
         the Mechanism's `primary OutputState <OutputState_Primary>` (i.e., the one in the its `output_state
         <Mechanism_Base.output_state>` attribute).
 
-    output_values : List[value] : default Mechanism_Base.function(instance_defaults.variable)
+    output_values : List[value]
         each item in the list corresponds to the `value <OutputState.value>` of one of the Mechanism's `OutputStates
         <Mechanism_OutputStates>` listed in its `output_states <Mechanism_Base.output_states>` attribute.
 
@@ -1006,12 +1017,59 @@ class Mechanism_Base(Mechanism):
             for how phases are used).
     COMMENT
 
-    processes : Dict[Process, str]:
+    states : ContentAddressableList
+        a list of all of the Mechanism's `States <State>`, composed from its `input_states
+        <Mechanism_Base.input_states>`, `parameter_states <Mechanism_Base.parameter_states>`, and
+        `output_states <Mechanism_Base.output_states>` attributes.
+
+    projections : ContentAddressableList
+        a list of all of the Mechanism's `Projections <Projection>`, composed from the
+        `path_afferents <InputStates.path_afferents>` of all of its `input_states <Mechanism_Base.input_states>`,
+        the `mod_afferents` of all of its `input_states <Mechanism_Base.input_states>`,
+        `parameter_states <Mechanism)Base.parameter_states>`, and `output_states <Mechanism_Base.output_states>`,
+        and the `efferents <OutputState.efferents>` of all of its `output_states <Mechanism_Base.output_states>`.
+
+    afferents : ContentAddressableList
+        a list of all of the Mechanism's afferent `Projections <Projection>`, composed from the
+        `path_afferents <InputStates.path_afferents>` of all of its `input_states <Mechanism_Base.input_states>`,
+        and the `mod_afferents` of all of its `input_states <Mechanism_Base.input_states>`,
+        `parameter_states <Mechanism)Base.parameter_states>`, and `output_states <Mechanism_Base.output_states>`.,
+
+    path_afferents : ContentAddressableList
+        a list of all of the Mechanism's afferent `PathwayProjections <PathwayProjection>`, composed from the
+        `path_afferents <InputStates.path_afferents>` attributes of all of its `input_states
+        <Mechanism_Base.input_states>`.
+
+    mod_afferents : ContentAddressableList
+        a list of all of the Mechanism's afferent `ModulatoryProjections <ModulatoryProjection>`, composed from the
+        `mod_afferents` attributes of all of its `input_states <Mechanism_Base.input_states>`, `parameter_states
+        <Mechanism)Base.parameter_states>`, and `output_states <Mechanism_Base.output_states>`.
+
+    efferents : ContentAddressableList
+        a list of all of the Mechanism's efferent `Projections <Projection>`, composed from the `efferents
+        <OutputState.efferents>` attributes of all of its `output_states <Mechanism_Base.output_states>`.
+
+    senders : ContentAddressableList
+        a list of all of the Mechanisms that send `Projections <Projection>` to the Mechanism (i.e., the senders of
+        its `afferents <Mechanism_Base.afferents>`; this includes both `ProcessingMechanisms <ProcessingMechanism>`
+        (that send `MappingProjections <MappingProjection>` and `AdaptiveMechanisms <AdaptiveMechanism>` (that send
+        `ModulatoryProjections <ModulatoryProjection>` (also see `modulators <Mechanism_Base.modulators>`).
+
+    modulators : ContentAddressableList
+        a list of all of the `AdapativeMechanisms <AdaptiveMechanism>` that send `ModulatoryProjections
+        <ModulatoryProjection>` to the Mechanism (i.e., the senders of its `mod_afferents
+        <Mechanism_Base.mod_afferents>` (also see `senders <Mechanism_Base.senders>`).
+
+    receivers : ContentAddressableList
+        a list of all of the Mechanisms that receive `Projections <Projection>` from the Mechanism (i.e.,
+        the receivers of its `efferents <Mechanism_Base.efferents>`.
+
+    processes : Dict[Process, str]
         a dictionary of the `Processes <Process>` to which the Mechanism belongs, that designates its  `role
         <Mechanism_Role_In_Processes_And_Systems>` in each.  The key of each entry is a Process to which the Mechansim
         belongs, and its value is the Mechanism's `role in that Process <Process_Mechanisms>`.
 
-    systems : Dict[System, str]:
+    systems : Dict[System, str]
         a dictionary of the `Systems <System>` to which the Mechanism belongs, that designates its `role
         <Mechanism_Role_In_Processes_And_Systems>` in each. The key of each entry is a System to which the Mechanism
         belongs, and its value is the Mechanism's `role in that System <System_Mechanisms>`.
@@ -1024,8 +1082,8 @@ class Mechanism_Base(Mechanism):
         assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
         .. _stateRegistry : Registry
@@ -1055,6 +1113,19 @@ class Mechanism_Base(Mechanism):
     #     kwPreferenceSetName: 'MechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
+    # Class-specific loggable items
+    @property
+    def _loggable_items(self):
+        # States, afferent Projections are loggable for a Mechanism
+        #     - this allows the value of InputStates and OutputStates to be logged
+        #     - for MappingProjections, this logs the value of the Projection's matrix parameter
+        #     - for ModulatoryProjections, this logs the value of the Projection
+        # IMPLEMENTATION NOTE: this needs to be a property as Projections may be added after instantiation
+        try:
+            # return list(self.states) + list(self.afferents)
+            return list(self.states)
+        except:
+            return []
 
     #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute
     # By default, init only the _execute method of Mechanism subclass objects when their execute method is called;
@@ -1758,7 +1829,6 @@ class Mechanism_Base(Mechanism):
     def execute(self,
                 input=None,
                 runtime_params=None,
-                clock=CentralClock,
                 time_scale=TimeScale.TRIAL,
                 ignore_execution_id = False,
                 context=None):
@@ -1835,7 +1905,6 @@ class Mechanism_Base(Mechanism):
                 return_value =  self._execute(
                     variable=self.instance_defaults.variable,
                     runtime_params=runtime_params,
-                    clock=clock,
                     time_scale=time_scale,
                     context=context,
                 )
@@ -1943,7 +2012,6 @@ class Mechanism_Base(Mechanism):
         self.value = self._execute(
             variable=variable,
             runtime_params=runtime_params,
-            clock=clock,
             time_scale=time_scale,
             context=context,
         )
@@ -2150,7 +2218,6 @@ class Mechanism_Base(Mechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    clock=CentralClock,
                     time_scale=None,
                     context=None):
         return self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)
@@ -2350,35 +2417,6 @@ class Mechanism_Base(Mechanism):
                     if isinstance(value, ParameterState) )
 
     @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-
-        # # MODIFIED 1/28/17 NEW: [COPIED FROM State]
-        # # Store value in log if specified
-        # # Get logPref
-        # if self.prefs:
-        #     log_pref = self.prefs.logPref
-        #
-        # # Get context
-        # try:
-        #     curr_frame = inspect.currentframe()
-        #     prev_frame = inspect.getouterframes(curr_frame, 2)
-        #     context = inspect.getargvalues(prev_frame[1][0]).locals['context']
-        # except KeyError:
-        #     context = ""
-        #
-        # # If context is consistent with log_pref, record value to log
-        # if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-        #         (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
-        #         (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
-        #     self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
-        # # MODIFIED 1/28/17 END
-
-    @property
     def default_value(self):
         return self._default_value
 
@@ -2427,6 +2465,78 @@ class Mechanism_Base(Mechanism):
         # FIX:  CATCHES ELEMENTWISE COMPARISON DEPRECATION WARNING/ERROR -- NEEDS TO BE FIXED AT SOME POINT
         except:
             self._status = CHANGED
+
+    @property
+    def states(self):
+        """Return list of all of the Mechanism's States"""
+        return ContentAddressableList(
+                component_type=State,
+                list=list(self.input_states) +
+                     list(self.parameter_states) +
+                     list(self.output_states))
+
+    @property
+    def path_afferents(self):
+        """Return list of path_afferent Projections to all of the Mechanism's input_states"""
+        projs = []
+        for input_state in self.input_states:
+            projs.extend(input_state.path_afferents)
+        return ContentAddressableList(component_type=Projection, list=projs)
+
+    @property
+    def mod_afferents(self):
+        """Return all of the Mechanism's afferent modulatory Projections"""
+        projs = []
+        for input_state in self.input_states:
+            projs.extend(input_state.mod_afferents)
+        for parameter_state in self.parameter_states:
+            projs.extend(parameter_state.mod_afferents)
+        for output_state in self.input_states:
+            projs.extend(output_state.mod_afferents)
+        return ContentAddressableList(component_type=Projection, list=projs)
+
+    @property
+    def afferents(self):
+        """Return all afferent Projections"""
+        return ContentAddressableList(component_type=Projection,
+                                      list= list(self.path_afferents) + list(self.mod_afferents))
+
+    @property
+    def efferents(self):
+        """Return list of all of the Mechanism's Projections"""
+        projs = []
+        for output_state in self.output_states:
+            projs.extend(output_state.efferents)
+        return ContentAddressableList(component_type=Projection, list=projs)
+
+    @property
+    def projections(self):
+        """Return all Projections"""
+        return ContentAddressableList(component_type=Projection,
+                                      list=list(self.path_afferents) +
+                                           list(self.mod_afferents) +
+                                           list(self.efferents))
+
+    @property
+    def senders(self):
+        """Return all Mechanisms that send Projections to self"""
+        return ContentAddressableList(component_type=Mechanism,
+                                      list=[p.sender.owner for p in self.afferents
+                                            if isinstance(p.sender.owner, Mechanism_Base)])
+
+    @property
+    def receivers(self):
+        """Return all Mechanisms that send Projections to self"""
+        return ContentAddressableList(component_type=Mechanism,
+                                      list=[p.receiver.owner for p in self.efferents
+                                            if isinstance(p.sender.owner, Mechanism_Base)])
+
+    @property
+    def modulators(self):
+        """Return all Mechanisms that send Projections to self"""
+        return ContentAddressableList(component_type=Mechanism,
+                                      list=[p.sender.owner for p in self.mod_afferents
+                                            if isinstance(p.sender.owner, Mechanism_Base)])
 
 
 def _is_mechanism_spec(spec):

@@ -383,26 +383,20 @@ COMMENT
 
 """
 import inspect
-import typecheck as tc
 import warnings
+
+import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
-from psyneulink.components.states.state import StateError
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
-from psyneulink.globals.keywords import \
-    NAME, PARAMS, CONTEXT, PATHWAY, \
-    MECHANISM, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, \
-    STANDARD_ARGS, STATE, STATES, WEIGHT, EXPONENT, \
-    PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, \
-    MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, \
-    LEARNING, LEARNING_SIGNAL, LEARNING_PROJECTION, \
-    CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, \
-    GATING, GATING_SIGNAL, GATING_PROJECTION, \
-    kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from psyneulink.components.states.state import StateError
+from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
+from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
 from psyneulink.globals.utilities import ContentAddressableList, iscompatible, is_numeric, is_matrix, type_match
+from psyneulink.globals.log import LogCondition, LogEntry, _get_log_context
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -793,8 +787,6 @@ class Projection_Base(Projection):
         If self.value / self.instance_defaults.variable is None, set to sender.value
         """
         from psyneulink.components.states.outputstate import OutputState
-        from psyneulink.components.states.parameterstate import ParameterState
-
 
         # ASSIGN sender specification
 
@@ -925,17 +917,6 @@ class Projection_Base(Projection):
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
-    @property
-    def parameter_states(self):
-        return self._parameter_states
-
-    @parameter_states.setter
-    def parameter_states(self, value):
-        # IMPLEMENTATION NOTE:
-        # This keeps parameter_states property readonly,
-        #    but averts exception when setting paramsCurrent in Component (around line 850)
-        pass
-
     # FIX: 10/3/17 - replace with @property on Projection for receiver and sender
     @property
     def socket_assignments(self):
@@ -957,6 +938,16 @@ class Projection_Base(Projection):
         raise ProjectionError("PROGRAM ERROR: {} must implement _assign_default_projection_name().".
                               format(self.__class__.__name__))
 
+    @property
+    def parameter_states(self):
+        return self._parameter_states
+
+    @parameter_states.setter
+    def parameter_states(self, value):
+        # IMPLEMENTATION NOTE:
+        # This keeps parameter_states property readonly,
+        #    but averts exception when setting paramsCurrent in Component (around line 850)
+        pass
 
 @tc.typecheck
 def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
@@ -1260,7 +1251,6 @@ def _parse_connection_specs(connectee_state_type,
     from psyneulink.components.states.outputstate import OutputState
     from psyneulink.components.states.parameterstate import ParameterState
     from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-    from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, _is_control_spec
     from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 
 
@@ -1885,14 +1875,13 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     from psyneulink.components.states.state import _instantiate_state
     from psyneulink.components.states.state import State_Base
     from psyneulink.components.states.inputstate import InputState
-    from psyneulink.components.states.parameterstate import ParameterState
 
     if not isinstance(state, (int, str, State)):
         raise ProjectionError("State specification(s) for {} (as receiver(s) of {}) contain(s) one or more items"
                              " that is not a name, reference to a {} or an index for one".
                              format(receiver.name, projection_spec.name, State.__name__))
 
-    # state is State object, so use that
+    # state is State object, so use thatParameterState
     if isinstance(state, State_Base):
         state._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
