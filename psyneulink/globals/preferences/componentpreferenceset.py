@@ -323,8 +323,6 @@ class ComponentPreferenceSet(PreferenceSet):
                          context=self)
         self._level = level
 
-    #region verbose entry ----------------------------------------------------------------------------------------------
-
     @property
     def verbosePref(self):
         """Return setting of owner's verbosePref at level specified in its PreferenceEntry.level
@@ -342,8 +340,6 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         self.set_preference(candidate_info=setting, pref_ivar_name=kpVerbosePref)
-
-    # region param_validation ----------------------------------------------------------------------------------------------
 
     @property
     def paramValidationPref(self):
@@ -364,8 +360,6 @@ class ComponentPreferenceSet(PreferenceSet):
         """
         self.set_preference(setting,kpParamValidationPref)
 
-    #region reportOutput entry -----------------------------------------------------------------------------------------
-
     @property
     def reportOutputPref(self):
         """Return setting of owner's reportOutputPref at level specified in its PreferenceEntry.level
@@ -384,8 +378,6 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         self.set_preference(candidate_info=setting, pref_ivar_name=kpReportOutputPref)
-
-    #region log entry --------------------------------------------------------------------------------------------------
 
     @property
     def logPref(self):
@@ -426,8 +418,6 @@ class ComponentPreferenceSet(PreferenceSet):
         self.set_preference(candidate_info=setting, pref_ivar_name=kpLogPref)
 
 
-    #region runtimeParamModulation -------------------------------------------------------------------------------------
-
     @property
     def runtimeParamModulationPref(self):
         """Returns owner's runtimeParamModulationPref
@@ -446,8 +436,6 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         self.set_preference(candidate_info=setting, pref_ivar_name=kpRuntimeParamModulationPref)
-
-    #region runtimeParamStickyAssignment -------------------------------------------------------------------------------
 
     @property
     def runtimeParamStickyAssignmentPref(self):
