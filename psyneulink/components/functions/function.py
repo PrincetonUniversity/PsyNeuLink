@@ -17,6 +17,7 @@ Combination Functions:
   * `Reduce`
   * `LinearCombination`
   * `CombineMeans`
+  * `PredictionErrorDelta`
 
 TransferMechanism Functions:
   * `Linear`
@@ -53,6 +54,7 @@ Learning Functions:
   * `Hebbian`
   * `Reinforcement`
   * `BackPropagation`
+  * `TDLearning`
 
 .. _Function_Overview:
 
@@ -2341,12 +2343,9 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         gamma = self.gamma
         sample = variable[0]
         reward = variable[1]
-        delta = np.zeros_like(sample)
+        delta = np.zeros(sample.shape)
 
-        # for t in range(len(sample) - 1):
-        #     delta[t] = reward[t] + gamma * sample[t + 1] - sample[t]
-            # delta[t] = reward[t] + gamma * sample[t] - sample[t - 1]
-        for t in range(1, len(sample) - 1):
+        for t in range(1, len(sample)):
             delta[t] = reward[t] + gamma * sample[t] - sample[t - 1]
         return delta
 
@@ -9483,6 +9482,10 @@ class BackPropagation(LearningFunction):
 
 
 class TDLearning(Reinforcement):
+    """
+    This class is used to implement temporal difference learning via the 
+    `Reinforcement` function. See `Reinforcement` for class details.
+    """
     componentName = TDLEARNING_FUNCTION
 
     class ClassDefaults(Reinforcement.ClassDefaults):

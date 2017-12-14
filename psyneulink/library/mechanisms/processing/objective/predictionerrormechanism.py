@@ -160,7 +160,7 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
     OUTCOME
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import INITIALIZING, PREDICTION_ERROR_MECHANISM
+from psyneulink.globals.keywords import INITIALIZING, PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, \
     kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, \
@@ -251,8 +251,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
     def _execute(self, variable=None, runtime_params=None, clock=CentralClock,
                  time_scale=None, context=None):
         # TODO: update to take sample/reward from variable
-        # sample = x(t) in Montague
-        from globals.keywords import SAMPLE, TARGET
+        # sample = x(t) in Montague on first run, V(t) on subsequent runs
 
         sample = self.input_states[SAMPLE].value
         reward = self.input_states[TARGET].value
