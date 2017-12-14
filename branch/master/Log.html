@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.1.0+0.gfb53232.dirty documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.1.0+4.gd789c2e.dirty documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.1.0+0.gfb53232.dirty documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.1.0+4.gd789c2e.dirty documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.1
+                0.4.1.0+4
               </div>
             
           
@@ -91,23 +91,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Condition.html">Condition</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Time.html">Time</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Log</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -307,6 +295,11 @@ initialization requires that it be assigned in the <strong>prefs</strong> argume
 </pre></div>
 </div>
 </div>
+<div class="admonition hint">
+<p class="first admonition-title">Hint</p>
+<p class="last">To log the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Component at the start or end of a <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, use its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log_values" title="psyneulink.components.component.Component.log_values"><code class="xref any py py-meth docutils literal"><span class="pre">log_values</span></code></a> method in the <strong>call_before_trial</strong> or <strong>call_after_trial</strong> arguments of the System’s
+<a class="reference internal" href="System.html#psyneulink.components.system.System.run" title="psyneulink.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
+</div>
 </div>
 </div>
 <div class="section" id="execution">
@@ -449,12 +442,12 @@ reported.</p>
 <dl class="attribute">
 <dt id="psyneulink.globals.log.LogCondition.CONTROL">
 <code class="descname">CONTROL</code><em class="property"> = 64</em><a class="headerlink" href="#psyneulink.globals.log.LogCondition.CONTROL" title="Permalink to this definition">¶</a></dt>
-<dd><p>Record all value assignment during control phase of Composition execution.</p>
+<dd><p>Record all value assignments during control phase of Composition execution.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.globals.log.LogCondition.ALL_ASSIGNMENTS">
-<code class="descname">ALL_ASSIGNMENTS</code><em class="property"> = 510</em><a class="headerlink" href="#psyneulink.globals.log.LogCondition.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
+<code class="descname">ALL_ASSIGNMENTS</code><em class="property"> = 1662</em><a class="headerlink" href="#psyneulink.globals.log.LogCondition.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Record all value assignments.</p>
 </dd></dl>
 
@@ -755,7 +748,7 @@ property of its class, and its own <a class="reference internal" href="Component
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.1.0+0.gfb53232.dirty',
+            VERSION:'0.4.1.0+4.gd789c2e.dirty',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
