@@ -1240,7 +1240,7 @@ class Log:
                 # MODIFIED 12/14/17 OLD:
                     while datum.time != next(time_col,None):
                         row.append(None)
-                value = None if datum.value is None else datum.value.tolist()
+                value = None if datum.value is None else np.array(datum.value).tolist()
                 row.append(value)
                 # # MODIFIED 12/14/17 NEW:
                 #     for i in range(len(time_values)):
