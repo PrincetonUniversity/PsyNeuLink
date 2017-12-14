@@ -1331,8 +1331,6 @@ class Log:
 
         # Headers
         csv = "\'" + "\', \'".join(i[0] if isinstance(i, list) else i for i in npaT[0]) + "\'"
-        # csv = "\'" + "\', \'".join(str(i[0]) if isinstance(i, list) else str(i) for i in npaT[0]) + "\'"
-        # csv = ", ".join(str(i[0]) if isinstance(i, list) else str(i) for i in npaT[0]) + "\'"
         # csv = "\'" + "\', \'".join(npaT[0]) + "\'"
         # Data
         for i in range(1, len(npaT)):
