@@ -520,16 +520,16 @@ def run(object,
         `System <System_Execution_Learning>`.  If it is not specified, the current state of learning is left intact.
         If it is `True`, learning is forced on; if it is `False`, learning is forced off.
 
-    call_before_trial : Function : default= `None`
+    call_before_trial : Function : default `None`
         called before each `TRIAL` in the sequence is run.
 
-    call_after_trial : Function : default= `None`
+    call_after_trial : Function : default `None`
         called after each `TRIAL` in the sequence is run.
 
-    call_before_time_step : Function : default= ``None`
+    call_before_time_step : Function : default ``None`
         called before each `TIME_STEP` is executed.
 
-    call_after_time_step : Function : default= `None`
+    call_after_time_step : Function : default `None`
         called after each `TIME_STEP` is executed.
 
     termination_processing : Dict[TimeScale: Condition]

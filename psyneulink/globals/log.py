@@ -132,6 +132,10 @@ LogConditions (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
     >> T = pnl.TransferMechanism(
     ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
+.. hint::
+   To log the `value <Component.value>` of a Component at the start or end of a `TRIAL`, use its `log_values
+   <Component.log_values>` method in the **call_before_trial** or **call_after_trial** arguments of the System's
+   `run <System.run>` method.
 
 .. _Log_Execution:
 
@@ -266,7 +270,6 @@ COMMENT:
            [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
             [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]]], dtype=object)
 
-
 JENKINS:
     >> proj_A_to_B.log.nparray(entries=[pnl.MATRIX], owner_name=False, header=False)
     array([[list([0]), list([1])],
@@ -391,25 +394,30 @@ class LogCondition(IntEnum):
     """Specifies levels of logging, as descrdibed below."""
     OFF = 0
     """No recording."""
-    INITIALIZATION = 1<<1           # 2
+    INITIALIZATION =     1<<1       # 2
     """Record during initial assignment."""
-    VALIDATION = 1<<2               # 4
+    VALIDATION =         1<<2       # 4
     """Record value during validation."""
-    EXECUTION = 1<<3                # 8
+    EXECUTION =          1<<3       # 8
     """Record all value assignments during any execution of the Component."""
-    PROCESSING = 1<<4               # 16
+    PROCESSING =         1<<4       # 16
     """Record all value assignments during processing phase of Composition execution."""
     # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-    # LEARNING = 1<<5               # 32
+    # LEARNING =         1<<5       # 32
     LEARNING = (1<<5) + EXECUTION   # 40
     """Record all value assignments during learning phase of Composition execution."""
-    CONTROL = 1<<6                  # 64
-    """Record all value assignment during control phase of Composition execution."""
-    VALUE_ASSIGNMENT = 1<<7         # 128
+    CONTROL =            1<<6       # 64
+    """Record all value assignments during control phase of Composition execution."""
+    # FIX: TRIAL, RUN, VALUE_ASSIGNMENT & FINAL NOT YET IMPLEMENTED:
+    TRIAL =              1<<7       # 128
+    # """Record value at the end of a TRIAL."""
+    RUN =                1<<8       # 256
+    # """Record value at the end of a RUN."""
+    VALUE_ASSIGNMENT =   1<<9       # 512
     # """Record final value assignments during Composition execution."""
-    FINAL = 1<<8                    # 256
+    FINAL =             1<<10       # 1024
     # """Synonym of VALUE_ASSIGNMENT."""
-    COMMAND_LINE = 1 << 9           # 512
+    COMMAND_LINE =      1<<11       # 2048
     ALL_ASSIGNMENTS = \
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL | VALUE_ASSIGNMENT | FINAL
     """Record all value assignments."""
@@ -697,7 +705,7 @@ class Log:
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
                                format(item, self.owner.name))
             try:
-                component = next(c for c in self.loggable_components if c.name == item)
+                component = next(c for c in self.loggable_components if self._alias_owner_name(c.name) == item)
                 component.logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
             except AttributeError:
                 raise LogError("PROGRAM ERROR: Unable to set LogCondition for {} of {}".format(item, self.owner.name))
