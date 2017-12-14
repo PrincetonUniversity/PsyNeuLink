@@ -1237,15 +1237,27 @@ class Log:
             time_col = iter(time_values)
             for datum in self.logged_entries[entry]:
                 if time_values:
-                    # for time in next(time_col,None):
-                        # if time is None:
-                        #     break
-                        # if datum.item != time:
-                        #     row.append(None)
+                # MODIFIED 12/14/17 OLD:
                     while datum.time != next(time_col,None):
                         row.append(None)
-                value = None if datum.value is None else datum.value.tolist()
+                value = None if datum.value is None else np.array(datum.value).tolist()
                 row.append(value)
+                # # MODIFIED 12/14/17 NEW:
+                #     for i in range(len(time_values)):
+                #         time = next(time_col,None)
+                #         if time is None:
+                #             break
+                #         if datum.time != time:
+                #             row.append(None)
+                #             continue
+                #         value = None if datum.value is None else datum.value.tolist()
+                #         row.append(value)
+                #         break
+                # else:
+                #     value = None if datum.value is None else datum.value.tolist()
+                #     row.append(value)
+                # MODIFIED 12/14/17 END
+
             if header:
                 entry_header = "{}{}{}{}".format(owner_name_str, lb, self._alias_owner_name(entry), rb)
                 row = [entry_header] + row
