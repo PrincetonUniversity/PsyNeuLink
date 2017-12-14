@@ -304,20 +304,23 @@ class ComponentPreferenceSet(PreferenceSet):
             if isinstance(owner_class.classPreferences, dict):
                 raise AttributeError
         except AttributeError:
-            super(ComponentPreferenceSet, self).__init__(
-                owner=owner_class,
-                level=owner_class.classPreferenceLevel,
-                prefs=ComponentDefaultPrefDicts[owner_class.classPreferenceLevel],
-                name=name,
-                context=self)
-
-        # Instantiate PreferenceSet
-        super(ComponentPreferenceSet, self).__init__(owner=owner,
+            if inspect.isclass(owner):
+                # If this is a call to instantiate the classPreferences, no need to keep doing it! (infinite recursion)
+                pass
+            else:
+                # Instantiate the classPreferences
+                owner_class.classPreferences = ComponentPreferenceSet(
+                                                    owner=owner_class,
                                                     level=owner_class.classPreferenceLevel,
-                                                    prefs=prefs,
+                                                    prefs=ComponentDefaultPrefDicts[owner_class.classPreferenceLevel],
                                                     name=name,
                                                     context=self)
-        # FIX:  NECESSARY?? 5/30/16
+        # Instantiate PreferenceSet
+        super().__init__(owner=owner,
+                         level=owner_class.classPreferenceLevel,
+                         prefs=prefs,
+                         name=name,
+                         context=self)
         self._level = level
 
     #region verbose entry ----------------------------------------------------------------------------------------------
