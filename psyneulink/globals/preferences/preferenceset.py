@@ -49,7 +49,7 @@ class PreferenceSet(object):
 
     Description:
         Each PreferenceSet object stores a set of preferences in its corresponding attributes
-        Every class in the Function hierarchy is assigned a PreferenceLevel:
+        Every class in the Component hierarchy is assigned a PreferenceLevel:
             - System:  reserved for the Component class
             - Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Function)
             - Type: Category subclasses (e.g., MappingProjection and ControlProjection subclasses of Projection, Function subclasses)
@@ -530,7 +530,13 @@ class PreferenceSet(object):
         #endregion
 
         #region candidate_info is a PreferenceEntry
-        if isinstance(candidate_info, PreferenceEntry):
+        if (isinstance(candidate_info, PreferenceEntry)
+                or (isinstance(candidate_info, tuple) and len(candidate_info)==2)):
+            # elif len(candidate_info) != 2:
+            #     raise PreferenceSetError("Preference specification tuple for {} ({}) must have only two entries "
+            #                              "(setting and level)".format(owner_name, candidate_info))
+            if not isinstance(candidate_info, PreferenceEntry):
+                candidate_info = PreferenceEntry(candidate_info[0], candidate_info[1])
             setting_OK = self.validate_setting(candidate_info.setting, default_setting, pref_ivar_name)
             level_OK = isinstance(candidate_info.level, PreferenceLevel)
             if level_OK and setting_OK:
@@ -687,13 +693,13 @@ class PreferenceSet(object):
             elif requested_level > self.owner.__class__.classPreferenceLevel:
                 # IMPLEMENTATION NOTE: REMOVE HACK BELOW, ONCE ALL CLASSES ARE ASSIGNED classPreferences ON INIT
                 next_level = self.owner.__class__.__bases__[0]
-                # MODIFIED ~4/30/17 NEW:
                 # If classPreferences for level have not yet been assigned as PreferenceSet, assign them
                 if (not hasattr(next_level, 'classPreferences') or
                         not isinstance(next_level.classPreferences, PreferenceSet)):
                     from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet
-                    ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
-                # MODIFIED ~4/30/17 END
+                    next_level.classPreferences = ComponentPreferenceSet(owner=next_level,
+                                                                         prefs=next_level.classPreferences,
+                                                                         level=next_level.classPreferenceLevel)
                 return_val = next_level.classPreferences.get_pref_setting_for_level(pref_ivar_name, requested_level)
                 return return_val[0],return_val[1]
             # Otherwise, return value for current level
@@ -747,14 +753,12 @@ class PreferenceSet(object):
                                           pref_entry.level.__class__.__name__+'.'+pref_entry.level.name))
                         return pref_value, err_msg
                 else:
-                    # MODIFIED 5/2/17 NEW:
                     # If classPreferences for level have not yet been assigned as PreferenceSet, assign them
                     next_level = self.owner.__bases__[0]
                     if (not hasattr(next_level, 'classPreferences') or
                             not isinstance(next_level.classPreferences, PreferenceSet)):
                         from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet
                         ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
-                    # MODIFIED 5/2/17 END
                     return_val = self.owner.__bases__[0].classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                                requested_level)
                     return return_val[0], return_val[1]
