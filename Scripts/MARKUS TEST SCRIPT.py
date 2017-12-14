@@ -41,7 +41,7 @@ new_system.run(stim_list_dict,
               learning = True)
 
 print(new_system.results)
-new_system.show_graph(show_learning=True)
+# new_system.show_graph(show_learning=True)
 
 input_layer.log.nparray()
 

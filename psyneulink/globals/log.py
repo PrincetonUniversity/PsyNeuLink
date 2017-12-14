@@ -1237,6 +1237,11 @@ class Log:
             time_col = iter(time_values)
             for datum in self.logged_entries[entry]:
                 if time_values:
+                    # for time in next(time_col,None):
+                        # if time is None:
+                        #     break
+                        # if datum.item != time:
+                        #     row.append(None)
                     while datum.time != next(time_col,None):
                         row.append(None)
                 value = None if datum.value is None else datum.value.tolist()
