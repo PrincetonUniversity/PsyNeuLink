@@ -2009,6 +2009,8 @@ class Mechanism_Base(Mechanism):
 
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
+        # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
+        #                      to avoid multiple calls to (and potential log entries for) self.value property
         value = self._execute(variable=variable,
                                    runtime_params=runtime_params,
                                    time_scale=time_scale,
