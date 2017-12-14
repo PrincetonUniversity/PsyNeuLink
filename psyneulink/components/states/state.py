@@ -2709,7 +2709,7 @@ def _parse_state_spec(state_type=None,
                                                                          state_dict=state_dict,
                                                                          state_specific_spec = state_specific_specs)
             # State subclass returned a state_spec, so call _parse_state_spec to parse it
-            if state_spec:
+            if state_spec is not None:
                 state_dict = _parse_state_spec(context=context, state_spec=state_spec, **standard_args)
 
             # Move PROJECTIONS entry to params

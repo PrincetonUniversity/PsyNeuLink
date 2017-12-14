@@ -304,23 +304,34 @@ class ComponentPreferenceSet(PreferenceSet):
             if isinstance(owner_class.classPreferences, dict):
                 raise AttributeError
         except AttributeError:
-            super(ComponentPreferenceSet, self).__init__(
-                owner=owner_class,
-                level=owner_class.classPreferenceLevel,
-                prefs=ComponentDefaultPrefDicts[owner_class.classPreferenceLevel],
-                name=name,
-                context=self)
-
-        # Instantiate PreferenceSet
-        super(ComponentPreferenceSet, self).__init__(owner=owner,
+            # MODIFIED 12/14/17 OLD:
+            # super(ComponentPreferenceSet, self).__init__(
+            #     owner=owner_class,
+            #     level=owner_class.classPreferenceLevel,
+            #     prefs=ComponentDefaultPrefDicts[owner_class.classPreferenceLevel],
+            #     name=name,
+            #     context=self)
+            # MODIFIED 12/14/17 NEW:
+            if inspect.isclass(owner):
+                # If this is a call to instantiate the classPreferences, no need to keep doing it! (infinite recursion)
+                pass
+            else:
+                # Instantiate the classPreferences
+                owner_class.classPreferences = ComponentPreferenceSet(
+                                                    owner=owner_class,
                                                     level=owner_class.classPreferenceLevel,
-                                                    prefs=prefs,
+                                                    prefs=ComponentDefaultPrefDicts[owner_class.classPreferenceLevel],
                                                     name=name,
                                                     context=self)
-        # FIX:  NECESSARY?? 5/30/16
-        self._level = level
+            # MODIFIED 12/14/17 END
 
-    #region verbose entry ----------------------------------------------------------------------------------------------
+        # Instantiate PreferenceSet
+        super().__init__(owner=owner,
+                         level=owner_class.classPreferenceLevel,
+                         prefs=prefs,
+                         name=name,
+                         context=self)
+        self._level = level
 
     @property
     def verbosePref(self):
@@ -339,8 +350,6 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         self.set_preference(candidate_info=setting, pref_ivar_name=kpVerbosePref)
-
-    # region param_validation ----------------------------------------------------------------------------------------------
 
     @property
     def paramValidationPref(self):
@@ -361,8 +370,6 @@ class ComponentPreferenceSet(PreferenceSet):
         """
         self.set_preference(setting,kpParamValidationPref)
 
-    #region reportOutput entry -----------------------------------------------------------------------------------------
-
     @property
     def reportOutputPref(self):
         """Return setting of owner's reportOutputPref at level specified in its PreferenceEntry.level
@@ -381,8 +388,6 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         self.set_preference(candidate_info=setting, pref_ivar_name=kpReportOutputPref)
-
-    #region log entry --------------------------------------------------------------------------------------------------
 
     @property
     def logPref(self):
@@ -423,8 +428,6 @@ class ComponentPreferenceSet(PreferenceSet):
         self.set_preference(candidate_info=setting, pref_ivar_name=kpLogPref)
 
 
-    #region runtimeParamModulation -------------------------------------------------------------------------------------
-
     @property
     def runtimeParamModulationPref(self):
         """Returns owner's runtimeParamModulationPref
@@ -443,8 +446,6 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         self.set_preference(candidate_info=setting, pref_ivar_name=kpRuntimeParamModulationPref)
-
-    #region runtimeParamStickyAssignment -------------------------------------------------------------------------------
 
     @property
     def runtimeParamStickyAssignmentPref(self):
