@@ -128,8 +128,8 @@ LogConditions (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
    COMMENT:
    FIX: THIS EXAMPLE CAN'T CURRENTLY BE EXECUTED AS IT PERMANENTLY SETS THE LogPref FOR ALL TransferMechanism
    COMMENT
-    >> import psyneulink as pnl
-    >> T = pnl.TransferMechanism(
+    >>> import psyneulink as pnl
+    >>> T = pnl.TransferMechanism(
     ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
 .. hint::
@@ -155,7 +155,6 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
-    >>> import psyneulink as pnl
     >>> my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
     >>> my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
     >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
@@ -1238,6 +1237,11 @@ class Log:
             time_col = iter(time_values)
             for datum in self.logged_entries[entry]:
                 if time_values:
+                    # for time in next(time_col,None):
+                        # if time is None:
+                        #     break
+                        # if datum.item != time:
+                        #     row.append(None)
                     while datum.time != next(time_col,None):
                         row.append(None)
                 value = None if datum.value is None else datum.value.tolist()
