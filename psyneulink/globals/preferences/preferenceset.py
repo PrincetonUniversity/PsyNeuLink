@@ -49,7 +49,7 @@ class PreferenceSet(object):
 
     Description:
         Each PreferenceSet object stores a set of preferences in its corresponding attributes
-        Every class in the Function hierarchy is assigned a PreferenceLevel:
+        Every class in the Component hierarchy is assigned a PreferenceLevel:
             - System:  reserved for the Component class
             - Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Function)
             - Type: Category subclasses (e.g., MappingProjection and ControlProjection subclasses of Projection, Function subclasses)
@@ -530,7 +530,13 @@ class PreferenceSet(object):
         #endregion
 
         #region candidate_info is a PreferenceEntry
-        if isinstance(candidate_info, PreferenceEntry):
+        if (isinstance(candidate_info, PreferenceEntry)
+                or (isinstance(candidate_info, tuple) and len(candidate_info)==2)):
+            # elif len(candidate_info) != 2:
+            #     raise PreferenceSetError("Preference specification tuple for {} ({}) must have only two entries "
+            #                              "(setting and level)".format(owner_name, candidate_info))
+            if not isinstance(candidate_info, PreferenceEntry):
+                candidate_info = PreferenceEntry(candidate_info[0], candidate_info[1])
             setting_OK = self.validate_setting(candidate_info.setting, default_setting, pref_ivar_name)
             level_OK = isinstance(candidate_info.level, PreferenceLevel)
             if level_OK and setting_OK:
