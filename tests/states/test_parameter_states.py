@@ -2,52 +2,84 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.functions.function import Logistic
+
 class TestParameterStates:
     def test_inspect_function_params_slope(self):
-        # A = IntegratorMechanism(function=Linear)
-        B = TransferMechanism()
-        A = TransferMechanism()
-        print()
-        print("A.function_object.slope --> ", A.function_object.slope)
-        print("B.function_object.slope --> ", B.function_object.slope)
-        print("A.function_object._slope --> ", A.function_object._slope)
-        print("B.function_object._slope --> ", B.function_object._slope)
-        # print("A.function_object._slope --> ", A.function_object._slope)
-        # print("A.function_object.mod_slope --> ", A.function_object.mod_slope)
-        # print("A.function_object.base_value_slope --> ", A.function_object.base_value_slope)
-        print("- - - - - SETTING A.function_object.slope = 0.2 - - - - -")
-        A.function_object.slope = 0.2
-        print("A.function_object.slope --> ", A.function_object.slope)
-        print("B.function_object.slope --> ", B.function_object.slope)
-        print("A.function_object._slope --> ", A.function_object._slope)
-        print("B.function_object._slope --> ", B.function_object._slope)
-        # print("A.function_object._slope --> ", A.function_object._slope)
-        # print("A.function_object.mod_slope --> ", A.function_object.mod_slope)
 
-        print("- - - - - SETTING B.function_object.slope = 0.8 - - - - -")
-        B.function_object.slope = 0.8
-        print("A.function_object.slope --> ", A.function_object.slope)
-        print("B.function_object.slope --> ", B.function_object.slope)
-        print("A.function_object._slope --> ", A.function_object._slope)
-        print("B.function_object._slope --> ", B.function_object._slope)
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+
+        assert A.function_object.slope == 1.0
+        assert B.function_object.slope == 1.0
+        assert A.function_object._slope == 1.0
+        assert B.function_object._slope == 1.0
+        assert A.function_object.mod_slope == [1.0]
+        assert B.function_object.mod_slope == [1.0]
+
+        assert A.noise == 0.0
+        assert B.noise == 0.0
+        assert A._noise == 0.0
+        assert B._noise == 0.0
+        assert A.mod_noise == 0.0
+        assert B.mod_noise == 0.0
+
+        A.function_object.slope = 0.2
+
+        assert A.function_object.slope == 0.2
+        assert B.function_object.slope == 1.0
+        assert A.function_object._slope == 0.2
+        assert B.function_object._slope == 1.0
+        assert A.function_object.mod_slope == [1.0]
+        assert B.function_object.mod_slope == [1.0]
+
+        A.noise = 0.5
+
+        assert A.noise == 0.5
+        assert B.noise == 0.0
+        assert A._noise == 0.5
+        assert B._noise == 0.0
+        assert A.mod_noise == 0.0
+        assert B.mod_noise == 0.0
+
+        B.function_object.slope = 0.7
+
+        assert A.function_object.slope == 0.2
+        assert B.function_object.slope == 0.7
+        assert A.function_object._slope == 0.2
+        assert B.function_object._slope == 0.7
+        assert A.function_object.mod_slope == [1.0]
+        assert B.function_object.mod_slope == [1.0]
+
+        B.noise = 0.6
+
+        assert A.noise == 0.5
+        assert B.noise == 0.6
+        assert A._noise == 0.5
+        assert B._noise == 0.6
+        assert A.mod_noise == 0.0
+        assert B.mod_noise == 0.0
+
         # print("A.function_object.base_value_slope --> ", A.function_object.base_value_slope)
         print("- - - - - EXECUTING A - - - - -")
         print(A.execute(1.0))
+        assert A.function_object.mod_slope == [0.2]
         print("- - - - - EXECUTING B - - - - -")
         print(B.execute(1.0))
-        print("A.function_object.slope --> ", A.function_object.slope)
-        print("B.function_object.slope --> ", B.function_object.slope)
-        print("A.function_object._slope --> ", A.function_object._slope)
-        print("B.function_object._slope --> ", B.function_object._slope)
-        # print("A.function_object._slope --> ", A.function_object._slope)
-        # print("A.function_object.mod_slope --> ", A.function_object.mod_slope)
-        # print("A.function_object.base_value_slope --> ", A.function_object.base_value_slope)
-        print("- - - - - SETTING A.function_object.slope = 0.5 - - - - -")
-        A.function_object.slope = 0.5
-        print("A.function_object.slope --> ", A.function_object.slope)
-        print("B.function_object.slope --> ", B.function_object.slope)
-        print("A.function_object._slope --> ", A.function_object._slope)
-        print("B.function_object._slope --> ", B.function_object._slope)
+
+        assert A.function_object.slope == 0.2
+        assert B.function_object.slope == 0.7
+        assert A.function_object._slope == 0.2
+        assert B.function_object._slope == 0.7
+        assert A.function_object.mod_slope == [0.2]
+        assert B.function_object.mod_slope == [0.7]
+
+        assert A.noise == 0.5
+        assert B.noise == 0.6
+        assert A._noise == 0.5
+        assert B._noise == 0.6
+        assert A.mod_noise == 0.5
+        assert B.mod_noise == 0.6
 
     def test_inspect_mechanism_params_noise(self):
         print("\n\n========================== starting second test ==========================\n\n")
