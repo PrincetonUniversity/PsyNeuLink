@@ -746,57 +746,61 @@ class Log:
         from psyneulink.components.component import Component
         programmatic = False
 
+        if isinstance(value, LogEntry):
+            self.entries[self.owner.name] = value
 
-        if context is COMMAND_LINE:
-            # If _log_value is being called programmatically,
-            #    flag for later and set context to None to get context from the stack
-            programmatic = True
-            context = None
+        else:
 
-        # Get context from the stack
-        if context is None:
-            curr_frame = inspect.currentframe()
-            prev_frame = inspect.getouterframes(curr_frame, 2)
-            i = 1
-            # Search stack for first frame (most recent call) with a context specification
-            while context is None:
-                try:
-                    context = inspect.getargvalues(prev_frame[i][0]).locals['context']
-                except KeyError:
-                    # Try earlier frame
-                    i += 1
-                except IndexError:
-                    # Ran out of frames, so just set context to empty string
-                    context = ""
-                else:
-                    break
+            if context is COMMAND_LINE:
+                # If _log_value is being called programmatically,
+                #    flag for later and set context to None to get context from the stack
+                programmatic = True
+                context = None
 
-        # If context is a Component object, it must be during its initialization, so assign accordingly:
-        if isinstance(context, Component):
-            context = "{} of {}".format(INITIALIZING, context.name)
+            # Get context from the stack
+            if context is None:
+                curr_frame = inspect.currentframe()
+                prev_frame = inspect.getouterframes(curr_frame, 2)
+                i = 1
+                # Search stack for first frame (most recent call) with a context specification
+                while context is None:
+                    try:
+                        context = inspect.getargvalues(prev_frame[i][0]).locals['context']
+                    except KeyError:
+                        # Try earlier frame
+                        i += 1
+                    except IndexError:
+                        # Ran out of frames, so just set context to empty string
+                        context = ""
+                    else:
+                        break
 
-        # No context was specified in any frame
-        if context is None:
-            raise LogError("PROGRAM ERROR: No context specification found in any frame")
+            # If context is a Component object, it must be during its initialization, so assign accordingly:
+            if isinstance(context, Component):
+                context = "{} of {}".format(INITIALIZING, context.name)
 
-        if not isinstance(context, str):
-            raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
+            # No context was specified in any frame
+            if context is None:
+                raise LogError("PROGRAM ERROR: No context specification found in any frame")
 
-        # Context is an empty string, but called programatically
-        if not context and programmatic:
-            context = COMMAND_LINE
-            # context = self.owner.prev_context + "FROM " + COMMAND_LINE
-            # context = self.owner.prev_context
+            if not isinstance(context, str):
+                raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
 
-        context_flags = _get_log_context(context)
+            # Context is an empty string, but called programatically
+            if not context and programmatic:
+                context = COMMAND_LINE
+                # context = self.owner.prev_context + "FROM " + COMMAND_LINE
+                # context = self.owner.prev_context
 
-        log_pref = self.owner.prefs.logPref if self.owner.prefs else None
+            context_flags = _get_log_context(context)
 
-        # Log value if logging condition is satisfied or called for programmatically
-        if (log_pref and log_pref == context_flags) or context_flags & LogCondition.COMMAND_LINE:
-        # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-        # if log_pref and log_pref | context_flags:
-            self.entries[self.owner.name] = LogEntry(self._get_time(context, context_flags), context, value)
+            log_pref = self.owner.prefs.logPref if self.owner.prefs else None
+
+            # Log value if logging condition is satisfied or called for programmatically
+            if (log_pref and log_pref == context_flags) or context_flags & LogCondition.COMMAND_LINE:
+            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
+            # if log_pref and log_pref | context_flags:
+                self.entries[self.owner.name] = LogEntry(self._get_time(context, context_flags), context, value)
 
         if context is not COMMAND_LINE:
             self.owner.prev_context = context
@@ -1437,3 +1441,14 @@ class Log:
 
     # def save_log(self):
     #     print("Saved")
+
+def _log_trials_and_runs(self, composition, curr_condition:tc.enum(LogCondition.TRIAL, LogCondition.RUN), context):
+    for mech in composition.mechanisms:
+        for component, condition in mech.loggable_components:
+            if condition is curr_condition:
+                value = LogEntry((composition.simple_time.run,
+                                  composition.simple_time.trial,
+                                  composition.simple_time.time_step),
+                                 context,
+                                 component.value)
+                component.log._log_value(value, context)
