@@ -96,7 +96,7 @@ from psyneulink.components.projections.modulatory.modulatoryprojection import Mo
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Process_Base
 from psyneulink.globals.defaults import defaultGatingPolicy
-from psyneulink.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INITIALIZING, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from psyneulink.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INITIALIZING, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -155,7 +155,6 @@ class GatingProjection(ModulatoryProjection_Base):
                 FUNCTION:Linear,
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
                 PROJECTION_SENDER: DefaultGatingMechanism, # GatingProjection (assigned to class ref in __init__ module)
-                PROJECTION_SENDER_VALUE: [defaultGatingSignal]
     COMMENT
 
 
@@ -266,7 +265,7 @@ class GatingProjection(ModulatoryProjection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_SENDER: GatingMechanism,
-        PROJECTION_SENDER_VALUE: defaultGatingPolicy})
+    })
 
     @tc.typecheck
     def __init__(self,
