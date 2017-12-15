@@ -79,7 +79,7 @@ list of 2d lists/arrays, though `some shorthand notations are allowed <Input_Spe
         ...                          default_variable=[[0.0], [0.0]])
         >>> c = pnl.TransferMechanism(name='c')
 
-        >>>p1 = pnl.Process(pathway=[a, c],
+        >>> p1 = pnl.Process(pathway=[a, c],
         ...                 name='p1')
         >>> p2 = pnl.Process(pathway=[b, c],
         ...                 name='p2')

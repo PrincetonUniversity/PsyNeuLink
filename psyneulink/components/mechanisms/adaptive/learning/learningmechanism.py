@@ -1137,7 +1137,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _execute(self,
                 variable=None,
                 runtime_params=None,
-
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute LearningMechanism function and return learning_signal

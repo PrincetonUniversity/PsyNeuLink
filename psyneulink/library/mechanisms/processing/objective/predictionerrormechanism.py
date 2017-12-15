@@ -134,8 +134,7 @@ value of which is a vector of the same length as the output of sample.
 
     >>> reward_mech = pnl.TransferMechanism(size=5)
 
-    >>> prediction_error_mech = pnl.PredictionErrorMechanism(default_variable=[[0], [0]],
-    ...                                                      sample=sample_mech,
+    >>> prediction_error_mech = pnl.PredictionErrorMechanism(sample=sample_mech,
     ...                                                      target=reward_mech)
 
 Note that ``sample_mech`` is specified to take an array of length 5 as its
@@ -168,7 +167,6 @@ from psyneulink.globals.preferences.preferenceset import PreferenceEntry, \
 from psyneulink.globals.utilities import is_numeric
 from psyneulink.library.mechanisms.processing.objective.comparatormechanism \
     import ComparatorMechanism, ComparatorMechanismError
-from psyneulink.scheduling.timescale import CentralClock
 
 __all__ = [
     'PredictionErrorMechanism',
@@ -189,7 +187,6 @@ class PredictionErrorMechanism(ComparatorMechanism):
     PredictionErrorMechanism(                                \
         sample,                                              \
         target,                                              \
-        input_states=[SAMPLE,TARGET]                         \
         function=LinearCombination,                          \
         output_states=[OUTCOME, MSE],                        \
         params=None,                                         \
@@ -223,7 +220,6 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  function=PredictionErrorDeltaFunction(),
                  output_states: tc.optional(tc.any(str, Iterable)) = OUTCOME,
                  learning_rate=0.3,
-                 max_time_steps=0,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
@@ -235,7 +231,6 @@ class PredictionErrorMechanism(ComparatorMechanism):
                                                   input_states=input_states,
                                                   output_states=output_states,
                                                   learning_rate=learning_rate,
-                                                  max_time_steps=max_time_steps,
                                                   params=params)
 
         super().__init__(sample=sample,
@@ -248,8 +243,8 @@ class PredictionErrorMechanism(ComparatorMechanism):
                          prefs=prefs,
                          context=context)
 
-    def _execute(self, variable=None, runtime_params=None, clock=CentralClock,
-                 time_scale=None, context=None):
+    def _execute(self, variable=None, runtime_params=None, time_scale=None,
+                 context=None):
         # TODO: update to take sample/reward from variable
         # sample = x(t) in Montague on first run, V(t) on subsequent runs
 

@@ -1673,7 +1673,6 @@ class Process(Process_Base):
                     seen.add(mech)
                 if mech.processes[self] in {ORIGIN, SINGLETON}:
                     self.instance_defaults.variable.extend(mech.instance_defaults.variable)
-        print("Instance defaults variable: {}".format(self.instance_defaults.variable))
         process_input = convert_to_np_array(self.instance_defaults.variable, 2)
 
         # Get number of Process inputs
