@@ -425,6 +425,20 @@ class LogCondition(IntEnum):
     # def _log_level_max(cls):
     #     return max([cls[i].value for i in list(cls.__members__) if cls[i] is not LogCondition.ALL_ASSIGNMENTS])
 
+    @classmethod
+    def _get_condition_string(cls, condition, string=None):
+        """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
+        if string:
+            string += ": "
+        else:
+            string = ""
+        flagged_items = []
+        for c in list(cls.__members__):
+            if LogCondition[c] & condition:
+               flagged_items.append(c)
+        string += ", ".join(flagged_items)
+        return string
+
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
@@ -728,12 +742,14 @@ class Log:
                 # self.add_entries(item[0])
                 assign_log_level(item[0], item[1])
 
-    def _log_value(self, value, context=None):
+    def _log_value(self, value, time=None, context=None):
         """Add LogEntry to an entry in the Log
 
-        Identifies the context in which the call is being made, which is assigned to the context field of the
-        `LogEntry`, along with the current time stamp and value itself
-
+        If **value** is a LogEntry, it is assigned to the entry
+        If **context** is a LogCondition, it is used to determine whether the entry should be made;
+           **time** must be passed;  the name of the LogCondition(s) specified are assigned to the context of LogEntry
+        Otherwise, uses string (or Component) passed in **context**, or searches stack (see note) to determine the
+        context, and uses that to determine the scheduler and, from that, the time;
         If value is None, uses owner's `value <Component.value>` attribute.
 
         .. note::
@@ -751,48 +767,57 @@ class Log:
 
         else:
 
-            if context is COMMAND_LINE:
-                # If _log_value is being called programmatically,
-                #    flag for later and set context to None to get context from the stack
-                programmatic = True
-                context = None
+            if isinstance(context, LogCondition):
+                context_flags = context
+                context = LogCondition._get_condition_string(context)
+                if not time:
+                    raise LogError("Use of LogCondition ({}) by {} to specify context requires specificatiom of time".
+                                   format(context.name, self.owner.name ))
 
-            # Get context from the stack
-            if context is None:
-                curr_frame = inspect.currentframe()
-                prev_frame = inspect.getouterframes(curr_frame, 2)
-                i = 1
-                # Search stack for first frame (most recent call) with a context specification
-                while context is None:
-                    try:
-                        context = inspect.getargvalues(prev_frame[i][0]).locals['context']
-                    except KeyError:
-                        # Try earlier frame
-                        i += 1
-                    except IndexError:
-                        # Ran out of frames, so just set context to empty string
-                        context = ""
-                    else:
-                        break
+            # Get context
+            else:
+                if context is COMMAND_LINE:
+                    # If _log_value is being called programmatically,
+                    #    flag for later and set context to None to get context from the stack
+                    programmatic = True
+                    context = None
 
-            # If context is a Component object, it must be during its initialization, so assign accordingly:
-            if isinstance(context, Component):
-                context = "{} of {}".format(INITIALIZING, context.name)
+                # Get context from the stack
+                if context is None:
+                    curr_frame = inspect.currentframe()
+                    prev_frame = inspect.getouterframes(curr_frame, 2)
+                    i = 1
+                    # Search stack for first frame (most recent call) with a context specification
+                    while context is None:
+                        try:
+                            context = inspect.getargvalues(prev_frame[i][0]).locals['context']
+                        except KeyError:
+                            # Try earlier frame
+                            i += 1
+                        except IndexError:
+                            # Ran out of frames, so just set context to empty string
+                            context = ""
+                        else:
+                            break
 
-            # No context was specified in any frame
-            if context is None:
-                raise LogError("PROGRAM ERROR: No context specification found in any frame")
+                # If context is a Component object, it must be during its initialization, so assign accordingly:
+                if isinstance(context, Component):
+                    context = "{} of {}".format(INITIALIZING, context.name)
 
-            if not isinstance(context, str):
-                raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
+                # No context was specified in any frame
+                if context is None:
+                    raise LogError("PROGRAM ERROR: No context specification found in any frame")
 
-            # Context is an empty string, but called programatically
-            if not context and programmatic:
-                context = COMMAND_LINE
-                # context = self.owner.prev_context + "FROM " + COMMAND_LINE
-                # context = self.owner.prev_context
+                if not isinstance(context, str):
+                    raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
 
-            context_flags = _get_log_context(context)
+                # Context is an empty string, but called programatically
+                if not context and programmatic:
+                    context = COMMAND_LINE
+                    # context = self.owner.prev_context + "FROM " + COMMAND_LINE
+                    # context = self.owner.prev_context
+
+                context_flags = _get_log_context(context)
 
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 
@@ -800,7 +825,8 @@ class Log:
             if (log_pref and log_pref == context_flags) or context_flags & LogCondition.COMMAND_LINE:
             # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
             # if log_pref and log_pref | context_flags:
-                self.entries[self.owner.name] = LogEntry(self._get_time(context, context_flags), context, value)
+                time = time or self._get_time(context, context_flags)
+                self.entries[self.owner.name] = LogEntry(time, context, value)
 
         if context is not COMMAND_LINE:
             self.owner.prev_context = context
