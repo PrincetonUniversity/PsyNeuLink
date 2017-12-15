@@ -31,9 +31,9 @@ Overview
 --------
 
 A Mechanism takes an input, transforms it in some way, and makes the result available as its output.  There are two
-types of Mechanisms in psyneulink:
+types of Mechanisms in PsyNeuLink:
 
-    * `ProcessingMechanisms <ProcessingMechanism>` aggregrate the input they receive from other Mechanisms, and/or the
+    * `ProcessingMechanisms <ProcessingMechanism>` aggregate the input they receive from other Mechanisms, and/or the
       input to the `Process` or `System` to which they belong, transform it in some way, and
       provide the result as input to other Mechanisms in the Process or System, or as the output for a Process or
       System itself.  There are a variety of different types of ProcessingMechanism, that accept various forms of
@@ -109,7 +109,7 @@ mentioned above, or using one of the following:
           the Mechanism's `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method, or where it is
           specified in the `pathway <Process.pathway>` attribute of a `Process`.
 
-  * **automatically** -- psyneulink automatically creates one or more Mechanisms under some circumstances. For example,
+  * **automatically** -- PsyNeuLink automatically creates one or more Mechanisms under some circumstances. For example,
     a `ComparatorMechanism` and `LearningMechanism <LearningMechanism>` are created automatically when `learning is
     specified <Process_Learning_Sequence>` for a Process; and an `ObjectiveMechanism` and `ControlMechanism
     <ControlMechanism>` are created when the `controller <System.controller>` is specified for a `System`.
@@ -242,7 +242,7 @@ to the Mechanism's `function <Mechanism_Base.function>` attribute.
 
 .. note::
    It is important to recognize the distinction between a `Function <Function>` and its `function
-   <Function_Base.function>` attribute (note the difference in capitalization).  A *Function* is a psyneulink `Component
+   <Function_Base.function>` attribute (note the difference in capitalization).  A *Function* is a PsyNeuLink `Component
    <Component>`, that can be created using a constructor; a *function* is an attribute that contains a callable method
    belonging to a Function, and that is executed when the Component to which the Function belongs is executed.
    Functions are used to assign, store, and apply parameter values associated with their function (see `Function
@@ -317,7 +317,7 @@ unpredictable effects.
 
 COMMENT:
     When a custom function is specified,
-    the function itself is assigned to the Mechanism's designated attribute.  At the same time, psyneulink automatically
+    the function itself is assigned to the Mechanism's designated attribute.  At the same time, PsyNeuLink automatically
     creates a `UserDefinedFunction` object, and assigns the custom function to its
     `function <UserDefinedFunction.function>` attribute.
 COMMENT
@@ -597,7 +597,7 @@ be configured (see `OutputState Specification <OutputState_Specification>`. Thes
 
 All of a Mechanism's OutputStates (including the primary one) are listed in its `output_states
 <Mechanism_Base.output_states>` attribute (note the plural). The `output_states <Mechanism_Base.output_states>`
-attribute is a ContentAddressableList -- a psyneulink-defined subclass of the Python class
+attribute is a ContentAddressableList -- a PsyNeuLink-defined subclass of the Python class
 `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userlist#collections.UserList>`_ -- that
 allows a specific OutputState in the list to be accessed using its name as the index for the list (e.g.,
 ``my_mechanism['OutputState name']``).  This list can also be used to assign additional OutputStates to the Mechanism
