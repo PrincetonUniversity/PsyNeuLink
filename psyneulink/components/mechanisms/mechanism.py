@@ -2009,51 +2009,40 @@ class Mechanism_Base(Mechanism):
 
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
-        self.value = self._execute(
-            variable=variable,
-            runtime_params=runtime_params,
-            time_scale=time_scale,
-            context=context,
-        )
+        # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
+        #                      to avoid multiple calls to (and potential log entries for) self.value property
+        value = self._execute(variable=variable,
+                                   runtime_params=runtime_params,
+                                   time_scale=time_scale,
+                                   context=context,
+                                   )
 
-        # # MODIFIED 3/3/17 OLD:
-        # self.value = np.atleast_2d(self.value)
-        # # MODIFIED 3/3/17 NEW:
-        # converted_to_2d = np.atleast_2d(self.value)
-        # # If self.value is a list of heterogenous elements, leave as is;
-        # # Otherwise, use converted value (which is a genuine 2d array)
-        # if converted_to_2d.dtype != object:
-        #     self.value = converted_to_2d
-        # MODIFIED 3/8/17 NEWER:
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
         #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
         #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-        if (isinstance(self.value, list) and
-            (all(isinstance(item, np.ndarray) for item in self.value) and
+        if (isinstance(value, list) and
+            (all(isinstance(item, np.ndarray) for item in value) and
                 all(
-                        all(item.shape[i]==self.value[0].shape[0]
+                        all(item.shape[i]==value[0].shape[0]
                             for i in range(len(item.shape)))
-                        for item in self.value))):
-                # return self.value
+                        for item in value))):
                 pass
         else:
-            converted_to_2d = np.atleast_2d(self.value)
+            converted_to_2d = np.atleast_2d(value)
             # If return_value is a list of heterogenous elements, return as is
             #     (satisfies requirement that return_value be an array of possibly multidimensional values)
             if converted_to_2d.dtype == object:
-                # return self.value
                 pass
             # Otherwise, return value converted to 2d np.array
             else:
                 # return converted_to_2d
-                self.value = converted_to_2d
-        # MODIFIED 3/3/17 END
+                value = converted_to_2d
 
         # Set status based on whether self.value has changed
-        self.status = self.value
-
+        self.status = value
         #endregion
 
+        self.value = value
 
         #region UPDATE OUTPUT STATE(S)
         self._update_output_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
