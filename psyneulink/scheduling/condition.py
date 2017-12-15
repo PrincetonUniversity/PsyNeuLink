@@ -291,7 +291,7 @@ Class Reference
 
 import logging
 
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTrials', 'AfterPass', 'AfterTrial', 'All',
@@ -321,7 +321,7 @@ class ConditionSet(object):
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
         evaluate the `Conditions <Condition>`
 
-    conditions : dict{`Component`: `Condition`}
+    conditions : Dict[`Component <Component>`: `Condition`]
         specifies an iterable collection of `Components <Component>` and the `Conditions <Condition>` associated
         with each.
 
@@ -332,8 +332,8 @@ class ConditionSet(object):
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
         evaluate the `Conditions <Condition>`
 
-    conditions : dict{`Component`: `Condition`}
-        the key of each entry is a `Component`, and its value is the `Condition <Condition>` associated
+    conditions : Dict[`Component <Component>`: `Condition`]
+        the key of each entry is a `Component <Component>`, and its value is the `Condition <Condition>` associated
         with that Component.  Conditions can be added to the
         ConditionSet using the ConditionSet's `add_condition` method.
 
@@ -383,7 +383,7 @@ class ConditionSet(object):
         Arguments
         ---------
 
-        conditions : dict{`Component`: `Condition`}
+        conditions : Dict[`Component <Component>`: `Condition`]
             specifies an iterable collection of Conditions to be added to the ConditionSet, in the form of a dict
             each entry of which maps a `Component` (the key) to a `Condition <Condition>` (the value).
 
@@ -733,7 +733,7 @@ class BeforePass(Condition):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
-            return self.scheduler.times[time_scale][TimeScale.PASS] < n
+            return self.scheduler.clock.get_total_times_relative(TimeScale.PASS, time_scale) < n
         super().__init__(func, n, time_scale)
 
 
@@ -762,11 +762,7 @@ class AtPass(Condition):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
-            try:
-                return self.scheduler.times[time_scale][TimeScale.PASS] == n
-            except KeyError as e:
-                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
-                                     format(type(self).__name__, e, time_scale))
+            return self.scheduler.clock.get_total_times_relative(TimeScale.PASS, time_scale) == n
         super().__init__(func, n)
 
 
@@ -794,7 +790,7 @@ class AfterPass(Condition):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
-            return self.scheduler.times[time_scale][TimeScale.PASS] > n
+            return self.scheduler.clock.get_total_times_relative(TimeScale.PASS, time_scale) > n
         super().__init__(func, n, time_scale)
 
 
@@ -818,7 +814,7 @@ class AfterNPasses(Condition):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
-            return self.scheduler.times[time_scale][TimeScale.PASS] >= n
+            return self.scheduler.clock.get_total_times_relative(TimeScale.PASS, time_scale) >= n
         super().__init__(func, n, time_scale)
 
 
@@ -844,7 +840,7 @@ class EveryNPasses(Condition):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
-            return self.scheduler.times[time_scale][TimeScale.PASS] % n == 0
+            return self.scheduler.clock.get_total_times_relative(TimeScale.PASS, time_scale) % n == 0
         super().__init__(func, n, time_scale)
 
 
@@ -872,11 +868,7 @@ class BeforeTrial(Condition):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
-            try:
-                return self.scheduler.times[time_scale][TimeScale.TRIAL] < n
-            except KeyError as e:
-                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
-                                     format(type(self).__name__, e, time_scale))
+            return self.scheduler.clock.get_total_times_relative(TimeScale.TRIAL, time_scale) < n
         super().__init__(func, n)
 
 
@@ -904,11 +896,7 @@ class AtTrial(Condition):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
-            try:
-                return self.scheduler.times[time_scale][TimeScale.TRIAL] == n
-            except KeyError as e:
-                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
-                                     format(type(self).__name__, e, time_scale))
+            return self.scheduler.clock.get_total_times_relative(TimeScale.TRIAL, time_scale) == n
         super().__init__(func, n)
 
 
@@ -937,11 +925,7 @@ class AfterTrial(Condition):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
-            try:
-                return self.scheduler.times[time_scale][TimeScale.TRIAL] > n
-            except KeyError as e:
-                raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
-                                     format(type(self).__name__, e, time_scale))
+            return self.scheduler.clock.get_total_times_relative(TimeScale.TRIAL, time_scale) > n
         super().__init__(func, n)
 
 
@@ -964,7 +948,7 @@ class AfterNTrials(Condition):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
-            return self.scheduler.times[time_scale][TimeScale.TRIAL] >= n
+            return self.scheduler.clock.get_total_times_relative(TimeScale.TRIAL, time_scale) >= n
         super().__init__(func, n, time_scale)
 
 ######################################################################

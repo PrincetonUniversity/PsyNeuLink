@@ -264,11 +264,10 @@ from psyneulink.components.functions.function import AccumulatorIntegrator, Line
 from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import VALUE, AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, \
-    FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, EXECUTING, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZING, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, SYSTEM_INPUT_STATE, VALUE, kwAssign
+from psyneulink.globals.log import LogEntry, LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock
 
 __all__ = [
     'MappingError', 'MappingProjection',
@@ -362,7 +361,7 @@ class MappingProjection(PathwayProjection_Base):
         value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
         of its `receiver <MappingProjection.receiver>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
@@ -440,6 +439,16 @@ class MappingProjection(PathwayProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
+    @property
+    def _loggable_items(self):
+        # States and afferent Projections are loggable for a Mechanism
+        #     - this allows the value of InputStates and OutputStates to be logged
+        #     - for MappingProjections, this logs the value of the Projection's matrix parameter
+        #     - for ModulatoryProjections, this logs the value of the Projection
+        # IMPLEMENTATION NOTE: this needs to be a property as that is expected by Log.loggable_items
+        return list(self.parameter_states)
+
+
     class sockets:
         sender=[OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE]
         receiver=[INPUT_STATE]
@@ -503,8 +512,10 @@ class MappingProjection(PathwayProjection_Base):
                                                                             initializer=matrix,
                                                                             # rate=initial_rate
                                                                                )
-
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
+
+        # # Assign ParameterState the same Log as the MappingProjection, so that its entries are accessible to Mechanisms
+        # self._parameter_states[MATRIX].log = self.log
 
     def _instantiate_receiver(self, context=None):
         """Determine matrix needed to map from sender to receiver
@@ -602,7 +613,7 @@ class MappingProjection(PathwayProjection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
+    def execute(self, input=None, time_scale=None, params=None, context=None):
         """
         If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix ParameterState:
 
@@ -617,33 +628,9 @@ class MappingProjection(PathwayProjection_Base):
         """
 
         # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
-        # minor bug with execution ID): maybe we should just fix this∞∞∞ bug instead, if it's useful to do so
+        # minor bug with execution ID): maybe we should just fix this bug instead, if it's useful to do so
         if "System" not in str(self.sender.owner):
             self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
-
-        # Check whether error_signal has changed
-        if (self.learning_mechanism
-            and self.learning_mechanism.learning_enabled
-            and self.learning_mechanism.status == CHANGED):
-
-            # Assume that if learning_mechanism attribute is assigned,
-            #    both a LearningProjection and ParameterState[MATRIX] to receive it have been instantiated
-            matrix_parameter_state = self._parameter_states[MATRIX]
-
-            # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
-            setattr(self, '_'+MATRIX, self.matrix)
-
-            # Update MATRIX
-            self.matrix = matrix_parameter_state.value
-            # FIX: UPDATE FOR LEARNING END
-
-            # # TEST PRINT
-            # print("\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
-            # # print("\n@@@ WEIGHTS CHANGED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
-            # TEST DEBUG MULTILAYER
-            # print("\n{}\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".
-            #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.matrix))
-
 
         return self.function(self.sender.value, params=params, context=context)
 
@@ -699,3 +686,13 @@ class MappingProjection(PathwayProjection_Base):
 
         else:
             self.paramsCurrent[FUNCTION_PARAMS].__additem__(MATRIX, value)
+
+    @property
+    def logPref(self):
+        return self.prefs.logPref
+
+    # Always assign matrix Parameter state the same logPref as the MappingProjection
+    @logPref.setter
+    def logPref(self, setting):
+        self.prefs.logPref = setting
+        self.parameter_states[MATRIX].logPref = setting

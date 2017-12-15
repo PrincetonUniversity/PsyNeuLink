@@ -412,6 +412,7 @@ Class Reference
 
 """
 
+import datetime
 import warnings
 
 from collections import Iterable
@@ -424,7 +425,7 @@ from psyneulink.components.process import ProcessInputState
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.globals.keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'EXECUTION_SET_DIM', 'MECHANISM_DIM', 'RunError', 'STATE_DIM', 'run'
@@ -445,7 +446,6 @@ class RunError(Exception):
 def run(object,
         inputs,
         num_trials:tc.optional(int)=None,
-        reset_clock:bool=True,
         initialize:bool=False,
         initial_values:tc.optional(tc.any(list, dict, np.ndarray))=None,
         targets=None,
@@ -454,7 +454,6 @@ def run(object,
         call_after_trial:tc.optional(callable)=None,
         call_before_time_step:tc.optional(callable)=None,
         call_after_time_step:tc.optional(callable)=None,
-        clock=CentralClock,
         time_scale:tc.optional(tc.enum(TimeScale.TRIAL, TimeScale.TIME_STEP))=None,
         termination_processing=None,
         termination_learning=None,
@@ -462,7 +461,6 @@ def run(object,
     """run(                      \
     inputs,                      \
     num_trials=None,             \
-    reset_clock=True,            \
     initialize=False,            \
     intial_values=None,          \
     targets=None,                \
@@ -471,7 +469,6 @@ def run(object,
     call_after_trial=None,       \
     call_before_time_step=None,  \
     call_after_time_step=None,   \
-    clock=CentralClock,          \
     time_scale=None)
 
     Run a sequence of executions for a `Process` or `System`.
@@ -509,9 +506,6 @@ def run(object,
         equal to the number of items specified in the **inputs** argument.  If **num_trials** exceeds the number of
         inputs, then the inputs will be cycled until the number of `TRIAL` \\s specified have been run.
 
-    reset_clock : bool : default True
-        if `True`, resets `CentralClock` to 0 before a sequence of `TRIAL` \\s.
-
     initialize : bool default False
         calls the `initialize <System.initialize>` method of the System prior to the first `TRIAL`.
 
@@ -527,17 +521,25 @@ def run(object,
         `System <System_Execution_Learning>`.  If it is not specified, the current state of learning is left intact.
         If it is `True`, learning is forced on; if it is `False`, learning is forced off.
 
-    call_before_trial : Function : default= `None`
+    call_before_trial : Function : default `None`
         called before each `TRIAL` in the sequence is run.
 
-    call_after_trial : Function : default= `None`
+    call_after_trial : Function : default `None`
         called after each `TRIAL` in the sequence is run.
 
-    call_before_time_step : Function : default= ``None`
+    call_before_time_step : Function : default ``None`
         called before each `TIME_STEP` is executed.
 
-    call_after_time_step : Function : default= `None`
+    call_after_time_step : Function : default `None`
         called after each `TIME_STEP` is executed.
+
+    termination_processing : Dict[TimeScale: Condition]
+        a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`processing
+        phase of execution <System_Execution_Processing>`
+
+    termination_learning : Dict[TimeScale: Condition]
+        a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
+        phase of execution <System_Execution_Learning>`
 
    Returns
    -------
@@ -615,9 +617,6 @@ def run(object,
 
 
     # INITIALIZATION
-    if reset_clock:
-        clock.trial = 0
-        clock.time_step = 0
     if initialize:
         object.initialize()
 
@@ -666,18 +665,17 @@ def run(object,
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
                 object.execution_status = ExecutionStatus.EXECUTING
-            result = object.execute(input=execution_inputs,
-                                    execution_id=execution_id,
-                                    clock=clock,
-                                    time_scale=time_scale,
-                                    termination_processing=termination_processing,
-                                    termination_learning=termination_learning,
-                                    context=context)
+            result = object.execute(
+                input=execution_inputs,
+                execution_id=execution_id,
+                time_scale=time_scale,
+                termination_processing=termination_processing,
+                termination_learning=termination_learning,
+                context=context
+            )
 
             if call_after_time_step:
                 call_after_time_step()
-
-            clock.time_step += 1
 
         # object.results.append(result)
         if isinstance(result, Iterable):
@@ -689,7 +687,12 @@ def run(object,
         if call_after_trial:
             call_after_trial()
 
-        clock.trial += 1
+    try:
+        # this will fail on processes, which do not have schedulers
+        object.scheduler_processing.date_last_run_end = datetime.datetime.now()
+        object.scheduler_learning.date_last_run_end = datetime.datetime.now()
+    except AttributeError:
+        pass
 
     # Restore learning state
     try:

@@ -88,7 +88,7 @@ from psyneulink.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'AutoAssociativeLearningMechanism', 'AutoAssociativeLearningMechanismError', 'DefaultTrainingMechanism',
@@ -158,7 +158,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         specifies the learning rate for the AutoAssociativeLearningMechanism. (see `learning_rate
         <AutoAssociativeLearningMechanism.learning_rate>` for details).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
@@ -346,7 +346,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     def _execute(self,
                 variable=None,
                 runtime_params=None,
-                clock=CentralClock,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute AutoAssociativeLearningMechanism. function and return learning_signal

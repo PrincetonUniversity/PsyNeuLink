@@ -95,7 +95,7 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import AUTO, AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HETERO, HOLLOW_MATRIX, INITIALIZING, MATRIX
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'AutoAssociativeError', 'AutoAssociativeProjection', 'get_auto_matrix', 'get_hetero_matrix',
@@ -155,7 +155,7 @@ class AutoAssociativeProjection(MappingProjection):
         the matrix used by `function <AutoAssociativeProjection.function>` (default: `LinearCombination`) to transform
         the value of the `sender <AutoAssociativeProjection.sender>`.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
@@ -250,7 +250,7 @@ class AutoAssociativeProjection(MappingProjection):
                          prefs=prefs,
                          context=context)
 
-    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
+    def execute(self, input=None, time_scale=None, params=None, context=None):
         """
         Based heavily on the execute() method for MappingProjection.
 
@@ -349,7 +349,7 @@ class AutoAssociativeProjection(MappingProjection):
         #
         # return self.function(self.sender.value, params=params, context=context)
         # MODIFIED 9/23/17 NEW:
-        return super().execute(input=input, clock=clock, time_scale=time_scale, params=params, context=context)
+        return super().execute(input=input, time_scale=time_scale, params=params, context=context)
         # MODIFIED 9/23/17 END:
 
     def _update_auto_and_hetero(self, owner_mech=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):

@@ -9,7 +9,7 @@ from psyneulink.composition import Composition
 from psyneulink.scheduling.condition import AfterNCalls, AfterNTrials, AfterPass, All, Always, Any, AtPass, \
     BeforePass, EveryNCalls, EveryNPasses, JustRan, WhenFinished
 from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 
 logger = logging.getLogger(__name__)

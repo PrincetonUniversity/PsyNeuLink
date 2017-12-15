@@ -14,7 +14,7 @@ This is an attempt to show the value of defaultControlAllocation:  :py:print:`De
 
 from enum import Enum
 
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'defaultControlAllocation', 'DefaultControlAllocationMode', 'defaultGatingPolicy', 'DefaultGatingPolicyMode',

@@ -97,9 +97,8 @@ Class Reference
 
 """
 
-import typecheck as tc
-
 import inspect
+import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
 from psyneulink.components.functions.function import Linear
@@ -108,11 +107,9 @@ from psyneulink.components.projections.modulatory.modulatoryprojection import Mo
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Process_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, PROJECTION_SENDER, \
-    PROJECTION_SENDER_VALUE, PARAMETER_STATE
+from psyneulink.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock
 
 __all__ = [
     'CONTROL_SIGNAL_PARAMS', 'ControlProjection', 'ControlProjectionError',
@@ -200,12 +197,12 @@ class ControlProjection(ModulatoryProjection_Base):
        specifies the value by which to exponentiate the ControlProjection's `value <ControlProjection.value>`
        before combining it with others (see `exponent <ControlProjection.exponent>` for additional details).
 
-    control_signal_params pip install --updgrade Sphinx==1.6.2 sphinx-rtd-theme==0.2.4 sphinxcontrib-websupport==1.0.1: Dict[param keyword, param value]
+    control_signal_params pip install --updgrade Sphinx==1.6.2 sphinx-rtd-theme==0.2.4 sphinxcontrib-websupport==1.0.1: Dict[param keyword: param value]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
         ControlProjection's `sender <ControlProjection.sender>` (see `ControlSignal_Structure` for a description
         of ControlSignal parameters).
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlProjection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
@@ -387,8 +384,8 @@ class ControlProjection(ModulatoryProjection_Base):
         # else:
         super(ControlProjection, self)._instantiate_receiver(context=context)
 
-    def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
-    # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+    def execute(self, params=None, time_scale=None, context=None):
+    # def execute(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         self.value = self.function(variable=self.sender.value, params=params, time_scale=time_scale, context=context)
         return self.value
 

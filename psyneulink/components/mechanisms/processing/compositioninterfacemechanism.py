@@ -52,7 +52,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = []
 
@@ -90,7 +90,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
 
-    params : Dict[param keyword, param value] : default None
+    params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
         the `Mechanism <Mechanism>`, parameters for its `function <CompositionInterfaceMechanism.function>`, and/or a
         custom function and its parameters.  Values specified for parameters in the dictionary override any assigned
