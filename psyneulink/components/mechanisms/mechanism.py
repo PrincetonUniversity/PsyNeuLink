@@ -787,7 +787,7 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import ADD_STATES, _parse_state_spec
 from psyneulink.globals.defaults import timeScaleSystemDefault
-from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
@@ -1986,7 +1986,8 @@ class Mechanism_Base(Mechanism):
         # Executing or simulating Process or System, get input by updating input_states
 
         if (input is None
-            and (EXECUTING in context or EVC_SIMULATION in context)
+            # and (EXECUTING in context or EVC_SIMULATION in context)
+            and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION})
             and (self.input_state.path_afferents != [])):
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
                                                                        time_scale=time_scale,
@@ -2049,7 +2050,8 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region REPORT EXECUTION
-        if self.prefs.reportOutputPref and context and EXECUTING in context:
+        # if self.prefs.reportOutputPref and context and EXECUTING in context:
+        if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}):
             self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
         #endregion
 
