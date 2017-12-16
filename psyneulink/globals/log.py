@@ -433,7 +433,14 @@ class LogCondition(IntEnum):
         else:
             string = ""
         flagged_items = []
+        # If ALL_ASSIGNMENTS, just return that
+        if condition is LogCondition.ALL_ASSIGNMENTS:
+            return LogCondition.ALL_ASSIGNMENTS.name
+        # Otherwise, append each flag's name to the string
         for c in list(cls.__members__):
+            # Don't include ALL_ASSIGNMENTS:
+            if c is LogCondition.ALL_ASSIGNMENTS.name:
+                continue
             if LogCondition[c] & condition:
                flagged_items.append(c)
         string += ", ".join(flagged_items)
@@ -1015,12 +1022,14 @@ class Log:
                       entries:tc.optional(tc.any(str, list, is_component))=ALL,
                       width:int=120,
                       display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
+                      long_context=False
                       ):
         """
         print_entries(          \
               entries=ALL,      \
               width=120,        \
               display=None      \
+              long_context=Full \
             )
 
         Print summary of the Log's entries in a (human-readable) table format.
@@ -1043,6 +1052,10 @@ class Log:
             specified items;  the widths of the columns for the items is dynamically adjusted, based on how many
             are specified, allowing more information about one to be shown by omitting others (this is useful 
             if the context strings are long and/or the values are arrays).
+
+        full_context : bool : default False
+            specifies the use of the full context string in the display;  this can be informative, but also take up
+            more space in each line of the display.
             
         """
 
@@ -1086,7 +1099,11 @@ class Log:
         if option_flags & options.CONTEXT:
             for entry in entries:
                 for datum in self.logged_entries[entry]:
-                    context_width = min(context_width, len(datum.context))
+                    if long_context:
+                        context = LogCondition._get_condition_string(_get_log_context(context))
+                    else:
+                        context = datum.context
+                    context_width = min(context_width, len(context))
 
         # Set other widths based on options:
         # FIX: "ALGORITHMIZE" THIS:
@@ -1146,7 +1163,13 @@ class Log:
                     if options.TIME & option_flags:
                         data_str = data_str + time_str.ljust(time_width)
                     if options.CONTEXT & option_flags:
-                        data_str = data_str + repr(context).ljust(context_width, spacer)
+                        if long_context:
+                            # Use context from LogEntry
+                            context = repr(context)
+                        else:
+                            # Get names of LogCondition flag(s) from parse of context string
+                            context = LogCondition._get_condition_string(_get_log_context(context))
+                        data_str = data_str + context.ljust(context_width, spacer)
                     if options.VALUE & option_flags:
                         format_str = "{{:2.{0}}}".format(value_width)
                         data_str = data_str + value_spacer + format_str.format(value).ljust(value_width)
