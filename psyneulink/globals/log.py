@@ -402,8 +402,8 @@ class LogCondition(IntEnum):
     PROCESSING =         1<<4       # 16
     """Record all value assignments during processing phase of Composition execution."""
     # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-    # LEARNING =         1<<5       # 32
-    LEARNING = (1<<5) + EXECUTION   # 40
+    LEARNING =         1<<5       # 32
+    # LEARNING = (1<<5) + EXECUTION   # 40
     """Record all value assignments during learning phase of Composition execution."""
     CONTROL =            1<<6       # 64
     """Record all value assignments during control phase of Composition execution."""
