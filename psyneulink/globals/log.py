@@ -1082,7 +1082,14 @@ class Log:
         value_spacer = " ".ljust(value_spacer_width)
         base_width = item_name_width
 
-        # FIX: COULD "ALGORITHMIZE" THIS:
+        # Get max width of context and set context_width to that + 4
+        if option_flags & options.CONTEXT:
+            for entry in entries:
+                for datum in self.logged_entries[entry]:
+                    context_width = min(context_width, len(datum.context))
+
+        # Set other widths based on options:
+        # FIX: "ALGORITHMIZE" THIS:
         if option_flags == options.TIME:
             pass
         elif option_flags == options.CONTEXT:
