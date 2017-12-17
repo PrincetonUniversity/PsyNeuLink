@@ -1095,13 +1095,15 @@ class Log:
 
         # Set context_width based on long_context option (length of context string) or context flags
         if option_flags & options.CONTEXT:
+            c_width = 0
             for entry in entries:
                 for datum in self.logged_entries[entry]:
                     if long_context:
                         context = datum.context
                     else:
                         context = LogCondition._get_condition_string(_get_log_context(datum.context))
-                    context_width = min(context_width, len(context))
+                    c_width = max(c_width, len(context))
+            context_width = min(context_width, c_width)
 
         # Set other widths based on options:
         # FIX: "ALGORITHMIZE" THIS:
@@ -1302,25 +1304,26 @@ class Log:
             time_col = iter(time_values)
             for datum in self.logged_entries[entry]:
                 if time_values:
-                # MODIFIED 12/14/17 OLD:
-                    while datum.time != next(time_col,None):
-                        row.append(None)
-                value = None if datum.value is None else np.array(datum.value).tolist()
-                row.append(value)
-                # # MODIFIED 12/14/17 NEW:
-                #     for i in range(len(time_values)):
-                #         time = next(time_col,None)
-                #         if time is None:
-                #             break
-                #         if datum.time != time:
-                #             row.append(None)
-                #             continue
-                #         value = None if datum.value is None else datum.value.tolist()
-                #         row.append(value)
-                #         break
-                # else:
-                #     value = None if datum.value is None else datum.value.tolist()
-                #     row.append(value)
+                    # time_col = iter(time_values)
+                # # MODIFIED 12/14/17 OLD:
+                #     while datum.time != next(time_col,None):
+                #         row.append(None)
+                # value = None if datum.value is None else np.array(datum.value).tolist()
+                # row.append(value)
+                # MODIFIED 12/14/17 NEW:
+                    for i in range(len(time_values)):
+                        time = next(time_col,None)
+                        if time is None:
+                            break
+                        if datum.time != time:
+                            row.append(None)
+                            continue
+                        value = None if datum.value is None else datum.value.tolist()
+                        row.append(value)
+                        break
+                else:
+                    value = None if datum.value is None else datum.value.tolist()
+                    row.append(value)
                 # MODIFIED 12/14/17 END
 
             if header:
