@@ -402,7 +402,7 @@ class LogCondition(IntEnum):
     PROCESSING =         1<<4       # 16
     """Record all value assignments during processing phase of Composition execution."""
     # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-    LEARNING =         1<<5       # 32
+    LEARNING =           1<<5       # 32
     # LEARNING = (1<<5) + EXECUTION   # 40
     """Record all value assignments during learning phase of Composition execution."""
     CONTROL =            1<<6       # 64
@@ -829,9 +829,9 @@ class Log:
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 
             # Log value if logging condition is satisfied or called for programmatically
-            if (log_pref and log_pref == context_flags) or context_flags & LogCondition.COMMAND_LINE:
             # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-            # if log_pref and log_pref | context_flags:
+            if (log_pref and log_pref == context_flags) or context_flags & LogCondition.COMMAND_LINE:
+            # if (log_pref and log_pref | context_flags) or context_flags & LogCondition.COMMAND_LINE:
                 time = time or self._get_time(context, context_flags)
                 self.entries[self.owner.name] = LogEntry(time, context, value)
 
@@ -1075,6 +1075,7 @@ class Log:
         if not isinstance(display, list):
             display = [display]
 
+        # Set option_flags for specified options
         option_flags = options.NONE
         if TIME in display:
             option_flags |= options.TIME
@@ -1085,6 +1086,7 @@ class Log:
         if ALL in display:
             option_flags = options.ALL
 
+        # Default widths
         full_width = width
         item_name_width = 15
         time_width = 10
@@ -1095,14 +1097,14 @@ class Log:
         value_spacer = " ".ljust(value_spacer_width)
         base_width = item_name_width
 
-        # Get max width of context and set context_width to that + 4
+        # Set context_width based on long_context option (length of context string) or context flags
         if option_flags & options.CONTEXT:
             for entry in entries:
                 for datum in self.logged_entries[entry]:
                     if long_context:
-                        context = LogCondition._get_condition_string(_get_log_context(context))
-                    else:
                         context = datum.context
+                    else:
+                        context = LogCondition._get_condition_string(_get_log_context(datum.context))
                     context_width = min(context_width, len(context))
 
         # Set other widths based on options:
@@ -1121,7 +1123,7 @@ class Log:
             context_width = full_width - value_width
             value_width = full_width - context_width
         elif option_flags == options.ALL:
-            pass
+            value_width = full_width - context_width
         else:
             raise LogError("PROGRAM ERROR:  unrecognized state of option_flags: {}".format(option_flags))
 
@@ -1151,17 +1153,16 @@ class Log:
             else:
                 import numpy as np
                 for i, item in enumerate(datum):
+
                     time, context, value = item
-                    if len(context) > context_width:
-                        context = context[:context_width-3] + "..."
-                    value = str(value).replace('\n',',')
-                    if len(value) > value_width:
-                        value = value[:value_width-3].rstrip() + "..."
-                    time_str = _time_string(time)
+
                     entry_name = self._alias_owner_name(entry_name)
                     data_str = repr(entry_name).ljust(item_name_width, spacer)
+
                     if options.TIME & option_flags:
+                        time_str = _time_string(time)
                         data_str = data_str + time_str.ljust(time_width)
+
                     if options.CONTEXT & option_flags:
                         if long_context:
                             # Use context from LogEntry
@@ -1169,11 +1170,19 @@ class Log:
                         else:
                             # Get names of LogCondition flag(s) from parse of context string
                             context = LogCondition._get_condition_string(_get_log_context(context))
+                        if len(context) > context_width:
+                            context = context[:context_width-3] + "..."
                         data_str = data_str + context.ljust(context_width, spacer)
+
                     if options.VALUE & option_flags:
+                        value = str(value).replace('\n',',')
+                        if len(value) > value_width:
+                            value = value[:value_width-3].rstrip() + "..."
                         format_str = "{{:2.{0}}}".format(value_width)
                         data_str = data_str + value_spacer + format_str.format(value).ljust(value_width)
+
                     print(data_str)
+
                 if len(datum) > 1:
                     print("\n")
 
