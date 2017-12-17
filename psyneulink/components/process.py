@@ -2277,8 +2277,6 @@ class Process(Process_Base):
                             # Call parameter_state.update with LEARNING in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                            # context = context + SEPARATOR_BAR + LEARNING
-                            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
                             context = context.replace(EXECUTING, LEARNING + ' ')
 
                             # NOTE: This will need to be updated when runtime params are re-enabled

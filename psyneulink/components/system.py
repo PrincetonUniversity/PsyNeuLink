@@ -2541,8 +2541,6 @@ class System(System_Base):
 
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context and self.learning:
-            # self._execute_learning(context=context + SEPARATOR_BAR + LEARNING)
-            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
             self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
         # endregion
 
