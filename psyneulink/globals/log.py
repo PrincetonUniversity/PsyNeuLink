@@ -734,7 +734,7 @@ class Log:
             levels = LogCondition.OFF
             for l in level:
                 try:
-                    l = LogCondition[l] if isinstance(l, str) else l
+                    l = LogCondition[l.upper()] if isinstance(l, str) else l
                 except KeyError:
                     raise LogError("\'{}\' is not a value of {}".
                                    format(l, LogCondition.__name__))
