@@ -389,7 +389,7 @@ import numpy as np
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.utilities import ContentAddressableList, AutoNumber, is_component
 from psyneulink.globals.keywords \
-    import INITIALIZING, EXECUTING, VALIDATE, CONTROL, LEARNING, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
+    import INITIALIZING, EXECUTING, VALIDATE, CONTROL, LEARNING, TRIAL, RUN, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
 
 
 __all__ = [
@@ -473,7 +473,11 @@ def _get_log_context(context):
         context_flag |= LogCondition.CONTROL
     if LEARNING in context:
         context_flag |= LogCondition.LEARNING
-    if COMMAND_LINE in context:
+    if context == LogCondition.TRIAL.name:
+        context_flag |= LogCondition.TRIAL
+    if context == LogCondition.RUN.name:
+        context_flag |= LogCondition.RUN
+    if context == LogCondition.COMMAND_LINE.name:
         context_flag |= LogCondition.COMMAND_LINE
     return context_flag
 
@@ -792,8 +796,8 @@ class Log:
                 context_flags = context
                 context = LogCondition._get_condition_string(context)
                 if not time:
-                    raise LogError("Use of LogCondition ({}) by {} to specify context requires specificatiom of time".
-                                   format(context.name, self.owner.name ))
+                    raise LogError("Use of LogCondition ({}) by {} to specify context requires specification of time".
+                                   format(context, self.owner.name ))
 
             # Get context
             else:
@@ -899,7 +903,8 @@ class Log:
         # Get System in which it is being (or was last) executed (if any):
 
         # If called from COMMAND_LINE, get context for last time value was assigned:
-        if context_flags & LogCondition.COMMAND_LINE:
+        # if context_flags & LogCondition.COMMAND_LINE:
+        if context_flags & (LogCondition.COMMAND_LINE | LogCondition.RUN | LogCondition.TRIAL):
             execution_context = self.owner.prev_context
             context_flags = _get_log_context(execution_context)
         else:
@@ -1530,13 +1535,14 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
     for mech in composition.mechanisms:
         for component in mech.log.loggable_components:
             if component.logPref & curr_condition:
-                value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
-                                  composition.scheduler_processing.clock.simple_time.trial,
-                                  composition.scheduler_processing.clock.simple_time.time_step),
-                                 # context,
-                                 curr_condition,
-                                 component.value)
-                component.log._log_value(value=value, context=context)
+                # value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
+                #                   composition.scheduler_processing.clock.simple_time.trial,
+                #                   composition.scheduler_processing.clock.simple_time.time_step),
+                #                  # context,
+                #                  curr_condition,
+                #                  component.value)
+                # component.log._log_value(value=value, context=context)
+                component.log._log_value(value=component.value, context=curr_condition.name)
 
     # FIX: IMPLEMENT ONCE projections IS ADDED AS ATTRIBUTE OF Composition
     # for proj in composition.projections:
