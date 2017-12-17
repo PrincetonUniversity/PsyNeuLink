@@ -1558,7 +1558,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            # if EXECUTING in context:
             if any(c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
@@ -1566,7 +1565,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
-            # if EXECUTING in context:
             if (c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
@@ -1581,7 +1579,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
-            # if EXECUTING in context:
             if (c in context for c in {EXECUTING, LEARNING}):
                 if (isinstance(scale, np.ndarray) and
                         (scale.size != self.instance_defaults.variable.size or
@@ -1600,7 +1597,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
-            # if EXECUTING in context:
             if (c in context for c in {EXECUTING, LEARNING}):
                 if (isinstance(offset, np.ndarray) and
                         (offset.size != self.instance_defaults.variable.size or
@@ -2001,7 +1997,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            # if EXECUTING in context:
             if (c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
@@ -2009,7 +2004,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
-            # if EXECUTING in context:
             if (c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
@@ -2024,7 +2018,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
-            # if EXECUTING in context:
             if (c in context for c in {EXECUTING, LEARNING}):
                 if (isinstance(scale, np.ndarray) and
                         (scale.size != self.instance_defaults.variable.size or
@@ -2043,7 +2036,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
-            # if EXECUTING in context:
             if (c in context for c in {EXECUTING, LEARNING}):
                 if (isinstance(offset, np.ndarray) and
                         (offset.size != self.instance_defaults.variable.size or

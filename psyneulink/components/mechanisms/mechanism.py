@@ -1986,7 +1986,6 @@ class Mechanism_Base(Mechanism):
         # Executing or simulating Process or System, get input by updating input_states
 
         if (input is None
-            # and (EXECUTING in context or EVC_SIMULATION in context)
             and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION})
             and (self.input_state.path_afferents != [])):
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
