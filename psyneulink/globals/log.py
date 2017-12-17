@@ -403,7 +403,7 @@ class LogCondition(IntEnum):
     OFF = 0
     """No recording."""
     INITIALIZATION =     1<<1       # 2
-    """Record during initial assignment."""
+    """Record value during initial assignment."""
     VALIDATION =         1<<2       # 4
     """Record value during validation."""
     EXECUTION =          1<<3       # 8
@@ -416,9 +416,9 @@ class LogCondition(IntEnum):
     """Record all value assignments during control phase of Composition execution."""
     # FIX: TRIAL, RUN, VALUE_ASSIGNMENT & FINAL NOT YET IMPLEMENTED:
     TRIAL =              1<<7       # 128
-    # """Record value at the end of a TRIAL."""
+    """Record value at the end of a TRIAL."""
     RUN =                1<<8       # 256
-    # """Record value at the end of a RUN."""
+    """Record value at the end of a RUN."""
     VALUE_ASSIGNMENT =   1<<9       # 512
     # """Record final value assignments during Composition execution."""
     FINAL =             1<<10       # 1024
@@ -460,6 +460,8 @@ TIME_NOT_SPECIFIED = 'Time Not Specified'
 
 def _get_log_context(context):
 
+    if isinstance(context, LogCondition):
+        return context
     context_flag = LogCondition.OFF
     if INITIALIZING in context:
         context_flag |= LogCondition.INITIALIZATION
@@ -1445,7 +1447,7 @@ class Log:
                 if entry not in self.logged_entries:
                     # raise LogError("{} is not currently being logged by {} (try using set_log_conditions)".
                     #                format(repr(entry), self.owner.name))
-                    print("\n{} is not currently being logged by {} (try using set_log_conditions)".
+                    print("\n{} is not currently being logged by {} or has not data (try using set_log_conditions)".
                           format(repr(entry), self.owner.name))
         return entries
 
@@ -1522,13 +1524,27 @@ class Log:
     # def save_log(self):
     #     print("Saved")
 
-def _log_trials_and_runs(self, composition, curr_condition:tc.enum(LogCondition.TRIAL, LogCondition.RUN), context):
+def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL, LogCondition.RUN), context):
+    # FIX: ALSO CHECK TIME FOR scheduler_learning, AND CHECK DATE FOR BOTH, AND USE WHICHEVER IS LATEST
+    # FIX:  BUT WHAT IF THIS PARTICULAR COMPONENT WAS RUN IN THE LAST TIME_STEP??
     for mech in composition.mechanisms:
-        for component, condition in mech.loggable_components:
-            if condition is curr_condition:
-                value = LogEntry((composition.simple_time.run,
-                                  composition.simple_time.trial,
-                                  composition.simple_time.time_step),
-                                 context,
+        for component in mech.log.loggable_components:
+            if component.logPref & curr_condition:
+                value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
+                                  composition.scheduler_processing.clock.simple_time.trial,
+                                  composition.scheduler_processing.clock.simple_time.time_step),
+                                 # context,
+                                 curr_condition,
                                  component.value)
-                component.log._log_value(value, context)
+                component.log._log_value(value=value, context=context)
+
+    # FIX: IMPLEMENT ONCE projections IS ADDED AS ATTRIBUTE OF Composition
+    # for proj in composition.projections:
+    #     for component in proj.log.loggable_components:
+    #         if component.logPref & curr_condition:
+    #             value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
+    #                               composition.scheduler_processing.clock.simple_time.trial,
+    #                               composition.scheduler_processing.clock.simple_time.time_step),
+    #                              context,
+    #                              component.value)
+    #             component.log._log_value(value, context)
