@@ -115,14 +115,14 @@ Configuring a Component to be logged is done using a `LogCondition`, that specif
 multiple Components to be specied at once, while the latter affords more control over the specification (see
 `Preferences`).  LogConditions are treated as binary "flags", and can be combined to permit logging under more than
 one condition using bitwise operators on LogConditions.  For convenience, they can also be referred to by their
-names, and combined by specifying a list.  For example, all of the following specify that the `matrix
-<MappingProjection.matrix>` of ``my_projection`` be logged both during execution and learning::
+names, and combined by specifying a list.  For example, all of the following specify that the `value
+<Mechanism_Base.value>` of ``my_mech`` be logged both during execution and learning::
 
     >>> import psyneulink as pnl
-    >>> my_projection = pnl.MappingProjection()
-    >>> my_projection.set_log_condition('matrix', pnl.LogCondition.EXECUTION | pnl.LogCondition.LEARNING)
-    >>> my_projection.set_log_condition('matrix', pnl.LogCondition.EXECUTION + pnl.LogCondition.LEARNING)
-    >>> my_projection.set_log_condition('matrix', [pnl.EXECUTION, LEARNING])
+    >>> my_mech = pnl.TransferMechanism()
+    >>> my_mech.set_log_conditions('value', pnl.LogCondition.EXECUTION | pnl.LogCondition.LEARNING)
+    >>> my_mech.set_log_conditions('value', pnl.LogCondition.EXECUTION + pnl.LogCondition.LEARNING)
+    >>> my_mech.set_log_conditions('value', [pnl.EXECUTION, LEARNING])
 
 
 .. note::
@@ -138,7 +138,7 @@ names, and combined by specifying a list.  For example, all of the following spe
    COMMENT:
    FIX: THIS EXAMPLE CAN'T CURRENTLY BE EXECUTED AS IT PERMANENTLY SETS THE LogPref FOR ALL TransferMechanism
    COMMENT
-    >>> T = pnl.TransferMechanism(
+    >>> my_mech = pnl.TransferMechanism(
     ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
 .. hint::

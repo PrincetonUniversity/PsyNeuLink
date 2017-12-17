@@ -935,20 +935,6 @@ class Component(object):
 
         self.init_status = InitStatus.INITIALIZED
 
-    def __getattr__(self, key):
-        if self.init_status is InitStatus.DEFERRED_INITIALIZATION and key in {'log'}:
-            raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete".
-                                 format(self.name, key))
-        else:
-            raise AttributeError
-
-    # def __setattr__(self, key, value):
-    #     if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
-    #         raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete".
-    #                              format(self.name, key))
-    #     else:
-    #         raise AttributeError
-
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
@@ -2853,6 +2839,21 @@ class Component(object):
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
+
+    @property
+    def log(self):
+        try:
+            return self._log
+        except AttributeError:
+            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete".
+                                     format(self.name, 'log'))
+            else:
+                raise AttributeError
+
+    @log.setter
+    def log(self, log):
+        self._log = log
 
     @property
     def loggable_items(self):
