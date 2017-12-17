@@ -303,4 +303,5 @@ task.show()
 LC.log.nparray()
 
 
+# decision_layer.log.nparray()
 print(decision_layer.log.nparray())
