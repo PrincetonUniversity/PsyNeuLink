@@ -132,8 +132,8 @@ names, and combined by specifying a list.  For example, all of the following spe
    COMMENT
 
 .. note::
-   Using the `INITIALIZATION` `LogCondition` to log the `value <Component.value>` of a Component during its
-   initialization requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
+   Using `LogCondition.INITIALIZATION` to log the `value <Component.value>` of a Component during its initialization
+   requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
 
    COMMENT:
    FIX: THIS EXAMPLE CAN'T CURRENTLY BE EXECUTED AS IT PERMANENTLY SETS THE LogPref FOR ALL TransferMechanism
@@ -142,9 +142,9 @@ names, and combined by specifying a list.  For example, all of the following spe
     ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
 .. hint::
-   To log the `value <Component.value>` of a Component at the start or end of a `TRIAL`, use its `log_values
-   <Component.log_values>` method in the **call_before_trial** or **call_after_trial** arguments of the System's
-   `run <System.run>` method.
+   `LogCondition.TRIAL` logs the `value <Component.value>` of a Component at the end of a `TRIAL`.  To log its
+   `value <Component.value>` at the start of a `TRIAL`, use its `log_values <Component.log_values>` method in the
+   **call_before_trial** argument of the System's `run <System.run>` method.
 
 .. _Log_Execution:
 
