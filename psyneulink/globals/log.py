@@ -440,13 +440,12 @@ class LogCondition(IntEnum):
         else:
             string = ""
         flagged_items = []
-        # If ALL_ASSIGNMENTS, just return that
+        # If OFF or ALL_ASSIGNMENTS, just return that
         if condition in (LogCondition.ALL_ASSIGNMENTS, LogCondition.OFF):
-            # return LogCondition.ALL_ASSIGNMENTS.name
             return condition.name
         # Otherwise, append each flag's name to the string
         for c in list(cls.__members__):
-            # Don't include ALL_ASSIGNMENTS:
+            # Skip ALL_ASSIGNMENTS (handled above)
             if c is LogCondition.ALL_ASSIGNMENTS.name:
                 continue
             if LogCondition[c] & condition:
@@ -723,6 +722,7 @@ class Log:
 
         def assign_log_level(item, level):
 
+            # Handle multiple level assignments (as LogConditions or strings in a list)
             if not isinstance(level, list):
                 level = [level]
             levels = LogCondition.OFF
