@@ -358,7 +358,8 @@ import typecheck as tc
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
     CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, LOG_ENTRIES, \
-    INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
+    INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, \
+    OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
     SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
 # from psyneulink.globals.log import Log, LogCondition
@@ -841,13 +842,11 @@ class Component(object):
             self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
 
         # ASSIGN LOG
-
         from psyneulink.globals.log import Log
         self.log = Log(owner=self)
         self.recording = False
         # Used by run to store return value of execute
         self.results = []
-
 
         # ENFORCE REQUIRED CLASS DEFAULTS
 
@@ -2840,6 +2839,21 @@ class Component(object):
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
+
+    @property
+    def log(self):
+        try:
+            return self._log
+        except AttributeError:
+            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete".
+                                     format(self.name, 'log'))
+            else:
+                raise AttributeError
+
+    @log.setter
+    def log(self, log):
+        self._log = log
 
     @property
     def loggable_items(self):

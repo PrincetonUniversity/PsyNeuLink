@@ -2459,7 +2459,9 @@ class System(System_Base):
                     for projection in state.all_afferents:
                         projection.sender.owner._execution_id = self._execution_id
 
-        self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
+        self._report_system_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING,
+                                                                                                         LEARNING})
+
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
 
@@ -2539,9 +2541,7 @@ class System(System_Base):
 
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context and self.learning:
-            self._execute_learning(context=context + SEPARATOR_BAR + LEARNING)
-            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-            # self._execute_learning(clock=clock, context=context.replace(EXECUTING, LEARNING + ' '))
+            self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
         # endregion
 
 
