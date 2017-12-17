@@ -56,9 +56,10 @@ to access its `entries <Log.entries>`:
     * `loggable_items <Log.loggable_items>` -- a dictionary with the items that can be logged in a Component's `log
       <Component.log>`;  the key for each entry is the name of a Component,  and the value is it current `LogCondition`.
     ..
-    * `set_log_conditions <Log.set_log_conditions>` -- used to assign the LogCondition for one or more Components.  Components can be
-      specified by their names, a reference to the Component object, in a tuple that specifies the `LogCondition` to
-      assign to that Component, or in a list with a `LogCondition` to be applied to multiple items at once.
+    * `set_log_conditions <Log.set_log_conditions>` -- used to assign the LogCondition for one or more Components.
+      Components can be specified by their names, a reference to the Component object, in a tuple that specifies the
+      `LogCondition` to assign to that Component, or in a list with a `LogCondition` to be applied to multiple items
+      at once.
     ..
     * `log_values <Log.log_values>` -- used to the `value <Component.value>` of one or more Components in the Log
       programmatically ("manually").  Components can be specified by their names or references to the objects.
@@ -108,12 +109,21 @@ LogConditions
 ~~~~~~~~~~~~~
 
 Configuring a Component to be logged is done using a `LogCondition`, that specifies the conditions under which its
-`value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_conditions <Log.set_log_conditions>`
-method of a Log, or directly by specifying a LogCondition for the value a Component's `logPref  <Compnent.logPref>` item
-of its `prefs <Component.prefs>` attribute.  The former is easier, and allows multiple Components to be specied at
-once, while the latter affords more control over the specification (see `Preferences`).  LogConditions are treated as
-binary "flags", and can be combined to permit logging under more than one condition, using bitwise operators on
-LogConditions (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
+`value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_conditions
+<Log.set_log_conditions>` method of a Log, or directly by specifying a LogCondition for the value a Component's
+`logPref  <Compnent.logPref>` item of its `prefs <Component.prefs>` attribute.  The former is easier, and allows
+multiple Components to be specied at once, while the latter affords more control over the specification (see
+`Preferences`).  LogConditions are treated as binary "flags", and can be combined to permit logging under more than
+one condition using bitwise operators on LogConditions.  For convenience, they can also be referred to by their
+names, and combined by specifying a list.  For example, all of the following specify that the `matrix
+<MappingProjection.matrix>` of ``my_projection`` be logged both during execution and learning::
+
+    >>> import psyneulink as pnl
+    >>> my_projection = pnl.MappingProjection()
+    >>> my_projection.set_log_condition('matrix', pnl.LogCondition.EXECUTION | pnl.LogCondition.LEARNING)
+    >>> my_projection.set_log_condition('matrix', pnl.LogCondition.EXECUTION + pnl.LogCondition.LEARNING)
+    >>> my_projection.set_log_condition('matrix', [pnl.EXECUTION, LEARNING])
+
 
 .. note::
    Currently, the `VALIDATION` `LogCondition` is not implemented.
@@ -128,7 +138,6 @@ LogConditions (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
    COMMENT:
    FIX: THIS EXAMPLE CAN'T CURRENTLY BE EXECUTED AS IT PERMANENTLY SETS THE LogPref FOR ALL TransferMechanism
    COMMENT
-    >>> import psyneulink as pnl
     >>> T = pnl.TransferMechanism(
     ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
@@ -432,8 +441,9 @@ class LogCondition(IntEnum):
             string = ""
         flagged_items = []
         # If ALL_ASSIGNMENTS, just return that
-        if condition is LogCondition.ALL_ASSIGNMENTS:
-            return LogCondition.ALL_ASSIGNMENTS.name
+        if condition in (LogCondition.ALL_ASSIGNMENTS, LogCondition.OFF):
+            # return LogCondition.ALL_ASSIGNMENTS.name
+            return condition.name
         # Otherwise, append each flag's name to the string
         for c in list(cls.__members__):
             # Don't include ALL_ASSIGNMENTS:
@@ -1464,10 +1474,12 @@ class Log:
         for c in self.loggable_components:
             name = self._alias_owner_name(c.name)
             try:
-                log_pref = c.logPref.name
+                # log_pref_names = c.logPref.name
+                log_pref_names = LogCondition._get_condition_string(c.logPref)
             except:
-                log_pref = None
-            loggable_items[name] = log_pref
+                log_pref_names = None
+                # log_pref_names = LogCondition._get_condition_string(c.logPref)
+            loggable_items[name] = log_pref_names
         return loggable_items
 
     @property
