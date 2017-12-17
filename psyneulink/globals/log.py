@@ -713,11 +713,17 @@ class Log:
 
         def assign_log_level(item, level):
 
-            try:
-                level = LogCondition[level] if isinstance(level, str) else level
-            except KeyError:
-                raise LogError("\'{}\' is not a value of {}".
-                               format(level, LogCondition.__name__))
+            if not isinstance(level, list):
+                level = [level]
+            levels = LogCondition.OFF
+            for l in level:
+                try:
+                    l = LogCondition[l] if isinstance(l, str) else l
+                except KeyError:
+                    raise LogError("\'{}\' is not a value of {}".
+                                   format(l, LogCondition.__name__))
+                levels |= l
+            level = levels
 
             if not item in self.loggable_items:
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
@@ -739,12 +745,10 @@ class Log:
 
         for item in items:
             if isinstance(item, (str, Component)):
-                # self.add_entries(item)
                 if isinstance(item, Component):
                     item = item.name
                 assign_log_level(item, log_condition)
             else:
-                # self.add_entries(item[0])
                 assign_log_level(item[0], item[1])
 
     def _log_value(self, value, time=None, context=None):
