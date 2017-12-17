@@ -1063,8 +1063,8 @@ class Log:
             are specified, allowing more information about one to be shown by omitting others (this is useful 
             if the context strings are long and/or the values are arrays).
 
-        full_context : bool : default False
-            specifies the use of the full context string in the display;  this can be informative, but also take up
+        long_context : bool : default False
+            specifies the use of the full context string in the display;  this can be informative, but can also take up
             more space in each line of the display.
             
         """
