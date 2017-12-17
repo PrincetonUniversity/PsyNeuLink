@@ -826,8 +826,7 @@ class Log:
 
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 
-            # Log value if logging condition is satisfied or called for programmatically
-            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
+            # Get time and log value if logging condition is satisfied or called for programmatically
             if (log_pref and log_pref & context_flags) or context_flags & LogCondition.COMMAND_LINE:
                 time = time or self._get_time(context, context_flags)
                 self.entries[self.owner.name] = LogEntry(time, context, value)
