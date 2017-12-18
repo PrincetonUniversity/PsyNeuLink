@@ -257,7 +257,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     hetero=None,                       \
     initial_value=None,                \
     noise=0.0,                         \
-    smoothing_factor=1.0,                 \
+    smoothing_factor=0.5,                 \
     clip=(float:min, float:max),      \
     learning_rate=None,                \
     learning_function=Hebbian,         \
@@ -331,8 +331,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    smoothing_factor : float : default 1.0
-        the time constant for exponential time averaging of input when `integrator_mode
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
          result = (smoothing_factor * variable) +
@@ -407,8 +407,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    smoothing_factor : float
-        the time constant for exponential time averaging of input when `integrator_mode
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
           result = (smoothing_factor * current input) + (1-smoothing_factor * result on previous time_step)
@@ -515,7 +515,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  hetero=None,
                  initial_value=None,
                  noise=0.0,
-                 smoothing_factor: is_numeric_or_none=1.0,
+                 smoothing_factor: is_numeric_or_none=0.5,
                  integrator_mode=False,
                  clip=None,
                  input_states:tc.optional(tc.any(list, dict)) = None,

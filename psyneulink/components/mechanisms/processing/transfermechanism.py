@@ -270,7 +270,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     function=Linear,             \
     initial_value=None,          \
     noise=0.0,                   \
-    smoothing_factor=1.0,           \
+    smoothing_factor=0.5,           \
     integrator_mode=False,       \
     clip=(float:min, float:max), \
     output_states=RESULTS        \
@@ -344,8 +344,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    smoothing_factor : float : default 1.0
-        the time constant for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
         set to True::
 
          result = (smoothing_factor * current input) + ((1-smoothing_factor) * result on previous time_step)
@@ -411,8 +411,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    smoothing_factor : float
-        the time constant for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
         set to True::
 
           result = (smoothing_factor * current input) + ( (1-smoothing_factor) * result on previous time_step)
@@ -487,7 +487,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  function=Linear,
                  initial_value=None,
                  noise=0.0,
-                 smoothing_factor=1.0,
+                 smoothing_factor=0.5,
                  integrator_mode=False,
                  clip=None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
