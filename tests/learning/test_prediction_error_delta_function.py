@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 from psyneulink import PredictionErrorDeltaFunction
@@ -31,13 +30,6 @@ def test_prediction_error_delta_first_run():
         for i in range(59):
             weights[i] = weights[i] + learning_rate * sample[i] * \
                          delta_vals[t][i + 1]
-
-    plt.plot(delta_vals[0][35:], "-o", label="Trial 1")
-    plt.plot(delta_vals[29][35:], "-o", label="Trial 30")
-    plt.plot(delta_vals[49][35:], "-o", label="Trial 50")
-    plt.plot(delta_vals[59][35:], "-o", label="Trial 60")
-    plt.legend()
-    plt.show()
 
     validation_array = np.array([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
