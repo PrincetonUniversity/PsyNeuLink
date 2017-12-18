@@ -1544,6 +1544,18 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
                 # component.log._log_value(value=value, context=context)
                 component.log._log_value(value=component.value, context=curr_condition.name)
 
+        for proj in mech.afferents:
+            for component in proj.log.loggable_components:
+                if component.logPref & curr_condition:
+                    # value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
+                    #                   composition.scheduler_processing.clock.simple_time.trial,
+                    #                   composition.scheduler_processing.clock.simple_time.time_step),
+                    #                  context,
+                    #                  component.value)
+                    # component.log._log_value(value, context)
+                    component.log._log_value(value=component.value, context=curr_condition.name)
+
+
     # FIX: IMPLEMENT ONCE projections IS ADDED AS ATTRIBUTE OF Composition
     # for proj in composition.projections:
     #     for component in proj.log.loggable_components:
