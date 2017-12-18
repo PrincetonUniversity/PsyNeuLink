@@ -454,7 +454,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=NormalDist(),
-                time_constant=1.0,
+                smoothing_factor=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -466,7 +466,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=Reinforcement(),
-                time_constant=1.0,
+                smoothing_factor=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -478,7 +478,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=ConstantIntegrator(),
-                time_constant=1.0,
+                smoothing_factor=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -490,7 +490,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=Reduce(),
-                time_constant=1.0,
+                smoothing_factor=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -499,12 +499,12 @@ class TestRecurrentTransferMechanismFunction:
 
 class TestRecurrentTransferMechanismTimeConstant:
 
-    def test_recurrent_mech_time_constant_0_8(self):
+    def test_recurrent_mech_smoothing_factor_0_8(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            time_constant=0.8,
+            smoothing_factor=0.8,
             integrator_mode=True
         )
         val = R.execute([1, 1, 1, 1])
@@ -512,12 +512,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([1, 1, 1, 1])
         np.testing.assert_allclose(val, [[.96, .96, .96, .96]])
 
-    def test_recurrent_mech_time_constant_0_8_initial_0_5(self):
+    def test_recurrent_mech_smoothing_factor_0_8_initial_0_5(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            time_constant=0.8,
+            smoothing_factor=0.8,
             initial_value=np.array([[0.5, 0.5, 0.5, 0.5]]),
             integrator_mode=True
         )
@@ -526,12 +526,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([1, 2, 3, 4])
         np.testing.assert_allclose(val, [[.98, 1.78, 2.5800000000000005, 3.3800000000000003]])  # due to inevitable floating point errors
 
-    def test_recurrent_mech_time_constant_0_8_initial_1_8(self):
+    def test_recurrent_mech_smoothing_factor_0_8_initial_1_8(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            time_constant=0.8,
+            smoothing_factor=0.8,
             initial_value=np.array([[1.8, 1.8, 1.8, 1.8]]),
             integrator_mode=True
         )
@@ -542,12 +542,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([-4, -3, 0, 1])
         np.testing.assert_allclose(val, [[-2.8336, -2.0336000000000003, .36639999999999995, 1.1663999999999999]])
 
-    def test_recurrent_mech_time_constant_0_8_initial_1_2(self):
+    def test_recurrent_mech_smoothing_factor_0_8_initial_1_2(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            time_constant=0.8,
+            smoothing_factor=0.8,
             initial_value=np.array([[-1, 1, -2, 2]]),
             integrator_mode=True
         )

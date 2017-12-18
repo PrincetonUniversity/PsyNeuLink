@@ -7,7 +7,7 @@
 
 # NOTES:
 #  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
-#  * NOW THAT NOISE AND TIME_CONSTANT ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#  * NOW THAT NOISE AND SMOOTHING_FACTOR ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
@@ -46,8 +46,8 @@ a Function constructor that can include arguments specifying the Function's para
     >>> my_linear_transfer_mechanism = pnl.TransferMechanism(function=pnl.Linear)
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
 
-In addition to Function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant
-<TransferMechanism.time_constant>` parameters can be specified for the Mechanism (see `Transfer_Execution`).
+In addition to Function-specific parameters, `noise <TransferMechanism.noise>` and `smoothing_factor
+<TransferMechanism.smoothing_factor>` parameters can be specified for the Mechanism (see `Transfer_Execution`).
 
 
 .. _Transfer_Structure:
@@ -130,10 +130,10 @@ the following parameters (in addition to any specified for the `function <Transf
       passing through the function of the mechanisms. When `integrator_mode <TransferMechanism.integrator_mode>` is set
       to True, the TransferMechanism exponentially time-averages its input before transforming it.
     ..
-    * `time_constant <TransferMechanism.time_constant>`: if the `integrator_mode <TransferMechanism.integrator_mode>`
-      attribute is set to True, the `time_constant <TransferMechanism.time_constant>` attribute is the rate of
+    * `smoothing_factor <TransferMechanism.smoothing_factor>`: if the `integrator_mode <TransferMechanism.integrator_mode>`
+      attribute is set to True, the `smoothing_factor <TransferMechanism.smoothing_factor>` attribute is the rate of
       integration (a higher value specifies a faster rate); if `integrator_mode <TransferMechanism.integrator_mode>` is
-      False, `time_constant <TransferMechanism.time_constant>` is ignored and time-averaging does not occur.
+      False, `smoothing_factor <TransferMechanism.smoothing_factor>` is ignored and time-averaging does not occur.
 
 After each execution of the Mechanism the result of `function <TransferMechanism.function>` applied to each
 `InputState` is assigned as an item of the Mechanism's `value <TransferMechanism.value>`, and the `value
@@ -177,13 +177,13 @@ from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
-    'INITIAL_VALUE', 'CLIP', 'TIME_CONSTANT', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH',
+    'INITIAL_VALUE', 'CLIP', 'SMOOTHING_FACTOR', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH',
     'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
 ]
 
 # TransferMechanism parameter keywords:
 CLIP = "clip"
-TIME_CONSTANT = "time_constant"
+SMOOTHING_FACTOR = "smoothing_factor"
 INITIAL_VALUE = 'initial_value'
 
 # TransferMechanism default parameter values:
@@ -270,7 +270,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     function=Linear,             \
     initial_value=None,          \
     noise=0.0,                   \
-    time_constant=1.0,           \
+    smoothing_factor=1.0,           \
     integrator_mode=False,       \
     clip=(float:min, float:max), \
     output_states=RESULTS        \
@@ -344,11 +344,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float : default 1.0
+    smoothing_factor : float : default 1.0
         the time constant for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
         set to True::
 
-         result = (time_constant * current input) + ((1-time_constant) * result on previous time_step)
+         result = (smoothing_factor * current input) + ((1-smoothing_factor) * result on previous time_step)
 
     clip : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
@@ -401,7 +401,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if `integrator_mode
-        <TransferMechanism.integrator_mode>` is True and `time_constant <TransferMechanism.time_constant>` is not 1.0).
+        <TransferMechanism.integrator_mode>` is True and `smoothing_factor <TransferMechanism.smoothing_factor>` is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
@@ -411,15 +411,15 @@ class TransferMechanism(ProcessingMechanism_Base):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float
+    smoothing_factor : float
         the time constant for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
         set to True::
 
-          result = (time_constant * current input) + ( (1-time_constant) * result on previous time_step)
+          result = (smoothing_factor * current input) + ( (1-smoothing_factor) * result on previous time_step)
 
     integrator_mode : booleane
         when set to True, the Mechanism time averages its input according to an exponentially weighted moving average
-        (see `time_constant <TransferMechanisms.time_constant>`).
+        (see `smoothing_factor <TransferMechanisms.smoothing_factor>`).
 
     clip : Optional[Tuple[float, float]]
         determines the allowable range of the result: the first value specifies the minimum allowable value
@@ -487,7 +487,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  function=Linear,
                  initial_value=None,
                  noise=0.0,
-                 time_constant=1.0,
+                 smoothing_factor=1.0,
                  integrator_mode=False,
                  clip=None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
@@ -510,7 +510,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   input_states=input_states,
                                                   output_states=output_states,
                                                   noise=noise,
-                                                  time_constant=time_constant,
+                                                  smoothing_factor=smoothing_factor,
                                                   integrator_mode=integrator_mode,
                                                   time_scale=time_scale,
                                                   clip=clip,
@@ -581,16 +581,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                         )
                     )
 
-        # FIX: SHOULD THIS (AND TIME_CONSTANT) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
+        # FIX: SHOULD THIS (AND SMOOTHING_FACTOR) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
         # Validate NOISE:
         if NOISE in target_set:
             self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
-        # Validate TIME_CONSTANT:
-        if TIME_CONSTANT in target_set:
-            time_constant = target_set[TIME_CONSTANT]
-            if (not (isinstance(time_constant, float) and 0 <= time_constant <= 1)) and (time_constant != None):
-                raise TransferError("time_constant parameter ({}) for {} must be a float between 0 and 1".
-                                    format(time_constant, self.name))
+        # Validate SMOOTHING_FACTOR:
+        if SMOOTHING_FACTOR in target_set:
+            smoothing_factor = target_set[SMOOTHING_FACTOR]
+            if (not (isinstance(smoothing_factor, float) and 0 <= smoothing_factor <= 1)) and (smoothing_factor != None):
+                raise TransferError("smoothing_factor parameter ({}) for {} must be a float between 0 and 1".
+                                    format(smoothing_factor, self.name))
 
         # Validate RANGE:
         if CLIP in target_set:
@@ -607,7 +607,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         #     # default_variable=self.default_variable,
         #                                       initializer = self.instance_defaults.variable,
         #                                       noise = self.noise,
-        #                                       rate = self.time_constant,
+        #                                       rate = self.smoothing_factor,
         #                                       integration_type= ADAPTIVE)
 
     def _validate_noise(self, noise, var):
@@ -710,7 +710,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         variable (float): set to self.value (= self.input_value)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
             + NOISE (float)
-            + TIME_CONSTANT (float)
+            + SMOOTHING_FACTOR (float)
             + RANGE ([float, float])
         - context (str)
 
@@ -738,7 +738,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         #region ASSIGN PARAMETER VALUES
 
-        time_constant = self.time_constant
+        smoothing_factor = self.smoothing_factor
         clip = self.clip
         noise = self.noise
         #endregion
@@ -758,14 +758,14 @@ class TransferMechanism(ProcessingMechanism_Base):
                                             variable,
                                             initializer = self.initial_value,
                                             noise = self.noise,
-                                            rate = self.time_constant,
+                                            rate = self.smoothing_factor,
                                             owner = self)
 
             current_input = self.integrator_function.execute(variable,
                                                         # Should we handle runtime params?
                                                               params={INITIALIZER: self.initial_value,
                                                                       NOISE: self.noise,
-                                                                      RATE: self.time_constant},
+                                                                      RATE: self.smoothing_factor},
                                                               context=context
 
                                                              )
@@ -823,9 +823,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         print_input = input
         print_params = params.copy()
-        # Only report time_constant if in TIME_STEP mode
+        # Only report smoothing_factor if in TIME_STEP mode
         if params['time_scale'] is TimeScale.TRIAL:
-            del print_params[TIME_CONSTANT]
+            del print_params[SMOOTHING_FACTOR]
         # Suppress reporting of range (not currently used)
         del print_params[CLIP]
 
@@ -861,11 +861,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         self._noise = value
 
     @property
-    def time_constant(self):
+    def smoothing_factor(self):
         return self._time_constant
 
-    @time_constant.setter
-    def time_constant(self, value):
+    @smoothing_factor.setter
+    def smoothing_factor(self, value):
         self._time_constant = value
     # # MODIFIED 4/17/17 END
 

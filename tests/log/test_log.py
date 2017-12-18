@@ -17,14 +17,14 @@ class TestLog:
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'time_constant': 'OFF',
+                                     'smoothing_factor': 'OFF',
                                      'value': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'time_constant': 'OFF',
+                                     'smoothing_factor': 'OFF',
                                      'value': 'OFF'}
         assert PJ.loggable_items == {'matrix': 'OFF',
                                      'value': 'OFF'}
@@ -38,14 +38,14 @@ class TestLog:
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
                                      'noise': 'EXECUTION',
-                                     'time_constant': 'OFF',
+                                     'smoothing_factor': 'OFF',
                                      'value': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'time_constant': 'OFF',
+                                     'smoothing_factor': 'OFF',
                                      'value': 'OFF'}
         assert PJ.loggable_items == {'matrix': 'EXECUTION',
                                      'value': 'OFF'}
