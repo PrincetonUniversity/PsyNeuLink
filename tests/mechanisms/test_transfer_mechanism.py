@@ -19,6 +19,7 @@ class TestTransferMechanismInputs:
         T = TransferMechanism(
             name='T',
             default_variable=[0, 0, 0, 0],
+            smoothing_factor=1.0,
             integrator_mode=True
         )
         val = T.execute([10, 10, 10, 10])
@@ -31,6 +32,7 @@ class TestTransferMechanismInputs:
         T = TransferMechanism(
             name='T',
             default_variable=[0, 0, 0, 0],
+            smoothing_factor=1.0,
             integrator_mode=True
         )
         val = T.execute([10.0, 10.0, 10.0, 10.0])
