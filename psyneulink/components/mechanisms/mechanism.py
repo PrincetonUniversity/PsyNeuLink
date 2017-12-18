@@ -787,7 +787,7 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import ADD_STATES, _parse_state_spec
 from psyneulink.globals.defaults import timeScaleSystemDefault
-from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
@@ -1986,7 +1986,7 @@ class Mechanism_Base(Mechanism):
         # Executing or simulating Process or System, get input by updating input_states
 
         if (input is None
-            and (EXECUTING in context or EVC_SIMULATION in context)
+            and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION})
             and (self.input_state.path_afferents != [])):
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
                                                                        time_scale=time_scale,
@@ -2009,58 +2009,48 @@ class Mechanism_Base(Mechanism):
 
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
-        self.value = self._execute(
-            variable=variable,
-            runtime_params=runtime_params,
-            time_scale=time_scale,
-            context=context,
-        )
+        # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
+        #                      to avoid multiple calls to (and potential log entries for) self.value property
+        value = self._execute(variable=variable,
+                                   runtime_params=runtime_params,
+                                   time_scale=time_scale,
+                                   context=context,
+                                   )
 
-        # # MODIFIED 3/3/17 OLD:
-        # self.value = np.atleast_2d(self.value)
-        # # MODIFIED 3/3/17 NEW:
-        # converted_to_2d = np.atleast_2d(self.value)
-        # # If self.value is a list of heterogenous elements, leave as is;
-        # # Otherwise, use converted value (which is a genuine 2d array)
-        # if converted_to_2d.dtype != object:
-        #     self.value = converted_to_2d
-        # MODIFIED 3/8/17 NEWER:
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
         #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
         #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-        if (isinstance(self.value, list) and
-            (all(isinstance(item, np.ndarray) for item in self.value) and
+        if (isinstance(value, list) and
+            (all(isinstance(item, np.ndarray) for item in value) and
                 all(
-                        all(item.shape[i]==self.value[0].shape[0]
+                        all(item.shape[i]==value[0].shape[0]
                             for i in range(len(item.shape)))
-                        for item in self.value))):
-                # return self.value
+                        for item in value))):
                 pass
         else:
-            converted_to_2d = np.atleast_2d(self.value)
+            converted_to_2d = np.atleast_2d(value)
             # If return_value is a list of heterogenous elements, return as is
             #     (satisfies requirement that return_value be an array of possibly multidimensional values)
             if converted_to_2d.dtype == object:
-                # return self.value
                 pass
             # Otherwise, return value converted to 2d np.array
             else:
                 # return converted_to_2d
-                self.value = converted_to_2d
-        # MODIFIED 3/3/17 END
+                value = converted_to_2d
 
         # Set status based on whether self.value has changed
-        self.status = self.value
-
+        self.status = value
         #endregion
 
+        self.value = value
 
         #region UPDATE OUTPUT STATE(S)
         self._update_output_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
         #region REPORT EXECUTION
-        if self.prefs.reportOutputPref and context and EXECUTING in context:
+        # if self.prefs.reportOutputPref and context and EXECUTING in context:
+        if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}):
             self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
         #endregion
 

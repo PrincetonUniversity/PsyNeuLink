@@ -2154,8 +2154,7 @@ class Process(Process_Base):
             mech._execution_id = self._execution_id
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and context and EXECUTING in context
-
+        report_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING})
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
@@ -2279,9 +2278,7 @@ class Process(Process_Base):
                             # Call parameter_state.update with LEARNING in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                            context = context + SEPARATOR_BAR + LEARNING
-                            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-                            # context = context.replace(EXECUTING, LEARNING + ' ')
+                            context = context.replace(EXECUTING, LEARNING + ' ')
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
