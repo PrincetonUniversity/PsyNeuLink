@@ -11,6 +11,7 @@ from psyneulink.scheduling.condition import ConditionError, ConditionSet
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
+
 logger = logging.getLogger(__name__)
 
 

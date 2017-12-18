@@ -1291,7 +1291,6 @@ class Component(object):
                     # FIX: AND, EVEN IF IT DOES, WHAT ABOUT ORDER EFFECTS:
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
-
                     from psyneulink.components.functions.function import Function
                     from inspect import isfunction
 
@@ -1857,7 +1856,6 @@ class Component(object):
 
     @tc.typecheck
     def _assign_params(self, request_set:tc.optional(dict)=None, context=None):
-
         from psyneulink.components.functions.function import Function
 
         # FIX: Hack to prevent recursion in calls to setter and assign_params
@@ -2550,8 +2548,6 @@ class Component(object):
             # FUNCTION is a generic function (presumably user-defined), so "wrap" it in UserDefinedFunction:
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
-
-
                 from psyneulink.components.functions.function import UserDefinedFunction
                 self.function = UserDefinedFunction(function=function, context=context).function
 

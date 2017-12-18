@@ -1,6 +1,7 @@
 import pytest
 import typecheck
 import numpy as np
+
 from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import Linear, BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DDMError

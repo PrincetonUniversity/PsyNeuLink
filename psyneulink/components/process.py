@@ -490,12 +490,11 @@ ProcessRegistry = {}
 
 
 class ProcessError(Exception):
-     def __init__(self, error_value):
-         self.error_value = error_value
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-     def __str__(self):
-         return repr(self.error_value)
-
+    def __str__(self):
+        return repr(self.error_value)
 
 kwProcessInputState = 'ProcessInputState'
 kwTarget = 'target'
@@ -2040,6 +2039,9 @@ class Process(Process_Base):
 
             target = np.atleast_1d(target)
 
+            print("target mech target name = {}".format(target_mech_target.name))
+            print("target = {}".format(target))
+
             # Check that length of process' target input matches length of TARGET Mechanism's target input
             if len(target) != len(target_mech_target.instance_defaults.variable):
                 raise ProcessError("Length of target ({}) does not match length of input for TARGET Mechanism {} ({})".
@@ -2146,7 +2148,6 @@ class Process(Process_Base):
         if not context:
             context = EXECUTING + " " + PROCESS + " " + self.name
             self.execution_status = ExecutionStatus.EXECUTING
-
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
         for mech in self.mechanisms:
@@ -2518,6 +2519,7 @@ class Process(Process_Base):
     @property
     def numPhases(self):
         return self._phaseSpecMax + 1
+
 
 class ProcessInputState(OutputState):
     """Represents inputs and targets specified in a call to the Process' `execute <Process.execute>` and `run

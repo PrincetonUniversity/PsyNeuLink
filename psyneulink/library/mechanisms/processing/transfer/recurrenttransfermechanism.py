@@ -186,7 +186,6 @@ __all__ = [
     'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
 ]
 
-
 class RecurrentTransferError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
