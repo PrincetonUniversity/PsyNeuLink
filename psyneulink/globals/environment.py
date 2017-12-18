@@ -681,6 +681,11 @@ def run(object,
         if call_after_trial:
             call_after_trial()
 
+        from psyneulink.globals.log import _log_trials_and_runs, LogCondition
+        _log_trials_and_runs(composition=object,
+                             curr_condition=LogCondition.TRIAL,
+                             context=context)
+
     try:
         # this will fail on processes, which do not have schedulers
         object.scheduler_processing.date_last_run_end = datetime.datetime.now()
@@ -695,6 +700,11 @@ def run(object,
         pass
     else:
         object._learning_enabled = learning_state_buffer
+
+    from psyneulink.globals.log import _log_trials_and_runs, LogCondition
+    _log_trials_and_runs(composition=object,
+                         curr_condition=LogCondition.RUN,
+                         context=context)
 
     return object.results
 
