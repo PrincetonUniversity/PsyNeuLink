@@ -62,7 +62,6 @@ def test_reinforcement():
         # learning_rate=0.05,
         targets=[0],
     )
-    s.show_graph(show_learning='all')
 
     results = s.run(
         num_trials=10,
