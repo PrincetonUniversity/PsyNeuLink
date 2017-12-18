@@ -175,9 +175,9 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     COMMENT
     # Show the loggable items (and their current LogConditions) of each Mechanism and the Projection between them:
     >> my_mech_A.loggable_items
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
+    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'smoothing_factor': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
     >> my_mech_B.loggable_items
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
+    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'smoothing_factor': 'OFF'}
     >> proj_A_to_B.loggable_items
     {'value': 'OFF', 'matrix': 'OFF'}
 
