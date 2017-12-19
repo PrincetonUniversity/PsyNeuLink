@@ -301,24 +301,30 @@ class GatingProjection(ModulatoryProjection_Base):
                          prefs=prefs,
                          context=self)
 
-    def _instantiate_sender(self, params=None, context=None):
+    def _instantiate_sender(self, sender, params=None, context=None):
         """Check that sender is not a process and that, if specified as a Mechanism, it is a GatingMechanism
         """
 
         # A Process can't be the sender of a GatingProjection
-        if isinstance(self.sender, Process_Base):
-            raise ProjectionError("PROGRAM ERROR: attempt to add a {} from a Process {0} "
-                                  "to a Mechanism {0} in pathway list".
-                                  format(GATING_PROJECTION, self.name, self.sender.name))
+        if isinstance(sender, Process_Base):
+            raise ProjectionError(
+                "PROGRAM ERROR: attempt to add a {} from a Process {0} "
+                "to a Mechanism {0} in pathway list".format(
+                    GATING_PROJECTION, self.name, sender.name
+                )
+            )
 
         # If sender is specified as a Mechanism, validate that it is a GatingMechanism
-        if isinstance(self.sender, Mechanism):
-            if not isinstance(self.sender, GatingMechanism):
-                raise GatingProjectionError("Mechanism specified as sender for {} ({}) must be a {} (but it is a {})".
-                                    format(GATING_MECHANISM,self.name, self.sender.name,self.sender.__class__.__name__))
+        if isinstance(sender, Mechanism):
+            if not isinstance(sender, GatingMechanism):
+                raise GatingProjectionError(
+                    "Mechanism specified as sender for {} ({}) must be a {} (but it is a {})".format(
+                        GATING_MECHANISM, self.name, sender.name, sender.__class__.__name__
+                    )
+                )
 
         # Call super to instantiate sender
-        super()._instantiate_sender(context=context)
+        super()._instantiate_sender(sender, context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
 

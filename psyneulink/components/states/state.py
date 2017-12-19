@@ -1748,56 +1748,54 @@ class State_Base(State):
 
             # VALIDATE (if initialized or being initialized (UNSET))
 
-            if projection.init_status in {InitStatus.INITIALIZED, InitStatus.UNSET}:
+            if projection.init_status in {InitStatus.INITIALIZED, InitStatus.INITIALIZING, InitStatus.UNSET}:
 
                 # If still being initialized, then assign sender and receiver as necessary
-                if projection.init_status is InitStatus.UNSET:
+                if projection.init_status in {InitStatus.INITIALIZING, InitStatus.UNSET}:
                     if not isinstance(projection.sender, State):
                         projection.sender = self
-                        projection.instance_defaults.variable = self.value
 
                     if not isinstance(projection.receiver, State):
                         projection.receiver = receiver_state
 
-                    # FIX: 10/3/17 -- ??IS THE FOLLOWING LEGIT? (IT IS DONE TO PASS TESTS BELOW)
-                    # FIX:            [HASN'T BEEN ASSIGNED IN __init__ YET BECAUSE CALL CAN BE FROM
-                    # FIX:            LearningProjection._instantiate_sender() WHICH IS ITSELF CALLED
-                    # FIX:            FROM _instantiate_attributes_before_function
-                    projection.value = receiver.variable
+                try:
+                    # Validate variable
+                    #    - check that input to Projection is compatible with self.value
+                    if not iscompatible(self.value, projection.instance_defaults.variable):
+                        raise StateError("Input to {} ({}) is not compatible with the value ({}) of "
+                                         "the State from which it is supposed to project ({})".
+                                         format(projection.name, projection.variable, self.value, self.name))
 
-                # Validate variable
-                #    - check that input to Projection is compatible with self.value
-                if not iscompatible(self.value, projection.instance_defaults.variable):
-                    raise StateError("Input to {} ({}) is not compatible with the value ({}) of "
-                                     "the State from which it is supposed to project ({})".
-                                     format(projection.name, projection.variable, self.value, self.name))
+                    # Validate value:
+                    #    - check that output of projection's function (projection_spec.value) is compatible with
+                    #        variable of the State to which it projects;  if it is not, raise exception:
+                    #        the buck stops here; can't modify projection's function to accommodate the State,
+                    #        or there would be an unmanageable regress of reassigning projections,
+                    #        requiring reassignment or modification of sender OutputStates, etc.
 
-                # Validate value:
-                #    - check that output of projection's function (projection_spec.value) is compatible with
-                #        variable of the State to which it projects;  if it is not, raise exception:
-                #        the buck stops here; can't modify projection's function to accommodate the State,
-                #        or there would be an unmanageable regress of reassigning projections,
-                #        requiring reassignment or modification of sender OutputStates, etc.
+                    # PathwayProjection:
+                    #    - check that projection's value is compatible with the receiver's variable
+                    if isinstance(projection, PathwayProjection_Base):
+                        if not iscompatible(projection.value, receiver.instance_defaults.variable):
+                            raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
+                                             "the State to which it is supposed to project ({}).".
+                                             format(projection.name, projection.value,
+                                                    receiver.instance_defaults.variable, receiver.name, ))
 
-                # PathwayProjection:
-                #    - check that projection's value is compatible with the receiver's variable
-                if isinstance(projection, PathwayProjection_Base):
-                    if not iscompatible(projection.value, receiver.instance_defaults.variable):
-                        raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
-                                         "the State to which it is supposed to project ({}).".
-                                         format(projection.name, projection.value,
-                                                receiver.instance_defaults.variable, receiver.name, ))
-
-                # ModualatoryProjection:
-                #    - check that projection's value is compatible with value of the function param being modulated
-                elif isinstance(projection, ModulatoryProjection_Base):
-                    function_param_value = _get_modulated_param(receiver, projection).function_param_val
-                    # Match the projection's value with the value of the function parameter
-                    mod_proj_spec_value = type_match(projection.value, type(function_param_value))
-                    if (function_param_value is not None
-                        and not iscompatible(function_param_value, mod_proj_spec_value)):
-                        raise StateError("Output of {} ({}) is not compatible with the value of {} ({}).".
-                                         format(projection.name,mod_proj_spec_value,receiver.name,function_param_value))
+                    # ModualatoryProjection:
+                    #    - check that projection's value is compatible with value of the function param being modulated
+                    elif isinstance(projection, ModulatoryProjection_Base):
+                        function_param_value = _get_modulated_param(receiver, projection).function_param_val
+                        # Match the projection's value with the value of the function parameter
+                        mod_proj_spec_value = type_match(projection.value, type(function_param_value))
+                        if (function_param_value is not None
+                            and not iscompatible(function_param_value, mod_proj_spec_value)):
+                            raise StateError("Output of {} ({}) is not compatible with the value of {} ({}).".
+                                             format(projection.name,mod_proj_spec_value,receiver.name,function_param_value))
+                except AttributeError:
+                    # sometimes the above attributes like variable and value don't even exist when this is called
+                    # and additionally are set later to the values they're being validated against here
+                    pass
 
                 projection._assign_default_projection_name(state=self,
                                                            sender_name=self.name,

@@ -500,27 +500,33 @@ class LearningProjection(ModulatoryProjection_Base):
                                               "or the MATRIX parameterState of one."
                                               .format(PROJECTION_SENDER, sender, self.name, ))
 
-    def _instantiate_sender(self, context=None):
+    def _instantiate_sender(self, sender, context=None):
         """Instantiate LearningMechanism
         """
 
         # LearningMechanism was specified by class or was not specified,
         #    so call composition for "automatic" instantiation of a LearningMechanism
         # Note: this also instantiates an ObjectiveMechanism if necessary and assigns it the necessary projections
+
+        # assignment to attribute necessary because of uses in _instantiate_learning_components
+        self.sender = sender
+
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
             from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary \
                 import _instantiate_learning_components
-            _instantiate_learning_components(learning_projection=self,
-                                             context=context + " " + self.name)
+            _instantiate_learning_components(
+                learning_projection=self,
+                context="{0} {1}".format(context, self.name)
+            )
 
         if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
                                           format(self.name, self.sender.owner.name))
 
-        # This assigns self as an outgoing projection from the sender (LearningMechanism) outputState
+        # This assigns self as an outgoing projection from the self.sender (LearningMechanism) outputState
         #    and formats self.instance_defaults.variable to be compatible with that outputState's value
         #    (i.e., its learning_signal)
-        super()._instantiate_sender(context=context)
+        super()._instantiate_sender(self.sender, context=context)
 
         if self.sender.learning_rate is not None:
             self.learning_rate = self.sender.learning_rate
