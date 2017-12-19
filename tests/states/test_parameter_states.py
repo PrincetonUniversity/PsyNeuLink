@@ -8,14 +8,14 @@ class TestParameterStates:
 
         A = TransferMechanism()
         B = TransferMechanism()
-        C = TransferMechanism()
+        # C = TransferMechanism(function=Linear(slope=2))
 
         assert A.function_object.slope == 1.0
         assert B.function_object.slope == 1.0
         assert A.function_object._slope == 1.0
         assert B.function_object._slope == 1.0
-        assert A.function_object.mod_slope == [1.0]
-        assert B.function_object.mod_slope == [1.0]
+        assert A.mod_slope == [1.0]
+        assert B.mod_slope == [1.0]
 
         assert A.noise == 0.0
         assert B.noise == 0.0
@@ -30,8 +30,8 @@ class TestParameterStates:
         assert B.function_object.slope == 1.0
         assert A.function_object._slope == 0.2
         assert B.function_object._slope == 1.0
-        assert A.function_object.mod_slope == [1.0]
-        assert B.function_object.mod_slope == [1.0]
+        assert A.mod_slope == [1.0]
+        assert B.mod_slope == [1.0]
 
         A.noise = 0.5
 
@@ -48,8 +48,8 @@ class TestParameterStates:
         assert B.function_object.slope == 0.7
         assert A.function_object._slope == 0.2
         assert B.function_object._slope == 0.7
-        assert A.function_object.mod_slope == [1.0]
-        assert B.function_object.mod_slope == [1.0]
+        assert A.mod_slope == [1.0]
+        assert B.mod_slope == [1.0]
 
         B.noise = 0.6
 
@@ -61,9 +61,9 @@ class TestParameterStates:
         assert B.mod_noise == 0.0
 
         # print("A.function_object.base_value_slope --> ", A.function_object.base_value_slope)
-        print("- - - - - EXECUTING A - - - - -")
+        print("- - - - - EXECUTING A ", A.name, "- - - - -")
         print(A.execute(1.0))
-        assert A.function_object.mod_slope == [0.2]
+        assert A.mod_slope == [0.2]
         print("- - - - - EXECUTING B - - - - -")
         print(B.execute(1.0))
 
@@ -71,8 +71,8 @@ class TestParameterStates:
         assert B.function_object.slope == 0.7
         assert A.function_object._slope == 0.2
         assert B.function_object._slope == 0.7
-        assert A.function_object.mod_slope == [0.2]
-        assert B.function_object.mod_slope == [0.7]
+        assert A.mod_slope == [0.2]
+        assert B.mod_slope == [0.7]
 
         assert A.noise == 0.5
         assert B.noise == 0.6
