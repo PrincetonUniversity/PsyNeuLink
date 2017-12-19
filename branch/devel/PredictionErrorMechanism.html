@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.4.1.1+62.g6213ab2 documentation</title>
+  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.4.1.1+63.g9968b24 documentation</title>
   
 
   
@@ -35,7 +35,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.1.1+62.g6213ab2 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.1.1+63.g9968b24 documentation" href="index.html"/>
+        <link rel="up" title="Objective Mechanisms" href="ObjectiveMechanisms.html"/>
+        <link rel="next" title="Adaptive Mechanisms" href="AdaptiveMechanisms.html"/>
+        <link rel="prev" title="ComparatorMechanism" href="ComparatorMechanism.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +67,7 @@
             
             
               <div class="version">
-                0.4.1.1+62
+                0.4.1.1+63
               </div>
             
           
@@ -88,12 +91,30 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Components.html">Components</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="TransferMechanisms.html">Transfer Mechanisms</a></li>
+<li class="toctree-l5"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a></li>
+<li class="toctree-l5 current"><a class="reference internal" href="ObjectiveMechanisms.html">Objective Mechanisms</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanisms.html">Adaptive Mechanisms</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="Projections.html">Projections</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Compositions.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -137,6 +158,16 @@
   <ul class="wy-breadcrumbs">
     
       <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Library.html">Library</a> &raquo;</li>
+        
+          <li><a href="Components.html">Components</a> &raquo;</li>
+        
+          <li><a href="Mechanisms.html">Mechanisms</a> &raquo;</li>
+        
+          <li><a href="ProcessingMechanisms.html">Processing Mechanisms</a> &raquo;</li>
+        
+          <li><a href="ObjectiveMechanisms.html">Objective Mechanisms</a> &raquo;</li>
         
       <li>PredictionErrorMechanism</li>
     
@@ -240,7 +271,7 @@ Mechanism’s <code class="xref any docutils literal"><span class="pre">output_v
 for the SAMPLE and/or TARGET InputStates of a PredictionErrorMechanism. This
 can be useful when one or both of these differ from the format of the
 OutputState(s) specified in the <strong>sample</strong> and <strong>target</strong> arguments. For
-example, for <code class="xref any docutils literal"><span class="pre">Temporal</span> <span class="pre">Difference</span> <span class="pre">Learning</span></code>, a
+example, for <a class="reference internal" href="Function.html#psyneulink.components.functions.function.TDLearning" title="psyneulink.components.functions.function.TDLearning"><code class="xref any py py-class docutils literal"><span class="pre">Temporal</span> <span class="pre">Difference</span> <span class="pre">Learning</span></code></a>, a
 PredictionErrorMechanism is used to compare the predicted reward from the
 sample with the true reward (the target). In the example below, the sample
 Mechanism is a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function to output
@@ -285,6 +316,15 @@ length 5, that will match the length of the <em>TARGET</em> InputState.</p>
           </div>
           <footer>
   
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="AdaptiveMechanisms.html" class="btn btn-neutral float-right" title="Adaptive Mechanisms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ComparatorMechanism.html" class="btn btn-neutral" title="ComparatorMechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
   <hr/>
 
@@ -312,7 +352,7 @@ length 5, that will match the length of the <em>TARGET</em> InputState.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.1.1+62.g6213ab2',
+            VERSION:'0.4.1.1+63.g9968b24',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
