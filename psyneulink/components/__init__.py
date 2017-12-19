@@ -87,6 +87,7 @@ register_category(entry=DefaultControlMechanism,
                   context=kwInitPy)
 
 # DDM (used as DefaultMechanism)
+
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
 register_category(entry=DDM,
                   base_class=Mechanism_Base,
@@ -299,7 +300,6 @@ for projection_type in ProjectionRegistry:
 #endregion
 
 #region ***************************************** CLASS _PREFERENCES ***************************************************
-
 from psyneulink.globals.preferences.componentpreferenceset \
     import ComponentPreferenceSet, ComponentDefaultPrefDicts, PreferenceLevel
 

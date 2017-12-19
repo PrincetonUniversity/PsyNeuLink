@@ -274,7 +274,7 @@ each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (
 input for only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System.run>` method
 can be used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In
 both cases, two other types of input can be provided in corresponding arguments of the `run <System.run>` method:
-a  list or ndarray of **initial_values**, and a list or ndarray of **target** values. The **initial_values** are
+a list or ndarray of **initial_values**, and a list or ndarray of **target** values. The **initial_values** are
 assigned at the start of a `TRIAL` as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`,
 and listed in the System's `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute), and
 **target** values are assigned as the *TARGET* input of the System's `TARGET` Mechanisms (see
@@ -1432,7 +1432,7 @@ class System(System_Base):
             for receiver_object_item, dep_set in self.execution_graph.items():
                 mech = receiver_object_item
                 if not dep_set:
-                    print("\t\'{}\' is an {} Mechanism".
+                    print("\t'{}' is an {} Mechanism".
                           format(mech.name, mech.systems[self]))
                 else:
                     status = mech.systems[self]
@@ -1440,7 +1440,7 @@ class System(System_Base):
                         status = 'a ' + status
                     elif status in {INTERNAL, INITIALIZE_CYCLE}:
                         status = 'an ' + status
-                    print("\t\'{}\' is {} Mechanism that receives Projections from:".format(mech.name, status))
+                    print("\t'{}' is {} Mechanism that receives Projections from:".format(mech.name, status))
                     for sender_object_item in dep_set:
                         print("\t\t\'{}\'".format(sender_object_item.name))
 
@@ -1902,7 +1902,7 @@ class System(System_Base):
                                                    context=context)
             self.target_input_states.append(system_target_input_state)
 
-            # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
+            # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
             from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
             MappingProjection(sender=system_target_input_state,
                     receiver=target_mech_TARGET_input_state,
@@ -2020,7 +2020,6 @@ class System(System_Base):
         Returns list of MonitoredOutputStateTuples: (OutputState, weight, exponent, matrix)
 
         """
-
         # PARSE SPECS
 
         # Get OutputStates already being -- or specified to be -- monitored by controller
@@ -3514,7 +3513,7 @@ class System(System_Base):
                     pass
 
         # return
-        if   output_fmt == 'pdf':
+        if output_fmt == 'pdf':
             G.view(self.name.replace(" ", "-"), cleanup=True)
         elif output_fmt == 'jupyter':
             return G

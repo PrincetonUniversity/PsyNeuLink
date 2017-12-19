@@ -386,7 +386,7 @@ automatically creates an InputState, ParameterStates for its parameters, includi
     print(my_mech.input_states)
     > [(InputState InputState-0)]
     print(my_mech.parameter_states)
-    > [(ParameterState intercept), (ParameterState slope), (ParameterState noise), (ParameterState time_constant)]
+    > [(ParameterState intercept), (ParameterState slope), (ParameterState noise), (ParameterState smoothing_factor)]
     print(my_mech.output_states)
     > [(OutputState RESULT)]
 
@@ -2321,7 +2321,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     state_type = state_spec_dict.pop(STATE_TYPE, None)
     if REFERENCE_VALUE_NAME in state_spec_dict:
         del state_spec_dict[REFERENCE_VALUE_NAME]
-    if state_spec_dict[PARAMS] and  REFERENCE_VALUE_NAME in state_spec_dict[PARAMS]:
+    if state_spec_dict[PARAMS] and REFERENCE_VALUE_NAME in state_spec_dict[PARAMS]:
         del state_spec_dict[PARAMS][REFERENCE_VALUE_NAME]
 
     # Implement default State
@@ -2727,14 +2727,18 @@ def _parse_state_spec(state_type=None,
 
                 mech = state_specific_args[MECHANISM]
                 if not isinstance(mech, Mechanism):
-                    raise StateError("Value of the {} entry ({}) in the specification dictionary "
-                                     "for {} of {} is not a {}".
-                                     format(MECHANISM, mech, state_type.__name__, owner.name, Mechanism.__name__))
+                    raise StateError("Value of the {} entry ({}) in the "
+                                     "specification dictionary for {} of {} is "
+                                     "not a {}".format(MECHANISM,
+                                                       mech,
+                                                       state_type.__name__,
+                                                       owner.name,
+                                                       Mechanism.__name__))
 
                 # For States with which the one being specified can connect:
                 for STATES in state_type.connectsWithAttribute:
 
-                   if STATES in state_specific_args:
+                    if STATES in state_specific_args:
                         state_specs = state_specific_args[STATES]
                         state_specs = state_specs if isinstance(state_specs, list) else [state_specs]
                         for state_spec in state_specs:
@@ -2745,8 +2749,13 @@ def _parse_state_spec(state_type=None,
                                 state = state_attr[state]
                             except:
                                 name = owner.name if not 'unnamed' in owner.name else 'a ' + owner.__class__.__name__
-                                raise StateError("Unrecognized name ({}) for {} of {} in specification of {} for {}".
-                                                 format(state, STATES, mech.name, state_type.__name__, name))
+                                raise StateError("Unrecognized name ({}) for {} "
+                                                 "of {} in specification of {} "
+                                                 "for {}".format(state,
+                                                                 STATES,
+                                                                 mech.name,
+                                                                 state_type.__name__,
+                                                                 name))
                             # If state_spec was a tuple, put state back in as its first item and use as projection spec
                             if isinstance(state_spec, tuple):
                                 state = (state,) + state_spec[1:]
@@ -2771,10 +2780,13 @@ def _parse_state_spec(state_type=None,
                     params[PROJECTIONS] = state_specific_args[key]
                     del state_specific_args[key]
                 else:
-                    raise StateError("There is more than one entry of the {} specification dictionary for {} ({}) "
-                                     "that is not a keyword; there should be only one (used to name the State, "
-                                     "with a list of Projection specifications".
-                                     format(state_type.__name__, owner.name,
+                    raise StateError("There is more than one entry of the {} "
+                                     "specification dictionary for {} ({}) "
+                                     "that is not a keyword; there should be "
+                                     "only one (used to name the State, with a "
+                                     "list of Projection specifications".
+                                     format(state_type.__name__,
+                                            owner.name,
                                             ", ".join([s for s in list(state_specific_args.keys())])))
 
             for param in state_type.stateAttributes:
@@ -2906,8 +2918,11 @@ def _get_state_for_socket(owner,
                 proj_type = proj_spec[PROJECTION_TYPE]
         # MODIFIED 11/25/17 END:
 
-        # Get State type if it is appropriate for the specified socket of the Projection's type
-        s = next((s for s in state_types if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
+        # Get State type if it is appropriate for the specified socket of the
+        #  Projection's type
+        s = next((s for s in state_types if
+                  s.__name__ in getattr(proj_type.sockets, projection_socket)),
+                 None)
         if s:
             try:
                 # Return State associated with projection_socket if proj_spec is an actual Projection

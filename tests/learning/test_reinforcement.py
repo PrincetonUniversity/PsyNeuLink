@@ -4,9 +4,11 @@ import pytest
 
 from psyneulink.components.functions.function import PROB
 from psyneulink.components.functions.function import Reinforcement, SoftMax
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import \
+    TransferMechanism
 from psyneulink.components.process import Process
-from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+from psyneulink.components.projections.modulatory.learningprojection import \
+    LearningProjection
 from psyneulink.components.system import System
 
 
@@ -119,6 +121,6 @@ def test_reinforcement():
     for i in range(len(expected_output)):
         val, expected = expected_output[i]
         # setting absolute tolerance to be in accordance with reference_output precision
-        # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
+        # if you do not specify, assert_allclose will use a relative tolerance of 1e-07,
         # which WILL FAIL unless you gather higher precision values to use as reference
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))

@@ -145,14 +145,14 @@ class AutoNumber(IntEnum):
 
     Sample:
 
-        class NumberedList(AutoNumber):
-            FIRST_ITEM = ()
-            SECOND_ITEM = ()
+        >>> class NumberedList(AutoNumber):
+        ...    FIRST_ITEM = ()
+        ...    SECOND_ITEM = ()
 
-        >>>NumberedList.FIRST_ITEM.value
-         0
-        >>>NumberedList.SECOND_ITEM.value
-         1
+        >>> NumberedList.FIRST_ITEM.value
+        0
+        >>> NumberedList.SECOND_ITEM.value
+        1
 
     Adapted from AutoNumber example for Enum at https://docs.python.org/3/library/enum.html#enum.IntEnum:
     Notes:
@@ -746,6 +746,7 @@ class ContentAddressableList(UserList):
     of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputStates <OutputState>`, keyed by their
     names.  Therefore, ``my_mech.output_states.names`` returns the names of all of the Mechanism's OutputStates::
 
+        >>> import psyneulink as pnl
         >>> print(pnl.DDM().output_states.names)
         ['DECISION_VARIABLE', 'RESPONSE_TIME']
 

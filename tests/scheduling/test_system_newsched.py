@@ -13,6 +13,7 @@ from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
 
+
 class TestInit:
 
     def test_create_scheduler_from_system_StroopDemo(self):

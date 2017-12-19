@@ -1283,7 +1283,6 @@ def _parse_connection_specs(connectee_state_type,
         connections = [connections]
     connect_with_states = []
 
-
     for connection in connections:
 
 
@@ -2054,3 +2053,4 @@ context=context)
                                                       name=sender.name+'.output_states')
 
     output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
+
