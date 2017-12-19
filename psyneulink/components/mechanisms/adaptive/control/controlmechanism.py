@@ -771,7 +771,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
-
         from psyneulink.globals.registry import register_category
         from psyneulink.components.states.state import State_Base
 
@@ -789,6 +788,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
     # ---------------------------------------------------
 
         if self.control_signals:
+
+
 
             self._output_states = []
 

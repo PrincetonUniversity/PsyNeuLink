@@ -11,6 +11,7 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.globals.utilities import UtilitiesError
 
 
+
 class TestTransferMechanismInputs:
     # VALID INPUTS
 

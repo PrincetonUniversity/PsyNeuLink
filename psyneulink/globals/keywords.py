@@ -88,7 +88,7 @@ __all__ = [
     'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIAL', 'TRIALS_DIM', 'UNCHANGED', 'UNIFORM_DIST_FUNCTION',
     'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS', 'UTILITY_INTEGRATOR_FUNCTION',
     'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE', 'VECTOR',
-    'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS',
+    'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS'
 ]
 
 
@@ -170,11 +170,11 @@ class MatrixKeywords:
     ----------
 
     IDENTITY_MATRIX
-        a square matrix of 1's along the diagnoal, 0's elsewhere; this requires that the length of the sender and
+        a square matrix of 1's along the diagonal, 0's elsewhere; this requires that the length of the sender and
         receiver values are the same.
 
     HOLLOW_MATRIX
-        a square matrix of 0's along the diagnoal, 1's elsewhere; this requires that the length of the sender and
+        a square matrix of 0's along the diagonal, 1's elsewhere; this requires that the length of the sender and
         receiver values are the same.
 
     FULL_CONNECTIVITY_MATRIX
@@ -240,17 +240,17 @@ class DistanceMetrics:
     ----------
 
     DIFFERENCE
-        :math:`d = \\sum\limits^{len}(a_1-a_2)`
+        :math:`d = \\sum\\limits^{len}(a_1-a_2)`
 
     EUCLIDEAN
-        :math:`d = \\sum\limits^{len}\\sqrt{(a_1-a_2)^2}`
+        :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
 
     COMMENT:
     ANGLE
     COMMENT
 
     CORRELATION
-        :math:`d = \\frac{\\sum\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
+        :math:`d = \\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
 
     COMMENT:
     PEARSON
@@ -258,10 +258,10 @@ class DistanceMetrics:
     COMMENT
 
     ENTROPY and CROSS_ENTROPY
-        :math:`d = \\sum\limits^{len}a_1log(a_2)`
+        :math:`d = \\sum\\limits^{len}a_1log(a_2)`
 
     ENERGY:
-        :math:`d = -\\frac{1}{2}\\sum\limits_{i,j}a_{1_i}a_{2_j}w_{ij}`
+        :math:`d = -\\frac{1}{2}\\sum\\limits_{i,j}a_{1_i}a_{2_j}w_{ij}`
 
     """
     def __init__(self):
@@ -504,6 +504,7 @@ EVC_MECHANISM = "EVCControlMechanism"
 # ObjectiveMechanisms:
 OBJECTIVE_MECHANISM_OBJECT = "ObjectiveMechanism"
 COMPARATOR_MECHANISM = "ComparatorMechanism"
+PREDICTION_ERROR_MECHANISM = "PredictionErrorMechanism"
 
 # ProcessingMechanisms:
 TRANSFER_MECHANISM = "TransferMechanism"
@@ -520,6 +521,7 @@ ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
 REDUCE_FUNCTION = "Reduce Function"
 LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
+PREDICTION_ERROR_DELTA_FUNCTION = "PredictionErrorDelta Function"
 COMBINE_MEANS_FUNCTION = "CombineMeans Function"
 LINEAR_FUNCTION = "Linear Function"
 LEABRA_FUNCTION = "Leabra Function"
@@ -541,6 +543,7 @@ LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 HEBBIAN_FUNCTION = 'Hebbian Learning Function'
 RL_FUNCTION = 'ReinforcementLearning Function'
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
+TDLEARNING_FUNCTION = "TD Learning Function"
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
 
 # Distribution functions
@@ -613,6 +616,7 @@ TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
+ERROR = 'ERROR'
 
 RESULTS = 'RESULTS'
 RESULT = 'RESULT'
@@ -815,6 +819,7 @@ SIMPLE = 'scaled'
 ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
 
+REWARD = 'reward'
 NETWORK = 'network'
 
 #endregion

@@ -7,10 +7,10 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.composition import Composition
 from psyneulink.scheduling.condition import AfterNCalls, AfterNTrials, AfterPass, All, Always, Any, AtPass, \
-    BeforePass, \
-    EveryNCalls, EveryNPasses, JustRan, WhenFinished
+    BeforePass, EveryNCalls, EveryNPasses, JustRan, WhenFinished
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
+
 
 logger = logging.getLogger(__name__)
 
