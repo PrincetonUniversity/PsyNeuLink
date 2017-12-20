@@ -199,7 +199,7 @@ class LeabraFunction(Function_Base):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class ClassDefaults(Function_Base.ClassDefaults):
-        variable = [0]
+        variable = [[0], [0]]
 
     def __init__(self,
                  default_variable=None,

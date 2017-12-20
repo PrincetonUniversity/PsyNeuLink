@@ -1841,6 +1841,7 @@ class Process(Process_Base):
                     raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
                 # MODIFIED 5/2/17 END
 
+        # CHANGYAN NOTE: check this spot
         # Label monitoring mechanisms and add _learning_mechs to _mechs for execution
         if self._learning_mechs:
 
