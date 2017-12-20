@@ -689,10 +689,22 @@ class Component(object):
     componentCategory = None
     componentType = None
 
+    class _DefaultsMeta(type):
+        def __repr__(self):
+            return '{0} :\n{1}'.format(super().__repr__(), self.show())
 
-    class Defaults(object):
+        def show(self):
+            return ''
+
+    class Defaults(metaclass=_DefaultsMeta):
         def _attributes(obj):
-            return {k: getattr(obj, k) for k in dir(obj) if k[:2]+k[-2:] != '____' and not callable(getattr(obj, k))}
+            return {
+                k: getattr(obj, k) for k in dir(obj) + dir(type(obj))
+                if (
+                    k[:2] + k[-2:] != '____'
+                    and not callable(getattr(obj, k))
+                )
+            }
 
         @classmethod
         def values(cls):
