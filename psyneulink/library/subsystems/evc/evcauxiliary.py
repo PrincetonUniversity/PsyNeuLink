@@ -310,7 +310,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller.EVC_policies = []
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        context = context.replace(EXECUTING, '{0} {1}'.format(controller.name, EVC_SIMULATION))
+        context = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION))
 
         # Print progress bar
         if controller.prefs.reportOutputPref:

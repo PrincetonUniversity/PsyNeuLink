@@ -304,7 +304,7 @@ from psyneulink.components.states.parameterstate import _get_parameter_state
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, COMMAND_LINE, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SEPARATOR_BAR, SLOPE, SUM, kwAssign
-from psyneulink.globals.log import LogEntry, LogLevel
+from psyneulink.globals.log import LogEntry, LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
@@ -957,48 +957,48 @@ class ControlSignal(ModulatorySignal):
                 cost_change_string = "+" + str(cost_change)
             print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
 
-        #region Record control_signal values in owner Mechanism's log
-        # Notes:
-        # * Log control_signals for ALL states of a given Mechanism in the Mechanism's log
-        # * Log control_signals for EACH state in a separate entry of the Mechanism's log
-
-        # Get receiver Mechanism and state
-        controller = self.owner
-
-        # Get logPref for Mechanism
-        log_pref = controller.prefs.logPref
-
-        # Get context
-        if not context:
-            context = controller.name + " " + self.name + kwAssign
-        else:
-            context = context + SEPARATOR_BAR + self.name + kwAssign
-
-        # If context is consistent with log_pref:
-        if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-                (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
-                (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context))):
-            # record info in log
-
-# FIX: ENCODE ALL OF THIS AS 1D ARRAYS IN 2D PROJECTION VALUE, AND PASS TO .value FOR LOGGING
-            controller.log.entries[self.name + " " +
-                                      kpIntensity] = LogEntry('time_placeholder', context, float(self.intensity))
-            if not self.ignoreIntensityFunction:
-                controller.log.entries[self.name + " " + kpAllocation] = LogEntry('time_placeholder',
-                                                                                  context,
-                                                                                  float(self.allocation))
-                controller.log.entries[self.name + " " + kpIntensityCost] =  LogEntry('time_placeholder',
-                                                                                      context,
-                                                                                      float(self.intensity_cost))
-                controller.log.entries[self.name + " " + kpAdjustmentCost] = LogEntry('time_placeholder',
-                                                                                      context,
-                                                                                      float(self.adjustment_cost))
-                controller.log.entries[self.name + " " + kpDurationCost] = LogEntry('time_placeholder',
-                                                                                    context,
-                                                                                    float(self.duration_cost))
-                controller.log.entries[self.name + " " + kpCost] = LogEntry('time_placeholder',
-                                                                            context,
-                                                                            float(self.cost))
+#         #region Record control_signal values in owner Mechanism's log
+#         # Notes:
+#         # * Log control_signals for ALL states of a given Mechanism in the Mechanism's log
+#         # * Log control_signals for EACH state in a separate entry of the Mechanism's log
+#
+#         # Get receiver Mechanism and state
+#         controller = self.owner
+#
+#         # Get logPref for Mechanism
+#         log_pref = controller.prefs.logPref
+#
+#         # Get context
+#         if not context:
+#             context = controller.name + " " + self.name + kwAssign
+#         else:
+#             context = context + SEPARATOR_BAR + self.name + kwAssign
+#
+#         # If context is consistent with log_pref:
+#         if (log_pref is LogCondition.ALL_ASSIGNMENTS or
+#                 (log_pref is LogCondition.EXECUTION and EXECUTING in context) or
+#                 (log_pref is LogCondition.VALUE_ASSIGNMENT and (EXECUTING in context))):
+#             # record info in log
+#
+# # FIX: ENCODE ALL OF THIS AS 1D ARRAYS IN 2D PROJECTION VALUE, AND PASS TO .value FOR LOGGING
+#             controller.log.entries[self.name + " " +
+#                                       kpIntensity] = LogEntry('time_placeholder', context, float(self.intensity))
+#             if not self.ignoreIntensityFunction:
+#                 controller.log.entries[self.name + " " + kpAllocation] = LogEntry('time_placeholder',
+#                                                                                   context,
+#                                                                                   float(self.allocation))
+#                 controller.log.entries[self.name + " " + kpIntensityCost] =  LogEntry('time_placeholder',
+#                                                                                       context,
+#                                                                                       float(self.intensity_cost))
+#                 controller.log.entries[self.name + " " + kpAdjustmentCost] = LogEntry('time_placeholder',
+#                                                                                       context,
+#                                                                                       float(self.adjustment_cost))
+#                 controller.log.entries[self.name + " " + kpDurationCost] = LogEntry('time_placeholder',
+#                                                                                     context,
+#                                                                                     float(self.duration_cost))
+#                 controller.log.entries[self.name + " " + kpCost] = LogEntry('time_placeholder',
+#                                                                             context,
+#                                                                             float(self.cost))
     #endregion
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
@@ -1264,9 +1264,7 @@ class ControlSignal(ModulatorySignal):
         if self.init_status in {InitStatus.DEFERRED_INITIALIZATION, InitStatus.INITIALIZING}:
             return None
         else:
-            # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
             return self._intensity
-
 
     @value.setter
     def value(self, assignment):

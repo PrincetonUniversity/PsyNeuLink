@@ -64,11 +64,21 @@ class TestNaming:
     # TEST 4
     # Test that Mechanism assigned a duplicate name is incremented starting at 1 (original is not indexed)
 
-    def test_duplicate_assigned_mechanism_names(self):
-        TN1 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
-        TN2 = pnl.TransferMechanism(name='MY TRANSFER MECHANISM')
-        assert TN1.name == 'MY TRANSFER MECHANISM'
-        assert TN2.name == 'MY TRANSFER MECHANISM-1'
+    @pytest.mark.parametrize(
+        'name, expected1, expected2',
+        [
+            ('MY TRANSFER MECHANISM', 'MY TRANSFER MECHANISM', 'MY TRANSFER MECHANISM-1'),
+            ('A-1', 'A-1', 'A-1-1'),
+            ('A', 'A', 'A-2'),
+            ('A', 'A-3', 'A-4'),
+            ('A-1', 'A-5', 'A-6'),
+        ]
+    )
+    def test_duplicate_assigned_mechanism_names(self, name, expected1, expected2):
+        TN1 = pnl.TransferMechanism(name=name)
+        TN2 = pnl.TransferMechanism(name=name)
+        assert TN1.name == expected1
+        assert TN2.name == expected2
 
     # ------------------------------------------------------------------------------------------------
     # TEST 5

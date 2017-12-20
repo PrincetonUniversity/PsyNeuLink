@@ -396,7 +396,7 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
 from psyneulink.globals.utilities import ContentAddressableList, iscompatible, is_numeric, is_matrix, type_match
-from psyneulink.globals.log import LogLevel, LogEntry, _get_log_context
+from psyneulink.globals.log import LogCondition, LogEntry, _get_log_context
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -949,15 +949,6 @@ class Projection_Base(Projection):
         #    but averts exception when setting paramsCurrent in Component (around line 850)
         pass
 
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-        self.log._log_value(assignment)
-
 @tc.typecheck
 def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
     """Evaluate whether spec is a valid Projection specification
@@ -1291,7 +1282,6 @@ def _parse_connection_specs(connectee_state_type,
     elif not isinstance(connections, list):
         connections = [connections]
     connect_with_states = []
-
 
     for connection in connections:
 
@@ -2063,3 +2053,4 @@ context=context)
                                                       name=sender.name+'.output_states')
 
     output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
+

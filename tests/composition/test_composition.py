@@ -78,8 +78,13 @@ class TestAddMechanism:
         t = timeit(
             'comp.add_mechanism(TransferMechanism())',
             setup='''
+<<<<<<< HEAD
+from psyneulink.components.mechanisms.Mechanism import mechanism
+from PsyNeuLink.Composition import Composition
+=======
 from psyNeuLink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.composition import Composition
+>>>>>>> devel
 comp = Composition()
 ''',
             number=count
@@ -128,9 +133,15 @@ class TestAddProjection:
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
                    setup='''
+<<<<<<< HEAD
+from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Composition import Composition
+=======
 from psyneulink.components.mechanisms.processingmechanisms.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathwayprojections.mappingprojection import MappingProjection
 from psyneulink.composition import Composition
+>>>>>>> devel
 comp = Composition()
 A = TransferMechanism(name='A')
 B = TransferMechanism(name='B')
@@ -1078,7 +1089,7 @@ class TestCallBeforeAfterTimescale:
         def cb_timestep(scheduler, arr):
             def record_timestep():
 
-                arr.append(scheduler.times[TimeScale.TIME_STEP][TimeScale.TIME_STEP])
+                arr.append(scheduler.clock.get_total_times_relative(TimeScale.TIME_STEP, TimeScale.TRIAL))
 
             return record_timestep
 
@@ -1086,7 +1097,7 @@ class TestCallBeforeAfterTimescale:
 
             def record_pass():
 
-                arr.append(scheduler.times[TimeScale.RUN][TimeScale.PASS])
+                arr.append(scheduler.clock.get_total_times_relative(TimeScale.PASS, TimeScale.RUN))
 
             return record_pass
 
@@ -1094,7 +1105,7 @@ class TestCallBeforeAfterTimescale:
 
             def record_trial():
 
-                arr.append(scheduler.times[TimeScale.LIFE][TimeScale.TRIAL])
+                arr.append(scheduler.clock.get_total_times_relative(TimeScale.TRIAL, TimeScale.LIFE))
 
             return record_trial
 

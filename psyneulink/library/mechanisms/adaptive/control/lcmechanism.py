@@ -510,6 +510,7 @@ class LCMechanism(ControlMechanism):
 
         Returns ControlSignal (OutputState)
         """
+
         from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
         # *ALL* is specified for modulated_mechanisms:

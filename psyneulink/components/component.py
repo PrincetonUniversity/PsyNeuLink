@@ -139,9 +139,9 @@ corresponding arguments of its constructor, or by assigning them directly (see `
 
 * **log** - the `log <Component.log>` attribute contains the Component's `Log`, that can be used to record its
   `value <Component.value>`, as well as that of Components that belong to it, during initialization, validation,
-  execution and learning.  It also has three convenience methods -- `loggable_items <Log.loggable_items>`, `log_items
-  <Log.log_items>`, and `logged_items <Log.logged_items>` -- that provide access to the corresponding methods of its
-  Log, used to identify, configure and track items for logging.
+  execution and learning.  It also has four convenience methods -- `loggable_items <Log.loggable_items>`, `set_log_conditions
+  <Log.set_log_conditions>`, `log_values <Log.log_values>` and `logged_items <Log.logged_items>` -- that provide access to the
+  corresponding methods of its Log, used to identify, configure and track items for logging.
 ..
 
 .. _Component_Name:
@@ -358,10 +358,11 @@ import typecheck as tc
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
     CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, LOG_ENTRIES, \
-    INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
+    INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, \
+    OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
     SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
-# from psyneulink.globals.log import Log, LogLevel
+# from psyneulink.globals.log import Log, LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
@@ -370,7 +371,7 @@ __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
     'InitStatus', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
 ]
-
+# Testing pull request 
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
 DeferredInitRegistry = {}
@@ -841,13 +842,11 @@ class Component(object):
             self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
 
         # ASSIGN LOG
-
         from psyneulink.globals.log import Log
         self.log = Log(owner=self)
         self.recording = False
         # Used by run to store return value of execute
         self.results = []
-
 
         # ENFORCE REQUIRED CLASS DEFAULTS
 
@@ -1292,7 +1291,6 @@ class Component(object):
                     # FIX: AND, EVEN IF IT DOES, WHAT ABOUT ORDER EFFECTS:
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
-
                     from psyneulink.components.functions.function import Function
                     from inspect import isfunction
 
@@ -1858,7 +1856,6 @@ class Component(object):
 
     @tc.typecheck
     def _assign_params(self, request_set:tc.optional(dict)=None, context=None):
-
         from psyneulink.components.functions.function import Function
 
         # FIX: Hack to prevent recursion in calls to setter and assign_params
@@ -2551,8 +2548,6 @@ class Component(object):
             # FUNCTION is a generic function (presumably user-defined), so "wrap" it in UserDefinedFunction:
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
-
-
                 from psyneulink.components.functions.function import UserDefinedFunction
                 self.function = UserDefinedFunction(function=function, context=context).function
 
@@ -2785,6 +2780,15 @@ class Component(object):
             #    TO THE CORRESPONDING ATTRIBUTES OF THE OWNER OBJECT
 
     @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, assignment):
+        self._value = assignment
+        self.log._log_value(assignment)
+
+    @property
     def verbosePref(self):
         return self.prefs.verbosePref
 
@@ -2833,29 +2837,58 @@ class Component(object):
         self.prefs.runtimeParamStickyAssignmentPref = setting
 
     @property
+    def log(self):
+        try:
+            return self._log
+        except AttributeError:
+            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete".
+                                     format(self.name, 'log'))
+            else:
+                raise AttributeError
+
+    @log.setter
+    def log(self, log):
+        self._log = log
+
+    @property
     def loggable_items(self):
-        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `LogLevel`.
+        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `LogCondition`.
         This is a convenience method that calls the `loggable_items <Log.loggable_items>` property of the Component's
         `log <Component.log>`.
         """
         return self.log.loggable_items
 
-    from psyneulink.globals.log import LogLevel
-    def log_items(self, items, log_level=LogLevel.EXECUTION):
+    from psyneulink.globals.log import LogCondition
+    def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
         """
-        log_items(               \
+        set_log_conditions(               \
             items                \
-            log_level=EXECUTION  \
+            log_condition=EXECUTION  \
         )
 
-        Specifies items to be logged. This is a convenience method that calls the `log_items <Log.logged_items>` method
+        Specifies items to be logged; these must be be `loggable_items <Component.loggable_items>` of the Component's
+        `log <Component.log>`. This is a convenience method that calls the `set_log_conditions <Log.set_log_conditions>` method
         of the Component's `log <Component.log>`.
         """
-        self.log.log_items(items=items, log_level=log_level)
+        self.log.set_log_conditions(items=items, log_condition=log_condition)
+
+    def log_values(self, entries):
+        """
+        log_values(              \
+            entries              \
+        )
+
+        Specifies items to be logged; ; these must be be `loggable_items <Component.loggable_items>` of the Component's
+        `log <Component.log>`. This is a convenience method that calls the `log_values <Log.log_values>` method
+        of the Component's `log <Component.log>`.
+        """
+        self.log.log_values(entries)
+
 
     @property
     def logged_items(self):
-        """Dictionary of all items that have entries in the log, and their currently assigned `LogLevel`\\s
+        """Dictionary of all items that have entries in the log, and their currently assigned `LogCondition`\\s
         This is a convenience method that calls the `logged_items <Log.logged_items>` property of the Component's
         `log <Component.log>`.
         """

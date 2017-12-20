@@ -60,8 +60,8 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     from psyneulink.components.functions.function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        FUNCTION:Linear,
-        FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
+        FUNCTION: Linear,
+        FUNCTION_PARAMS: {SLOPE: 1, INTERCEPT: 0}
     })
 
     @tc.typecheck

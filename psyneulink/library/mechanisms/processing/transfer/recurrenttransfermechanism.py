@@ -7,7 +7,7 @@
 
 # NOTES:
 #  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
-#  * NOW THAT NOISE AND TIME_CONSTANT ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#  * NOW THAT NOISE AND SMOOTHING_FACTOR ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
@@ -186,7 +186,6 @@ __all__ = [
     'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
 ]
 
-
 class RecurrentTransferError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -257,7 +256,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     hetero=None,                       \
     initial_value=None,                \
     noise=0.0,                         \
-    time_constant=1.0,                 \
+    smoothing_factor=0.5,                 \
     clip=(float:min, float:max),      \
     learning_rate=None,                \
     learning_function=Hebbian,         \
@@ -331,12 +330,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when `integrator_mode
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
-         result = (time_constant * variable) +
-         (1-time_constant * input to mechanism's function on the previous time step)
+         result = (smoothing_factor * variable) +
+         (1-smoothing_factor * input to mechanism's function on the previous time step)
 
     clip : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`:
@@ -396,8 +395,8 @@ class RecurrentTransferMechanism(TransferMechanism):
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
-        determines the starting value for time-averaged input (only relevant if `time_constant
-        <RecurrentTransferMechanism.time_constant>` parameter is not 1.0).
+        determines the starting value for time-averaged input (only relevant if `smoothing_factor
+        <RecurrentTransferMechanism.smoothing_factor>` parameter is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
@@ -407,11 +406,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float
-        the time constant for exponential time averaging of input when `integrator_mode
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
-          result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+          result = (smoothing_factor * current input) + (1-smoothing_factor * result on previous time_step)
 
     clip : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
@@ -515,7 +514,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  hetero=None,
                  initial_value=None,
                  noise=0.0,
-                 time_constant: is_numeric_or_none=1.0,
+                 smoothing_factor: is_numeric_or_none=0.5,
                  integrator_mode=False,
                  clip=None,
                  input_states:tc.optional(tc.any(list, dict)) = None,
@@ -568,7 +567,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          noise=noise,
                          integrator_mode=integrator_mode,
 
-                         time_constant=time_constant,
+                         smoothing_factor=smoothing_factor,
                          clip=clip,
                          output_states=output_states,
                          time_scale=time_scale,
@@ -793,7 +792,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.output_states[ENERGY]._calculate = energy.function
 
         if ENTROPY in self.output_states.names:
-            # MODIFIED CW 12/11/17: changed "clip" to "self.clip" since "clip" is failed reference
             if self.function_object.bounds == (0,1) or self.clip == (0,1):
                 entropy = Stability(self.instance_defaults.variable[0],
                                     metric=ENTROPY,

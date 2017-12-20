@@ -13,7 +13,7 @@
 import inspect
 
 from psyneulink.globals.keywords import NAME, kwDefaultPreferenceSetOwner, kwPrefLevel, kwPreferenceSetName, kwPrefs, kwPrefsOwner
-from psyneulink.globals.log import LogLevel
+from psyneulink.globals.log import LogCondition
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import Modulation
 
@@ -57,7 +57,7 @@ SystemDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
-    kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),
+    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SYSTEM)}
 
@@ -66,7 +66,7 @@ CategoryDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
-    kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),
+    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.CATEGORY),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.CATEGORY)}
 
@@ -75,7 +75,7 @@ TypeDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.TYPE),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.TYPE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.TYPE),
-    kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.TYPE),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.TYPE)}
 
@@ -84,7 +84,7 @@ SubtypeDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
-    kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.SUBTYPE),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE)}
 
@@ -93,7 +93,7 @@ InstanceDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     kpParamValidationPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.OVERRIDE, PreferenceLevel.INSTANCE),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
@@ -131,7 +131,7 @@ class ComponentPreferenceSet(PreferenceSet):
             - verbose (bool): enables/disables reporting of (non-exception) warnings and system function
             - paramValidation (bool):  enables/disables run-time validation of the execute method of a Function object
             - reportOutput (bool): enables/disables reporting of execution of execute method
-            - log (bool): sets LogLevel for a given Component
+            - log (bool): sets LogCondition for a given Component
             - functionRunTimeParams (Modulation): uses run-time params to modulate execute method params
         Implement the following preference levels:
             - SYSTEM: System level default settings (Function.classPreferences)
@@ -230,7 +230,7 @@ class ComponentPreferenceSet(PreferenceSet):
             kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
             kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
             kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
-            kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),
+            kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
             kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM),
             kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SYSTEM)
 
@@ -304,23 +304,24 @@ class ComponentPreferenceSet(PreferenceSet):
             if isinstance(owner_class.classPreferences, dict):
                 raise AttributeError
         except AttributeError:
-            super(ComponentPreferenceSet, self).__init__(
-                owner=owner_class,
-                level=owner_class.classPreferenceLevel,
-                prefs=ComponentDefaultPrefDicts[owner_class.classPreferenceLevel],
-                name=name,
-                context=self)
-
-        # Instantiate PreferenceSet
-        super(ComponentPreferenceSet, self).__init__(owner=owner,
+            if inspect.isclass(owner):
+                # If this is a call to instantiate the classPreferences, no need to keep doing it! (infinite recursion)
+                pass
+            else:
+                # Instantiate the classPreferences
+                owner_class.classPreferences = ComponentPreferenceSet(
+                                                    owner=owner_class,
                                                     level=owner_class.classPreferenceLevel,
-                                                    prefs=prefs,
+                                                    prefs=ComponentDefaultPrefDicts[owner_class.classPreferenceLevel],
                                                     name=name,
                                                     context=self)
-        # FIX:  NECESSARY?? 5/30/16
+        # Instantiate PreferenceSet
+        super().__init__(owner=owner,
+                         level=owner_class.classPreferenceLevel,
+                         prefs=prefs,
+                         name=name,
+                         context=self)
         self._level = level
-
-    #region verbose entry ----------------------------------------------------------------------------------------------
 
     @property
     def verbosePref(self):
@@ -339,8 +340,6 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         self.set_preference(candidate_info=setting, pref_ivar_name=kpVerbosePref)
-
-    # region param_validation ----------------------------------------------------------------------------------------------
 
     @property
     def paramValidationPref(self):
@@ -361,8 +360,6 @@ class ComponentPreferenceSet(PreferenceSet):
         """
         self.set_preference(setting,kpParamValidationPref)
 
-    #region reportOutput entry -----------------------------------------------------------------------------------------
-
     @property
     def reportOutputPref(self):
         """Return setting of owner's reportOutputPref at level specified in its PreferenceEntry.level
@@ -381,8 +378,6 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         self.set_preference(candidate_info=setting, pref_ivar_name=kpReportOutputPref)
-
-    #region log entry --------------------------------------------------------------------------------------------------
 
     @property
     def logPref(self):
@@ -423,8 +418,6 @@ class ComponentPreferenceSet(PreferenceSet):
         self.set_preference(candidate_info=setting, pref_ivar_name=kpLogPref)
 
 
-    #region runtimeParamModulation -------------------------------------------------------------------------------------
-
     @property
     def runtimeParamModulationPref(self):
         """Returns owner's runtimeParamModulationPref
@@ -443,8 +436,6 @@ class ComponentPreferenceSet(PreferenceSet):
         :return:
         """
         self.set_preference(candidate_info=setting, pref_ivar_name=kpRuntimeParamModulationPref)
-
-    #region runtimeParamStickyAssignment -------------------------------------------------------------------------------
 
     @property
     def runtimeParamStickyAssignmentPref(self):

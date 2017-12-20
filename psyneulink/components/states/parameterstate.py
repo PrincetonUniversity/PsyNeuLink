@@ -525,7 +525,7 @@ class ParameterState(State_Base):
         # If the parameter is not in either the owner's user_params dict or its function_params dict, throw exception
         if not self.name in self.owner.user_params.keys() and not self.name in self.owner.function_params.keys():
             raise ParameterStateError("Name of requested ParameterState ({}) does not refer to a valid parameter "
-                                      "of the component ({}) or it function ({})".
+                                      "of the component ({}) or its function ({})".
                                       format(self.name,
                                              # self.owner.function_object.__class__.__name__,
                                              self.owner.name,
@@ -578,6 +578,7 @@ class ParameterState(State_Base):
         # MODIFIED 7/8/17
         # FIX:  THIS SHOULD ALSO LOOK FOR OTHER FORMS OF SPECIFICATION
         # FIX:  OF A PathwayProjection (E.G., TARGET STATE OR MECHANISM)
+
         from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
         pathway_projections = [proj for proj in projections if isinstance(proj, PathwayProjection_Base)]
         if pathway_projections:

@@ -198,10 +198,11 @@ does the same for `learning <System_Execution_Learning>` (assigned to its `sched
 The `scheduler_processing` can be assigned in the **scheduler** argument of the System's constructor;  if it is not
 specified, a default `Scheduler` is created automatically.   The `scheduler_learning` is always assigned automatically.
 The System's Schedulers base the ordering of execution of its Components based on the order in which they are listed
-in the `pathway <Process.pathway>`\\s of the `Proceses <Process>` used to construct the System, constrained by any
+in the `pathway <Process.pathway>`\\s of the `Processes <Process>` used to construct the System, constrained by any
 `Conditions <Condition>` that have been created for individual Components and assigned to the System's Schedulers (see
 `Scheduler`, `Condition <Condition_Creation>`, `System_Execution_Processing`, and `System_Execution_Learning` for
-additional details).
+additional details).  Both schedulers maintain a `Clock` that can be used to access their current `time
+<Time_Overview>`.
 
 .. _System_Control:
 
@@ -273,7 +274,7 @@ each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (
 input for only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System.run>` method
 can be used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In
 both cases, two other types of input can be provided in corresponding arguments of the `run <System.run>` method:
-a  list or ndarray of **initial_values**, and a list or ndarray of **target** values. The **initial_values** are
+a list or ndarray of **initial_values**, and a list or ndarray of **target** values. The **initial_values** are
 assigned at the start of a `TRIAL` as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`,
 and listed in the System's `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute), and
 **target** values are assigned as the *TARGET* input of the System's `TARGET` Mechanisms (see
@@ -1431,7 +1432,7 @@ class System(System_Base):
             for receiver_object_item, dep_set in self.execution_graph.items():
                 mech = receiver_object_item
                 if not dep_set:
-                    print("\t\'{}\' is an {} Mechanism".
+                    print("\t'{}' is an {} Mechanism".
                           format(mech.name, mech.systems[self]))
                 else:
                     status = mech.systems[self]
@@ -1439,7 +1440,7 @@ class System(System_Base):
                         status = 'a ' + status
                     elif status in {INTERNAL, INITIALIZE_CYCLE}:
                         status = 'an ' + status
-                    print("\t\'{}\' is {} Mechanism that receives Projections from:".format(mech.name, status))
+                    print("\t'{}' is {} Mechanism that receives Projections from:".format(mech.name, status))
                     for sender_object_item in dep_set:
                         print("\t\t\'{}\'".format(sender_object_item.name))
 
@@ -1901,7 +1902,7 @@ class System(System_Base):
                                                    context=context)
             self.target_input_states.append(system_target_input_state)
 
-            # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
+            # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
             from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
             MappingProjection(sender=system_target_input_state,
                     receiver=target_mech_TARGET_input_state,
@@ -2019,7 +2020,6 @@ class System(System_Base):
         Returns list of MonitoredOutputStateTuples: (OutputState, weight, exponent, matrix)
 
         """
-
         # PARSE SPECS
 
         # Get OutputStates already being -- or specified to be -- monitored by controller
@@ -2458,7 +2458,9 @@ class System(System_Base):
                     for projection in state.all_afferents:
                         projection.sender.owner._execution_id = self._execution_id
 
-        self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
+        self._report_system_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING,
+                                                                                                         LEARNING})
+
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
 
@@ -2538,9 +2540,7 @@ class System(System_Base):
 
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context and self.learning:
-            self._execute_learning(context=context + SEPARATOR_BAR + LEARNING)
-            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-            # self._execute_learning(clock=clock, context=context.replace(EXECUTING, LEARNING + ' '))
+            self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
         # endregion
 
 
@@ -2780,16 +2780,16 @@ class System(System_Base):
             If it is not specified, the current state is left intact.
             If it is `True`, learning is forced on; if it is :keyword:`False`, learning is forced off.
 
-        call_before_trial : Function : default= `None`
+        call_before_trial : Function : default `None`
             called before each trial in the sequence is executed.
 
-        call_after_trial : Function : default= `None`
+        call_after_trial : Function : default `None`
             called after each trial in the sequence is executed.
 
-        call_before_time_step : Function : default= `None`
+        call_before_time_step : Function : default `None`
             called before each time_step of each trial is executed.
 
-        call_after_time_step : Function : default= `None`
+        call_after_time_step : Function : default `None`
             called after each time_step of each trial is executed.
 
         termination_processing : Dict[TimeScale: Condition]
@@ -3513,7 +3513,7 @@ class System(System_Base):
                     pass
 
         # return
-        if   output_fmt == 'pdf':
+        if output_fmt == 'pdf':
             G.view(self.name.replace(" ", "-"), cleanup=True)
         elif output_fmt == 'jupyter':
             return G
