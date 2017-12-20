@@ -204,7 +204,7 @@ from psyneulink.globals.keywords import \
     SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, \
     USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, NORMALIZING_FUNCTION_TYPE,\
     kwComponentCategory, kwPreferenceSetName, TDLEARNING_FUNCTION, \
-    PREDICTION_ERROR_DELTA_FUNCTION
+    PREDICTION_ERROR_DELTA_FUNCTION, GAMMA
 
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -657,12 +657,15 @@ class Function_Base(Function):
     def execute(self, variable=None, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
 
-    def get_current_param(self, param_name):
-
+    def get_current_function_param(self, param_name):
         try:
-            return getattr(self, "mod_"+param_name)
-        except AttributeError:
-            return getattr(self, param_name)
+            return self.owner._parameter_states[param_name].value
+        except (AttributeError, TypeError):
+            try:
+                return self._parameter_states[param_name].value
+            except (AttributeError, TypeError):
+
+                return getattr(self, param_name)
 
     @property
     def functionOutputType(self):
@@ -932,8 +935,8 @@ class ArgumentTherapy(Function_Base):
 
         # Compute the function
         statement = variable
-        propensity = self.paramsCurrent[PROPENSITY]
-        pertinacity = self.paramsCurrent[PERTINACITY]
+        propensity = self.get_current_function_param(PROPENSITY)
+        pertinacity = self.get_current_function_param(PERTINACITY)
         whim = randint(-10, 10)
 
         if propensity == self.Manner.OBSEQUIOUS:
@@ -1293,9 +1296,9 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         # Validate variable and assign to variable, and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        operation = self.paramsCurrent[OPERATION]
-        scale = self.paramsCurrent[SCALE]
-        offset = self.paramsCurrent[OFFSET]
+        operation = self.get_current_function_param(OPERATION)
+        scale = self.get_current_function_param(SCALE)
+        offset = self.get_current_function_param(OFFSET)
 
         # Calculate using relevant aggregation operation and return
         if operation is SUM:
@@ -1673,22 +1676,23 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         # Validate variable and assign to variable, and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-        exponents = self.exponents
-        weights = self.weights
-        operation = self.operation
+
+        weights = self.get_current_function_param(WEIGHTS)
+        exponents = self.get_current_function_param(EXPONENTS)
+        operation = self.get_current_function_param(OPERATION)
+        scale = self.get_current_function_param(SCALE)
+        offset = self.get_current_function_param(OFFSET)
+
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
         #                   (DOES THE COMPILER KNOW NOT TO BOTHER WITH MULT BY 1 AND/OR ADD 0?)
         #                B) EVALUATION OF IF STATEMENTS TO DETERMINE THE ABOVE?
         # IMPLEMENTATION NOTE:  FOR NOW, ASSUME B) ABOVE, AND ASSIGN DEFAULT "NULL" VALUES TO offset AND scale
-        if self.offset is None:
+        if offset is None:
             offset = 0.0
-        else:
-            offset = self.offset
-        if self.scale is None:
+
+        if scale is None:
             scale = 1.0
-        else:
-            scale = self.scale
 
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
@@ -1748,7 +1752,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
-                                format(self.paramsCurrent[OPERATION].self.Operation.SUM))
+                                format(operation.self.Operation.SUM))
         return result
 
     @property
@@ -2111,22 +2115,22 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         # Validate variable and assign to variable, and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        exponents = self.exponents
-        weights = self.weights
-        operation = self.operation
+        exponents = self.get_current_function_param(EXPONENTS)
+        weights = self.get_current_function_param(WEIGHTS)
+        operation = self.get_current_function_param(OPERATION)
+        offset = self.get_current_function_param(OFFSET)
+        scale = self.get_current_function_param(SCALE)
+
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
         #                   (DOES THE COMPILER KNOW NOT TO BOTHER WITH MULT BY 1 AND/OR ADD 0?)
         #                B) EVALUATION OF IF STATEMENTS TO DETERMINE THE ABOVE?
         # IMPLEMENTATION NOTE:  FOR NOW, ASSUME B) ABOVE, AND ASSIGN DEFAULT "NULL" VALUES TO offset AND scale
-        if self.offset is None:
+        if offset is None:
             offset = 0.0
-        else:
-            offset = self.offset
-        if self.scale is None:
+
+        if scale is None:
             scale = 1.0
-        else:
-            scale = self.scale
 
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
@@ -2333,7 +2337,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         variable = self._update_variable(self._check_args(variable=variable,
                                                           params=params,
                                                           context=context))
-        gamma = self.gamma
+        gamma = self.get_current_function_param(GAMMA)
         sample = variable[0]
         reward = variable[1]
         delta = np.zeros(sample.shape)
@@ -2532,8 +2536,8 @@ class SoftMax(NormalizingFunction):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         # Assign the params and return the result
-        output_type = self.params[OUTPUT_TYPE]
-        gain = self.params[GAIN]
+        output_type = self.get_current_function_param(OUTPUT_TYPE)
+        gain = self.get_current_function_param(GAIN)
 
         # Modulate variable by gain
         v = gain * variable
@@ -2835,9 +2839,9 @@ class Linear(TransferFunction):  # ---------------------------------------------
         # slope = self.paramsCurrent[SLOPE]
         # intercept = self.paramsCurrent[INTERCEPT]
 
-        # KAM 12/13 replacing paramCurrent look-ups with call to get_current_param (on Function_Base)
-        slope = self.get_current_param(SLOPE)
-        intercept = self.get_current_param(INTERCEPT)
+        # KAM 12/13 replacing paramCurrent look-ups with call to get_current_function_param (on Function_Base)
+        slope = self.get_current_function_param(SLOPE)
+        intercept = self.get_current_function_param(INTERCEPT)
 
         outputType = self.functionOutputType
 
@@ -2916,7 +2920,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         """
 
-        return self.slope
+        return self.get_current_function_param(SLOPE)
 
 
 class Exponential(TransferFunction):  # --------------------------------------------------------------------------------
@@ -3054,9 +3058,9 @@ class Exponential(TransferFunction):  # ----------------------------------------
         # rate = self.paramsCurrent[RATE]
         # scale = self.paramsCurrent[SCALE]
 
-        # KAM 12/13 replacing paramCurrent look-ups with call to get_current_param (on Function_Base)
-        rate = self.get_current_param(RATE)
-        scale = self.get_current_param(SCALE)
+        # KAM 12/13 replacing paramCurrent look-ups with call to get_current_function_param (on Function_Base)
+        rate = self.get_current_function_param(RATE)
+        scale = self.get_current_function_param(SCALE)
 
         return scale * np.exp(rate * variable)
 
@@ -3073,7 +3077,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
             `rate <Exponential.rate>` * input.
 
         """
-        return self.rate * input
+        return self.get_current_function_param(RATE) * input
 
 
 class Logistic(TransferFunction):  # ------------------------------------------------------------------------------------
@@ -3223,10 +3227,10 @@ class Logistic(TransferFunction):  # -------------------------------------------
         # bias = self.paramsCurrent[BIAS]
         # offset = self.paramsCurrent[OFFSET]
         #
-        # KAM 12/13 replacing paramCurrent look-ups with call to get_current_param (on Function_Base)
-        gain = self.get_current_param(GAIN)
-        bias = self.get_current_param(BIAS)
-        offset = self.get_current_param(OFFSET)
+        # KAM 12/13 replacing paramCurrent look-ups with call to get_current_function_param (on Function_Base)
+        gain = self.get_current_function_param(GAIN)
+        bias = self.get_current_function_param(BIAS)
+        offset = self.get_current_function_param(OFFSET)
 
         return 1 / (1 + np.exp(-gain*(variable-bias) + offset))
 
@@ -3891,8 +3895,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        return np.dot(variable, self.matrix)
+        matrix = self.get_current_function_param(MATRIX)
+        return np.dot(variable, matrix)
 
     def keyword(self, keyword):
 
@@ -4716,15 +4720,17 @@ class LCAIntegrator(
 
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        rate = np.array(self.paramsCurrent[RATE]).astype(float)
+        rate = np.atleast_1d(self.get_current_function_param(RATE))
+        initializer = self.get_current_function_param(INITIALIZER)  # unnecessary?
+        noise = self.get_current_function_param(NOISE)
+        time_step_size = self.get_current_function_param(TIME_STEP_SIZE)
+        offset = self.get_current_function_param(OFFSET)
 
-        if self.offset is None:
+        if offset is None:
             offset = 0.0
-        else:
-            offset = self.offset
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self.noise, variable)
+        noise = self._try_execute_param(noise, variable)
 
         # try:
         #     previous_value = self._initializer
@@ -4739,7 +4745,7 @@ class LCAIntegrator(
         #     new_value = params[VARIABLE]
 
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
-        value = previous_value + (rate*previous_value + new_value)*self.time_step_size + noise*(self.time_step_size**0.5)
+        value = previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
 
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old value
@@ -5474,11 +5480,11 @@ class DriftDiffusionIntegrator(
         """
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        rate = np.array(self.get_current_param(RATE)).astype(float)
-        offset = self.get_current_param(OFFSET)
-        noise = self.get_current_param(NOISE)
-        threshold = self.get_current_param(THRESHOLD)
-        time_step_size = self.get_current_param(TIME_STEP_SIZE)
+        rate = np.array(self.get_current_function_param(RATE)).astype(float)
+        offset = self.get_current_function_param(OFFSET)
+        noise = self.get_current_function_param(NOISE)
+        threshold = self.get_current_function_param(THRESHOLD)
+        time_step_size = self.get_current_function_param(TIME_STEP_SIZE)
 
         # except (TypeError, KeyError):
         previous_value = self.previous_value
@@ -7250,11 +7256,19 @@ class BogaczEtAl(
 
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        drift_rate = float(self.drift_rate) * float(variable)
-        threshold = float(self.threshold)
-        starting_point = float(self.starting_point)
-        noise = float(self.noise)
-        t0 = float(self.t0)
+        attentional_drift_rate = float(self.get_current_function_param(DRIFT_RATE))
+        stimulus_drift_rate = float(variable)
+        drift_rate = attentional_drift_rate * stimulus_drift_rate
+        threshold = float(self.get_current_function_param(THRESHOLD))
+        starting_point = float(self.get_current_function_param(STARTING_POINT))
+        noise = float(self.get_current_function_param(NOISE))
+        t0 = float(self.get_current_function_param(NON_DECISION_TIME))
+
+        # drift_rate = float(self.drift_rate) * float(variable)
+        # threshold = float(self.threshold)
+        # starting_point = float(self.starting_point)
+        # noise = float(self.noise)
+        # t0 = float(self.t0)
 
         self.bias = bias = (starting_point + threshold) / (2 * threshold)
 
@@ -7351,9 +7365,9 @@ class BogaczEtAl(
             <BogaczEtAl.drift_rate>`.
 
         """
-        Z = output or self.threshold
-        A = input or self.drift_rate
-        c = self.noise
+        Z = output or self.get_current_function_param(THRESHOLD)
+        A = input or self.get_current_function_param(DRIFT_RATE)
+        c = self.get_current_function_param(NOISE)
         c_sq = c**2
         E = np.exp(-2*Z*A/c_sq)
         D_iti = 0
@@ -9267,20 +9281,15 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
         output = self.activation_output
         error = self.error_signal
-
+        learning_rate = self.get_current_function_param(LEARNING_RATE)
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
         #                          so that the process or system can see it is free to be assigned
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        if self.learning_rate is None:
+        if learning_rate is None:
             learning_rate = self.default_learning_rate
-        else:
-            learning_rate = self.learning_rate
-        # # MODIFIED 3/22/17 NEWER:
-        # learning_rate = self.learning_rate
-        # MODIFIED 3/22/17 END
 
         # Assign error term to chosen item of output array
         error_array = (np.where(output, learning_rate * error, 0))

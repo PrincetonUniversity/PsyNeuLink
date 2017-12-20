@@ -1472,6 +1472,7 @@ class Component(object):
         if make_as_properties:
             # getter returns backing field value
             # setter runs validation [_assign_params()], updates user_params
+
             for arg_name, arg_value in kwargs.items():
                 if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
                     # create property
@@ -2076,7 +2077,7 @@ class Component(object):
         :return none:
         """
         for param_name, param_value in request_set.items():
-            setattr(self, "_"+param_name, param_value)
+            # setattr(self, "_"+param_name, param_value)
 
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
@@ -2966,39 +2967,15 @@ def make_property(name):
     # prop.__doc__ = docs[name]
     return prop
 
-def make_property_mod(name):
+def make_property_mod(param_name):
 
     def getter(self):
-        return self._parameter_states[name].value
-
-        # try:
-        #     # Get value of function param from ParameterState.value of owner
-        #     #    case: request is for the value of a Function parameter for which the owner has a ParameterState
-        #     #    example: slope or intercept parameter of a Linear Function)
-        #     #    rationale: most common and therefore requires the greatest efficiency
-        #     #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
-        #     from psyneulink.components.functions.function import Function
-        #     if not isinstance(self, Function):
-        #         raise TypeError
-        #     return self.owner._parameter_states[attr_name].value
-        # except (AttributeError, TypeError):
-        #     try:
-        #         # Get value of param from Component's own ParameterState.value
-        #         #    case: request is for value of a parameter of a Mechanism or Projection that has a ParameterState
-        #         #    example: matrix parameter of a MappingProjection)
-        #         #    rationale: next most common case
-        #         #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
-        #         return self._parameter_states[attr_name].value
-        #     except (AttributeError, TypeError):
-        #         raise ComponentError("{} does not have a Parameter State for {}".format(self.name, attr_name))
+        return self._parameter_states[param_name].value
 
     def setter(self):
-        raise ParameterStateError("Cannot set {}'s mod_{} directly because it is evaluated by the Parameter State."
-                             .format(self.owner.name, self.name))
+        raise ComponentError("Cannot set to {}'s mod_{} directly because it is computed by the ParameterState."
+                             .format(self.name, param_name))
 
-    # Create the property
     prop = property(getter).setter(setter)
 
-    # # Install some documentation
-    # prop.__doc__ = docs[name]
     return prop

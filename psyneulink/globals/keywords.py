@@ -822,4 +822,5 @@ DIFFUSION = 'diffusion'
 REWARD = 'reward'
 NETWORK = 'network'
 
+GAMMA = 'gamma'
 #endregion
