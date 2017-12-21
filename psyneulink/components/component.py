@@ -1044,8 +1044,6 @@ class Component(object):
             # param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
             # self.user_params_for_instantiation['size'] = None  # 7/5/17 VERY HACKY: See Changyan's Notes on this.
 
-            # MODIFIED 6/28/17 (CW): Because size was changed to always be a 1D array, the check below was changed
-            # to a for loop iterating over each element of variable and size
             # Both variable and size are specified
             if variable is not None and size is not None:
                 # If they conflict, give warning
