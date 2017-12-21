@@ -566,7 +566,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                          initial_value=initial_value,
                          noise=noise,
                          integrator_mode=integrator_mode,
-
                          smoothing_factor=smoothing_factor,
                          clip=clip,
                          output_states=output_states,
