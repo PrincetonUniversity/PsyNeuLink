@@ -323,6 +323,8 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_VARIABLE = 0.0
+
 DECISION_VARIABLE='DECISION_VARIABLE'
 RESPONSE_TIME = 'RESPONSE_TIME'
 PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'
@@ -670,8 +672,10 @@ class DDM(ProcessingMechanism_Base):
         if default_variable is None and size is None:
             try:
                 default_variable = params[FUNCTION_PARAMS][STARTING_POINT]
+                if not is_numeric(default_variable):
+                    default_variable = DEFAULT_VARIABLE
             except:
-                default_variable = 0.0
+                default_variable = DEFAULT_VARIABLE
 
         # # Conflict with above
         # self.size = size
