@@ -891,9 +891,9 @@ class DDM(ProcessingMechanism_Base):
             result = self.function(variable, context=context)
             if INITIALIZING not in context:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
-            if abs(result) >= self.function_object.threshold:
+            if abs(result) >= self.function_object.get_current_function_param(THRESHOLD):
                 logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name,
-                                                                       self.function_object.threshold))
+                                                                       self.function_object.get_current_function_param(THRESHOLD)))
                 self.is_finished = True
 
             return np.array([result, [self.function_object.previous_time]])
@@ -927,7 +927,7 @@ class DDM(ProcessingMechanism_Base):
                                format(self.function.__self__))
 
             # Convert ER to decision variable:
-            threshold = float(self.function_object.threshold)
+            threshold = float(self.function_object.get_current_function_param(THRESHOLD))
             if random.random() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
