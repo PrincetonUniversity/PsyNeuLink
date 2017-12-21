@@ -752,7 +752,7 @@ class TestRecurrentTransferMechanismInSystem:
                                        )
         # Test that all of these are the same:
         np.testing.assert_allclose(
-            R.matrix,
+            R.recurrent_projection.mod_matrix,
             [
                 [0.1,  0.1, 0.1, 0.1],
                 [0.1, 0.1, 0.1, 0.1],
@@ -775,7 +775,7 @@ class TestRecurrentTransferMechanismInSystem:
         p.execute([1, 1, 0, 0])
         np.testing.assert_allclose(R.value, [[1.28, 1.28, 0.28, 0.28]])
         np.testing.assert_allclose(
-            R.matrix,
+            R.recurrent_projection.mod_matrix,
             [
                 [0.18192000000000003, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
                 [0.18192000000000003, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
@@ -786,7 +786,7 @@ class TestRecurrentTransferMechanismInSystem:
         p.execute([1, 1, 0, 0])
         np.testing.assert_allclose(R.value, [[1.5317504, 1.5317504, 0.3600704, 0.3600704]])
         np.testing.assert_allclose(
-            R.matrix,
+            R.recurrent_projection.mod_matrix,
             [
                 [0.299232964395008, 0.299232964395008, 0.14549689896140802, 0.14549689896140802],
                 [0.299232964395008, 0.299232964395008, 0.14549689896140802, 0.14549689896140802],
