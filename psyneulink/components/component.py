@@ -951,10 +951,8 @@ class Component(object):
             If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
-        # TODO: to get rid of the allLists bug, consider replacing np.atleast_2d with a similar method
         if size is not NotImplemented:
 
-            # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
             #     variable = self.ClassDefaults.variable
             # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
@@ -978,7 +976,6 @@ class Component(object):
                                       "integer, its value changed to {}.".format(x, int_x))
                 return int_x
 
-            #region Convert variable (if given) to a 2D array, and size (if given) to a 1D integer array
             if variable is not None:
                 variable = np.array(variable)
                 if variable.dtype == object:
@@ -1007,9 +1004,7 @@ class Component(object):
 
             if size is not None:
                 size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
-            # endregion
 
-            # region If variable is None, make it a 2D array of zeros each with length=size[i]
             # implementation note: for good coding practices, perhaps add setting to enable easy change of the default
             # value of variable (though it's an unlikely use case), which is an array of zeros at the moment
             if variable is None and size is not None:
@@ -1023,11 +1018,9 @@ class Component(object):
                                          "was unable to infer variable from the size argument, {}. size should be"
                                          " an integer or an array or list of integers. Either size or "
                                          "variable must be specified.".format(size))
-            # endregion
 
             # the two regions below (creating size if it's None and/or expanding it) are probably obsolete (7/7/17 CW)
 
-            # region If size is None, then make it a 1D array of scalars with size[i] = length(variable[i])
             if size is None and variable is not None:
                 size = []
                 try:
@@ -1040,17 +1033,12 @@ class Component(object):
                         "the variable argument, {}. variable can be an array,"
                         " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
                         " variable must be specified.".format(variable))
-            # endregion
 
-            # region If length(size) = 1 and variable is not None, then expand size to length(variable)
             if size is not None and variable is not None:
                 if len(size) == 1 and len(variable) > 1:
                     new_size = np.empty(len(variable))
                     new_size.fill(size[0])
                     size = new_size
-            # endregion
-
-            # endregion
 
             # the two lines below were used when size was a param and are likely obsolete (7/7/17 CW)
             # param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
@@ -1065,14 +1053,13 @@ class Component(object):
                     if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
                         warnings.warn("The size arg of {} conflicts with the length "
                                       "of its variable arg ({}) at element {}: variable takes precedence".
-                                      format(self.name, size[i], variable[i], i))
-                else:
-                    for i in range(len(size)):
-                        if size[i] != len(variable[i]):
-                            if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-                                warnings.warn("The size arg of {} ({}) conflicts with the length "
-                                                 "of its variable arg ({}) at element {}: variable takes precedence".
-                                                 format(self.name, size[i], variable[i], i))
+                                      format(self.name, size, variable))
+                for i in range(len(size)):
+                    if size[i] != len(variable[i]):
+                        if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                            warnings.warn("The size arg of {} ({}) conflicts with the length "
+                                          "of its variable arg ({}) at element {}: variable takes precedence".
+                                          format(self.name, size[i], variable[i], i))
 
         return variable
 
