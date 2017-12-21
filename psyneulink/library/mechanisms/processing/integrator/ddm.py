@@ -314,6 +314,7 @@ from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputS
 from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.globals.utilities import is_numeric
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
