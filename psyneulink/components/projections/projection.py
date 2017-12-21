@@ -846,6 +846,7 @@ class Projection_Base(Projection):
 
     def _instantiate_attributes_after_function(self, context=None):
         self._instantiate_receiver(context=context)
+        super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_receiver(self, context=None):
         """Call receiver's owner to add projection to its afferents list
