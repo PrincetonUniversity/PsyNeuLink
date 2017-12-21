@@ -1029,10 +1029,10 @@ class Component(object):
                     size = np.array(size)
                 except:
                     raise ComponentError(
-                        "size was not specified, but PsyNeuLink was unable to infer size from "
-                        "the variable argument, {}. variable can be an array,"
-                        " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                        " variable must be specified.".format(variable))
+                            "{}: size was not specified, and unable to infer it from the variable argument ({}) "
+                            "-- it can be an array, list, a 2D array, a list of arrays, array of lists, etc. ".
+                                format(self.name, variable))
+            # endregion
 
             if size is not None and variable is not None:
                 if len(size) == 1 and len(variable) > 1:
