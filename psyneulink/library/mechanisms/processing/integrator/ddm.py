@@ -811,9 +811,10 @@ class DDM(ProcessingMechanism_Base):
         else:
             if isinstance(threshold, tuple):
                 threshold = threshold[0]
-            if is_numeric(threshold) and not threshold >= 0:
-                raise DDMError("{} param of {} ({}) must be >= zero".
-                               format(THRESHOLD, self.name, threshold))
+            if is_numeric(threshold):
+                if not threshold >= 0:
+                    raise DDMError("{} param of {} ({}) must be >= zero".
+                                   format(THRESHOLD, self.name, threshold))
             elif isinstance(threshold, ControlSignal):
                 threshold = threshold.allocation_samples
                 if not np.amin(threshold) >= 0:
