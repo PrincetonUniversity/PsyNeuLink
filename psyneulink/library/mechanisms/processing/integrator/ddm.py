@@ -311,9 +311,12 @@ from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionI
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
-from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, kwPreferenceSetName
+from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.globals.keywords import \
+    ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.globals.utilities import is_numeric
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
@@ -322,6 +325,8 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_VARIABLE = 0.0
 
 DECISION_VARIABLE='DECISION_VARIABLE'
 RESPONSE_TIME = 'RESPONSE_TIME'
@@ -670,8 +675,10 @@ class DDM(ProcessingMechanism_Base):
         if default_variable is None and size is None:
             try:
                 default_variable = params[FUNCTION_PARAMS][STARTING_POINT]
+                if not is_numeric(default_variable):
+                    default_variable = DEFAULT_VARIABLE
             except:
-                default_variable = 0.0
+                default_variable = DEFAULT_VARIABLE
 
         # # Conflict with above
         # self.size = size
@@ -804,8 +811,18 @@ class DDM(ProcessingMechanism_Base):
         else:
             if isinstance(threshold, tuple):
                 threshold = threshold[0]
-            if not threshold >= 0:
-                raise DDMError("{} param of {} ({}) must be >= zero".
+            if is_numeric(threshold):
+                if not threshold >= 0:
+                    raise DDMError("{} param of {} ({}) must be >= zero".
+                                   format(THRESHOLD, self.name, threshold))
+            elif isinstance(threshold, ControlSignal):
+                threshold = threshold.allocation_samples
+                if not np.amin(threshold) >= 0:
+                    raise DDMError("The lowest value of {} for the {} "
+                                   "assigned to the {} param of {} must be >= zero".
+                                   format(ALLOCATION_SAMPLES, ControlSignal.__name__, THRESHOLD, self.name, threshold))
+            else:
+                raise DDMError("PROGRAM ERROR: unrecognized specification for {} of {} ({})".
                                format(THRESHOLD, self.name, threshold))
 
     def _instantiate_attributes_before_function(self, context=None):

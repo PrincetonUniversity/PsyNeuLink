@@ -16,20 +16,21 @@ Overview
 
 A PredictionErrorMechanism is a subclass of `ComparatorMechanism` that receives
 two inputs (a sample and a target), and calculates the temporal difference
-prediction error as found in Montague, Dayan, and Sejnowski (1996) using its
+prediction error as described in `Montague, Dayan, and Sejnowski (1996)
+<http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_ using its
 `function <PredictionErrorMechanism.function>`, and places the delta values
 (the difference between the actual and predicted reward) in its *OUTCOME*
-`OutputState <PredictionErrorMechanism.output_state>`.
+`OutputState`.
 
 .. _PredictionErrorMechanism_Creation:
 
 Creating a PredictionErrorMechanism
 -----------------------------------
 
-PredictionErrorMechanisms are generally created automatically when other
-PsyNeuLink components are created (such as `LearningMechanisms
-<LearningMechanism_Creation`). A PredictionErrorMechanism can also be created
-directly by calling its constructor. Its **sample** and **target** arguments are
+A PredictionErrorMechanism is usually created automatically when a `LearningMechanism`
+`is created <LearningMechanism_Creation>` using the `TDLearning` function).
+A PredictionErrorMechanism can also be created directly by calling its constructor.
+Its **sample** and **target**  arguments are
 used to specify the OutputStates that provide the sample and target inputs,
 respectively (see `ObjectiveMechanism_Monitored_States` for details concerning
 their specification, which are special versions of an ObjectiveMechanism's
