@@ -1,7 +1,7 @@
 """
 This implements a model of mesolimbic dopamine cell activity during monkey 
 conditioning as found in `Montague, Dayan, and Sejnowski (1996) 
-<http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`
+<http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_
 """
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d

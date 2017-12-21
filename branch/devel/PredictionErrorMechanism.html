@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.4.1.1+63.g9968b24 documentation</title>
+  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.4.1.1+64.g8ffbd35 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.1.1+63.g9968b24 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.1.1+64.g8ffbd35 documentation" href="index.html"/>
         <link rel="up" title="Objective Mechanisms" href="ObjectiveMechanisms.html"/>
         <link rel="next" title="Adaptive Mechanisms" href="AdaptiveMechanisms.html"/>
         <link rel="prev" title="ComparatorMechanism" href="ComparatorMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.1.1+63
+                0.4.1.1+64
               </div>
             
           
@@ -194,17 +194,17 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A PredictionErrorMechanism is a subclass of <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> that receives
 two inputs (a sample and a target), and calculates the temporal difference
-prediction error as found in Montague, Dayan, and Sejnowski (1996) using its
+prediction error as described in <a class="reference external" href="http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf">Montague, Dayan, and Sejnowski (1996)</a> using its
 <code class="xref any docutils literal"><span class="pre">function</span></code>, and places the delta values
 (the difference between the actual and predicted reward) in its <em>OUTCOME</em>
-<code class="xref any docutils literal"><span class="pre">OutputState</span></code>.</p>
+<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>.</p>
 </div>
 <div class="section" id="creating-a-predictionerrormechanism">
 <span id="predictionerrormechanism-creation"></span><h2>Creating a PredictionErrorMechanism<a class="headerlink" href="#creating-a-predictionerrormechanism" title="Permalink to this headline">¶</a></h2>
-<p>PredictionErrorMechanisms are generally created automatically when other
-PsyNeuLink components are created (such as <code class="xref any docutils literal"><span class="pre">LearningMechanisms</span>
-<span class="pre">&lt;LearningMechanism_Creation</span></code>). A PredictionErrorMechanism can also be created
-directly by calling its constructor. Its <strong>sample</strong> and <strong>target</strong> arguments are
+<p>A PredictionErrorMechanism is usually created automatically when a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>
+<a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">is created</span></a> using the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.TDLearning" title="psyneulink.components.functions.function.TDLearning"><code class="xref any py py-class docutils literal"><span class="pre">TDLearning</span></code></a> function).
+A PredictionErrorMechanism can also be created directly by calling its constructor.
+Its <strong>sample</strong> and <strong>target</strong>  arguments are
 used to specify the OutputStates that provide the sample and target inputs,
 respectively (see <code class="xref any docutils literal"><span class="pre">ObjectiveMechanism_Monitored_States</span></code> for details concerning
 their specification, which are special versions of an ObjectiveMechanism’s
@@ -352,7 +352,7 @@ length 5, that will match the length of the <em>TARGET</em> InputState.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.1.1+63.g9968b24',
+            VERSION:'0.4.1.1+64.g8ffbd35',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
