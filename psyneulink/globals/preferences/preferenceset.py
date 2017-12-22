@@ -762,7 +762,9 @@ class PreferenceSet(object):
                     if (not hasattr(next_level, 'classPreferences') or
                             not isinstance(next_level.classPreferences, PreferenceSet)):
                         from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet
-                        ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
+                        next_level.classPreferences = ComponentPreferenceSet(owner=next_level,
+                                                                             prefs=next_level.classPreferences,
+                                                                             level=next_level.classPreferenceLevel)
                     return_val = self.owner.__bases__[0].classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                                requested_level)
                     return return_val[0], return_val[1]
