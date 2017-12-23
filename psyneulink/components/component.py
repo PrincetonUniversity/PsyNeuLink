@@ -1047,9 +1047,6 @@ class Component(object):
                     new_size = np.empty(len(variable))
                     new_size.fill(size[0])
                     size = new_size
-            # endregion
-
-            # endregion
 
             # the two lines below were used when size was a param and are likely obsolete (7/7/17 CW)
             # param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
