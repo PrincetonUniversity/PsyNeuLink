@@ -868,6 +868,7 @@ class ControlSignal(ModulatorySignal):
         self.intensity = self.function(self.allocation)
         self.last_intensity = self.intensity
 
+    # FIX: MOVE THIS TO FUNCTION DEFINITION, AND CALL IT FROM CALCULATE FUNCTION
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         """Adjust the control signal, based on the allocation value passed to it
 
@@ -876,7 +877,6 @@ class ControlSignal(ModulatorySignal):
         Use self.function to assign intensity
 
             - if ignoreIntensityFunction is set (for efficiency, if the execute method it is the identity function):
-
                 - ignore self.function
                 - pass allocation (input to control_signal) along as its output
         Update cost.
@@ -886,6 +886,16 @@ class ControlSignal(ModulatorySignal):
         :return: (intensity)
         """
 
+        # FIX: 12/22/17:
+        # FIX: ASSIGNMENT TO self.value BY super IS CURRENTLY GETTING OVERRIDDEN BY ASSIGNMENT TO self.intensity BELOW
+        # FIX: EITHER CALL TO super SHOULD BE REMOVED, OR IT SHOULD BE PLACED AT END OF THIS METHOD
+        # FIX:    SO THAT ANY MODULATORY PROJECTIONS AND THE calculate FUNCTION CAN HAVE THEIR EFFECTS
+        # FIX: HOWEVER, HAVE TO DECIDE WHETHER MODULATION AND CALCULATE SHOULD HAPPEN BEFORE OR AFTER
+        # FIX:    COST AND DURATION EFFECTS BELOW
+        # FIX: ACTUALLY, THE INTENSITY COST AND DURATION EFFECTS SHOULD BE IMPLEMENTED BY THE CALCULATE FUNCTION
+        # FIX:     BUT THEN WOULD BE COMMITTED TO HAPPENING *AFTER* MODULATION
+        # FIX: MAYBE MODULATION SHOULD ALWAYS HAPPEN AFTER CALCULATE?
+        # FIX: ALSO NEED TO ATTEND TO POTENTIAL PROBLEMS WITH FORMATTING AS 1D VS 2D (PER KevM'S OBSERVATION)
         # Update self.value
         super().update(params=params, time_scale=time_scale, context=context)
 
@@ -1110,19 +1120,11 @@ class ControlSignal(ModulatorySignal):
 
     @property
     def intensity(self):
-        # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
         return self._intensity
 
     @intensity.setter
     def intensity(self, new_value):
-        try:
-            old_value = self._intensity
-        except AttributeError:
-            old_value = 0
         self._intensity = new_value
-        # if len(self.observers[kpIntensity]):
-        #     for observer in self.observers[kpIntensity]:
-        #         observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
 
     @property
     def control_signal(self):
