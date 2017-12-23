@@ -1845,10 +1845,11 @@ class State_Base(State):
         Call update for each projection in self.path_afferents (passing specified params)
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
-        Returns combined values of
+        Returns combined values of projections, modulated by any mod_afferents
     """
 
-        # region SET UP ------------------------------------------------------------------------------------------------
+        # SET UP ------------------------------------------------------------------------------------------------
+
         # Get State-specific param_specs
         try:
             # Get State params
@@ -1857,24 +1858,22 @@ class State_Base(State):
             self.stateParams = {}
         except (AttributeError):
             raise StateError("PROGRAM ERROR: paramsType not specified for {}".format(self.name))
-        #endregion
 
-        # Flag format of input
-        if isinstance(self.value, numbers.Number):
-            # Treat as single real value
-            value_is_number = True
-        else:
-            # Treat as vector (list or np.array)
-            value_is_number = False
+        # # Flag format of input
+        # if isinstance(self.value, numbers.Number):
+        #     # Treat as single real value
+        #     value_is_number = True
+        # else:
+        #     # Treat as vector (list or np.array)
+        #     value_is_number = False
 
-        # region AGGREGATE INPUT FROM PROJECTIONS -----------------------------------------------------------------------------
+        # AGGREGATE INPUT FROM PROJECTIONS -----------------------------------------------------------------------
 
         # Get type-specific params from PROJECTION_PARAMS
         mapping_params = merge_param_dicts(self.stateParams, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         learning_projection_params = merge_param_dicts(self.stateParams, LEARNING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         control_projection_params = merge_param_dicts(self.stateParams, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
         gating_projection_params = merge_param_dicts(self.stateParams, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        #endregion
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
         self._path_proj_values = []
@@ -1899,7 +1898,6 @@ class State_Base(State):
             raise StateError("PROGRAM ERROR: Object ({}) of type {} has a {}, but this is only allowed for "
                              "Mechanisms and MappingProjections".
                              format(self.owner.name, self.owner.__class__.__name__, self.__class__.__name__,))
-
 
         modulatory_override = False
 
@@ -1944,7 +1942,6 @@ class State_Base(State):
             if not projection_params:
                 projection_params = None
 
-            # FIX: UPDATE FOR LEARNING
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection) and not LEARNING in context:

@@ -886,13 +886,10 @@ class ControlSignal(ModulatorySignal):
         :return: (intensity)
         """
 
-        # MODIFIED 4/15/17 OLD: [NOT SURE WHY, BUT THIS SKIPPED OutputState.update() WHICH CALLS self.calculate()
-        # super(OutputState, self).update(params=params, time_scale=time_scale, context=context)
-        # MODIFIED 4/15/17 NEW: [THIS GOES THROUGH OutputState.update() WHICH CALLS self.calculate()
+        # Update self.value
         super().update(params=params, time_scale=time_scale, context=context)
-        # MODIFIED 4/15/17 END
 
-        # store previous state
+        # Store previous state
         self.last_allocation = self.allocation
         self.last_intensity = self.intensity
         self.last_cost = self.cost
@@ -946,7 +943,6 @@ class ControlSignal(ModulatorySignal):
             new_cost = 0
         self.cost = new_cost
 
-
         # Report new values to stdio
         if self.prefs.verbosePref:
             cost_change = new_cost - self.last_cost
@@ -957,6 +953,7 @@ class ControlSignal(ModulatorySignal):
                 cost_change_string = "+" + str(cost_change)
             print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
 
+#         FIX: NEEDS TO BE REFACTORED TO WORK WITH UPDATED LOG:
 #         #region Record control_signal values in owner Mechanism's log
 #         # Notes:
 #         # * Log control_signals for ALL states of a given Mechanism in the Mechanism's log
@@ -1269,4 +1266,5 @@ class ControlSignal(ModulatorySignal):
     @value.setter
     def value(self, assignment):
         self._value = assignment
+        self.intensity = assignment
         self.log._log_value(assignment)
