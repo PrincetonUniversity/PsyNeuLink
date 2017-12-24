@@ -819,14 +819,12 @@ class LCControlMechanism(ControlMechanism):
                                            format(MODULATED_MECHANISMS, self.name, mech, MULTIPLICATIVE_PARAM))
 
     def _instantiate_output_states(self, context=None):
-        """Instantiate ControlSignal and assign ControlProjections to Mechanisms in self.modulated_mechanisms
+        """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms
 
         If **modulated_mechanisms** argument of constructor was specified as *ALL*,
             assign all ProcessingMechanisms in Compositions to which LCControlMechanism belongs to self.modulated_mechanisms
-        Instantiate ControlSignal with Projections to the ParameterState for the multiplicative_param of every
+        Instantiate ControlSignal with Projection to the ParameterState for the multiplicative_param of every
            Mechanism listed in self.modulated_mechanisms
-
-        Returns ControlSignal (OutputState)
         """
         from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
