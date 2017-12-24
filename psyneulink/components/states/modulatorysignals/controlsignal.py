@@ -939,30 +939,15 @@ class ControlSignal(ModulatorySignal):
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         super().update(params=params, time_scale=time_scale, context=context)
-        self.compute_costs()
+        self._compute_costs()
         
-    def compute_costs(self):
+    def _compute_costs(self):
         """Compute costs based on self.value."""
-    
-        # FIX: 12/22/17:
-        # FIX: ASSIGNMENT TO self.value BY super IS CURRENTLY GETTING OVERRIDDEN BY ASSIGNMENT TO self.intensity BELOW
-        # FIX: EITHER CALL TO super SHOULD BE REMOVED, OR IT SHOULD BE PLACED AT END OF THIS METHOD
-        # FIX:    SO THAT ANY MODULATORY PROJECTIONS AND THE calculate FUNCTION CAN HAVE THEIR EFFECTS
-        # FIX: HOWEVER, HAVE TO DECIDE WHETHER MODULATION AND CALCULATE SHOULD HAPPEN BEFORE OR AFTER
-        # FIX:    COST AND DURATION EFFECTS BELOW
-        # FIX: ACTUALLY, THE INTENSITY COST AND DURATION EFFECTS SHOULD BE IMPLEMENTED BY THE CALCULATE FUNCTION
-        # FIX:     BUT THEN WOULD BE COMMITTED TO HAPPENING *AFTER* MODULATION
-        # FIX: MAYBE MODULATION SHOULD ALWAYS HAPPEN AFTER CALCULATE?
-        # FIX: ALSO NEED TO ATTEND TO POTENTIAL PROBLEMS WITH FORMATTING AS 1D VS 2D (PER KevM'S OBSERVATION)
-        # Update self.value
-        # super().update(params=params, time_scale=time_scale, context=context)
-    
-        # Store previous state
-        self.last_cost = self.cost
-        self.last_duration_cost = self.duration_cost
-    
+
+        intensity = self.value
+
         try:
-            intensity_change = self.value-self.last_intensity
+            intensity_change = intensity-self.last_intensity
         except AttributeError:
             intensity_change = 0
     
@@ -973,13 +958,13 @@ class ControlSignal(ModulatorySignal):
             elif intensity_change > 0:
                 intensity_change_string = "+" + str(intensity_change)
             if self.prefs.verbosePref:
-                warnings.warn("\nAllocation: {0} [{1}]".format(self.value, intensity_change_string))
+                warnings.warn("\nAllocation: {0} [{1}]".format(intensity, intensity_change_string))
     
         # compute cost(s)
-        new_cost = intensity_cost = adjustment_cost = duration_cost = 0
+        intensity_cost = adjustment_cost = duration_cost = 0
     
         if self.cost_options & ControlSignalCosts.INTENSITY_COST:
-            intensity_cost = self.intensity_cost = self.intensity_cost_function(self.value)
+            intensity_cost = self.intensity_cost = self.intensity_cost_function(intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
     
@@ -988,30 +973,35 @@ class ControlSignal(ModulatorySignal):
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
     
+        # FIX: 12/23/17 - THIS NEEDS TO HAVE BEEN INITIALIZED
         if self.cost_options & ControlSignalCosts.DURATION_COST:
-            duration_cost = self.duration_cost = \
-                self.duration_cost_function([self.last_duration_cost, new_cost])
+            duration_cost = self.duration_cost = self.duration_cost_function(self.cost)
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
     
-        new_cost = self.cost_combination_function([float(intensity_cost), adjustment_cost, duration_cost])
-    
-        if new_cost < 0:
-            new_cost = 0
-        self.cost = new_cost
-    
+        self.cost = max(0.0, self.cost_combination_function([float(intensity_cost),
+                                                             adjustment_cost,
+                                                             duration_cost]))
+
+        # Store current state for use in next call as last state
+        self.last_intensity = intensity
+        self.last_cost = self.cost
+        self.last_duration_cost = self.duration_cost
+
+
         # Report new values to stdio
         if self.prefs.verbosePref:
-            cost_change = new_cost - self.last_cost
+            try:
+                cost_change = self.cost - self.last_cost
+            except AttributeError:
+                cost_change = 0
             cost_change_string = "no change"
             if cost_change < 0:
                 cost_change_string = str(cost_change)
             elif cost_change > 0:
                 cost_change_string = "+" + str(cost_change)
             print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
-            
-        self.last_intensity = self.value
-    
+
     #         FIX: NEEDS TO BE REFACTORED TO WORK WITH UPDATED LOG:
     #         #region Record control_signal values in owner Mechanism's log
     #         # Notes:
