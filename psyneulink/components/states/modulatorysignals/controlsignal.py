@@ -868,6 +868,7 @@ class ControlSignal(ModulatorySignal):
         self.intensity = self.function(self.allocation)
         self.last_intensity = self.intensity
 
+    # FIX: MOVE THIS TO FUNCTION DEFINITION, AND CALL IT FROM CALCULATE FUNCTION
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         """Adjust the control signal, based on the allocation value passed to it
 
@@ -876,7 +877,6 @@ class ControlSignal(ModulatorySignal):
         Use self.function to assign intensity
 
             - if ignoreIntensityFunction is set (for efficiency, if the execute method it is the identity function):
-
                 - ignore self.function
                 - pass allocation (input to control_signal) along as its output
         Update cost.
@@ -886,13 +886,20 @@ class ControlSignal(ModulatorySignal):
         :return: (intensity)
         """
 
-        # MODIFIED 4/15/17 OLD: [NOT SURE WHY, BUT THIS SKIPPED OutputState.update() WHICH CALLS self.calculate()
-        # super(OutputState, self).update(params=params, time_scale=time_scale, context=context)
-        # MODIFIED 4/15/17 NEW: [THIS GOES THROUGH OutputState.update() WHICH CALLS self.calculate()
+        # FIX: 12/22/17:
+        # FIX: ASSIGNMENT TO self.value BY super IS CURRENTLY GETTING OVERRIDDEN BY ASSIGNMENT TO self.intensity BELOW
+        # FIX: EITHER CALL TO super SHOULD BE REMOVED, OR IT SHOULD BE PLACED AT END OF THIS METHOD
+        # FIX:    SO THAT ANY MODULATORY PROJECTIONS AND THE calculate FUNCTION CAN HAVE THEIR EFFECTS
+        # FIX: HOWEVER, HAVE TO DECIDE WHETHER MODULATION AND CALCULATE SHOULD HAPPEN BEFORE OR AFTER
+        # FIX:    COST AND DURATION EFFECTS BELOW
+        # FIX: ACTUALLY, THE INTENSITY COST AND DURATION EFFECTS SHOULD BE IMPLEMENTED BY THE CALCULATE FUNCTION
+        # FIX:     BUT THEN WOULD BE COMMITTED TO HAPPENING *AFTER* MODULATION
+        # FIX: MAYBE MODULATION SHOULD ALWAYS HAPPEN AFTER CALCULATE?
+        # FIX: ALSO NEED TO ATTEND TO POTENTIAL PROBLEMS WITH FORMATTING AS 1D VS 2D (PER KevM'S OBSERVATION)
+        # Update self.value
         super().update(params=params, time_scale=time_scale, context=context)
-        # MODIFIED 4/15/17 END
 
-        # store previous state
+        # Store previous state
         self.last_allocation = self.allocation
         self.last_intensity = self.intensity
         self.last_cost = self.cost
@@ -946,7 +953,6 @@ class ControlSignal(ModulatorySignal):
             new_cost = 0
         self.cost = new_cost
 
-
         # Report new values to stdio
         if self.prefs.verbosePref:
             cost_change = new_cost - self.last_cost
@@ -957,6 +963,7 @@ class ControlSignal(ModulatorySignal):
                 cost_change_string = "+" + str(cost_change)
             print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
 
+#         FIX: NEEDS TO BE REFACTORED TO WORK WITH UPDATED LOG:
 #         #region Record control_signal values in owner Mechanism's log
 #         # Notes:
 #         # * Log control_signals for ALL states of a given Mechanism in the Mechanism's log
@@ -1113,19 +1120,11 @@ class ControlSignal(ModulatorySignal):
 
     @property
     def intensity(self):
-        # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
         return self._intensity
 
     @intensity.setter
     def intensity(self, new_value):
-        try:
-            old_value = self._intensity
-        except AttributeError:
-            old_value = 0
         self._intensity = new_value
-        # if len(self.observers[kpIntensity]):
-        #     for observer in self.observers[kpIntensity]:
-        #         observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
 
     @property
     def control_signal(self):
@@ -1269,4 +1268,5 @@ class ControlSignal(ModulatorySignal):
     @value.setter
     def value(self, assignment):
         self._value = assignment
+        self.intensity = assignment
         self.log._log_value(assignment)
