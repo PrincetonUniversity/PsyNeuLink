@@ -538,7 +538,7 @@ class ControlSignal(ModulatorySignal):
         converts `allocation` into the ControlSignal's `intensity`.  The default is the identity function, which
         assigns the ControlSignal's `allocation` as its `intensity`.
 
-    value : number, list or np.ndarray
+    value : float
         result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity` and `control_signal`.
 
     intensity : float
