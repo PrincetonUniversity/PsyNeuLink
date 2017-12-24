@@ -940,7 +940,10 @@ class ControlSignal(ModulatorySignal):
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         super().update(params=params, time_scale=time_scale, context=context)
         self._compute_costs()
-        
+
+    def _execute(self, function_params, context):
+        return float(super()._execute(function_params=function_params, context=context))
+
     def _compute_costs(self):
         """Compute costs based on self.value."""
 
