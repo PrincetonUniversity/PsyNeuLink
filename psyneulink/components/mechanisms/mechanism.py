@@ -959,10 +959,6 @@ class Mechanism_Base(Mechanism):
            `output_values <Mechanism_Base.output_values>` attribute, which lists the `values <OutputState.value>`
            of its `OutputStates <Mechanism_Base.outputStates>`.
 
-    default_value : ndarray
-        set equal to the `value <Mechanism_Base.value>` attribute when the Mechanism is first initialized; maintains
-        its value even when `value <Mechanism_Base.value>` is reset to None when (re-)initialized prior to execution.
-
     output_state : OutputState
         `primary OutputState <OutputState_Primary>` for the Mechanism;  same as first entry of its `output_states
         <Mechanism_Base.output_states>` attribute.
@@ -1295,9 +1291,9 @@ class Mechanism_Base(Mechanism):
                                      format(name, self.name))
 
         try:
-            self._default_value = self.value.copy()
+            self.instance_defaults.value = self.value.copy()
         except AttributeError:
-            self._default_value = self.value
+            self.instance_defaults.value = self.value
         self.value = self._old_value = None
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
@@ -1663,7 +1659,7 @@ class Mechanism_Base(Mechanism):
             from psyneulink.components.states.parameterstate import ParameterState
             for param_name, param_value in function_param_specs.items():
                 try:
-                    default_value = self.paramInstanceDefaults[FUNCTION_PARAMS][param_name]
+                    self.instance_defaults.value = self.paramInstanceDefaults[FUNCTION_PARAMS][param_name]
                 except KeyError:
                     raise MechanismError("{0} not recognized as a param of execute method for {1}".
                                          format(param_name, self.__class__.__name__))
@@ -1673,8 +1669,8 @@ class Mechanism_Base(Mechanism):
                         isinstance(param_value, ParameterState) or
                         isinstance(param_value, Projection) or
                         isinstance(param_value, dict) or
-                        iscompatible(param_value, default_value)):
-                    params[FUNCTION_PARAMS][param_name] = default_value
+                        iscompatible(param_value, self.instance_defaults.value)):
+                    params[FUNCTION_PARAMS][param_name] = self.instance_defaults.value
                     if self.prefs.verbosePref:
                         print("{0} param ({1}) for execute method {2} of {3} is not a ParameterState, "
                               "projection, tuple, or value; default value ({4}) will be used".
@@ -1682,7 +1678,7 @@ class Mechanism_Base(Mechanism):
                                      param_value,
                                      self.execute.__self__.componentName,
                                      self.__class__.__name__,
-                                     default_value))
+                                     self.instance_defaults.value))
 
         # VALIDATE OUTPUT STATE(S)
 
@@ -2405,9 +2401,6 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.parameterstate import ParameterState
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
-    @property
-    def default_value(self):
-        return self._default_value
 
     @property
     def input_state(self):

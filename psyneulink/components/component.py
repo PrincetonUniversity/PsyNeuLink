@@ -2628,20 +2628,22 @@ class Component(object):
         if not context:
             context = "DIRECT CALL"
         try:
-            self.value = self.execute(variable=self.instance_defaults.variable, context=context)
+            value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:
             try:
-                self.value = self.execute(input=self.instance_defaults.variable, context=context)
+                value = self.execute(input=self.instance_defaults.variable, context=context)
             except TypeError:
-                self.value = self.execute(context=context)
-        if self.value is None:
+                value = self.execute(context=context)
+        if value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+
+        self.value = value
         try:
             # Could be mutable, so assign copy
-            self._default_value = self.value.copy()
+            self.instance_defaults.value = value.copy()
         except AttributeError:
             # Immutable, so just assign value
-            self._default_value = self.value
+            self.instance_defaults.value = value
 
     def _instantiate_attributes_after_function(self, context=None):
         pass

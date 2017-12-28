@@ -807,7 +807,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                              if isinstance(state, ControlSignal)])
 
         if self.allocation_policy is None:
-            self.allocation_policy = self.default_value
+            self.allocation_policy = self.instance_defaults.value
 
         # If the ControlMechanism's allocation_policy has more than one item,
         #    warn if the number of items does not equal the number of its ControlSignals
@@ -835,7 +835,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         #    it returns the default_allocation policy which has only a single item,
         #    however validation of indices for OutputStates requires proper number of items be in self.value
         self.value = self.allocation_policy
-        self._default_value = self.value
+        self.instance_defaults.value = self.value
 
         from psyneulink.components.states.state import _instantiate_state
         # Parses control_signal specifications (in call to State._parse_state_spec)
