@@ -898,11 +898,11 @@ class OutputState(State_Base):
                 return
             else:
                 try:
-                    self.owner.default_value[target_set[INDEX]]
+                    self.owner.instance_defaults.value[target_set[INDEX]]
                 except IndexError:
                     raise OutputStateError("Value of \'{}\' argument for {} ({}) is greater than the number "
                                            "of items in the output_values ({}) for its owner Mechanism ({})".
-                                           format(INDEX, self.name, target_set[INDEX], self.owner.default_value,
+                                           format(INDEX, self.name, target_set[INDEX], self.owner.instance_defaults.value,
                                                   self.owner.name))
 
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
@@ -926,7 +926,7 @@ class OutputState(State_Base):
                                                format(index, self.name, self.owner.name))
                     return
 
-                default_value_item_str = self.owner.default_value[index] if isinstance(index, int) else index
+                default_value_item_str = self.owner.instance_defaults.value[index] if isinstance(index, int) else index
                 error_msg = ("Item {} of value for {} ({}) is not compatible with "
                              "the function specified for the {} parameter of {} ({})".
                              format(index,
@@ -936,10 +936,10 @@ class OutputState(State_Base):
                                     self.name,
                                     target_set[CALCULATE]))
                 try:
-                    function(self.owner.default_value[index], context=context)
+                    function(self.owner.instance_defaults.value[index], context=context)
                 except TypeError:
                     try:
-                        function(self.owner.default_value[index])
+                        function(self.owner.instance_defaults.value[index])
                     except:
                         raise OutputStateError(error_msg)
                 # except IndexError:
@@ -964,7 +964,7 @@ class OutputState(State_Base):
     # MODIFIED 11/15/17 NEW:
     def _instantiate_attributes_before_function(self, context=None):
         if self.variable is None and self.reference_value is None:
-            self.instance_defaults.variable = self.owner.default_value[0]
+            self.instance_defaults.variable = self.owner.instance_defaults.value[0]
     # MODIFIED 11/15/17 END
 
     def _instantiate_attributes_after_function(self, context=None):
@@ -1140,12 +1140,12 @@ class OutputState(State_Base):
                     raise OutputStateError("The {} (2nd) item of the {} specification tuple for {} ({}) "
                                            "must be a number".format(INDEX, OutputState.__name__, owner.name, index))
                 try:
-                    owner.default_value[index]
+                    owner.instance_defaults.value[index]
                 except IndexError:
                     raise OutputStateError("The {0} (2nd) item of the {1} specification tuple for {2} ({3}) is out "
                                            "of bounds for the number of items in {4}'s value ({5}, max index: {6})".
                                            format(INDEX, OutputState.__name__, owner.name, index,
-                                                  owner.name, owner.default_value, len(owner.default_value)-1))
+                                                  owner.name, owner.instance_defaults.value, len(owner.instance_defaults.value)-1))
                 params_dict[INDEX] = index
 
         elif state_specific_spec is not None:
@@ -1202,7 +1202,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
     # Get owner.value
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
-    owner_value = owner.default_value
+    owner_value = owner.instance_defaults.value
 
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
     #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -1218,7 +1218,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         converted_to_2d = np.atleast_2d(owner.value)
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
-            owner_value = owner.default_value
+            owner_value = owner.instance_defaults.value
         # Otherwise, use value converted to 2d np.array
         else:
             owner_value = converted_to_2d

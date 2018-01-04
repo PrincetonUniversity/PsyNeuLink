@@ -124,7 +124,7 @@ of the ControlSignal's constructor) to determine the allocation values to sample
 ControlSignal's `allocation <ControlSignal>` attribute reflects value assigned to it by the ControlMechanism
 at the end of the previous `TRIAL` (i.e., when the ControlMechanism last executed --  see
 `ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL` is assigned to the
-`last_allocation` attribute.
+`last_intensity` attribute.
 
 *Function*. A ControlSignal's `allocation <ControlSignal.alloction>` serves as its`variable <ControlSignal.variable>`,
 and is used by its `function <ControlSignal.function>` to generate an `intensity`. The default `function
@@ -372,8 +372,8 @@ class ControlSignalCosts(IntEnum):
         ControlSignal's `cost` is not computed.
 
     INTENSITY_COST
-        `intensity_cost_function` is used to calculate a contribution to the ControlSignal's `cost <ControlSignal.cost>`
-        based its current `intensity` value.
+        `intensity_cost_function` is used to calculate a contribution to the ControlSignal's `cost
+        <ControlSignal.cost>` based its current `intensity` value.
 
     ADJUSTMENT_COST
         `adjustment_cost_function` is used to calculate a contribution to the `cost` based on the change in its
@@ -538,7 +538,7 @@ class ControlSignal(ModulatorySignal):
         converts `allocation` into the ControlSignal's `intensity`.  The default is the identity function, which
         assigns the ControlSignal's `allocation` as its `intensity`.
 
-    value : number, list or np.ndarray
+    value : float
         result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity` and `control_signal`.
 
     intensity : float
@@ -715,7 +715,6 @@ class ControlSignal(ModulatorySignal):
         - cost functions are all appropriate
         - allocation_samples is a list or 1d np.array
         - all cost functions are references to valid ControlProjection costFunctions (listed in self.costFunctions)
-        - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
 
         """
 
@@ -836,170 +835,25 @@ class ControlSignal(ModulatorySignal):
         # Assign instance attributes
         self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
 
-        # Default intensity params
+        # Default allocation params
         self.default_allocation = defaultControlAllocation
         self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
         self.last_allocation = self.allocation
-        self.intensity = self.allocation
 
         # Default cost params
-        self.intensity_cost = self.intensity_cost_function(self.intensity)
+        self.intensity_cost = self.intensity_cost_function(self.allocation)
         self.adjustment_cost = 0
         self.duration_cost = 0
         self.last_duration_cost = self.duration_cost
         self.cost = self.intensity_cost
         self.last_cost = self.cost
 
-        # If intensity function (self.function) is identity function, set ignoreIntensityFunction
-        function = self.params[FUNCTION]
-        function_params = self.params[FUNCTION_PARAMS]
-        if ((isinstance(function, Linear) or (inspect.isclass(function) and issubclass(function, Linear)) and
-                function_params[SLOPE] == 1 and
-                function_params[INTERCEPT] == 0)):
-            self.ignoreIntensityFunction = True
-        else:
-            self.ignoreIntensityFunction = False
-
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate calculate function
         """
         super()._instantiate_attributes_after_function(context=context)
 
-        self.intensity = self.function(self.allocation)
-        self.last_intensity = self.intensity
-
-    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
-        """Adjust the control signal, based on the allocation value passed to it
-
-        Computes new intensity and cost attributes from allocation
-
-        Use self.function to assign intensity
-
-            - if ignoreIntensityFunction is set (for efficiency, if the execute method it is the identity function):
-
-                - ignore self.function
-                - pass allocation (input to control_signal) along as its output
-        Update cost.
-        Assign intensity to value of ControlSignal (done in setter property for value)
-
-        :parameter allocation: (single item list, [0-1])
-        :return: (intensity)
-        """
-
-        # MODIFIED 4/15/17 OLD: [NOT SURE WHY, BUT THIS SKIPPED OutputState.update() WHICH CALLS self.calculate()
-        # super(OutputState, self).update(params=params, time_scale=time_scale, context=context)
-        # MODIFIED 4/15/17 NEW: [THIS GOES THROUGH OutputState.update() WHICH CALLS self.calculate()
-        super().update(params=params, time_scale=time_scale, context=context)
-        # MODIFIED 4/15/17 END
-
-        # store previous state
-        self.last_allocation = self.allocation
-        self.last_intensity = self.intensity
-        self.last_cost = self.cost
-        self.last_duration_cost = self.duration_cost
-
-        # update current intensity
-        # FIX: INDEX MUST BE ASSIGNED WHEN OUTPUTSTATE IS CREATED FOR ControlMechanism (IN PLACE OF LIST OF PROJECTIONS)
-        self.allocation = self.owner.value[self.index]
-        # self.allocation = self.sender.value
-
-        if self.ignoreIntensityFunction:
-            # self.set_intensity(self.allocation)
-            self.intensity = self.allocation
-        else:
-            self.intensity = self.function(self.allocation, params)
-        intensity_change = self.intensity-self.last_intensity
-
-        if self.prefs.verbosePref:
-            intensity_change_string = "no change"
-            if intensity_change < 0:
-                intensity_change_string = str(intensity_change)
-            elif intensity_change > 0:
-                intensity_change_string = "+" + str(intensity_change)
-            if self.prefs.verbosePref:
-                warnings.warn("\nIntensity: {0} [{1}] (for allocation {2})".format(self.intensity,
-                                                                                   intensity_change_string,
-                                                                                   self.allocation))
-                warnings.warn("[Intensity function {0}]".format(["ignored", "used"][self.ignoreIntensityFunction]))
-
-        # compute cost(s)
-        new_cost = intensity_cost = adjustment_cost = duration_cost = 0
-
-        if self.cost_options & ControlSignalCosts.INTENSITY_COST:
-            intensity_cost = self.intensity_cost = self.intensity_cost_function(self.intensity)
-            if self.prefs.verbosePref:
-                print("++ Used intensity cost")
-
-        if self.cost_options & ControlSignalCosts.ADJUSTMENT_COST:
-            adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(intensity_change)
-            if self.prefs.verbosePref:
-                print("++ Used adjustment cost")
-
-        if self.cost_options & ControlSignalCosts.DURATION_COST:
-            duration_cost = self.duration_cost = self.duration_cost_function([self.last_duration_cost, new_cost])
-            if self.prefs.verbosePref:
-                print("++ Used duration cost")
-
-        new_cost = self.cost_combination_function([float(intensity_cost), adjustment_cost, duration_cost])
-
-        if new_cost < 0:
-            new_cost = 0
-        self.cost = new_cost
-
-
-        # Report new values to stdio
-        if self.prefs.verbosePref:
-            cost_change = new_cost - self.last_cost
-            cost_change_string = "no change"
-            if cost_change < 0:
-                cost_change_string = str(cost_change)
-            elif cost_change > 0:
-                cost_change_string = "+" + str(cost_change)
-            print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
-
-#         #region Record control_signal values in owner Mechanism's log
-#         # Notes:
-#         # * Log control_signals for ALL states of a given Mechanism in the Mechanism's log
-#         # * Log control_signals for EACH state in a separate entry of the Mechanism's log
-#
-#         # Get receiver Mechanism and state
-#         controller = self.owner
-#
-#         # Get logPref for Mechanism
-#         log_pref = controller.prefs.logPref
-#
-#         # Get context
-#         if not context:
-#             context = controller.name + " " + self.name + kwAssign
-#         else:
-#             context = context + SEPARATOR_BAR + self.name + kwAssign
-#
-#         # If context is consistent with log_pref:
-#         if (log_pref is LogCondition.ALL_ASSIGNMENTS or
-#                 (log_pref is LogCondition.EXECUTION and EXECUTING in context) or
-#                 (log_pref is LogCondition.VALUE_ASSIGNMENT and (EXECUTING in context))):
-#             # record info in log
-#
-# # FIX: ENCODE ALL OF THIS AS 1D ARRAYS IN 2D PROJECTION VALUE, AND PASS TO .value FOR LOGGING
-#             controller.log.entries[self.name + " " +
-#                                       kpIntensity] = LogEntry('time_placeholder', context, float(self.intensity))
-#             if not self.ignoreIntensityFunction:
-#                 controller.log.entries[self.name + " " + kpAllocation] = LogEntry('time_placeholder',
-#                                                                                   context,
-#                                                                                   float(self.allocation))
-#                 controller.log.entries[self.name + " " + kpIntensityCost] =  LogEntry('time_placeholder',
-#                                                                                       context,
-#                                                                                       float(self.intensity_cost))
-#                 controller.log.entries[self.name + " " + kpAdjustmentCost] = LogEntry('time_placeholder',
-#                                                                                       context,
-#                                                                                       float(self.adjustment_cost))
-#                 controller.log.entries[self.name + " " + kpDurationCost] = LogEntry('time_placeholder',
-#                                                                                     context,
-#                                                                                     float(self.duration_cost))
-#                 controller.log.entries[self.name + " " + kpCost] = LogEntry('time_placeholder',
-#                                                                             context,
-#                                                                             float(self.cost))
-    #endregion
+        self.last_intensity = self.function(self.allocation)
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
@@ -1083,6 +937,119 @@ class ControlSignal(ModulatorySignal):
 
         return state_spec, params_dict
 
+    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
+        super().update(params=params, time_scale=time_scale, context=context)
+        self._compute_costs()
+
+    def _execute(self, function_params, context):
+        return float(super()._execute(function_params=function_params, context=context))
+
+    def _compute_costs(self):
+        """Compute costs based on self.value."""
+
+        intensity = self.value
+
+        try:
+            intensity_change = intensity-self.last_intensity
+        except AttributeError:
+            intensity_change = 0
+    
+        if self.prefs.verbosePref:
+            intensity_change_string = "no change"
+            if intensity_change < 0:
+                intensity_change_string = "-" + str(intensity_change)
+            elif intensity_change > 0:
+                intensity_change_string = "+" + str(intensity_change)
+            if self.prefs.verbosePref:
+                warnings.warn("\nAllocation: {0} [{1}]".format(intensity, intensity_change_string))
+    
+        # compute cost(s)
+        intensity_cost = adjustment_cost = duration_cost = 0
+    
+        if self.cost_options & ControlSignalCosts.INTENSITY_COST:
+            intensity_cost = self.intensity_cost = self.intensity_cost_function(intensity)
+            if self.prefs.verbosePref:
+                print("++ Used intensity cost")
+    
+        if self.cost_options & ControlSignalCosts.ADJUSTMENT_COST:
+            adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(intensity_change)
+            if self.prefs.verbosePref:
+                print("++ Used adjustment cost")
+    
+        # FIX: 12/23/17 - THIS NEEDS TO HAVE BEEN INITIALIZED
+        if self.cost_options & ControlSignalCosts.DURATION_COST:
+            duration_cost = self.duration_cost = self.duration_cost_function(self.cost)
+            if self.prefs.verbosePref:
+                print("++ Used duration cost")
+    
+        self.cost = max(0.0, self.cost_combination_function([float(intensity_cost),
+                                                             adjustment_cost,
+                                                             duration_cost]))
+
+        # Store current state for use in next call as last state
+        self.last_intensity = intensity
+        self.last_cost = self.cost
+        self.last_duration_cost = self.duration_cost
+
+
+        # Report new values to stdio
+        if self.prefs.verbosePref:
+            try:
+                cost_change = self.cost - self.last_cost
+            except AttributeError:
+                cost_change = 0
+            cost_change_string = "no change"
+            if cost_change < 0:
+                cost_change_string = str(cost_change)
+            elif cost_change > 0:
+                cost_change_string = "+" + str(cost_change)
+            print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
+
+    #         FIX: NEEDS TO BE REFACTORED TO WORK WITH UPDATED LOG:
+    #         #region Record control_signal values in owner Mechanism's log
+    #         # Notes:
+    #         # * Log control_signals for ALL states of a given Mechanism in the Mechanism's log
+    #         # * Log control_signals for EACH state in a separate entry of the Mechanism's log
+    #
+    #         # Get receiver Mechanism and state
+    #         controller = self.owner
+    #
+    #         # Get logPref for Mechanism
+    #         log_pref = controller.prefs.logPref
+    #
+    #         # Get context
+    #         if not context:
+    #             context = controller.name + " " + self.name + kwAssign
+    #         else:
+    #             context = context + SEPARATOR_BAR + self.name + kwAssign
+    #
+    #         # If context is consistent with log_pref:
+    #         if (log_pref is LogCondition.ALL_ASSIGNMENTS or
+    #                 (log_pref is LogCondition.EXECUTION and EXECUTING in context) or
+    #                 (log_pref is LogCondition.VALUE_ASSIGNMENT and (EXECUTING in context))):
+    #             # record info in log
+    #
+    # # FIX: ENCODE ALL OF THIS AS 1D ARRAYS IN 2D PROJECTION VALUE, AND PASS TO .value FOR LOGGING
+    #             controller.log.entries[self.name + " " +
+    #                                       kpIntensity] = LogEntry('time_placeholder', context, float(self.intensity))
+    #             if not self.ignoreIntensityFunction:
+    #                 controller.log.entries[self.name + " " + kpAllocation] = LogEntry('time_placeholder',
+    #                                                                                   context,
+    #                                                                                   float(self.allocation))
+    #                 controller.log.entries[self.name + " " + kpIntensityCost] =  LogEntry('time_placeholder',
+    #                                                                                       context,
+    #                                                                                       float(self.intensity_cost))
+    #                 controller.log.entries[self.name + " " + kpAdjustmentCost] = LogEntry('time_placeholder',
+    #                                                                                       context,
+    #                                                                                       float(self.adjustment_cost))
+    #                 controller.log.entries[self.name + " " + kpDurationCost] = LogEntry('time_placeholder',
+    #                                                                                     context,
+    #                                                                                     float(self.duration_cost))
+    #                 controller.log.entries[self.name + " " + kpCost] = LogEntry('time_placeholder',
+    #                                                                             context,
+    #                                                                             float(self.cost))
+    #endregion
+
     @property
     def allocation_samples(self):
         return self._allocation_samples
@@ -1113,19 +1080,11 @@ class ControlSignal(ModulatorySignal):
 
     @property
     def intensity(self):
-        # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
         return self._intensity
 
     @intensity.setter
     def intensity(self, new_value):
-        try:
-            old_value = self._intensity
-        except AttributeError:
-            old_value = 0
         self._intensity = new_value
-        # if len(self.observers[kpIntensity]):
-        #     for observer in self.observers[kpIntensity]:
-        #         observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
 
     @property
     def control_signal(self):
@@ -1264,9 +1223,13 @@ class ControlSignal(ModulatorySignal):
         if self.init_status in {InitStatus.DEFERRED_INITIALIZATION, InitStatus.INITIALIZING}:
             return None
         else:
-            return self._intensity
+            return self._value
 
     @value.setter
     def value(self, assignment):
         self._value = assignment
         self.log._log_value(assignment)
+
+    @property
+    def intensity(self):
+        return self.value

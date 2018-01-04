@@ -261,7 +261,7 @@ class GatingSignal(ModulatorySignal):
     """
     GatingSignal(                                   \
         owner,                                      \
-        index=PRIMARY                  \
+        index=PRIMARY                               \
         function=LinearCombination(operation=SUM),  \
         modulation=ModulationParam.MULTIPLICATIVE,  \
         projections=None,                           \

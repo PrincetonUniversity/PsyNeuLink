@@ -6,7 +6,7 @@ import psyneulink as pnl
 mechanism_prefs = pnl.ComponentPreferenceSet(
     prefs={
         pnl.VERBOSE_PREF: pnl.PreferenceEntry(False, pnl.PreferenceLevel.INSTANCE),
-        pnl.REPORT_OUTPUT_PREF: pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
+        # pnl.REPORT_OUTPUT_PREF: pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
     }
 )
 

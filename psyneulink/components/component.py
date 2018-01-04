@@ -689,10 +689,22 @@ class Component(object):
     componentCategory = None
     componentType = None
 
+    class _DefaultsMeta(type):
+        def __repr__(self):
+            return '{0} :\n{1}'.format(super().__repr__(), self.show())
 
-    class Defaults(object):
+        def show(self):
+            return ''
+
+    class Defaults(metaclass=_DefaultsMeta):
         def _attributes(obj):
-            return {k: getattr(obj, k) for k in dir(obj) if k[:2]+k[-2:] != '____' and not callable(getattr(obj, k))}
+            return {
+                k: getattr(obj, k) for k in dir(obj) + dir(type(obj))
+                if (
+                    k[:2] + k[-2:] != '____'
+                    and not callable(getattr(obj, k))
+                )
+            }
 
         @classmethod
         def values(cls):
@@ -2616,20 +2628,22 @@ class Component(object):
         if not context:
             context = "DIRECT CALL"
         try:
-            self.value = self.execute(variable=self.instance_defaults.variable, context=context)
+            value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:
             try:
-                self.value = self.execute(input=self.instance_defaults.variable, context=context)
+                value = self.execute(input=self.instance_defaults.variable, context=context)
             except TypeError:
-                self.value = self.execute(context=context)
-        if self.value is None:
+                value = self.execute(context=context)
+        if value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+
+        self.value = value
         try:
             # Could be mutable, so assign copy
-            self._default_value = self.value.copy()
+            self.instance_defaults.value = value.copy()
         except AttributeError:
             # Immutable, so just assign value
-            self._default_value = self.value
+            self.instance_defaults.value = value
 
     def _instantiate_attributes_after_function(self, context=None):
         pass
