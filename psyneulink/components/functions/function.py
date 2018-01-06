@@ -1581,7 +1581,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
-            if not parameter_spec(target_set[EXPONENTS]):
+            if not parameter_spec(target_set[EXPONENTS], numeric_only=True):
                 owner_name = 'of ' + self.owner.name if self.owner else ""
                 raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
                                     format(target_set[EXPONENTS], EXPONENTS, self.__class__.__name__, owner_name))
