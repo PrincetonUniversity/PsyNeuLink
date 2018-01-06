@@ -2199,6 +2199,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         self._scale = val
 
 
+GAMMA = 'gamma'
 class PredictionErrorDeltaFunction(CombinationFunction):
     """
     Function that calculates the temporal difference prediction error
@@ -2300,9 +2301,12 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                                  target_set=target_set,
                                  context=context)
 
+        if GAMMA in target_set and target_set[GAMMA] is not None:
+            self._validate_parameter_spec(target_set[GAMMA] ,GAMMA, numeric_only=True)
+
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
-            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,
-                                                                             1)
+            self._validate_parameter_spec(target_set[WEIGHTS] ,WEIGHTS, numeric_only=True)
+            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
             if EXECUTING in context:
                 if len(target_set[WEIGHTS]) != len(
                         self.instance_defaults.variable):
