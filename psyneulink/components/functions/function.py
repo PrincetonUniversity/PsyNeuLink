@@ -654,6 +654,12 @@ class Function_Base(Function):
                          prefs=prefs,
                          context=context)
 
+    def _validate_parameter_spec(self, param, param_name, numeric):
+        if not parameter_spec(param, numeric_only=True):
+            owner_name = 'of ' + self.owner.name if self.owner else ""
+            raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
+                                format(param, param_name, self.__class__.__name__, owner_name))
+
     def execute(self, variable=None, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
 
@@ -1494,8 +1500,9 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 weights: tc.optional(parameter_spec)=None,
+                 # weights: tc.optional(parameter_spec)=None,
                  # exponents: tc.optional(parameter_spec)=None,
+                 weights=None,
                  exponents=None,
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  scale=None,
@@ -1574,6 +1581,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                  context=context)
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
+            self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric=True)
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if any(c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
@@ -1581,10 +1589,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
-            if not parameter_spec(target_set[EXPONENTS], numeric_only=True):
-                owner_name = 'of ' + self.owner.name if self.owner else ""
-                raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
-                                    format(target_set[EXPONENTS], EXPONENTS, self.__class__.__name__, owner_name))
+            self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric=True)
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
             if (c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
@@ -1966,8 +1971,10 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 weights:tc.optional(parameter_spec)=None,
-                 exponents:tc.optional(parameter_spec)=None,
+                 # weights:tc.optional(parameter_spec)=None,
+                 # exponents:tc.optional(parameter_spec)=None,
+                 weights=None,
+                 exponents=None,
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  scale=None,
                  offset=None,
