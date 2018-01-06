@@ -16,11 +16,10 @@ Overview
 
 A PredictionErrorMechanism is a subclass of `ComparatorMechanism` that receives
 two inputs (a sample and a target), and calculates the temporal difference
-prediction error as described in `Montague, Dayan, and Sejnowski (1996)
-<http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_ using its
-`function <PredictionErrorMechanism.function>`, and places the delta values
-(the difference between the actual and predicted reward) in its *OUTCOME*
-`OutputState`.
+prediction error as found in `Montague, Dayan, and Sejnowski (1996) <http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_
+using its `function <PredictionErrorMechanism.function>`, and places the delta 
+values (the difference between the actual and predicted reward) in its *OUTCOME*
+`OutputState <PredictionErrorMechanism.output_state>`.
 
 .. _PredictionErrorMechanism_Creation:
 
@@ -30,15 +29,13 @@ Creating a PredictionErrorMechanism
 A PredictionErrorMechanism is usually created automatically when a `LearningMechanism`
 `is created <LearningMechanism_Creation>` using the `TDLearning` function).
 A PredictionErrorMechanism can also be created directly by calling its constructor.
-Its **sample** and **target**  arguments are
-used to specify the OutputStates that provide the sample and target inputs,
-respectively (see `ObjectiveMechanism_Monitored_States` for details concerning
-their specification, which are special versions of an ObjectiveMechanism's
-**monitored_output_states** argument). When the PredictionErrorMechanism is
-created, two InputStates are created, one each for its sample and target inputs
-(and named, by default *SAMPLE* and *TARGET*). Each is assigned a
-MappingProjection from the corresponding OutputState specified in the **sample**
-and **target** arguments.
+Its **sample** and **target**  arguments are used to specify the OutputStates 
+that provide the sample and target inputs, respectively (see 
+`ObjectiveMechanism Monitored Output States <ObjectiveMechanism_Monitored_Output_States>` 
+for details). When the PredictionErrorMechanism is created, two InputStates are 
+created, one each for its sample and target inputs (and named, by default 
+*SAMPLE* and *TARGET*). Each is assigned a MappingProjection from the 
+corresponding OutputState specified in the **sample** and **target** arguments.
 
 It is important to recognize that the value of the *SAMPLE* and *TARGET*
 InputStates must have the same length and type, so that they can be compared
@@ -61,7 +58,7 @@ InputState can differ from its corresponding OutputState; in that case, by
 default, the MappingProjection created uses a `FULL_CONNECTIVITY` matrix. Thus,
 OutputStates of differing lengths can be mapped to the sample and target
 InputStates of a PredictionErrorMechanism (see the `example
-<PredictionErrorMechanism_Example`> below), so long as the latter of of the
+<PredictionErrorMechanism_Example>` below), so long as the latter of of the
 same length. If a projection other than a `FULL_CONNECTIVITY` matrix is
 needed, this can be specified using the *PROJECTION* entry of a `State
 specification dictionary <State_Specification>` for the InputState in the
@@ -73,16 +70,16 @@ Structure
 ---------
 
 A PredictionErrorMechanism has two `input_states
-<PredictionErrorMechanism.input_states>`, each of which receives a
+<ComparatorMechanism.input_states>`, each of which receives a
 `MappingProjection` from a corresponding OutputState specified in the
 **sample** and **target** arguments of its constructor. The InputStates are
-listed in the Mechanism's `input_states <PredictionErrorMechanism.input_states>`
+listed in the Mechanism's `input_states <ComparatorMechanism.input_states>`
 attribute and named, respectively, *SAMPLE* and *TARGET*. The OutputStates
 from which they receive their projections (specified in the the **sample** and
 **target** arguments) are listed in the Mechanism's `sample
-<PredictionErrorMechanism.sample>` and `target
-<PredictionErrorMechanism.target>` attributes as well as in its
-`monitored_output_states <PredictionErrorMechanism.monitored_output_states>`
+<ComparatorMechanism.sample>` and `target
+<ComparatorMechanism.target>` attributes as well as in its
+`monitored_output_states <ComparatorMechanism.monitored_output_states>`
 attribute. The PredictionErrorMechanism's `function
 <PredictionErrorMechanism.function>` calculates the difference between the
 predicted reward and the true reward at each timestep in **SAMPLE**. By
@@ -91,7 +88,7 @@ default, it uses a `PredictionErrorDeltaFunction`. However, the
 is replaced with one that takes two arrays with the same format as its inputs
 and generates a similar array as its result. The result is assigned as the
 value of the PredictionErrorMechanism's *OUTCOME* (`primary
-<OutputState_Primary`>) OutputState.
+<OutputState_Primary>`) OutputState.
 
 .. _PredictionErrorMechanism_Function:
 
@@ -132,9 +129,7 @@ value of which is a vector of the same length as the output of sample.
     >>> import psyneulink as pnl
     >>> sample_mech = pnl.TransferMechanism(size=5,
     ...                                     function=pnl.Linear())
-
     >>> reward_mech = pnl.TransferMechanism(size=5)
-
     >>> prediction_error_mech = pnl.PredictionErrorMechanism(sample=sample_mech,
     ...                                                      target=reward_mech)
 
@@ -143,6 +138,11 @@ input, and therefore generate one of the same length as its `primary output
 <OutputState_Primary>`. Since it is assigned as the **sample** of the
 PredictionErrorMechanism, by default this will create a *SAMPLE* InputState of
 length 5, that will match the length of the *TARGET* InputState.
+
+Currently the default method of implementing temporal difference learning in
+PsyNeuLink requires the values of *SAMPLE* and *TARGET* to be provided as an
+array representing a full time series as an experiment. See
+`MontagueDayanSejnowski.py` in the Scripts folder for an example.
 
 .. _PredictionErrorMechanism_Class_Reference
 
@@ -160,7 +160,8 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
     OUTCOME
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import INITIALIZING, PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
+from psyneulink.globals.keywords import INITIALIZING, \
+    PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET, LEARNING_RATE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, \
     kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, \
@@ -188,13 +189,71 @@ class PredictionErrorMechanism(ComparatorMechanism):
     PredictionErrorMechanism(                                \
         sample,                                              \
         target,                                              \
-        function=LinearCombination,                          \
-        output_states=[OUTCOME, MSE],                        \
+        function=PredictionErrorDeltaFunction,               \
+        output_states=[OUTCOME],                             \
         params=None,                                         \
         name=None,                                           \
         prefs=None)
 
     Calculates the prediction error between the predicted reward and the target
+    
+    Arguments
+    ---------
+    
+    sample : OutputState, Mechanism_Base, dict, number, or str
+        specifies the SAMPLE InputState, which will be evaluated by
+        the function
+    
+    target : OutputState, Mechanism_Base, dict, number, or str
+        specifies the TARGET InputState, which will be used by the function to
+        evaluate the sample
+    
+    function : CombinationFunction, ObjectiveFunction, function, or method : default PredictionErrorDeltaFunction
+        the function used to evaluate the sample and target inputs.
+    
+    output_states : str, Iterable : default OUTCOME
+        by default, contains only the *OUTCOME* (`primary <OutputState_Primary>`)
+        OutputState of the PredictionErrorMechanism.
+    
+    learning_rate : Number : default 0.3
+        controls the weight of later timesteps compared to earlier ones. Higher
+        rates weight later timesteps more heavily than previous ones.
+        
+    name : str
+        the name of the PredictionErrorMechanism; if it is not specified in the
+        **name** argument of the constructor, a default is assigned by
+        MechanismRegistry (see `Naming` for conventions used for default and
+        duplicate names).
+        
+    
+    Attributes
+    ----------
+
+    sample : OutputState, Mechanism_Base, dict, number, or str
+        specifies the SAMPLE InputState, which will be evaluated by
+        the function
+    
+    target : OutputState, Mechanism_Base, dict, number, or str
+        specifies the TARGET InputState, which will be used by the function to
+        evaluate the sample
+    
+    function : CombinationFunction, ObjectiveFunction, Function, or method : default PredictionErrorDeltaFunction
+        the function used to evaluate the sample and target inputs.
+    
+    output_states : str, Iterable : default OUTCOME
+        by default, contains only the *OUTCOME* (`primary <OutputState_Primary>`)
+        OutputState of the PredictionErrorMechanism.
+    
+    learning_rate : Number : default 0.3
+        controls the weight of later timesteps compared to earlier ones. Higher
+        rates weight later timesteps more heavily than previous ones.
+        
+    name : str
+        the name of the PredictionErrorMechanism; if it is not specified in the
+        **name** argument of the constructor, a default is assigned by
+        MechanismRegistry (see `Naming` for conventions used for default and
+        duplicate names).
+    
     """
     componentType = PREDICTION_ERROR_MECHANISM
 
@@ -220,7 +279,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                                             str)) = None,
                  function=PredictionErrorDeltaFunction(),
                  output_states: tc.optional(tc.any(str, Iterable)) = OUTCOME,
-                 learning_rate=0.3,
+                 learning_rate: is_numeric = 0.3,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
