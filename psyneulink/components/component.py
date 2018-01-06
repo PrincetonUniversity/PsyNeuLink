@@ -689,7 +689,23 @@ class Component(object):
     componentCategory = None
     componentType = None
 
-    class _DefaultsMeta(type):
+    class _DefaultsAliases:
+        '''
+        Used to create aliases for both ClassDefaults and InstanceDefaults, via properties.
+        e.g. to simply alias foo and bar:
+
+        @property
+        def foo(self):
+            return self.bar
+
+        @foo.setter
+        def foo(self, value):
+            self.bar = value
+
+        '''
+        pass
+
+    class _DefaultsMeta(type, _DefaultsAliases):
         def __repr__(self):
             return '{0} :\n{1}'.format(super().__repr__(), self.show())
 
@@ -732,7 +748,7 @@ class Component(object):
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         variable = np.array([0])
 
-    class InstanceDefaults(Defaults):
+    class InstanceDefaults(Defaults, _DefaultsAliases):
         def __init__(self, **kwargs):
             for param in kwargs:
                 setattr(self, param, kwargs[param])
