@@ -490,12 +490,11 @@ ProcessRegistry = {}
 
 
 class ProcessError(Exception):
-     def __init__(self, error_value):
-         self.error_value = error_value
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-     def __str__(self):
-         return repr(self.error_value)
-
+    def __str__(self):
+        return repr(self.error_value)
 
 kwProcessInputState = 'ProcessInputState'
 kwTarget = 'target'
@@ -2040,6 +2039,9 @@ class Process(Process_Base):
 
             target = np.atleast_1d(target)
 
+            print("target mech target name = {}".format(target_mech_target.name))
+            print("target = {}".format(target))
+
             # Check that length of process' target input matches length of TARGET Mechanism's target input
             if len(target) != len(target_mech_target.instance_defaults.variable):
                 raise ProcessError("Length of target ({}) does not match length of input for TARGET Mechanism {} ({})".
@@ -2146,15 +2148,13 @@ class Process(Process_Base):
         if not context:
             context = EXECUTING + " " + PROCESS + " " + self.name
             self.execution_status = ExecutionStatus.EXECUTING
-
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
         for mech in self.mechanisms:
             mech._execution_id = self._execution_id
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and context and EXECUTING in context
-
+        report_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING})
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
@@ -2278,9 +2278,7 @@ class Process(Process_Base):
                             # Call parameter_state.update with LEARNING in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                            context = context + SEPARATOR_BAR + LEARNING
-                            # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-                            # context = context.replace(EXECUTING, LEARNING + ' ')
+                            context = context.replace(EXECUTING, LEARNING + ' ')
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
@@ -2521,6 +2519,7 @@ class Process(Process_Base):
     @property
     def numPhases(self):
         return self._phaseSpecMax + 1
+
 
 class ProcessInputState(OutputState):
     """Represents inputs and targets specified in a call to the Process' `execute <Process.execute>` and `run

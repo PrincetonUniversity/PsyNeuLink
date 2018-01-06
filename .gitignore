@@ -42,6 +42,7 @@ Temporary Items
 .idea/dictionaries
 .idea/codeStyles
 .idea/other.xml
+.idea/codeStyleSettings.xml
 .idea/inspectionProfiles/Project_Default.xml
 
 # Sensitive or high-churn files:
@@ -65,6 +66,8 @@ cmake-build-debug/
 
 ## File-based project format:
 *.iws
+*.sublime-project
+*.sublime-workspace
 
 ## Plugin-specific files:
 
@@ -197,6 +200,9 @@ ENV/
 
 # mkdocs documentation
 /site
+
+# merge files
+*.orig
 
 # End of https://www.gitignore.io/api/osx,python,pycharm
 

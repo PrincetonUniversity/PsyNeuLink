@@ -145,14 +145,14 @@ class AutoNumber(IntEnum):
 
     Sample:
 
-        class NumberedList(AutoNumber):
-            FIRST_ITEM = ()
-            SECOND_ITEM = ()
+        >>> class NumberedList(AutoNumber):
+        ...    FIRST_ITEM = ()
+        ...    SECOND_ITEM = ()
 
-        >>>NumberedList.FIRST_ITEM.value
-         0
-        >>>NumberedList.SECOND_ITEM.value
-         1
+        >>> NumberedList.FIRST_ITEM.value
+        0
+        >>> NumberedList.SECOND_ITEM.value
+        1
 
     Adapted from AutoNumber example for Enum at https://docs.python.org/3/library/enum.html#enum.IntEnum:
     Notes:
@@ -192,7 +192,7 @@ def optional_parameter_spec(param):
     return parameter_spec(param)
 
 
-def parameter_spec(param):
+def parameter_spec(param, numeric_only=None):
     """Test whether param is a legal PsyNeuLink parameter specification
 
     Used with typecheck
@@ -224,6 +224,9 @@ def parameter_spec(param):
                            Projection))
         or param in MODULATORY_SPEC_KEYWORDS
         or param in parameter_keywords):
+        if numeric_only:
+            if not is_numeric(param):
+                return False
         return True
     return False
 
@@ -746,6 +749,7 @@ class ContentAddressableList(UserList):
     of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputStates <OutputState>`, keyed by their
     names.  Therefore, ``my_mech.output_states.names`` returns the names of all of the Mechanism's OutputStates::
 
+        >>> import psyneulink as pnl
         >>> print(pnl.DDM().output_states.names)
         ['DECISION_VARIABLE', 'RESPONSE_TIME']
 

@@ -352,8 +352,8 @@ class TestLCControlMechanism:
         def report_trial():
             gain_created_by_LC_output_state_1.append(LC.output_states[0].value)
             gain_created_by_LC_output_state_2.append(LC.output_states[1].value)
-            gain_assigned_to_A.append(A.function_object.gain)
-            gain_assigned_to_B.append(B.function_object.gain)
+            gain_assigned_to_A.append(A.function_object.gain[0])
+            gain_assigned_to_B.append(B.function_object.gain[0])
             gain_assigned_to_A_underscore.append(A.function_object._gain)
             gain_assigned_to_B_underscore.append(B.function_object._gain)
 

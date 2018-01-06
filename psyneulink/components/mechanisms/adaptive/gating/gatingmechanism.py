@@ -158,6 +158,7 @@ Class Reference
 
 import numpy as np
 import typecheck as tc
+
 import warnings
 
 from psyneulink.components.component import InitStatus
@@ -417,6 +418,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         from psyneulink.globals.registry import register_category
 
         # Create registry for GatingSignals (to manage names)
+
         register_category(entry=GatingSignal,
                           base_class=State_Base,
                           registry=self._stateRegistry,
@@ -476,7 +478,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         Returns GatingSignal (OutputState)
         """
-
         from psyneulink.components.states.state import _instantiate_state
 
         # Parse gating_signal specifications (in call to State._parse_state_spec)

@@ -376,7 +376,8 @@ class ObjectiveMechanismError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-
+# monitored_output_states is an alias to input_states argument, which can
+# still be used in a spec dict
 class ObjectiveMechanism(ProcessingMechanism_Base):
     # monitored_output_states is an alias to input_states argument, which can
     # still be used in a spec dict

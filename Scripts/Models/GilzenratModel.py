@@ -6,6 +6,7 @@ and electrophysiological data (from LC recordings) in non-human primates.
 """
 from matplotlib import pyplot as plt
 import sys
+
 import numpy as np
 
 from psyneulink.library.mechanisms.processing.transfer.lca import LCA

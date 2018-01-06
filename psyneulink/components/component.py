@@ -358,7 +358,8 @@ import typecheck as tc
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
     CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, LOG_ENTRIES, \
-    INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
+    INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, \
+    OUTPUT_STATES, \
     PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
     SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
 # from psyneulink.globals.log import Log, LogCondition
@@ -688,10 +689,22 @@ class Component(object):
     componentCategory = None
     componentType = None
 
+    class _DefaultsMeta(type):
+        def __repr__(self):
+            return '{0} :\n{1}'.format(super().__repr__(), self.show())
 
-    class Defaults(object):
+        def show(self):
+            return ''
+
+    class Defaults(metaclass=_DefaultsMeta):
         def _attributes(obj):
-            return {k: getattr(obj, k) for k in dir(obj) if k[:2]+k[-2:] != '____' and not callable(getattr(obj, k))}
+            return {
+                k: getattr(obj, k) for k in dir(obj) + dir(type(obj))
+                if (
+                    k[:2] + k[-2:] != '____'
+                    and not callable(getattr(obj, k))
+                )
+            }
 
         @classmethod
         def values(cls):
@@ -841,13 +854,11 @@ class Component(object):
             self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
 
         # ASSIGN LOG
-
         from psyneulink.globals.log import Log
         self.log = Log(owner=self)
         self.recording = False
         # Used by run to store return value of execute
         self.results = []
-
 
         # ENFORCE REQUIRED CLASS DEFAULTS
 
@@ -1037,10 +1048,9 @@ class Component(object):
                     size = np.array(size)
                 except:
                     raise ComponentError(
-                        "size was not specified, but PsyNeuLink was unable to infer size from "
-                        "the variable argument, {}. variable can be an array,"
-                        " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                        " variable must be specified.".format(variable))
+                            "{}: size was not specified, and unable to infer it from the variable argument ({}) "
+                            "-- it can be an array, list, a 2D array, a list of arrays, array of lists, etc. ".
+                                format(self.name, variable))
             # endregion
 
             # region If length(size) = 1 and variable is not None, then expand size to length(variable)
@@ -1049,9 +1059,6 @@ class Component(object):
                     new_size = np.empty(len(variable))
                     new_size.fill(size[0])
                     size = new_size
-            # endregion
-
-            # endregion
 
             # the two lines below were used when size was a param and are likely obsolete (7/7/17 CW)
             # param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
@@ -1292,7 +1299,6 @@ class Component(object):
                     # FIX: AND, EVEN IF IT DOES, WHAT ABOUT ORDER EFFECTS:
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
-
                     from psyneulink.components.functions.function import Function
                     from inspect import isfunction
 
@@ -1858,7 +1864,6 @@ class Component(object):
 
     @tc.typecheck
     def _assign_params(self, request_set:tc.optional(dict)=None, context=None):
-
         from psyneulink.components.functions.function import Function
 
         # FIX: Hack to prevent recursion in calls to setter and assign_params
@@ -2551,8 +2556,6 @@ class Component(object):
             # FUNCTION is a generic function (presumably user-defined), so "wrap" it in UserDefinedFunction:
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
-
-
                 from psyneulink.components.functions.function import UserDefinedFunction
                 self.function = UserDefinedFunction(function=function, context=context).function
 
@@ -2625,20 +2628,22 @@ class Component(object):
         if not context:
             context = "DIRECT CALL"
         try:
-            self.value = self.execute(variable=self.instance_defaults.variable, context=context)
+            value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:
             try:
-                self.value = self.execute(input=self.instance_defaults.variable, context=context)
+                value = self.execute(input=self.instance_defaults.variable, context=context)
             except TypeError:
-                self.value = self.execute(context=context)
-        if self.value is None:
+                value = self.execute(context=context)
+        if value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+
+        self.value = value
         try:
             # Could be mutable, so assign copy
-            self._default_value = self.value.copy()
+            self.instance_defaults.value = value.copy()
         except AttributeError:
             # Immutable, so just assign value
-            self._default_value = self.value
+            self.instance_defaults.value = value
 
     def _instantiate_attributes_after_function(self, context=None):
         pass
@@ -2840,6 +2845,21 @@ class Component(object):
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
+
+    @property
+    def log(self):
+        try:
+            return self._log
+        except AttributeError:
+            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete".
+                                     format(self.name, 'log'))
+            else:
+                raise AttributeError
+
+    @log.setter
+    def log(self, log):
+        self._log = log
 
     @property
     def loggable_items(self):

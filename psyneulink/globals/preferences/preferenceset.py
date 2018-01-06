@@ -12,7 +12,8 @@ import inspect
 from collections import namedtuple
 from enum import Enum, IntEnum
 
-from psyneulink.globals.keywords import kwPreferenceSetName
+from psyneulink.globals.keywords import kwPreferenceSetName, \
+    kwDefaultPreferenceSetOwner
 from psyneulink.globals.utilities import iscompatible, kwCompatibilityType
 
 __all__ = [
@@ -239,6 +240,7 @@ class PreferenceSet(object):
 
         #region REGISTER
         # FIX: MAKE SURE THIS MAKES SENSE
+
         from psyneulink.globals.registry import  register_category
         register_category(entry=self,
                           base_class=PreferenceSet,
@@ -617,6 +619,7 @@ class PreferenceSet(object):
         :return:
         """
         candidate_log_class = type(candidate_log_item)
+
         from psyneulink.globals.log import LogEntry
 
         # Candidate_log_item must be from a LogEntry declared in the same module as the owner of the preference
@@ -731,6 +734,7 @@ class PreferenceSet(object):
             # If requested level is higher than current one:
             if requested_level > self.owner.classPreferenceLevel:
                 # Call class at next level
+
                 from psyneulink.components.component import Component
                 # THis is needed to skip ShellClass, which has no classPreferences, to get to Function (System) level
                 if 'ShellClass' in repr(self.owner.__bases__[0]):
@@ -758,7 +762,9 @@ class PreferenceSet(object):
                     if (not hasattr(next_level, 'classPreferences') or
                             not isinstance(next_level.classPreferences, PreferenceSet)):
                         from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet
-                        ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
+                        next_level.classPreferences = ComponentPreferenceSet(owner=next_level,
+                                                                             prefs=next_level.classPreferences,
+                                                                             level=next_level.classPreferenceLevel)
                     return_val = self.owner.__bases__[0].classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                                requested_level)
                     return return_val[0], return_val[1]
