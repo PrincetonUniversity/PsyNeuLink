@@ -192,7 +192,7 @@ def optional_parameter_spec(param):
     return parameter_spec(param)
 
 
-def parameter_spec(param):
+def parameter_spec(param, numeric_only=None):
     """Test whether param is a legal PsyNeuLink parameter specification
 
     Used with typecheck
@@ -224,6 +224,9 @@ def parameter_spec(param):
                            Projection))
         or param in MODULATORY_SPEC_KEYWORDS
         or param in parameter_keywords):
+        if numeric_only:
+            if not is_numeric(param):
+                return False
         return True
     return False
 
