@@ -655,6 +655,8 @@ class Function_Base(Function):
                          context=context)
 
     def _validate_parameter_spec(self, param, param_name, numeric):
+        """Validates function param
+        Required in place of direct call to parameter_spec in tc, which seems to not get called"""
         if not parameter_spec(param, numeric_only=True):
             owner_name = 'of ' + self.owner.name if self.owner else ""
             raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
