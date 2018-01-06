@@ -654,10 +654,10 @@ class Function_Base(Function):
                          prefs=prefs,
                          context=context)
 
-    def _validate_parameter_spec(self, param, param_name, numeric):
+    def _validate_parameter_spec(self, param, param_name, numeric_only=True):
         """Validates function param
-        Required in place of direct call to parameter_spec in tc, which seems to not get called"""
-        if not parameter_spec(param, numeric_only=True):
+        Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s"""
+        if not parameter_spec(param, numeric_only):
             owner_name = 'of ' + self.owner.name if self.owner else ""
             raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
                                 format(param, param_name, self.__class__.__name__, owner_name))
@@ -1583,7 +1583,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                  context=context)
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
-            self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric=True)
+            self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if any(c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
@@ -1591,7 +1591,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
-            self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric=True)
+            self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
             if (c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
@@ -8823,9 +8823,7 @@ class LearningFunction(Function_Base):
         learning_rate = np.array(learning_rate).copy()
         learning_rate_dim = learning_rate.ndim
 
-        if not is_numeric(learning_rate):
-            raise FunctionError("{} arg for {} ({}) must be numeric".
-                                format(LEARNING_RATE, self.name, learning_rate))
+        self._validate_parameter_spec(learning_rate, LEARNING_RATE)
 
         if type is AUTOASSOCIATIVE:
 
@@ -8938,7 +8936,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     def __init__(self,
                  default_variable=ClassDefaults.variable,
                  activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -9171,7 +9170,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     def __init__(self,
                  default_variable=ClassDefaults.variable,
                  activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -9218,6 +9218,13 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                                      format(variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
 
         return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate learning_rate
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
+            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
     def function(self,
                  variable=None,
@@ -9435,7 +9442,8 @@ class BackPropagation(LearningFunction):
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_matrix=None,
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -9501,6 +9509,9 @@ class BackPropagation(LearningFunction):
         # # MODIFIED 3/22/17 END
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
+            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
         # Validate error_matrix specification
         if ERROR_MATRIX in target_set:
