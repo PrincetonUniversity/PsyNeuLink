@@ -1304,7 +1304,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 class LinearCombination(CombinationFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
     # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
-    # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
+    # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMILARLY FOR NP.ARRAY
     """
     LinearCombination(     \
          default_variable, \
@@ -1495,7 +1495,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     def __init__(self,
                  default_variable=ClassDefaults.variable,
                  weights: tc.optional(parameter_spec)=None,
-                 exponents: tc.optional(parameter_spec)=None,
+                 # exponents: tc.optional(parameter_spec)=None,
+                 exponents=None,
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  scale=None,
                  offset=None,
@@ -1580,6 +1581,10 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
+            if not parameter_spec(target_set[EXPONENTS]):
+                owner_name = 'of ' + self.owner.name if self.owner else ""
+                raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
+                                    format(target_set[EXPONENTS], EXPONENTS, self.__class__.__name__, owner_name))
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
             if (c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):

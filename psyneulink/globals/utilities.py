@@ -224,6 +224,9 @@ def parameter_spec(param):
                            Projection))
         or param in MODULATORY_SPEC_KEYWORDS
         or param in parameter_keywords):
+        if is_numeric:
+            if not is_numeric(param):
+                return False
         return True
     return False
 
