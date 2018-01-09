@@ -525,14 +525,18 @@ class KWTA(RecurrentTransferMechanism):
 
     def _kwta_scale(self, current_input, context=None):
         try:
-            int_k_value = int(self.k_value[0])
-        except TypeError: # if self.k_value is a single value rather than a list or array
-            int_k_value = int(self.k_value)
+            current_k_value = self.parameter_states["k_value"].value
+        except KeyError:
+            current_k_value = self.k_value
+        try:
+            int_k_value = int(current_k_value[0])
+        except TypeError: # if current_k_value is a single value rather than a list or array
+            int_k_value = int(current_k_value)
         # ^ this is hacky but necessary for now, since something is
-        # incorrectly turning self.k_value into an array of floats
+        # incorrectly turning current_k_value into an array of floats
         n = self.size[0]
-        if (self.k_value[0] > 0) and (self.k_value[0] < 1):
-            k = int(round(self.k_value[0] * n))
+        if (current_k_value[0] > 0) and (current_k_value[0] < 1):
+            k = int(round(current_k_value[0] * n))
         elif (int_k_value < 0):
             k = n - int_k_value
         else:
