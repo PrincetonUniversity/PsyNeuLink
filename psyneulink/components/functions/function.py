@@ -654,6 +654,14 @@ class Function_Base(Function):
                          prefs=prefs,
                          context=context)
 
+    def _validate_parameter_spec(self, param, param_name, numeric_only=True):
+        """Validates function param
+        Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s"""
+        if not parameter_spec(param, numeric_only):
+            owner_name = 'of ' + self.owner.name if self.owner else ""
+            raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
+                                format(param, param_name, self.__class__.__name__, owner_name))
+
     def execute(self, variable=None, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
 
@@ -1314,7 +1322,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 class LinearCombination(CombinationFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
     # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
-    # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
+    # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMILARLY FOR NP.ARRAY
     """
     LinearCombination(     \
          default_variable, \
@@ -1504,8 +1512,10 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 weights: tc.optional(parameter_spec)=None,
-                 exponents: tc.optional(parameter_spec)=None,
+                 # weights: tc.optional(parameter_spec)=None,
+                 # exponents: tc.optional(parameter_spec)=None,
+                 weights=None,
+                 exponents=None,
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  scale=None,
                  offset=None,
@@ -1583,6 +1593,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                  context=context)
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
+            self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if any(c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
@@ -1590,6 +1601,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
+            self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
             if (c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
@@ -1704,9 +1716,14 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         if exponents is not None:
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            if INITIALIZING in context and any(not any(i) and j < 0 for i, j in zip(variable, exponents)):
-                variable = self._update_variable(np.ones_like(variable))
+            # Allow during initialization because 0s are common in default_variable argument
+            if context is not None and INITIALIZING in context:
+                try:
+                    variable = self._update_variable(variable ** exponents)
+                except ZeroDivisionError:
+                    variable = self._update_variable(np.ones_like(variable))
             else:
+                # if this fails with ZeroDivisionError it should not be caught outside of initialization
                 variable = self._update_variable(variable ** exponents)
 
         # Apply weights if they were specified
@@ -1967,8 +1984,10 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 weights:tc.optional(parameter_spec)=None,
-                 exponents:tc.optional(parameter_spec)=None,
+                 # weights:tc.optional(parameter_spec)=None,
+                 # exponents:tc.optional(parameter_spec)=None,
+                 weights=None,
+                 exponents=None,
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  scale=None,
                  offset=None,
@@ -2191,6 +2210,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         self._scale = val
 
 
+GAMMA = 'gamma'
 class PredictionErrorDeltaFunction(CombinationFunction):
     """
     Function that calculates the temporal difference prediction error
@@ -2292,9 +2312,12 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                                  target_set=target_set,
                                  context=context)
 
+        if GAMMA in target_set and target_set[GAMMA] is not None:
+            self._validate_parameter_spec(target_set[GAMMA] ,GAMMA, numeric_only=True)
+
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
-            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,
-                                                                             1)
+            self._validate_parameter_spec(target_set[WEIGHTS] ,WEIGHTS, numeric_only=True)
+            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
             if EXECUTING in context:
                 if len(target_set[WEIGHTS]) != len(
                         self.instance_defaults.variable):
@@ -8836,9 +8859,7 @@ class LearningFunction(Function_Base):
         learning_rate = np.array(learning_rate).copy()
         learning_rate_dim = learning_rate.ndim
 
-        if not is_numeric(learning_rate):
-            raise FunctionError("{} arg for {} ({}) must be numeric".
-                                format(LEARNING_RATE, self.name, learning_rate))
+        self._validate_parameter_spec(learning_rate, LEARNING_RATE)
 
         if type is AUTOASSOCIATIVE:
 
@@ -8951,7 +8972,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     def __init__(self,
                  default_variable=ClassDefaults.variable,
                  activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -9184,7 +9206,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     def __init__(self,
                  default_variable=ClassDefaults.variable,
                  activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -9231,6 +9254,13 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                                      format(variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
 
         return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate learning_rate
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
+            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
     def function(self,
                  variable=None,
@@ -9443,7 +9473,8 @@ class BackPropagation(LearningFunction):
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_matrix=None,
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -9509,6 +9540,9 @@ class BackPropagation(LearningFunction):
         # # MODIFIED 3/22/17 END
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
+            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
 
         # Validate error_matrix specification
         if ERROR_MATRIX in target_set:

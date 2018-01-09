@@ -689,10 +689,38 @@ class Component(object):
     componentCategory = None
     componentType = None
 
+    class _DefaultsAliases:
+        '''
+        Used to create aliases for both ClassDefaults and InstanceDefaults, via properties.
+        e.g. to simply alias foo and bar:
 
-    class Defaults(object):
+        @property
+        def foo(self):
+            return self.bar
+
+        @foo.setter
+        def foo(self, value):
+            self.bar = value
+
+        '''
+        pass
+
+    class _DefaultsMeta(type, _DefaultsAliases):
+        def __repr__(self):
+            return '{0} :\n{1}'.format(super().__repr__(), self.show())
+
+        def show(self):
+            return ''
+
+    class Defaults(metaclass=_DefaultsMeta):
         def _attributes(obj):
-            return {k: getattr(obj, k) for k in dir(obj) if k[:2]+k[-2:] != '____' and not callable(getattr(obj, k))}
+            return {
+                k: getattr(obj, k) for k in dir(obj) + dir(type(obj))
+                if (
+                    k[:2] + k[-2:] != '____'
+                    and not callable(getattr(obj, k))
+                )
+            }
 
         @classmethod
         def values(cls):
@@ -720,7 +748,7 @@ class Component(object):
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         variable = np.array([0])
 
-    class InstanceDefaults(Defaults):
+    class InstanceDefaults(Defaults, _DefaultsAliases):
         def __init__(self, **kwargs):
             for param in kwargs:
                 setattr(self, param, kwargs[param])
@@ -1047,9 +1075,6 @@ class Component(object):
                     new_size = np.empty(len(variable))
                     new_size.fill(size[0])
                     size = new_size
-            # endregion
-
-            # endregion
 
             # the two lines below were used when size was a param and are likely obsolete (7/7/17 CW)
             # param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
@@ -2626,20 +2651,22 @@ class Component(object):
         if not context:
             context = "DIRECT CALL"
         try:
-            self.value = self.execute(variable=self.instance_defaults.variable, context=context)
+            value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:
             try:
-                self.value = self.execute(input=self.instance_defaults.variable, context=context)
+                value = self.execute(input=self.instance_defaults.variable, context=context)
             except TypeError:
-                self.value = self.execute(context=context)
-        if self.value is None:
+                value = self.execute(context=context)
+        if value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+
+        self.value = value
         try:
             # Could be mutable, so assign copy
-            self._default_value = self.value.copy()
+            self.instance_defaults.value = value.copy()
         except AttributeError:
             # Immutable, so just assign value
-            self._default_value = self.value
+            self.instance_defaults.value = value
 
     def _instantiate_attributes_after_function(self, context=None):
         if hasattr(self, "_parameter_states"):

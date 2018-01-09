@@ -178,7 +178,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'IntegratorMechanismCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
         # Sets template for variable (input)
