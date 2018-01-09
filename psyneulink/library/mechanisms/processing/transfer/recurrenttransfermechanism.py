@@ -733,10 +733,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
 
         # [9/23/17 JDC: WHY IS THIS GETTING DONE HERE RATHER THAN IN _instantiate_attributes_before_function ??]
-        auto = self.params[AUTO]
-        hetero = self.params[HETERO]
 
-        if auto is None and hetero is None:
+        if self.auto is None and self.hetero is None:
             self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
             if self.matrix is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
