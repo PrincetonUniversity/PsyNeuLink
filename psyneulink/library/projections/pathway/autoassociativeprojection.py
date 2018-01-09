@@ -92,7 +92,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.projections.projection import projection_keywords
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import AUTO, AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HETERO, HOLLOW_MATRIX, INITIALIZING, MATRIX
+from psyneulink.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, INITIALIZING, MATRIX
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.scheduling.time import TimeScale
@@ -279,42 +279,48 @@ class AutoAssociativeProjection(MappingProjection):
 
         owner_param_states = owner_mech._parameter_states.key_values
 
+        # KAM COMMENTED OUT 1/9/2018 -- redundant code? auto and hetero should only be handled by mechanism, projection
+        # just looks up current matrix??
+
         # MODIFIED 9/23/17 NEW: [JDC ALLOW DEFAULT MATRIX TO BE USED IF AUTO AND HETERO ARE NOT SPECIFIED]:
-        if AUTO in owner_param_states or HETERO in owner_param_states:
-        # MODIFIED 9/23/17 END
-            if AUTO not in owner_param_states or HETERO not in owner_param_states:
-                raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; "
-                                           "here are names of the current ParameterStates for {1}: {2}".
-                                           format(owner_mech.__class__.__name__, owner_mech.name, owner_param_states))
+        # if AUTO in owner_param_states or HETERO in owner_param_states:
+        # # MODIFIED 9/23/17 END
+        #     if AUTO not in owner_param_states or HETERO not in owner_param_states:
+        #         raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; "
+        #                                    "here are names of the current ParameterStates for {1}: {2}".
+        #                                    format(owner_mech.__class__.__name__, owner_mech.name, owner_param_states))
+        #
+        #     # update the param states for auto/hetero: otherwise, if they've changed since self's last execution,
+        #     # we won't know because the mechanism may not have updated its param state yet
+        #     # (if we execute before the mechanism)
+        #     self._update_auto_and_hetero(owner_mech, params, time_scale, context)
+        #
+        #     # read auto and hetero from their ParameterStates, and put them into `auto_matrix` and `hetero_matrix`
+        #     # (where auto_matrix is a diagonal matrix and hetero_matrix is a hollow matrix)
+        #     raw_auto = owner_mech.auto
+        #     auto_matrix = get_auto_matrix(raw_auto=raw_auto, size=owner_mech.size[0])
+        #     if auto_matrix is None:
+        #         raise AutoAssociativeError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
+        #                                    "type {}. Instead, the `auto` parameter should be a number, 1D array, "
+        #                                    "2d array, 2d list, or numpy matrix".
+        #                                    format(owner_mech.__class__.__name__,
+        #                                           owner_mech.name,
+        #                                           raw_auto,
+        #                                           type(raw_auto)))
+        #
+        #     raw_hetero = owner_mech.hetero
+        #     hetero_matrix = get_hetero_matrix(raw_hetero=raw_hetero, size=owner_mech.size[0])
+        #     if hetero_matrix is None:
+        #         raise AutoAssociativeError("The `hetero` parameter of {} {} was invalid: it was equal to {}, "
+        #                                    "and was of type {}. Instead, the `hetero` parameter should be a number, "
+        #                                    "1D array of length one, 2d array, 2d list, or numpy matrix".
+        #                                    format(owner_mech.__class__.__name__,
+        #                                           owner_mech.name, raw_hetero,
+        #                                           type(raw_hetero)))
+        #     self.matrix = auto_matrix + hetero_matrix
 
-            # update the param states for auto/hetero: otherwise, if they've changed since self's last execution,
-            # we won't know because the mechanism may not have updated its param state yet
-            # (if we execute before the mechanism)
-            self._update_auto_and_hetero(owner_mech, params, time_scale, context)
+        # END OF KAM COMMENTED OUT 1/9/2018
 
-            # read auto and hetero from their ParameterStates, and put them into `auto_matrix` and `hetero_matrix`
-            # (where auto_matrix is a diagonal matrix and hetero_matrix is a hollow matrix)
-            raw_auto = owner_mech.auto
-            auto_matrix = get_auto_matrix(raw_auto=raw_auto, size=owner_mech.size[0])
-            if auto_matrix is None:
-                raise AutoAssociativeError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `auto` parameter should be a number, 1D array, "
-                                           "2d array, 2d list, or numpy matrix".
-                                           format(owner_mech.__class__.__name__,
-                                                  owner_mech.name,
-                                                  raw_auto,
-                                                  type(raw_auto)))
-
-            raw_hetero = owner_mech.hetero
-            hetero_matrix = get_hetero_matrix(raw_hetero=raw_hetero, size=owner_mech.size[0])
-            if hetero_matrix is None:
-                raise AutoAssociativeError("The `hetero` parameter of {} {} was invalid: it was equal to {}, "
-                                           "and was of type {}. Instead, the `hetero` parameter should be a number, "
-                                           "1D array of length one, 2d array, 2d list, or numpy matrix".
-                                           format(owner_mech.__class__.__name__,
-                                                  owner_mech.name, raw_hetero,
-                                                  type(raw_hetero)))
-            self.matrix = auto_matrix + hetero_matrix
 
         # # MODIFIED 9/23/17 OLD [JDC: CALLED SUPER FOR ALL OF THIS, THOUGH SEE IMPLEMENTATION NOTE BELOW]:
         # # note that updating parameter states MUST happen AFTER self.matrix is set by auto_matrix and hetero_matrix,
@@ -352,21 +358,27 @@ class AutoAssociativeProjection(MappingProjection):
         return super().execute(input=input, time_scale=time_scale, params=params, context=context)
         # MODIFIED 9/23/17 END:
 
-    def _update_auto_and_hetero(self, owner_mech=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
-        if owner_mech is None:
-            if isinstance(self.sender, OutputState):
-                owner_mech = self.sender.owner
-            elif isinstance(self.sender, Mechanism):
-                owner_mech = self.sender
-            else:
-                raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-                                           " the sender is {}".
-                                           format(self.__class__.__name__, self.name, self.sender))
-        if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-            owner_mech._parameter_states[AUTO].update(params=runtime_params, time_scale=time_scale,
-                                                      context=context + INITIALIZING)
-            owner_mech._parameter_states[HETERO].update(params=runtime_params, time_scale=time_scale,
-                                                        context=context + INITIALIZING)
+    # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
+    #     if it is used in the future
+
+    # def _update_auto_and_hetero(self, owner_mech=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
+    #     if owner_mech is None:
+    #         if isinstance(self.sender, OutputState):
+    #             owner_mech = self.sender.owner
+    #         elif isinstance(self.sender, Mechanism):
+    #             owner_mech = self.sender
+    #         else:
+    #             raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+    #                                        " the sender is {}".
+    #                                        format(self.__class__.__name__, self.name, self.sender))
+    #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
+    #         owner_mech._parameter_states[AUTO].update(params=runtime_params, time_scale=time_scale,
+    #                                                   context=context + INITIALIZING)
+    #         owner_mech._parameter_states[HETERO].update(params=runtime_params, time_scale=time_scale,
+    #                                                     context=context + INITIALIZING)
+    #
+
+    # END OF COMMENTED OUT BY KAM 1/9/2018
 
 
     # NOTE 7/25/17 CW: Originally, this override was written because if the user set the 'auto' parameter on the
@@ -401,54 +413,57 @@ class AutoAssociativeProjection(MappingProjection):
     #                                    "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
     #                                    owner_mech.name, owner_mech._parameter_states.key_values))
 
+    # COMMENTED OUT BY KAM 1/9/2018 -- auto and hetero should only be handled by RecurrentTransferMechanism. Projection
+    # should just look up matrix
     # these properties allow the auto and hetero properties to live purely on the RecurrentTransferMechanism
-    @property
-    def auto(self):
-        if isinstance(self.sender, OutputState):
-            owner_mech = self.sender.owner
-        elif isinstance(self.sender, Mechanism):
-            owner_mech = self.sender
-        else:
-            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-                                       " the sender is {}".
-                                       format(self.__class__.__name__, self.name, self.sender))
-        return owner_mech.auto
-
-    @auto.setter
-    def auto(self, setting):
-        if isinstance(self.sender, OutputState):
-            owner_mech = self.sender.owner
-        elif isinstance(self.sender, Mechanism):
-            owner_mech = self.sender
-        else:
-            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-                                       " the sender is {}".
-                                       format(self.__class__.__name__, self.name, self.sender))
-        owner_mech.auto = setting
-
-    @property
-    def hetero(self):
-        if isinstance(self.sender, OutputState):
-            owner_mech = self.sender.owner
-        elif isinstance(self.sender, Mechanism):
-            owner_mech = self.sender
-        else:
-            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-                                       " the sender is {}".
-                                       format(self.__class__.__name__, self.name, self.sender))
-        return owner_mech.hetero
-
-    @hetero.setter
-    def hetero(self, setting):
-        if isinstance(self.sender, OutputState):
-            owner_mech = self.sender.owner
-        elif isinstance(self.sender, Mechanism):
-            owner_mech = self.sender
-        else:
-            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-                                       " the sender is {}".
-                                       format(self.__class__.__name__, self.name, self.sender))
-        owner_mech.hetero = setting
+    # @property
+    # def auto(self):
+    #     if isinstance(self.sender, OutputState):
+    #         owner_mech = self.sender.owner
+    #     elif isinstance(self.sender, Mechanism):
+    #         owner_mech = self.sender
+    #     else:
+    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+    #                                    " the sender is {}".
+    #                                    format(self.__class__.__name__, self.name, self.sender))
+    #     return owner_mech.auto
+    #
+    # @auto.setter
+    # def auto(self, setting):
+    #     if isinstance(self.sender, OutputState):
+    #         owner_mech = self.sender.owner
+    #     elif isinstance(self.sender, Mechanism):
+    #         owner_mech = self.sender
+    #     else:
+    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+    #                                    " the sender is {}".
+    #                                    format(self.__class__.__name__, self.name, self.sender))
+    #     owner_mech.auto = setting
+    #
+    # @property
+    # def hetero(self):
+    #     if isinstance(self.sender, OutputState):
+    #         owner_mech = self.sender.owner
+    #     elif isinstance(self.sender, Mechanism):
+    #         owner_mech = self.sender
+    #     else:
+    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+    #                                    " the sender is {}".
+    #                                    format(self.__class__.__name__, self.name, self.sender))
+    #     return owner_mech.hetero
+    #
+    # @hetero.setter
+    # def hetero(self, setting):
+    #     if isinstance(self.sender, OutputState):
+    #         owner_mech = self.sender.owner
+    #     elif isinstance(self.sender, Mechanism):
+    #         owner_mech = self.sender
+    #     else:
+    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+    #                                    " the sender is {}".
+    #                                    format(self.__class__.__name__, self.name, self.sender))
+    #     owner_mech.hetero = setting
+    # END OF COMMENTED OUT BY KAM 1/9/2018
 
     @property
     def matrix(self):
@@ -466,7 +481,6 @@ class AutoAssociativeProjection(MappingProjection):
 
     @matrix.setter
     def matrix(self, setting):
-        super(AutoAssociativeProjection, self.__class__).matrix.fset(self, setting)
         if isinstance(self.sender, OutputState):
             owner_mech = self.sender.owner
         elif isinstance(self.sender, Mechanism):
@@ -475,10 +489,14 @@ class AutoAssociativeProjection(MappingProjection):
             raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
                                        " the sender is {}".
                                        format(self.__class__.__name__, self.name, self.sender))
-        mat_setting = np.array(setting).copy()
-        owner_mech.auto = np.diag(setting).copy()
-        np.fill_diagonal(mat_setting, 0)
-        owner_mech.hetero = mat_setting
+        if hasattr(owner_mech, "matrix"):
+            owner_mech.matrix = setting
+        else:
+            super(AutoAssociativeProjection, self.__class__).matrix.fset(self, setting)
+        # mat_setting = np.array(setting).copy()
+        # owner_mech.auto = np.diag(setting).copy()
+        # np.fill_diagonal(mat_setting, 0)
+        # owner_mech.hetero = mat_setting
 
 # a helper function that takes a specification of `hetero` and returns a hollow matrix with the right values
 def get_hetero_matrix(raw_hetero, size):
