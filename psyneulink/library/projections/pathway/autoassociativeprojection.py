@@ -452,6 +452,16 @@ class AutoAssociativeProjection(MappingProjection):
 
     @property
     def matrix(self):
+        if isinstance(self.sender, OutputState):
+            owner_mech = self.sender.owner
+        elif isinstance(self.sender, Mechanism):
+            owner_mech = self.sender
+        else:
+            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+                                       " the sender is {}".
+                                       format(self.__class__.__name__, self.name, self.sender))
+        if hasattr(owner_mech, "matrix"):
+            return owner_mech.matrix
         return super(AutoAssociativeProjection, self.__class__).matrix.fget(self)
 
     @matrix.setter
