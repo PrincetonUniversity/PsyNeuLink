@@ -694,6 +694,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        reference_value_name=AUTO,
                                        params=None,
                                        context=context)
+            self.auto = d
             if state is not None:
                 self._parameter_states[AUTO] = state
             else:
@@ -703,10 +704,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         # if HETERO not in param_keys:
         # MODIFIED 9/23/17 NEW [JDC]:
         # if self.hetero is not None:
+
         if HETERO not in param_keys and AUTO in param_keys:
         # MODIFIED 9/23/17 END
+
             m = specified_matrix.copy()
             np.fill_diagonal(m, 0.0)
+            self.hetero = m
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
                                        name=HETERO,
@@ -719,7 +723,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 raise RecurrentTransferError("Failed to create ParameterState for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
-
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputStates
         """
