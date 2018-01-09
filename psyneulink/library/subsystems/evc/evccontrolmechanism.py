@@ -973,7 +973,7 @@ class EVCControlMechanism(ControlMechanism):
 
         if self.value is None:
             # Initialize value if it is None
-            self.value = self.allocation_policy
+            self.value = np.empty(len(self.control_signals))
 
         # Implement the current allocation_policy over ControlSignals (outputStates),
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states

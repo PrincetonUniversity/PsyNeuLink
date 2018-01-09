@@ -317,7 +317,7 @@ from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'ADJUSTMENT_COST', 'ADJUSTMENT_COST_FUNCTION', 'ControlSignal', 'ControlSignalCosts', 'ControlSignalError',
-    'COST_COMBINATION_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DEFAULT_ALLOCATION_SAMPLES', 'DURATION_COST',
+    'COST_COMBINATION_FUNCTION', 'COST_OPTIONS', 'costFunctionNames', 'DURATION_COST',
     'DURATION_COST_FUNCTION', 'INTENSITY_COST', 'INTENSITY_COST_FUNCTION', 'kpAdjustmentCost', 'kpAllocation', 'kpCost',
     'kpCostRange', 'kpDurationCost', 'kpIntensity', 'kpIntensityCost',
 ]
@@ -328,13 +328,6 @@ __all__ = [
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
-# # Default control allocation mode values:
-# class DefaultControlAllocationMode(Enum):
-#     GUMBY_MODE = 0.0
-#     BADGER_MODE = 1.0
-#     TEST_MODE = 240
-# defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
-DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
@@ -425,7 +418,7 @@ class ControlSignal(ModulatorySignal):
         adjustment_cost_function=Linear,                 \
         duration_cost_function=Integrator,               \
         cost_combination_function=Reduce(operation=SUM), \
-        allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
+        allocation_samples=self.ClassDefaults.allocation_samples,   \
         modulation=ModulationParam.MULTIPLICATIVE        \
         projections=None                                 \
         params=None,                                     \
@@ -625,6 +618,27 @@ class ControlSignal(ModulatorySignal):
     componentType = CONTROL_SIGNAL
     paramsType = OUTPUT_STATE_PARAMS
 
+    class _DefaultsAliases(ModulatorySignal._DefaultsAliases):
+        # alias allocation to variable for user convenience
+        # NOTE: should not be used internally for consistency
+        @property
+        def allocation(self):
+            return self.variable
+
+        @allocation.setter
+        def allocation(self, value):
+            self.variable = value
+
+    class _DefaultsMeta(ModulatorySignal._DefaultsMeta, _DefaultsAliases):
+        pass
+
+    class ClassDefaults(ModulatorySignal.ClassDefaults, metaclass=_DefaultsMeta):
+        variable = defaultControlAllocation
+        allocation_samples = np.arange(0.1, 1.01, 0.3)
+
+    class InstanceDefaults(ModulatorySignal.InstanceDefaults, _DefaultsAliases):
+        pass
+
     stateAttributes = ModulatorySignal.stateAttributes | {ALLOCATION_SAMPLES}
 
     connectsWith = [PARAMETER_STATE]
@@ -661,7 +675,7 @@ class ControlSignal(ModulatorySignal):
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
                  cost_combination_function:tc.optional(is_function_type)=Reduce(operation=SUM),
-                 allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
+                 allocation_samples=ClassDefaults.allocation_samples,
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
                  params=None,
@@ -694,7 +708,6 @@ class ControlSignal(ModulatorySignal):
                                                   allocation_samples=allocation_samples,
                                                   params=params)
 
-
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.output_states here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
@@ -712,6 +725,17 @@ class ControlSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=context)
+
+        # Default cost params
+        if self.init_status is not InitStatus.DEFERRED_INITIALIZATION:
+            self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
+        else:
+            self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
+        self.adjustment_cost = 0
+        self.duration_cost = 0
+        self.last_duration_cost = self.duration_cost
+        self.cost = self.intensity_cost
+        self.last_cost = self.cost
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions
@@ -779,7 +803,7 @@ class ControlSignal(ModulatorySignal):
                                          format(cost_function, cost_function_name))
 
         # Validate allocation samples list:
-        # - default is 1D np.array (defined by DEFAULT_ALLOCATION_SAMPLES)
+        # - default is 1D np.array (defined by self.ClassDefaults.allocation_samples)
         # - however, for convenience and compatibility, allow lists:
         #    check if it is a list of numbers, and if so convert to np.array
         if ALLOCATION_SAMPLES in request_set:
@@ -839,26 +863,6 @@ class ControlSignal(ModulatorySignal):
 
         # Assign instance attributes
         self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
-
-        # Default allocation params
-        self.default_allocation = defaultControlAllocation
-        self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
-        self.last_allocation = self.allocation
-
-        # Default cost params
-        self.intensity_cost = self.intensity_cost_function(self.allocation)
-        self.adjustment_cost = 0
-        self.duration_cost = 0
-        self.last_duration_cost = self.duration_cost
-        self.cost = self.intensity_cost
-        self.last_cost = self.cost
-
-    def _instantiate_attributes_after_function(self, context=None):
-        """Instantiate calculate function
-        """
-        super()._instantiate_attributes_after_function(context=context)
-
-        self.last_intensity = self.function(self.allocation)
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get ControlSignal specified for a parameter or in a 'control_signals' argument
@@ -1010,51 +1014,6 @@ class ControlSignal(ModulatorySignal):
                 cost_change_string = "+" + str(cost_change)
             print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
 
-    #         FIX: NEEDS TO BE REFACTORED TO WORK WITH UPDATED LOG:
-    #         #region Record control_signal values in owner Mechanism's log
-    #         # Notes:
-    #         # * Log control_signals for ALL states of a given Mechanism in the Mechanism's log
-    #         # * Log control_signals for EACH state in a separate entry of the Mechanism's log
-    #
-    #         # Get receiver Mechanism and state
-    #         controller = self.owner
-    #
-    #         # Get logPref for Mechanism
-    #         log_pref = controller.prefs.logPref
-    #
-    #         # Get context
-    #         if not context:
-    #             context = controller.name + " " + self.name + kwAssign
-    #         else:
-    #             context = context + SEPARATOR_BAR + self.name + kwAssign
-    #
-    #         # If context is consistent with log_pref:
-    #         if (log_pref is LogCondition.ALL_ASSIGNMENTS or
-    #                 (log_pref is LogCondition.EXECUTION and EXECUTING in context) or
-    #                 (log_pref is LogCondition.VALUE_ASSIGNMENT and (EXECUTING in context))):
-    #             # record info in log
-    #
-    # # FIX: ENCODE ALL OF THIS AS 1D ARRAYS IN 2D PROJECTION VALUE, AND PASS TO .value FOR LOGGING
-    #             controller.log.entries[self.name + " " +
-    #                                       kpIntensity] = LogEntry('time_placeholder', context, float(self.intensity))
-    #             if not self.ignoreIntensityFunction:
-    #                 controller.log.entries[self.name + " " + kpAllocation] = LogEntry('time_placeholder',
-    #                                                                                   context,
-    #                                                                                   float(self.allocation))
-    #                 controller.log.entries[self.name + " " + kpIntensityCost] =  LogEntry('time_placeholder',
-    #                                                                                       context,
-    #                                                                                       float(self.intensity_cost))
-    #                 controller.log.entries[self.name + " " + kpAdjustmentCost] = LogEntry('time_placeholder',
-    #                                                                                       context,
-    #                                                                                       float(self.adjustment_cost))
-    #                 controller.log.entries[self.name + " " + kpDurationCost] = LogEntry('time_placeholder',
-    #                                                                                     context,
-    #                                                                                     float(self.duration_cost))
-    #                 controller.log.entries[self.name + " " + kpCost] = LogEntry('time_placeholder',
-    #                                                                             context,
-    #                                                                             float(self.cost))
-    #endregion
-
     @property
     def allocation_samples(self):
         return self._allocation_samples
@@ -1076,7 +1035,7 @@ class ControlSignal(ModulatorySignal):
             raise ControlSignalError("AUTO not yet supported for {} param of ControlProjection; default will be used".
                                      format(ALLOCATION_SAMPLES))
         else:
-            sample_range = DEFAULT_ALLOCATION_SAMPLES
+            sample_range = self.ClassDefaults.allocation_samples
         self._allocation_samples = []
         i = sample_range[0]
         while i < sample_range[1]:

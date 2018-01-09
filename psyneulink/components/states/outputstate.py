@@ -905,7 +905,7 @@ class OutputState(State_Base):
                 except IndexError:
                     raise OutputStateError("Value of \'{}\' argument for {} ({}) is greater than the number "
                                            "of items in the output_values ({}) for its owner Mechanism ({})".
-                                           format(INDEX, self.name, target_set[INDEX], self.owner.instance_defaults.value,
+                                           format(INDEX, self.name, target_set[INDEX], len(self.owner.instance_defaults.value),
                                                   self.owner.name))
 
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH

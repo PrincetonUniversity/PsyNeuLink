@@ -876,7 +876,7 @@ class InputState(State_Base):
         if self._path_proj_values:
             # Combine Projection values
             # TODO: stateful - this seems dangerous with statefulness, maybe safe when self.value is only passed or stateful
-            combined_values = self.function(variable=self._path_proj_values,
+            combined_values = self.function(variable=np.asarray(self._path_proj_values),
                                             params=function_params,
                                             context=context)
             return combined_values
