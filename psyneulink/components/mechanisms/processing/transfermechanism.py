@@ -464,11 +464,11 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
-    classPreferences = {
-        kwPreferenceSetName: 'TransferCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
-    }
+    # classPreferences = {
+    #     kwPreferenceSetName: 'TransferCustomClassPreferences',
+    #     # kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    #     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    # }
 
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
