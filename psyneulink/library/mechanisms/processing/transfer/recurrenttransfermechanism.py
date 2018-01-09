@@ -732,44 +732,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         # [9/23/17 JDC: WHY IS THIS GETTING DONE HERE RATHER THAN IN _instantiate_attributes_before_function ??]
         auto = self.params[AUTO]
         hetero = self.params[HETERO]
-        if auto is not None and hetero is not None:
-            a = get_auto_matrix(auto, size=self.size[0])
-            if a is None:
-                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of"
-                                             " type {}. Instead, the `auto` parameter should be a number, 1D array, "
-                                             "2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, auto, type(auto)))
-            c = get_hetero_matrix(hetero, size=self.size[0])
-            if c is None:
-                raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was "
-                                             "of type {}. Instead, the `hetero` parameter should be a number, 1D array "
-                                             "of length one, 2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, hetero, type(hetero)))
-            self.matrix = a + c
-        elif auto is not None:
-            self.matrix = get_auto_matrix(auto, size=self.size[0])
-            if self.matrix is None:
-                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `auto` parameter should be a number, 1D array, "
-                                           "2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, auto, type(auto)))
 
-        elif hetero is not None:
-            self.matrix = get_hetero_matrix(hetero, size=self.size[0])
-            if self.matrix is None:
-                raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `hetero` parameter should be a number, 1D array of "
-                                           "length one, 2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, hetero, type(hetero)))
-
-        # MODIFIED 9/23/17 NEW [JDC]:
-        else:
+        if auto is None and hetero is None:
             self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
             if self.matrix is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
-        # MODIFIED 9/23/17 END:
-
 
         # (7/19/17 CW) this line of code is now questionable, given the changes to matrix and the recurrent projection
         if isinstance(self.matrix, AutoAssociativeProjection):
@@ -842,18 +810,12 @@ class RecurrentTransferMechanism(TransferMechanism):
             return a + c
         else:
             # if auto and hetero are not yet instantiated, then just use the standard method of attribute retrieval
-            # (simplified version of Component's basic make_property getter)
-            name = 'matrix'
             backing_field = '_matrix'
-            # MODIFIED 9/23/17 NEW [JDC]:
             try:
                 return self.recurrent_projection.matrix
             except (AttributeError, TypeError):
-            # MODIFIED 9/23/17 END:
-                try:
-                    return self._parameter_states[name].value
-                except (AttributeError, TypeError):
-                    return getattr(self, backing_field)
+            # KAM MODIFIED 1/9/18 -- removed parameter state value look up (now reserved for 'mod_' params)
+                return getattr(self, backing_field)
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
