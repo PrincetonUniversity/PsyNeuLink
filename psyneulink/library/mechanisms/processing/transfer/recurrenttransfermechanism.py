@@ -814,11 +814,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         else:
             # if auto and hetero are not yet instantiated, then just use the standard method of attribute retrieval
             backing_field = '_matrix'
-            try:
-                return self.recurrent_projection.matrix
-            except (AttributeError, TypeError):
+            # try:
+            #     return self.recurrent_projection.matrix
+            # except (AttributeError, TypeError):
             # KAM MODIFIED 1/9/18 -- removed parameter state value look up (now reserved for 'mod_' params)
-                return getattr(self, backing_field)
+            return getattr(self, backing_field)
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
