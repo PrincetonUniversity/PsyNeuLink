@@ -550,27 +550,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
                         gating_signal_specs.update({GATING_SIGNAL_SPECS: [projection]})
                         self._instantiate_gating_signal(gating_signal_specs, context=context)
 
-    # IMPLEMENTATION NOTE: This is needed if GatingMechanism is added to a System but does not have any afferents
-    #                      (including from ProcessInputState or SystemInputState)
-    #                      and therefore variable = None
-    def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    context=None):
-        """Updates GatingSignals based on inputs
-        """
-
-        if variable is None or variable[0] is None:
-            variable = self._update_variable(self.ClassDefaults.variable)
-
-        return super()._execute(variable=variable,
-                                runtime_params=runtime_params,
-                                context=context)
-        # gating_policy = self.function(variable=variable,
-        #                               function_params=function_params,
-        #                               context=context)
-        # return gating_policy
-
     def show(self):
         """Display the InputStates and/or OutputStates gated by the GatingMechanism's `gating_signals
         <GatingMechanism.gating_signals>`.

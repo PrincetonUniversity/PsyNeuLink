@@ -357,10 +357,6 @@ class GatingProjection(ModulatoryProjection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def execute(self, params=None, context=None):
-        self.value = self.function(variable=self.sender.value, params=params, context=context)
-        return self.value
-
     @property
     def gating_signal(self):
         return self.sender.value

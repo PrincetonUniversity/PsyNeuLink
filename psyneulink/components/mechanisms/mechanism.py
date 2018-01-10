@@ -2217,12 +2217,6 @@ class Mechanism_Base(Mechanism):
         self.value = np.atleast_1d(value)
         self._update_output_states(context="INITIAL_VALUE")
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
-        return self.function(variable=variable, params=runtime_params, context=context)
-
     def _report_mechanism_execution(self, input_val=None, params=None, output=None):
 
         if input_val is None:

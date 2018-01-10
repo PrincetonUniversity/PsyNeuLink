@@ -343,17 +343,6 @@ class AGTControlMechanism(ControlMechanism):
                                                     format(OBJECTIVE_MECHANISM, self.name, item))
                     _parse_monitored_output_states(source=self, output_state_list=item, context=context)
 
-
-    def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    context=None):
-        """Updates AGTControlMechanism's ControlSignal based on input and mode parameter value
-        """
-        return self.function(variable=variable,
-                             params=runtime_params,
-                             context=context)
-
     @property
     def initial_short_term_utility(self):
         return self._objective_mechanism.function_object._initial_short_term_utility

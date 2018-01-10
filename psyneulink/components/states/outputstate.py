@@ -539,14 +539,11 @@ import typecheck as tc
 from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.functions.function import Linear, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
-from psyneulink.globals.keywords import \
-    PROJECTION, PROJECTIONS, PROJECTION_TYPE, MAPPING_PROJECTION, INPUT_STATE, INPUT_STATES, RECEIVER, GATING_SIGNAL, \
-    COMMAND_LINE, STATE, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, RESULT, INDEX, PARAMS, REFERENCE_VALUE,\
-    CALCULATE, MEAN, MEDIAN, NAME, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, VARIANCE, ALL, MECHANISM_VALUE
+from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.globals.keywords import ALL, CALCULATE, COMMAND_LINE, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MEAN, MECHANISM_VALUE, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import UtilitiesError, iscompatible, type_match, is_numeric
+from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match
 
 __all__ = [
     'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
@@ -1018,28 +1015,31 @@ class OutputState(State_Base):
                                                     receiver=proj,
                                                     context=context)
 
-    def _execute(self, function_params, context):
+    def _execute(self, variable=None, runtime_params=None, context=None):
         """Call self.function with owner's value as variable
         """
 
-        # Most common case is OutputState has index, so assume that for efficiency
-        try:
-            # Get indexed item of owner's value
-            owner_val = self.owner.value[self.index]
-        except IndexError:
-            # Index is ALL, so use owner's entire value
-            if self.index is ALL:
-                owner_val = self.owner.value
-            else:
-                raise IndexError
+        if variable is not None:
+            return self.function(variable, runtime_params, context)
+        else:
+            # Most common case is OutputState has index, so assume that for efficiency
+            try:
+                # Get indexed item of owner's value
+                owner_val = self.owner.value[self.index]
+            except IndexError:
+                # Index is ALL, so use owner's entire value
+                if self.index is ALL:
+                    owner_val = self.owner.value
+                else:
+                    raise IndexError
 
-        # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
-        #                      so there is no need to use their value (as do InputStates)
-        value = self.function(variable=owner_val,
-                                params=function_params,
-                                context=context)
+            # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
+            #                      so there is no need to use their value (as do InputStates)
+            value = self.function(variable=owner_val,
+                                    params=runtime_params,
+                                    context=context)
 
-        return type_match(self.calculate(owner_val), type(value))
+            return type_match(self.calculate(owner_val), type(value))
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state

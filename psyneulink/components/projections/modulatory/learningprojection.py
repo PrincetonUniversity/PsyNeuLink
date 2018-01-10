@@ -596,20 +596,19 @@ class LearningProjection(ModulatoryProjection_Base):
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = True
 
-
-    def execute(self, input=None, params=None, context=None):
+    def _execute(self, variable, runtime_params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
 
-        params = params or {}
+        runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
         if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
             return self.init_status
 
         # if self.learning_rate:
-        #     params.update({SLOPE:self.learning_rate})
+        #     runtime_params.update({SLOPE:self.learning_rate})
 
         learning_signal = self.sender.value
         matrix = self.receiver.value
@@ -638,9 +637,11 @@ class LearningProjection(ModulatoryProjection_Base):
                                               format(self.sender.owner.name, learning_signal,
                                                      self.receiver.owner.name, matrix))
 
-        self.weight_change_matrix = self.function(variable=learning_signal,
-                                                  params=params,
-                                                  context=context)
+        self.weight_change_matrix = self.function(
+            variable=learning_signal,
+            params=runtime_params,
+            context=context
+        )
 
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate

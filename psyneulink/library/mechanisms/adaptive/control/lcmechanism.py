@@ -546,25 +546,6 @@ class LCMechanism(ControlMechanism):
 
         super()._instantiate_output_states(context=context)
 
-    # def _instantiate_attributes_after_function(self, context=None):
-    #     """Implment ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
-    #
-    #     Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
-    #         that insures that any ControlSignals specified in control_signals arg are instantiated first
-    #     Then calls _assign_as_controller to instantiate any ControlProjections/ControlSignals specified
-    #         along with parameter specification(s) (i.e., as part of a (<param value>, ControlProjection) tuple
-    #     """
-    #
-    #     super()._instantiate_attributes_after_function(context=context)
-    #
-    def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    context=None):
-        """Updates LCMechanism's ControlSignal based on input and mode parameter value
-        """
-        return self.function()
-
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):
         """Add ControlProjections to the specified Mechanisms.

@@ -1943,7 +1943,7 @@ class State_Base(State):
             if isinstance(projection, LearningProjection) and not LEARNING in context:
                 projection_value = projection.value * 0.0
             else:
-                projection_value = projection.execute(params=projection_params,
+                projection_value = projection.execute(runtime_params=projection_params,
                                                       context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
@@ -2006,11 +2006,7 @@ class State_Base(State):
             function_params = self.stateParams[FUNCTION_PARAMS]
         except (KeyError, TypeError):
             function_params = None
-        self.value = self._execute(function_params=function_params, context=context)
-        assert True
-
-    def execute(self, input=None, params=None, context=None):
-        return self.function(variable=input, params=params, context=context)
+        self.value = self._execute(runtime_params=function_params, context=context)
 
     @property
     def owner(self):

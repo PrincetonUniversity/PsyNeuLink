@@ -859,22 +859,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 del self.output_states[ENTROPY]
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
-        """Implement decay
-        """
-        # KAM commented out 8/29/17 because self.previous_input is not a valid attrib of this mechanism
-
-        # if context is None or (INITIALIZING not in context):
-        #     if self.decay is not None and self.decay != 1.0:
-        #         self.previous_input = self.previous_input * float(self.decay)
-
-        return super()._execute(variable=variable,
-                                runtime_params=runtime_params,
-                                context=context)
-
     def _update_parameter_states(self, runtime_params=None, context=None):
         for state in self._parameter_states:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection

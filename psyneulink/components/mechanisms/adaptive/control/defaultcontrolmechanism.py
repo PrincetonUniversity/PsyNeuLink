@@ -119,13 +119,6 @@ class DefaultControlMechanism(ControlMechanism):
                                                     prefs=prefs,
                                                     context=self)
 
-    def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    context=None):
-
-        return self.input_values or [defaultControlAllocation]
-
     def _instantiate_input_states(self, context=None):
         """Instantiate input_value attribute
 

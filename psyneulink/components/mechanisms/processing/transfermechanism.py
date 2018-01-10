@@ -944,14 +944,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                                             rate=smoothing_factor,
                                             owner=self)
 
-            current_input = self.integrator_function.execute(variable,
-                                                        # Should we handle runtime params?
-                                                              params={INITIALIZER: self.initial_value,
-                                                                      NOISE: self.noise,
-                                                                      RATE: self.smoothing_factor},
-                                                              context=context
-
-                                                             )
+            current_input = self.integrator_function.execute(
+                variable,
+                # Should we handle runtime params?
+                runtime_params={
+                    INITIALIZER: self.initial_value,
+                    NOISE: self.noise,
+                    RATE: self.smoothing_factor
+                },
+                context=context
+            )
         else:
             noise = self._try_execute_param(self.noise, variable)
             # formerly: current_input = self.input_state.value + noise

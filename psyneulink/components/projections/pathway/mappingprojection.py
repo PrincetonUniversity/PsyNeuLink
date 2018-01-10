@@ -611,11 +611,11 @@ class MappingProjection(PathwayProjection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def execute(self, input=None, params=None, context=None):
+    def _execute(self, variable=None, runtime_params=None, context=None):
         """
         If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix ParameterState:
 
-        - it should set params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
+        - it should set runtime_params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
           and then call its super().execute
         - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
 
@@ -628,9 +628,9 @@ class MappingProjection(PathwayProjection_Base):
         # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
         # minor bug with execution ID): maybe we should just fix this bug instead, if it's useful to do so
         if "System" not in str(self.sender.owner):
-            self._update_parameter_states(runtime_params=params, context=context)
+            self._update_parameter_states(runtime_params=runtime_params, context=context)
 
-        return self.function(self.sender.value, params=params, context=context)
+        return self.function(self.sender.value, params=runtime_params, context=context)
 
     @property
     def matrix(self):

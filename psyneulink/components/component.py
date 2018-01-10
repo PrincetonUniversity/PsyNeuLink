@@ -2737,8 +2737,11 @@ class Component(object):
     def initialize(self):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def execute(self, input=None, params=None, context=None):
-        raise ComponentError("{} class must implement execute".format(self.__class__.__name__))
+    def execute(self, variable=None, runtime_params=None, context=None):
+        return self._execute(variable=variable, runtime_params=runtime_params, context=context)
+
+    def _execute(self, variable=None, runtime_params=None, context=None):
+        return self.function(variable=variable, params=runtime_params, context=context)
 
     def _update_value(self, context=None):
         """Evaluate execute method

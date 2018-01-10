@@ -885,6 +885,10 @@ class Projection_Base(Projection):
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
+    def _execute(self, variable, runtime_params=None, context=None):
+        self.value = self.function(variable=self.sender.value, params=runtime_params, context=context)
+        return self.value
+
     # FIX: 10/3/17 - replace with @property on Projection for receiver and sender
     @property
     def socket_assignments(self):

@@ -651,9 +651,6 @@ class Function_Base(Function):
             raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
                                 format(param, param_name, self.__class__.__name__, owner_name))
 
-    def execute(self, variable=None, params=None, context=None):
-        return self.function(variable=variable, params=params, context=context)
-
     def get_current_function_param(self, param_name):
         try:
             return self.owner._parameter_states[param_name].value
