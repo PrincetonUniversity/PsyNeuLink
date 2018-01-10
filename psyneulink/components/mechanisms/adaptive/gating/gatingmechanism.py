@@ -556,7 +556,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    time_scale=TimeScale.TRIAL,
                     context=None):
         """Updates GatingSignals based on inputs
         """
@@ -566,11 +565,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,
-                                time_scale=time_scale,
                                 context=context)
         # gating_policy = self.function(variable=variable,
         #                               function_params=function_params,
-        #                               time_scale=time_scale,
         #                               context=context)
         # return gating_policy
 

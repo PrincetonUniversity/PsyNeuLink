@@ -304,7 +304,7 @@ from psyneulink.components.states.parameterstate import _get_parameter_state
 from psyneulink.components.states.state import State_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, COMMAND_LINE, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SEPARATOR_BAR, SLOPE, SUM, kwAssign
-from psyneulink.globals.log import LogEntry, LogCondition
+from psyneulink.globals.log import LogCondition, LogEntry
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
@@ -937,8 +937,8 @@ class ControlSignal(ModulatorySignal):
 
         return state_spec, params_dict
 
-    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
-        super().update(params=params, time_scale=time_scale, context=context)
+    def update(self, params=None, context=None):
+        super().update(params=params, context=context)
         self._compute_costs()
 
     def _execute(self, function_params, context):
@@ -953,7 +953,7 @@ class ControlSignal(ModulatorySignal):
             intensity_change = intensity-self.last_intensity
         except AttributeError:
             intensity_change = 0
-    
+
         if self.prefs.verbosePref:
             intensity_change_string = "no change"
             if intensity_change < 0:
@@ -962,26 +962,26 @@ class ControlSignal(ModulatorySignal):
                 intensity_change_string = "+" + str(intensity_change)
             if self.prefs.verbosePref:
                 warnings.warn("\nAllocation: {0} [{1}]".format(intensity, intensity_change_string))
-    
+
         # compute cost(s)
         intensity_cost = adjustment_cost = duration_cost = 0
-    
+
         if self.cost_options & ControlSignalCosts.INTENSITY_COST:
             intensity_cost = self.intensity_cost = self.intensity_cost_function(intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
-    
+
         if self.cost_options & ControlSignalCosts.ADJUSTMENT_COST:
             adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(intensity_change)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
-    
+
         # FIX: 12/23/17 - THIS NEEDS TO HAVE BEEN INITIALIZED
         if self.cost_options & ControlSignalCosts.DURATION_COST:
             duration_cost = self.duration_cost = self.duration_cost_function(self.cost)
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
-    
+
         self.cost = max(0.0, self.cost_combination_function([float(intensity_cost),
                                                              adjustment_cost,
                                                              duration_cost]))

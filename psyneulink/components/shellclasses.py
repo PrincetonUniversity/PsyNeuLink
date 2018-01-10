@@ -69,7 +69,7 @@ class System_Base(ShellClass):
                          prefs=prefs,
                          context=context)
 
-    def execute(self, variable=None, time_scale=None, context=None):
+    def execute(self, variable=None, context=None):
         raise ShellClassError("Must implement execute in {0}".format(self.__class__.__name__))
 
 
@@ -114,7 +114,7 @@ class Mechanism(ShellClass):
     def _validate_params(self, request_set, target_set=None, context=None):
         raise ShellClassError("Must implement _validate_params in {0}".format(self))
 
-    def execute(self, variable, params, time_scale, context):
+    def execute(self, variable, params, context):
         raise ShellClassError("Must implement execute in {0}".format(self))
 
     def adjust_function(self, params, context):
@@ -154,7 +154,7 @@ class State(ShellClass):
     def set_value(self, new_value):
         raise ShellClassError("Must implement set_value in {0}".format(self.__class__.__name__))
 
-    def update(self, params=None, time_scale=None, context=None):
+    def update(self, params=None, context=None):
         raise ShellClassError("{} must implement update".format(self.__class__.__name__))
 
 

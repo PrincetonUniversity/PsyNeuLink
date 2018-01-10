@@ -566,7 +566,6 @@ class LCMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    time_scale=TimeScale.TRIAL,
                     context=None):
         """Updates LCMechanism's ControlSignal based on input and mode parameter value
         """

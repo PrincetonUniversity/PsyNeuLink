@@ -17,7 +17,7 @@ Overview
 A PredictionErrorMechanism is a subclass of `ComparatorMechanism` that receives
 two inputs (a sample and a target), and calculates the temporal difference
 prediction error as found in `Montague, Dayan, and Sejnowski (1996) <http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_
-using its `function <PredictionErrorMechanism.function>`, and places the delta 
+using its `function <PredictionErrorMechanism.function>`, and places the delta
 values (the difference between the actual and predicted reward) in its *OUTCOME*
 `OutputState <PredictionErrorMechanism.output_state>`.
 
@@ -29,12 +29,12 @@ Creating a PredictionErrorMechanism
 A PredictionErrorMechanism is usually created automatically when a `LearningMechanism`
 `is created <LearningMechanism_Creation>` using the `TDLearning` function).
 A PredictionErrorMechanism can also be created directly by calling its constructor.
-Its **sample** and **target**  arguments are used to specify the OutputStates 
-that provide the sample and target inputs, respectively (see 
-`ObjectiveMechanism Monitored Output States <ObjectiveMechanism_Monitored_Output_States>` 
-for details). When the PredictionErrorMechanism is created, two InputStates are 
-created, one each for its sample and target inputs (and named, by default 
-*SAMPLE* and *TARGET*). Each is assigned a MappingProjection from the 
+Its **sample** and **target**  arguments are used to specify the OutputStates
+that provide the sample and target inputs, respectively (see
+`ObjectiveMechanism Monitored Output States <ObjectiveMechanism_Monitored_Output_States>`
+for details). When the PredictionErrorMechanism is created, two InputStates are
+created, one each for its sample and target inputs (and named, by default
+*SAMPLE* and *TARGET*). Each is assigned a MappingProjection from the
 corresponding OutputState specified in the **sample** and **target** arguments.
 
 It is important to recognize that the value of the *SAMPLE* and *TARGET*
@@ -157,15 +157,11 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import PredictionErrorDeltaFunction
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.components.mechanisms.processing.objectivemechanism import \
-    OUTCOME
+from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import INITIALIZING, \
-    PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET, LEARNING_RATE
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, \
-    kpReportOutputPref
-from psyneulink.globals.preferences.preferenceset import PreferenceEntry, \
-    PreferenceLevel, kwPreferenceSetName
+from psyneulink.globals.keywords import INITIALIZING, LEARNING_RATE, PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
+from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, kwPreferenceSetName
 from psyneulink.globals.utilities import is_numeric
 from psyneulink.library.mechanisms.processing.objective.comparatormechanism \
     import ComparatorMechanism, ComparatorMechanismError
@@ -196,64 +192,64 @@ class PredictionErrorMechanism(ComparatorMechanism):
         prefs=None)
 
     Calculates the prediction error between the predicted reward and the target
-    
+
     Arguments
     ---------
-    
+
     sample : OutputState, Mechanism_Base, dict, number, or str
         specifies the SAMPLE InputState, which will be evaluated by
         the function
-    
+
     target : OutputState, Mechanism_Base, dict, number, or str
         specifies the TARGET InputState, which will be used by the function to
         evaluate the sample
-    
+
     function : CombinationFunction, ObjectiveFunction, function, or method : default PredictionErrorDeltaFunction
         the function used to evaluate the sample and target inputs.
-    
+
     output_states : str, Iterable : default OUTCOME
         by default, contains only the *OUTCOME* (`primary <OutputState_Primary>`)
         OutputState of the PredictionErrorMechanism.
-    
+
     learning_rate : Number : default 0.3
         controls the weight of later timesteps compared to earlier ones. Higher
         rates weight later timesteps more heavily than previous ones.
-        
+
     name : str
         the name of the PredictionErrorMechanism; if it is not specified in the
         **name** argument of the constructor, a default is assigned by
         MechanismRegistry (see `Naming` for conventions used for default and
         duplicate names).
-        
-    
+
+
     Attributes
     ----------
 
     sample : OutputState, Mechanism_Base, dict, number, or str
         specifies the SAMPLE InputState, which will be evaluated by
         the function
-    
+
     target : OutputState, Mechanism_Base, dict, number, or str
         specifies the TARGET InputState, which will be used by the function to
         evaluate the sample
-    
+
     function : CombinationFunction, ObjectiveFunction, Function, or method : default PredictionErrorDeltaFunction
         the function used to evaluate the sample and target inputs.
-    
+
     output_states : str, Iterable : default OUTCOME
         by default, contains only the *OUTCOME* (`primary <OutputState_Primary>`)
         OutputState of the PredictionErrorMechanism.
-    
+
     learning_rate : Number : default 0.3
         controls the weight of later timesteps compared to earlier ones. Higher
         rates weight later timesteps more heavily than previous ones.
-        
+
     name : str
         the name of the PredictionErrorMechanism; if it is not specified in the
         **name** argument of the constructor, a default is assigned by
         MechanismRegistry (see `Naming` for conventions used for default and
         duplicate names).
-    
+
     """
     componentType = PREDICTION_ERROR_MECHANISM
 
@@ -303,8 +299,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                          prefs=prefs,
                          context=context)
 
-    def _execute(self, variable=None, runtime_params=None, time_scale=None,
-                 context=None):
+    def _execute(self, variable=None, runtime_params=None, context=None):
         # TODO: update to take sample/reward from variable
         # sample = x(t) in Montague on first run, V(t) on subsequent runs
 
