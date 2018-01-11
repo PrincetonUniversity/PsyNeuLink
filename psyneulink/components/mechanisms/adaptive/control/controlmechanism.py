@@ -938,9 +938,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
         """Instantiate OutputStates to be monitored by ControlMechanism's `objective_mechanism
         <ControlMechanism.objective_mechanism>`.
 
-        **monitored_output_states** can be a `Mechanism`, `OutputState`, `tuple specification
-        <InputState_Tuple_Specification>`, a `State specification dicionary <InputState_Specification_Dictionary>`,
-        or list with any of these. If item is a Mechanism, its `primary OutputState <OutputState_Primary>` is used.
+        **monitored_output_states** can be any of the following:
+            - `Mechanism`;
+            - `OutputState`;
+            - `tuple specification <InputState_Tuple_Specification>`;
+            - `State specification dictionary <InputState_Specification_Dictionary>`;
+            - list with any of the above.
+        If any item is a Mechanism, its `primary OutputState <OutputState_Primary>` is used.
         OutputStates must belong to Mechanisms in the same `System` as the ControlMechanism.
         """
         output_states = self.objective_mechanism.add_monitored_output_states(
@@ -998,7 +1002,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         #    and add them to the ControlMechanism's monitored_output_states attribute and to its
         #    ObjectiveMechanisms monitored_output_states attribute
         monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
-        # FIX: 1/11/18 - monitored_output_states NOT GETTING ADDED TO CONTROLLER BELOW:
         self.add_monitored_output_states(monitored_output_states)
 
         # Then, assign it ControlSignals for any parameters in the current System specified for control

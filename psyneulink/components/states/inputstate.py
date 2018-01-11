@@ -1093,6 +1093,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
+    # IMPLEMENTATION NOTE: USE OF CONTEXT STRING
     if context and 'ADD_STATES' in context:
         owner.input_states.extend(state_list)
     else:

@@ -642,51 +642,41 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if MONITORED_OUTPUT_STATES in target_set and target_set[MONITORED_OUTPUT_STATES] is not None:
             pass
 
-
     def _instantiate_input_states(self, monitored_output_states_specs=None, context=None):
-        """Instantiate InputStates for each OutputState specified in monitored_output_states_specs
+        """Instantiate InputStates specified in **input_states** argument of constructor or each OutputState
+        specified in monitored_output_states_specs
 
-        Called by _add_monitored_output_states as well as during initialization
-            (so must distinguish between initialization and adding to instantiated input_states)
+        Called during initialization as well as by _add_monitored_output_states(),
+            so must distinguish between initialization and adding to instantiated input_states.
 
-        Parse specifications for **input_states**, using **monitored_output_states** where relevant and instantiate
-        input_states.
+        During initialization, uses **input_states** as specification of InputStates to instantiate;
+            if none are specified, instantiates a default InputState
 
-        Instantiate or extend self.instance_defaults.variable to match number of InputStates.
-
-        Update self.input_state and self.input_states.
-
-        Call _instantiate_monitoring_projection() to instantiate MappingProjection to InputState
-            if an OutputState has been specified.
+        Otherwise, uses monitored_output_States_specs as specification of InputStates to instantiate;
+            these will replace any existing InputStates (including a default one)
         """
         from psyneulink.components.states.inputstate import InputState
         # If call is for initialization
         if self.init_status is InitStatus.UNSET:
-            # Pass self.input_states (containing specs from **input_states** arg of constructor)
-            input_states = self.input_states
-        else:
-            # If initialized, don't pass self.input_states, as this is now a list of existing InputStates
-            input_states = None
-
-        # PARSE input_states (=monitored_output_states) specifications into InputState specification dictionaries
-        # and ASSIGN self.instance_defaults.variable
-
-        if not input_states:
-            # If no input_states are specified, create a default
-            input_states = [{STATE_TYPE: InputState, VARIABLE: [0]}]
+            # Use self.input_states (containing specs from **input_states** arg of constructor) or default InputState
+            input_states = self.input_states or [{STATE_TYPE: InputState, VARIABLE: [0]}]
+            return super()._instantiate_input_states(input_states=input_states, context=context)
 
         # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
-        # instantiated_input_states = super()._instantiate_input_states(input_states=self.input_states, context=context)
-        instantiated_input_states = super()._instantiate_input_states(input_states=input_states, context=context)
-        # MODIFIED 10/3/17 END
+        #     (note: these will replace any existing ones, including a default one created on initialization)
+        return super()._instantiate_input_states(input_states=monitored_output_states_specs, context=context)
 
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
 
         Used by other Components to add a `State` or list of States to be monitored by the ObjectiveMechanism.
-        The **monitored_output_states_spec** can be a `Mechanism`, `OutputState`, `tuple specification
-        <InputState_Tuple_Specification>`, `State specification dictionary <InputState_Specification_Dictionary>`, or
-        list with any of these.  If item is a Mechanism, its `primary OutputState <OutputState_Primary>` is used.
+        The **monitored_output_states_spec** can be any of the following:
+        - `Mechanism`;
+        - `OutputState`;
+        - `tuple specification <InputState_Tuple_Specification>`;
+        - `State specification dictionary <InputState_Specification_Dictionary>`;
+        - list with any of the above.
+        If the item is a Mechanism, its `primary OutputState <OutputState_Primary>` is used.
         """
         monitored_output_states_specs = list(monitored_output_states_specs)
 
