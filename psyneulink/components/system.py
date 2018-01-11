@@ -1964,7 +1964,10 @@ class System(System_Base):
 
         # Make assignment
         self._controller = controller
-        self.control_signals = controller.control_signals
+        if self.control_signals is None:
+            self.control_signals = controller.control_signals
+        else:
+            self.control_signals.append(controller.control_signals)
 
         # Add controller's ObjectiveMechanism to the System's execution_list and execution_graph
         self.execution_list.append(self.controller.objective_mechanism)
