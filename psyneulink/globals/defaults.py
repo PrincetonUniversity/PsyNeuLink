@@ -14,12 +14,9 @@ This is an attempt to show the value of defaultControlAllocation:  :py:print:`De
 
 from enum import Enum
 
-from psyneulink.scheduling.time import TimeScale
-
 __all__ = [
     'defaultControlAllocation', 'DefaultControlAllocationMode', 'defaultGatingPolicy', 'DefaultGatingPolicyMode',
     'inputValueSystemDefault', 'MPI_IMPLEMENTATION', 'outputValueSystemDefault', 'SystemDefaultInputValue',
-    'timeScaleSystemDefault',
 ]
 
 MPI_IMPLEMENTATION = False
@@ -27,9 +24,6 @@ MPI_IMPLEMENTATION = False
 # State values:
 inputValueSystemDefault = [0]
 outputValueSystemDefault = [0]
-
-# TimeScale:
-timeScaleSystemDefault = TimeScale.TRIAL
 
 # Default input:
 SystemDefaultInputValue = 0.0

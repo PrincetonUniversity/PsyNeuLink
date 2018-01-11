@@ -868,13 +868,11 @@ class LCControlMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    time_scale=TimeScale.TRIAL,
                     context=None):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
         output_values = self.function(variable=variable,
                              params=runtime_params,
-                             time_scale=time_scale,
                              context=context)
         gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
         return gain_t, gain_t, output_values[0], output_values[1], output_values[2]

@@ -522,7 +522,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None,
@@ -570,7 +569,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                          smoothing_factor=smoothing_factor,
                          clip=clip,
                          output_states=output_states,
-                         time_scale=time_scale,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -804,7 +802,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 time_scale = TimeScale.TRIAL,
                  context=None):
         """Implement decay
         """
@@ -816,16 +813,15 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,
-                                time_scale=time_scale,
                                 context=context)
 
-    def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
+    def _update_parameter_states(self, runtime_params=None, context=None):
         for state in self._parameter_states:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
             # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
             # projection's _update_parameter_states, and accordingly are not updated here
             if state.name != AUTO or state.name != HETERO:
-                state.update(params=runtime_params, time_scale=time_scale, context=context)
+                state.update(params=runtime_params, context=context)
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?

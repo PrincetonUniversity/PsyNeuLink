@@ -39,7 +39,7 @@ If these differ, the **input_states** argument can be used to explicitly specify
 *SAMPLE* and *TARGET* InputStates, to insure they are compatible with one another (as well as to customize their
 names, if desired).  If the **input_states** argument is used, *both* the sample and target InputStates must be
 specified.  Any of the formats for `specifying InputStates <InputState_Specification>` can be used in the argument.
-If values are assigned for the InputStates, they must be of equal length and type.  Their types must 
+If values are assigned for the InputStates, they must be of equal length and type.  Their types must
 also be compatible with the value of the OutputStates specified in the **sample** and **target** arguments.  However,
 the length specified for an InputState can differ from its corresponding OutputState;  in that case, by default, the
 MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, OutputStates of differing lengths can be mapped
@@ -128,6 +128,7 @@ Class Reference
 
 import numpy as np
 import typecheck as tc
+
 from collections import Iterable
 
 from psyneulink.components.functions.function import LinearCombination
@@ -137,11 +138,10 @@ from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, TIME_SCALE, VARIABLE, kwPreferenceSetName
+from psyneulink.globals.keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'COMPARATOR_OUTPUT', 'ComparatorMechanism', 'ComparatorMechanismError', 'MSE', 'SSE',
@@ -294,8 +294,8 @@ class ComparatorMechanism(ObjectiveMechanism):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ComparatorMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the ComparatorMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
 
@@ -314,7 +314,6 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME: SSE,
