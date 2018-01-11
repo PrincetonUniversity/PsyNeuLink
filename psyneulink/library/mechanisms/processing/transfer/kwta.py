@@ -507,50 +507,36 @@ class KWTA(RecurrentTransferMechanism):
         # so it shouldn't be a problem)
         self.indexOfInhibitionInputState = len(self.input_states) - 1
 
-        # try:
-        #     int_k_value = int(self.k_value[0])
-        # except TypeError: # if self.k_value is a single value rather than a list or array
-        #     int_k_value = int(self.k_value)
-        # # ^ this is hacky but necessary for now, since something is
-        # # incorrectly turning self.k_value into an array of floats
-        # n = self.size[0]
-        # if (self.k_value[0] > 0) and (self.k_value[0] < 1):
-        #     k = int(round(self.k_value[0] * n))
-        # elif (int_k_value < 0):
-        #     k = n - int_k_value
-        # else:
-        #     k = int_k_value
-        #
-        # self.int_k = k
-
     def _kwta_scale(self, current_input, context=None):
+        k_value = self.get_current_mechanism_param("k_value")
+        threshold = self.get_current_mechanism_param("threshold")
+        average_based = self.get_current_mechanism_param("average_based")
+        ratio = self.get_current_mechanism_param("ratio")
+        inhibition_only = self.get_current_mechanism_param("inhibition_only")
+
         try:
-            current_k_value = self.parameter_states["k_value"].value
-        except KeyError:
-            current_k_value = self.k_value
-        try:
-            int_k_value = int(current_k_value[0])
-        except TypeError: # if current_k_value is a single value rather than a list or array
-            int_k_value = int(current_k_value)
+            int_k_value = int(k_value[0])
+        except TypeError: # if k_value is a single value rather than a list or array
+            int_k_value = int(k_value)
         # ^ this is hacky but necessary for now, since something is
-        # incorrectly turning current_k_value into an array of floats
+        # incorrectly turning k_value into an array of floats
         n = self.size[0]
-        if (current_k_value[0] > 0) and (current_k_value[0] < 1):
-            k = int(round(current_k_value[0] * n))
+        if (k_value[0] > 0) and (k_value[0] < 1):
+            k = int(round(k_value[0] * n))
         elif (int_k_value < 0):
             k = n - int_k_value
         else:
             k = int_k_value
         # k = self.int_k
 
-        diffs = self.threshold - current_input[0]
+        diffs = threshold - current_input[0]
 
         sorted_diffs = sorted(diffs)
 
-        if self.average_based:
+        if average_based:
             top_k_mean = np.mean(sorted_diffs[0:k])
             other_mean = np.mean(sorted_diffs[k:n])
-            final_diff = other_mean * self.ratio + top_k_mean * (1 - self.ratio)
+            final_diff = other_mean * ratio + top_k_mean * (1 - ratio)
         else:
             if k == 0:
                 final_diff = sorted_diffs[k]
@@ -560,15 +546,15 @@ class KWTA(RecurrentTransferMechanism):
                 raise KWTAError("k value ({}) is greater than the length of the first input ({}) for KWTA mechanism {}".
                                 format(k, current_input[0], self.name))
             else:
-                final_diff = sorted_diffs[k] * self.ratio + sorted_diffs[k-1] * (1 - self.ratio)
+                final_diff = sorted_diffs[k] * ratio + sorted_diffs[k-1] * (1 - ratio)
 
 
 
-        if self.inhibition_only and final_diff > 0:
+        if inhibition_only and final_diff > 0:
             final_diff = 0
 
         new_input = np.array(current_input[0] + final_diff)
-        if (sum(new_input > self.threshold) > k) and not self.average_based:
+        if (sum(new_input > threshold) > k) and not average_based:
             warnings.warn("KWTA scaling was not successful: the result was too high. The original input was {}, "
                           "and the KWTA-scaled result was {}".format(current_input, new_input))
         new_input = list(new_input)
