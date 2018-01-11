@@ -1822,6 +1822,12 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.projections.projection import _add_projection_from
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
+    def get_current_mechanism_param(self, param_name):
+        try:
+            return self._parameter_states[param_name].value
+        except (AttributeError, TypeError):
+            return getattr(self, param_name)
+
     def execute(self,
                 input=None,
                 runtime_params=None,
