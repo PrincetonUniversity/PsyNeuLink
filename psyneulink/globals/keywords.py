@@ -68,7 +68,7 @@ __all__ = [
     'MAKE_DEFAULT_GATING_MECHANISM',
     'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET',
     'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS', 'MatrixKeywords', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
-    'MECHANISM_TIME_SCALE', 'MechanismRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
+    'MechanismRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
     'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME', 'NO_CONTEXT',
     'NOISE', 'NORMAL_DIST_FUNCTION', 'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
     'OFF', 'OFFSET', 'ON', 'OPERATION', 'ORIGIN', 'ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME_FUNCTION',
@@ -84,7 +84,7 @@ __all__ = [
     'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION',
     'STABILITY_FUNCTION', 'STANDARD_ARGS','STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES', 'STATE', 'STATE_PARAMS',
     'STATE_TYPE', 'STATE_VALUE', 'STATES', 'SUBTRACTION', 'SUM', 'SYSTEM', 'SYSTEM_DEFAULT_CONTROLLER',
-    'SYSTEM_INIT', 'TARGET', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_SCALE', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
+    'SYSTEM_INIT', 'TARGET', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
     'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIAL', 'TRIALS_DIM', 'UNCHANGED', 'UNIFORM_DIST_FUNCTION',
     'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS', 'UTILITY_INTEGRATOR_FUNCTION',
     'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE', 'VECTOR',
@@ -365,11 +365,6 @@ kwDefaultPreferenceSetOwner = 'DefaultPreferenceSetOwner'
 # kpVerbosePref = '_verbose_pref'
 #endregion
 
-#region --------------------------------------------    TIME SCALE    --------------------------------------------------
-
-TIME_SCALE = "time_scale"
-#endregion
-
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
 
 kwPreferenceSet = 'PreferenceSet'
@@ -634,7 +629,6 @@ STATE_VALUE = "State value"   # Used in State specification dict
 STATE_PARAMS = "State params" # Used in State specification dict
 
 # ParamClassDefaults:
-MECHANISM_TIME_SCALE = "Mechanism Time Scale"
 kwMechanismExecutionSequenceTemplate = "Mechanism Execution Sequence Template"
 
 # Entries for output OrderedDict, describing the current state of the Mechanism

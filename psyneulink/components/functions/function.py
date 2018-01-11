@@ -185,27 +185,7 @@ from random import randint
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
-from psyneulink.globals.keywords import \
-    VARIABLE, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, \
-    ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, \
-    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, \
-    DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DistanceMetrics,\
-    DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, \
-    EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, \
-    FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, \
-    HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, \
-    INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
-    LEARNING, LEARNING_FUNCTION_TYPE, \
-    LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
-    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, \
-    OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
-    PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
-    RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, \
-    SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, \
-    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, NORMALIZING_FUNCTION_TYPE,\
-    kwComponentCategory, kwPreferenceSetName, TDLEARNING_FUNCTION, \
-    PREDICTION_ERROR_DELTA_FUNCTION, GAMMA
-
+from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -916,7 +896,6 @@ class ArgumentTherapy(Function_Base):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Returns a boolean that is (or tends to be) the same as or opposite the one passed in.
@@ -1274,7 +1253,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Calculate sum or product of the elements for each array in `variable <Reduce.variable>`,
@@ -1653,7 +1631,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Apply `weights <LinearCombination.weights>` and/or `exponents <LinearCombinations.weights>` to the
@@ -2100,7 +2077,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate and combine means of items in `variable <CombineMean.variable>`.
 
@@ -2329,7 +2305,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Calculates the prediction error using the arrays in `variable
@@ -2530,7 +2505,6 @@ class SoftMax(NormalizingFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
@@ -2834,7 +2808,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: `slope <Linear.slope>` * `variable <Linear.variable>` + `intercept <Linear.intercept>`.
@@ -3050,7 +3023,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: `scale <Exponential.scale>`
@@ -3217,7 +3189,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return:
@@ -3389,7 +3360,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #     def function(self,
 #                  variable=None,
 #                  params=None,
-#                  time_scale=TimeScale.TRIAL,
 #                  context=None):
 #         """
 #         Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
@@ -3406,9 +3376,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
 #             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 #             arguments of the constructor.
-#
-#         time_scale :  TimeScale : default TimeScale.TRIAL
-#             specifies whether the function is executed on the time_step or trial time scale.
 #
 #         Returns
 #         -------
@@ -3892,7 +3859,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: `variable <LinearMatrix.variable>` • `matrix <LinearMatrix.matrix>`
@@ -4494,7 +4460,6 @@ class SimpleIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: `variable <Linear.slope>` combined with `previous_value <SimpleIntegrator.previous_value>`
@@ -4714,7 +4679,6 @@ class LCAIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return:
@@ -4945,7 +4909,6 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: the sum of `previous_value <ConstantIntegrator.previous_value>`, `rate <ConstantIntegrator.rate>`, and
@@ -5224,7 +5187,6 @@ class AdaptiveIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: some fraction of `variable <AdaptiveIntegrator.variable>` combined with some fraction of `previous_value
@@ -5474,7 +5436,6 @@ class DriftDiffusionIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: One time step of evidence accumulation according to the Drift Diffusion Model
@@ -5713,7 +5674,6 @@ class OrnsteinUhlenbeckIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: One time step of evidence accumulation according to the Ornstein Uhlenbeck Model
@@ -6333,7 +6293,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: current v, current w
@@ -6675,7 +6634,6 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: `previous_value <ConstantIntegrator.previous_value>` combined with `rate <ConstantIntegrator.rate>` and
@@ -7022,7 +6980,6 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: some fraction of `variable <AGTUtilityIntegrator.variable>` combined with some fraction of `previous_value
@@ -7253,7 +7210,6 @@ class BogaczEtAl(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean
@@ -7579,7 +7535,6 @@ class NavarroAndFuss(IntegratorFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: terminal value of decision variable, mean accuracy (error rate; ER), mean response time (RT),
@@ -7733,7 +7688,6 @@ class NormalDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
@@ -7853,7 +7807,6 @@ class UniformToNormalDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
 
         try:
@@ -7954,7 +7907,6 @@ class ExponentialDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
@@ -8059,7 +8011,6 @@ class UniformDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
@@ -8166,7 +8117,6 @@ class GammaDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
@@ -8271,7 +8221,6 @@ class WaldDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
@@ -8559,7 +8508,6 @@ COMMENT
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate the stability of `variable <Stability.variable>`.
 
@@ -8722,7 +8670,6 @@ class Distance(ObjectiveFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate the distance between the two vectors in `variable <Stability.variable>`.
 
@@ -9019,7 +8966,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate a matrix of weight changes from a 1d array of activity values
 
@@ -9265,7 +9211,6 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate a matrix of weight changes from a single (scalar) error term
 
@@ -9605,7 +9550,6 @@ class BackPropagation(LearningFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms
 
@@ -9689,7 +9633,7 @@ class BackPropagation(LearningFunction):
 
 class TDLearning(Reinforcement):
     """
-    This class is used to implement temporal difference learning via the 
+    This class is used to implement temporal difference learning via the
     `Reinforcement` function. See `Reinforcement` for class details.
     """
     componentName = TDLEARNING_FUNCTION
@@ -9744,10 +9688,8 @@ class TDLearning(Reinforcement):
 
         return variable
 
-    def function(self, variable=None, params=None, time_scale=TimeScale.TRIAL,
-                 context=None):
-        return super().function(variable=variable, params=params,
-                                time_scale=TimeScale.TRIAL, context=context)
+    def function(self, variable=None, params=None, context=None):
+        return super().function(variable=variable, params=params, context=context)
 
 
 # region *****************************************   OBJECTIVE FUNCTIONS

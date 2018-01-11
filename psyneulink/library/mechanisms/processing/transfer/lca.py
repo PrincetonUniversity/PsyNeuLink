@@ -448,7 +448,6 @@ class LCA(RecurrentTransferMechanism):
                  time_step_size=0.1,
                  clip=None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -493,7 +492,6 @@ class LCA(RecurrentTransferMechanism):
                          noise=noise,
                          clip=clip,
                          output_states=output_states,
-                         time_scale=time_scale,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -502,7 +500,6 @@ class LCA(RecurrentTransferMechanism):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Execute TransferMechanism function and return transform of input
 
@@ -564,8 +561,6 @@ class LCA(RecurrentTransferMechanism):
 
         # Update according to time-scale of integration
         if integrator_mode:
-        # if time_scale is TimeScale.TIME_STEP:
-
             if not self.integrator_function:
 
                 self.integrator_function = LCAIntegrator(

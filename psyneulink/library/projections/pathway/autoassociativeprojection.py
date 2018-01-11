@@ -250,7 +250,7 @@ class AutoAssociativeProjection(MappingProjection):
                          prefs=prefs,
                          context=context)
 
-    def execute(self, input=None, time_scale=None, params=None, context=None):
+    def execute(self, input=None, params=None, context=None):
         """
         Based heavily on the execute() method for MappingProjection.
 
@@ -283,6 +283,7 @@ class AutoAssociativeProjection(MappingProjection):
         # just looks up current matrix??
 
         # MODIFIED 9/23/17 NEW: [JDC ALLOW DEFAULT MATRIX TO BE USED IF AUTO AND HETERO ARE NOT SPECIFIED]:
+
         # if AUTO in owner_param_states or HETERO in owner_param_states:
         # # MODIFIED 9/23/17 END
         #     if AUTO not in owner_param_states or HETERO not in owner_param_states:
@@ -321,13 +322,12 @@ class AutoAssociativeProjection(MappingProjection):
 
         # END OF KAM COMMENTED OUT 1/9/2018
 
-
         # # MODIFIED 9/23/17 OLD [JDC: CALLED SUPER FOR ALL OF THIS, THOUGH SEE IMPLEMENTATION NOTE BELOW]:
         # # note that updating parameter states MUST happen AFTER self.matrix is set by auto_matrix and hetero_matrix,
         # # because setting self.matrix only changes the previous_value/variable of the 'matrix' parameter state (which
         # # holds the matrix parameter) and the matrix parameter state must be UPDATED AFTERWARDS to put the new value
         # # from the previous_value into the value of the parameterState
-        # self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
+        # self._update_parameter_states(runtime_params=params, context=context)
         #
         # # Check whether error_signal has changed
         # if (self.learning_mechanism
@@ -355,7 +355,7 @@ class AutoAssociativeProjection(MappingProjection):
         #
         # return self.function(self.sender.value, params=params, context=context)
         # MODIFIED 9/23/17 NEW:
-        return super().execute(input=input, time_scale=time_scale, params=params, context=context)
+        return super().execute(input=input, params=params, context=context)
         # MODIFIED 9/23/17 END:
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
@@ -380,21 +380,20 @@ class AutoAssociativeProjection(MappingProjection):
 
     # END OF COMMENTED OUT BY KAM 1/9/2018
 
-
     # NOTE 7/25/17 CW: Originally, this override was written because if the user set the 'auto' parameter on the
         # recurrent mechanism, the parameter state wouldn't update until after the mechanism executed: since the system
         # first runs the projection, then runs the mechanism, the projection initially uses the 'old' value. However,
         # this is commented out because this may in fact be the desired behavior.
         # Two possible solutions: allow control to be done on projections, or build a more general way to allow
         # projections to read parameters from mechanisms.
-    # def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
+    # def _update_parameter_states(self, runtime_params=None, context=None):
     #     """Update this projection's owner mechanism's `auto` and `hetero` parameter states as well! The owner mechanism
     #     should be a RecurrentTransferMechanism, which DOES NOT update its own `auto` and `hetero` parameter states during
     #     its _update_parameter_states function (so that the ParameterState is not redundantly updated).
     #     Thus, if you want to have an AutoAssociativeProjection on a mechanism that's not a RecurrentTransferMechanism,
     #     your mechanism must similarly exclude `auto` and `hetero` from updating.
     #     """
-    #     super()._update_parameter_states(runtime_params, time_scale, context)
+    #     super()._update_parameter_states(runtime_params, context)
     #
     #     if isinstance(self.sender, OutputState):
     #         owner_mech = self.sender.owner
@@ -406,8 +405,8 @@ class AutoAssociativeProjection(MappingProjection):
     #                                    format(self.__class__.__name__, self.name, self.sender))
     #
     #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-    #         owner_mech._parameter_states[AUTO].update(params=runtime_params, time_scale=time_scale, context=context + INITIALIZING)
-    #         owner_mech._parameter_states[HETERO].update(params=runtime_params, time_scale=time_scale, context=context + INITIALIZING)
+    #         owner_mech._parameter_states[AUTO].update(params=runtime_params, context=context + INITIALIZING)
+    #         owner_mech._parameter_states[HETERO].update(params=runtime_params, context=context + INITIALIZING)
     #     else:
     #         raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; here are names of the "
     #                                    "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,

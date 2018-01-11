@@ -451,7 +451,6 @@ class KWTA(RecurrentTransferMechanism):
                  clip=None,
                  input_states:tc.optional(tc.any(list, dict)) = None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
@@ -491,7 +490,6 @@ class KWTA(RecurrentTransferMechanism):
                          smoothing_factor=smoothing_factor,
                          clip=clip,
                          output_states=output_states,
-                         time_scale=time_scale,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -607,26 +605,23 @@ class KWTA(RecurrentTransferMechanism):
     def execute(self,
                 input=None,
                 runtime_params=None,
-                time_scale=TimeScale.TRIAL,
                 ignore_execution_id=False,
                 context=None):
         if isinstance(input, str) or (isinstance(input, (list, np.ndarray)) and isinstance(input[0], str)):
             raise KWTAError("input ({}) to {} was a string, which is not supported for {}".
                             format(input, self, self.__class__.__name__))
-        return super().execute(input=input, runtime_params=runtime_params, time_scale=time_scale,
+        return super().execute(input=input, runtime_params=runtime_params,
                                ignore_execution_id=ignore_execution_id, context=context)
 
     def _execute(self,
                 variable=None,
                 runtime_params=None,
-                time_scale = TimeScale.TRIAL,
                 context=None):
 
         variable = self._update_variable(self._kwta_scale(variable, context=context))
 
         return super()._execute(variable=variable,
                        runtime_params=runtime_params,
-                       time_scale=time_scale,
                        context=context)
 
         # NOTE 7/10/17 CW: this version of KWTA executes scaling _before_ noise or integration is applied. This can be

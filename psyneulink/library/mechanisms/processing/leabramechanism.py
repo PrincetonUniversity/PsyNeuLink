@@ -248,7 +248,6 @@ class LeabraFunction(Function_Base):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
