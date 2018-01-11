@@ -550,10 +550,11 @@ class LCA(RecurrentTransferMechanism):
 
         #region ASSIGN PARAMETER VALUES
 
-        beta = self.beta
-        clip = self.clip
-        noise = self.noise
-        time_step_size = self.time_step_size
+        leak = self.get_current_mechanism_param("leak")
+        clip = self.get_current_mechanism_param("clip")
+        noise = self.get_current_mechanism_param("noise")
+        initial_value = self.get_current_mechanism_param("initial_value")
+        time_step_size = self.get_current_mechanism_param("time_step_size")
 
         #endregion
         #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
@@ -569,24 +570,24 @@ class LCA(RecurrentTransferMechanism):
 
                 self.integrator_function = LCAIntegrator(
                                             variable,
-                                            initializer=self.initial_value,
-                                            noise=self.noise,
-                                            time_step_size=self.time_step_size,
-                                            rate=self.leak,
+                                            initializer=initial_value,
+                                            noise=noise,
+                                            time_step_size=time_step_size,
+                                            rate=leak,
                                             owner=self)
 
             current_input = self.integrator_function.execute(variable,
                                                         # Should we handle runtime params?
-                                                              params={INITIALIZER: self.initial_value,
-                                                                      NOISE: self.noise,
-                                                                      RATE: self.leak,
-                                                                      TIME_STEP_SIZE: self.time_step_size},
+                                                              params={INITIALIZER: initial_value,
+                                                                      NOISE: noise,
+                                                                      RATE: leak,
+                                                                      TIME_STEP_SIZE: time_step_size},
                                                               context=context
 
                                                              )
         else:
         # elif time_scale is TimeScale.TRIAL:
-            noise = self._try_execute_param(self.noise, variable)
+            noise = self._try_execute_param(noise, variable)
             # formerly: current_input = self.input_state.value + noise
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
             # when the input is given as a string.
