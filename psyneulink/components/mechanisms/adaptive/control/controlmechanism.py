@@ -797,10 +797,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             for control_signal in self.control_signals:
                 self._instantiate_control_signal(control_signal, context=context)
 
-        # If no ControlSignals are specified, don't instantiate any Outputstates
-        #    (note: this overrides ordinary instantiatiation of a default OutputState for a Mechanism)
-        if self.output_states:
-            super()._instantiate_output_states(context=context)
+        super()._instantiate_output_states(context=context)
 
         # Reassign control_signals to capture any user_defined ControlSignals instantiated in call to super
         #    and assign to ContentAddressableList
@@ -1012,7 +1009,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # system_control_signals = system._get_control_signals_for_system(system.control_signals, context=context)
         # for control_signal_spec in system_control_signals:
         #     self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-
         # MODIFIED 1/11/18 NEW:
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
@@ -1026,7 +1022,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 control_signal.owner = None
         for control_signal_spec in system_control_signals:
             self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-
         # MODIFIED 1/11/18 END
 
         # If it HAS been assigned a System, make sure it is the current one
