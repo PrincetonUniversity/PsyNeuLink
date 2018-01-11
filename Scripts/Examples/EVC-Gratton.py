@@ -139,6 +139,10 @@ mySystem = pnl.System(
     name='EVC Gratton System'
 )
 
+control_mech = pnl.EVCControlMechanism(name='NEW CONTROLLER')
+# control_mech.assign_as_controller(mySystem, context='dummy')
+control_mech.assign_as_controller(mySystem)
+
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()

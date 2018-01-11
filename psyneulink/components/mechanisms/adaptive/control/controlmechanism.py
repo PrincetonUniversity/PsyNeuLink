@@ -998,9 +998,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         #    and add them to the ControlMechanism's monitored_output_states attribute and to its
         #    ObjectiveMechanisms monitored_output_states attribute
         monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
+        # FIX: 1/11/18 - monitored_output_states NOT GETTING ADDED TO CONTROLLER BELOW:
         self.add_monitored_output_states(monitored_output_states)
 
         # Then, assign it ControlSignals for any parameters in the current System specified for control
+        # FIX: 1/11/18 - NOT RETURNING ANY CONTROLSIGNALS FOR SYSTEM BELOW:
         system_control_signals = system._get_control_signals_for_system(system.control_signals, context=context)
         for control_signal_spec in system_control_signals:
             self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
@@ -1016,6 +1018,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
         self._objective_mechanism.controller = True
+
+        # Finally, assign the self as controller for system
+        system.controller = self
 
     @property
     def monitored_output_states(self):
