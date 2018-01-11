@@ -392,11 +392,11 @@ from psyneulink.components.shellclasses import Mechanism, Process_Base, Projecti
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.components.states.state import StateError
 from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from psyneulink.globals.log import LogCondition, LogEntry, _get_log_context
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
-from psyneulink.globals.utilities import ContentAddressableList, iscompatible, is_numeric, is_matrix, type_match
-from psyneulink.globals.log import LogCondition, LogEntry, _get_log_context
+from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -882,10 +882,10 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
+    def _update_parameter_states(self, runtime_params=None, context=None):
         for state in self._parameter_states:
             state_name = state.name
-            state.update(params=runtime_params, time_scale=time_scale, context=context)
+            state.update(params=runtime_params, context=context)
 
             # Assign ParameterState's value to parameter value in runtime_params
             if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:

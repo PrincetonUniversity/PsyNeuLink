@@ -355,13 +355,8 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
+from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MAPPING_PROJECTION, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, LOG_ENTRIES, \
-    INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, \
-    OUTPUT_STATES, \
-    PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
-    SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
 # from psyneulink.globals.log import Log, LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
@@ -371,7 +366,7 @@ __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
     'InitStatus', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
 ]
-# Testing pull request 
+# Testing pull request
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
 DeferredInitRegistry = {}
@@ -689,7 +684,23 @@ class Component(object):
     componentCategory = None
     componentType = None
 
-    class _DefaultsMeta(type):
+    class _DefaultsAliases:
+        '''
+        Used to create aliases for both ClassDefaults and InstanceDefaults, via properties.
+        e.g. to simply alias foo and bar:
+
+        @property
+        def foo(self):
+            return self.bar
+
+        @foo.setter
+        def foo(self, value):
+            self.bar = value
+
+        '''
+        pass
+
+    class _DefaultsMeta(type, _DefaultsAliases):
         def __repr__(self):
             return '{0} :\n{1}'.format(super().__repr__(), self.show())
 
@@ -732,7 +743,7 @@ class Component(object):
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         variable = np.array([0])
 
-    class InstanceDefaults(Defaults):
+    class InstanceDefaults(Defaults, _DefaultsAliases):
         def __init__(self, **kwargs):
             for param in kwargs:
                 setattr(self, param, kwargs[param])
@@ -2651,7 +2662,7 @@ class Component(object):
     def initialize(self):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def execute(self, input=None, params=None, time_scale=None, context=None):
+    def execute(self, input=None, params=None, context=None):
         raise ComponentError("{} class must implement execute".format(self.__class__.__name__))
 
     def _update_value(self, context=None):

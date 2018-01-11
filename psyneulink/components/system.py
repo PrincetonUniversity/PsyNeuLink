@@ -445,11 +445,11 @@ from psyneulink.components.process import Process, ProcessList, ProcessTuple
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, WEIGHT, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, WEIGHT, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.log import Log
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.log import Log
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
@@ -571,7 +571,7 @@ class System(System_Base):
         - _instantiate_controller(): instantiates ControlMechanism in **controller** argument or assigned to attribute
         - identify_origin_and_terminal_mechanisms():  assign self.origin_mechanisms and self.terminalMechanisms
         - _assign_output_states():  assign OutputStates of System (currently = terminalMechanisms)
-        - execute(input, time_scale, context):  executes Mechanisms in order specified by execution_list
+        - execute(input, context):  executes Mechanisms in order specified by execution_list
         - instance_defaults.variable(value):  setter for instance_defaults.variable;  does some kind of error checking??
 
        SystemRegistry
@@ -782,17 +782,17 @@ class System(System_Base):
         variable = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
-                               'outputStates': {},
-                               '_phaseSpecMax': 0,
-                               'stimulusInputStates': [],
-                               'inputs': [],
-                               'current_input': None,
-                               'target_input_states': [],
-                               'targets': None,
-                               'current_targets': None,
-                               'learning': False
-                               })
+    paramClassDefaults.update({
+        'outputStates': {},
+        '_phaseSpecMax': 0,
+        'stimulusInputStates': [],
+        'inputs': [],
+        'current_input': None,
+        'target_input_states': [],
+        'targets': None,
+        'current_targets': None,
+        'learning': False
+    })
 
     # FIX 5/23/17: ADD control_signals ARGUMENT HERE (AND DOCUMENT IT ABOVE)
     @tc.typecheck
@@ -2386,10 +2386,8 @@ class System(System_Base):
                 input=None,
                 target=None,
                 execution_id=None,
-                time_scale=None,
                 termination_processing=None,
                 termination_learning=None,
-                # time_scale=TimeScale.TRIAL
                 context=None):
         """Execute mechanisms in System at specified :ref:`phases <System_Execution_Phase>` in order \
         specified by the :py:data:`execution_graph <System.execution_graph>` attribute.
@@ -2463,8 +2461,6 @@ class System(System_Base):
 
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
-
-        self.timeScale = time_scale or TimeScale.TRIAL
 
         # FIX: MOVE TO RUN??
         #region ASSIGN INPUTS TO SystemInputStates
@@ -2552,7 +2548,6 @@ class System(System_Base):
         if not EVC_SIMULATION in context and self.enable_controller:
             try:
                 self.controller.execute(
-                    time_scale=TimeScale.TRIAL,
                     runtime_params=None,
                     context=context
                 )
@@ -2571,7 +2566,6 @@ class System(System_Base):
 
         return self.terminal_mechanisms.outputStateValues
 
-    # def _execute_processing(self, time_scale=TimeScale.Trial, context=None):
     def _execute_processing(self, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
@@ -2597,7 +2591,6 @@ class System(System_Base):
                 process_names = list(p.name for p in process_keys_sorted)
 
                 mechanism.execute(
-                    time_scale=self.timeScale,
                     runtime_params=rt_params,
                     context=context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
                 )
@@ -2683,7 +2676,7 @@ class System(System_Base):
                                          re.sub(r'[\[,\],\n]','',str(process_names))))
 
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                component.execute(time_scale=self.timeScale, runtime_params=params, context=context_str)
+                component.execute(runtime_params=params, context=context_str)
                 # # TEST PRINT:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
@@ -2712,7 +2705,7 @@ class System(System_Base):
                                          component.name,
                                          re.sub(r'[\[,\],\n]','',str(process_names))))
 
-                component._parameter_states[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
+                component._parameter_states[MATRIX].update(context=context_str)
 
                 # TEST PRINT:
                 # print ("EXECUTING WEIGHT UPDATES: ", component.name)
@@ -2747,7 +2740,6 @@ class System(System_Base):
             call_after_trial=None,
             call_before_time_step=None,
             call_after_time_step=None,
-            time_scale=None,
             termination_processing=None,
             termination_learning=None,
             context=None):
@@ -2832,7 +2824,6 @@ class System(System_Base):
                    call_after_trial=call_after_trial,
                    call_before_time_step=call_before_time_step,
                    call_after_time_step=call_after_time_step,
-                   time_scale=time_scale,
                    termination_processing=termination_processing,
                    termination_learning=termination_learning,
                    context=context)

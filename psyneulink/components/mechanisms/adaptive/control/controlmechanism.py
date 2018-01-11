@@ -890,7 +890,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Updates ControlSignals based on inputs
 

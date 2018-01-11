@@ -491,7 +491,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                  integrator_mode=False,
                  clip=None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -512,7 +511,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   noise=noise,
                                                   smoothing_factor=smoothing_factor,
                                                   integrator_mode=integrator_mode,
-                                                  time_scale=time_scale,
                                                   clip=clip,
                                                   params=params)
 
@@ -691,7 +689,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Execute TransferMechanism function and return transform of input
 
@@ -750,7 +747,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Update according to time-scale of integration
         if integrator_mode:
-        # if time_scale is TimeScale.TIME_STEP:
 
             if not self.integrator_function:
 
@@ -770,7 +766,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
                                                              )
         else:
-        # elif time_scale is TimeScale.TRIAL:
             noise = self._try_execute_param(self.noise, variable)
             # formerly: current_input = self.input_state.value + noise
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
@@ -823,9 +818,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         print_input = input
         print_params = params.copy()
-        # Only report smoothing_factor if in TIME_STEP mode
-        if params['time_scale'] is TimeScale.TRIAL:
-            del print_params[SMOOTHING_FACTOR]
         # Suppress reporting of range (not currently used)
         del print_params[CLIP]
 

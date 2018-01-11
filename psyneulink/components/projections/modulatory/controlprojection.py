@@ -384,9 +384,8 @@ class ControlProjection(ModulatoryProjection_Base):
         # else:
         super(ControlProjection, self)._instantiate_receiver(context=context)
 
-    def execute(self, params=None, time_scale=None, context=None):
-    # def execute(self, params=None, time_scale=TimeScale.TRIAL, context=None):
-        self.value = self.function(variable=self.sender.value, params=params, time_scale=time_scale, context=context)
+    def execute(self, params=None, context=None):
+        self.value = self.function(variable=self.sender.value, params=params, context=context)
         return self.value
 
     @property

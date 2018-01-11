@@ -269,7 +269,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller=None,
         variable=None,
         runtime_params=None,
-        time_scale=TimeScale.TRIAL,
         params=None,
         context=None,
     ):
@@ -332,7 +331,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #        preserved here for possible future restoration
         if PY_MULTIPROCESSING:
             EVC_pool = Pool()
-            results = EVC_pool.map(_compute_EVC, [(controller, arg, runtime_params, time_scale, context)
+            results = EVC_pool.map(_compute_EVC, [(controller, arg, runtime_params, context)
                                                  for arg in controller.control_signal_search_space])
 
         else:
@@ -391,7 +390,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 # Calculate EVC for specified allocation policy
                 result_tuple = _compute_EVC(args=(controller, allocation_vector,
                                                   runtime_params,
-                                                  time_scale,
                                                   context))
                 EVC, outcome, cost = result_tuple
 
@@ -507,7 +505,6 @@ def _compute_EVC(args):
         ctlr (EVCControlMechanism)
         allocation_vector (1D np.array): allocation policy for which to compute EVC
         runtime_params (dict): runtime params passed to ctlr.update
-        time_scale (TimeScale): time_scale passed to ctlr.update
         context (value): context passed to ctlr.update
 
     Returns (float, float, float):
@@ -515,7 +512,7 @@ def _compute_EVC(args):
 
     """
 
-    ctlr, allocation_vector, runtime_params, time_scale, context = args
+    ctlr, allocation_vector, runtime_params, context = args
 
     # # TEST PRINT:
     # print("Allocation vector: {}\nPredicted input: {}".
@@ -525,7 +522,6 @@ def _compute_EVC(args):
     outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
                         allocation_vector=allocation_vector,
                         runtime_params=runtime_params,
-                        time_scale=time_scale,
                         context=context)
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,

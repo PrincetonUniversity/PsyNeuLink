@@ -454,7 +454,6 @@ def run(object,
         call_after_trial:tc.optional(callable)=None,
         call_before_time_step:tc.optional(callable)=None,
         call_after_time_step:tc.optional(callable)=None,
-        time_scale:tc.optional(tc.enum(TimeScale.TRIAL, TimeScale.TIME_STEP))=None,
         termination_processing=None,
         termination_learning=None,
         context=None):
@@ -468,8 +467,7 @@ def run(object,
     call_before_trial=None,      \
     call_after_trial=None,       \
     call_before_time_step=None,  \
-    call_after_time_step=None,   \
-    time_scale=None)
+    call_after_time_step=None,   \)
 
     Run a sequence of executions for a `Process` or `System`.
 
@@ -584,8 +582,6 @@ def run(object,
 
     object.targets = targets
 
-    time_scale = time_scale or TimeScale.TRIAL
-
     # SET LEARNING (if relevant)
     # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
     #      IMPLEMENT learning_enabled FOR SYSTEM, WHICH FORCES LEARNING OF PROCESSES WHEN SYSTEM EXECUTES?
@@ -668,7 +664,6 @@ def run(object,
             result = object.execute(
                 input=execution_inputs,
                 execution_id=execution_id,
-                time_scale=time_scale,
                 termination_processing=termination_processing,
                 termination_learning=termination_learning,
                 context=context
