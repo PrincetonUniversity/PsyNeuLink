@@ -313,7 +313,9 @@ from psyneulink.components.shellclasses import System_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import INDEX, SEQUENTIAL
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, \
+    CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, OBJECTIVE_MECHANISM, PRODUCT, \
+    PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT, COMMAND_LINE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -788,9 +790,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     # ---------------------------------------------------
 
         if self.control_signals:
-
-
-
             self._output_states = []
 
             # for i, control_signal in enumerate(self.control_signals):
@@ -798,9 +797,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
             for control_signal in self.control_signals:
                 self._instantiate_control_signal(control_signal, context=context)
 
-        super()._instantiate_output_states(context=context)
+        # If no ControlSignals are specified, don't instantiate any Outputstates
+        #    (note: this overrides ordinary instantiatiation of a default OutputState for a Mechanism)
+        if self.output_states:
+            super()._instantiate_output_states(context=context)
 
-        # Reassign control_signals to capture any user_defined ControlSignals instantiated by in call to super
+        # Reassign control_signals to capture any user_defined ControlSignals instantiated in call to super
         #    and assign to ContentAddressableList
         self._control_signals = ContentAddressableList(component_type=ControlSignal,
                                                        list=[state for state in self.output_states
@@ -885,8 +887,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         return control_signal
 
-
-
     def _execute(self,
                  variable=None,
                  runtime_params=None,
@@ -954,13 +954,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
             self.system._validate_monitored_state_in_system(output_states, context=context)
 
     @tc.typecheck
-    def assign_as_controller(self, system:System_Base, context=None):
+    def assign_as_controller(self, system:System_Base, context=COMMAND_LINE):
         """Assign ControlMechanism as `controller <System.controller>` for a `System`.
 
         **system** must be a System for which the ControlMechanism should be assigned as the `controller
-        <System.controller>`;  if the specified System already has a `controller <System.controller>`,
-        it will be replaced by the current one;  if the current one is already the `controller <System.controller>`
-        for another System, it will be disabled for that System.
+        <System.controller>`.
+        If the specified System already has a `controller <System.controller>`, it will be replaced by the current
+        one, and the current one will inherit any ControlSignals previously specified for the old controller or the
+        System itself.
+        If the current one is already the `controller <System.controller>` for another System, it will be disabled
+        for that System.
         COMMENT:
             [TBI:
             The ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>`,
@@ -1004,11 +1007,27 @@ class ControlMechanism(AdaptiveMechanism_Base):
         monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
         self.add_monitored_output_states(monitored_output_states)
 
-        # Then, assign it ControlSignals for any parameters in the current System specified for control
-        # FIX: 1/11/18 - NOT RETURNING ANY CONTROLSIGNALS FOR SYSTEM BELOW:
-        system_control_signals = system._get_control_signals_for_system(system.control_signals, context=context)
+        # # MODIFIED 1/11/18 OLD:
+        # # Then, assign it ControlSignals for any parameters in the current System specified for control
+        # system_control_signals = system._get_control_signals_for_system(system.control_signals, context=context)
+        # for control_signal_spec in system_control_signals:
+        #     self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
+
+        # MODIFIED 1/11/18 NEW:
+        # The system does NOT already have a controller,
+        #    so assign it ControlSignals for any parameters in the System specified for control
+        if system.controller is None:
+            system_control_signals = system._get_control_signals_for_system(system.control_signals, context=context)
+        # The system DOES already have a controller,
+        #    so assign it the old controller's ControlSignals
+        else:
+            system_control_signals = system.control_signals
+            for control_signal in system_control_signals:
+                control_signal.owner = None
         for control_signal_spec in system_control_signals:
             self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
+
+        # MODIFIED 1/11/18 END
 
         # If it HAS been assigned a System, make sure it is the current one
         if self.system and not self.system is system:

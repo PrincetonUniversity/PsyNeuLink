@@ -140,8 +140,8 @@ mySystem = pnl.System(
 )
 
 control_mech = pnl.EVCControlMechanism(name='NEW CONTROLLER')
-# control_mech.assign_as_controller(mySystem, context='dummy')
-control_mech.assign_as_controller(mySystem)
+control_mech.assign_as_controller(mySystem, context='dummy')
+# control_mech.assign_as_controller(mySystem)
 
 # Show characteristics of system:
 mySystem.show()

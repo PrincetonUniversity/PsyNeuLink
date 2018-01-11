@@ -1926,7 +1926,7 @@ class System(System_Base):
         if control_mech_spec is None:
             return
 
-       # Warn for request to assign the ControlMechanism already assigned
+        # Warn for request to assign the ControlMechanism already assigned
         if control_mech_spec is self.controller and self.prefs.verbosePref:
             warnings.warn("{} has already been assigned as the {} for {}; assignment ignored".
                           format(control_mech_spec, CONTROLLER, self.name))
@@ -1934,14 +1934,7 @@ class System(System_Base):
 
         # An existing ControlMechanism is being assigned
         if isinstance(control_mech_spec, ControlMechanism):
-            controller = control_mech_spec
-
-# FIX: EVEN IF THE CONTROLLER HAS BEEN ASSIGNED TO A SYSTEM, STILL NEED TO ADD MONITORED_OUTPUT_STATES AND
-# FIX:            CONTROL_SIGNALS FOR NEW SYSTEM
-
-            # If it has NOT been assigned a System or already has another controller:
-            if controller.system is None or not controller.system is self:
-                controller.assign_as_controller(self, context=context)
+            control_mech_spec.assign_as_controller(self, context=context)
 
         # A ControlMechanism class or subclass is being used to specify the controller
         elif inspect.isclass(control_mech_spec) and issubclass(control_mech_spec, ControlMechanism):
@@ -1962,7 +1955,7 @@ class System(System_Base):
             warnings.warn("The existing {} for {} ({}) is being replaced by {}".
                           format(CONTROLLER, self.name, self.controller.name, controller.name))
 
-        # Make assignment
+        # Make assignment (and assign controller's ControlSignals to self.control_signals)
         self._controller = controller
         if self.control_signals is None:
             self.control_signals = controller.control_signals
