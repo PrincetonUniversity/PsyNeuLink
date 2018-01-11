@@ -738,9 +738,10 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         #region ASSIGN PARAMETER VALUES
 
-        smoothing_factor = self.smoothing_factor
-        clip = self.clip
-        noise = self.noise
+        smoothing_factor = self.get_current_mechanism_param("smoothing_factor")
+        clip = self.get_current_mechanism_param("clip")
+        noise = self.get_current_mechanism_param("noise")
+        initial_value = self.get_current_mechanism_param("initial_value")
         #endregion
 
         #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
@@ -756,10 +757,10 @@ class TransferMechanism(ProcessingMechanism_Base):
 
                 self.integrator_function = AdaptiveIntegrator(
                                             variable,
-                                            initializer = self.initial_value,
-                                            noise = self.noise,
-                                            rate = self.smoothing_factor,
-                                            owner = self)
+                                            initializer=initial_value,
+                                            noise=noise,
+                                            rate=smoothing_factor,
+                                            owner=self)
 
             current_input = self.integrator_function.execute(variable,
                                                         # Should we handle runtime params?
