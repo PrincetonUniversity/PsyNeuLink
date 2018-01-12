@@ -694,24 +694,22 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_output_states(context=context)
 
     def get_param_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            param_type_list = [self.function_object.get_param_struct_type()]
-            if self.integrator_mode:
-                assert self.integrator_function is not None
-                param_type_list.append(self.integrator_function.get_param_struct_type())
+         param_type_list = [self.function_object.get_param_struct_type()]
+         if self.integrator_mode:
+             assert self.integrator_function is not None
+             param_type_list.append(self.integrator_function.get_param_struct_type())
 
-            return ir.LiteralStructType(param_type_list)
+         return ir.LiteralStructType(param_type_list)
 
 
     def get_context_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            context_type_list = [self.function_object.get_context_struct_type()]
-            if self.integrator_mode:
-                assert self.integrator_function is not None
-                context_type_list.append(self.integrator_function.get_context_struct_type())
+        context_type_list = [self.function_object.get_context_struct_type()]
+        if self.integrator_mode:
+           assert self.integrator_function is not None
+           context_type_list.append(self.integrator_function.get_context_struct_type())
 
-            context_type = ir.LiteralStructType(context_type_list)
-            return context_type
+        context_type = ir.LiteralStructType(context_type_list)
+        return context_type
 
 
     def get_output_struct_type(self):
