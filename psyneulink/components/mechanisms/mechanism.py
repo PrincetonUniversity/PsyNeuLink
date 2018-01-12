@@ -804,6 +804,7 @@ __all__ = [
     'Mechanism_Base', 'MechanismError'
 ]
 
+import ctypes
 import psyneulink.llvm as pnlvm
 
 logger = logging.getLogger(__name__)
@@ -2258,6 +2259,41 @@ class Mechanism_Base(Mechanism):
                                      format(value, append_type_to_name(self)))
         self.value[0] = value
         self._update_output_states()
+
+    def _bin_execute(self,
+                 variable=None,
+                 runtime_params=None,
+                 clock=CentralClock,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+
+        params = self.function_object.get_param_initializer()
+
+        bf = self._llvmBinFunction
+
+        def nested_len(x):
+            try:
+                return sum(nested_len(y) for y in x)
+            except:
+                return 1
+        ret = np.zeros(nested_len(variable)) #default is numpy.float64
+        par_struct_ty, context_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+
+        if self.nv_state is None:
+            initializer = self.function_object.get_context_initializer()
+            self.nv_state = context_struct_ty(initializer,)
+
+        ct_context = self.nv_state
+        ct_param = par_struct_ty(params)
+
+        variable = np.asarray(variable, dtype=np.float64)
+        # This is bit hacky because numpy can't cast to arrays
+        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
+
+        bf(ct_param, ctypes.byref(ct_context), ct_vi, ct_vo)
+
+        return ret
 
     def _execute(self,
                     variable=None,
