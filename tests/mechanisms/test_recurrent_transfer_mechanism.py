@@ -611,8 +611,11 @@ class TestRecurrentTransferMechanismInProcess:
         p.run(inputs={T1: [[1, 2, 3, 4]]})
         proj.matrix = [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
         proj.function_object.matrix = [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
-        p.run(inputs={T1: [[1, 2, 3, 4]]})
-        assert proj.matrix == [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
+        assert np.allclose(proj.matrix, [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]])
+        # p.run(inputs={T1: [[1, 2, 3, 4]]})
+        T1.execute([[1, 2, 3, 4]])
+        proj.execute(context="EXECUTING testing projection")
+        assert np.allclose(proj.matrix, np.array([[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]))
 
     def test_recurrent_mech_process_matrix_change(self):
         R = RecurrentTransferMechanism(
