@@ -596,6 +596,24 @@ class TestRecurrentTransferMechanismInProcess:
         np.testing.assert_allclose(R.value, [[-1.0, 4.0, 2.0, 11.5]])
         np.testing.assert_allclose(T.value, [[16.5, 16.5, 16.5]])
 
+    def test_transfer_mech_process_matrix_change(self):
+        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        T1 = TransferMechanism(
+            size=4,
+            function=Linear)
+        proj = MappingProjection(matrix=[[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]])
+        T2 = TransferMechanism(
+            size=4,
+            function=Linear)
+
+        p = Process(size=4, pathway=[T1, proj, T2])
+
+        p.run(inputs={T1: [[1, 2, 3, 4]]})
+        proj.matrix = [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
+        proj.function_object.matrix = [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
+        p.run(inputs={T1: [[1, 2, 3, 4]]})
+        assert proj.matrix == [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
+
     def test_recurrent_mech_process_matrix_change(self):
         R = RecurrentTransferMechanism(
             size=4,
@@ -606,6 +624,7 @@ class TestRecurrentTransferMechanismInProcess:
             function=Linear)
         p = Process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.matrix = [[2, 0, 1, 3]] * 4
+
         p.run(inputs={T: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(T.value, [[1, 2, 3, 4]])
         np.testing.assert_allclose(R.value, [[1, 2, 3, 4]])
@@ -718,6 +737,8 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(T.value, [[5.5, 5.5, 5.5, 5.5, 5.5]])
         R.hetero = 0
         s.run(inputs={R: [[-1.5, 0, 1, 2]]})
+        print("hetero = ", R.hetero)
+        print("auto = ", R.auto)
         np.testing.assert_allclose(R.value, [[-.5, 4, 10, 0]])
         np.testing.assert_allclose(T.value, [[13.5, 13.5, 13.5, 13.5, 13.5]])
         R.auto = [0, 0, 0, 0]
