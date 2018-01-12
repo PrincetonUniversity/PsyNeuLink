@@ -1020,8 +1020,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
             system_control_signals = system.control_signals
             for control_signal in system_control_signals:
                 control_signal.owner = None
+        # FIX: 1/11/18 - GET RID OF DEFAULT CONTROLSIGNAL IF IT HAS NO CONTROLPROJECTIONS ASSIGNED
+        if len(self.control_signals) == 1 and not self.control_signals[0].efferents:
+            del self._output_states[0]
+            del self.control_signals[0]
+            self.allocation_policy = None
+
         for control_signal_spec in system_control_signals:
-            self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
+            control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
+            control_signal.owner = self
+            self.control_signals.append(control_signal)
         # MODIFIED 1/11/18 END
 
         # If it HAS been assigned a System, make sure it is the current one
