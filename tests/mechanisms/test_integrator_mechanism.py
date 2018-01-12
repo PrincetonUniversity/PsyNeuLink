@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from psyneulink.components.functions.function import AGTUtilityIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
+from psyneulink.components.functions.function import AGTUtilityIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, Linear, OrnsteinUhlenbeckIntegrator
 from psyneulink.components.functions.function import AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, NormalDist, SimpleIntegrator
 from psyneulink.components.functions.function import FunctionError
 from psyneulink.components.mechanisms.mechanism import MechanismError
@@ -10,6 +10,8 @@ from psyneulink.scheduling.timescale import TimeScale
 
 
 # ======================================= FUNCTION TESTS ============================================
+
+VECTOR_SIZE=4
 
 class TestIntegratorFunctions:
 
@@ -24,6 +26,26 @@ class TestIntegratorFunctions:
         # P = Process(pathway=[I])
         val = I.execute(1)
         assert val == 25
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    def test_transfer_integrator(self, benchmark):
+        I = IntegratorMechanism(
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Linear(slope=5.0))
+        val = benchmark(I.execute, [1.0 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    def test_transfer_integrator_llvm(self, benchmark):
+        I = IntegratorMechanism(
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Linear(slope=5.0))
+        val = benchmark(I.execute, [1.0 for i in range(VECTOR_SIZE)], bin_execute=True)
+        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
     def test_constant_integrator(self):
         I = IntegratorMechanism(

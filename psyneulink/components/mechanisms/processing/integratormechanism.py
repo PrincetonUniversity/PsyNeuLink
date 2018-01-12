@@ -75,6 +75,11 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, k
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.timescale import TimeScale
 
+import functools
+import ctypes
+import psyneulink.llvm as pnlvm
+from llvmlite import ir
+
 __all__ = [
     'DEFAULT_RATE', 'IntegratorMechanism', 'IntegratorMechanismError'
 ]
@@ -225,6 +230,12 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                   name=name,
                                                   prefs=prefs,
                                                   context=self)
+        def nested_len(x):
+            try:
+                return sum(nested_len(y) for y in x)
+            except:
+                return 1
+        self._variable_length = nested_len(default_variable)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 
@@ -234,4 +245,59 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         return self.function_object.previous_value
     # MODIFIED 6/2/17 END
 
+    def get_param_struct_type(self):
+        param_type_list = [self.function_object.get_param_struct_type()]
+        return ir.LiteralStructType(param_type_list)
 
+
+    def get_context_struct_type(self):
+        context_type_list = [self.function_object.get_context_struct_type()]
+        context_type = ir.LiteralStructType(context_type_list)
+        return context_type
+
+
+    def get_output_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            output_type = ir.LiteralStructType([vec_ty])
+            return output_type
+
+
+    def get_input_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            input_type = ir.LiteralStructType([vec_ty])
+            return input_type
+
+
+    def _gen_llvm_function(self):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_ty = ir.FunctionType(ir.VoidType(),
+                (self.get_param_struct_type().as_pointer(),
+                 self.get_context_struct_type().as_pointer(),
+                 self.get_input_struct_type().as_pointer(),
+                 self.get_output_struct_type().as_pointer()))
+
+            func_name = ctx.module.get_unique_name("integrator_machanism")
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            params, state, si, so = llvm_func.args
+            for p in params, state, si, so:
+                p.attributes.add('nonnull')
+                p.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+            vi = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+            mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            # We know that TransferFunction is not stateful, but a consistent interface would be nicer
+            builder.call(main_function, [mf_params, vi, vo])
+
+            builder.ret_void()
+        return func_name
