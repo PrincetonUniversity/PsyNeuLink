@@ -1320,6 +1320,8 @@ class Mechanism_Base(Mechanism):
         self.__llvm_bin_function = None
         self.__llvm_recompile = True
 
+        self.nv_state = None
+
     @property
     def llvmSymbolName(self):
         if self.__llvm_regenerate:
