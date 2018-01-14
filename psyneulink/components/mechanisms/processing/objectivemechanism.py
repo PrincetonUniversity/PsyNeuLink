@@ -38,21 +38,22 @@ Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The **monitored_output_states** argument of the constructor specifies the `OutputStates <OutputState>` it monitors.
-This takes the place of the **input_states** argument used by most other forms of `Mechanism`, and is used by the
-ObjectiveMechanism to create an `InputState` for each OutputState it monitors, along with a `MappingProjection` from
-the OutputState to the InputState.  The **monitored_output_states** argument takes a list of items that can include
-any of the `forms of specification <InputState_Specification>` used in a standard **input_states** argument. For the
-**monitored_output_states** argument, this is usually a list of OutputStates to be monitored.  However, as with a
-standard **input_states** argument, items in the  **monitored_output_states** argument can also be used to specify
-attributes of the InputState and/or MappingProjection to it created by the ObjectiveMechanism to monitor the specified
-OutputState.  In general, the `value <OutputState.value>` of each specified OutputState determines the format of the
-`variable <InputState.variable>` of the InputState that is created for it by the ObjectiveMechanism. However, this can
-be overridden using the ObjectiveMechanism's `default_variable <ObjectiveMechanism.default_variable>` or `size
-<ObjectiveMechanism.size>` attributes (see `Mechanism_InputState_Specification`), or by specifying a Projection from
-the OutputState to the InputState (see `Input Source Specification <InputState_Projection_Source_Specification>`).
-If an item in the **monitored_output_states** argument specifies an InputState for the ObjectiveMechanism, but not
-the OutputState to be monitored, the InputState is created but will be ignored until an OutputState (and
-MappingProjection from it) are specified for that InputState.
+This takes the place of the **input_states** argument used by most other forms of `Mechanism <Mechanism>`, and is used
+by the ObjectiveMechanism to create an `InputState` for each OutputState it monitors, along with a `MappingProjection`
+from the OutputState to that InputState.  The **monitored_output_states** argument takes a list of items that can
+include any of the `forms of specification <InputState_Specification>` used in a standard **input_states** argument.
+For the **monitored_output_states** argument, this is usually a list of OutputStates to be monitored.  However,
+as with a standard **input_states** argument, items in the  **monitored_output_states** argument can also be used to
+specify attributes of the InputState and/or MappingProjection to it created that the ObjectiveMechanism creates to
+monitor the specified OutputState.  In general, the `value <OutputState.value>` of each specified OutputState determines
+the format of the `variable <InputState.variable>` of the InputState that is created for it by the ObjectiveMechanism.
+However, this can be overridden using the ObjectiveMechanism's `default_variable <ObjectiveMechanism.default_variable>`
+or `size <ObjectiveMechanism.size>` attributes (see `Mechanism InputState specification
+<Mechanism_InputState_Specification>`), or by specifying a Projection from the OutputState to the InputState (see
+`Input Source Specification <InputState_Projection_Source_Specification>`). If an item in the
+**monitored_output_states** argument specifies an InputState for the ObjectiveMechanism, but not the OutputState to
+be monitored, the InputState is created but will be ignored until an OutputState (and MappingProjection from it) are
+specified for that InputState.
 
 
 COMMENT:
@@ -430,7 +431,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     default_variable : number, list or np.ndarray : default monitored_output_states
         specifies the format of the `variable <ObjectiveMechanism.variable>` for the `InputStates` of the
-        ObjectiveMechanism (see `Mechanism_InputState_Specification` for details).
+        ObjectiveMechanism (see `Mechanism InputState specification <Mechanism_InputState_Specification>` for details).
 
     size : int, list or np.ndarray of ints
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
