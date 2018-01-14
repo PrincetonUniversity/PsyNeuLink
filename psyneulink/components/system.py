@@ -2124,22 +2124,6 @@ class System(System_Base):
                                   "is not a recognized specification for an {}".
                                   format(MONITOR_FOR_CONTROL, self.name, spec, OutputState.__name__))
 
-
-                # Get OutputState(s), and matrix specified for Projection to each,
-                #    from the ProjectionTuple in the PROJECTIONS entry of the PARMS dict.
-                # However, use weight and exponent entries for InputState, rather than any specified for
-                #    for each Projection (in its projection_spec).
-                # The InputState weight and exponent are used in the MonitoredOutputStateTuple
-                #    as they specify the how the InputState should be weighted;
-                # Any weight(s) and/or exponent(s) specified in the projection_spec(s) (a ProjectionTuple)
-                #    are used for individual Projections to the InputState when it is  actually instantiated.
-                for projection_spec in input_state_spec[PARAMS][PROJECTIONS]:
-                    monitored_output_state_tuples.extend([MonitoredOutputStateTuple(
-                                                                        output_state=projection_spec.state,
-                                                                        weight=input_state_spec[WEIGHT],
-                                                                        exponent=input_state_spec[EXPONENT],
-                                                                        matrix=projection_spec.matrix)])
-
             # Delete original item of all_specs, and assign ones parsed into monitored_output_state_tuple(s)
             del all_specs[i]
             all_specs.insert(i, monitored_output_state_tuples)
