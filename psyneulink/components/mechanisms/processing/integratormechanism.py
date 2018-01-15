@@ -270,6 +270,10 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             return input_type
 
 
+    def get_param_initializer(self):
+        return tuple([self.function_object.get_param_initializer()]);
+
+
     def _gen_llvm_function(self):
         func_name = None
         llvm_func = None
