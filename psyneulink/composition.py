@@ -52,6 +52,9 @@ from collections import Iterable, OrderedDict
 from enum import Enum
 
 import numpy as np
+import ctypes
+import psyneulink.llvm as pnlvm
+from llvmlite import ir
 
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
@@ -363,6 +366,15 @@ class Composition(object):
 
         # TBI: update self.sched whenever something is added to the composition
         self.sched = Scheduler(composition=self)
+
+
+        # Compiled resources
+        self.__params_struct = None
+        self.__context_struct = None
+        self.__data_struct = None
+
+        self.__compiled_mech = {}
+        self.__compiled_results_extract = {}
 
     @property
     def graph_processing(self):
@@ -775,7 +787,8 @@ class Composition(object):
         call_before_pass=None,
         call_after_time_step=None,
         call_after_pass=None,
-        execution_id=None
+        execution_id=None,
+        bin_execute=False,
     ):
         '''
             Passes inputs to any Mechanisms receiving inputs directly from the user, then coordinates with the Scheduler
@@ -832,6 +845,9 @@ class Composition(object):
         execution_scheduler = scheduler_processing
         num = None
 
+        if (bin_execute):
+            self.__bin_initialize(inputs)
+
         if call_before_pass:
             call_before_pass()
 
@@ -853,17 +869,47 @@ class Composition(object):
             # execute each mechanism with EXECUTING in context
             for mechanism in next_execution_set:
                 if isinstance(mechanism, Mechanism):
-                    num = mechanism.execute(context=EXECUTING + "composition")
-                    print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
-                    print("result = ", num)
-                    print()
-                    print()
+                    if bin_execute:
+                        bin_mechanism = self.__get_bin_mechanism(mechanism);
+                        c, p, d = bin_mechanism.byref_arg_types
+                        # Cast the arguments. Structures are the same but ctypes
+                        # creates new class every time.
+                        bin_mechanism(ctypes.cast(ctypes.byref(self.__context_struct), ctypes.POINTER(c)),
+                                      ctypes.cast(ctypes.byref(self.__params_struct), ctypes.POINTER(p)),
+                                      ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(d)))
+                        num = mechanism
+
+#                        bin_mech_extract = self.__get_bin_mech_output_extract(num)
+#                        data, out = bin_mech_extract.byref_arg_types
+                        #FIXME This assumes the result is the same format as
+                        #      default variable
+#                        res = np.zeros(len(num.instance_defaults.variable))
+#                        ct_res = res.ctypes.data_as(ctypes.POINTER(out))
+#                        bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ct_res)
+#                        print(res);
+                    else:
+                        num = mechanism.execute(context=EXECUTING + "composition")
+#                        print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
+#                        print("result = ", num)
+#                        print()
+#                        print()
 
             if call_after_time_step:
                 call_after_time_step()
 
         if call_after_pass:
             call_after_pass()
+
+        # extract result here
+        if bin_execute:
+            bin_mech_extract = self.__get_bin_mech_output_extract(num)
+            data, out = bin_mech_extract.byref_arg_types
+            #FIXME This assumes the result is the same format as
+            #      default variable
+            res = np.zeros(len(num.instance_defaults.variable))
+            ct_res = res.ctypes.data_as(ctypes.POINTER(out))
+            bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ct_res)
+            num=[res]
 
         return num
 
@@ -882,6 +928,7 @@ class Composition(object):
         call_after_pass=None,
         call_before_trial=None,
         call_after_trial=None,
+        bin_execute=False,
     ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
@@ -998,6 +1045,7 @@ class Composition(object):
                 call_after_time_step,
                 call_after_pass,
                 execution_id,
+                bin_execute=bin_execute,
             )
 
             if num is not None:
@@ -1010,3 +1058,123 @@ class Composition(object):
 
         # return the output of the LAST mechanism executed in the composition
         return result
+
+    def get_param_struct_type(self):
+        param_type_list = [m.get_param_struct_type() for m in self.mechanisms]
+        return ir.LiteralStructType(param_type_list)
+
+    def get_context_struct_type(self):
+        ctx_type_list = [m.get_context_struct_type() for m in self.mechanisms]
+        return ir.LiteralStructType(ctx_type_list)
+
+    def get_data_struct_type(self):
+        output_type_list = [m.get_input_struct_type() for m in self.input_mechanisms.keys()]
+        output_type_list.extend([m.get_output_struct_type() for m in self.mechanisms])
+        return ir.LiteralStructType(output_type_list)
+
+
+    def __get_bin_mechanism(self, mechanism):
+        if mechanism not in self.__compiled_mech:
+            wrapper = self.__gen_mech_wrapper(mechanism)
+            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
+            self.__compiled_mech[mechanism] = bin_f
+            return bin_f
+
+        return self.__compiled_mech[mechanism]
+
+
+    def __get_bin_mech_output_extract(self, mechanism):
+        if mechanism not in self.__compiled_results_extract:
+            wrapper = self.__gen_mech_result_extract(mechanism)
+            bin_f = pnlvm.LLVMBinaryFunction.get(wrapper)
+            self.__compiled_results_extract[mechanism] = bin_f
+            return bin_f
+
+        return self.__compiled_results_extract[mechanism]
+
+
+    def __bin_initialize(self, inputs, reinit=False):
+        data = [tuple([inputs[m]]) if m in inputs else tuple(m.instance_defaults.variable) for m in self.input_mechanisms.keys()]
+        self.__data_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())(tuple(data))
+        if reinit or self.__params_struct is None:
+            params = tuple([m.get_param_initializer() for m in self.mechanisms])
+            self.__params_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())(*params) # FIXME: I have no idea why this needs *
+        if reinit or self.__context_struct is None:
+            self.__context_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_context_struct_type())()
+
+    def __gen_mech_wrapper(self, mech):
+        idx = self.mechanisms.index(mech)
+        #TODO should this use mechanism role?
+        if mech in self.input_mechanisms.keys():
+            vi_idx = list(self.input_mechanisms.keys()).index(mech)
+        else:
+            # Get projection
+            par = self.graph.get_parents_from_component(mech)
+            assert len(par) == 1
+            par_proj = par[0].component
+
+            # Get parent mechanism
+            par = self.graph.get_parents_from_component(par_proj)
+            assert len(par) == 1
+            par_mech = par[0].component
+            vi_idx = len(self.input_mechanisms) + self.mechanisms.index(par_mech)
+
+        vo_idx = idx + len(self.input_mechanisms)
+        func_name = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_name = ctx.module.get_unique_name("comp_wrap_" + mech.name)
+            func_ty = ir.FunctionType(ir.VoidType(), (
+                self.get_context_struct_type().as_pointer(),
+                self.get_param_struct_type().as_pointer(),
+                self.get_data_struct_type().as_pointer()))
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            context, params, data = llvm_func.args
+            for a in llvm_func.args:
+                a.attributes.add('nonnull')
+                a.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+
+            context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
+            vo = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vo_idx)])
+
+            mech_function = ctx.get_llvm_function(mech.llvmSymbolName)
+            builder.call(mech_function, [params, context, vi, vo])
+            builder.ret_void()
+
+        return func_name
+
+
+    def __gen_mech_result_extract(self, mech):
+        idx = self.mechanisms.index(mech)
+
+        res_idx = idx + len(self.input_mechanisms)
+        func_name = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_name = ctx.module.get_unique_name("comp_result_wrap_" + mech.name)
+            func_ty = ir.FunctionType(ir.VoidType(), (
+                self.get_data_struct_type().as_pointer(),
+                mech.get_output_struct_type().as_pointer()))
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            data, vo = llvm_func.args
+            for a in llvm_func.args:
+                a.attributes.add('nonnull')
+                a.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+
+            res = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(res_idx)])
+            data = builder.load(res)
+            builder.store(data, vo)
+
+            builder.ret_void()
+
+        return func_name
