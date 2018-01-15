@@ -724,6 +724,14 @@ class TransferMechanism(ProcessingMechanism_Base):
             input_type = ir.LiteralStructType([vec_ty])
             return input_type
 
+    def get_param_initializer(self):
+         param_list = [self.function_object.get_param_initializer()]
+         if self.integrator_mode:
+             assert self.integrator_function is not None
+             param_list.append(self.integrator_function.get_param_initializer())
+
+         return tuple(param_list)
+
 
     def __gen_llvm_clamp(self, builder, index, ctx, vo, min_val, max_val):
         ptri = builder.gep(vo, [ctx.int32_ty(0), index])
