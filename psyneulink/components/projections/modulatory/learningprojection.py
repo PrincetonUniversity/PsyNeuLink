@@ -115,7 +115,7 @@ additional details).
 
 .. note::
    The `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes of a
-   LearningProjection are not commonly used, and are implemented largely for generalit and compatibility with other
+   LearningProjection are not commonly used, and are implemented largely for generality and compatibility with other
    types of `Projection`.  They are distinct from, and are applied in addition to the LearningProjection's
    `learning_rate <LearningProjection.learning_rate>` attribute.  As noted under  `Projection
    <Projection_Weight_Exponent>`, they are not normalized and thus their effects aggregate if a ParameterState
@@ -175,18 +175,14 @@ from psyneulink.components.projections.projection import Projection_Base, _is_pr
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.globals.keywords import ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, \
-    LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE, NAME, \
-    CONTEXT
+from psyneulink.globals.keywords import CONTEXT, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, NAME, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import iscompatible, parameter_spec
-from psyneulink.scheduling.timescale import CentralClock
 
 __all__ = [
     'DefaultTrainingMechanism', 'LearningProjection', 'LearningProjectionError', 'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDER_DIM',
 ]
-
 # Params:
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
@@ -598,7 +594,7 @@ class LearningProjection(ModulatoryProjection_Base):
         learned_projection.has_learning_projection = True
 
 
-    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
+    def execute(self, input=None, params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
@@ -619,16 +615,8 @@ class LearningProjection(ModulatoryProjection_Base):
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate
 
-
         if not INITIALIZING in context and self.reportOutputPref:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, self.weight_change_matrix))
-
-        # TEST PRINT
-        # print("\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
-        # print("\n@@@ WEIGHT CHANGES CALCULATED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
-        # TEST DEBUG MULTILAYER
-        # print("\n{}\n@@@ WEIGHT CHANGES FOR {} TRIAL {}:\n{}".
-        #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.value))
+            print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(self.weight_change_matrix)))
 
         return self.value
 

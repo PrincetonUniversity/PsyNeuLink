@@ -341,7 +341,7 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction
-from psyneulink.scheduling.timescale import CentralClock, Clock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'EVCControlMechanism', 'EVCError',
@@ -550,7 +550,7 @@ class EVCControlMechanism(ControlMechanism):
     COMMENT:
         NOTES ON API FOR CUSTOM VERSIONS:
             Gets controller as argument (along with any standard params specified in call)
-            Must include **kwargs to receive standard args (variable, params, time_scale, and context)
+            Must include **kwargs to receive standard args (variable, params, and context)
             Must return an allocation policy compatible with controller.allocation_policy:
                 2d np.array with one array for each allocation value
 
@@ -662,8 +662,8 @@ class EVCControlMechanism(ControlMechanism):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the EVCControlMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the EVCControlMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
     """
@@ -792,12 +792,12 @@ class EVCControlMechanism(ControlMechanism):
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
-                name=origin_mech.name + " " + PREDICTION_MECHANISM,
-                default_variable = origin_mech.input_state.instance_defaults.variable,
-                # default_variable=variables,
-                # INPUT_STATES=state_names,
-                params = prediction_mechanism_params,
-                context=context,
+                    name=origin_mech.name + " " + PREDICTION_MECHANISM,
+                    default_variable = origin_mech.input_state.instance_defaults.variable,
+                    # default_variable=variables,
+                    # INPUT_STATES=state_names,
+                    params = prediction_mechanism_params,
+                    context=context,
             )
             prediction_mechanism._role = CONTROL
             prediction_mechanism.origin_mech = origin_mech
@@ -876,8 +876,6 @@ class EVCControlMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    clock=CentralClock,
-                    time_scale=TimeScale.TRIAL,
                     context=None):
         """Determine `allocation_policy <EVCControlMechanism.allocation_policy>` for next run of System
 
@@ -920,7 +918,6 @@ class EVCControlMechanism(ControlMechanism):
         allocation_policy = self.function(controller=self,
                                           variable=variable,
                                           runtime_params=runtime_params,
-                                          time_scale=time_scale,
                                           context=context)
         # IMPLEMENTATION NOTE:
         # self.system._restore_system_state()
@@ -954,7 +951,6 @@ class EVCControlMechanism(ControlMechanism):
                        inputs,
                        allocation_vector,
                        runtime_params=None,
-                       time_scale=TimeScale.TRIAL,
                        context=None):
         """
         Run simulation of `System` for which the EVCControlMechanism is the `controller <System.controller>`.
@@ -976,9 +972,6 @@ class EVCControlMechanism(ControlMechanism):
             their functions, or Projection(s) to any of their states.  See `Mechanism_Runtime_Parameters` for a full
             description.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the Mechanism is executed on the `TIME_STEP` or `TRIAL` time scale.
-
         """
 
         if self.value is None:
@@ -990,17 +983,14 @@ class EVCControlMechanism(ControlMechanism):
         for i in range(len(self.control_signals)):
             # self.control_signals[list(self.control_signals.values())[i]].value = np.atleast_1d(allocation_vector[i])
             self.value[i] = np.atleast_1d(allocation_vector[i])
-        self._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+        self._update_output_states(runtime_params=runtime_params, context=context)
 
-        # Execute simulation run of system for the current allocation_policy
-        sim_clock = Clock('EVC SIMULATION CLOCK')
-
-        self.system.run(inputs=inputs, clock=sim_clock, time_scale=time_scale, context=context)
+        self.system.run(inputs=inputs, context=context)
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)
         # self.objective_mechanism.execute(context=EVC_SIMULATION)
-        monitored_states = self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+        monitored_states = self._update_input_states(runtime_params=runtime_params, context=context)
 
         for i in range(len(self.control_signals)):
             self.control_signal_costs[i] = self.control_signals[i].cost

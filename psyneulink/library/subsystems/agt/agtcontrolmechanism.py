@@ -129,7 +129,7 @@ from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'AGTControlMechanism', 'AGTControlMechanismError', 'ControlMechanismRegistry', 'MONITORED_OUTPUT_STATE_NAME_SUFFIX',
@@ -148,7 +148,7 @@ class AGTControlMechanismError(Exception):
 
 class AGTControlMechanism(ControlMechanism):
     """
-    AGTControlMechanism(                       \
+    AGTControlMechanism(                \
         system=None,                    \
         monitored_output_states=None,   \
         function=Linear,                \
@@ -353,14 +353,11 @@ class AGTControlMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    clock=CentralClock,
-                    time_scale=TimeScale.TRIAL,
                     context=None):
         """Updates AGTControlMechanism's ControlSignal based on input and mode parameter value
         """
         return self.function(variable=variable,
                              params=runtime_params,
-                             time_scale=time_scale,
                              context=context)
 
     @property

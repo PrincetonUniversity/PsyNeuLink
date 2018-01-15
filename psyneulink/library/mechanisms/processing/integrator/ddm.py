@@ -176,12 +176,9 @@ COMMENT:
 The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism assigns one **inputState** to
 each item in the `default_variable` argument, corresponding to each of the decision processes implemented
 (see :ref:`Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
-`function <DDM.function>` and `time_scale <DDM.time_scale>` parameters are the primary determinants of how the
+`function <DDM.function>` parameters is the primary determinants of how the
 decision process is executed, and what information is returned. The `function <DDM.function>` parameter specifies
-the analytical solution to use when `time_scale <DDM.time_scale>` is  set to :keyword:`TimeScale.TRIAL` (see
-:ref:`Functions <DDM_Functions>` below); when `time_scale <DDM.time_scale>` set to `TimeScale.TIME_STEP`,
-executing the DDM Mechanism numerically integrates the path of the decision variable (see `Execution <DDM_Execution>`
-below).  The number of `OutputStates <OutputState>` is determined by the `function <DDM.function>` in use (see
+the analytical solution to use. The number of `OutputStates <OutputState>` is determined by the `function <DDM.function>` in use (see
 :ref:`list of output values <DDM_Results>` below).
 
 [TBI - average_output_states ARGUMENT/OPTION AFTER IMPLEMENTING MULTIPROCESS DDM]
@@ -201,21 +198,14 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
     The DDM process uses the same set of parameters for all modes of execution.  These can be specified as arguments
     for the functions used in TRIAL mode, or in a params dictionary assigned to the `params` argument,
     using the keywords in the list below, as in the following example::
-        my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1),
-                     params={DRIFT_RATE:(0.2, ControlProjection),
-                             STARTING_POINT:-0.5},
-                     time_scale=TimeScale.TRIAL)
-
-    .. note::  Parameters specified in the `params` argument (as in the example above) will be used for both
-       `TRIAL` and `TIME_STEP` mode, since parameters specified in the `params` argument of a Mechanism's constructor
-       override corresponding ones specified as arguments of its `function <Mechanism_Base.function>`
-       (see :doc:`COMPONENT`).  In the example above, this means that even if the `time_scale <DDM.time_scale>`
-       parameter is set to `TimeScale.TRIAL`, the `drift_rate` of 0.2 will be used (rather than 0.1).  For parameters
-       NOT specified as entries in the `params` dictionary, the value specified for those in the function will be
-       used in both `TRIAL` and `TIME_STEP` mode.
-
-    The parameters for the DDM when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL` and
-    `function <DDM.function>` is set to `BogaczEtAl` or `NavarroAndFuss` are:
+        my_DDM = DDM(
+            function=BogaczEtAl(drift_rate=0.1),
+            params={
+                DRIFT_RATE:(0.2, ControlProjection),
+                STARTING_POINT:-0.5
+            },
+        )
+    The parameters for the DDM when `function <DDM.function>` is set to `BogaczEtAl` or `NavarroAndFuss` are:
 
     .. _DDM_Drift_Rate:
 
@@ -228,24 +218,17 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
       effect for each time_step of the decision process.
     ..
     * `STARTING_POINT <starting_point>` (default 0.0)
-      - specifies the starting value of the decision variable.  If `time_scale <DDM.time_scale>` is
-      `TimeScale.TIME_STEP`, the `starting_point` is added to the decision variable on the first call to `function
-      <DDM.function>` but not subsequently.
+      - specifies the starting value of the decision variable.
     ..
     * `THRESHOLD` (default 1.0)
-      - specifies the stopping value for the decision process.  When `time_scale <DDM.time_scale>` is `TIME_STEP`, the
-      integration process is terminated when the absolute value of the decision variable equals the absolute value
-      of threshold.  The `threshold` parameter must be greater than or equal to zero.
+      - specifies the stopping value for the decision process. The `threshold` parameter must be greater than or
+      equal to zero.
     ..
     * `NOISE` (default 0.5)
-      - specifies the variance of the stochastic ("diffusion") component of the decision process.  If
-      `time_scale <DDM.time_scale>` is `TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean
-      normal (Gaussian) distribution on every call of function <DDM.function>`, and added to the decision variable.
+      - specifies the variance of the stochastic ("diffusion") component of the decision process.
     ..
     * `NON_DECISION_TIME` (default 0.2)
       specifies the `t0` parameter of the decision process (in units of seconds).
-      when ``time_scale <DDM.time_scale>`` is  TIME_STEP, it is added to the number of time steps
-      taken to complete the decision process when reporting the response time.
 
 [TBI - MULTIPROCESS DDM - REPLACE BELOW]
 When a DDM Mechanism is executed it computes the decision process, either analytically (in TRIAL mode)
@@ -303,17 +286,19 @@ import random
 
 import numpy as np
 import typecheck as tc
+
 from collections import Iterable
 
 from psyneulink.components.component import method_type
 from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.states.outputstate import StandardOutputStates, SEQUENTIAL
-from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, kwPreferenceSetName
+from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.globals.utilities import is_numeric
 
 __all__ = [
     'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError', 'DECISION_VARIABLE', 'PROBABILITY_LOWER_THRESHOLD',
@@ -321,6 +306,8 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_VARIABLE = 0.0
 
 DECISION_VARIABLE='DECISION_VARIABLE'
 RESPONSE_TIME = 'RESPONSE_TIME'
@@ -349,7 +336,7 @@ class DDM_OUTPUT():
       • `analytic mode <DDM_Analytic_Mode>`: the value of the threshold crossed by the decision variable on the
         current TRIAL (which is either the value of the DDM `function <DDM.function>`'s threshold attribute or its
         negative); \n
-      • `integration mode <DDM_Integration_Mode>`: the value of the decision variable at the current TIME_STEP of 
+      • `integration mode <DDM_Integration_Mode>`: the value of the decision variable at the current TIME_STEP of
         execution. \n
       Corresponds to the 1st item of the DDM's `value <DDM.value>`.
 
@@ -359,7 +346,7 @@ class DDM_OUTPUT():
       • `analytic mode <DDM_Analytic_Mode>`: mean time (in seconds) for the decision variable to reach the positive
         or negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by the analytic
         solution calculated by the `function <DDM.function>`); \n
-      • `integration mode <DDM_Integration_Mode>`: the number of `TIME_STEP` that have occurred since the DDM began 
+      • `integration mode <DDM_Integration_Mode>`: the number of `TIME_STEP` that have occurred since the DDM began
         to execute in the current `TRIAL` or, if it has reached the positive or negative value of the DDM `function
         <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
       Corresponds to the 2nd item of the DDM's `value <DDM.value>`.
@@ -592,7 +579,7 @@ class DDM(ProcessingMechanism_Base):
             - _instantiate_function(context)
                 deletes params not in use, in order to restrict outputStates to those that are computed for
                 specified params
-            - execute(variable, time_scale, params, context)
+            - execute(variable, params, context)
                 executes specified version of DDM and returns outcome values (in self.value and values of
                 self.output_states)
             - _out_update(particle, drift, noise, time_step_size, decay)
@@ -626,7 +613,6 @@ class DDM(ProcessingMechanism_Base):
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        TIME_SCALE: TimeScale.TRIAL,
         OUTPUT_STATES: None})
 
     @tc.typecheck
@@ -641,11 +627,9 @@ class DDM(ProcessingMechanism_Base):
                                      t0=.200),
                  output_states:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  name=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs: is_pref_set = None,
-                 thresh=0,
                  context=componentType + INITIALIZING
     ):
 
@@ -662,7 +646,6 @@ class DDM(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   output_states=output_states,
-                                                  time_scale=time_scale,
                                                   params=params)
 
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
@@ -670,12 +653,13 @@ class DDM(ProcessingMechanism_Base):
         if default_variable is None and size is None:
             try:
                 default_variable = params[FUNCTION_PARAMS][STARTING_POINT]
+                if not is_numeric(default_variable):
+                    default_variable = DEFAULT_VARIABLE
             except:
-                default_variable = 0.0
+                default_variable = DEFAULT_VARIABLE
 
         # # Conflict with above
         # self.size = size
-        self.threshold = thresh
 
         super(DDM, self).__init__(variable=default_variable,
                                   output_states=output_states,
@@ -805,8 +789,18 @@ class DDM(ProcessingMechanism_Base):
         else:
             if isinstance(threshold, tuple):
                 threshold = threshold[0]
-            if not threshold >= 0:
-                raise DDMError("{} param of {} ({}) must be >= zero".
+            if is_numeric(threshold):
+                if not threshold >= 0:
+                    raise DDMError("{} param of {} ({}) must be >= zero".
+                                   format(THRESHOLD, self.name, threshold))
+            elif isinstance(threshold, ControlSignal):
+                threshold = threshold.allocation_samples
+                if not np.amin(threshold) >= 0:
+                    raise DDMError("The lowest value of {} for the {} "
+                                   "assigned to the {} param of {} must be >= zero".
+                                   format(ALLOCATION_SAMPLES, ControlSignal.__name__, THRESHOLD, self.name, threshold))
+            else:
+                raise DDMError("PROGRAM ERROR: unrecognized specification for {} of {} ({})".
                                format(THRESHOLD, self.name, threshold))
 
     def _instantiate_attributes_before_function(self, context=None):
@@ -828,8 +822,6 @@ class DDM(ProcessingMechanism_Base):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 clock=CentralClock,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Execute DDM function (currently only trial-level, analytic solution)
         Execute DDM and estimate outcome or calculate trajectory of decision variable
@@ -876,8 +868,9 @@ class DDM(ProcessingMechanism_Base):
             result = self.function(variable, context=context)
             if INITIALIZING not in context:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
-            if abs(result) >= self.threshold:
-                logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
+            if abs(result) >= self.function_object.threshold:
+                logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name,
+                                                                       self.function_object.threshold))
                 self.is_finished = True
 
             return np.array([result, self.function_object.previous_time])

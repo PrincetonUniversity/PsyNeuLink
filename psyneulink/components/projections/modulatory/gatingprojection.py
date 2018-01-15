@@ -99,7 +99,6 @@ from psyneulink.globals.defaults import defaultGatingPolicy
 from psyneulink.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INITIALIZING, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock
 
 __all__ = [
     'GATING_SIGNAL_PARAMS', 'GatingProjection', 'GatingProjectionError',
@@ -356,9 +355,8 @@ class GatingProjection(ModulatoryProjection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
-    # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
-        self.value = self.function(variable=self.sender.value, params=params, time_scale=time_scale, context=context)
+    def execute(self, params=None, context=None):
+        self.value = self.function(variable=self.sender.value, params=params, context=context)
         return self.value
 
     @property

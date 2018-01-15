@@ -104,6 +104,7 @@ Class Reference
 """
 
 import warnings
+
 from collections import Iterable
 
 import numpy as np
@@ -111,11 +112,11 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.globals.keywords import TIME_STEP_SIZE, BETA, CALCULATE, ENERGY, ENTROPY, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, VARIANCE
+from psyneulink.globals.keywords import BETA, CALCULATE, ENERGY, ENTROPY, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'LCA', 'LCA_OUTPUT', 'LCAError', 'MAX_VS_AVG', 'MAX_VS_NEXT',
@@ -403,8 +404,8 @@ class LCA(RecurrentTransferMechanism):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LCA Mechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the LCA Mechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
     Returns
@@ -447,7 +448,6 @@ class LCA(RecurrentTransferMechanism):
                  time_step_size=0.1,
                  clip=None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -492,7 +492,6 @@ class LCA(RecurrentTransferMechanism):
                          noise=noise,
                          clip=clip,
                          output_states=output_states,
-                         time_scale=time_scale,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -501,8 +500,6 @@ class LCA(RecurrentTransferMechanism):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 clock=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Execute TransferMechanism function and return transform of input
 
@@ -563,8 +560,6 @@ class LCA(RecurrentTransferMechanism):
 
         # Update according to time-scale of integration
         if integrator_mode:
-        # if time_scale is TimeScale.TIME_STEP:
-
             if not self.integrator_function:
 
                 self.integrator_function = LCAIntegrator(
@@ -585,7 +580,6 @@ class LCA(RecurrentTransferMechanism):
 
                                                              )
         else:
-        # elif time_scale is TimeScale.TRIAL:
             noise = self._try_execute_param(self.noise, variable)
             # formerly: current_input = self.input_state.value + noise
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message

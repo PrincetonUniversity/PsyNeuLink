@@ -17,6 +17,7 @@ Combination Functions:
   * `Reduce`
   * `LinearCombination`
   * `CombineMeans`
+  * `PredictionErrorDelta`
 
 TransferMechanism Functions:
   * `Linear`
@@ -53,6 +54,7 @@ Learning Functions:
   * `Hebbian`
   * `Reinforcement`
   * `BackPropagation`
+  * `TDLearning`
 
 .. _Function_Overview:
 
@@ -183,45 +185,39 @@ from random import randint
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
-from psyneulink.globals.keywords import \
-    VARIABLE, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, \
-    ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, \
-    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, \
-    DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DistanceMetrics,\
-    DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, \
-    EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, \
-    FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, \
-    HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, \
-    INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, \
-    LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
-    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, \
-    OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
-    PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
-    RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, \
-    SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, \
-    USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, WALD_DIST_FUNCTION, WEIGHTS, NORMALIZING_FUNCTION_TYPE,\
-    kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, is_distance_metric, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
-    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM', 'AdditiveParam', 'AGTUtilityIntegrator',
-    'ArgumentTherapy', 'AUTOASSOCIATIVE', 'BackPropagation', 'BogaczEtAl', 'BOUNDS', 'CombinationFunction', 'CombineMeans',
-    'ConstantIntegrator', 'DISABLE', 'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
-    'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON', 'ERROR_MATRIX', 'Exponential', 'ExponentialDist',
-    'FHNIntegrator', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType', 'FunctionRegistry',
-    'GammaDist', 'get_matrix', 'get_param_value_for_function', 'get_param_value_for_keyword', 'Hebbian', 'Integrator',
-    'IntegratorFunction', 'is_Function', 'is_function_type', 'kwBogaczEtAl', 'kwNavarrosAndFuss', 'LCAIntegrator',
-    'LEARNING_ACTIVATION_FUNCTION', 'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT', 'LEARNING_ERROR_OUTPUT',
-    'LearningFunction', 'Linear', 'LinearCombination', 'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next',
-    'ModulatedParam', 'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MultiplicativeParam', 'NavarroAndFuss',
-    'NF_Results', 'NON_DECISION_TIME', 'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator', 'OVERRIDE',
-    'OVERRIDE_PARAM', 'PERTINACITY', 'PROPENSITY', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator', 'SoftMax',
-    'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY', 'THRESHOLD', 'TransferFunction', 'TRESHOLD_VARIABILITY',
-    'UniformDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDERS_DIM'
+    'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
+    'AdditiveParam', 'AGTUtilityIntegrator', 'ArgumentTherapy',
+    'AUTOASSOCIATIVE', 'BackPropagation', 'BogaczEtAl', 'BOUNDS',
+    'CombinationFunction', 'CombineMeans', 'ConstantIntegrator', 'DISABLE',
+    'DISABLE_PARAM', 'Distance', 'DistributionFunction', 'DRIFT_RATE',
+    'DRIFT_RATE_VARIABILITY', 'DriftDiffusionIntegrator', 'EPSILON',
+    'ERROR_MATRIX', 'Exponential', 'ExponentialDist', 'FHNIntegrator',
+    'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType',
+    'FunctionRegistry', 'GammaDist', 'get_matrix', 'get_param_value_for_function',
+    'get_param_value_for_keyword', 'Hebbian', 'Integrator',
+    'IntegratorFunction', 'is_Function', 'is_function_type', 'kwBogaczEtAl',
+    'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
+    'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT',
+    'LEARNING_ERROR_OUTPUT', 'LearningFunction', 'Linear', 'LinearCombination',
+    'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next', 'ModulatedParam',
+    'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM',
+    'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
+    'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
+    'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
+    'PROPENSITY', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
+    'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
+    'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
+    'UniformDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
+    'WT_MATRIX_SENDERS_DIM'
 ]
 
 import functools
@@ -235,6 +231,7 @@ EPSILON = np.finfo(float).eps
 FunctionRegistry = {}
 
 function_keywords = {FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION}
+
 
 class FunctionError(Exception):
     def __init__(self, error_value):
@@ -658,6 +655,13 @@ class Function_Base(Function):
 
         self._variable_length = nested_len(default_variable)
 
+    def _validate_parameter_spec(self, param, param_name, numeric_only=True):
+        """Validates function param
+        Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s"""
+        if not parameter_spec(param, numeric_only):
+            owner_name = 'of ' + self.owner.name if self.owner else ""
+            raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
+                                format(param, param_name, self.__class__.__name__, owner_name))
 
     def execute(self, variable=None, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
@@ -928,7 +932,6 @@ class ArgumentTherapy(Function_Base):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Returns a boolean that is (or tends to be) the same as or opposite the one passed in.
@@ -1286,7 +1289,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Calculate sum or product of the elements for each array in `variable <Reduce.variable>`,
@@ -1321,7 +1323,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         offset = self.paramsCurrent[OFFSET]
 
         # Calculate using relevant aggregation operation and return
-        if (operation is SUM):
+        if operation is SUM:
             result = np.sum(variable) * scale + offset
         elif operation is PRODUCT:
             result = np.product(variable) * scale + offset
@@ -1334,7 +1336,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 class LinearCombination(CombinationFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
     # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
-    # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
+    # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMILARLY FOR NP.ARRAY
     """
     LinearCombination(     \
          default_variable, \
@@ -1524,8 +1526,10 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 weights:tc.optional(parameter_spec)=None,
-                 exponents:tc.optional(parameter_spec)=None,
+                 # weights: tc.optional(parameter_spec)=None,
+                 # exponents: tc.optional(parameter_spec)=None,
+                 weights=None,
+                 exponents=None,
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  scale=None,
                  offset=None,
@@ -1580,8 +1584,9 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                 else:
                     new_length = len(variable[i])
                 if old_length != new_length:
-                    raise FunctionError("Length of all arrays in variable {0} for {1} must be the same".
-                                        format(variable, self.__class__.__name__))
+                    raise FunctionError("Length of all arrays in variable {0} "
+                                        "for {1} must be the same".format(variable,
+                                                                          self.__class__.__name__))
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1590,7 +1595,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
         Check that SCALE and OFFSET are either scalars or np.arrays of numbers with length and shape equal to variable
 
-        Note: the checks of compatiability with variable are only performed for validation calls during execution
+        Note: the checks of compatibility with variable are only performed for validation calls during execution
               (i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
               a parameter may be re-assigned before variable assigned during is known
         """
@@ -1602,15 +1607,17 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                  context=context)
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
+            self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            if EXECUTING in context:
+            if any(c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
+            self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
-            if EXECUTING in context:
+            if (c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable.shape)))
@@ -1624,7 +1631,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
-            if EXECUTING in context:
+            if (c in context for c in {EXECUTING, LEARNING}):
                 if (isinstance(scale, np.ndarray) and
                         (scale.size != self.instance_defaults.variable.size or
                          scale.shape != self.instance_defaults.variable.shape)):
@@ -1642,7 +1649,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
-            if EXECUTING in context:
+            if (c in context for c in {EXECUTING, LEARNING}):
                 if (isinstance(offset, np.ndarray) and
                         (offset.size != self.instance_defaults.variable.size or
                          offset.shape != self.instance_defaults.variable.shape)):
@@ -1657,11 +1664,9 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".
             #     format(operation))
 
-
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Apply `weights <LinearCombination.weights>` and/or `exponents <LinearCombinations.weights>` to the
@@ -1723,9 +1728,14 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         if exponents is not None:
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            if INITIALIZING in context and any(not any(i) and j < 0 for i, j in zip(variable, exponents)):
-                variable = self._update_variable(np.ones_like(variable))
+            # Allow during initialization because 0s are common in default_variable argument
+            if context is not None and INITIALIZING in context:
+                try:
+                    variable = self._update_variable(variable ** exponents)
+                except ZeroDivisionError:
+                    variable = self._update_variable(np.ones_like(variable))
             else:
+                # if this fails with ZeroDivisionError it should not be caught outside of initialization
                 variable = self._update_variable(variable ** exponents)
 
         # Apply weights if they were specified
@@ -1734,7 +1744,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
 
-        if (operation is SUM):
+        if operation is SUM:
             if isinstance(scale, numbers.Number):
                 # Scalar scale and offset
                 if isinstance(offset, numbers.Number):
@@ -1751,7 +1761,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                     hadamard_product = np.product([np.sum([variable], axis=0), scale], axis=0)
                     result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
 
-        elif (operation is PRODUCT):
+        elif operation is PRODUCT:
             product = np.product(variable, axis=0)
             if isinstance(scale, numbers.Number):
                 # Scalar scale and offset
@@ -1919,8 +1929,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     exponents : 1d or 2d np.array : default None
         if it is 1d, each element is used to exponentiate the elements of the corresponding array of
-        `variable <CombineMeanss.variable>`;  if it is 2d, the element of each array is used to exponentiate
-        the correspnding element of the corresponding array of `variable <CombineMeans.variable>`.
+        `variable <CombineMeans.variable>`;  if it is 2d, the element of each array is used to exponentiate
+        the corresponding element of the corresponding array of `variable <CombineMeans.variable>`.
         In either case, exponentiating is applied after application of the `weights <CombineMeans.weights>`
         (if any are specified).
 
@@ -1986,8 +1996,10 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 weights:tc.optional(parameter_spec)=None,
-                 exponents:tc.optional(parameter_spec)=None,
+                 # weights:tc.optional(parameter_spec)=None,
+                 # exponents:tc.optional(parameter_spec)=None,
+                 weights=None,
+                 exponents=None,
                  operation: tc.enum(SUM, PRODUCT)=SUM,
                  scale=None,
                  offset=None,
@@ -2024,12 +2036,12 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate weghts, exponents, scale and offset parameters
+        """Validate weights, exponents, scale and offset parameters
 
         Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
         Check that SCALE and OFFSET are either scalars or np.arrays of numbers with length and shape equal to variable
 
-        Note: the checks of compatiability with variable are only performed for validation calls during execution
+        Note: the checks of compatibility with variable are only performed for validation calls during execution
               (i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
               a parameter may be re-assigned before variable assigned during is known
         """
@@ -2042,14 +2054,14 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            if EXECUTING in context:
+            if (c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
-            if EXECUTING in context:
+            if (c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable.shape)))
@@ -2063,7 +2075,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
-            if EXECUTING in context:
+            if (c in context for c in {EXECUTING, LEARNING}):
                 if (isinstance(scale, np.ndarray) and
                         (scale.size != self.instance_defaults.variable.size or
                          scale.shape != self.instance_defaults.variable.shape)):
@@ -2081,7 +2093,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
-            if EXECUTING in context:
+            if (c in context for c in {EXECUTING, LEARNING}):
                 if (isinstance(offset, np.ndarray) and
                         (offset.size != self.instance_defaults.variable.size or
                          offset.shape != self.instance_defaults.variable.shape)):
@@ -2100,7 +2112,6 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate and combine means of items in `variable <CombineMean.variable>`.
 
@@ -2209,6 +2220,166 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     def scale(self, val):
         self._scale = val
 
+
+GAMMA = 'gamma'
+class PredictionErrorDeltaFunction(CombinationFunction):
+    """
+    Function that calculates the temporal difference prediction error
+    """
+    componentName = PREDICTION_ERROR_DELTA_FUNCTION
+
+    classPreferences = {
+        kwPreferenceSetName: 'PredictionErrorDeltaCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False,
+                                                            PreferenceLevel.INSTANCE)
+    }
+
+    class ClassDefaults(CombinationFunction.ClassDefaults):
+        variable = [[1], [1]]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    multiplicative_param = None
+    additive_param = None
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=ClassDefaults.variable,
+                 gamma: tc.optional(float) = 1.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context=componentName + INITIALIZING):
+        # Assign args to params and functionParams dicts
+        # (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(gamma=gamma,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.gamma = gamma
+
+    def _validate_variable(self, variable, context=None):
+        """
+        Insure that all items of variable are numeric
+
+        Parameters
+        ----------
+        variable
+        context
+
+        Returns
+        -------
+        variable if all items are numeric
+        """
+        variable = self._update_variable(super()._validate_variable(variable=variable, context=context))
+
+        if isinstance(variable, (list, np.ndarray)):
+            if isinstance(variable, np.ndarray) and not variable.ndim:
+                return variable
+            length = 0
+            for i in range(1, len(variable)):
+                if i == 0:
+                    continue
+                if isinstance(variable[i - 1], numbers.Number):
+                    old_length = 1
+                else:
+                    old_length = len(variable[i - 1])
+                if isinstance(variable[i], numbers.Number):
+                    new_length = 1
+                else:
+                    new_length = len(variable[i])
+                if old_length != new_length:
+                    raise FunctionError("Length of all arrays in variable {} "
+                                        "for {} must be the same".format(variable,
+                                                                         self.__class__.__name__))
+        return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """
+        Checks that WEIGHTS is a list or np.array of numbers with length equal
+        to variable.
+
+        Note: the checks of compatibility with variable are only performed for
+        validation calls during execution (i.e. from `check_args()`), since
+        during initialization or COMMAND_LINE assignment, a parameter may be
+        re-assigned before variable assigned during is known
+
+        Parameters
+        ----------
+        request_set
+        target_set
+        context
+
+        Returns
+        -------
+        None
+        """
+        super()._validate_params(request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if GAMMA in target_set and target_set[GAMMA] is not None:
+            self._validate_parameter_spec(target_set[GAMMA] ,GAMMA, numeric_only=True)
+
+        if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
+            self._validate_parameter_spec(target_set[WEIGHTS] ,WEIGHTS, numeric_only=True)
+            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
+            if EXECUTING in context:
+                if len(target_set[WEIGHTS]) != len(
+                        self.instance_defaults.variable):
+                    raise FunctionError("Number of weights {} is not equal to "
+                                        "number of items in variable {}".format(
+                        len(target_set[WEIGHTS]),
+                        len(self.instance_defaults.variable.shape)))
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+        Calculates the prediction error using the arrays in `variable
+        <PredictionErrorDeltaFunction.variable>` and returns the resulting
+        array.
+
+        Parameters
+        ----------
+        variable : 2d np.array : default ClassDefaults.variable
+            a 2d array representing the sample and target values to be used to
+            calculate the temporal difference delta values. Both arrays must
+            have the same length
+
+        params : Dict[param keyword, param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that
+            specifies the parameters for the function. Values specified for
+            parameters in the dictionary override any assigned to those
+            parameters in arguments of the constructor.
+
+
+        Returns
+        -------
+        delta values : 1d np.array
+            the result of
+                :math: `\\delta(t) = r(t) + \\gamma sample(t) - sample(t - 1)`
+
+        """
+        variable = self._update_variable(self._check_args(variable=variable,
+                                                          params=params,
+                                                          context=context))
+        gamma = self.gamma
+        sample = variable[0]
+        reward = variable[1]
+        delta = np.zeros(sample.shape)
+
+        for t in range(1, len(sample)):
+            delta[t] = reward[t] + gamma * sample[t] - sample[t - 1]
+        return delta
+
+
 # *********************************** NORMALIZING FUNCTIONS **************************************************
 
 class NormalizingFunction(Function_Base):
@@ -2252,6 +2423,7 @@ class NormalizingFunction(Function_Base):
     @additive.setter
     def additive(self, val):
         setattr(self, self.additive_param, val)
+
 
 class SoftMax(NormalizingFunction):
     """
@@ -2309,7 +2481,7 @@ class SoftMax(NormalizingFunction):
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
         determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
-        in the array returned by `function <SoftMax.funtion>`:
+        in the array returned by `function <SoftMax.function>`:
             * **ALL**: array of all SoftMax-transformed values (the default);
             * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
             * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
@@ -2499,7 +2671,6 @@ class SoftMax(NormalizingFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
@@ -2880,7 +3051,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: `slope <Linear.slope>` * `variable <Linear.variable>` + `intercept <Linear.intercept>`.
@@ -3171,7 +3341,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: `scale <Exponential.scale>`
@@ -3281,6 +3450,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
     bias : float : default 0.0
         value added to each element of `variable <Logistic.variable>` after applying the `gain <Logistic.gain>`
         (if it is specified).
+
+    bounds : (0,1)
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3419,7 +3590,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return:
@@ -3586,7 +3756,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #     def function(self,
 #                  variable=None,
 #                  params=None,
-#                  time_scale=TimeScale.TRIAL,
 #                  context=None):
 #         """
 #         Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
@@ -3603,9 +3772,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
 #             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 #             arguments of the constructor.
-#
-#         time_scale :  TimeScale : default TimeScale.TRIAL
-#             specifies whether the function is executed on the time_step or trial time scale.
 #
 #         Returns
 #         -------
@@ -3707,6 +3873,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 #                                 "(and therefore the relevant element is ambiguous)".format(self.owner_name))
 #
 #         return derivative
+
 
 class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
     """
@@ -3951,8 +4118,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                     weight_matrix = np.matrix(param_value)
                     if 'U' in repr(weight_matrix.dtype):
-                        raise FunctionError("Non-numeric entry in MATRIX specification ({}) for the {} function of {}".
-                                            format(param_value), self.name, self.owner.name)
+                        raise FunctionError("Non-numeric entry in MATRIX "
+                                            "specification ({}) for the {} "
+                                            "function of {}".format(param_value,
+                                                                    self.name,
+                                                                    self.owner.name))
 
                     if weight_matrix.ndim != 2:
                         raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
@@ -3963,9 +4133,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                     # Check that number of rows equals length of sender vector (variable)
                     if matrix_rows != sender_len:
-                        raise FunctionError("The number of rows ({}) of the matrix provided for {} function of {} "
-                                            "does not equal the length ({}) of the sender vector (variable)".
-                                            format(matrix_rows, self.name, self.owner.name, sender_len))
+                        raise FunctionError("The number of rows ({}) of the "
+                                            "matrix provided for {} function "
+                                            "of {} does not equal the length "
+                                            "({}) of the sender vector "
+                                            "(variable)".format(matrix_rows,
+                                                                self.name,
+                                                                self.owner.name,
+                                                                sender_len))
 
                 # Auto, full or random connectivity matrix requested (using keyword):
                 # Note:  assume that these will be properly processed by caller
@@ -4080,7 +4255,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: `variable <LinearMatrix.variable>` • `matrix <LinearMatrix.matrix>`
@@ -4682,7 +4856,6 @@ class SimpleIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: `variable <Linear.slope>` combined with `previous_value <SimpleIntegrator.previous_value>`
@@ -4902,7 +5075,6 @@ class LCAIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return:
@@ -4964,8 +5136,9 @@ class LCAIntegrator(
             self.previous_value = adjusted_value
 
         return adjusted_value
-class ConstantIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+
+
+class ConstantIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
     ConstantIntegrator(                 \
         default_variable=None,          \
@@ -5130,7 +5303,6 @@ class ConstantIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: the sum of `previous_value <ConstantIntegrator.previous_value>`, `rate <ConstantIntegrator.rate>`, and
@@ -5544,7 +5716,6 @@ class AdaptiveIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: some fraction of `variable <AdaptiveIntegrator.variable>` combined with some fraction of `previous_value
@@ -5604,6 +5775,7 @@ class DriftDiffusionIntegrator(
         time_step_size=1.0,             \
         t0=0.0,                         \
         decay=0.0,                      \
+        threshold=1.0                   \
         initializer,                    \
         params=None,                    \
         owner=None,                     \
@@ -5612,7 +5784,8 @@ class DriftDiffusionIntegrator(
 
     .. _DriftDiffusionIntegrator:
 
-    Accumulate evidence overtime based on a stimulus, rate, previous position, and noise.
+    Accumulates evidence over time based on a stimulus, rate, previous position, and noise. Stops accumulating at a
+    threshold.
 
     Arguments
     ---------
@@ -5638,6 +5811,17 @@ class DriftDiffusionIntegrator(
     initializer : float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
         `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
+
+    threshold : float : default 0.0
+        specifies the threshold (boundaries) of the drift diffusion process (i.e., at which the
+        integration process is assumed to terminate).
+
+        Once the magnitude of the decision variable has exceeded the threshold, the function will simply return the
+        threshold magnitude (with the appropriate sign) for that execution and any future executions.
+
+        If the function is in a `DDM mechanism <DDM>`, crossing the threshold will also switch the `is_finished`
+        attribute from False to True. This attribute may be important for the `Scheduler <Scheduler>` when using
+         `Conditions <Condition>` such as `WhenFinished <WhenFinished>`.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5692,6 +5876,20 @@ class DriftDiffusionIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
+    threshold : float : default 0.0
+        when used properly determines the threshold (boundaries) of the drift diffusion process (i.e., at which the
+        integration process is assumed to terminate).
+
+        If the system is assembled as follows, then the DriftDiffusionIntegrator function stops accumulating when its
+        value reaches +threshold or -threshold
+
+            (1) the function is used in the `DDM mechanism <DDM>`
+
+            (2) the mechanism is part of a `System <System>` with a `Scheduler <Scheduler>` which applies the
+            `WhenFinished <WhenFinished>` `Condition <Condition>` to the mechanism
+
+        Otherwise, `threshold <DriftDiffusionIntegrator.threshold>` does not influence the function at all.
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -5729,6 +5927,7 @@ class DriftDiffusionIntegrator(
                  time_step_size=1.0,
                  t0=0.0,
                  initializer=ClassDefaults.variable,
+                 threshold=100.0,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -5739,6 +5938,7 @@ class DriftDiffusionIntegrator(
                                                   time_step_size=time_step_size,
                                                   t0=t0,
                                                   initializer=initializer,
+                                                  threshold=threshold,
                                                   noise=noise,
                                                   offset=offset,
                                                   params=params)
@@ -5766,7 +5966,6 @@ class DriftDiffusionIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: One time step of evidence accumulation according to the Drift Diffusion Model
@@ -5810,10 +6009,16 @@ class DriftDiffusionIntegrator(
         previous_value = np.atleast_2d(previous_value)
         new_value = variable
 
+
         value = previous_value + rate * new_value * time_step_size  \
                 + np.sqrt(time_step_size * noise) * np.random.normal()
 
-        adjusted_value = value + offset
+        if np.all(abs(value) < self.threshold):
+            adjusted_value = value + offset
+        else:
+            adjusted_value = self.threshold
+            for i in range(len(value)):
+                adjusted_value[i] = self.threshold[i]*np.sign(value[i][0])
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
@@ -6001,7 +6206,6 @@ class OrnsteinUhlenbeckIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: One time step of evidence accumulation according to the Ornstein Uhlenbeck Model
@@ -6060,8 +6264,8 @@ class OrnsteinUhlenbeckIntegrator(
 
         return adjusted_value
 
-class FHNIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+
+class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
     FHNIntegrator(                      \
         default_variable=1.0,           \
@@ -6621,7 +6825,6 @@ class FHNIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: current v, current w
@@ -6703,8 +6906,8 @@ class FHNIntegrator(
 
         return self.previous_v, self.previous_w, self.previous_t
 
-class AccumulatorIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+
+class AccumulatorIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
     AccumulatorIntegrator(              \
         default_variable=None,          \
@@ -6963,7 +7166,6 @@ class AccumulatorIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: `previous_value <ConstantIntegrator.previous_value>` combined with `rate <ConstantIntegrator.rate>` and
@@ -7017,8 +7219,8 @@ class AccumulatorIntegrator(
             self.previous_value = value
         return value
 
-class AGTUtilityIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+
+class AGTUtilityIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
     AGTUtilityIntegrator(                    \
         default_variable=None,            \
@@ -7310,7 +7512,6 @@ class AGTUtilityIntegrator(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: some fraction of `variable <AGTUtilityIntegrator.variable>` combined with some fraction of `previous_value
@@ -7387,7 +7588,7 @@ class AGTUtilityIntegrator(
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
 THRESHOLD = 'threshold'
-TRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
+THRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
 STARTING_POINT = 'starting_point'
 STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
 # NOISE = 'noise' -- Defined in Keywords
@@ -7541,7 +7742,6 @@ class BogaczEtAl(
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean
@@ -7603,7 +7803,7 @@ class BogaczEtAl(
             old_settings = np.seterr(over='raise', under='raise')
 
             try:
-                rt = ztilde *np.tanh(ztilde * atilde) + \
+                rt = ztilde * np.tanh(ztilde * atilde) + \
                      ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
                      np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
                 er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
@@ -7627,7 +7827,6 @@ class BogaczEtAl(
             er = (is_neg_drift == 1) * (1 - er) + (is_neg_drift == 0) * (er)
 
         return rt, er
-
 
     def derivative(self, output=None, input=None):
         """
@@ -7693,6 +7892,7 @@ class NF_Results(IntEnum):
     COND_RTS = 3
     COND_VAR_RTS = 4
     COND_SKEW_RTS = 5
+
 
 # ----------------------------------------------------------------------------
 class NavarroAndFuss(IntegratorFunction):
@@ -7859,7 +8059,6 @@ class NavarroAndFuss(IntegratorFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """
         Return: terminal value of decision variable, mean accuracy (error rate; ER), mean response time (RT),
@@ -8013,7 +8212,6 @@ class NormalDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
@@ -8133,7 +8331,6 @@ class UniformToNormalDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
 
         try:
@@ -8234,7 +8431,6 @@ class ExponentialDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
@@ -8339,7 +8535,6 @@ class UniformDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
@@ -8446,7 +8641,6 @@ class GammaDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
@@ -8551,7 +8745,6 @@ class WaldDist(DistributionFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
@@ -8758,7 +8951,7 @@ COMMENT
                     param_type_string = "MappingProjection's ParameterState"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
-                                        "paramaterState that has been assigned a 2d array or matrix".
+                                        "ParameterState that has been assigned a 2d array or matrix".
                                         format(MATRIX, self.name, matrix.shape, MATRIX))
 
             elif isinstance(matrix, ParameterState):
@@ -8796,7 +8989,6 @@ COMMENT
                                     "must be a square matrix".
                                     format(param_type_string, MATRIX, self.name, matrix))
 
-
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate matrix
 
@@ -8832,7 +9024,7 @@ COMMENT
         # MODIFIED 11/12/17 NEW:
         if self.metric is ENTROPY:
             self._metric_fct = Distance(metric=CROSS_ENTROPY, normalize=self.normalize)
-        elif self.metric in DISTANCE_METRICS:
+        elif self.metric in DISTANCE_METRICS._set():
             self._metric_fct = Distance(metric=self.metric, normalize=self.normalize)
         # MODIFIED 11/12/17 END
 
@@ -8840,7 +9032,6 @@ COMMENT
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate the stability of `variable <Stability.variable>`.
 
@@ -9224,7 +9415,6 @@ class Distance(ObjectiveFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate the distance between the two vectors in `variable <Stability.variable>`.
 
@@ -9361,9 +9551,7 @@ class LearningFunction(Function_Base):
         learning_rate = np.array(learning_rate).copy()
         learning_rate_dim = learning_rate.ndim
 
-        if not is_numeric(learning_rate):
-            raise FunctionError("{} arg for {} ({}) must be numeric".
-                                format(LEARNING_RATE, self.name, learning_rate))
+        self._validate_parameter_spec(learning_rate, LEARNING_RATE)
 
         if type is AUTOASSOCIATIVE:
 
@@ -9476,7 +9664,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     def __init__(self,
                  default_variable=ClassDefaults.variable,
                  activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -9522,7 +9711,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate a matrix of weight changes from a 1d array of activity values
 
@@ -9586,8 +9774,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         return weight_change_matrix
 
 
-class Reinforcement(
-    LearningFunction):  # -------------------------------------------------------------------------------
+class Reinforcement(LearningFunction):  # -------------------------------------------------------------------------------
     """
     Reinforcement(                                       \
         default_variable=ClassDefaults.variable,         \
@@ -9675,7 +9862,7 @@ class Reinforcement(
 
     activation_function : Function or function : SoftMax
         the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`; must
-        return and array with a single non-zero value.
+        return an array with a single non-zero value.
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
@@ -9710,7 +9897,8 @@ class Reinforcement(
     def __init__(self,
                  default_variable=ClassDefaults.variable,
                  activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -9751,17 +9939,23 @@ class Reinforcement(
         # Allow initializion with zero but not during a run (i.e., when called from check_args())
         if not INITIALIZING in context:
             if np.count_nonzero(self.activation_output) != 1:
-                raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
+                raise ComponentError("Second item ({}) of variable for {} must be an array with a single non-zero value "
                                      "(if output Mechanism being trained uses softmax,"
                                      " its \'output\' arg may need to be set to to PROB)".
                                      format(variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
 
         return variable
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate learning_rate
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
+            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
+
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate a matrix of weight changes from a single (scalar) error term
 
@@ -9794,12 +9988,13 @@ class Reinforcement(
 
         Returns
         -------
-        error signal : 1d np.array
-            same as value received in `error_signal <Reinforcement.error_signal>` argument.
-
         diagonal weight change matrix : 2d np.array
             has a single non-zero entry in the same row and column as the one in
             `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`.
+
+        error signal : 1d np.array
+            same as value received in `error_signal <Reinforcement.error_signal>` argument.
+
         """
 
         self._check_args(variable=variable, params=params, context=context)
@@ -9918,16 +10113,16 @@ class BackPropagation(LearningFunction):
        `error_signal <BackPropagation.error_signal>`.
 
     activation_input : 1d np.array
-        the input to the matrix being modified; same as 1st item of `variable <BackPropagation.variable>.
+        the input to the matrix being modified; same as 1st item of `variable <BackPropagation.variable>`.
 
     activation_output : 1d np.array
         the output of the function for which the matrix being modified provides the input;
-        same as 2nd item of `variable <BackPropagation.variable>.
+        same as 2nd item of `variable <BackPropagation.variable>`.
 
     error_signal : 1d np.array
         the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
         target (training signal) and the output of the last Mechanism in the sequence;
-        same as 3rd item of `variable <BackPropagation.variable>.
+        same as 3rd item of `variable <BackPropagation.variable>`.
 
     error_matrix : 2d np.array or ParameterState
         matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`;
@@ -9973,7 +10168,8 @@ class BackPropagation(LearningFunction):
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_matrix=None,
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -10040,6 +10236,9 @@ class BackPropagation(LearningFunction):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
+        if LEARNING_RATE in target_set and target_set[LEARNING_RATE] is not None:
+            self._validate_learning_rate(target_set[LEARNING_RATE], AUTOASSOCIATIVE)
+
         # Validate error_matrix specification
         if ERROR_MATRIX in target_set:
 
@@ -10101,7 +10300,6 @@ class BackPropagation(LearningFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms
 
@@ -10182,7 +10380,70 @@ class BackPropagation(LearningFunction):
 
         return [weight_change_matrix, dE_dW]
 
-# region *****************************************   OBJECTIVE FUNCTIONS ***********************************************
+
+class TDLearning(Reinforcement):
+    """
+    This class is used to implement temporal difference learning via the
+    `Reinforcement` function. See `Reinforcement` for class details.
+    """
+    componentName = TDLEARNING_FUNCTION
+
+    class ClassDefaults(Reinforcement.ClassDefaults):
+        variable = [[0], [0]]
+
+    def __init__(self,
+                 default_variable=Reinforcement.ClassDefaults.variable,
+                 activation_function: tc.any(SoftMax, tc.enum(SoftMax))=SoftMax,
+                 learning_rate=Reinforcement.default_learning_rate,
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context='TDLearning Function Init'):
+        """
+        Dummy function used to implement TD Learning via Reinforcement Learning
+
+        Parameters
+        ----------
+        default_variable
+        learning_rate: float: default 0.05
+        params
+        owner
+        prefs
+        context
+        """
+        # params = self._assign_args_to_param_dicts(learning_rate=learning_rate,
+                                                  # params=params)
+        super().__init__(default_variable=default_variable,
+                         activation_function=activation_function,
+                         learning_rate=learning_rate,
+                         params=params,
+                         context=context,
+                         owner=owner,
+                         prefs=prefs)
+
+    def _validate_variable(self, variable, context=None):
+        variable = self._update_variable(super(Reinforcement, self)._validate_variable(variable, context))
+
+        if len(variable) != 3:
+            raise ComponentError("Variable for {} ({}) must have three items (input"
+                                ", output, and error arrays".format(self.name, variable))
+
+        self.activation_input = variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_signal = variable[LEARNING_ERROR_OUTPUT]
+
+        if len(self.error_signal) != len(self.activation_output):
+            raise ComponentError("Error term does not match the length of the"
+                                 "sample sequence")
+
+        return variable
+
+    def function(self, variable=None, params=None, context=None):
+        return super().function(variable=variable, params=params, context=context)
+
+
+# region *****************************************   OBJECTIVE FUNCTIONS
+# ***********************************************
 # endregion
 # TBI
 

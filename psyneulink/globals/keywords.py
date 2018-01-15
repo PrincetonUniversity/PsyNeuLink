@@ -27,7 +27,7 @@ __all__ = [
     'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION', 'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION',
     'ADAPTIVE_MECHANISM', 'ALL', 'ALLOCATION_SAMPLES', 'ANGLE', 'ARGUMENT_THERAPY_FUNCTION', 'ASSIGN_VALUE', 'AUTO',
     'AUTO_ASSIGN_MATRIX', 'AUTO_ASSOCIATIVE_PROJECTION', 'AUTO_DEPENDENT', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
-    'BACKPROPAGATION_FUNCTION', 'BETA', 'BIAS', 'CALCULATE', 'CENTRAL_CLOCK', 'CHANGED', 'CLAMP_INPUT', 'CLOCK',
+    'BACKPROPAGATION_FUNCTION', 'BETA', 'BIAS', 'CALCULATE', 'CHANGED', 'CLAMP_INPUT',
     'COMBINATION_FUNCTION_TYPE', 'COMBINE_MEANS_FUNCTION', 'COMBINE_OUTCOME_AND_COST_FUNCTION', 'COMMAND_LINE',
     'COMPARATOR_MECHANISM', 'COMPONENT_INIT', 'COMPOSITION_INTERFACE_MECHANISM', 'CONROLLER_PHASE_SPEC', 'CONSTANT',
     'CONSTANT_INTEGRATOR_FUNCTION', 'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PROJECTION',
@@ -37,20 +37,22 @@ __all__ = [
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION', 'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION',
     'DIST_FUNCTION_TYPE', 'DIST_MEAN', 'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE',
     'DIVISION', 'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DRIFT_RATE', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY',
-    'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE', 'EXECUTING',
-    'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS', 'FHN_INTEGRATOR_FUNCTION', 'FULL',
-    'FULL_CONNECTIVITY_MATRIX', 'FUNCTION', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE',
+    'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE',
+    'EXECUTING', 'EXECUTION', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
+    'FHN_INTEGRATOR_FUNCTION', 'FINAL', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
+    'FUNCTION', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE',
     'FUNCTION_OUTPUT_TYPE_CONVERSION', 'FUNCTION_PARAMS', 'GAIN', 'GAMMA_DIST_FUNCTION', 'GATE', 'GATING',
     'GATING_MECHANISM', 'GATING_POLICY', 'GATING_PROJECTION', 'GATING_PROJECTION_PARAMS', 'GATING_PROJECTIONS',
     'GATING_SIGNAL', 'GATING_SIGNAL_SPECS', 'GATING_SIGNALS', 'GILZENRAT_INTEGRATOR_FUNCTION', 'HARD_CLAMP',
     'HEBBIAN_FUNCTION', 'HETERO', 'HIGH', 'HOLLOW_MATRIX', 'IDENTITY_MATRIX', 'INCREMENT', 'INDEX',
     'INIT__EXECUTE__METHOD_ONLY', 'INIT_FULL_EXECUTE_METHOD', 'INIT_FUNCTION_METHOD_ONLY', 'INITIAL_VALUES',
-    'INITIALIZE_CYCLE', 'INITIALIZED', 'INITIALIZER', 'INITIALIZING', 'INPUT_STATE', 'INPUT_STATE_PARAMS', 'INPUT_STATES',
+    'INITIALIZE_CYCLE', 'INITIALIZATION', 'INITIALIZED', 'INITIALIZER', 'INITIALIZING', 'INPUT_STATE',
+    'INPUT_STATE_PARAMS', 'INPUT_STATES',
     'INPUTS_DIM', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION_TYPE',
     'INTEGRATOR_MECHANISM', 'INTERCEPT', 'INTERNAL', 'K_VALUE', 'kpMechanismControlAllocationsLogEntry',
     'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry', 'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry',
     'kwAddInputState', 'kwAddOutputState', 'kwAggregate', 'kwAssign', 'kwComponentCategory', 'kwComponentPreferenceSet',
-    'kwContext', 'kwDefaultPreferenceSetOwner', 'kwInitialPoint', 'kwInstantiate', 'kwMechanismAdjustFunction',
+    'kwDefaultPreferenceSetOwner', 'kwInitialPoint', 'kwInstantiate', 'kwMechanismAdjustFunction',
     'kwMechanismComponentCategory', 'kwMechanismConfidence', 'kwMechanismDefault', 'kwMechanismDefaultInputValue',
     'kwMechanismDefaultParams', 'kwMechanismDuration', 'kwMechanismExecuteFunction', 'kwMechanismExecutionSequenceTemplate',
     'kwMechanismInterrogateFunction', 'kwMechanismName', 'kwMechanismOutputValue', 'kwMechanismParams',
@@ -59,21 +61,21 @@ __all__ = [
     'kwPrefsOwner', 'kwProcessComponentCategory', 'kwProcessDefaultMechanism', 'kwProcessDefaultProjectionFunction',
     'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
     'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory', 'kwStateContext', 'kwStateName', 'kwStatePrefs',
-    'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'kwTime', 'kwValue', 'LCA', 'LEARNED_PARAM', 'LEARNING',
+    'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'LCA', 'LEARNED_PARAM', 'LEARNING',
     'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE',
     'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION',
     'LINEAR_FUNCTION', 'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'LOW',
     'MAKE_DEFAULT_GATING_MECHANISM',
     'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET',
     'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS', 'MatrixKeywords', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
-    'MECHANISM_TIME_SCALE', 'MechanismRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
+    'MechanismRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
     'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME', 'NO_CONTEXT',
     'NOISE', 'NORMAL_DIST_FUNCTION', 'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
     'OFF', 'OFFSET', 'ON', 'OPERATION', 'ORIGIN', 'ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME_FUNCTION',
     'OUTPUT_STATE', 'OUTPUT_STATE_PARAMS', 'OUTPUT_STATES', 'OUTPUT_TYPE', 'OWNER', 'PARAM_CLASS_DEFAULTS',
     'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_STATE', 'PARAMETER_STATE_PARAMS', 'PARAMETER_STATES', 'PARAMS',
     'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON', 'PREDICTION_MECHANISM', 'PREDICTION_MECHANISM_OUTPUT',
-    'PREDICTION_MECHANISM_PARAMS', 'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PRIMARY', 'PROB', 'PROCESS',
+    'PREDICTION_MECHANISM_PARAMS', 'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PRIMARY', 'PROB', 'PROCESS', 'PROCESSING',
     'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING_MECHANISM', 'PRODUCT', 'PROJECTION',
     'PROJECTION_PARAMS', 'PROJECTION_SENDER', 'PROJECTION_SENDER_VALUE', 'PROJECTION_TYPE', 'PROJECTIONS',
     'QUOTIENT', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'RECEIVER', 'RECURRENT_TRANSFER_MECHANISM',
@@ -82,11 +84,11 @@ __all__ = [
     'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION',
     'STABILITY_FUNCTION', 'STANDARD_ARGS','STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES', 'STATE', 'STATE_PARAMS',
     'STATE_TYPE', 'STATE_VALUE', 'STATES', 'SUBTRACTION', 'SUM', 'SYSTEM', 'SYSTEM_DEFAULT_CONTROLLER',
-    'SYSTEM_INIT', 'TARGET', 'TERMINAL', 'THRESHOLD', 'TIME_SCALE', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
-    'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIALS_DIM', 'UNCHANGED', 'UNIFORM_DIST_FUNCTION',
-    'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS', 'UTILITY_INTEGRATOR_FUNCTION', 'VALIDATE',
-    'VALUE', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE', 'VECTOR',
-    'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS',
+    'SYSTEM_INIT', 'TARGET', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
+    'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIAL', 'TRIALS_DIM', 'UNCHANGED', 'UNIFORM_DIST_FUNCTION',
+    'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS', 'UTILITY_INTEGRATOR_FUNCTION',
+    'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE', 'VECTOR',
+    'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS'
 ]
 
 
@@ -168,11 +170,11 @@ class MatrixKeywords:
     ----------
 
     IDENTITY_MATRIX
-        a square matrix of 1's along the diagnoal, 0's elsewhere; this requires that the length of the sender and
+        a square matrix of 1's along the diagonal, 0's elsewhere; this requires that the length of the sender and
         receiver values are the same.
 
     HOLLOW_MATRIX
-        a square matrix of 0's along the diagnoal, 1's elsewhere; this requires that the length of the sender and
+        a square matrix of 0's along the diagonal, 1's elsewhere; this requires that the length of the sender and
         receiver values are the same.
 
     FULL_CONNECTIVITY_MATRIX
@@ -238,17 +240,17 @@ class DistanceMetrics:
     ----------
 
     DIFFERENCE
-        :math:`d = \\sum\limits^{len}(a_1-a_2)`
+        :math:`d = \\sum\\limits^{len}(a_1-a_2)`
 
     EUCLIDEAN
-        :math:`d = \\sum\limits^{len}\\sqrt{(a_1-a_2)^2}`
+        :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
 
     COMMENT:
     ANGLE
     COMMENT
 
     CORRELATION
-        :math:`d = \\frac{\\sum\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
+        :math:`d = \\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{a_2}}`
 
     COMMENT:
     PEARSON
@@ -256,10 +258,10 @@ class DistanceMetrics:
     COMMENT
 
     ENTROPY and CROSS_ENTROPY
-        :math:`d = \\sum\limits^{len}a_1log(a_2)`
+        :math:`d = \\sum\\limits^{len}a_1log(a_2)`
 
     ENERGY:
-        :math:`d = -\\frac{1}{2}\\sum\limits_{i,j}a_{1_i}a_{2_j}w_{ij}`
+        :math:`d = -\\frac{1}{2}\\sum\\limits_{i,j}a_{1_i}a_{2_j}w_{ij}`
 
     """
     def __init__(self):
@@ -363,13 +365,6 @@ kwDefaultPreferenceSetOwner = 'DefaultPreferenceSetOwner'
 # kpVerbosePref = '_verbose_pref'
 #endregion
 
-#region --------------------------------------------    TIME SCALE    --------------------------------------------------
-
-CENTRAL_CLOCK = "CentralClock"
-TIME_SCALE = "time_scale"
-CLOCK = "clock"
-#endregion
-
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
 
 kwPreferenceSet = 'PreferenceSet'
@@ -378,10 +373,16 @@ kwComponentPreferenceSet = 'PreferenceSet'
 
 #region ------------------------------------------------   LOG    ------------------------------------------------------
 
-kwTime = 'Time'
-kwContext = 'Context'
-kwValue = 'Value'
+TIME = 'time'
 LOG_ENTRIES = 'LOG_ENTRIES'
+INITIALIZATION = 'INITIALIZATION'
+VALIDATION = 'VALIDATION'
+EXECUTION = 'EXECUTION'
+PROCESSING = 'PROCESSING'
+VALUE_ASSIGNMENT = 'VALUE_ASSIGNMENT'
+FINAL = 'FINAL'
+
+
 #endregion
 
 #region -----------------------------------------------  UTILITIES  ----------------------------------------------------
@@ -498,6 +499,7 @@ EVC_MECHANISM = "EVCControlMechanism"
 # ObjectiveMechanisms:
 OBJECTIVE_MECHANISM_OBJECT = "ObjectiveMechanism"
 COMPARATOR_MECHANISM = "ComparatorMechanism"
+PREDICTION_ERROR_MECHANISM = "PredictionErrorMechanism"
 
 # ProcessingMechanisms:
 TRANSFER_MECHANISM = "TransferMechanism"
@@ -514,6 +516,7 @@ ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
 REDUCE_FUNCTION = "Reduce Function"
 LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
+PREDICTION_ERROR_DELTA_FUNCTION = "PredictionErrorDelta Function"
 COMBINE_MEANS_FUNCTION = "CombineMeans Function"
 LINEAR_FUNCTION = "Linear Function"
 LEABRA_FUNCTION = "Leabra Function"
@@ -535,6 +538,7 @@ LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 HEBBIAN_FUNCTION = 'Hebbian Learning Function'
 RL_FUNCTION = 'ReinforcementLearning Function'
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
+TDLEARNING_FUNCTION = "TD Learning Function"
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
 
 # Distribution functions
@@ -562,7 +566,8 @@ CONTROLLER = "controller"
 ENABLE_CONTROLLER = "enable_controller"
 CONROLLER_PHASE_SPEC = 'ControllerPhaseSpec'
 
-RUN = 'Run'
+RUN = 'run'
+TRIAL = 'trial'
 
 #endregion
 
@@ -577,7 +582,7 @@ SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
 LEARNING = 'LEARNING'
 LEARNING_RATE = "learning_rate"
-CONTROL = 'control'
+CONTROL = 'CONTROL'
 GATING = 'gating'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
@@ -606,6 +611,7 @@ TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
+ERROR = 'ERROR'
 
 RESULTS = 'RESULTS'
 RESULT = 'RESULT'
@@ -623,7 +629,6 @@ STATE_VALUE = "State value"   # Used in State specification dict
 STATE_PARAMS = "State params" # Used in State specification dict
 
 # ParamClassDefaults:
-MECHANISM_TIME_SCALE = "Mechanism Time Scale"
 kwMechanismExecutionSequenceTemplate = "Mechanism Execution Sequence Template"
 
 # Entries for output OrderedDict, describing the current state of the Mechanism
@@ -670,7 +675,7 @@ COMBINE_OUTCOME_AND_COST_FUNCTION = 'combine_outcome_and_cost_function'
 VALUE_FUNCTION = 'value_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 SYSTEM_DEFAULT_CONTROLLER = "DefaultController"
-EVC_SIMULATION = 'SIMULATING'
+EVC_SIMULATION = 'CONTROL SIMULATION'
 ALLOCATION_SAMPLES = "allocation_samples"
 
 
@@ -808,6 +813,7 @@ SIMPLE = 'scaled'
 ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
 
+REWARD = 'reward'
 NETWORK = 'network'
 
 #endregion

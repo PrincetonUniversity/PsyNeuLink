@@ -1,13 +1,15 @@
+import functools
 import numpy as np
 import pytest
 
 from psyneulink.components.functions.function import PROB
 from psyneulink.components.functions.function import Reinforcement, SoftMax
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import \
+    TransferMechanism
 from psyneulink.components.process import Process
-from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+from psyneulink.components.projections.modulatory.learningprojection import \
+    LearningProjection
 from psyneulink.components.system import System
-from psyneulink.scheduling.timescale import CentralClock
 
 
 def test_reinforcement():
@@ -43,8 +45,8 @@ def test_reinforcement():
     # Get reward value for selected action)
     reward = lambda: [reward_values[int(np.nonzero(action_selection.output_states.value)[0])]]
 
-    def print_header():
-        print("\n\n**** TRIAL: ", CentralClock.trial)
+    def print_header(system):
+        print("\n\n**** TRIAL: ", system.scheduler_processing.clock.simple_time)
 
     def show_weights():
         print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].matrix)
@@ -65,7 +67,7 @@ def test_reinforcement():
         num_trials=10,
         inputs=input_list,
         targets=reward,
-        call_before_trial=print_header,
+        call_before_trial=functools.partial(print_header, s),
         call_after_trial=show_weights,
     )
 
@@ -119,6 +121,6 @@ def test_reinforcement():
     for i in range(len(expected_output)):
         val, expected = expected_output[i]
         # setting absolute tolerance to be in accordance with reference_output precision
-        # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
+        # if you do not specify, assert_allclose will use a relative tolerance of 1e-07,
         # which WILL FAIL unless you gather higher precision values to use as reference
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))

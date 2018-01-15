@@ -1,3 +1,4 @@
+
 # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
@@ -70,25 +71,25 @@ list of 2d lists/arrays, though `some shorthand notations are allowed <Input_Spe
 
 ::
 
-        import psyneulink as pnl
+        >>> import psyneulink as pnl
 
-        a = pnl.TransferMechanism(name='a',
-                                  default_variable=[[0.0, 0.0]])
-        b = pnl.TransferMechanism(name='b',
-                                  default_variable=[[0.0], [0.0]])
-        c = pnl.TransferMechanism(name='c')
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                          default_variable=[[0.0, 0.0]])
+        >>> b = pnl.TransferMechanism(name='b',
+        ...                          default_variable=[[0.0], [0.0]])
+        >>> c = pnl.TransferMechanism(name='c')
 
-        p1 = pnl.Process(pathway=[a, c],
-                         name='p1')
-        p2 = pnl.Process(pathway=[b, c],
-                         name='p2')
+        >>> p1 = pnl.Process(pathway=[a, c],
+        ...                 name='p1')
+        >>> p2 = pnl.Process(pathway=[b, c],
+        ...                 name='p2')
 
-        s = pnl.System(processes=[p1, p2])
+        >>> s = pnl.System(processes=[p1, p2])
 
-        input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
-                            b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
+        >>> input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
+        ...                    b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
 
-        s.run(inputs=input_dictionary)
+        >>> s.run(inputs=input_dictionary)
 
 .. _Run_Inputs_Fig:
 
@@ -122,18 +123,18 @@ five inputs are provided for each origin mechanism, and num_trials is not specif
 
 ::
 
-        import psyneulink as pnl
+        >>> import psyneulink as pnl
 
-        a = pnl.TransferMechanism(name='a')
-        b = pnl.TransferMechanism(name='b')
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
 
-        p1 = pnl.Process(pathway=[a, b])
+        >>> p1 = pnl.Process(pathway=[a, b])
 
-        s = pnl.System(processes=[p1])
+        >>> s = pnl.System(processes=[p1])
 
-        input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
 
-        s.run(inputs=input_dictionary)
+        >>> s.run(inputs=input_dictionary)
 
 If num_trials is in use, `run` will iterate over the inputs until num_trials is reached. For example, if five inputs
 are provided for each `ORIGIN` mechanism, and num_trials = 7, the system will execute seven times. The first two
@@ -411,6 +412,7 @@ Class Reference
 
 """
 
+import datetime
 import warnings
 
 from collections import Iterable
@@ -423,7 +425,7 @@ from psyneulink.components.process import ProcessInputState
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.globals.keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'EXECUTION_SET_DIM', 'MECHANISM_DIM', 'RunError', 'STATE_DIM', 'run'
@@ -444,24 +446,20 @@ class RunError(Exception):
 def run(object,
         inputs,
         num_trials:tc.optional(int)=None,
-        reset_clock:bool=True,
         initialize:bool=False,
         initial_values:tc.optional(tc.any(list, dict, np.ndarray))=None,
-        targets:tc.optional(tc.any(list, dict, np.ndarray, function_type))=None,
+        targets=None,
         learning:tc.optional(bool)=None,
         call_before_trial:tc.optional(callable)=None,
         call_after_trial:tc.optional(callable)=None,
         call_before_time_step:tc.optional(callable)=None,
         call_after_time_step:tc.optional(callable)=None,
-        clock=CentralClock,
-        time_scale:tc.optional(tc.enum(TimeScale.TRIAL, TimeScale.TIME_STEP))=None,
         termination_processing=None,
         termination_learning=None,
         context=None):
     """run(                      \
     inputs,                      \
     num_trials=None,             \
-    reset_clock=True,            \
     initialize=False,            \
     intial_values=None,          \
     targets=None,                \
@@ -469,9 +467,7 @@ def run(object,
     call_before_trial=None,      \
     call_after_trial=None,       \
     call_before_time_step=None,  \
-    call_after_time_step=None,   \
-    clock=CentralClock,          \
-    time_scale=None)
+    call_after_time_step=None,   \)
 
     Run a sequence of executions for a `Process` or `System`.
 
@@ -508,9 +504,6 @@ def run(object,
         equal to the number of items specified in the **inputs** argument.  If **num_trials** exceeds the number of
         inputs, then the inputs will be cycled until the number of `TRIAL` \\s specified have been run.
 
-    reset_clock : bool : default True
-        if `True`, resets `CentralClock` to 0 before a sequence of `TRIAL` \\s.
-
     initialize : bool default False
         calls the `initialize <System.initialize>` method of the System prior to the first `TRIAL`.
 
@@ -526,16 +519,16 @@ def run(object,
         `System <System_Execution_Learning>`.  If it is not specified, the current state of learning is left intact.
         If it is `True`, learning is forced on; if it is `False`, learning is forced off.
 
-    call_before_trial : Function : default= `None`
+    call_before_trial : Function : default `None`
         called before each `TRIAL` in the sequence is run.
 
-    call_after_trial : Function : default= `None`
+    call_after_trial : Function : default `None`
         called after each `TRIAL` in the sequence is run.
 
-    call_before_time_step : Function : default= ``None`
+    call_before_time_step : Function : default ``None`
         called before each `TIME_STEP` is executed.
 
-    call_after_time_step : Function : default= `None`
+    call_after_time_step : Function : default `None`
         called after each `TIME_STEP` is executed.
 
     termination_processing : Dict[TimeScale: Condition]
@@ -571,9 +564,14 @@ def run(object,
 
     inputs, num_inputs_sets = _adjust_stimulus_dict(object, inputs)
 
-    num_trials = num_trials or num_inputs_sets  # num_trials may be provided by user, otherwise = # of input sets
+    if num_trials is not None:
+        num_trials = num_trials
+    else:
+        num_trials = num_inputs_sets
 
-    if targets:
+    # num_trials = num_trials or num_inputs_sets  # num_trials may be provided by user, otherwise = # of input sets
+
+    if targets is not None:
         if isinstance(targets, dict):
             targets = _adjust_target_dict(object, targets)
         elif not isinstance(targets, function_type):
@@ -583,8 +581,6 @@ def run(object,
     object_type = _get_object_type(object)
 
     object.targets = targets
-
-    time_scale = time_scale or TimeScale.TRIAL
 
     # SET LEARNING (if relevant)
     # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
@@ -617,9 +613,6 @@ def run(object,
 
 
     # INITIALIZATION
-    if reset_clock:
-        clock.trial = 0
-        clock.time_step = 0
     if initialize:
         object.initialize()
 
@@ -668,18 +661,16 @@ def run(object,
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
                 object.execution_status = ExecutionStatus.EXECUTING
-            result = object.execute(input=execution_inputs,
-                                    execution_id=execution_id,
-                                    clock=clock,
-                                    time_scale=time_scale,
-                                    termination_processing=termination_processing,
-                                    termination_learning=termination_learning,
-                                    context=context)
+            result = object.execute(
+                input=execution_inputs,
+                execution_id=execution_id,
+                termination_processing=termination_processing,
+                termination_learning=termination_learning,
+                context=context
+            )
 
             if call_after_time_step:
                 call_after_time_step()
-
-            clock.time_step += 1
 
         # object.results.append(result)
         if isinstance(result, Iterable):
@@ -691,7 +682,17 @@ def run(object,
         if call_after_trial:
             call_after_trial()
 
-        clock.trial += 1
+        from psyneulink.globals.log import _log_trials_and_runs, LogCondition
+        _log_trials_and_runs(composition=object,
+                             curr_condition=LogCondition.TRIAL,
+                             context=context)
+
+    try:
+        # this will fail on processes, which do not have schedulers
+        object.scheduler_processing.date_last_run_end = datetime.datetime.now()
+        object.scheduler_learning.date_last_run_end = datetime.datetime.now()
+    except AttributeError:
+        pass
 
     # Restore learning state
     try:
@@ -700,6 +701,11 @@ def run(object,
         pass
     else:
         object._learning_enabled = learning_state_buffer
+
+    from psyneulink.globals.log import _log_trials_and_runs, LogCondition
+    _log_trials_and_runs(composition=object,
+                         curr_condition=LogCondition.RUN,
+                         context=context)
 
     return object.results
 
@@ -852,7 +858,6 @@ def _adjust_target_dict(object, stimuli):
     # - to match standard format of mech.instance_defaults.variable
     # - to deal with case in which the lists have only one stimulus, one more more has length > 1,
     #     and those are specified as lists or 1D arrays (which would be misinterpreted as > 1 stimulus)
-
     stim_lists = list(stimuli.values())
     num_input_sets = len(stim_lists[EXECUTION_SET_DIM])
 
@@ -963,8 +968,9 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             # If inputs to processes of system are homogeneous, inputs.ndim should be 3:
             expected_dim = 2 + process_structure
             if targets.ndim != expected_dim:
-                raise RunError("targets arg in call to {}.run() must be a {}D np.array or comparable list".
-                                  format(object.name, expected_dim))
+                raise RunError("targets arg in call to {}.run() must be a {}D "
+                               "np.array or comparable list (currently {}D)".
+                               format(object.name, expected_dim, targets.ndim))
 
             # FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
             # # MODIFIED 2/16/17 OLD:
@@ -991,15 +997,23 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 
             for target, targetMechanism in zip(targets, object.target_mechanisms):
                 target_len = np.size(target)
+                print("size of target mech instance defaults var = {}".format(np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
+                print("target = {}".format(target))
+                print("length of target mech instance defaults var = {}".format(len(targetMechanism.input_states[TARGET].instance_defaults.variable)))
                 if target_len != np.size(targetMechanism.input_states[TARGET].instance_defaults.variable):
                     if num_targets_per_set > 1:
                         plural = 's'
                     else:
                         plural = ''
-                    raise RunError("Length ({}) of target{} specified for run of {}"
-                                       " does not match expected target length of {}".
-                                       format(target_len, plural, append_type_to_name(object),
-                                              np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
+                    raise RunError("Length ({}) of target{} specified for run "
+                                   "of {} does not match expected target "
+                                   "length of {} for target mechanism {}".
+                                   format(target_len,
+                                          plural,
+                                          append_type_to_name(object),
+                                          np.size(targetMechanism.input_states[
+                                                      TARGET].instance_defaults.variable),
+                                          targetMechanism.name))
 
                 if any(np.size(target) != target_len for target in target_array):
                     raise RunError("Not all of the targets specified for {} are of the same length".

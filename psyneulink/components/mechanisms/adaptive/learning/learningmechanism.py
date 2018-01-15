@@ -520,20 +520,17 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
-from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, \
-    is_function_type
-from psyneulink.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import CONTROL_PROJECTIONS, IDENTITY_MATRIX, INDEX, INITIALIZING, \
-    INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, \
-    LEARNING_SIGNALS, MATRIX, NAME, PARAMS, OUTPUT_STATES, PROJECTIONS, ENABLED, MATRIX_KEYWORD_SET
+from psyneulink.globals.keywords import CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATES, PARAMS, PROJECTIONS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import is_numeric, parameter_spec, ContentAddressableList
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
@@ -911,11 +908,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         variable = self._update_variable(super()._validate_variable(variable, context))
 
         if len(variable) != 3:
-            raise LearningMechanismError("Variable for {} ({}) must have three items ({}, {}, and {})".
-                                format(self.name, variable,
-                                       ACTIVATION_INPUT,
-                                       ACTIVATION_OUTPUT,
-                                       ERROR_SIGNAL))
+            raise LearningMechanismError("Variable for {} ({}) must have three "
+                                         "items ({}, {}, and {})".
+                                         format(self.name, variable,
+                                                ACTIVATION_INPUT,
+                                                ACTIVATION_OUTPUT,
+                                                ERROR_SIGNAL))
 
         # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
         for i in range(len(variable)):
@@ -1110,7 +1108,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             for learning_signal in self.learning_signals:
                 # Instantiate LearningSignal
 
-                params = {LEARNED_PARAM:MATRIX}
+                params = {LEARNED_PARAM: MATRIX}
 
                 # Parses learning_signal specifications (in call to State._parse_state_spec)
                 #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
@@ -1139,8 +1137,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _execute(self,
                 variable=None,
                 runtime_params=None,
-                clock=CentralClock,
-                time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute LearningMechanism function and return learning_signal
 
@@ -1152,7 +1148,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                                 params=runtime_params,
                                                                 context=context)
 
-        if not INITIALIZING in context and self.reportOutputPref:
+        if INITIALIZING not in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal, self.error_signal]
@@ -1219,24 +1215,27 @@ def _instantiate_error_signal_projection(sender, receiver):
     elif isinstance(sender, LearningMechanism):
         sender = sender.output_states[ERROR_SIGNAL]
     else:
-        raise LearningMechanismError("Sender of the error signal Projection {} must be either "
-                                     "an ObjectiveMechanism or a LearningMechanism".
-                                     format(sender))
+        raise LearningMechanismError("Sender of the error signal Projection {} "
+                                     "must be either an ObjectiveMechanism or "
+                                     "a LearningMechanism".format(sender))
 
     if isinstance(receiver, LearningMechanism):
         receiver = receiver.input_states[ERROR_SIGNAL]
     else:
-        raise LearningMechanismError("Receiver of the error signal Projection {} must be a LearningMechanism".
-                                     format(receiver))
+        raise LearningMechanismError("Receiver of the error signal Projection "
+                                     "{} must be a LearningMechanism".format(receiver))
 
     if len(sender.value) != len(receiver.value):
-        raise LearningMechanismError("The length of the OutputState ({}) for the sender ({}) of "
-                                     "the error signal Projection does not match "
-                                     "the length of the InputState ({}) for the receiver ({})".
-                                     format(len(sender.value), sender.owner.name,
-                                            len(receiver.value),receiver.owner.name))
+        raise LearningMechanismError("The length of the OutputState ({}) for "
+                                     "the sender ({}) of the error signal "
+                                     "Projection does not match the length of "
+                                     "the InputState ({}) for the receiver "
+                                     "({})".format(len(sender.value),
+                                                   sender.owner.name,
+                                                   len(receiver.value),
+                                                   receiver.owner.name))
 
     return MappingProjection(sender=sender,
                              receiver=receiver,
                              matrix=IDENTITY_MATRIX,
-                             name = sender.owner.name + ' ' + OUTCOME)
+                             name=sender.owner.name + ' ' + OUTCOME)

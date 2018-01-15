@@ -21,7 +21,7 @@ from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAlloca
 from psyneulink.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch', 'EVCAuxiliaryError',
@@ -269,7 +269,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller=None,
         variable=None,
         runtime_params=None,
-        time_scale=TimeScale.TRIAL,
         params=None,
         context=None,
     ):
@@ -310,7 +309,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller.EVC_policies = []
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        context = context.replace(EXECUTING, '{0} {1}'.format(controller.name, EVC_SIMULATION))
+        context = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION))
 
         # Print progress bar
         if controller.prefs.reportOutputPref:
@@ -332,7 +331,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #        preserved here for possible future restoration
         if PY_MULTIPROCESSING:
             EVC_pool = Pool()
-            results = EVC_pool.map(_compute_EVC, [(controller, arg, runtime_params, time_scale, context)
+            results = EVC_pool.map(_compute_EVC, [(controller, arg, runtime_params, context)
                                                  for arg in controller.control_signal_search_space])
 
         else:
@@ -391,7 +390,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 # Calculate EVC for specified allocation policy
                 result_tuple = _compute_EVC(args=(controller, allocation_vector,
                                                   runtime_params,
-                                                  time_scale,
                                                   context))
                 EVC, outcome, cost = result_tuple
 
@@ -507,7 +505,6 @@ def _compute_EVC(args):
         ctlr (EVCControlMechanism)
         allocation_vector (1D np.array): allocation policy for which to compute EVC
         runtime_params (dict): runtime params passed to ctlr.update
-        time_scale (TimeScale): time_scale passed to ctlr.update
         context (value): context passed to ctlr.update
 
     Returns (float, float, float):
@@ -515,7 +512,7 @@ def _compute_EVC(args):
 
     """
 
-    ctlr, allocation_vector, runtime_params, time_scale, context = args
+    ctlr, allocation_vector, runtime_params, context = args
 
     # # TEST PRINT:
     # print("Allocation vector: {}\nPredicted input: {}".
@@ -525,7 +522,6 @@ def _compute_EVC(args):
     outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
                         allocation_vector=allocation_vector,
                         runtime_params=runtime_params,
-                        time_scale=time_scale,
                         context=context)
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,

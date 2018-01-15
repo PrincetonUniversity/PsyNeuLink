@@ -360,7 +360,7 @@ from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
@@ -671,8 +671,8 @@ class LCControlMechanism(ControlMechanism):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the LCControlMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the LCControlMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
     """
@@ -819,14 +819,12 @@ class LCControlMechanism(ControlMechanism):
                                            format(MODULATED_MECHANISMS, self.name, mech, MULTIPLICATIVE_PARAM))
 
     def _instantiate_output_states(self, context=None):
-        """Instantiate ControlSignal and assign ControlProjections to Mechanisms in self.modulated_mechanisms
+        """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms
 
         If **modulated_mechanisms** argument of constructor was specified as *ALL*,
             assign all ProcessingMechanisms in Compositions to which LCControlMechanism belongs to self.modulated_mechanisms
-        Instantiate ControlSignal with Projections to the ParameterState for the multiplicative_param of every
+        Instantiate ControlSignal with Projection to the ParameterState for the multiplicative_param of every
            Mechanism listed in self.modulated_mechanisms
-
-        Returns ControlSignal (OutputState)
         """
         from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
@@ -870,14 +868,11 @@ class LCControlMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    clock=CentralClock,
-                    time_scale=TimeScale.TRIAL,
                     context=None):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
         output_values = self.function(variable=variable,
                              params=runtime_params,
-                             time_scale=time_scale,
                              context=context)
         gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
         return gain_t, gain_t, output_values[0], output_values[1], output_values[2]

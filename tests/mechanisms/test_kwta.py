@@ -1,5 +1,7 @@
 import pytest
 
+import numpy as np
+
 from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import Linear, Logistic
 from psyneulink.components.mechanisms.mechanism import MechanismError
@@ -9,8 +11,7 @@ from psyneulink.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVI
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.library.mechanisms.processing.transfer.kwta import KWTA, KWTAError
-from psyneulink.scheduling.timescale import TimeScale
-import numpy as np
+from psyneulink.scheduling.time import TimeScale
 
 class TestKWTAInputs:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
@@ -425,7 +426,6 @@ class TestKWTALongTerm:
             size=10,
             k_value=3,
             threshold=1,
-            time_scale=TimeScale.TIME_STEP
         )
         p = Process(pathway=[K], prefs=TestKWTALongTerm.simple_prefs)
         s = System(processes=[p], prefs=TestKWTALongTerm.simple_prefs)

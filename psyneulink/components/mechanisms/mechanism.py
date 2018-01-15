@@ -33,7 +33,7 @@ Overview
 A Mechanism takes an input, transforms it in some way, and makes the result available as its output.  There are two
 types of Mechanisms in PsyNeuLink:
 
-    * `ProcessingMechanisms <ProcessingMechanism>` aggregrate the input they receive from other Mechanisms, and/or the
+    * `ProcessingMechanisms <ProcessingMechanism>` aggregate the input they receive from other Mechanisms, and/or the
       input to the `Process` or `System` to which they belong, transform it in some way, and
       provide the result as input to other Mechanisms in the Process or System, or as the output for a Process or
       System itself.  There are a variety of different types of ProcessingMechanism, that accept various forms of
@@ -779,26 +779,17 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, InitStatus, ExecutionStatus, function_type, method_type
+from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
-from psyneulink.components.states.state import _parse_state_spec, ADD_STATES
-from psyneulink.globals.defaults import timeScaleSystemDefault
-from psyneulink.globals.keywords import \
-    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, \
-    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
-    INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, \
-    SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, VARIABLE, VALUE, REFERENCE_VALUE, \
-    kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.components.states.state import ADD_STATES, _parse_state_spec
+from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, UNCHANGED, VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
-from psyneulink.globals.log import LogLevel
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
     'Mechanism_Base', 'MechanismError'
@@ -882,7 +873,6 @@ class Mechanism_Base(Mechanism):
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
             + ClassDefaults.variable (list)
             + paramClassDefaults (dict):
-                + MECHANISM_TIME_SCALE (TimeScale): TimeScale.TRIAL (timeScale at which Mechanism executes)
                 + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
                     specifies order in which types of States are executed;  used by self.execute]
             + default_mechanism (str): Currently DDM_MECHANISM (class reference resolved in __init__.py)
@@ -891,7 +881,7 @@ class Mechanism_Base(Mechanism):
         -------------
             - _validate_variable(variable, context)
             - _validate_params(request_set, target_set, context)
-            - update_states_and_execute(time_scale, params, context):
+            - update_states_and_execute(params, context):
                 updates input, param values, executes <subclass>.function, returns outputState.value
             - terminate_execute(self, context=None): terminates execution of Mechanism (for TimeScale = time_step)
             - adjust(params, context)
@@ -966,12 +956,8 @@ class Mechanism_Base(Mechanism):
 
         .. note::
            the `value <Mechanism_Base.value>` of a Mechanism is not necessarily the same as its
-           `output_values <Mechanism_Base.output_values>` attribute, which lists the `value <OutputState.value>`\\s
-           of its `OutputStates <Mechanism_Base.output_states>`.
-
-    default_value : ndarray
-        set equal to the `value <Mechanism_Base.value>` attribute when the Mechanism is first initialized; maintains
-        its value even when `value <Mechanism_Base.value>` is reset to None when (re-)initialized prior to execution.
+           `output_values <Mechanism_Base.output_values>` attribute, which lists the `values <OutputState.value>`
+           of its `OutputStates <Mechanism_Base.outputStates>`.
 
     output_state : OutputState
         `primary OutputState <OutputState_Primary>` for the Mechanism;  same as first entry of its `output_states
@@ -1084,16 +1070,13 @@ class Mechanism_Base(Mechanism):
         <Mechanism_Role_In_Processes_And_Systems>` in each. The key of each entry is a System to which the Mechanism
         belongs, and its value is the Mechanism's `role in that System <System_Mechanisms>`.
 
-    time_scale : TimeScale : default TimeScale.TRIAL
-        determines the default value of the `TimeScale` used by the Mechanism when `executed <Mechanism_Execution>`.
-
     name : str
         the name of the Mechanism; if it is not specified in the **name** argument of the constructor, a default is
         assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
         .. _stateRegistry : Registry
@@ -1166,7 +1149,6 @@ class Mechanism_Base(Mechanism):
         #     Components.States.InputState.InputState,
         #     Components.States.ParameterState.ParameterState,
         #     Components.States.OutputState.OutputState]
-        MECHANISM_TIME_SCALE: TimeScale.TRIAL
         })
 
     # def __new__(cls, *args, **kwargs):
@@ -1305,9 +1287,9 @@ class Mechanism_Base(Mechanism):
                                      format(name, self.name))
 
         try:
-            self._default_value = self.value.copy()
+            self.instance_defaults.value = self.value.copy()
         except AttributeError:
-            self._default_value = self.value
+            self.instance_defaults.value = self.value
         self.value = self._old_value = None
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
@@ -1610,7 +1592,6 @@ class Mechanism_Base(Mechanism):
         """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL
 
         Go through target_set params (populated by Component._validate_params) and validate values for:
-            + TIME_SCALE:  <TimeScale>
             + INPUT_STATES:
                 <MechanismsInputState or Projection object or class,
                 specification dict for one, 2-item tuple, or numeric value(s)>;
@@ -1635,6 +1616,7 @@ class Mechanism_Base(Mechanism):
                                    and calling on corresponding subclass to get default values (if param not found)
                                    (as PROJECTION_TYPE and PROJECTION_SENDER are currently handled)
         """
+
         from psyneulink.components.states.state import _parse_state_spec
         from psyneulink.components.states.inputstate import InputState
 
@@ -1643,22 +1625,6 @@ class Mechanism_Base(Mechanism):
         super(Mechanism, self)._validate_params(request_set,target_set,context)
 
         params = target_set
-
-        #VALIDATE TIME SCALE
-        try:
-            param_value = params[TIME_SCALE]
-        except KeyError:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
-                pass
-            else:
-                self.timeScale = timeScaleSystemDefault
-        else:
-            if isinstance(param_value, TimeScale):
-                self.timeScale = params[TIME_SCALE]
-            else:
-                if self.prefs.verbosePref:
-                    print("Value for {0} ({1}) param of {2} must be of type {3};  default will be used: {4}".
-                          format(TIME_SCALE, param_value, self.name, type(TimeScale), timeScaleSystemDefault))
 
         # VALIDATE INPUT STATE(S)
 
@@ -1690,10 +1656,11 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError("{0} in {1} must be a dict of param specifications".
                                      format(FUNCTION_PARAMS, self.__class__.__name__))
             # Validate params
+
             from psyneulink.components.states.parameterstate import ParameterState
             for param_name, param_value in function_param_specs.items():
                 try:
-                    default_value = self.paramInstanceDefaults[FUNCTION_PARAMS][param_name]
+                    self.instance_defaults.value = self.paramInstanceDefaults[FUNCTION_PARAMS][param_name]
                 except KeyError:
                     raise MechanismError("{0} not recognized as a param of execute method for {1}".
                                          format(param_name, self.__class__.__name__))
@@ -1703,8 +1670,8 @@ class Mechanism_Base(Mechanism):
                         isinstance(param_value, ParameterState) or
                         isinstance(param_value, Projection) or
                         isinstance(param_value, dict) or
-                        iscompatible(param_value, default_value)):
-                    params[FUNCTION_PARAMS][param_name] = default_value
+                        iscompatible(param_value, self.instance_defaults.value)):
+                    params[FUNCTION_PARAMS][param_name] = self.instance_defaults.value
                     if self.prefs.verbosePref:
                         print("{0} param ({1}) for execute method {2} of {3} is not a ParameterState, "
                               "projection, tuple, or value; default value ({4}) will be used".
@@ -1712,7 +1679,7 @@ class Mechanism_Base(Mechanism):
                                      param_value,
                                      self.execute.__self__.componentName,
                                      self.__class__.__name__,
-                                     default_value))
+                                     self.instance_defaults.value))
 
         # VALIDATE OUTPUT STATE(S)
 
@@ -1834,7 +1801,6 @@ class Mechanism_Base(Mechanism):
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_states
             or process InputStates before and/or after call to _instantiate_parameter_states
         """
-
         from psyneulink.components.states.parameterstate import _instantiate_parameter_states
         _instantiate_parameter_states(owner=self, context=context)
 
@@ -1848,7 +1814,6 @@ class Mechanism_Base(Mechanism):
         _instantiate_output_states(owner=self, output_states=self.output_states, context=context)
 
     def _add_projection_to_mechanism(self, state, projection, context=None):
-
         from psyneulink.components.projections.projection import _add_projection_to
         _add_projection_to(receiver=self, state=state, projection_spec=projection, context=context)
 
@@ -1861,8 +1826,6 @@ class Mechanism_Base(Mechanism):
     def execute(self,
                 input=None,
                 runtime_params=None,
-                clock=CentralClock,
-                time_scale=TimeScale.TRIAL,
                 ignore_execution_id = False,
                 context=None,
                 bin_execute=False):
@@ -1911,9 +1874,6 @@ class Mechanism_Base(Mechanism):
             `runtimeParamStickyAssignmentPref` is set for the Component to which the parameter belongs).  See
             `runtime_params <Mechanism_Runtime_Parameters>` above for details concerning specification.
 
-        time_scale : TimeScale :  default TimeScale.TRIAL
-            specifies whether the Mechanism is executed for a single `TIME_STEP` or a `TRIAL`.
-
         Returns
         -------
 
@@ -1939,8 +1899,6 @@ class Mechanism_Base(Mechanism):
                 return_value =  self._execute(
                     variable=self.instance_defaults.variable,
                     runtime_params=runtime_params,
-                    clock=clock,
-                    time_scale=time_scale,
                     context=context,
                 )
 
@@ -1976,7 +1934,6 @@ class Mechanism_Base(Mechanism):
                 return_value = self.function(
                     variable=self.instance_defaults.variable,
                     params=runtime_params,
-                    time_scale=time_scale,
                     context=context,
                 )
                 return np.atleast_2d(return_value)
@@ -2021,10 +1978,9 @@ class Mechanism_Base(Mechanism):
         # Executing or simulating Process or System, get input by updating input_states
 
         if (input is None
-            and (EXECUTING in context or EVC_SIMULATION in context)
+            and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION})
             and (self.input_state.path_afferents != [])):
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
-                                                                       time_scale=time_scale,
                                                                        context=context))
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
@@ -2039,73 +1995,60 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE PARAMETER STATE(S)
-        self._update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+        self._update_parameter_states(runtime_params=runtime_params, context=context)
         #endregion
 
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
         if bin_execute:
-            self.value = self._bin_execute(
+            value = self._bin_execute(
                 variable=variable,
                 runtime_params=runtime_params,
-                clock=clock,
-                time_scale=time_scale,
                 context=context,
             )
         else:
-            self.value = self._execute(
+        # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
+        #                      to avoid multiple calls to (and potential log entries for) self.value property
+            value = self._execute(
                 variable=variable,
                 runtime_params=runtime_params,
-                clock=clock,
-                time_scale=time_scale,
                 context=context,
             )
 
-        # # MODIFIED 3/3/17 OLD:
-        # self.value = np.atleast_2d(self.value)
-        # # MODIFIED 3/3/17 NEW:
-        # converted_to_2d = np.atleast_2d(self.value)
-        # # If self.value is a list of heterogenous elements, leave as is;
-        # # Otherwise, use converted value (which is a genuine 2d array)
-        # if converted_to_2d.dtype != object:
-        #     self.value = converted_to_2d
-        # MODIFIED 3/8/17 NEWER:
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
         #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
         #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-        if (isinstance(self.value, list) and
-            (all(isinstance(item, np.ndarray) for item in self.value) and
+        if (isinstance(value, list) and
+            (all(isinstance(item, np.ndarray) for item in value) and
                 all(
-                        all(item.shape[i]==self.value[0].shape[0]
+                        all(item.shape[i]==value[0].shape[0]
                             for i in range(len(item.shape)))
-                        for item in self.value))):
-                # return self.value
+                        for item in value))):
                 pass
         else:
-            converted_to_2d = np.atleast_2d(self.value)
+            converted_to_2d = np.atleast_2d(value)
             # If return_value is a list of heterogenous elements, return as is
             #     (satisfies requirement that return_value be an array of possibly multidimensional values)
             if converted_to_2d.dtype == object:
-                # return self.value
                 pass
             # Otherwise, return value converted to 2d np.array
             else:
                 # return converted_to_2d
-                self.value = converted_to_2d
-        # MODIFIED 3/3/17 END
+                value = converted_to_2d
 
         # Set status based on whether self.value has changed
-        self.status = self.value
-
+        self.status = value
         #endregion
 
+        self.value = value
 
         #region UPDATE OUTPUT STATE(S)
-        self._update_output_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+        self._update_output_states(runtime_params=runtime_params, context=context)
         #endregion
 
         #region REPORT EXECUTION
-        if self.prefs.reportOutputPref and context and EXECUTING in context:
+        # if self.prefs.reportOutputPref and context and EXECUTING in context:
+        if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}):
             self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
         #endregion
 
@@ -2127,12 +2070,13 @@ class Mechanism_Base(Mechanism):
 
         return self.value
 
-    def run(self,
-            inputs,
-            num_trials=None,
-            call_before_execution=None,
-            call_after_execution=None,
-            time_scale=None):
+    def run(
+        self,
+        inputs,
+        num_trials=None,
+        call_before_execution=None,
+        call_after_execution=None,
+    ):
         """Run a sequence of `executions <Mechanism_Execution>`.
 
         COMMENT:
@@ -2155,9 +2099,6 @@ class Mechanism_Base(Mechanism):
         call_after_execution : function : default None
             called after each execution of the Mechanism.
 
-        time_scale : TimeScale : default TimeScale.TRIAL
-            specifies whether the Mechanism is executed for a single `TIME_STEP` or a `TRIAL`.
-
         Returns
         -------
 
@@ -2167,12 +2108,13 @@ class Mechanism_Base(Mechanism):
 
         """
         from psyneulink.globals.environment import run
-        return run(self,
-                   inputs=inputs,
-                   num_trials=num_trials,
-                   call_before_trial=call_before_execution,
-                   call_after_trial=call_after_execution,
-                   time_scale=time_scale)
+        return run(
+            self,
+            inputs=inputs,
+            num_trials=num_trials,
+            call_before_trial=call_before_execution,
+            call_after_trial=call_after_execution,
+        )
 
     def _get_variable_from_input(self, input):
 
@@ -2212,7 +2154,7 @@ class Mechanism_Base(Mechanism):
 
         return np.array(self.input_values)
 
-    def _update_input_states(self, runtime_params=None, time_scale=None, context=None):
+    def _update_input_states(self, runtime_params=None, context=None):
         """ Update value for each InputState in self.input_states:
 
         Call execute method for all (MappingProjection) Projections in InputState.path_afferents
@@ -2221,21 +2163,21 @@ class Mechanism_Base(Mechanism):
         """
         for i in range(len(self.input_states)):
             state = self.input_states[i]
-            state.update(params=runtime_params, time_scale=time_scale, context=context)
+            state.update(params=runtime_params, context=context)
         return np.array(self.input_values)
 
-    def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
+    def _update_parameter_states(self, runtime_params=None, context=None):
 
         for state in self._parameter_states:
 
-            state.update(params=runtime_params, time_scale=time_scale, context=context)
+            state.update(params=runtime_params, context=context)
 
-    def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
+    def _update_output_states(self, runtime_params=None, context=None):
         """Execute function for each OutputState and assign result of each to corresponding item of self.output_values
 
         """
         for state in self.output_states:
-            state.update(params=runtime_params, time_scale=time_scale, context=context)
+            state.update(params=runtime_params, context=context)
 
     def initialize(self, value):
         """Assign an initial value to the Mechanism's `value <Mechanism_Base.value>` attribute and update its
@@ -2263,8 +2205,6 @@ class Mechanism_Base(Mechanism):
     def _bin_execute(self,
                  variable=None,
                  runtime_params=None,
-                 clock=CentralClock,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
 
         params = self.function_object.get_param_initializer()
@@ -2296,12 +2236,10 @@ class Mechanism_Base(Mechanism):
         return ret
 
     def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    clock=CentralClock,
-                    time_scale=None,
-                    context=None):
-        return self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)
+                 variable=None,
+                 runtime_params=None,
+                 context=None):
+        return self.function(variable=variable, params=runtime_params, context=context)
 
     def _report_mechanism_execution(self, input_val=None, params=None, output=None):
 
@@ -2496,39 +2434,6 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.parameterstate import ParameterState
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, assignment):
-        self._value = assignment
-
-        # # MODIFIED 1/28/17 NEW: [COPIED FROM State]
-        # # Store value in log if specified
-        # # Get logPref
-        # if self.prefs:
-        #     log_pref = self.prefs.logPref
-        #
-        # # Get context
-        # try:
-        #     curr_frame = inspect.currentframe()
-        #     prev_frame = inspect.getouterframes(curr_frame, 2)
-        #     context = inspect.getargvalues(prev_frame[1][0]).locals['context']
-        # except KeyError:
-        #     context = ""
-        #
-        # # If context is consistent with log_pref, record value to log
-        # if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-        #         (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
-        #         (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
-        #     self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
-        # # MODIFIED 1/28/17 END
-
-    @property
-    def default_value(self):
-        return self._default_value
 
     @property
     def input_state(self):

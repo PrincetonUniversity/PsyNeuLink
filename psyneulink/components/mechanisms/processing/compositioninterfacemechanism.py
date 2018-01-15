@@ -52,7 +52,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = []
 
@@ -140,7 +140,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                  default_input_value=None,
                  size=None,
                  function = Linear(slope = 1, intercept=0.0),
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

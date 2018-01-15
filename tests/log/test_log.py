@@ -17,32 +17,38 @@ class TestLog:
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'time_constant': 'OFF'}
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'time_constant': 'OFF'}
-        assert PJ.loggable_items == {'matrix': 'OFF'}
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'OFF'}
+        assert PJ.loggable_items == {'matrix': 'OFF',
+                                     'value': 'OFF'}
 
-        T_1.log_items(pnl.NOISE)
-        T_1.log_items(pnl.RESULTS)
-        PJ.log_items(pnl.MATRIX)
+        T_1.set_log_conditions(pnl.NOISE)
+        T_1.set_log_conditions(pnl.RESULTS)
+        PJ.set_log_conditions(pnl.MATRIX)
 
         assert T_1.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'EXECUTION',
                                      'intercept': 'OFF',
                                      'noise': 'EXECUTION',
-                                     'time_constant': 'OFF'}
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'OFF'}
         assert T_2.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
                                      'RESULTS': 'OFF',
                                      'intercept': 'OFF',
                                      'noise': 'OFF',
-                                     'time_constant': 'OFF'}
-        assert PJ.loggable_items == {'matrix': 'EXECUTION'}
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'OFF'}
+        assert PJ.loggable_items == {'matrix': 'EXECUTION',
+                                     'value': 'OFF'}
 
         PS.execute()
         PS.execute()
@@ -51,10 +57,12 @@ class TestLog:
         assert T_1.logged_items == {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
         assert PJ.logged_items == {'matrix': 'EXECUTION'}
 
+        T_1.log.print_entries()
+
         # assert T_1.log.print_entries() ==
         # # Log for mech_A:
         # #
-        # # Entry     Variable:                                          Context                                                                 Value
+        # # Index     Variable:                                          Context                                                                  Value
         # # 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # # 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # #
@@ -65,7 +73,7 @@ class TestLog:
         # assert T_2.log.print_entries() ==
         # # Log for mech_A:
         # #
-        # # Entry     Variable:                                          Context                                                                 Value
+        # # Index     Variable:                                          Context                                                                  Value
         # # 0         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # # 1         'RESULTS'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # #
@@ -73,20 +81,27 @@ class TestLog:
         # # 0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
         # # 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
 
+        print(T_1.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None))
         assert T_1.log.csv(entries=['noise', 'RESULTS'], owner_name=False, quotes=None) == \
-                        "\'Entry\', \'noise\', \'RESULTS\'\n0,  0.,  0.  0.\n1,  0.,  0.  0.\n2,  0.,  0.  0.\n"
+                        "\'Index\', \'noise\', \'RESULTS\'\n0, 0.0, 0.0 0.0\n1, 0.0, 0.0 0.0\n2, 0.0, 0.0 0.0\n"
 
         assert PJ.log.csv(entries='matrix', owner_name=True, quotes=True) == \
-               "\'Entry\', \'MappingProjection from T_1 to T_2[matrix]\'\n" \
-               "0, \' 1.  0.\'\n \' 0.  1.\'\n" \
-               "1, \' 1.  0.\'\n \' 0.  1.\'\n" \
-               "2, \' 1.  0.\'\n \' 0.  1.\'\n"
+               "\'Index\', \'MappingProjection from T_1 to T_2[matrix]\'\n" \
+               "\'0\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+               "\'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+               "\'2\', \'1.0 0.0\' \'0.0 1.0\'\n"
 
         result = T_1.log.nparray(entries=['noise', 'RESULTS'], header=False, owner_name=True)
         np.testing.assert_array_equal(result,
                                       np.array([[[0], [1], [2]],
                                                 [[ 0.], [ 0.], [ 0.]],
                                                 [[ 0.,  0.], [ 0.,  0.],[ 0., 0.]]]))
+
+    def test_log_initialization(self):
+        T = pnl.TransferMechanism(
+                prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
+        )
+        assert T.logged_items == {'value': 'INITIALIZATION'}
 
 
 

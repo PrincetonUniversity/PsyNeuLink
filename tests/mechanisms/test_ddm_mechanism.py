@@ -1,12 +1,17 @@
+import numpy as np
 import pytest
 import typecheck
-import numpy as np
+
 from psyneulink.components.component import ComponentError
-from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
+from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, Linear, NormalDist
+from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.system import System
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DDMError
-from psyneulink.scheduling.timescale import TimeScale
-
-
+from psyneulink.scheduling.condition import WhenFinished, While
+from psyneulink.scheduling.scheduler import Scheduler
+from psyneulink.scheduling.time import TimeScale
 # ======================================= FUNCTION TESTS ============================================
 
 # VALID FUNCTIONS:
@@ -15,21 +20,86 @@ from psyneulink.scheduling.timescale import TimeScale
 # TEST 1
 # function = Integrator
 
+class TestThreshold:
+    def test_threshold_param(self):
+        D = DDM(name='DDM',
+                function=DriftDiffusionIntegrator(threshold=10.0))
 
-def test_DDM_Integrator():
-    stim = 10
-    T = DDM(
-        name='DDM',
-        function=DriftDiffusionIntegrator(
-            initializer=20.0
-        ),
-        time_scale=TimeScale.TIME_STEP
-    )
-    val = float(T.execute(stim)[0])
+        assert D.function_object.threshold[0] == 10.0
 
-    T.function_object.initializer = 30.0
-    val2 = float(T.execute(stim)[0])
-    # assert [val, val2]  == [10, 30]
+        D.function_object.threshold = 5.0
+        assert D.function_object._threshold == 5.0
+
+    def test_threshold_sets_is_finished(self):
+        D = DDM(name='DDM',
+                function=DriftDiffusionIntegrator(threshold=5.0))
+        D.execute(2.0)  # 2.0 < 5.0
+        assert not D.is_finished
+
+        D.execute(2.0)  # 4.0 < 5.0
+        assert not D.is_finished
+
+        D.execute(2.0)   # 5.0 = threshold
+        assert D.is_finished
+
+    def test_threshold_stops_accumulation(self):
+        D = DDM(name='DDM',
+                function=DriftDiffusionIntegrator(threshold=5.0))
+        decision_variables = []
+        time_points = []
+        for i in range(5):
+            output = D.execute(2.0)
+            decision_variables.append(output[0][0])
+            time_points.append(output[1][0])
+
+        # decision variable accumulation stops
+        assert np.allclose(decision_variables, [2.0, 4.0, 5.0, 5.0, 5.0])
+
+        # time accumulation does not stop
+        assert np.allclose(time_points, [1.0, 2.0, 3.0, 4.0, 5.0])
+
+    # def test_threshold_stops_accumulation_multiple_variables(self):
+    #     D = IntegratorMechanism(name='DDM',
+    #                             default_variable=[[0,0,0]],
+    #                             function=DriftDiffusionIntegrator(threshold=[5.0, 5.0, 10.0],
+    #                                                               initializer=[[0.0, 0.0, 0.0]],
+    #                                                               rate=[2.0, -2.0, -2.0 ]))
+    #     decision_variables_a = []
+    #     decision_variables_b = []
+    #     decision_variables_c = []
+    #     for i in range(5):
+    #         output = D.execute([2.0, 2.0, 2.0])
+    #         print(output)
+    #         decision_variables_a.append(output[0][0])
+    #         decision_variables_b.append(output[0][1])
+    #         decision_variables_c.append(output[0][2])
+    #
+    #     # decision variable accumulation stops
+    #     assert np.allclose(decision_variables_a, [2.0, 4.0, 5.0, 5.0, 5.0])
+
+
+    def test_is_finished_stops_system(self):
+        D = DDM(name='DDM',
+                function=DriftDiffusionIntegrator(threshold=10.0))
+        P = Process(pathway=[D])
+        S = System(processes=[P])
+
+        S.run(inputs={D: 2.0},
+              termination_processing={TimeScale.TRIAL: WhenFinished(D)})
+        # decision variable's value should match threshold
+        assert D.value[0] == 10.0
+        # it should have taken 5 executions (and time_step_size = 1.0)
+        assert D.value[1] == 5.0
+
+
+    # def test_is_finished_stops_mechanism(self):
+    #     D = DDM(name='DDM',
+    #             function=DriftDiffusionIntegrator(threshold=10.0))
+    #     T = TransferMechanism(function=Linear(slope=2.0))
+    #     P = Process(pathway=[D, T])
+    #     S = System(processes=[P])
+    #
+    #     sched = Scheduler(system=S)
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -82,7 +152,6 @@ def test_DDM_zero_noise():
             rate=1.0,
             time_step_size=1.0
         ),
-        time_scale=TimeScale.TIME_STEP
     )
     val = float(T.execute(stim)[0])
     assert val == 10
@@ -145,7 +214,6 @@ def test_DDM_noise_int():
                 rate=1.0,
                 time_step_size=1.0
             ),
-            time_scale=TimeScale.TIME_STEP
         )
         float(T.execute(stim)[0])
     assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
@@ -166,7 +234,6 @@ def test_DDM_noise_fn():
                 rate=1.0,
                 time_step_size=1.0
             ),
-            time_scale=TimeScale.TIME_STEP
         )
         float(T.execute(stim)[0])
     assert "DriftDiffusionIntegrator requires noise parameter to be a float" in str(error_text.value)
@@ -189,7 +256,6 @@ def test_DDM_input_int():
             rate=1.0,
             time_step_size=1.0
         ),
-        time_scale=TimeScale.TIME_STEP
     )
     val = float(T.execute(stim)[0])
     assert val == 10
@@ -208,7 +274,6 @@ def test_DDM_input_list_len_1():
             rate=1.0,
             time_step_size=1.0
         ),
-        time_scale=TimeScale.TIME_STEP
     )
     val = float(T.execute(stim)[0])
     assert val == 10
@@ -227,7 +292,6 @@ def test_DDM_input_float():
             rate=1.0,
             time_step_size=1.0
         ),
-        time_scale=TimeScale.TIME_STEP
     )
     val = float(T.execute(stim)[0])
     assert val == 10.0
@@ -253,7 +317,6 @@ def test_DDM_input_list_len_2():
                 rate=1.0,
                 time_step_size=1.0
             ),
-            time_scale=TimeScale.TIME_STEP
         )
         float(T.execute(stim)[0])
     assert "must have only a single numeric item" in str(error_text.value)
@@ -279,7 +342,6 @@ def test_DDM_input_fn():
                 rate=1.0,
                 time_step_size=1.0
             ),
-            time_scale=TimeScale.TIME_STEP
         )
         float(T.execute(stim))
     assert "not supported for the input types" in str(error_text.value)
@@ -302,7 +364,6 @@ def test_DDM_rate_int():
             rate=5,
             time_step_size=1.0
         ),
-        time_scale=TimeScale.TIME_STEP
     )
     val = float(T.execute(stim)[0])
     assert val == 50
@@ -323,7 +384,6 @@ def test_DDM_rate_list_len_1():
             rate=[5],
             time_step_size=1.0
         ),
-        time_scale=TimeScale.TIME_STEP
     )
     val = float(T.execute(stim)[0])
     assert val == 50
@@ -342,7 +402,6 @@ def test_DDM_rate_float():
             rate=5,
             time_step_size=1.0
         ),
-        time_scale=TimeScale.TIME_STEP
     )
     val = float(T.execute(stim)[0])
     assert val == 50
@@ -366,7 +425,6 @@ def test_DDM_input_rate_negative():
             rate=-5.0,
             time_step_size=1.0
         ),
-        time_scale=TimeScale.TIME_STEP
     )
     val = float(T.execute(stim)[0])
     assert val == -50
@@ -397,7 +455,6 @@ def test_DDM_rate_fn():
                 rate=NormalDist().function,
                 time_step_size=1.0
             ),
-            time_scale=TimeScale.TIME_STEP
         )
         float(T.execute(stim)[0])
     assert "incompatible value" in str(error_text.value)
@@ -423,7 +480,6 @@ def test_DDM_size_int_check_var():
             rate=-5.0,
             time_step_size=1.0
         ),
-        time_scale=TimeScale.TIME_STEP
     )
     assert len(T.instance_defaults.variable) == 1 and T.instance_defaults.variable[0][0] == 0
 
@@ -440,7 +496,6 @@ def test_DDM_size_int_inputs_():
             rate=-5.0,
             time_step_size=1.0
         ),
-        time_scale=TimeScale.TIME_STEP
     )
     val = T.execute([.4]).tolist()
     assert val == [[-2.0], [1.0]]
@@ -464,7 +519,6 @@ def test_DDM_mech_size_zero():
                 rate=-5.0,
                 time_step_size=1.0
             ),
-            time_scale=TimeScale.TIME_STEP
         )
     assert "is not a positive number" in str(error_text.value)
 
@@ -483,7 +537,6 @@ def test_DDM_mech_size_negative_one():
                 rate=-5.0,
                 time_step_size=1.0
             ),
-            time_scale=TimeScale.TIME_STEP
         )
     assert "is not a positive number" in str(error_text.value)
 
@@ -502,7 +555,6 @@ def test_DDM_size_too_large():
                 rate=-5.0,
                 time_step_size=1.0
             ),
-            time_scale=TimeScale.TIME_STEP
         )
     assert "must have only a single numeric item" in str(error_text.value)
 
@@ -521,7 +573,6 @@ def test_DDM_size_too_long():
                 rate=-5.0,
                 time_step_size=1.0
             ),
-            time_scale=TimeScale.TIME_STEP
         )
     assert "is greater than 1, implying there are" in str(error_text.value)
 

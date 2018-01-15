@@ -2,21 +2,11 @@ import numpy as np
 import psyneulink as pnl
 
 
-def test_search_function(controller=None, **kwargs):
-    result = np.array(controller.allocationPolicy).reshape(len(controller.allocationPolicy), -1)
-    return result
-
-
-def test_outcome_function(**kwargs):
-    result = np.array([0])
-    return result
-
-
 # Preferences:
 mechanism_prefs = pnl.ComponentPreferenceSet(
     prefs={
         pnl.VERBOSE_PREF: pnl.PreferenceEntry(False, pnl.PreferenceLevel.INSTANCE),
-        pnl.REPORT_OUTPUT_PREF: pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
+        # pnl.REPORT_OUTPUT_PREF: pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
     }
 )
 
@@ -152,7 +142,7 @@ mySystem = pnl.System(
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
-mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
+# mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
 
 # configure EVC components
 mySystem.controller.control_signals[0].intensity_cost_function = pnl.Exponential(rate=0.8046).function
@@ -199,8 +189,12 @@ stim_list_dict = {
 
 mySystem.controller.reportOutputPref = True
 
+Flanker_Rep.set_log_conditions((pnl.SLOPE, pnl.LogCondition.CONTROL))
 
 mySystem.run(
     num_trials=nTrials,
     inputs=stim_list_dict,
 )
+
+Flanker_Rep.log.print_entries()
+

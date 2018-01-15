@@ -11,7 +11,7 @@
 
 import re
 
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 
 from psyneulink.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
 
@@ -177,17 +177,14 @@ def register_category(entry,
         else:
             # Set instance's name to first instance:
             # If name was not provided, assign component_type_name-1 as default;
-            if not name:
+            if name is None:
                 entry.name = component_type_name + "-0"
             else:
                 entry.name = name
 
             # Create instance dict:
             instanceDict = {entry.name: entry}
-            if name is None:
-                renamed_instance_counts = {component_type_name: 1}
-            else:
-                renamed_instance_counts = {component_type_name: 0}
+            renamed_instance_counts = defaultdict(int)
 
             # Register component type with instance count of 1:
             registry[component_type_name] = RegistryEntry(type(entry), instanceDict, 1, renamed_instance_counts, False)
@@ -204,7 +201,7 @@ def register_category(entry,
         # - instantiate empty instanceDict
         # - set instance count = 0
         else:
-            registry[component_type_name] = RegistryEntry(entry, {}, 0, {component_type_name: 0}, False)
+            registry[component_type_name] = RegistryEntry(entry, {}, 0, defaultdict(int), False)
 
     else:
         raise RegistryError("Requested entry {0} not of type {1}".format(entry, base_class))
@@ -213,12 +210,12 @@ def register_category(entry,
 def register_instance(entry, name, base_class, registry, sub_dict):
 
     renamed_instance_counts = registry[sub_dict].renamed_instance_counts
-
+    renamed = False
     # If entry (instance) name is None, set entry's name to sub_dict-n where n is the next available numeric suffix
     # (starting at 0) based on the number of unnamed/renamed sub_dict objects that have already been assigned names
-    if not name:
+    if name is None:
         entry.name = '{0}-{1}'.format(sub_dict, renamed_instance_counts[sub_dict])
-        renamed_instance_counts[sub_dict] += 1
+        renamed = True
     else:
         entry.name = name
 
@@ -229,24 +226,44 @@ def register_instance(entry, name, base_class, registry, sub_dict):
         #   does not follow our pattern. In this case, we will produce a unique name, but the "count" will be off
         #   e.g. user gives a mechanism the name TransferMechanism-5, then the fifth unnamed TransferMechanism
         #   will be named TransferMechanism-6
+        # TODO: an ambiguation problem - is the name "MappingProjection x to y-1"
+        # the second projection from x to y, or the first projection from x to y-1?
         match = numeric_suffix_pat.match(entry.name)
-        if not match:
-            name_stripped_of_suffix = entry.name
-            try:
-                renamed_instance_counts[entry.name] += 1
-            except KeyError:
-                renamed_instance_counts[entry.name] = 1
+
+        if match is None:
+            renamed_instance_counts[entry.name] += 1
             entry.name += '-{0}'.format(renamed_instance_counts[entry.name])
         else:
             name_stripped_of_suffix = match.groups()[0]
-            entry.name = numeric_suffix_pat.sub(r'\1-{0}'.
-                                                format(renamed_instance_counts[name_stripped_of_suffix]), entry.name)
+
+            if name_stripped_of_suffix in renamed_instance_counts:
+                # try to detect unsuffixed version first as base name
+                renamed_instance_counts[name_stripped_of_suffix] += 1
+                entry.name = numeric_suffix_pat.sub(
+                    r'\1-{0}'.format(
+                        renamed_instance_counts[name_stripped_of_suffix]
+                    ),
+                    entry.name
+                )
+            else:
+                # the second time a -\d suffixed name (not renamed though) appears
+                renamed_instance_counts[entry.name] += 1
+                entry.name += '-{0}'.format(renamed_instance_counts[entry.name])
 
     # Add instance to instanceDict:
     registry[sub_dict].instanceDict.update({entry.name: entry})
 
     # Update instanceCount in registry:
     registry[sub_dict] = registry[sub_dict]._replace(instanceCount=registry[sub_dict].instanceCount + 1)
+
+    # increment the base (non-suffixed) name count
+    if renamed:
+        match = numeric_suffix_pat.match(entry.name)
+        if match is None:
+            renamed_instance_counts[entry.name] += 1
+        else:
+            renamed_instance_counts[match.groups()[0]] += 1
+
 
 def clear_registry(registry):
     registry.clear()

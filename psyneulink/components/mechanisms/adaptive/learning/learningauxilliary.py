@@ -133,20 +133,31 @@ import warnings
 
 import numpy as np
 
+from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism \
+    import PredictionErrorMechanism
 from psyneulink.components.component import function_type, method_type
-from psyneulink.components.functions.function import BackPropagation, Hebbian, Linear, Reinforcement
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import _is_projection_spec
+from psyneulink.components.functions.function import BackPropagation, Hebbian, \
+    Linear, Reinforcement, TDLearning, LinearCombination, LinearMatrix, \
+    PredictionErrorDeltaFunction
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
+    ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import \
+    ObjectiveMechanism, OUTCOME
+from psyneulink.components.mechanisms.processing.processingmechanism import \
+    ProcessingMechanism_Base
+from psyneulink.components.projections.modulatory.learningprojection import \
+    LearningProjection
+from psyneulink.components.projections.pathway.mappingprojection import \
+    MappingProjection
 from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.keywords import \
-    BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
-    MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT, PROJECTIONS
+    BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, \
+    IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
+    MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, \
+    WEIGHT, PROJECTIONS, TDLEARNING_FUNCTION, PREDICTION_ERROR_MECHANISM, \
+    FUNCTION, HOLLOW_MATRIX
 
 __all__ = [
     'LearningAuxilliaryError'
@@ -374,6 +385,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     #      THESE SHOULD BE MOVED (ALONG WITH THE SPECIFICATION FOR LEARNING) TO A DEDICATED LEARNING SPEC
     #      FOR PROCESS AND SYSTEM, RATHER THAN USING A LearningProjection
     # Get function used for learning and the learning_rate from their specification in the LearningProjection
+    # FIXME: learning_function is deprecated
     learning_function = learning_projection.learning_function
     learning_rate = learning_projection.learning_rate
 
@@ -409,6 +421,20 @@ def _instantiate_learning_components(learning_projection, context=None):
                                           activation_function=lc.activation_mech_fct,
                                           learning_rate=learning_rate)
 
+    elif learning_function.componentName is TDLEARNING_FUNCTION:
+        activation_input = np.zeros_like(lc.activation_mech_input.value)
+        activation_output = np.zeros_like(lc.activation_mech_output.value)
+
+        error_output = np.zeros_like(lc.activation_mech_output.value)
+        error_signal = np.zeros_like(lc.activation_mech_output.value)
+        learning_rate = learning_projection.learning_function.learning_rate
+
+        learning_function = TDLearning(default_variable=[activation_input,
+                                                         activation_output,
+                                                         error_signal],
+                                       activation_function=lc.activation_mech_fct,
+                                       learning_rate=learning_rate)
+
     # BACKPROPAGATION LEARNING FUNCTION
     elif learning_function.componentName is BACKPROPAGATION_FUNCTION:
 
@@ -420,9 +446,10 @@ def _instantiate_learning_components(learning_projection, context=None):
         try:
             activation_derivative = lc.activation_mech_fct.derivative
         except AttributeError:
-            raise LearningAuxilliaryError("Function for activation_mech of {} must have a derivative "
-                                          "to be used with {}".
-                                          format(learning_projection.name, BackPropagation.componentName))
+            raise LearningAuxilliaryError("Function for activation_mech of {} "
+                                          "must have a derivative to be used "
+                                          "with {}".format(learning_projection.name,
+                                                           BackPropagation.componentName))
 
         # Get error_mech values
         if is_target:
@@ -441,9 +468,10 @@ def _instantiate_learning_components(learning_projection, context=None):
             try:
                 error_derivative = lc.error_derivative
             except AttributeError:
-                raise LearningAuxilliaryError("Function for error_mech of {} must have a derivative "
-                                              "to be used with {}".
-                                              format(learning_projection.name, BackPropagation.componentName))
+                raise LearningAuxilliaryError("Function for error_mech of {} "
+                                              "must have a derivative to be "
+                                              "used with {}".format(learning_projection.name,
+                                                                    BackPropagation.componentName))
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     DERIVATIVE, LEARNING_RATE, ERROR_MATRIX
@@ -458,8 +486,9 @@ def _instantiate_learning_components(learning_projection, context=None):
                                             context=context)
 
     else:
-        raise LearningAuxilliaryError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
-                                  format(learning_function.componentName, learning_projection.name))
+        raise LearningAuxilliaryError("PROGRAM ERROR: unrecognized learning "
+                                      "function ({}) for {}".format(learning_function.componentName,
+                                                                    learning_projection.name))
 
 
     # INSTANTIATE ObjectiveMechanism
@@ -479,7 +508,6 @@ def _instantiate_learning_components(learning_projection, context=None):
             # Assign derivative of Linear to lc.error_derivative (as default, until TARGET projection is assigned);
             #    this will induce a simple subtraction of target-sample (i.e., implement a comparator)
             sample_input = target_input = error_output
-
             # MODIFIED 10/10/17 OLD:
             # objective_mechanism = ComparatorMechanism(sample=lc.activation_mech_output,
             #                                           target=TARGET,
@@ -501,29 +529,41 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                                               COMPARATOR_MECHANISM),
             #                                           context=context)
             # MODIFIED 10/10/17 NEW:
-            objective_mechanism = ComparatorMechanism(sample={NAME:SAMPLE,
-                                                              VARIABLE:sample_input,
-                                                              PROJECTIONS:[lc.activation_mech_output],
-                                                              WEIGHT:-1},
-                                                      target={NAME:TARGET,
-                                                              VARIABLE:target_input},
-                                                      # input_states=[sample_input, target_input],
-                                                      # FOR TESTING: ALTERNATIVE specifications of input_states arg:
-                                                      # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
-                                                      # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
-                                                      #               target_input],
-                                                      # input_states=[{NAME:SAMPLE,
-                                                      #                VARIABLE:sample_input,
-                                                      #                WEIGHT:-1
-                                                      #                },
-                                                      #               {NAME:TARGET,
-                                                      #                VARIABLE:target_input,
-                                                      #                # WEIGHT:1
-                                                      #                }],
-                                                      name="{} {}".format(lc.activation_mech.name,
-                                                                          COMPARATOR_MECHANISM),
-                                                      context=context)
-            # MODIFIED 10/10/17 END
+            if learning_function.componentName == TDLEARNING_FUNCTION:
+                objective_mechanism = PredictionErrorMechanism(
+                        sample={NAME: SAMPLE,
+                                VARIABLE: sample_input,
+                                PROJECTIONS: [lc.activation_mech_output]},
+                        target={NAME: TARGET,
+                                VARIABLE: target_input},
+                        function=PredictionErrorDeltaFunction(gamma=1.0),
+                        name="{} {}".format(lc.activation_mech.name,
+                                            PREDICTION_ERROR_MECHANISM),
+                        context=context)
+            else:
+                objective_mechanism = ComparatorMechanism(sample={NAME: SAMPLE,
+                                                                  VARIABLE: sample_input,
+                                                                  PROJECTIONS: [lc.activation_mech_output],
+                                                                  WEIGHT: -1},
+                                                          target={NAME: TARGET,
+                                                                  VARIABLE: target_input},
+                                                          # input_states=[sample_input, target_input],
+                                                          # FOR TESTING: ALTERNATIVE specifications of input_states arg:
+                                                          # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
+                                                          # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
+                                                          #               target_input],
+                                                          # input_states=[{NAME:SAMPLE,
+                                                          #                VARIABLE:sample_input,
+                                                          #                WEIGHT:-1
+                                                          #                },
+                                                          #               {NAME:TARGET,
+                                                          #                VARIABLE:target_input,
+                                                          #                # WEIGHT:1
+                                                          #                }],
+                                                          name="{} {}".format(lc.activation_mech.name,
+                                                                              COMPARATOR_MECHANISM),
+                                                          context=context)
+                # MODIFIED 10/10/17 END
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
             # #              (should produce identical result to use of ComparatorMechanism above)
@@ -543,17 +583,26 @@ def _instantiate_learning_components(learning_projection, context=None):
             objective_mechanism._learning_role = TARGET
 
         try:
-            lc.error_projection = objective_mechanism.input_state.path_afferents[0]
-            # FIX: THIS IS TO FORCE ASSIGNMENT (SINCE IT DOESN'T SEEM TO BE ASSIGNED BY TEST BELOW)
+            lc.error_projection = \
+            objective_mechanism.input_state.path_afferents[0]
+            # FIX: THIS IS TO FORCE ASSIGNMENT (SINCE IT DOESN'T SEEM TO BE
+            # ASSIGNED BY TEST BELOW)
         except AttributeError:
-            raise LearningAuxilliaryError("PROGRAM ERROR: problem finding projection to TARGET ObjectiveMechanism "
-                                          "from {} when instantiating {}".
-                                          format(lc.activation_mech.name, learning_projection.name))
+            raise LearningAuxilliaryError("PROGRAM ERROR: problem finding "
+                                          "projection to TARGET "
+                                          "ObjectiveMechanism from {} when "
+                                          "instantiating {}".format(
+                lc.activation_mech.name,
+                learning_projection.name))
         else:
             if not lc.error_matrix:
-                raise LearningAuxilliaryError("PROGRAM ERROR: problem assigning error_matrix for projection to "
-                                              "ObjectiveMechanism for {} when instantiating {}".
-                                              format(lc.activation_mech.name, learning_projection.name))
+                raise LearningAuxilliaryError("PROGRAM ERROR: problem "
+                                              "assigning error_matrix for "
+                                              "projection to "
+                                              "ObjectiveMechanism for {} when "
+                                              "instantiating {}".format(
+                    lc.activation_mech.name,
+                    learning_projection.name))
 
         # INSTANTIATE LearningMechanism
 
@@ -579,7 +628,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                            function=learning_function,
                                            # learning_signals=[lc.activation_mech_projection],
                                            learning_signals=[learning_projection],
-                                           name = lc.activation_mech_projection.name + " " + LEARNING_MECHANISM,
+                                           name=lc.activation_mech_projection.name + " " + LEARNING_MECHANISM,
                                            context=context)
 
     # IMPLEMENTATION NOTE:
@@ -1059,8 +1108,9 @@ class LearningComponents(object):
                 (isinstance(assignment, ObjectiveMechanism) and assignment._role is LEARNING)):
             self._error_signal_mech = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_signal_mech; "
-                                          "it must be a LearningMechanism.")
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment "
+                                          "to error_signal_mech; it must be a "
+                                          "LearningMechanism.")
 
     # ---------------------------------------------------------------------------------------------------------------
     # FIX: MODIFY TO RETURN EITHER outputState if it is an ObjectiveMechanism or
@@ -1076,26 +1126,35 @@ class LearningComponents(object):
                 try:
                     self.error_signal_mech_output = self.error_signal_mech.output_state
                 except AttributeError:
-                    raise LearningAuxilliaryError("error_signal_mech_output not identified: error_signal_mech ({})"
-                                                  "does not appear to have an outputState".
+                    raise LearningAuxilliaryError("error_signal_mech_output "
+                                                  "not identified: "
+                                                  "error_signal_mech ({}) does "
+                                                  "not appear to have an "
+                                                  "OutputState".
                                                   format(self.error_signal_mech.name))
                 if not isinstance(self.error_signal_mech_output, OutputState):
-                    raise LearningAuxilliaryError("error_signal_mech_output found ({}) for {} but it does not "
-                                                  "appear to be an OutputState".
+                    raise LearningAuxilliaryError("error_signal_mech_output "
+                                                  "found ({}) for {} but it "
+                                                  "does not appear to be an "
+                                                  "OutputState".
                                                   format(self.error_signal_mech.name,
                                                          self.error_signal_mech_output.name))
             elif isinstance(self.error_signal_mech, LearningMechanism):
                 try:
                     self.error_signal_mech_output = self.error_signal_mech.output_states[ERROR_SIGNAL]
                 except AttributeError:
-                    raise LearningAuxilliaryError("error_signal_mech_output not identified: error_signal_mech ({})"
-                                                  "does not appear to have an ERROR_SIGNAL outputState".
+                    raise LearningAuxilliaryError("error_signal_mech_output "
+                                                  "not identified: "
+                                                  "error_signal_mech ({}) does "
+                                                  "not appear to have an "
+                                                  "ERROR_SIGNAL outputState".
                                                   format(self.error_signal_mech))
                 if not isinstance(self.error_signal_mech_output, OutputState):
-                    raise LearningAuxilliaryError("error_signal_mech_output found ({}) for {} but it does not "
-                                                  "appear to be an OutputState".
-                                                  format(self.error_signal_mech.name,
-                                                         self.error_signal_mech_output.name))
+                    raise LearningAuxilliaryError("error_signal_mech_output "
+                                                  "found ({}) for {} but it "
+                                                  "does not appear to be an "
+                                                  "OutputState".format(self.error_signal_mech.name,
+                                                                       self.error_signal_mech_output.name))
             return self.error_signal_mech.output_state
         return self._error_signal_mech_output or _get_err_sig_mech_out()
 
@@ -1104,8 +1163,9 @@ class LearningComponents(object):
         if isinstance(assignment, (OutputState)):
             self._error_signal_mech_output = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_signal_mech_output; "
-                                          "it must be an OutputState.")
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment "
+                                          "to error_signal_mech_output; it "
+                                          "must be an OutputState.")
 
     # # ---------------------------------------------------------------------------------------------------------------
     # # error_objective_mech:  TARGET objective mechanism for error_mech (ObjectiveMechanism)

@@ -11,3 +11,4 @@ Objective Mechanisms
    :maxdepth: 1
 
    ComparatorMechanism
+   PredictionErrorMechanism

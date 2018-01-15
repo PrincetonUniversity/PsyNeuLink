@@ -7,7 +7,7 @@
 
 # NOTES:
 #  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
-#  * NOW THAT NOISE AND TIME_CONSTANT ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#  * NOW THAT NOISE AND SMOOTHING_FACTOR ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
@@ -161,6 +161,7 @@ Class Reference
 """
 
 import numbers
+
 from collections import Iterable
 
 import numpy as np
@@ -179,12 +180,11 @@ from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, FUL
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
-from psyneulink.scheduling.timescale import CentralClock, TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
 ]
-
 
 class RecurrentTransferError(Exception):
     def __init__(self, error_value):
@@ -256,7 +256,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     hetero=None,                       \
     initial_value=None,                \
     noise=0.0,                         \
-    time_constant=1.0,                 \
+    smoothing_factor=0.5,                 \
     clip=(float:min, float:max),      \
     learning_rate=None,                \
     learning_function=Hebbian,         \
@@ -330,12 +330,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when `integrator_mode
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
-         result = (time_constant * variable) +
-         (1-time_constant * input to mechanism's function on the previous time step)
+         result = (smoothing_factor * variable) +
+         (1-smoothing_factor * input to mechanism's function on the previous time step)
 
     clip : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`:
@@ -369,7 +369,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies the name of the RecurrentTransferMechanism.
 
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the RecurrentTransferMechanism; see `prefs <RecurrentTransferMechanism.prefs>` 
+        specifies the `PreferenceSet` for the RecurrentTransferMechanism; see `prefs <RecurrentTransferMechanism.prefs>`
         for details.
 
     context : str : default componentType+INITIALIZING
@@ -395,8 +395,8 @@ class RecurrentTransferMechanism(TransferMechanism):
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
-        determines the starting value for time-averaged input (only relevant if `time_constant
-        <RecurrentTransferMechanism.time_constant>` parameter is not 1.0).
+        determines the starting value for time-averaged input (only relevant if `smoothing_factor
+        <RecurrentTransferMechanism.smoothing_factor>` parameter is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
@@ -406,11 +406,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float
-        the time constant for exponential time averaging of input when `integrator_mode
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
-          result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+          result = (smoothing_factor * current input) + (1-smoothing_factor * result on previous time_step)
 
     clip : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
@@ -485,8 +485,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the RecurrentTransferMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the RecurrentTransferMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
 
@@ -514,7 +514,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  hetero=None,
                  initial_value=None,
                  noise=0.0,
-                 time_constant: is_numeric_or_none=1.0,
+                 smoothing_factor: is_numeric_or_none=0.5,
                  integrator_mode=False,
                  clip=None,
                  input_states:tc.optional(tc.any(list, dict)) = None,
@@ -522,7 +522,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None,
@@ -567,10 +566,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                          noise=noise,
                          integrator_mode=integrator_mode,
 
-                         time_constant=time_constant,
+                         smoothing_factor=smoothing_factor,
                          clip=clip,
                          output_states=output_states,
-                         time_scale=time_scale,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -792,7 +790,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.output_states[ENERGY]._calculate = energy.function
 
         if ENTROPY in self.output_states.names:
-            if self.function_object.bounds == (0,1) or clip == (0,1):
+            if self.function_object.bounds == (0,1) or self.clip == (0,1):
                 entropy = Stability(self.instance_defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
@@ -804,8 +802,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 clock=CentralClock,
-                 time_scale = TimeScale.TRIAL,
                  context=None):
         """Implement decay
         """
@@ -817,17 +813,15 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,
-                                clock=CentralClock,
-                                time_scale=time_scale,
                                 context=context)
 
-    def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
+    def _update_parameter_states(self, runtime_params=None, context=None):
         for state in self._parameter_states:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
             # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
             # projection's _update_parameter_states, and accordingly are not updated here
             if state.name != AUTO or state.name != HETERO:
-                state.update(params=runtime_params, time_scale=time_scale, context=context)
+                state.update(params=runtime_params, context=context)
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?

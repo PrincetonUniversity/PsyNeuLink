@@ -137,8 +137,11 @@ corresponding arguments of its constructor, or by assigning them directly (see `
 
 .. _Component_Log:
 
-* **log** - the `log <Component.log>` attribute contains the Component's `Log`, in which its `value <Component.value>`
-  can be recorded during initialization, validation and/or execution.
+* **log** - the `log <Component.log>` attribute contains the Component's `Log`, that can be used to record its
+  `value <Component.value>`, as well as that of Components that belong to it, during initialization, validation,
+  execution and learning.  It also has four convenience methods -- `loggable_items <Log.loggable_items>`, `set_log_conditions
+  <Log.set_log_conditions>`, `log_values <Log.log_values>` and `logged_items <Log.logged_items>` -- that provide access to the
+  corresponding methods of its Log, used to identify, configure and track items for logging.
 ..
 
 .. _Component_Name:
@@ -352,13 +355,9 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
+from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MAPPING_PROJECTION, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, LOG_ENTRIES, \
-    INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, \
-    PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
-    SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
-from psyneulink.globals.log import Log, LogLevel
+# from psyneulink.globals.log import Log, LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
@@ -367,7 +366,7 @@ __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
     'InitStatus', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
 ]
-
+# Testing pull request
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
 DeferredInitRegistry = {}
@@ -685,53 +684,76 @@ class Component(object):
     componentCategory = None
     componentType = None
 
+    class _DefaultsAliases:
+        '''
+        Used to create aliases for both ClassDefaults and InstanceDefaults, via properties.
+        e.g. to simply alias foo and bar:
 
-    class Defaults(object):
-        def _attributes(obj):
-            return {k: getattr(obj, k) for k in dir(obj) if k[:2]+k[-2:] != '____' and not callable(getattr(obj, k))}
+        @property
+        def foo(self):
+            return self.bar
 
-        @classmethod
-        def values(cls):
+        @foo.setter
+        def foo(self, value):
+            self.bar = value
+
+        '''
+        pass
+
+    class _DefaultsMeta(type, _DefaultsAliases):
+        def __repr__(self):
+            return '{0} :\n{1}'.format(super().__repr__(), self.show())
+
+        def __str__(self):
+            return self.show()
+
+        def values(self):
             '''
                 Returns
                 -------
-                A dictionary consisting of the non-dunder and non-function attributes of **obj**
+                A dictionary consisting of the non-hidden and non-function attributes
             '''
-            return cls._attributes(cls)
+            return self._values(self)
 
-        def _show(obj):
-            vals = obj.values()
+        def show(self):
+            '''
+                Returns
+                -------
+                A pretty string version of the non-hidden and non-function attributes
+            '''
+            return self._show(self)
+
+    class Defaults(metaclass=_DefaultsMeta):
+        def _values(self):
+            return {
+                k: getattr(self, k) for k in dir(self) + dir(type(self))
+                if (k[:1] != '_' and not callable(getattr(self, k)))
+            }
+
+        def _show(self):
+            vals = self.values()
             return '(\n\t{0}\n)'.format('\n\t'.join(['{0} = {1},'.format(k, vals[k]) for k in vals]))
-
-        @classmethod
-        def show(cls):
-            '''
-                Returns
-                -------
-                A pretty string version of the non-dunder and non-function attributes of **obj**
-            '''
-            return cls._show(cls)
 
     class ClassDefaults(Defaults):
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         variable = np.array([0])
 
-    class InstanceDefaults(Defaults):
+    class InstanceDefaults(Defaults, _DefaultsAliases):
         def __init__(self, **kwargs):
             for param in kwargs:
                 setattr(self, param, kwargs[param])
-
-        def values(self):
-            return self._attributes()
-
-        def show(self):
-            return self._show()
 
         def __repr__(self):
             return '{0} :\n{1}'.format(super().__repr__(), self.__str__())
 
         def __str__(self):
             return self.show()
+
+        def values(self):
+            return self._values()
+
+        def show(self):
+            return self._show()
 
     initMethod = INIT_FULL_EXECUTE_METHOD
 
@@ -838,12 +860,11 @@ class Component(object):
             self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
 
         # ASSIGN LOG
-
+        from psyneulink.globals.log import Log
         self.log = Log(owner=self)
         self.recording = False
         # Used by run to store return value of execute
         self.results = []
-
 
         # ENFORCE REQUIRED CLASS DEFAULTS
 
@@ -1033,10 +1054,9 @@ class Component(object):
                     size = np.array(size)
                 except:
                     raise ComponentError(
-                        "size was not specified, but PsyNeuLink was unable to infer size from "
-                        "the variable argument, {}. variable can be an array,"
-                        " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                        " variable must be specified.".format(variable))
+                            "{}: size was not specified, and unable to infer it from the variable argument ({}) "
+                            "-- it can be an array, list, a 2D array, a list of arrays, array of lists, etc. ".
+                                format(self.name, variable))
             # endregion
 
             # region If length(size) = 1 and variable is not None, then expand size to length(variable)
@@ -1045,9 +1065,6 @@ class Component(object):
                     new_size = np.empty(len(variable))
                     new_size.fill(size[0])
                     size = new_size
-            # endregion
-
-            # endregion
 
             # the two lines below were used when size was a param and are likely obsolete (7/7/17 CW)
             # param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
@@ -1288,7 +1305,6 @@ class Component(object):
                     # FIX: AND, EVEN IF IT DOES, WHAT ABOUT ORDER EFFECTS:
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
-
                     from psyneulink.components.functions.function import Function
                     from inspect import isfunction
 
@@ -1854,7 +1870,6 @@ class Component(object):
 
     @tc.typecheck
     def _assign_params(self, request_set:tc.optional(dict)=None, context=None):
-
         from psyneulink.components.functions.function import Function
 
         # FIX: Hack to prevent recursion in calls to setter and assign_params
@@ -2547,8 +2562,6 @@ class Component(object):
             # FUNCTION is a generic function (presumably user-defined), so "wrap" it in UserDefinedFunction:
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
-
-
                 from psyneulink.components.functions.function import UserDefinedFunction
                 self.function = UserDefinedFunction(function=function, context=context).function
 
@@ -2621,20 +2634,22 @@ class Component(object):
         if not context:
             context = "DIRECT CALL"
         try:
-            self.value = self.execute(variable=self.instance_defaults.variable, context=context)
+            value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:
             try:
-                self.value = self.execute(input=self.instance_defaults.variable, context=context)
+                value = self.execute(input=self.instance_defaults.variable, context=context)
             except TypeError:
-                self.value = self.execute(context=context)
-        if self.value is None:
+                value = self.execute(context=context)
+        if value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+
+        self.value = value
         try:
             # Could be mutable, so assign copy
-            self._default_value = self.value.copy()
+            self.instance_defaults.value = value.copy()
         except AttributeError:
             # Immutable, so just assign value
-            self._default_value = self.value
+            self.instance_defaults.value = value
 
     def _instantiate_attributes_after_function(self, context=None):
         pass
@@ -2642,7 +2657,7 @@ class Component(object):
     def initialize(self):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def execute(self, input=None, params=None, time_scale=None, context=None):
+    def execute(self, input=None, params=None, context=None):
         raise ComponentError("{} class must implement execute".format(self.__class__.__name__))
 
     def _update_value(self, context=None):
@@ -2781,6 +2796,15 @@ class Component(object):
             #    TO THE CORRESPONDING ATTRIBUTES OF THE OWNER OBJECT
 
     @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, assignment):
+        self._value = assignment
+        self.log._log_value(assignment)
+
+    @property
     def verbosePref(self):
         return self.prefs.verbosePref
 
@@ -2829,20 +2853,60 @@ class Component(object):
         self.prefs.runtimeParamStickyAssignmentPref = setting
 
     @property
+    def log(self):
+        try:
+            return self._log
+        except AttributeError:
+            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete".
+                                     format(self.name, 'log'))
+            else:
+                raise AttributeError
+
+    @log.setter
+    def log(self, log):
+        self._log = log
+
+    @property
     def loggable_items(self):
-        """List of names of all items that can be logged
-        This is a convenience method that calls self.log
+        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `LogCondition`.
+        This is a convenience method that calls the `loggable_items <Log.loggable_items>` property of the Component's
+        `log <Component.log>`.
         """
         return self.log.loggable_items
 
-    def log_items(self, items, log_level=LogLevel.EXECUTION):
-        # Overriden by subclasses to add param_sets (see Mechanism_Base for an example)
-        self.log.log_items(items=items, log_level=log_level)
+    from psyneulink.globals.log import LogCondition
+    def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
+        """
+        set_log_conditions(               \
+            items                \
+            log_condition=EXECUTION  \
+        )
+
+        Specifies items to be logged; these must be be `loggable_items <Component.loggable_items>` of the Component's
+        `log <Component.log>`. This is a convenience method that calls the `set_log_conditions <Log.set_log_conditions>` method
+        of the Component's `log <Component.log>`.
+        """
+        self.log.set_log_conditions(items=items, log_condition=log_condition)
+
+    def log_values(self, entries):
+        """
+        log_values(              \
+            entries              \
+        )
+
+        Specifies items to be logged; ; these must be be `loggable_items <Component.loggable_items>` of the Component's
+        `log <Component.log>`. This is a convenience method that calls the `log_values <Log.log_values>` method
+        of the Component's `log <Component.log>`.
+        """
+        self.log.log_values(entries)
+
 
     @property
     def logged_items(self):
-        """List of names of all the items being logged
-        This is a convenience method that calls self.log.entries
+        """Dictionary of all items that have entries in the log, and their currently assigned `LogCondition`\\s
+        This is a convenience method that calls the `logged_items <Log.logged_items>` property of the Component's
+        `log <Component.log>`.
         """
         return self.log.logged_items
 

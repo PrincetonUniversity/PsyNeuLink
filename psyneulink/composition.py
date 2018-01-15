@@ -48,6 +48,7 @@ Class Reference
 
 import logging
 import uuid
+
 from collections import Iterable, OrderedDict
 from enum import Enum
 
@@ -61,7 +62,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.globals.keywords import EXECUTING
 from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.scheduling.timescale import TimeScale
+from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'Composition', 'CompositionError', 'MechanismRole',
@@ -853,15 +854,15 @@ class Composition(object):
 
         for next_execution_set in execution_scheduler.run():
             if call_after_pass:
-                if next_pass_after == execution_scheduler.times[TimeScale.TRIAL][TimeScale.PASS]:
-                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.times[TimeScale.TRIAL][TimeScale.PASS]))
+                if next_pass_after == execution_scheduler.clock.time.pass_:
+                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.clock.current_pass()))
                     call_after_pass()
                     next_pass_after += 1
 
             if call_before_pass:
-                if next_pass_before == execution_scheduler.times[TimeScale.TRIAL][TimeScale.PASS]:
+                if next_pass_before == execution_scheduler.clock.time.pass_:
                     call_before_pass()
-                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.format(next_pass_before, execution_scheduler.times[TimeScale.TRIAL][TimeScale.PASS]))
+                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.format(next_pass_before, execution_scheduler.clock.current_pass()))
                     next_pass_before += 1
 
             if call_before_time_step:
@@ -1016,7 +1017,6 @@ class Composition(object):
         input_indices = range(len_inputs)
 
         scheduler_processing._reset_counts_total(TimeScale.RUN)
-        scheduler_processing._reset_time(TimeScale.RUN)
 
         # TBI: Handle learning graph
 
@@ -1054,7 +1054,7 @@ class Composition(object):
             if call_after_trial:
                 call_after_trial()
 
-        scheduler_processing._increment_time(TimeScale.RUN)
+        scheduler_processing.clock._increment_time(TimeScale.RUN)
 
         # return the output of the LAST mechanism executed in the composition
         return result
