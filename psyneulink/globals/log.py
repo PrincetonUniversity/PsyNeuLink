@@ -665,7 +665,7 @@ class Log:
     Attributes
     ----------
 
-    owner : Compoment
+    owner : Component
         the `Component <Component>` to which the Log belongs (and assigned as its `log <Component.log>` attribute).
 
     loggable_components : ContentAddressableList
