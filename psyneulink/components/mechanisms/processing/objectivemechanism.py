@@ -333,8 +333,9 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.keywords import PARAMS, PROJECTION, PROJECTIONS, CONTROL, DEFAULT_MATRIX, DEFAULT_VARIABLE, \
-    EXPONENTS, FUNCTION, \
-    INPUT_STATES, LEARNING, MATRIX, OBJECTIVE_MECHANISM, SENDER, STATE_TYPE, VARIABLE, WEIGHTS, kwPreferenceSetName
+    EXPONENT, EXPONENTS, FUNCTION, \
+    INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
+    kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -697,22 +698,36 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # Get reference value
         reference_value = []
         # Get value of each OutputState or, if a Projection from it is specified, then the Projection's value
-        for spec in monitored_output_states_specs:
+        for i, spec in enumerate(monitored_output_states_specs):
             from psyneulink.components.states.inputstate import InputState
-            # Parse spec to get value of OutputState and (possibly) the Projection from it
-            input_state = _parse_state_spec(owner=self, state_type = InputState, state_spec=spec)
-            # There should be only one ProjectionTuple specified,
-            #    that designates the OutputState and (possibly) a Projection from it
-            if len(input_state[PARAMS][PROJECTIONS])!=1:
-                raise ObjectiveMechanismError("PROGRAM ERROR: Failure to parse item in monitored_output_states_specs "
-                                              "for {} (item: {})".format(self.name, spec))
-            projection_tuple = input_state[PARAMS][PROJECTIONS][0]
-            # If Projection is specified, use its value
-            if PROJECTION in projection_tuple.projection:
-                reference_value.append(projection_tuple.projection[PROJECTION].value)
-            # Otherwise, use its sender's (OutputState) value
+            from psyneulink.components.system import MonitoredOutputStateTuple
+
+            # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
+            if isinstance(spec, MonitoredOutputStateTuple):
+                # Create InputState specification dictionary:
+                monitored_output_states_specs[i] = {NAME: spec.output_state.name,
+                                                    VARIABLE: spec.output_state.value,
+                                                    WEIGHT: spec.weight,
+                                                    EXPONENT: spec.exponent,
+                                                    PROJECTIONS: [(spec.output_state, spec.matrix)]}
+                reference_value.append(spec.output_state.value)
+
             else:
-                reference_value.append(projection_tuple.state.value)
+                # Otherwise, parse spec to get value of OutputState and (possibly) the Projection from it
+                input_state = _parse_state_spec(owner=self, state_type = InputState, state_spec=spec)
+
+                # There should be only one ProjectionTuple specified,
+                #    that designates the OutputState and (possibly) a Projection from it
+                if len(input_state[PARAMS][PROJECTIONS])!=1:
+                    raise ObjectiveMechanismError("PROGRAM ERROR: Failure to parse item in monitored_output_states_specs "
+                                                  "for {} (item: {})".format(self.name, spec))
+                projection_tuple = input_state[PARAMS][PROJECTIONS][0]
+                # If Projection is specified, use its value
+                if PROJECTION in projection_tuple.projection:
+                    reference_value.append(projection_tuple.projection[PROJECTION].value)
+                # Otherwise, use its sender's (OutputState) value
+                else:
+                    reference_value.append(projection_tuple.state.value)
 
         input_states = self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
                                               reference_value=reference_value,
