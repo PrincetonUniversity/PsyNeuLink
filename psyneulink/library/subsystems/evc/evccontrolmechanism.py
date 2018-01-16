@@ -336,7 +336,8 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import CONTROL, COST_FUNCTION, EVC_MECHANISM, FUNCTION, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
+from psyneulink.globals.keywords import COMMAND_LINE, CONTROL, COST_FUNCTION, EVC_MECHANISM, FUNCTION, INITIALIZING, \
+    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -747,8 +748,8 @@ class EVCControlMechanism(ControlMechanism):
 
         Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in self.system; these will now be `TERMINAL`
         Mechanisms:
-            - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so
-            - therefore if an associated input Mechanism must be monitored by the EVCControlMechanism, it must be specified
+            - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so;  therefore...
+            - if an associated input Mechanism must be monitored by the EVCControlMechanism, it must be specified
                 explicitly in an OutputState, Mechanism, controller or System OBJECTIVE_MECHANISM param (see below)
 
         For each `ORIGIN` Mechanism in self.system:
@@ -759,7 +760,7 @@ class EVCControlMechanism(ControlMechanism):
         Instantiate self.predicted_input dict:
             - key for each entry is an `ORIGIN` Mechanism of the System
             - value of each entry is the value of the corresponding predictionMechanism:
-            -     each value is a 2d array, each item of which is the value of an InputState of the predictionMechanism
+                each value is a 2d array, each item of which is the value of an InputState of the predictionMechanism
 
         Args:
             context:
@@ -781,7 +782,7 @@ class EVCControlMechanism(ControlMechanism):
 
 
         for origin_mech in self.system.origin_mechanisms.mechanisms:
-
+            # FIX: 1/15/18
             # # IMPLEMENT THE FOLLOWING ONCE INPUT_STATES CAN BE SPECIFIED IN CONSTRUCTION OF ALL MECHANISMS
             # #           (AS THEY CAN CURRENTLY FOR ObjectiveMechanisms)
             # state_names = []
@@ -869,9 +870,19 @@ class EVCControlMechanism(ControlMechanism):
                                           num_control_projections))
 
     @tc.typecheck
-    def assign_as_controller(self, system:System_Base, context=None):
+    def assign_as_controller(self, system:System_Base, context=COMMAND_LINE):
+        # # MODIFIED 1/15/18 OLD:
+        # super().assign_as_controller(system=system, context=context)
+        # self._instantiate_prediction_mechanisms(context=context)
+        # MODIFIED 1/15/18 NEW:
+        if system.controller.prediction_mechanisms:
+            self.prediction_mechanisms = system.controller.prediction_mechanisms
+            self.origin_prediction_mechanisms = system.controller.origin_prediction_mechanisms
+            self.predicted_input = system.controller.predicted_input
+        else:
+            self._instantiate_prediction_mechanisms(context=context)
         super().assign_as_controller(system=system, context=context)
-        self._instantiate_prediction_mechanisms(context=context)
+        # MODIFIED 1/15/18 END
 
     def _execute(self,
                     variable=None,

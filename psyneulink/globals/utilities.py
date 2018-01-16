@@ -71,6 +71,7 @@ OTHER
 * `ContentAddressableList`
 * `make_readonly_property`
 * `get_class_attributes`
+* `insert_list`
 
 """
 
@@ -88,7 +89,7 @@ from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES,
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'convert_all_elements_to_np_array', 'get_class_attributes',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
-    'is_matrix_spec',
+    'insert_list', 'is_matrix_spec',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
@@ -1079,3 +1080,8 @@ def convert_all_elements_to_np_array(arr):
             elementwise_subarr[i] = subarr[i]
 
         return elementwise_subarr
+
+
+def insert_list(list1, position, list2):
+    """Insert list2 into list1 at position"""
+    return list1[:position] + list2 + list1[position:]

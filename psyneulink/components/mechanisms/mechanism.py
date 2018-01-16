@@ -1761,14 +1761,17 @@ class Mechanism_Base(Mechanism):
         self._instantiate_output_states(context=context)
         super()._instantiate_attributes_after_function(context=context)
 
-    def _instantiate_input_states(self, input_states=None, context=None):
+    def _instantiate_input_states(self, input_states=None, reference_value=None, context=None):
         """Call State._instantiate_input_states to instantiate orderedDict of InputState(s)
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_states
             or process InputStates before and/or after call to _instantiate_input_states
         """
         from psyneulink.components.states.inputstate import _instantiate_input_states
-        return _instantiate_input_states(owner=self, input_states=input_states or self.input_states, context=context)
+        return _instantiate_input_states(owner=self,
+                                         input_states=input_states or self.input_states,
+                                         reference_value=reference_value,
+                                         context=context)
 
     def _instantiate_parameter_states(self, context=None):
         """Call State._instantiate_parameter_states to instantiate a ParameterState for each parameter in user_params
