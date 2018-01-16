@@ -717,9 +717,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # FIX: NEEDS TO RETURN output_states (?IN ADDITION TO input_states) SO THAT IF CALLED BY ControlMechanism THAT
         # FIX:  BELONGS TO A SYSTEM, THE ControlMechanism CAN CALL System._validate_monitored_states_in_system
         # FIX:  ON THE output_states ADDED
-        return self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
+        input_states = self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
                                               reference_value=reference_value,
                                               context='ADD_STATES')
+
+        self._instantiate_function_weights_and_exponents(context=context)
+
+        return input_states
 
     def _instantiate_attributes_after_function(self, context=None):
         """Assign InputState weights and exponents to ObjectiveMechanism's function
@@ -745,6 +749,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if hasattr(self.function_object, EXPONENTS):
             if any(exponent is not None for exponent in exponents):
                 self.function_object.exponents = [exponent or DEFAULT_EXPONENT for exponent in exponents]
+        assert True
 
     @property
     def monitored_output_states(self):
