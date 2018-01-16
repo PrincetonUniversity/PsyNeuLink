@@ -816,6 +816,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
+        if hasattr(self, "recurrent_projection"):
+            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = val
         if hasattr(self, '_parameter_states')\
                 and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
             if hasattr(self, 'size'):
@@ -841,6 +843,47 @@ class RecurrentTransferMechanism(TransferMechanism):
                 if hasattr(param_state.function_object, 'initializer'):
                     param_state.function_object.reset_initializer = val
 
+    @property
+    def auto(self):
+        return getattr(self, "_auto")
+
+    @auto.setter
+    def auto(self, val):
+
+        if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
+            val_type = val.__class__.__name__
+            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + "auto" + ' of ' + self.name
+            # self.prev_context = "nonsense" + str(curr_context)
+            self._assign_params(request_set={"auto": val}, context=curr_context)
+        else:
+            setattr(self, "_auto", val)
+
+        if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_states:
+            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = self.matrix
+
+        # Update user_params dict with new value
+        self.user_params.__additem__("auto", val)
+
+    @property
+    def hetero(self):
+        return getattr(self, "_hetero")
+
+    @hetero.setter
+    def hetero(self, val):
+
+        if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
+            val_type = val.__class__.__name__
+            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + "hetero" + ' of ' + self.name
+            # self.prev_context = "nonsense" + str(curr_context)
+            self._assign_params(request_set={"hetero": val}, context=curr_context)
+        else:
+            setattr(self, "_hetero", val)
+
+        if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_states:
+            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = self.matrix
+
+        # Update user_params dict with new value
+        self.user_params.__additem__("hetero", val)
     @property
     def learning_enabled(self):
         return self._learning_enabled
