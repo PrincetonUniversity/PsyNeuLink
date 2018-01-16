@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>States &mdash; PsyNeuLink 0.4.1.1+81.gdd9bef5 documentation</title>
+  <title>States &mdash; PsyNeuLink 0.4.1.1+82.g5a2e444 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.1.1+81.gdd9bef5 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.1.1+82.g5a2e444 documentation" href="index.html"/>
         <link rel="up" title="Components" href="Component.html"/>
         <link rel="next" title="InputState" href="InputState.html"/>
         <link rel="prev" title="GatingProjection" href="GatingProjection.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.1.1+81
+                0.4.1.1+82
               </div>
             
           
@@ -197,8 +197,8 @@
 provided by them.  The value of a State can be modulated by a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>. There are
 three primary types of States (InputStates, ParameterStates and OutputStates) as well as one subtype (ModulatorySignal,
 used to send ModulatoryProjections), as summarized in the table below:</p>
-<span id="state-types-table"></span><table border="1" class="docutils align-left" id="id6">
-<caption><span class="caption-text"><strong>State Types and Associated Projection Types</strong></span><a class="headerlink" href="#id6" title="Permalink to this table">¶</a></caption>
+<span id="state-types-table"></span><table border="1" class="docutils align-left" id="id4">
+<caption><span class="caption-text"><strong>State Types and Associated Projection Types</strong></span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col width="17%" />
 <col width="18%" />
@@ -344,13 +344,13 @@ without any accompanying State specification entries (see below), the Projection
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to the Mechanism’s <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> or from its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary
 OutputState</span></a>, depending upon the type of Mechanism and context of specification.  It
 can also be accompanied by one or more State specification entries described below, to create one or more
-Projections to/from those States (see <a class="reference internal" href="#state-state-name-entry-example"><span class="std std-ref">examples</span></a>).</dd>
+Projections to/from those specific States (see <a class="reference internal" href="#state-state-name-entry-example"><span class="std std-ref">examples</span></a>).</dd>
 </dl>
 </li>
 </ul>
 <ul>
 <li><dl class="first docutils">
-<dt><a href="#id1"><span class="problematic" id="id2">*</span></a>&lt;STATES_KEYWORD&gt;:List[&lt;str or State.name&gt;,…]</dt>
+<dt>&lt;STATES_KEYWORD&gt;:List[&lt;str or State.name&gt;,…]</dt>
 <dd><p class="first">this must accompany a <em>MECHANISM</em> entry (described above), and is used to specify its State(s) by name.
 Each entry must use one of the following keywords as its key, and there can be no more than one of each:</p>
 <blockquote>
@@ -410,8 +410,8 @@ details and compatibility requirements.</li>
 argument of its constructor, or a <em>PROJECTIONS</em> entry of a <a class="reference internal" href="#state-specification-dictionary"><span class="std std-ref">State specification dictionary</span></a> (or a dictionary assigned to the <strong>params</strong> argument of the State’s constructor).
 The following types of Projections can be specified for each type of State:</p>
 <blockquote>
-<div><span id="state-projections-table"></span><table border="1" class="docutils align-left" id="id7">
-<caption><span class="caption-text"><strong>Specifiable Projections for State Types</strong></span><a class="headerlink" href="#id7" title="Permalink to this table">¶</a></caption>
+<div><span id="state-projections-table"></span><table border="1" class="docutils align-left" id="id5">
+<caption><span class="caption-text"><strong>Specifiable Projections for State Types</strong></span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col width="21%" />
 <col width="36%" />
@@ -507,12 +507,12 @@ specified explicitly in the <strong>owner</strong> argument of the constructor f
 assigned to the specified Mechanism).  If the <strong>owner</strong> argument is not specified, the State’s initialization is
 <a class="reference internal" href="#state-deferred-initialization"><span class="std std-ref">deferred</span></a> until it has been assigned to an owner using the owner’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.add_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.</p>
 </div>
-<div class="section" id="id3">
-<h3>Projections<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id1">
+<h3>Projections<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>Every State has attributes that lists the <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> it sends and/or receives.  These depend on the
 type of State, listed below (and shown in the <a class="reference internal" href="#state-projections-table"><span class="std std-ref">table</span></a>):</p>
-<table border="1" class="docutils align-left" id="id8">
-<caption><span class="caption-text">State Projection Attributes</span><a class="headerlink" href="#id8" title="Permalink to this table">¶</a></caption>
+<table border="1" class="docutils align-left" id="id6">
+<caption><span class="caption-text">State Projection Attributes</span><a class="headerlink" href="#id6" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col width="42%" />
 <col width="58%" />
@@ -889,7 +889,7 @@ note:  only <a class="reference internal" href="InputState.html"><span class="do
 <code class="descname">efferents</code><a class="headerlink" href="#psyneulink.components.states.state.State_Base.efferents" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Optional[List[Projection]]</em> – list of outgoing Projections from the State (i.e., for which is a <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.sender" title="psyneulink.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>;
 note:  only <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, and members of its <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>
-subclass (<a href="#id4"><span class="problematic" id="id5">`</span></a>LearningProjection, ControlProjection and GatingProjection) have efferents;  the list is empty for
+subclass (<a href="#id2"><span class="problematic" id="id3">`</span></a>LearningProjection, ControlProjection and GatingProjection) have efferents;  the list is empty for
 InputStates and ParameterStates.</p>
 </dd></dl>
 
@@ -982,7 +982,7 @@ details).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.1.1+81.gdd9bef5',
+            VERSION:'0.4.1.1+82.g5a2e444',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
