@@ -714,16 +714,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             else:
                 reference_value.append(projection_tuple.state.value)
 
-        # FIX: NEEDS TO RETURN output_states (?IN ADDITION TO input_states) SO THAT IF CALLED BY ControlMechanism THAT
-        # FIX:  BELONGS TO A SYSTEM, THE ControlMechanism CAN CALL System._validate_monitored_states_in_system
-        # FIX:  ON THE output_states ADDED
         input_states = self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
                                               reference_value=reference_value,
                                               context='ADD_STATES')
+        output_states = [[projection.sender for projection in state.path_afferents] for state in input_states]
 
         self._instantiate_function_weights_and_exponents(context=context)
 
-        return input_states
+        return output_states
 
     def _instantiate_attributes_after_function(self, context=None):
         """Assign InputState weights and exponents to ObjectiveMechanism's function
