@@ -1593,7 +1593,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                     raise FunctionError("Scale is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
                                         "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(scale.shape, scale.size, self.instance_defaults.variable.shape, self.instance_defaults.variable.size))
+                                        format(scale.shape, scale.size, self.instance_defaults.variable.shape,
+                                               self.instance_defaults.variable.size))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
@@ -1611,7 +1612,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                     raise FunctionError("Offset is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
                                         "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(offset.shape, offset.size, self.instance_defaults.variable.shape, self.instance_defaults.variable.size))
+                                        format(offset.shape, offset.size, self.instance_defaults.variable.shape,
+                                               self.instance_defaults.variable.size))
 
             # if not operation:
             #     raise FunctionError("Operation param missing")
