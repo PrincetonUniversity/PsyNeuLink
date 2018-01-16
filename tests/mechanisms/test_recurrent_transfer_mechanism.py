@@ -43,7 +43,6 @@ class TestMatrixSpec:
             results.append(recurrent_mech.value)
         s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
               call_after_trial=record_trial)
-        print(results)
 
     def test_recurrent_mech_auto_auto_hetero(self):
 
@@ -52,7 +51,6 @@ class TestMatrixSpec:
                                                     auto=3.0,
                                                     hetero=-7.0)
 
-        print(recurrent_mech.recurrent_projection)
         p = Process(pathway=[T, recurrent_mech])
 
         s = System(processes=[p])
@@ -62,10 +60,6 @@ class TestMatrixSpec:
             results.append(recurrent_mech.value)
         s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
               call_after_trial=record_trial)
-        print(results)
-
-
-
 
 class TestRecurrentTransferMechanismInputs:
 
@@ -610,7 +604,6 @@ class TestRecurrentTransferMechanismInProcess:
 
         p.run(inputs={T1: [[1, 2, 3, 4]]})
         proj.matrix = [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
-        proj.function_object.matrix = [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
         assert np.allclose(proj.matrix, [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]])
         # p.run(inputs={T1: [[1, 2, 3, 4]]})
         T1.execute([[1, 2, 3, 4]])
@@ -720,7 +713,7 @@ class TestRecurrentTransferMechanismInSystem:
         s.run(inputs={R: [[-1.5, 0, 1, 2]]})
         np.testing.assert_allclose(R.value, [[-.5, 4, 10, 0]])
         np.testing.assert_allclose(T.value, [[13.5, 13.5, 13.5, 13.5, 13.5]])
-        R.hetero = [[-1, 2, 3, 1.5]] * 4
+        R.hetero = np.array([[-1, 2, 3, 1.5]] * 4)
         s.run(inputs={R: [[12, 11, 10, 9]]})
         np.testing.assert_allclose(R.value, [[-2.5, 38, 50.5, 29.25]])
         np.testing.assert_allclose(T.value, [[115.25, 115.25, 115.25, 115.25, 115.25]])
@@ -740,8 +733,6 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(T.value, [[5.5, 5.5, 5.5, 5.5, 5.5]])
         R.hetero = 0
         s.run(inputs={R: [[-1.5, 0, 1, 2]]})
-        print("hetero = ", R.hetero)
-        print("auto = ", R.auto)
         np.testing.assert_allclose(R.value, [[-.5, 4, 10, 0]])
         np.testing.assert_allclose(T.value, [[13.5, 13.5, 13.5, 13.5, 13.5]])
         R.auto = [0, 0, 0, 0]
