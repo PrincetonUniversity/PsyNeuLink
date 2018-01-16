@@ -649,7 +649,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                         # If ControlMechanism has been assigned to a System, check that
                         #    all the items in the list used to specify objective_mechanism are in the same System
                         if self.system:
-                            self.system._validate_monitored_state_in_system([spec], context=context)
+                            self.system._validate_monitored_states_in_system([spec], context=context)
 
             if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list)):
                 raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
@@ -721,7 +721,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # INSTANTIATE ObjectiveMechanism
 
-        # If *objective_mechanism* argument si an ObjectiveMechanism, add monitored_output_states to it
+        # If *objective_mechanism* argument is an ObjectiveMechanism, add monitored_output_states to it
         if isinstance(self.objective_mechanism, ObjectiveMechanism):
             if monitored_output_states:
                 self.objective_mechanism.add_monitored_output_states(
@@ -948,7 +948,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                                  monitored_output_states_specs=monitored_output_states,
                                                                  context=context)
         if self.system:
-            self.system._validate_monitored_state_in_system(output_states, context=context)
+            self.system._validate_monitored_states_in_system(output_states, context=context)
 
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=COMMAND_LINE):
@@ -984,6 +984,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         COMMENT
         """
 
+        if context==COMMAND_LINE:
+            system.controller = self
+            return
+
         # NEED TO BUFFER OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ARGUMENTS FOR USE IN REINSTANTIATION HERE
         # DETACH AS CONTROLLER FOR ANY EXISTING SYSTEM (AND SET THAT ONE'S CONTROLLER ATTRIBUTE TO None)
         # DELETE ALL EXISTING OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ASSIGNMENTS
@@ -994,7 +998,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # First, validate that all of the ControlMechanism's monitored_output_states and controlled parameters
         #    are in the new System
-        system._validate_monitored_state_in_system(self.monitored_output_states)
+        system._validate_monitored_states_in_system(self.monitored_output_states)
         system._validate_control_signals(self.control_signals)
 
         # Next, get any OutputStates specified in the **monitored_output_states** argument of the System's
@@ -1004,12 +1008,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
         self.add_monitored_output_states(monitored_output_states)
 
-        # # MODIFIED 1/11/18 OLD:
-        # # Then, assign it ControlSignals for any parameters in the current System specified for control
-        # system_control_signals = system._get_control_signals_for_system(system.control_signals, context=context)
-        # for control_signal_spec in system_control_signals:
-        #     self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-        # MODIFIED 1/11/18 NEW:
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
         if system.controller is None:
@@ -1020,8 +1018,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
             system_control_signals = system.control_signals
             for control_signal in system_control_signals:
                 control_signal.owner = None
-        # FIX: 1/11/18 - GET RID OF DEFAULT CONTROLSIGNAL IF IT HAS NO CONTROLPROJECTIONS ASSIGNED
-        if len(self.control_signals) == 1 and not self.control_signals[0].efferents:
+        # Get rid of default ControlSignal if it has no ControlProjections
+        if (len(self.control_signals)==1
+                and self.control_signals[0].name=='ControlSignal-0'
+                and not self.control_signals[0].efferents):
             del self._output_states[0]
             del self.control_signals[0]
             self.allocation_policy = None
@@ -1030,7 +1030,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
             control_signal.owner = self
             self.control_signals.append(control_signal)
-        # MODIFIED 1/11/18 END
 
         # If it HAS been assigned a System, make sure it is the current one
         if self.system and not self.system is system:
@@ -1045,7 +1044,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self._objective_mechanism.controller = True
 
         # Finally, assign the self as controller for system
-        system.controller = self
+        # # MODIFIED 1/14/18 OLD:
+        # system.controller = self
+        # MODIFIED 1/14/18 NEW:
+        if context != 'System.controller setter':
+            system._controller = self
+        # MODIFIED 1/14/18 END
 
     @property
     def monitored_output_states(self):

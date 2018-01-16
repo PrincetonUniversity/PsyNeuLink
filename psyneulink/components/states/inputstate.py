@@ -1112,12 +1112,12 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
             break
 
     if not variable_item_is_OK:
-        # NOTE: This block of code appears unused, and the 'for' loop appears to cause an error anyways. (7/11/17 CW)
         old_variable = owner.instance_defaults.variable
         new_variable = []
         for state in owner.input_states:
             new_variable.append(state.value)
         owner.instance_defaults.variable = np.array(new_variable)
+        owner._update_variable(new_variable)
         if owner.verbosePref:
             warnings.warn(
                 "Variable for {} ({}) has been adjusted to match number and format of its input_states: ({})".format(

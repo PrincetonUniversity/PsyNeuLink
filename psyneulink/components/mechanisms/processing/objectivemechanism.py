@@ -332,7 +332,9 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import CONTROL, DEFAULT_MATRIX, DEFAULT_VARIABLE, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, OBJECTIVE_MECHANISM, SENDER, STATE_TYPE, VARIABLE, WEIGHTS, kwPreferenceSetName
+from psyneulink.globals.keywords import PARAMS, PROJECTION, PROJECTIONS, CONTROL, DEFAULT_MATRIX, DEFAULT_VARIABLE, \
+    EXPONENTS, FUNCTION, \
+    INPUT_STATES, LEARNING, MATRIX, OBJECTIVE_MECHANISM, SENDER, STATE_TYPE, VARIABLE, WEIGHTS, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -643,7 +645,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if MONITORED_OUTPUT_STATES in target_set and target_set[MONITORED_OUTPUT_STATES] is not None:
             pass
 
-    def _instantiate_input_states(self, monitored_output_states_specs=None, context=None):
+    def _instantiate_input_states(self, monitored_output_states_specs=None, reference_value=None, context=None):
         """Instantiate InputStates specified in **input_states** argument of constructor or each OutputState
         specified in monitored_output_states_specs
 
@@ -665,13 +667,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states
         #     (note: these will replace any existing ones, including a default one created on initialization)
-        return super()._instantiate_input_states(input_states=monitored_output_states_specs, context=context)
+        return super()._instantiate_input_states(input_states=monitored_output_states_specs,
+                                                 reference_value=reference_value,
+                                                 context=context)
 
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
         """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
 
         Used by other Components to add a `State` or list of States to be monitored by the ObjectiveMechanism.
         The **monitored_output_states_spec** can be any of the following:
+        - MonitoredOutputStateTuple
         - `Mechanism`;
         - `OutputState`;
         - `tuple specification <InputState_Tuple_Specification>`;
@@ -681,11 +686,40 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
         monitored_output_states_specs = list(monitored_output_states_specs)
 
+        # If ObjectiveMechanism has only its default InputState and it has no afferent Projections:
+        #    delete it and first item of variable
+        if len(self.input_states)==1 and self.input_state.name=='InputState-0' and not self.input_state.path_afferents:
+            del self.input_states[0]
+            # FIX: 1/14/18 - CHECK WITH KEVIN WHETHER THIS IS THE THING TO DO HERE
+            self.instance_defaults.variable = []
+            self._update_variable(self.instance_defaults.variable)
+
+        # Get reference value
+        reference_value = []
+        # Get value of each OutputState or, if a Projection from it is specified, then the Projection's value
+        for spec in monitored_output_states_specs:
+            from psyneulink.components.states.inputstate import InputState
+            # Parse spec to get value of OutputState and (possibly) the Projection from it
+            input_state = _parse_state_spec(owner=self, state_type = InputState, state_spec=spec)
+            # There should be only one ProjectionTuple specified,
+            #    that designates the OutputState and (possibly) a Projection from it
+            if len(input_state[PARAMS][PROJECTIONS])!=1:
+                raise ObjectiveMechanismError("PROGRAM ERROR: Failure to parse item in monitored_output_states_specs "
+                                              "for {} (item: {})".format(self.name, spec))
+            projection_tuple = input_state[PARAMS][PROJECTIONS][0]
+            # If Projection is specified, use its value
+            if PROJECTION in projection_tuple.projection:
+                reference_value.append(projection_tuple.projection[PROJECTION].value)
+            # Otherwise, use its sender's (OutputState) value
+            else:
+                reference_value.append(projection_tuple.state.value)
+
         # FIX: NEEDS TO RETURN output_states (?IN ADDITION TO input_states) SO THAT IF CALLED BY ControlMechanism THAT
-        # FIX:  BELONGS TO A SYSTEM, THE ControlMechanism CAN CALL System._validate_monitored_state_in_system
+        # FIX:  BELONGS TO A SYSTEM, THE ControlMechanism CAN CALL System._validate_monitored_states_in_system
         # FIX:  ON THE output_states ADDED
         return self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
-                                              context=context)
+                                              reference_value=reference_value,
+                                              context='ADD_STATES')
 
     def _instantiate_attributes_after_function(self, context=None):
         """Assign InputState weights and exponents to ObjectiveMechanism's function

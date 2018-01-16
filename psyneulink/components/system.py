@@ -76,11 +76,11 @@ arguments of the `System`, as described below.
   (see `ObjectiveMechanism_Monitored_Output_States`).  In addition, the **monitor_for_control** argument supports two
   other forms of specification:
 
-  * **string** -- must be the `name <OutputState.name>` of an `OutputState` of a `Mechanism <Mechanism>` in the
-    System (see third example under `System_Control_Examples`);  any OutputState with that name, including ones with
-    the same name belonging to different Mechanisms within the System, will be monitored. If an OutputState of a
-    particular Mechanism is desired, and it shares its name with ones of other Mechanisms, then it must be referenced
-    explicitly (see examples under `System_Control_Examples`).
+  * **string** -- must be the `name <OutputState.name>` of an `OutputState` of a `Mechanism <Mechanism>` in the System
+    (see third example under `System_Control_Examples`);  any OutputState with that name, including ones with the
+    same name belonging to different Mechanisms within the System, will be monitored. If an OutputState of a particular
+    Mechanism is desired, and it shares its name with ones of other Mechanisms, then it must be referenced explicitly
+    (see `InputState specification<InputState_Specification>`, and examples under `System_Control_Examples`).
   |
   * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
     single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
@@ -451,7 +451,8 @@ from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
+from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, \
+    convert_to_np_array, iscompatible, insert_list
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -1935,6 +1936,7 @@ class System(System_Base):
         # An existing ControlMechanism is being assigned
         if isinstance(control_mech_spec, ControlMechanism):
             control_mech_spec.assign_as_controller(self, context=context)
+            controller = control_mech_spec
 
         # A ControlMechanism class or subclass is being used to specify the controller
         elif inspect.isclass(control_mech_spec) and issubclass(control_mech_spec, ControlMechanism):
@@ -2060,8 +2062,7 @@ class System(System_Base):
         #    - a MonitoredOutputStatesOption (parsed below);
         #    - a MonitoredOutputStatesTuple (returned by _get_monitored_states_for_system when
         #          specs were initially processed by the System to parse its *monitor_for_control* argument;
-        #    - a specification for an existing Mechanism or OutputState from the *monitor_for_control* arg of System,
-        #          which should return a reference to the OutputState when passed to _parse_state_spec
+        #    - a specification for an existing Mechanism or OutputStates from the *monitor_for_control* arg of System.
         all_specs_extracted_from_tuples = []
         for i, spec in enumerate(all_specs.copy()):
 
@@ -2083,57 +2084,76 @@ class System(System_Base):
             matrix=DEFAULT_MONITORED_STATE_MATRIX
 
             # spec is a tuple
+            # - put OutputState(s) in spec
+            # - assign any weight, exponent, and/or matrix specified
             if isinstance(spec, tuple):
+                # 2-item tuple (<OutputState(s) name(s)>, <Mechanism>)
                 if len(spec) == 2:
-                    # FIX: DO ERROR CHECK ON THE FOLLOWING:
+                    # FIX: DO ERROR CHECK ON THE FOLLOWING / ALLOW LIST OF STATES
                     spec = spec[1].output_states[spec[0]]
+                # 3-item tuple (<OutputState(s) spec>, weight, exponent)
                 elif len(spec) == 3:
                     spec, weight, exponent = spec
+                # 4-item tuple (<OutputState(s) spec>, weight, exponent, matrix)
                 elif len(spec) == 4:
                     spec, weight, exponent, matrix = spec
 
-            # spec is an OutputState or Mechanism
-            if isinstance(spec, (OutputState, Mechanism)):
-                # spec is an OutputState, so use it
-                if isinstance(spec, OutputState):
-                    output_states = [spec]
-                # spec is Mechanism, so use the State's owner, and get the relevant OutputState(s)
-                elif isinstance(spec, Mechanism):
-                    if (MONITOR_FOR_CONTROL in spec.params
-                        and spec.params[MONITOR_FOR_CONTROL] is MonitoredOutputStatesOption.ALL_OUTPUT_STATES):
-                        output_states = spec.output_states
-                    else:
-                        output_states = [spec.output_state]
-                for output_state in output_states:
-                    monitored_output_state_tuples.extend([MonitoredOutputStateTuple(output_state=output_state,
-                                                                                    weight=weight,
-                                                                                    exponent=exponent,
-                                                                                    matrix=matrix)])
-            # spec is a string, search System for Mechanisms with OutputStates with the string as their name
-            elif isinstance(spec, str):
-                for mech in self.mechanisms:
-                    for output_state in mech.output_states:
-                        if output_state.name is spec:
-                            monitored_output_state_tuples.extend([MonitoredOutputStateTuple(output_state=output_state,
-                                                                                            weight=weight,
-                                                                                            exponent=exponent,
-                                                                                            matrix=matrix)])
+            if not isinstance(spec, list):
+                spec_list = [spec]
 
-            else:
-                raise SystemError("Specification of item in \'{}\' arg in constructor for {} ({}) "
-                                  "is not a recognized specification for an {}".
-                                  format(MONITOR_FOR_CONTROL, self.name, spec, OutputState.__name__))
+            for spec in spec_list:
+                # spec is an OutputState or Mechanism
+                if isinstance(spec, (OutputState, Mechanism)):
+                    # spec is an OutputState, so use it
+                    if isinstance(spec, OutputState):
+                        output_states = [spec]
+                    # spec is Mechanism, so use the State's owner, and get the relevant OutputState(s)
+                    elif isinstance(spec, Mechanism):
+                        if (MONITOR_FOR_CONTROL in spec.params
+                            and spec.params[MONITOR_FOR_CONTROL] is MonitoredOutputStatesOption.ALL_OUTPUT_STATES):
+                            output_states = spec.output_states
+                        else:
+                            output_states = [spec.output_state]
+                    for output_state in output_states:
+                        monitored_output_state_tuples.extend(
+                                [MonitoredOutputStateTuple(output_state=output_state,
+                                                           weight=weight,
+                                                           exponent=exponent,
+                                                           matrix=matrix)])
+                # spec is a string
+                elif isinstance(spec, str):
+                    # Search System for Mechanisms with OutputStates with the string as their name
+                    for mech in self.mechanisms:
+                        for output_state in mech.output_states:
+                            if output_state.name is spec:
+                                monitored_output_state_tuples.extend(
+                                        [MonitoredOutputStateTuple(output_state=output_state,
+                                                                   weight=weight,
+                                                                   exponent=exponent,
+                                                                   matrix=matrix)])
 
-            # Delete original item of all_specs, and assign ones parsed into monitored_output_state_tuple(s)
-            del all_specs[i]
-            all_specs.insert(i, monitored_output_state_tuples)
+                else:
+                    raise SystemError("Specification of item in \'{}\' arg in constructor for {} ({}) "
+                                      "is not a recognized specification for an {}".
+                                      format(MONITOR_FOR_CONTROL, self.name, spec, OutputState.__name__))
 
-            all_specs_extracted_from_tuples.extend([item.output_state for item in monitored_output_state_tuples])
-        # MODIFIED 10/3/17 END
+                # Delete original item of all_specs, and assign ones parsed into monitored_output_state_tuple(s)
+                del all_specs[i]
+                # # MODIFIED 1/15/17 OLD:
+                # all_specs.insert(i, monitored_output_state_tuples)
+                # MODIFIED 1/15/17 NEW:
+                all_specs = insert_list(all_specs, i, monitored_output_state_tuples)
+                # MODIFIED 1/15/17 END
 
-        # FIX: 10/3/17 - TURN THIS INTO A TRY AND EXCEPT:
-        assert(all (isinstance(item, (OutputState, MonitoredOutputStatesOption)) for item in
-                    all_specs_extracted_from_tuples))
+
+                all_specs_extracted_from_tuples.extend([item.output_state for item in monitored_output_state_tuples])
+
+        try:
+            all (isinstance(item, (OutputState, MonitoredOutputStatesOption))
+                 for item in all_specs_extracted_from_tuples)
+        except:
+            raise SystemError("PROGRAM ERROR: Fail to parse items of \'{}\' arg ({}) in constructor for {}".
+                              format(MONITOR_FOR_CONTROL, self.name, spec, OutputState.__name__))
 
         # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
         option_specs = [item for item in all_specs_extracted_from_tuples
@@ -2328,7 +2348,7 @@ class System(System_Base):
                                                                            matrix=spec.matrix)
         return output_state_tuples
 
-    def _validate_monitored_state_in_system(self, monitored_states, context=None):
+    def _validate_monitored_states_in_system(self, monitored_states, context=None):
         for spec in monitored_states:
             # if not any((spec is mech.name or spec in mech.output_states.names)
             if not any((spec in {mech, mech.name} or spec in mech.output_states or spec in mech.output_states.names)
