@@ -412,57 +412,54 @@ class AutoAssociativeProjection(MappingProjection):
     #                                    "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
     #                                    owner_mech.name, owner_mech._parameter_states.key_values))
 
-    # COMMENTED OUT BY KAM 1/9/2018 -- auto and hetero should only be handled by RecurrentTransferMechanism. Projection
-    # should just look up matrix
     # these properties allow the auto and hetero properties to live purely on the RecurrentTransferMechanism
-    # @property
-    # def auto(self):
-    #     if isinstance(self.sender, OutputState):
-    #         owner_mech = self.sender.owner
-    #     elif isinstance(self.sender, Mechanism):
-    #         owner_mech = self.sender
-    #     else:
-    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-    #                                    " the sender is {}".
-    #                                    format(self.__class__.__name__, self.name, self.sender))
-    #     return owner_mech.auto
+    @property
+    def auto(self):
+        if isinstance(self.sender, OutputState):
+            owner_mech = self.sender.owner
+        elif isinstance(self.sender, Mechanism):
+            owner_mech = self.sender
+        else:
+            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+                                       " the sender is {}".
+                                       format(self.__class__.__name__, self.name, self.sender))
+        return owner_mech.auto
+
+    @auto.setter
+    def auto(self, setting):
+        if isinstance(self.sender, OutputState):
+            owner_mech = self.sender.owner
+        elif isinstance(self.sender, Mechanism):
+            owner_mech = self.sender
+        else:
+            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+                                       " the sender is {}".
+                                       format(self.__class__.__name__, self.name, self.sender))
+        owner_mech.auto = setting
     #
-    # @auto.setter
-    # def auto(self, setting):
-    #     if isinstance(self.sender, OutputState):
-    #         owner_mech = self.sender.owner
-    #     elif isinstance(self.sender, Mechanism):
-    #         owner_mech = self.sender
-    #     else:
-    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-    #                                    " the sender is {}".
-    #                                    format(self.__class__.__name__, self.name, self.sender))
-    #     owner_mech.auto = setting
-    #
-    # @property
-    # def hetero(self):
-    #     if isinstance(self.sender, OutputState):
-    #         owner_mech = self.sender.owner
-    #     elif isinstance(self.sender, Mechanism):
-    #         owner_mech = self.sender
-    #     else:
-    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-    #                                    " the sender is {}".
-    #                                    format(self.__class__.__name__, self.name, self.sender))
-    #     return owner_mech.hetero
-    #
-    # @hetero.setter
-    # def hetero(self, setting):
-    #     if isinstance(self.sender, OutputState):
-    #         owner_mech = self.sender.owner
-    #     elif isinstance(self.sender, Mechanism):
-    #         owner_mech = self.sender
-    #     else:
-    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
-    #                                    " the sender is {}".
-    #                                    format(self.__class__.__name__, self.name, self.sender))
-    #     owner_mech.hetero = setting
-    # END OF COMMENTED OUT BY KAM 1/9/2018
+    @property
+    def hetero(self):
+        if isinstance(self.sender, OutputState):
+            owner_mech = self.sender.owner
+        elif isinstance(self.sender, Mechanism):
+            owner_mech = self.sender
+        else:
+            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+                                       " the sender is {}".
+                                       format(self.__class__.__name__, self.name, self.sender))
+        return owner_mech.hetero
+
+    @hetero.setter
+    def hetero(self, setting):
+        if isinstance(self.sender, OutputState):
+            owner_mech = self.sender.owner
+        elif isinstance(self.sender, Mechanism):
+            owner_mech = self.sender
+        else:
+            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+                                       " the sender is {}".
+                                       format(self.__class__.__name__, self.name, self.sender))
+        owner_mech.hetero = setting
 
     @property
     def matrix(self):
