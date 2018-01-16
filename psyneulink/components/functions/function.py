@@ -1567,7 +1567,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             if any(c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
-                                        format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable.shape)))
+                                        format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
@@ -1575,7 +1575,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             if any(c in context for c in {EXECUTING, LEARNING}):
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
-                                        format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable.shape)))
+                                        format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
 
         if SCALE in target_set and target_set[SCALE] is not None:
             scale = target_set[SCALE]
@@ -1593,7 +1593,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                     raise FunctionError("Scale is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
                                         "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(scale.shape, scale.size, self.instance_defaults.variable.shape, self.instance_defaults.variable.size))
+                                        format(scale.shape, scale.size, self.instance_defaults.variable.shape,
+                                               self.instance_defaults.variable.size))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
@@ -1611,7 +1612,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                     raise FunctionError("Offset is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
                                         "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(offset.shape, offset.size, self.instance_defaults.variable.shape, self.instance_defaults.variable.size))
+                                        format(offset.shape, offset.size, self.instance_defaults.variable.shape,
+                                               self.instance_defaults.variable.size))
 
             # if not operation:
             #     raise FunctionError("Operation param missing")
