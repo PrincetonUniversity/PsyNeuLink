@@ -1008,15 +1008,15 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # DO *NOT* ASSIGN AS CONTROLLER FOR SYSTEM... LET THE SYSTEM HANDLE THAT
         # Assign the current System to the ControlMechanism
 
-        # First, validate that all of the ControlMechanism's monitored_output_states and controlled parameters
+        # Validate that all of the ControlMechanism's monitored_output_states and controlled parameters
         #    are in the new System
         system._validate_monitored_states_in_system(self.monitored_output_states)
         system._validate_control_signals(self.control_signals)
 
-        # Next, get any OutputStates specified in the **monitored_output_states** argument of the System's
-        #    constructor and/or in a MONITOR_FOR_CONTROL specification for individual OutputStates and/or Mechanisms,
-        #    and add them to the ControlMechanism's monitored_output_states attribute and to its
-        #    ObjectiveMechanisms monitored_output_states attribute
+        # Get any and all OutputStates specified in:
+        # - **monitored_output_states** argument of the System's constructor
+        # - in a MONITOR_FOR_CONTROL specification for individual OutputStates and/or Mechanisms
+        # - already being montiored by the ControlMechanism being assigned
         monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
 
         # Don't add any OutputStates that are already being monitored by the ControlMechanism's ObjectiveMechanism
@@ -1024,6 +1024,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
             if monitored_output_state.output_state in self.monitored_output_states:
                 del monitored_output_states[i]
 
+        # Add all other monitored_output_states to the ControlMechanism's monitored_output_states attribute
+        #    and to its ObjectiveMechanisms monitored_output_states attribute
         self.add_monitored_output_states(monitored_output_states)
 
         # The system does NOT already have a controller,
