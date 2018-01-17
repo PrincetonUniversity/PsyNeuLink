@@ -10,7 +10,8 @@ import pytest
 
 @pytest.mark.composition
 @pytest.mark.benchmark(group="LinearComposition")
-def test_run_composition(benchmark):
+@pytest.mark.parametrize("llvm", ['Python', 'LLVM'])
+def test_run_composition(benchmark, llvm):
     comp = Composition()
     A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
     B = TransferMechanism(function=Linear(slope=5.0))
@@ -19,13 +20,14 @@ def test_run_composition(benchmark):
     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
     comp._analyze_graph()
     sched = Scheduler(composition=comp)
-    output = benchmark(comp.run, inputs={A: [1.0]}, scheduler_processing=sched)
+    output = benchmark(comp.run, inputs={A: [1.0]}, scheduler_processing=sched, bin_execute=(llvm == 'LLVM'))
     assert 25 == output[0][0]
 
 
 @pytest.mark.composition
 @pytest.mark.benchmark(group="LinearComposition")
-def test_run_llvm_wrapper_composition(benchmark):
+@pytest.mark.parametrize("llvm", ['Python', 'LLVM'])
+def test_run_composition_default(benchmark, llvm):
     comp = Composition()
     A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
     B = TransferMechanism(function=Linear(slope=5.0))
@@ -34,68 +36,25 @@ def test_run_llvm_wrapper_composition(benchmark):
     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
     comp._analyze_graph()
     sched = Scheduler(composition=comp)
-    output = benchmark(comp.run, inputs={A: [1.0]}, scheduler_processing=sched, bin_execute=True)
+    output = benchmark(comp.run, scheduler_processing=sched, bin_execute=(llvm == 'LLVM'))
     assert 25 == output[0][0]
 
 
 @pytest.mark.composition
-@pytest.mark.benchmark(group="LinearComposition")
-def test_run_composition_default(benchmark):
+@pytest.mark.benchmark(group="LinearComposition Pathway 5")
+@pytest.mark.parametrize("llvm", ['Python', 'LLVM'])
+def test_LPP(benchmark, llvm):
+
+    var = 1.0
     comp = Composition()
-    A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
-    B = TransferMechanism(function=Linear(slope=5.0))
-    comp.add_mechanism(A)
-    comp.add_mechanism(B)
-    comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+    A = TransferMechanism(default_variable=var, name="A", function=Linear(slope=2.0))   # 1 x 2 = 2
+    B = TransferMechanism(default_variable=var, name="B", function=Linear(slope=2.0))   # 2 x 2 = 4
+    C = TransferMechanism(default_variable=var, name="C", function=Linear(slope=2.0))   # 4 x 2 = 8
+    D = TransferMechanism(default_variable=var, name="D", function=Linear(slope=2.0))   # 8 x 2 = 16
+    E = TransferMechanism(default_variable=var, name="E", function=Linear(slope=2.0))  # 16 x 2 = 32
+    comp.add_linear_processing_pathway([A, B, C, D, E])
     comp._analyze_graph()
+    inputs_dict = {A: var}
     sched = Scheduler(composition=comp)
-    output = benchmark(comp.run, scheduler_processing=sched)
-    assert 25 == output[0][0]
-
-
-@pytest.mark.composition
-@pytest.mark.benchmark(group="LinearComposition")
-def test_run_llvm_wrapper_composition_default(benchmark):
-    comp = Composition()
-    A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
-    B = TransferMechanism(function=Linear(slope=5.0))
-    comp.add_mechanism(A)
-    comp.add_mechanism(B)
-    comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    comp._analyze_graph()
-    sched = Scheduler(composition=comp)
-    output = benchmark(comp.run, scheduler_processing=sched, bin_execute=True)
-    assert 25 == output[0][0]
-
-VECTOR_LENGTH=4
-
-@pytest.mark.composition
-@pytest.mark.benchmark(group="LinearComposition Vector")
-def test_run_composition_vector(benchmark):
-    var = [1.0 for x in range(VECTOR_LENGTH)];
-    comp = Composition()
-    A = IntegratorMechanism(default_variable=var, function=Linear(slope=5.0))
-    B = TransferMechanism(default_variable=var, function=Linear(slope=5.0))
-    comp.add_mechanism(A)
-    comp.add_mechanism(B)
-    comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    comp._analyze_graph()
-    sched = Scheduler(composition=comp)
-    output = benchmark(comp.run, inputs={A: var}, scheduler_processing=sched)
-    assert np.allclose([25.0 for x in range(VECTOR_LENGTH)], output[0])
-
-
-@pytest.mark.composition
-@pytest.mark.benchmark(group="LinearComposition Vector")
-def test_run_llvm_wrapper_composition_vector(benchmark):
-    var = [1.0 for x in range(VECTOR_LENGTH)];
-    comp = Composition()
-    A = IntegratorMechanism(default_variable=var, function=Linear(slope=5.0))
-    B = TransferMechanism(default_variable=var, function=Linear(slope=5.0))
-    comp.add_mechanism(A)
-    comp.add_mechanism(B)
-    comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    comp._analyze_graph()
-    sched = Scheduler(composition=comp)
-    output = benchmark(comp.run, inputs={A: [1.0]}, scheduler_processing=sched, bin_execute=True)
-    assert np.allclose([25.0 for x in range(VECTOR_LENGTH)], output[0])
+    output = benchmark(comp.execute, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(llvm=='LLVM'))
+    assert 32 == output[0][0]
