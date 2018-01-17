@@ -23,9 +23,10 @@ A ParameterState can receive one or more `ControlProjections  <ControlProjection
 <ParameterState.mod_afferents>` attribute.
 
 When the Mechanism or Projection to which a ParameterState belongs executes, that component and its function use the
-ParameterState's value -- not the parameter attribute's value -- for any computation. When a ParameterState exists for a
-parameter, the attribute stores the "base value," which is the variable of the ParameterState's function. The
-parameter attribute will return the base value, and setting to this attribute will update the base value.
+ParameterState's value -- not the parameter attribute's value -- for any computation. A ParameterState's corresponding
+attribute on the Mechanism, Projection, or Function to which it belongs (i.e. MyTransferMech.function_object.gain),
+stores the "base value" of that parameter. The base value of a parameter is the variable of the ParameterState's
+function. The base value can be viewed or changed at any time through this attribute.
 
 The ParameterState value is available on the ParameterState itself, as well as the mod_name attribute of the Mechanism
 or Projection to which it belongs (i.e. MyTransferMech.mod_gain would return the value of the "gain" ParameterState
@@ -33,9 +34,9 @@ of the MyTransferMech mechanism.)
 
 .. note::
     Either of these options for looking up the value of the ParameterState will return the
-    value from the most recent execution. This means that if the value of MyTransferMech.gain (the base value) is
-    updated after execution #1, the base value will change immediately, but the ParameterState value (and
-    MyTransferMech.mod_gain), however, will not update until execution #2.
+    value from the most recent execution. This means that if the value of MyTransferMech.function_object.gain (the base
+    value) is updated after execution #1, the base value will change immediately, but the ParameterState value (and
+    MyTransferMech.mod_gain) will not update until execution #2.
 
 .. _ParameterState_Creation:
 
