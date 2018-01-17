@@ -38,6 +38,8 @@ Functions
              Stability,
              Distance,
              LearningFunction,
+             Hebbian,
              Reinforcement,
              BackPropagation,
+             TDLearning
    :exclude-members: MappingProjection, ParameterState

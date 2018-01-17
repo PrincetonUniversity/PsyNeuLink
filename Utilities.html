@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.4.1.1 documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.4.1.1+1.g862b8c1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.1.1 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.1.1+1.g862b8c1 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.1.1
+                0.4.1.1+1
               </div>
             
           
@@ -233,6 +233,7 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <li><a class="reference internal" href="#psyneulink.globals.utilities.ContentAddressableList" title="psyneulink.globals.utilities.ContentAddressableList"><code class="xref any py py-class docutils literal"><span class="pre">ContentAddressableList</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.globals.utilities.make_readonly_property" title="psyneulink.globals.utilities.make_readonly_property"><code class="xref any py py-func docutils literal"><span class="pre">make_readonly_property</span></code></a></li>
 <li><code class="xref any docutils literal"><span class="pre">get_class_attributes</span></code></li>
+<li><a class="reference internal" href="#psyneulink.globals.utilities.insert_list" title="psyneulink.globals.utilities.insert_list"><code class="xref any py py-func docutils literal"><span class="pre">insert_list</span></code></a></li>
 </ul>
 <dl class="class">
 <dt id="psyneulink.globals.utilities.Modulation">
@@ -247,17 +248,17 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <p>First item in list of declarations is numbered 0;
 Others incremented by 1</p>
 <p>Sample:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>class NumberedList(AutoNumber):</dt>
-<dd>FIRST_ITEM = ()
-SECOND_ITEM = ()</dd>
-<dt>&gt;&gt;&gt;NumberedList.FIRST_ITEM.value</dt>
-<dd>0</dd>
-<dt>&gt;&gt;&gt;NumberedList.SECOND_ITEM.value</dt>
-<dd>1</dd>
-</dl>
-</div></blockquote>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">NumberedList</span><span class="p">(</span><span class="n">AutoNumber</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">FIRST_ITEM</span> <span class="o">=</span> <span class="p">()</span>
+<span class="gp">... </span>   <span class="n">SECOND_ITEM</span> <span class="o">=</span> <span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">NumberedList</span><span class="o">.</span><span class="n">FIRST_ITEM</span><span class="o">.</span><span class="n">value</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">NumberedList</span><span class="o">.</span><span class="n">SECOND_ITEM</span><span class="o">.</span><span class="n">value</span>
+<span class="go">1</span>
+</pre></div>
+</div>
 <p>Adapted from AutoNumber example for Enum at <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.IntEnum">https://docs.python.org/3/library/enum.html#enum.IntEnum</a>:
 Notes:
 * Start of numbering changed to 0 (from 1 in example)
@@ -286,7 +287,7 @@ Used with typecheck</p>
 
 <dl class="function">
 <dt id="psyneulink.globals.utilities.parameter_spec">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">parameter_spec</code><span class="sig-paren">(</span><em>param</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.parameter_spec" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">parameter_spec</code><span class="sig-paren">(</span><em>param</em>, <em>numeric_only=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.parameter_spec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test whether param is a legal PsyNeuLink parameter specification</p>
 <p>Used with typecheck</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -503,7 +504,8 @@ entries.</p>
 with the keyed attribute of its entries.  For example, the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute
 of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> is a ContentAddressableList of the Mechanism’s <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, keyed by their
 names.  Therefore, <code class="docutils literal"><span class="pre">my_mech.output_states.names</span></code> returns the names of all of the Mechanism’s OutputStates:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">()</span><span class="o">.</span><span class="n">output_states</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">()</span><span class="o">.</span><span class="n">output_states</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
 <span class="go">[&#39;DECISION_VARIABLE&#39;, &#39;RESPONSE_TIME&#39;]</span>
 </pre></div>
 </div>
@@ -686,6 +688,12 @@ Return True only if both are instances or classes of a PsyNeuLink Function;  oth
 <dd><p>Recursively converts all items in <strong>arr</strong> to numpy arrays</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="psyneulink.globals.utilities.insert_list">
+<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">insert_list</code><span class="sig-paren">(</span><em>list1</em>, <em>position</em>, <em>list2</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.insert_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert list2 into list1 at position</p>
+</dd></dl>
+
 </div>
 </div>
 </div>
@@ -725,7 +733,7 @@ Return True only if both are instances or classes of a PsyNeuLink Function;  oth
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.1.1',
+            VERSION:'0.4.1.1+1.g862b8c1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

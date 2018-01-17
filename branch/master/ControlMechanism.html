@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Control Mechanism &mdash; PsyNeuLink 0.4.1.1 documentation</title>
+  <title>Control Mechanism &mdash; PsyNeuLink 0.4.1.1+1.g862b8c1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.1.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.1.1+1.g862b8c1 documentation" href="index.html"/>
         <link rel="up" title="Adaptive Mechanisms" href="AdaptiveMechanism.html"/>
         <link rel="next" title="Gating Mechanism" href="GatingMechanism.html"/>
         <link rel="prev" title="Learning Mechanism" href="LearningMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.1.1
+                0.4.1.1+1
               </div>
             
           
@@ -536,18 +536,31 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.add_monitored_output_states">
 <code class="descname">add_monitored_output_states</code><span class="sig-paren">(</span><em>monitored_output_states</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.add_monitored_output_states" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate OutputStates to be monitored by ControlMechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.</p>
-<p><strong>monitored_output_states</strong> can be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, <a class="reference internal" href="InputState.html#inputstate-tuple-specification"><span class="std std-ref">tuple specification</span></a>, a <a class="reference internal" href="InputState.html#inputstate-specification-dictionary"><span class="std std-ref">State specification dicionary</span></a>,
-or list with any of these. If item is a Mechanism, its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> is used.
+<dl class="docutils">
+<dt><strong>monitored_output_states</strong> can be any of the following:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>;</li>
+<li><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>;</li>
+<li><a class="reference internal" href="InputState.html#inputstate-tuple-specification"><span class="std std-ref">tuple specification</span></a>;</li>
+<li><a class="reference internal" href="InputState.html#inputstate-specification-dictionary"><span class="std std-ref">State specification dictionary</span></a>;</li>
+<li>list with any of the above.</li>
+</ul>
+</dd>
+</dl>
+<p>If any item is a Mechanism, its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> is used.
 OutputStates must belong to Mechanisms in the same <a class="reference internal" href="System.html"><span class="doc">System</span></a> as the ControlMechanism.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.assign_as_controller">
-<code class="descname">assign_as_controller</code><span class="sig-paren">(</span><em>system: psyneulink.components.shellclasses.System_Base</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.assign_as_controller" title="Permalink to this definition">¶</a></dt>
+<code class="descname">assign_as_controller</code><span class="sig-paren">(</span><em>system: psyneulink.components.shellclasses.System_Base</em>, <em>context='COMMAND_LINE'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.assign_as_controller" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign ControlMechanism as <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> for a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
-<p><strong>system</strong> must be a System for which the ControlMechanism should be assigned as the <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>;  if the specified System already has a <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>,
-it will be replaced by the current one;  if the current one is already the <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>
-for another System, it will be disabled for that System.</p>
+<p><strong>system</strong> must be a System for which the ControlMechanism should be assigned as the <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.
+If the specified System already has a <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>, it will be replaced by the current
+one, and the current one will inherit any ControlSignals previously specified for the old controller or the
+System itself.
+If the current one is already the <a class="reference internal" href="System.html#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> for another System, it will be disabled
+for that System.</p>
 </dd></dl>
 
 </dd></dl>
@@ -599,7 +612,7 @@ for another System, it will be disabled for that System.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.1.1',
+            VERSION:'0.4.1.1+1.g862b8c1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
