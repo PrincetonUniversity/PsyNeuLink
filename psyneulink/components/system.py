@@ -2063,8 +2063,9 @@ class System(System_Base):
         #    - a MonitoredOutputStatesTuple (returned by _get_monitored_states_for_system when
         #          specs were initially processed by the System to parse its *monitor_for_control* argument;
         #    - a specification for an existing Mechanism or OutputStates from the *monitor_for_control* arg of System.
-        all_specs_extracted_from_tuples = []
-        for i, spec in enumerate(all_specs.copy()):
+        all_specs_extracted_from_tuples=[]
+        all_specs_parsed=[]
+        for i, spec in enumerate(all_specs):
 
             # Leave MonitoredOutputStatesOption and MonitoredOutputStatesTuple spec in place;
             #    these are parsed later on
@@ -2137,16 +2138,10 @@ class System(System_Base):
                                       "is not a recognized specification for an {}".
                                       format(MONITOR_FOR_CONTROL, self.name, spec, OutputState.__name__))
 
-                # Delete original item of all_specs, and assign ones parsed into monitored_output_state_tuple(s)
-                del all_specs[i]
-                # # MODIFIED 1/15/17 OLD:
-                # all_specs.insert(i, monitored_output_state_tuples)
-                # MODIFIED 1/15/17 NEW:
-                all_specs = insert_list(all_specs, i, monitored_output_state_tuples)
-                # MODIFIED 1/15/17 END
-
-
+                all_specs_parsed.extend(monitored_output_state_tuples)
                 all_specs_extracted_from_tuples.extend([item.output_state for item in monitored_output_state_tuples])
+
+        all_specs = all_specs_parsed
 
         try:
             all (isinstance(item, (OutputState, MonitoredOutputStatesOption))

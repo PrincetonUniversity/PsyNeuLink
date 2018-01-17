@@ -1043,13 +1043,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
         self._objective_mechanism.controller = True
 
-        # Finally, assign the self as controller for system
-        # # MODIFIED 1/14/18 OLD:
-        # system.controller = self
-        # MODIFIED 1/14/18 NEW:
         if context != 'System.controller setter':
             system._controller = self
-        # MODIFIED 1/14/18 END
 
     @property
     def monitored_output_states(self):

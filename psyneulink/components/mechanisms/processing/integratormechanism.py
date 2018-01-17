@@ -196,6 +196,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
+                 input_states:tc.optional(tc.any(list, dict))=None,
                  function=AdaptiveIntegrator(rate=0.5),
                  params=None,
                  name=None,
@@ -219,6 +220,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         super(IntegratorMechanism, self).__init__(variable=default_variable,
                                                   size=size,
+                                                  input_states=input_states,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,

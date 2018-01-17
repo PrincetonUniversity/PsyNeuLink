@@ -687,11 +687,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
         monitored_output_states_specs = list(monitored_output_states_specs)
 
-        # If ObjectiveMechanism has only its default InputState and it has no afferent Projections:
+        # If ObjectiveMechanism has only its default InputState and that has no afferent Projections:
         #    delete it and first item of variable
         if len(self.input_states)==1 and self.input_state.name=='InputState-0' and not self.input_state.path_afferents:
             del self.input_states[0]
-            # FIX: 1/14/18 - CHECK WITH KEVIN WHETHER THIS IS THE THING TO DO HERE
             self.instance_defaults.variable = []
             self._update_variable(self.instance_defaults.variable)
 
@@ -704,30 +703,28 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
             # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
             if isinstance(spec, MonitoredOutputStateTuple):
-                # Create InputState specification dictionary:
-                monitored_output_states_specs[i] = {NAME: spec.output_state.name,
-                                                    VARIABLE: spec.output_state.value,
-                                                    WEIGHT: spec.weight,
-                                                    EXPONENT: spec.exponent,
-                                                    PROJECTIONS: [(spec.output_state, spec.matrix)]}
-                reference_value.append(spec.output_state.value)
+                spec = {NAME: spec.output_state.name,
+                        VARIABLE: spec.output_state.value,
+                        WEIGHT: spec.weight,
+                        EXPONENT: spec.exponent,
+                        PROJECTIONS: [(spec.output_state, spec.matrix)]}
+                monitored_output_states_specs[i] = spec
 
+            # Parse spec to get value of OutputState and (possibly) the Projection from it
+            input_state = _parse_state_spec(owner=self, state_type = InputState, state_spec=spec)
+
+            # There should be only one ProjectionTuple specified,
+            #    that designates the OutputState and (possibly) a Projection from it
+            if len(input_state[PARAMS][PROJECTIONS])!=1:
+                raise ObjectiveMechanismError("PROGRAM ERROR: Failure to parse item in monitored_output_states_specs "
+                                              "for {} (item: {})".format(self.name, spec))
+            projection_tuple = input_state[PARAMS][PROJECTIONS][0]
+            # If Projection is specified, use its value
+            if PROJECTION in projection_tuple.projection:
+                reference_value.append(projection_tuple.projection[PROJECTION].value)
+            # Otherwise, use its sender's (OutputState) value
             else:
-                # Otherwise, parse spec to get value of OutputState and (possibly) the Projection from it
-                input_state = _parse_state_spec(owner=self, state_type = InputState, state_spec=spec)
-
-                # There should be only one ProjectionTuple specified,
-                #    that designates the OutputState and (possibly) a Projection from it
-                if len(input_state[PARAMS][PROJECTIONS])!=1:
-                    raise ObjectiveMechanismError("PROGRAM ERROR: Failure to parse item in monitored_output_states_specs "
-                                                  "for {} (item: {})".format(self.name, spec))
-                projection_tuple = input_state[PARAMS][PROJECTIONS][0]
-                # If Projection is specified, use its value
-                if PROJECTION in projection_tuple.projection:
-                    reference_value.append(projection_tuple.projection[PROJECTION].value)
-                # Otherwise, use its sender's (OutputState) value
-                else:
-                    reference_value.append(projection_tuple.state.value)
+                reference_value.append(projection_tuple.state.value)
 
         input_states = self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
                                               reference_value=reference_value,
