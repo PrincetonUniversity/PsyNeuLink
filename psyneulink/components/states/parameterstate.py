@@ -260,7 +260,7 @@ have changed. We do not observe a change in mod_noise or mod_slope because the P
 until the mechanism executes.
 
     >>> my_transfer_mechanism.execute([10.0])
-    np.array([[ 14.]])
+    array([[ 14.]])
     >>> assert my_transfer_mechanism.noise == 4.0
     >>> assert my_transfer_mechanism.mod_noise == [4.0]
     >>> assert my_transfer_mechanism.function_object.slope == 1.0
