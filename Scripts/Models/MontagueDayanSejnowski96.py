@@ -1,6 +1,6 @@
 """
 This implements a model of mesolimbic dopamine cell activity during monkey 
-conditioning as found in `Montague, Dayan, and Sejnowski (1996) 
+conditioning as found in `Montague, Dayan, and Sejnowski (1996) in PsyNeuLink
 <http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_
 """
 import matplotlib.pyplot as plt
@@ -17,7 +17,6 @@ from psyneulink.components.projections.pathway.mappingprojection import \
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 from psyneulink.components.functions.function import Linear, TDLearning
-from psyneulink.scheduling.timescale import CentralClock
 
 
 def model_training():
@@ -72,7 +71,8 @@ def model_training():
     trial = 0
 
     def print_header():
-        print("\n\n*** EPISODE: {}".format(CentralClock.trial))
+        nonlocal trial
+        print("\n\n*** EPISODE: {}".format(trial))
 
     def store_delta_vals():
         nonlocal trial
@@ -171,7 +171,8 @@ def model_training_full_experiment():
     trial = 0
 
     def print_header():
-        print("\n\n*** EPISODE: {}".format(CentralClock.trial))
+        nonlocal trial
+        print("\n\n*** EPISODE: {}".format(trial))
 
     def store_delta_vals():
         nonlocal trial
@@ -263,7 +264,8 @@ def model_training_response_extinction():
     trial = 0
 
     def print_header():
-        print("\n\n*** EPISODE: {}".format(CentralClock.trial))
+        nonlocal trial
+        print("\n\n*** EPISODE: {}".format(trial))
 
     input_list = {
         sample: samples

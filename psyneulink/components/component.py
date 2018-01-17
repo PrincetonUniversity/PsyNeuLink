@@ -704,40 +704,35 @@ class Component(object):
         def __repr__(self):
             return '{0} :\n{1}'.format(super().__repr__(), self.show())
 
+        def __str__(self):
+            return self.show()
+
+        def values(self):
+            '''
+                Returns
+                -------
+                A dictionary consisting of the non-hidden and non-function attributes
+            '''
+            return self._values(self)
+
         def show(self):
-            return ''
+            '''
+                Returns
+                -------
+                A pretty string version of the non-hidden and non-function attributes
+            '''
+            return self._show(self)
 
     class Defaults(metaclass=_DefaultsMeta):
-        def _attributes(obj):
+        def _values(self):
             return {
-                k: getattr(obj, k) for k in dir(obj) + dir(type(obj))
-                if (
-                    k[:2] + k[-2:] != '____'
-                    and not callable(getattr(obj, k))
-                )
+                k: getattr(self, k) for k in dir(self) + dir(type(self))
+                if (k[:1] != '_' and not callable(getattr(self, k)))
             }
 
-        @classmethod
-        def values(cls):
-            '''
-                Returns
-                -------
-                A dictionary consisting of the non-dunder and non-function attributes of **obj**
-            '''
-            return cls._attributes(cls)
-
-        def _show(obj):
-            vals = obj.values()
+        def _show(self):
+            vals = self.values()
             return '(\n\t{0}\n)'.format('\n\t'.join(['{0} = {1},'.format(k, vals[k]) for k in vals]))
-
-        @classmethod
-        def show(cls):
-            '''
-                Returns
-                -------
-                A pretty string version of the non-dunder and non-function attributes of **obj**
-            '''
-            return cls._show(cls)
 
     class ClassDefaults(Defaults):
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
@@ -748,17 +743,17 @@ class Component(object):
             for param in kwargs:
                 setattr(self, param, kwargs[param])
 
-        def values(self):
-            return self._attributes()
-
-        def show(self):
-            return self._show()
-
         def __repr__(self):
             return '{0} :\n{1}'.format(super().__repr__(), self.__str__())
 
         def __str__(self):
             return self.show()
+
+        def values(self):
+            return self._values()
+
+        def show(self):
+            return self._show()
 
     initMethod = INIT_FULL_EXECUTE_METHOD
 

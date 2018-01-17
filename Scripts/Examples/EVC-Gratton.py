@@ -139,10 +139,18 @@ mySystem = pnl.System(
     name='EVC Gratton System'
 )
 
+# mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
+
+
+control_mech = pnl.EVCControlMechanism(name='NEW CONTROLLER')
+mySystem.controller = control_mech
+# control_mech.assign_as_controller(mySystem)
+
+# mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
+
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
-# mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
 
 # configure EVC components
 mySystem.controller.control_signals[0].intensity_cost_function = pnl.Exponential(rate=0.8046).function

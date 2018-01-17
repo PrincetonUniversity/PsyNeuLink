@@ -157,9 +157,9 @@ A State can be specified using any of the following:
           `MappingProjection` to the Mechanism's `primary InputState <InputState_Primary>` or from its `primary
           OutputState <OutputState_Primary>`, depending upon the type of Mechanism and context of specification.  It
           can also be accompanied by one or more State specification entries described below, to create one or more
-          Projections to/from those States (see `examples <State_State_Name_Entry_Example>`).
+          Projections to/from those specific States (see `examples <State_State_Name_Entry_Example>`).
       ..
-      * *<STATES_KEYWORD>:List[<str or State.name>,...]
+      * <STATES_KEYWORD>:List[<str or State.name>,...]
          this must accompany a *MECHANISM* entry (described above), and is used to specify its State(s) by name.
          Each entry must use one of the following keywords as its key, and there can be no more than one of each:
             - *INPUT_STATES*
