@@ -844,23 +844,23 @@ class TransferMechanism(ProcessingMechanism_Base):
     def clip(self, value):
         self._clip = value
 
-    # MODIFIED 4/17/17 NEW:
-    @property
-    def noise (self):
-        return self._noise
-
-    @noise.setter
-    def noise(self, value):
-        self._noise = value
-
-    @property
-    def smoothing_factor(self):
-        return self._time_constant
-
-    @smoothing_factor.setter
-    def smoothing_factor(self, value):
-        self._time_constant = value
-    # # MODIFIED 4/17/17 END
+    # # MODIFIED 4/17/17 NEW:
+    # @property
+    # def noise (self):
+    #     return self._noise
+    #
+    # @noise.setter
+    # def noise(self, value):
+    #     self._noise = value
+    #
+    # @property
+    # def smoothing_factor(self):
+    #     return self._time_constant
+    #
+    # @smoothing_factor.setter
+    # def smoothing_factor(self, value):
+    #     self._time_constant = value
+    # # # MODIFIED 4/17/17 END
 
     @property
     def previous_value(self):
