@@ -2142,9 +2142,10 @@ class System(System_Base):
                 # # MODIFIED 1/15/17 OLD:
                 # all_specs.insert(i, monitored_output_state_tuples)
                 # MODIFIED 1/15/17 NEW:
+                # FIX: 1/16/18 - THIS WON'T WORK FOR MORE THAN ONE monitored_output_states_tuple SINCE i WILL BE OFF:
+                #      NEED TO EITHER INCREMENT I ACCORDINGLY, OR
                 all_specs = insert_list(all_specs, i, monitored_output_state_tuples)
                 # MODIFIED 1/15/17 END
-
 
                 all_specs_extracted_from_tuples.extend([item.output_state for item in monitored_output_state_tuples])
 

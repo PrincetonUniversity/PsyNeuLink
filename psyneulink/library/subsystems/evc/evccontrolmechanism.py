@@ -337,7 +337,8 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import COMMAND_LINE, CONTROL, COST_FUNCTION, EVC_MECHANISM, FUNCTION, INITIALIZING, \
-    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
+    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, \
+    PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -740,25 +741,25 @@ class EVCControlMechanism(ControlMechanism):
         """Instantiate PredictionMechanisms
         """
         if self.system is not None:
-            self._instantiate_prediction_mechanisms(context=context)
+            self._instantiate_prediction_mechanisms(system=self.system, context=context)
         super()._instantiate_input_states(context=context)
 
-    def _instantiate_prediction_mechanisms(self, context=None):
-        """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in the System
+    def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):
+        """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
 
-        Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in self.system; these will now be `TERMINAL`
+        Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in system; these will now be `TERMINAL`
         Mechanisms:
             - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so;  therefore...
             - if an associated input Mechanism must be monitored by the EVCControlMechanism, it must be specified
-                explicitly in an OutputState, Mechanism, controller or System OBJECTIVE_MECHANISM param (see below)
+                explicitly in an OutputState, Mechanism, controller or system OBJECTIVE_MECHANISM param (see below)
 
-        For each `ORIGIN` Mechanism in self.system:
+        For each `ORIGIN` Mechanism in system:
             - instantiate a corresponding predictionMechanism
             - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction Mechanism
-            - add the process to self.system.processes
+            - add the Process to system.processes
 
         Instantiate self.predicted_input dict:
-            - key for each entry is an `ORIGIN` Mechanism of the System
+            - key for each entry is an `ORIGIN` Mechanism of system
             - value of each entry is the value of the corresponding predictionMechanism:
                 each value is a 2d array, each item of which is the value of an InputState of the predictionMechanism
 
@@ -766,10 +767,16 @@ class EVCControlMechanism(ControlMechanism):
             context:
         """
 
+        # FIX: 1/16/18 - Should should check for any new origin_mechs? What if origin_mech deleted?
+        # If system's controller already has prediction_mechanisms, use those
+        if hasattr(system.controller, PREDICTION_MECHANISMS):
+            self.prediction_mechanisms = system.controller.prediction_mechanisms
+            self.origin_prediction_mechanisms = system.controller.origin_prediction_mechanisms
+            self.predicted_input = system.controller.predicted_input
+            return
+
         # Dictionary of prediction_mechanisms, keyed by the ORIGIN Mechanism to which they correspond
         self.origin_prediction_mechanisms = {}
-
-        # self.predictionProcesses = []
 
         # List of prediction Mechanism tuples (used by system to execute them)
         self.prediction_mechs = []
@@ -780,14 +787,14 @@ class EVCControlMechanism(ControlMechanism):
         except KeyError:
             prediction_mechanism_params = {}
 
-        for origin_mech in self.system.origin_mechanisms.mechanisms:
+        for origin_mech in system.origin_mechanisms.mechanisms:
             state_names = []
             variable = []
             for state_name in origin_mech.input_states.names:
                 state_names.append(state_name)
                 variable.append(origin_mech.input_states[state_name].instance_defaults.variable)
 
-            # Instantiate predictionMechanism
+            # Instantiate PredictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
                     name=origin_mech.name + " " + PREDICTION_MECHANISM,
                     default_variable=variable,
@@ -821,17 +828,16 @@ class EVCControlMechanism(ControlMechanism):
             self.prediction_mechs.append(prediction_mechanism)
 
             # Add to system execution_graph and execution_list
-            self.system.execution_graph[prediction_mechanism] = set()
-            self.system.execution_list.append(prediction_mechanism)
+            system.execution_graph[prediction_mechanism] = set()
+            system.execution_list.append(prediction_mechanism)
 
         self.prediction_mechanisms = MechanismList(self, self.prediction_mechs)
 
         # Assign list of destinations for predicted_inputs:
-        #    the variable of the ORIGIN Mechanism for each process in the system
+        #    the variable of the ORIGIN Mechanism for each Process in the system
         self.predicted_input = {}
-        for i, origin_mech in zip(range(len(self.system.origin_mechanisms)), self.system.origin_mechanisms):
-            # self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].input_value
-            self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].instance_defaults.variable
+        for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
+            self.predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
     def _instantiate_attributes_after_function(self, context=None):
 
@@ -866,18 +872,8 @@ class EVCControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=COMMAND_LINE):
-        # # MODIFIED 1/15/18 OLD:
-        # super().assign_as_controller(system=system, context=context)
-        # self._instantiate_prediction_mechanisms(context=context)
-        # MODIFIED 1/15/18 NEW:
-        if system.controller.prediction_mechanisms:
-            self.prediction_mechanisms = system.controller.prediction_mechanisms
-            self.origin_prediction_mechanisms = system.controller.origin_prediction_mechanisms
-            self.predicted_input = system.controller.predicted_input
-        else:
-            self._instantiate_prediction_mechanisms(context=context)
+        self._instantiate_prediction_mechanisms(system=system, context=context)
         super().assign_as_controller(system=system, context=context)
-        # MODIFIED 1/15/18 END
 
     def _execute(self,
                     variable=None,
