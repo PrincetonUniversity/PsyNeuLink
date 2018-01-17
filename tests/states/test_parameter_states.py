@@ -1,6 +1,8 @@
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.functions.function import Linear
+from psyneulink.components.component import ComponentError
 import numpy as np
+import pytest
 
 class TestParameterStates:
     def test_inspect_function_params_slope_noise(self):
@@ -162,3 +164,9 @@ class TestConfigurableParameters:
         assert np.allclose(T._noise, new_value)
         assert np.allclose(T.mod_noise, new_value)
 
+class TestModParams:
+    def test_mod_param_error(self):
+        T = TransferMechanism()
+        with pytest.raises(ComponentError) as error_text:
+            T.mod_slope = 20.0
+        assert "directly because it is computed by the ParameterState" in str(error_text.value)
