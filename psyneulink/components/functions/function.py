@@ -6820,7 +6820,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                                                     gain=long_term_gain,
                                                     bias=long_term_bias
                                                     )
-        long_term_utility_logistic = long_term_utility_logistic
+        self.long_term_utility_logistic = long_term_utility_logistic
 
         # short term params applied to variable
         short_term_utility=self._EWMA_filter(self.previous_short_term_utility,
