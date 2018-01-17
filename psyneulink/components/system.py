@@ -2025,7 +2025,26 @@ class System(System_Base):
         if controller is not None and not inspect.isclass(controller):
             try:
                 # Get from monitored_output_states attribute if controller is already implemented
-                controller_specs = controller.monitored_output_states.copy() or []
+                monitored_output_states = controller.monitored_output_states.copy() or []
+                # Convert them to MonitoredOutputStateTuple specifications (for treatment below)
+                monitored_output_state_specs = []
+                for monitored_output_state, input_state in zip(monitored_output_states,
+                                                               controller.objective_mechanism.input_states):
+                    projection = input_state.path_afferents[0]
+                    if not projection.sender is monitored_output_state:
+                        raise SystemError("PROGRAM ERROR: Problem identifying projection ({}) for "
+                                          "monitored_output_state ({}) specified for {} ({}) assigned to {}".
+                                          format(projection.name,
+                                                 monitored_output_state.name,
+                                                 ControlMechanism.__name__,
+                                                 controller.name,
+                                                 self.name))
+                    monitored_output_state_specs.append(MonitoredOutputStateTuple(monitored_output_state,
+                                                                                  projection.weight,
+                                                                                  projection.exponent,
+                                                                                  projection.matrix))
+
+                controller_specs = monitored_output_state_specs
             except AttributeError:
                 # If controller has no monitored_output_states attribute, it has not yet been fully instantiated
                 #    (i.e., the call to this method is part of its instantiation by a System)
@@ -2071,9 +2090,11 @@ class System(System_Base):
             #    these are parsed later on
             if isinstance(spec, MonitoredOutputStatesOption):
                 all_specs_extracted_from_tuples.append(spec)
+                all_specs_parsed.append(spec)
                 continue
             if isinstance(spec, MonitoredOutputStateTuple):
                 all_specs_extracted_from_tuples.append(spec.output_state)
+                all_specs_parsed.append(spec)
                 continue
 
             # spec is from *monitor_for_control* arg, so convert/parse into MonitoredOutputStateTuple(s)

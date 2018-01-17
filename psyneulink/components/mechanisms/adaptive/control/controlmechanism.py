@@ -710,6 +710,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if isinstance(self.objective_mechanism, list):
             monitored_output_states = [None] * len(self.objective_mechanism)
             for i, item in enumerate(self.objective_mechanism):
+                # If it is a 4-item tuple, convert to MonitoredOutputStateTuple for treatment below
+                if isinstance(item, tuple) and len(item)==4:
+                    item = MonitoredOutputStateTuple(item[0],item[1],item[2],item[3])
                 # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
                 # Otherwise, assume it is a valid form of InputSate specification, and pass to ObjectiveMechanism
                 if isinstance(item, MonitoredOutputStateTuple):
@@ -725,6 +728,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                   WEIGHT:item.weight,
                                                   EXPONENT:item.exponent,
                                                   PROJECTIONS:[(item.output_state, item.matrix)]}
+                else:
+                    monitored_output_states[i] = item
 
         # INSTANTIATE ObjectiveMechanism
 
@@ -1013,6 +1018,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         #    and add them to the ControlMechanism's monitored_output_states attribute and to its
         #    ObjectiveMechanisms monitored_output_states attribute
         monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
+
+        # Don't add any OutputStates that are already being monitored by the ControlMechanism's ObjectiveMechanism
+        for i, monitored_output_state in enumerate(monitored_output_states.copy()):
+            if monitored_output_state.output_state in self.monitored_output_states:
+                del monitored_output_states[i]
+
         self.add_monitored_output_states(monitored_output_states)
 
         # The system does NOT already have a controller,

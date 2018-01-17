@@ -1610,7 +1610,6 @@ def _parse_connection_specs(connectee_state_type,
 
     return connect_with_states
 
-
 @tc.typecheck
 def _validate_connection_request(
         owner,                                   # Owner of State seeking connection

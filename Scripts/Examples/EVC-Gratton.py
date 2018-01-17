@@ -133,8 +133,7 @@ mySystem = pnl.System(
     controller=pnl.EVCControlMechanism,
     enable_controller=True,
     monitor_for_control=[
-        # (test_mech, None, None, np.array([[1],[1],[1]])),
-        (test_mech, None, None, np.zeros((3, 1))),
+        # (test_mech, None, None, np.ones((3,1))),
         Reward,
         Decision.PROBABILITY_UPPER_THRESHOLD,
         ('OFFSET RT', 1, -1),
@@ -145,12 +144,13 @@ mySystem = pnl.System(
 
 # mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
 
-
-control_mech = pnl.EVCControlMechanism(name='NEW CONTROLLER')
+control_mech = pnl.EVCControlMechanism(name='NEW CONTROLLER',
+                                       objective_mechanism = [(test_mech, None, None, np.ones((3,1)))],
+                                       )
 mySystem.controller = control_mech
 # control_mech.assign_as_controller(mySystem)
 
-# mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
+mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
 
 # Show characteristics of system:
 mySystem.show()
