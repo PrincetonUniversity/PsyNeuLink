@@ -1027,7 +1027,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Add all other monitored_output_states to the ControlMechanism's monitored_output_states attribute
         #    and to its ObjectiveMechanisms monitored_output_states attribute
         self.add_monitored_output_states(monitored_output_states)
-
+•
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
         if system.controller is None:
