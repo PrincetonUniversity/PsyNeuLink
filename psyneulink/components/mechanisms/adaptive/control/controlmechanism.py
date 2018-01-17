@@ -713,10 +713,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
                 # Otherwise, assume it is a valid form of InputSate specification, and pass to ObjectiveMechanism
                 if isinstance(item, MonitoredOutputStateTuple):
-                    if item.matrix is None:
-                        variable = item.output_state.value
-                    else:
+                    # If matrix is specified, let it determine the variable
+                    if item.matrix is not None:
                         variable = None
+                    # Otherwise, use OutputState's value as variable for InputState
+                    else:
+                        variable = item.output_state.value
                     # Create InputState specification dictionary:
                     monitored_output_states[i] = {NAME: item.output_state.name,
                                                   VARIABLE: variable,

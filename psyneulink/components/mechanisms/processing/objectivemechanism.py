@@ -700,13 +700,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         for i, spec in enumerate(monitored_output_states_specs):
             from psyneulink.components.states.inputstate import InputState
             from psyneulink.components.system import MonitoredOutputStateTuple
+            from psyneulink.components.projections.projection import _get_projection_value_shape
 
             # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
             if isinstance(spec, MonitoredOutputStateTuple):
-                if spec.matrix is None:
-                    variable = spec.output_state.value
-                else:
+                # If matrix is specified, let it determine the variable
+                if spec.matrix is not None:
                     variable = None
+                # Otherwise, use OutputState's value as variable for InputState
+                else:
+                    variable = spec.output_state.value
                 spec = {NAME: spec.output_state.name,
                         VARIABLE: variable,
                         WEIGHT: spec.weight,
@@ -726,6 +729,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # If Projection is specified, use its value
             if PROJECTION in projection_tuple.projection:
                 reference_value.append(projection_tuple.projection[PROJECTION].value)
+            # If matrix is specified for Projection, get its receiver dimension
+            elif MATRIX in projection_tuple.projection:
+                reference_value.append(_get_projection_value_shape(projection_tuple.state,
+                                                                   projection_tuple.projection[MATRIX]))
             # Otherwise, use its sender's (OutputState) value
             else:
                 reference_value.append(projection_tuple.state.value)

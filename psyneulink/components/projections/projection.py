@@ -385,6 +385,7 @@ COMMENT
 import inspect
 import warnings
 
+import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
@@ -1764,6 +1765,11 @@ def _validate_connection_request(
     #    (e.g., value or a name that will be used in context to instantiate it)
     return False
 
+def _get_projection_value_shape(sender, matrix):
+    """Return shape of a Projection's value given its sender and matrix"""
+    from psyneulink.components.functions.function import get_matrix
+    matrix = get_matrix(matrix)
+    return np.zeros(matrix.shape[sender.value.ndim :])
 
 # IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignals WHEN THAT IS IMPLEMENTED
 @tc.typecheck
@@ -2053,4 +2059,3 @@ context=context)
                                                       name=sender.name+'.output_states')
 
     output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
-
