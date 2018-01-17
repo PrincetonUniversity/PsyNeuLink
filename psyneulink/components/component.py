@@ -2986,7 +2986,11 @@ def make_property(name):
 def make_property_mod(param_name):
 
     def getter(self):
-        return self._parameter_states[param_name].value
+        try:
+            return self._parameter_states[param_name].value
+        except TypeError:
+            raise ComponentError("{} does not have a '{}' ParameterState."
+                                 .format(self.name, param_name))
 
     def setter(self):
         raise ComponentError("Cannot set to {}'s mod_{} directly because it is computed by the ParameterState."
