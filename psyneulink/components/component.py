@@ -2946,7 +2946,6 @@ def make_property(name):
         return getattr(self, backing_field)
 
     def setter(self, val):
-
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
             val_type = val.__class__.__name__
             curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
@@ -2992,7 +2991,7 @@ def make_property_mod(param_name):
             raise ComponentError("{} does not have a '{}' ParameterState."
                                  .format(self.name, param_name))
 
-    def setter(self):
+    def setter(self, value):
         raise ComponentError("Cannot set to {}'s mod_{} directly because it is computed by the ParameterState."
                              .format(self.name, param_name))
 
