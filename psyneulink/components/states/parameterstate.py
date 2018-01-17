@@ -13,15 +13,30 @@
 Overview
 --------
 
-ParameterStates belong to either a `Mechanism <Mechanism>` or a `Projection` and are used to represent, and possibly
-modify the, values of all of the `configurable parameters <ParameterState_Configurable_Parameters>` of the `Component
-<Component>` or those of its `function <Component_Function>`. A ParameterState can receive one or more
-`ControlProjections  <ControlProjection>` and/or `LearningProjections <LearningProjection>` that modify the value of
-the parameter. The Projections received by a ParameterState are listed in its `mod_afferents
-<ParameterState.mod_afferents>` attribute.  The ParameterState's `function <ParameterState.function>` combines the
-values of those Projections, and uses the result to modify the value of the parameter, that is then used by the
-Component or its `function <Component.function>` when it executes.
+ParameterStates belong to either a `Mechanism <Mechanism>` or a `Projection <Projection>` and are used to represent, and
+possibly modify, the values of all of the `configurable parameters <ParameterState_Configurable_Parameters>` of the
+`Component <Component>` or those of its `function <Component_Function>`.
 
+A ParameterState can receive one or more `ControlProjections  <ControlProjection>` and/or `LearningProjections
+<LearningProjection>` that modify the value returned by the ParameterState according to the ParameterState's
+`function <ParameterState.function>`. The Projections received by a ParameterState  are listed in its `mod_afferents
+<ParameterState.mod_afferents>` attribute.
+
+When the Mechanism or Projection to which a ParameterState belongs executes, that component and its function use the
+ParameterState's value -- not the parameter attribute's value -- for any computation. A ParameterState's corresponding
+attribute on the Mechanism, Projection, or Function to which it belongs (i.e. MyTransferMech.function_object.gain),
+stores the "base value" of that parameter. The base value of a parameter is the variable of the ParameterState's
+function. The base value can be viewed or changed at any time through this attribute.
+
+The ParameterState value is available on the ParameterState itself, as well as the mod_name attribute of the Mechanism
+or Projection to which it belongs (i.e. MyTransferMech.mod_gain would return the value of the "gain" ParameterState
+of the MyTransferMech mechanism.)
+
+.. note::
+    Either of these options for looking up the value of the ParameterState will return the
+    value from the most recent execution. This means that if the value of MyTransferMech.function_object.gain (the base
+    value) is updated after execution #1, the base value will change immediately, but the ParameterState value (and
+    MyTransferMech.mod_gain) will not update until execution #2.
 
 .. _ParameterState_Creation:
 
@@ -200,17 +215,60 @@ The example below shows how to specify the parameters in the first example using
     ...                                     pnl.GAIN:(0.5,pnl.ControlSignal),
     ...                                     pnl.BIAS:(1.0,pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))}})
 
-There are several things to note here.  First, the parameter specification dictionary must be assigned to the
-**params** argument of the constructor.  Second, both methods for specifying a parameter -- directly in an argument
-for the parameter, or in an entry of a parameter specification dictionary -- can be used within the same constructor.
-If a particular parameter is specified in both ways (as is the case for **noise** in the example), the value in the
-parameter specification dictionary takes priority (i.e., it is the value that will be assigned to the parameter).  If
-the parameter is specified in a parameter specification dictionary, the key for the parameter must be a string that is
-the same as the name of parameter (i.e., identical to how it appears as an arg in the constructor; as is shown
+There are several things to note here.
+
+First, the parameter specification dictionary must be assigned to the **params** argument of the constructor. Note that
+if the parameter is specified in a parameter specification dictionary, the key for the parameter must be a string that
+is the same as the name of parameter (i.e., identical to how it appears as an arg in the constructor; as is shown
 for **noise** in the example), or using a keyword that resolves to such a string (as shown for *NOISE* in the
-example).  Finally, the keyword *FUNCTION_PARAMS* can be used in a parameter specification dictionary to specify
+example).
+
+Second, both methods for specifying a parameter -- directly in an argument for the parameter, or in an entry of a
+parameter specification dictionary -- can be used within the same constructor.
+
+If a particular parameter is specified in both ways (as is the case for **noise** in the example), the value in the
+parameter specification dictionary takes priority (i.e., it is the value that will be assigned to the parameter).
+
+Finally, the keyword *FUNCTION_PARAMS* can be used in a parameter specification dictionary to specify
 parameters of the Component's `function <Component.function>`, as shown for the **gain** and **bias** parameters of
 the Logistic function in the example.
+
+The example below shows how to access ParameterState values vs base values, and demonstrates their differences::
+
+    >>> my_transfer_mechanism = pnl.TransferMechanism(
+    ...                      noise=5.0,
+    ...                      function=pnl.Linear(slope=2.0))
+    >>> assert my_transfer_mechanism.noise == 5.0
+    >>> assert my_transfer_mechanism.mod_noise == [5.0]
+    >>> assert my_transfer_mechanism.function_object.slope == 2.0
+    >>> assert my_transfer_mechanism.mod_slope == [2.0]
+
+Notice that the noise attribute, which stores the base value for the noise ParameterState of my_transfer_mechanism, is
+on my_transfer_mechanism, while the slope attribute, which stores the base value for the slope ParameterState of
+my_transfer_mechanism, is on my_transfer_mechanism's function. However, mod_noise and mod_slope are both properties on
+my_transfer_mechanism.
+
+    >>> my_transfer_mechanism.noise = 4.0
+    >>> my_transfer_mechanism.function_object.slope = 1.0
+    >>> assert my_transfer_mechanism.noise == 4.0
+    >>> assert my_transfer_mechanism.mod_noise == [5.0]
+    >>> assert my_transfer_mechanism.function_object.slope == 1.0
+    >>> assert my_transfer_mechanism.mod_slope == [2.0]
+
+When the base values of noise and slope are updated, we can inspect these attributes immediately and observe that they
+have changed. We do not observe a change in mod_noise or mod_slope because the ParameterState value will not update
+until the mechanism executes.
+
+    >>> my_transfer_mechanism.execute([10.0])
+    np.array([[ 14.]])
+    >>> assert my_transfer_mechanism.noise == 4.0
+    >>> assert my_transfer_mechanism.mod_noise == [4.0]
+    >>> assert my_transfer_mechanism.function_object.slope == 1.0
+    >>> assert my_transfer_mechanism.mod_slope == 1.0
+
+Now that the mechanism has executed, we can see that each ParameterState evaluated its function with the base value,
+producing a modulated noise value of 4.0 and a modulated slope value of 1.0. These values were used by
+my_transfer_mechanism and its Linear function when the mechanism executed.
 
 .. _ParameterState_Structure:
 
@@ -1023,7 +1081,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                   context=context)
         if state:
             owner._parameter_states[param_name] = state
-
 
 def _is_legal_param_value(owner, value):
 

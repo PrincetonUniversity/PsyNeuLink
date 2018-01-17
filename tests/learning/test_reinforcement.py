@@ -49,7 +49,7 @@ def test_reinforcement():
         print("\n\n**** TRIAL: ", system.scheduler_processing.clock.simple_time)
 
     def show_weights():
-        print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].matrix)
+        print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].mod_matrix)
         print('\nAction selected:  {}; predicted reward: {}'.format(
             np.nonzero(action_selection.output_states.value)[0][0],
             action_selection.output_states.value[np.nonzero(action_selection.output_states.value)[0][0]],
@@ -99,7 +99,7 @@ def test_reinforcement():
                 [0.        , 0.        , 0.        ],
             ])
         ])),
-        (reward_prediction_weights.matrix, np.array([
+        (reward_prediction_weights.mod_matrix, np.array([
             [ 1.,          0.,          0.,        ],
             [ 0.,          3.71496434,  0.,        ],
             [ 0.,          0.,          2.283625,  ],
