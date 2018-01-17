@@ -780,23 +780,18 @@ class EVCControlMechanism(ControlMechanism):
         except KeyError:
             prediction_mechanism_params = {}
 
-
         for origin_mech in self.system.origin_mechanisms.mechanisms:
-            # FIX: 1/15/18
-            # # IMPLEMENT THE FOLLOWING ONCE INPUT_STATES CAN BE SPECIFIED IN CONSTRUCTION OF ALL MECHANISMS
-            # #           (AS THEY CAN CURRENTLY FOR ObjectiveMechanisms)
-            # state_names = []
-            # variables = []
-            # for state_name in origin_mech.input_states.keys():
-            #     state_names.append(state_name)
-            #     variables.append(origin_mech_intputStates[state_name].instance_defaults.variable)
+            state_names = []
+            variable = []
+            for state_name in origin_mech.input_states.names:
+                state_names.append(state_name)
+                variable.append(origin_mech.input_states[state_name].instance_defaults.variable)
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
                     name=origin_mech.name + " " + PREDICTION_MECHANISM,
-                    default_variable = origin_mech.input_state.instance_defaults.variable,
-                    # default_variable=variables,
-                    # INPUT_STATES=state_names,
+                    default_variable=variable,
+                    input_states=state_names,
                     params = prediction_mechanism_params,
                     context=context,
             )

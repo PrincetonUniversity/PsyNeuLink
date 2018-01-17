@@ -1070,8 +1070,8 @@ def _parse_projection_spec(projection_spec,
 
     All keys in kwargs must be from PROJECTION_ARGS
 
-    If projection_spec is or resolves to a Projection object, returns State object.
-    Otherwise, return State specification dictionary using any arguments provided as defaults
+    If projection_spec is or resolves to a Projection object, returns Projection object.
+    Otherwise, return Projection specification dictionary using any arguments provided as defaults
     """
 
     bad_arg = next((key for key in kwargs if not key in PROJECTION_ARGS), None)
