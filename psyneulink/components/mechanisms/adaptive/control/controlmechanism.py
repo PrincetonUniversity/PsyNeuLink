@@ -687,6 +687,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, ObjectiveMechanismError
         from psyneulink.components.states.inputstate import EXPONENT_INDEX, WEIGHT_INDEX
+        from psyneulink.components.functions.function import FunctionError
 
         monitored_output_states = None
 
@@ -712,9 +713,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
                 # Otherwise, assume it is a valid form of InputSate specification, and pass to ObjectiveMechanism
                 if isinstance(item, MonitoredOutputStateTuple):
+                    if item.matrix is None:
+                        variable = item.output_state.value
+                    else:
+                        variable = None
                     # Create InputState specification dictionary:
                     monitored_output_states[i] = {NAME: item.output_state.name,
-                                                  VARIABLE: item.output_state.value,
+                                                  VARIABLE: variable,
                                                   WEIGHT:item.weight,
                                                   EXPONENT:item.exponent,
                                                   PROJECTIONS:[(item.output_state, item.matrix)]}
@@ -736,8 +741,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
 
-            except ObjectiveMechanismError as e:
-                raise ObjectiveMechanismError(e)
+            except (ObjectiveMechanismError, FunctionError) as e:
+                raise ObjectiveMechanismError("Error creating {} for {}: {}".format(OBJECTIVE_MECHANISM, self.name, e))
 
         # Print monitored_output_states
         if self.prefs.verbosePref:

@@ -703,8 +703,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
             # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
             if isinstance(spec, MonitoredOutputStateTuple):
+                if spec.matrix is None:
+                    variable = spec.output_state.value
+                else:
+                    variable = None
                 spec = {NAME: spec.output_state.name,
-                        VARIABLE: spec.output_state.value,
+                        VARIABLE: variable,
                         WEIGHT: spec.weight,
                         EXPONENT: spec.exponent,
                         PROJECTIONS: [(spec.output_state, spec.matrix)]}
