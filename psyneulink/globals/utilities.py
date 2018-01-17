@@ -329,7 +329,7 @@ def iscompatible(candidate, reference=None, **kargs):
     try:
         with warnings.catch_warnings():
             warnings.simplefilter(action='ignore', category=FutureWarning)
-            if reference and (candidate == reference):
+            if reference is not None and (candidate == reference):
                 return True
     except ValueError:
         # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
