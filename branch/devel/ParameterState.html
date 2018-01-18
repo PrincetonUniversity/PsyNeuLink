@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterState &mdash; PsyNeuLink 0.4.1.1+169.g2f43047 documentation</title>
+  <title>ParameterState &mdash; PsyNeuLink 0.4.1.1+178.gbe3fc1e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.1.1+169.g2f43047 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.1.1+178.gbe3fc1e documentation" href="index.html"/>
         <link rel="up" title="States" href="State.html"/>
         <link rel="next" title="OutputState" href="OutputState.html"/>
         <link rel="prev" title="InputState" href="InputState.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.1.1+169
+                0.4.1.1+178
               </div>
             
           
@@ -187,9 +187,10 @@
 <span id="parameterstate"></span><h1>ParameterState<a class="headerlink" href="#module-psyneulink.components.states.parameterstate" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>ParameterStates belong to either a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> and are used to represent, and
-possibly modify, the values of all of the <a class="reference internal" href="#parameterstate-configurable-parameters"><span class="std std-ref">configurable parameters</span></a> of the
-<a class="reference internal" href="Component.html"><span class="doc">Component</span></a> or those of its <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a>.</p>
+<p>ParameterStates belong to either a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>. A ParameterState is created
+to represent each eligible <a class="reference internal" href="#parameterstate-configurable-parameters"><span class="std std-ref">configurable parameter</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, as well as those of the component’s <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a>. A
+ParameterState provides the current value of the parameter it represents during any relevant computations, and serves as
+an interface for parameter modulation.</p>
 <p>A ParameterState can receive one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> that modify the value returned by the ParameterState according to the ParameterState’s
 <a class="reference internal" href="#psyneulink.components.states.parameterstate.ParameterState.function" title="psyneulink.components.states.parameterstate.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. The Projections received by a ParameterState  are listed in its <a class="reference internal" href="#psyneulink.components.states.parameterstate.ParameterState.mod_afferents" title="psyneulink.components.states.parameterstate.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.</p>
 <p>When the Mechanism or Projection to which a ParameterState belongs executes, that component and its function use the
@@ -202,10 +203,12 @@ or Projection to which it belongs (i.e. MyTransferMech.mod_gain would return the
 of the MyTransferMech mechanism.)</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Either of these options for looking up the value of the ParameterState will return the
-value from the most recent execution. This means that if the value of MyTransferMech.function_object.gain (the base
-value) is updated after execution #1, the base value will change immediately, but the ParameterState value (and
-MyTransferMech.mod_gain) will not update until execution #2.</p>
+<p>Either of these options for looking up the value of the ParameterState will return the parameter state value that
+was used during the most recent execution. This means that if the value of MyTransferMech.function_object.gain (the
+base value) is updated after execution #1, the base value will change immediately, but the ParameterState value (and
+MyTransferMech.mod_gain) will not be computed again until execution #2.</p>
+<p class="last">As a result, if either MyTransferMech.mod_gain or MyTransferMech.parameter_states[“gain”].value is viewed in between
+execution #1 and execution #2, it will return the gain parameter state value that was used during execution 1.</p>
 </div>
 </div>
 <div class="section" id="creating-a-parameterstate">
@@ -224,7 +227,7 @@ below.  The ParameterStates for the parameters of a Mechanism or Projection are 
 <blockquote>
 <div><ul class="simple">
 <li>In the <strong>argument</strong> of the constructor for the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which the parameter belongs
-(see <a class="reference internal" href="Component.html#component-configurable-attributes"><span class="std std-ref">Core Configurable Attributes</span></a> for additional details).</li>
+(see <a class="reference internal" href="Component.html#component-structural-attributes"><span class="std std-ref">Core Structural Attributes</span></a> for additional details).</li>
 </ul>
 <ul class="simple">
 <li>In a <em>parameter specification dictionary</em> assigned to the <strong>params</strong> argument in the constructor for the
@@ -543,7 +546,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.1.1+169.g2f43047',
+            VERSION:'0.4.1.1+178.gbe3fc1e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
