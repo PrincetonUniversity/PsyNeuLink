@@ -313,9 +313,9 @@ from psyneulink.components.shellclasses import System_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import INDEX, SEQUENTIAL
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, \
-    CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, OBJECTIVE_MECHANISM, PRODUCT, \
-    PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT, COMMAND_LINE
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROLLER, CONTROL_PROJECTION, \
+    CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, \
+    OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT, COMMAND_LINE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -887,6 +887,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Add ControlSignal to output_states list
         self._output_states.append(control_signal)
+        self.control_signals.append(control_signal)
 
         return control_signal
 
@@ -1024,14 +1025,15 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
-        if system.controller is None:
-            system_control_signals = system._get_control_signals_for_system(system.control_signals, context=context)
+        if not hasattr(system, CONTROLLER) or system.controller is None:
+            system_control_signals = system._get_control_signals_for_system(system.control_signals_arg, context=context)
         # The system DOES already have a controller,
         #    so assign it the old controller's ControlSignals
         else:
             system_control_signals = system.control_signals
             for control_signal in system_control_signals:
                 control_signal.owner = None
+
         # Get rid of default ControlSignal if it has no ControlProjections
         if (len(self.control_signals)==1
                 and self.control_signals[0].name=='ControlSignal-0'
@@ -1040,9 +1042,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
             del self.control_signals[0]
             self.allocation_policy = None
 
+        # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
+            # Don't add any that are already on the ControlMechanism
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-            self.control_signals.append(control_signal)
+            # if all(projection.receiver in [] or projection in control_signal.efferents):
+            #     continue
+            # self.control_signals.append(control_signal)
 
         # If it HAS been assigned a System, make sure it is the current one
         if self.system and not self.system is system:
