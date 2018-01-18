@@ -186,24 +186,24 @@ Projection in context:
 
      * **State specification** -- specifies the `State <State_Specification>` to connect with (**not** the one being
        connected; that is determined from context)
-
+     |
      * **weight** -- must be a value specifying the `weight <Projection_Base.weight>` of the Projection;  it can be
        `None`, in which case it is ignored, but there must be a specification present;
-
+     |
      * **exponent** -- must be a value specifying the `exponent <Projection_Base.exponent>` of the Projection;  it
-     can be `None`, in which case it is ignored, but there must be a specification present;
-
+       can be `None`, in which case it is ignored, but there must be a specification present;
+     |
      * **Projection specification** -- this is optional but, if included, msut be a `Projection specification
        <Projection_Specification>`;  it can take any of the forms of a Projection specification described above for
        any Projection subclass; it can be used to provide additional specifications for the Projection, such as its
        `matrix <MappingProjection.matrix>` if it is a `MappingProjection`.
 
     .. note::
-       A ProjectionTuple should not be confused with a `4-item InputState specification tuple <
-       InputState_Tuple_Specification>`, which also contains weight and exponent items.  In a ProjectionTuple, those
+       A ProjectionTuple should not be confused with a `4-item InputState specification tuple
+       <InputState_Tuple_Specification>`, which also contains weight and exponent items.  In a ProjectionTuple, those
        items specify the weight and/or exponent assigned to the *Projection* (see `Projection_Weight_Exponent`),
-       whereas in an InputState specification tuple they specify the weight and/or exponent of the **InputState**
-       (see `InputState_Weights_And_Exponents`).
+       whereas in an `InputState specification tuple <InputState_Weights_And_Exponents>` they specify the weight
+       and/or exponent of the **InputState**.
 
     Any (but not all) of the items can be `None`.  If the State specification is `None`, then there must be a
     Projection specification (used to infer the State to be connected with).  If the Projection specification is
@@ -385,6 +385,7 @@ COMMENT
 import inspect
 import warnings
 
+import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
@@ -1609,7 +1610,6 @@ def _parse_connection_specs(connectee_state_type,
 
     return connect_with_states
 
-
 @tc.typecheck
 def _validate_connection_request(
         owner,                                   # Owner of State seeking connection
@@ -1764,6 +1764,11 @@ def _validate_connection_request(
     #    (e.g., value or a name that will be used in context to instantiate it)
     return False
 
+def _get_projection_value_shape(sender, matrix):
+    """Return shape of a Projection's value given its sender and matrix"""
+    from psyneulink.components.functions.function import get_matrix
+    matrix = get_matrix(matrix)
+    return np.zeros(matrix.shape[sender.value.ndim :])
 
 # IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignals WHEN THAT IS IMPLEMENTED
 @tc.typecheck
@@ -2053,4 +2058,3 @@ context=context)
                                                       name=sender.name+'.output_states')
 
     output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
-
