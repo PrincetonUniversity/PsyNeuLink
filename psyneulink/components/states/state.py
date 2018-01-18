@@ -2442,6 +2442,7 @@ def _parse_state_spec(state_type=None,
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
     from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
     from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+    from psyneulink.components.projections.projection import _get_projection_value_shape
 
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
@@ -2616,7 +2617,7 @@ def _parse_state_spec(state_type=None,
 
         if sender is not None and matrix is not None and matrix is not AUTO_ASSIGN_MATRIX:
             sender = _get_state_for_socket(owner=owner,state_spec=sender,state_types=state_dict[STATE_TYPE])
-            projection_value = np.zeros(matrix.shape[sender.value.ndim :])
+            projection_value = _get_projection_value_shape(sender, matrix)
 
         reference_value = state_dict[REFERENCE_VALUE]
         # If State's reference_value is not specified, but Projection's value is, use projection_spec's value
