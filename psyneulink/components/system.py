@@ -1955,7 +1955,7 @@ class System(System_Base):
                               format(CONTROLLER, self.name, control_mech_spec))
 
         # Warn if current one is being replaced
-        if self.controller and self.prefs.verbosePref:
+        if hasattr(self, CONTROLLER) and self.controller and self.prefs.verbosePref:
             warnings.warn("The existing {} for {} ({}) is being replaced by {}".
                           format(CONTROLLER, self.name, self.controller.name, controller.name))
 
@@ -3200,7 +3200,11 @@ class System(System_Base):
 
     @property
     def controller(self):
-        return self._controller
+        try:
+            return self._controller
+        except AttributeError:
+            self._controller = None
+            return self._controller
 
     @controller.setter
     def controller(self, control_mech_spec):
