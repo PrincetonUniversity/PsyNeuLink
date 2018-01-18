@@ -313,9 +313,9 @@ from psyneulink.components.shellclasses import System_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import INDEX, SEQUENTIAL
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTIONS, \
-    CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, OBJECTIVE_MECHANISM, PRODUCT, \
-    PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT, COMMAND_LINE
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROLLER, CONTROL_PROJECTION, \
+    CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, \
+    OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT, COMMAND_LINE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -780,8 +780,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
 
-        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION
-        # ONCE THAT IS IMPLEMENTED
+        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
@@ -856,9 +855,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                             reference_value=defaultControlAllocation,
                                             modulation=self.modulation,
                                             state_spec=control_signal)
-        # MODIFIED 1/17/18 NEW: [MOVED HERE FROM _assign_as_controller]
         control_signal.owner = self
-        # MODIFIED 1/17/18 END
 
         if control_signal.index is SEQUENTIAL:
             control_signal.index = len(self.allocation_policy)-1
@@ -1028,13 +1025,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
         if system.controller is None:
-            system_control_signals = system._get_control_signals_for_system(system.control_signals, context=context)
+            system_control_signals = system._get_control_signals_for_system(system.control_signals_arg, context=context)
         # The system DOES already have a controller,
         #    so assign it the old controller's ControlSignals
         else:
             system_control_signals = system.control_signals
             for control_signal in system_control_signals:
                 control_signal.owner = None
+
         # Get rid of default ControlSignal if it has no ControlProjections
         if (len(self.control_signals)==1
                 and self.control_signals[0].name=='ControlSignal-0'
@@ -1043,11 +1041,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
             del self.control_signals[0]
             self.allocation_policy = None
 
+        # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-            # MODIFIED 1/17/18 OLD: [MOVED TO _instantiate_control_signal]
-            # control_signal.owner = self
-            # MODIFIED 1/17/18 END
+            # FIX: 1/18/18 - CHECK FOR SAME NAME IN _instantiate_control_signal
+            # # Don't add any that are already on the ControlMechanism
+            if control_signal.name in self.control_signals.names and (self.verbosePref or system.verbosePref):
+                warnings.warn("{} specified for {} has same name (\'{}\') "
+                              "as one in controller ({}) being assigned to the {}."
+                              "".format(ControlSignal.__name__, system.name,
+                                        control_signal.name, self.name, system.__class__.__name__))
             self.control_signals.append(control_signal)
 
         # If it HAS been assigned a System, make sure it is the current one

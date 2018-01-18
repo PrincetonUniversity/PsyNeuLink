@@ -825,14 +825,15 @@ class System(System_Base):
         if not isinstance(processes, list):
             processes = [processes]
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
+        self.control_signals_arg = control_signals or []
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
                                                   initial_values=initial_values,
-                                                  controller=controller,
+                                                  # controller=controller,
                                                   enable_controller=enable_controller,
                                                   monitor_for_control=monitor_for_control,
-                                                  control_signals=control_signals,
+                                                  # control_signals=control_signals,
                                                   learning_rate=learning_rate,
                                                   targets=targets,
                                                   params=params)
@@ -862,9 +863,8 @@ class System(System_Base):
         self.status = INITIALIZED
         self._execution_id = None
 
-        # Get/assign controller
-        # self._instantiate_controller()
-        self.controller = self.controller
+        # Assign controller
+        self._instantiate_controller(control_mech_spec=controller, context=context)
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -1935,7 +1935,7 @@ class System(System_Base):
                           format(control_mech_spec, CONTROLLER, self.name))
             return
 
-        # An existing ControlMechanism is being assigned
+        # An existing ControlMechanism is being assigned, possibly one declared in the System's constructor
         if isinstance(control_mech_spec, ControlMechanism):
             control_mech_spec.assign_as_controller(self, context=context)
             controller = control_mech_spec
@@ -1948,7 +1948,7 @@ class System(System_Base):
             controller = control_mech_spec(
                     system=self,
                     objective_mechanism=self._get_monitored_output_states_for_system(context=context),
-                    control_signals=self._get_control_signals_for_system(self.control_signals, context=context))
+                    control_signals=self._get_control_signals_for_system(self.control_signals_arg, context=context))
 
         else:
             raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".
@@ -1961,10 +1961,10 @@ class System(System_Base):
 
         # Make assignment (and assign controller's ControlSignals to self.control_signals)
         self._controller = controller
-        if self.control_signals is None:
-            self.control_signals = controller.control_signals
-        else:
-            self.control_signals.append(controller.control_signals)
+        # if self.control_signals is None:
+        #     self.control_signals = controller.control_signals
+        # else:
+        #     self.control_signals.append(controller.control_signals)
 
         # Add controller's ObjectiveMechanism to the System's execution_list and execution_graph
         self.execution_list.append(self.controller.objective_mechanism)
@@ -3200,16 +3200,22 @@ class System(System_Base):
 
     @property
     def controller(self):
-        return self._controller
+        try:
+            return self._controller
+        except AttributeError:
+            self._controller = None
+            return self._controller
 
     @controller.setter
     def controller(self, control_mech_spec):
+        self._instantiate_controller(control_mech_spec, context='System.controller setter')
 
-        if self.status is INITIALIZING:
-            return
-
+    @property
+    def control_signals(self):
+        if self.controller is None:
+            return None
         else:
-            self._instantiate_controller(control_mech_spec, context='System.controller setter')
+            return self.controller.control_signals
 
     def show_graph(self,
                    direction = 'BT',

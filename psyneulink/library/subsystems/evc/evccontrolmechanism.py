@@ -336,8 +336,8 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import COMMAND_LINE, CONTROL, COST_FUNCTION, EVC_MECHANISM, FUNCTION, INITIALIZING, \
-    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, \
+from psyneulink.globals.keywords import COMMAND_LINE, CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, FUNCTION, \
+    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, \
     PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -769,7 +769,7 @@ class EVCControlMechanism(ControlMechanism):
 
         # FIX: 1/16/18 - Should should check for any new origin_mechs? What if origin_mech deleted?
         # If system's controller already has prediction_mechanisms, use those
-        if hasattr(system.controller, PREDICTION_MECHANISMS):
+        if hasattr(system, CONTROLLER) and hasattr(system.controller, PREDICTION_MECHANISMS):
             self.prediction_mechanisms = system.controller.prediction_mechanisms
             self.origin_prediction_mechanisms = system.controller.origin_prediction_mechanisms
             self.predicted_input = system.controller.predicted_input
