@@ -52,13 +52,13 @@ of a `Process`), as appropriate.
 Component Structure
 -------------------
 
-.. _Component_Configurable_Attributes:
+.. _Component_Structural_Attributes:
 
-Core Configurable Attributes
+Core Structural Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every Component has the following set of core attributes that govern its operation, and that can be specified in
-corresponding arguments of its constructor, or by assigning them directly (see `ParameterState_Specification`):
+Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
+user once the component is constructed, with the one exception of `prefs <Component_Prefs>`.
 
 .. _Component_Variable:
 

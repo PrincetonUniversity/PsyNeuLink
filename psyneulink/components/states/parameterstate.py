@@ -80,7 +80,7 @@ Specifying Parameters
 Parameters can be specified in one of several places:
 
     * In the **argument** of the constructor for the `Component <Component>` to which the parameter belongs
-      (see `Component_Configurable_Attributes` for additional details).
+      (see `Component_Structural_Attributes` for additional details).
     ..
     * In a *parameter specification dictionary* assigned to the **params** argument in the constructor for the
       Component to which the parameter belongs. The entry for each parameter must use the name of the parameter

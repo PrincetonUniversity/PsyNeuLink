@@ -90,7 +90,7 @@ In general, States are created automatically by the objects to which they belong
 or by specifying the State in the constructor for its owner.  For example, unless otherwise specified, when a
 `Mechanism <Mechanism>` is created it creates a default `InputState` and `OutputState` for itself, and whenever any
 Component is created, it automatically creates a `ParameterState` for each of its `configurable parameters
-<Component_Configurable_Attributes>` and those of its `function <Component_Function>`. States are also created in
+<Component_Structural_Attributes>` and those of its `function <Component_Function>`. States are also created in
 response to explicit specifications.  For example, InputStates and OutputStates can be specified in the constructor for
 a Mechanism (see `Mechanism_State_Specification`); and ParameterStates are specified in effect when the value of a
 parameter for any Component or its `function <Component.function>` is specified in the constructor for that Component
