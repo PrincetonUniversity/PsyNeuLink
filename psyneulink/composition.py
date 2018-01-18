@@ -1099,7 +1099,10 @@ class Composition(object):
 
 
     def __bin_initialize(self, inputs, reinit=False):
-        data = [tuple([inputs[m]]) if m in inputs else tuple(m.instance_defaults.variable) for m in self.input_mechanisms.keys()]
+        #FIXME this is an ugly hack to make us work with vectors
+        def tupleize(x):
+            return tuple(x) if isinstance(x, (list)) else x
+        data = [tupleize(inputs[m]) if m in inputs else tuple(m.instance_defaults.variable) for m in self.input_mechanisms.keys()]
         self.__data_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())(tuple(data))
         if reinit or self.__params_struct is None:
             params = tuple([m.get_param_initializer() for m in self.mechanisms])
