@@ -7,3 +7,5 @@ illustrate principles of neural and/or psychological function.
 • `GilzenratModel`
 
 • `MontagueModel`
+
+• `NieuwenhuisModel`
