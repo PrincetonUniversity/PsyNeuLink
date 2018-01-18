@@ -742,7 +742,7 @@ class Component(object):
 
         def _show(self):
             vals = self.values()
-            return '(\n\t{0}\n)'.format('\n\t'.join(['{0} = {1},'.format(k, vals[k]) for k in vals]))
+            return '(\n\t{0}\n)'.format('\n\t'.join(sorted(['{0} = {1},'.format(k, vals[k]) for k in vals])))
 
     class ClassDefaults(Defaults):
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]

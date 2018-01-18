@@ -623,10 +623,6 @@ class Function_Base(Function):
                           name=name,
                           context=context)
         self.owner = owner
-        if self.owner is not None:
-            self.owner_name = ' ' + self.owner.name
-        else:
-            self.owner_name = ''
 
         super().__init__(default_variable=default_variable,
                          param_defaults=params,
@@ -638,7 +634,7 @@ class Function_Base(Function):
         """Validates function param
         Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s"""
         if not parameter_spec(param, numeric_only):
-            owner_name = 'of ' + self.owner.name if self.owner else ""
+            owner_name = 'of ' + self.owner_name if self.owner else ""
             raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
                                 format(param, param_name, self.__class__.__name__, owner_name))
 
@@ -694,6 +690,13 @@ class Function_Base(Function):
         for param_name, param_value in sorted(self.user_params.items()):
             print("\t{}: {}".format(param_name, param_value))
         print('')
+
+    @property
+    def owner_name(self):
+        try:
+            return self.owner.name
+        except AttributeError:
+            return '<no owner>'
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
@@ -3476,11 +3479,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                             "specification ({}) for the {} "
                                             "function of {}".format(param_value,
                                                                     self.name,
-                                                                    self.owner.name))
+                                                                    self.owner_name))
 
                     if weight_matrix.ndim != 2:
                         raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
-                                            format(weight_matrix.ndim, self.name, self.owner.name))
+                                            format(weight_matrix.ndim, self.name, self.owner_name))
 
                     matrix_rows = weight_matrix.shape[0]
                     matrix_cols = weight_matrix.shape[1]
@@ -3493,7 +3496,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                             "({}) of the sender vector "
                                             "(variable)".format(matrix_rows,
                                                                 self.name,
-                                                                self.owner.name,
+                                                                self.owner_name,
                                                                 sender_len))
 
                 # Auto, full or random connectivity matrix requested (using keyword):
@@ -3514,7 +3517,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         # param_set[kwReceiver] = sender
                         raise FunctionError("{} requested for the {} function of {}, "
                                             "but length of receiver ({}) does not match length of sender ({})".
-                                            format(param_value, self.name, self.owner.name, receiver_len, sender_len))
+                                            format(param_value, self.name, self.owner_name, receiver_len, sender_len))
                     continue
 
                 # list used to describe matrix, so convert to 2D np.array and pass to validation of matrix below
@@ -3524,7 +3527,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     except (ValueError, TypeError) as error_msg:
                         raise FunctionError("Error in list specification ({}) of matrix for the {} function of {}: {})".
                                             # format(param_value, self.__class__.__name__, error_msg))
-                                            format(param_value, self.name, self.owner.name, error_msg))
+                                            format(param_value, self.name, self.owner_name, error_msg))
 
                 # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
                 elif isinstance(param_value, str):
@@ -3534,7 +3537,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         raise FunctionError("Error in string specification ({}) of the matrix "
                                             "for the {} function of {}: {})".
                                             # format(param_value, self.__class__.__name__, error_msg))
-                                            format(param_value, self.name, self.owner.name, error_msg))
+                                            format(param_value, self.name, self.owner_name, error_msg))
 
                 # function so:
                 # - assume it uses random.rand()
@@ -3546,7 +3549,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
                                             "that returns a value ({}) that is neither a matrix nor an array".
                                             # format(param_value, self.__class__.__name__, test))
-                                            format(self.name, self.owner.name, param_value, test))
+                                            format(self.name, self.owner_name, param_value, test))
 
                 else:
                     raise FunctionError("Value of {} param ({}) for the {} function of {} "
@@ -3554,12 +3557,12 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                         format(param_name,
                                                param_value,
                                                self.name,
-                                               self.owner.name,
+                                               self.owner_name,
                                                MATRIX_KEYWORD_NAMES))
             else:
                 message += "Unrecognized param ({}) specified for the {} function of {}\n".format(param_name,
                                                                                                 self.componentName,
-                                                                                                self.owner.name)
+                                                                                                self.owner_name)
                 continue
 
         if message:
@@ -3592,7 +3595,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         except:
             raise FunctionError("Can't instantiate matrix specification ({}) for the {} function of {} "
                                 "since its receiver has not been specified".
-                                format(specification, self.name, self.owner.name))
+                                format(specification, self.name, self.owner_name))
             # receiver = sender
         receiver_len = receiver.shape[0]
 
@@ -3602,7 +3605,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         if matrix is None:
             raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function that returns "
                                 "one, a matrix specification keyword ({}), or a number (filler)".
-                                format(specification, self.name, self.owner.name, MATRIX_KEYWORD_NAMES))
+                                format(specification, self.name, self.owner_name, MATRIX_KEYWORD_NAMES))
         else:
             return matrix
 
@@ -3650,7 +3653,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         if matrix is None:
             raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
-                                format(keyword, self.name, self.owner.name))
+                                format(keyword, self.name, self.owner_name))
         else:
             return matrix
 
@@ -9419,7 +9422,7 @@ class BackPropagation(LearningFunction):
         #           "-error_signal (dE_DA): {}\n    "
         #           "-derivative (dA_dW): {}\n    "
         #           "-error_derivative (dE_dW): {}\n".
-        #           format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
+        #           format(self.owner_name, self.activation_input, dE_dA, dA_dW ,dE_dW))
 
         # self.return_val.error_signal = dE_dW
         # self.return_val.learning_signal = weight_change_matrix
