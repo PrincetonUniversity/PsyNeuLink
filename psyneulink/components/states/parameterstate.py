@@ -232,7 +232,7 @@ parameter specification dictionary takes priority (i.e., it is the value that wi
 Finally, the keyword *FUNCTION_PARAMS* can be used in a parameter specification dictionary to specify
 parameters of the Component's `function <Component.function>`, as shown for the **gain** and **bias** parameters of
 the Logistic function in the example.
-
+COMMENT:
 The example below shows how to access ParameterState values vs base values, and demonstrates their differences::
 
     >>> my_transfer_mechanism = pnl.TransferMechanism(
@@ -269,6 +269,7 @@ until the mechanism executes.
 Now that the mechanism has executed, we can see that each ParameterState evaluated its function with the base value,
 producing a modulated noise value of 4.0 and a modulated slope value of 1.0. These values were used by
 my_transfer_mechanism and its Linear function when the mechanism executed.
+COMMENT
 
 .. _ParameterState_Structure:
 
