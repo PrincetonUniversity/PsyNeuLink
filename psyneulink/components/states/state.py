@@ -157,9 +157,9 @@ A State can be specified using any of the following:
           `MappingProjection` to the Mechanism's `primary InputState <InputState_Primary>` or from its `primary
           OutputState <OutputState_Primary>`, depending upon the type of Mechanism and context of specification.  It
           can also be accompanied by one or more State specification entries described below, to create one or more
-          Projections to/from those States (see `examples <State_State_Name_Entry_Example>`).
+          Projections to/from those specific States (see `examples <State_State_Name_Entry_Example>`).
       ..
-      * *<STATES_KEYWORD>:List[<str or State.name>,...]
+      * <STATES_KEYWORD>:List[<str or State.name>,...]
          this must accompany a *MECHANISM* entry (described above), and is used to specify its State(s) by name.
          Each entry must use one of the following keywords as its key, and there can be no more than one of each:
             - *INPUT_STATES*
@@ -2442,6 +2442,7 @@ def _parse_state_spec(state_type=None,
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
     from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
     from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+    from psyneulink.components.projections.projection import _get_projection_value_shape
 
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
@@ -2616,7 +2617,7 @@ def _parse_state_spec(state_type=None,
 
         if sender is not None and matrix is not None and matrix is not AUTO_ASSIGN_MATRIX:
             sender = _get_state_for_socket(owner=owner,state_spec=sender,state_types=state_dict[STATE_TYPE])
-            projection_value = np.zeros(matrix.shape[sender.value.ndim :])
+            projection_value = _get_projection_value_shape(sender, matrix)
 
         reference_value = state_dict[REFERENCE_VALUE]
         # If State's reference_value is not specified, but Projection's value is, use projection_spec's value

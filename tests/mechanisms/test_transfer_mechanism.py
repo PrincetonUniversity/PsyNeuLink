@@ -1075,6 +1075,7 @@ class TestTransferMechanismMultipleInputStates:
         from psyneulink.globals.keywords import MECHANISM_VALUE
         T = TransferMechanism(input_states=[[[0],[0]],'b','c'],
                                   output_states=MECHANISM_VALUE)
+        print(T.value)
         val = T.execute([[[1],[4]],[2],[3]])
         expected_val = [[[1],[4]],[2],[3]]
         assert len(T.output_states)==1

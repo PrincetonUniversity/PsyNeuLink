@@ -29,10 +29,10 @@ Creating a ControlSignal
 
 A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is `specified for
 control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the **control_signals** argument
-of the constructor for a `ControlMechanism <ControlMechanism>`.  Although a ControlSignal can be created directly
-using its constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is usually
-not necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration
-that must be met for it to function properly.
+of the constructor for a `ControlMechanism <ControlMechanism>` or a `System <System_Control_Specification>`.  Although
+a ControlSignal can be created directly using its constructor (or any of the other ways for `creating an OutputState
+<OutputStates_Creation>`), this is usually not necessary nor is it advisable, as a ControlSignal has dedicated
+components and requirements for configuration that must be met for it to function properly.
 
 .. _ControlSignal_Specification:
 
@@ -62,8 +62,8 @@ When a ControlSignal is specified in the **control_signals** argument of the con
             controlled by the ControlSignal (and that will receive a `ControlProjection` from it).
   ..
   * **2-item tuple** -- the 1st time must be the name of the parameter (or list of parameter names), and the 2nd item
-    the Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a
-    specification dictionary (see below), but precludes specification of any `parameters <ControlSignal_Structure>`
+    the Mechanism to which it (they) belong(s); this is a convenience format, that is simpler to use than a
+    specification dictionary (see above), but precludes specification of any `parameters <ControlSignal_Structure>`
     for the ControlSignal.
   ..
 
@@ -190,11 +190,16 @@ which it belongs is executed.  When this occurs, the ControlMechanism provides t
 <ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its `intensity` for
 that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>` to set the
 `value <ParameterState.value>` \\(s) of the `ParameterState(s) <ParameterState>` to which the ControlSignal projects.
-Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal controls. See
-`ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  The ControlSignal's
-`intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost` attribute. That is used
-by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to evaluate an
-`allocation_policy <ControlMechanism.allocation_policy>`, and adjust the ControlSignal's `allocation
+
+Recall that the ParameterState value is referenced anywhere that the controlled parameter is used in computation, and
+that it does not update until the component to which the ParameterState belongs executes. If the distinction between the
+base value stored in the parameter attribute (i.e. MyTransferMech.function_object.gain) and the value of the
+ParameterState is unfamiliar, see `Parameter State documentation <ParameterState>` for more details, or see
+`ModulatorySignal_Modulation` for a detailed description of how modulation operates.
+
+The ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost`
+attribute. That is used by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to
+evaluate an `allocation_policy <ControlMechanism.allocation_policy>`, and adjust the ControlSignal's `allocation
 <ControlSignal.allocation>` for the next `TRIAL`.
 
 .. note::
