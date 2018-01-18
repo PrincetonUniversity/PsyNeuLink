@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projections &mdash; PsyNeuLink 0.4.1.1+87.gae666e8 documentation</title>
+  <title>Projections &mdash; PsyNeuLink 0.4.1.1+88.g8c6dfb5 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.1.1+87.gae666e8 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.1.1+88.g8c6dfb5 documentation" href="index.html"/>
         <link rel="up" title="Components" href="Component.html"/>
         <link rel="next" title="Pathway Projections" href="PathwayProjection.html"/>
         <link rel="prev" title="Gating Mechanism" href="GatingMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.1.1+87
+                0.4.1.1+88
               </div>
             
           
@@ -373,11 +373,24 @@ items in order, and can include the fourth optional item:</p>
 <div><ul class="simple">
 <li><strong>State specification</strong> – specifies the <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">State</span></a> to connect with (<strong>not</strong> the one being
 connected; that is determined from context)</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
 <li><strong>weight</strong> – must be a value specifying the <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.weight" title="psyneulink.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> of the Projection;  it can be
 <code class="xref any docutils literal"><span class="pre">None</span></code>, in which case it is ignored, but there must be a specification present;</li>
-<li><strong>exponent</strong> – must be a value specifying the <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.exponent" title="psyneulink.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> of the Projection;  it</li>
 </ul>
-<p>can be <code class="xref any docutils literal"><span class="pre">None</span></code>, in which case it is ignored, but there must be a specification present;</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li><strong>exponent</strong> – must be a value specifying the <a class="reference internal" href="#psyneulink.components.projections.projection.Projection_Base.exponent" title="psyneulink.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> of the Projection;  it
+can be <code class="xref any docutils literal"><span class="pre">None</span></code>, in which case it is ignored, but there must be a specification present;</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
 <ul class="simple">
 <li><strong>Projection specification</strong> – this is optional but, if included, msut be a <a class="reference internal" href="#projection-specification"><span class="std std-ref">Projection specification</span></a>;  it can take any of the forms of a Projection specification described above for
 any Projection subclass; it can be used to provide additional specifications for the Projection, such as its
@@ -386,10 +399,10 @@ any Projection subclass; it can be used to provide additional specifications for
 </div></blockquote>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">A ProjectionTuple should not be confused with a <code class="xref any docutils literal"><span class="pre">4-item</span> <span class="pre">InputState</span> <span class="pre">specification</span> <span class="pre">tuple</span></code>, which also contains weight and exponent items.  In a ProjectionTuple, those
+<p class="last">A ProjectionTuple should not be confused with a <a class="reference internal" href="InputState.html#inputstate-tuple-specification"><span class="std std-ref">4-item InputState specification tuple</span></a>, which also contains weight and exponent items.  In a ProjectionTuple, those
 items specify the weight and/or exponent assigned to the <em>Projection</em> (see <a class="reference internal" href="#projection-weight-exponent"><span class="std std-ref">Weight and Exponent</span></a>),
-whereas in an InputState specification tuple they specify the weight and/or exponent of the <strong>InputState</strong>
-(see <code class="xref any docutils literal"><span class="pre">InputState_Weights_And_Exponents</span></code>).</p>
+whereas in an <a class="reference internal" href="InputState.html#inputstate-weights-and-exponents"><span class="std std-ref">InputState specification tuple</span></a> they specify the weight
+and/or exponent of the <strong>InputState</strong>.</p>
 </div>
 <p>Any (but not all) of the items can be <code class="xref any docutils literal"><span class="pre">None</span></code>.  If the State specification is <code class="xref any docutils literal"><span class="pre">None</span></code>, then there must be a
 Projection specification (used to infer the State to be connected with).  If the Projection specification is
@@ -679,7 +692,7 @@ details).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.1.1+87.gae666e8',
+            VERSION:'0.4.1.1+88.g8c6dfb5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
