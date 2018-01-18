@@ -6,10 +6,10 @@ import psyneulink as pnl
 def test_control_mechanism_assignment():
     '''ControlMechanism assignment/replacement,  monitor_for_control, and control_signal specifications'''
 
-    T1 = pnl.TransferMechanism(size=3, name='T1')
-    T2 = pnl.TransferMechanism(function=pnl.Logistic, output_states=[{pnl.NAME: 'O-1'}], name='T2')
-    T3 = pnl.TransferMechanism(function=pnl.Logistic, name='T3')
-    T4 = pnl.TransferMechanism(function=pnl.Logistic, name='T4')
+    T1 = pnl.TransferMechanism(size=3, name='T-1')
+    T2 = pnl.TransferMechanism(function=pnl.Logistic, output_states=[{pnl.NAME: 'O-1'}], name='T-2')
+    T3 = pnl.TransferMechanism(function=pnl.Logistic, name='T-3')
+    T4 = pnl.TransferMechanism(function=pnl.Logistic, name='T-4')
     P = pnl.Process(pathway=[T1, T2, T3, T4])
     S = pnl.System(processes=P,
                    # controller=pnl.EVCControlMechanism,
@@ -26,7 +26,7 @@ def test_control_mechanism_assignment():
     assert len(S.control_signals)==2
 
     # Test for avoiding duplicate assignment of monitored_output_states and control_signals
-    C1 = pnl.EVCControlMechanism(name='C1',
+    C1 = pnl.EVCControlMechanism(name='C-1',
                                  objective_mechanism = [(T1, None, None, np.ones((3,1)))],
                                  control_signals=[(pnl.GAIN, T3)]
                                  )
@@ -35,17 +35,17 @@ def test_control_mechanism_assignment():
     S.controller = C1
     assert len(C1.monitored_output_states)==2
     assert len(S.control_signals)==3
-    assert S.controller.name == 'C1'
+    assert S.controller.name == 'C-1'
 
 
     # Test for adding a monitored_output_state and control_signal
-    C2 = pnl.EVCControlMechanism(name='C2',
+    C2 = pnl.EVCControlMechanism(name='C-2',
                                  objective_mechanism = [T3.output_states[pnl.RESULTS]],
                                  control_signals=[(pnl.GAIN, T4)])
     # Test use of assign_as_controller method
     C2.assign_as_controller(S)
     assert len(C2.monitored_output_states)==3
     assert len(S.control_signals)==4
-    assert S.controller.name == 'C2'
+    assert S.controller.name == 'C-2'
 
 

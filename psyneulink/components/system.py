@@ -1930,7 +1930,7 @@ class System(System_Base):
             return
 
         # Warn for request to assign the ControlMechanism already assigned
-        if hasattr(self, CONTROLLER) and control_mech_spec is self.controller and self.prefs.verbosePref:
+        if control_mech_spec is self.controller and self.prefs.verbosePref:
             warnings.warn("{} has already been assigned as the {} for {}; assignment ignored".
                           format(control_mech_spec, CONTROLLER, self.name))
             return
@@ -1955,7 +1955,7 @@ class System(System_Base):
                               format(CONTROLLER, self.name, control_mech_spec))
 
         # Warn if current one is being replaced
-        if hasattr(self, CONTROLLER) and self.controller and self.prefs.verbosePref:
+        if self.controller and self.prefs.verbosePref:
             warnings.warn("The existing {} for {} ({}) is being replaced by {}".
                           format(CONTROLLER, self.name, self.controller.name, controller.name))
 
@@ -3208,16 +3208,11 @@ class System(System_Base):
 
     @controller.setter
     def controller(self, control_mech_spec):
-
-        # if self.status is INITIALIZING:
-        #     return
-        #
-        # else:
         self._instantiate_controller(control_mech_spec, context='System.controller setter')
 
     @property
     def control_signals(self):
-        if not hasattr(self, CONTROLLER) or self.controller is None:
+        if self.controller is None:
             return None
         else:
             return self.controller.control_signals

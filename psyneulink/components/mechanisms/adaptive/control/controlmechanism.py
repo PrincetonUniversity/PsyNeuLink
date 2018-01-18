@@ -1024,7 +1024,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
-        if not hasattr(system, CONTROLLER) or system.controller is None:
+        if system.controller is None:
             system_control_signals = system._get_control_signals_for_system(system.control_signals_arg, context=context)
         # The system DOES already have a controller,
         #    so assign it the old controller's ControlSignals
