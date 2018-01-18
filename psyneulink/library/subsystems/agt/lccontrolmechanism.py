@@ -348,6 +348,7 @@ Class Reference
 ---------------
 
 """
+import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import FHNIntegrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
@@ -874,8 +875,16 @@ class LCControlMechanism(ControlMechanism):
         output_values = self.function(variable=variable,
                              params=runtime_params,
                              context=context)
+
         gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
+
+        # # MODIFIED 1/17/18 OLD:
         return gain_t, gain_t, output_values[0], output_values[1], output_values[2]
+        # # MODIFIED 1/17/18 NEW:
+        # output_values = np.array(output_values).reshape(3,1)
+        # return np.vstack((gain_t, gain_t, output_values))
+        # # MODIFIED 1/17/18 END
+
 
 
     @tc.typecheck
