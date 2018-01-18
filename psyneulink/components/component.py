@@ -52,13 +52,13 @@ of a `Process`), as appropriate.
 Component Structure
 -------------------
 
-.. _Component_Configurable_Attributes:
+.. _Component_Structural_Attributes:
 
-Core Configurable Attributes
+Core Structural Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every Component has the following set of core attributes that govern its operation, and that can be specified in
-corresponding arguments of its constructor, or by assigning them directly (see `ParameterState_Specification`):
+Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
+user once the component is constructed, with the one exception of `prefs <Component_Prefs>`.
 
 .. _Component_Variable:
 
@@ -164,12 +164,22 @@ Core Informational Attributes
 
 .. _Component_User_Params:
 
-* **user_params** - this contains a dictionary of all of the configurable parameters for a given Component.
+* **user_params** - a dictionary intended to provide a simple reference to all of the relevant features of a component.
+  The dictionary contains two main types of parameters:
+
+   (1) configurable parameters, meaning component-specific parameters that may or may not have a parameter state. A user
+   can change the value of a configurable parameter at any time. For example, on the TransferMechanism, clip,
+   initial_value, and integrator_mode are all available in user_params and do not have ParameterStates; noise and
+   smooothing_factor are also available in user_params and do have ParameterStates.
+
+   (2) informational parameters. For example, on the TransferMechanism, input_states, output_states, function, and
+   function_params are all available in user_params.
+
   The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
   <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
   as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
-  it cannot be used to make assignments.  Rather, changes to the value of a parameter
+  it cannot be used to make assignments.  Rather, changes to the value of a parameter, if allowed,
   must be made by assigning a value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``),
   or using the Component's `assign_params <Component.assign_params>` method.
 
