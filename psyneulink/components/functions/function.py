@@ -7247,25 +7247,22 @@ class BogaczEtAl(
                 y0tilde = -1 * (is_neg_drift == 1) * threshold + (is_neg_drift == 0) * threshold
             x0tilde = y0tilde / drift_rate_normed
 
-            old_settings = np.seterr(over='raise', under='raise')
+            with np.errstate(over='raise', under='raise'):
+                try:
+                    rt = ztilde * np.tanh(ztilde * atilde) + \
+                         ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
+                         np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
+                    er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
+                         ((1 - np.exp(-2 * x0tilde * atilde)) / (np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
 
-            try:
-                rt = ztilde * np.tanh(ztilde * atilde) + \
-                     ((2 * ztilde * (1 - np.exp(-2 * x0tilde * atilde))) / (
-                     np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)) - x0tilde) + t0
-                er = 1 / (1 + np.exp(2 * ztilde * atilde)) - \
-                     ((1 - np.exp(-2 * x0tilde * atilde)) / (np.exp(2 * ztilde * atilde) - np.exp(-2 * ztilde * atilde)))
-
-            except FloatingPointError:
-                # Per Mike Shvartsman:
-                # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
-                # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
-                # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
-                # generates a "RuntimeWarning: overflow encountered in exp"
-                er = 0
-                rt = ztilde / atilde - x0tilde + t0
-
-            np.seterr(**old_settings)
+                except FloatingPointError:
+                    # Per Mike Shvartsman:
+                    # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
+                    # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
+                    # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
+                    # generates a "RuntimeWarning: overflow encountered in exp"
+                    er = 0
+                    rt = ztilde / atilde - x0tilde + t0
 
             # This last line makes it report back in terms of a fixed reference point
             #    (i.e., closer to 1 always means higher p(upper boundary))
