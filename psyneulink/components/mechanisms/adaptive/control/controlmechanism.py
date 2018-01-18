@@ -780,8 +780,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
 
-        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION
-        # ONCE THAT IS IMPLEMENTED
+        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
@@ -856,9 +855,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                             reference_value=defaultControlAllocation,
                                             modulation=self.modulation,
                                             state_spec=control_signal)
-        # MODIFIED 1/17/18 NEW: [MOVED HERE FROM _assign_as_controller]
         control_signal.owner = self
-        # MODIFIED 1/17/18 END
 
         if control_signal.index is SEQUENTIAL:
             control_signal.index = len(self.allocation_policy)-1
@@ -1045,9 +1042,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         for control_signal_spec in system_control_signals:
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-            # MODIFIED 1/17/18 OLD: [MOVED TO _instantiate_control_signal]
-            # control_signal.owner = self
-            # MODIFIED 1/17/18 END
             self.control_signals.append(control_signal)
 
         # If it HAS been assigned a System, make sure it is the current one
