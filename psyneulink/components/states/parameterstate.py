@@ -13,9 +13,11 @@
 Overview
 --------
 
-ParameterStates belong to either a `Mechanism <Mechanism>` or a `Projection <Projection>` and are used to represent, and
-possibly modify, the values of all of the `configurable parameters <ParameterState_Configurable_Parameters>` of the
-`Component <Component>` or those of its `function <Component_Function>`.
+ParameterStates belong to either a `Mechanism <Mechanism>` or a `Projection <Projection>`. A ParameterState is created
+to represent each eligible `configurable parameter <ParameterState_Configurable_Parameters>` of the `Mechanism
+<Mechanism>` or a `Projection <Projection>`, as well as those of the component's `function <Component_Function>`. A
+ParameterState provides the current value of the parameter it represents during any relevant computations, and serves as
+an interface for parameter modulation.
 
 A ParameterState can receive one or more `ControlProjections  <ControlProjection>` and/or `LearningProjections
 <LearningProjection>` that modify the value returned by the ParameterState according to the ParameterState's
@@ -33,10 +35,13 @@ or Projection to which it belongs (i.e. MyTransferMech.mod_gain would return the
 of the MyTransferMech mechanism.)
 
 .. note::
-    Either of these options for looking up the value of the ParameterState will return the
-    value from the most recent execution. This means that if the value of MyTransferMech.function_object.gain (the base
-    value) is updated after execution #1, the base value will change immediately, but the ParameterState value (and
-    MyTransferMech.mod_gain) will not update until execution #2.
+    Either of these options for looking up the value of the ParameterState will return the parameter state value that
+    was used during the most recent execution. This means that if the value of MyTransferMech.function_object.gain (the
+    base value) is updated after execution #1, the base value will change immediately, but the ParameterState value (and
+    MyTransferMech.mod_gain) will not be computed again until execution #2.
+
+    As a result, if either MyTransferMech.mod_gain or MyTransferMech.parameter_states["gain"].value is viewed in between
+    execution #1 and execution #2, it will return the gain parameter state value that was used during execution 1.
 
 .. _ParameterState_Creation:
 
