@@ -887,7 +887,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Add ControlSignal to output_states list
         self._output_states.append(control_signal)
-        self.control_signals.append(control_signal)
 
         return control_signal
 
@@ -1044,11 +1043,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
-            # Don't add any that are already on the ControlMechanism
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
+            # # Don't add any that are already on the ControlMechanism
             # if all(projection.receiver in [] or projection in control_signal.efferents):
+            #     del OUTPUT_STATE ASSIGNMENT OF CONTROL SIGNAL
             #     continue
-            # self.control_signals.append(control_signal)
+            self.control_signals.append(control_signal)
 
         # If it HAS been assigned a System, make sure it is the current one
         if self.system and not self.system is system:
