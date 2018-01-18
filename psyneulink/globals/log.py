@@ -1342,7 +1342,7 @@ class Log:
                         if datum.time != time:
                             row.append(None)
                             continue
-                        value = None if datum.value is None else datum.value.tolist()
+                        value = None if datum.value is None else np.array(datum.value).tolist()
                         row.append(value)
                         break
                 else:

@@ -2888,8 +2888,8 @@ class Component(object):
     from psyneulink.globals.log import LogCondition
     def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
         """
-        set_log_conditions(               \
-            items                \
+        set_log_conditions(          \
+            items                    \
             log_condition=EXECUTION  \
         )
 

@@ -18,6 +18,8 @@ process_prefs = pnl.ComponentPreferenceSet(
 # Control Parameters
 signalSearchRange = np.arange(0.8, 2.0, 0.2)
 
+test_mech = pnl.TransferMechanism(size=3)
+
 # Stimulus Mechanisms
 Target_Stim = pnl.TransferMechanism(name='Target Stimulus', function=pnl.Linear(slope=0.3324))
 Flanker_Stim = pnl.TransferMechanism(name='Flanker Stimulus', function=pnl.Linear(slope=0.3545221843))
@@ -114,7 +116,7 @@ FlankerAutomaticProcess = pnl.Process(
 
 RewardProcess = pnl.Process(
     default_variable=[0],
-    pathway=[Reward],
+    pathway=[Reward, test_mech],
     prefs=process_prefs,
     name='RewardProcess'
 )
@@ -131,6 +133,7 @@ mySystem = pnl.System(
     controller=pnl.EVCControlMechanism,
     enable_controller=True,
     monitor_for_control=[
+        # (test_mech, None, None, np.ones((3,1))),
         Reward,
         Decision.PROBABILITY_UPPER_THRESHOLD,
         ('OFFSET RT', 1, -1),
@@ -139,18 +142,18 @@ mySystem = pnl.System(
     name='EVC Gratton System'
 )
 
-# mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
-
-
-control_mech = pnl.EVCControlMechanism(name='NEW CONTROLLER')
-mySystem.controller = control_mech
+# control_mech = pnl.EVCControlMechanism(name='NEW CONTROLLER',
+#                                        objective_mechanism = [(test_mech, None, None, np.ones((3,1)))],
+#                                        )
+# mySystem.controller = control_mech
 # control_mech.assign_as_controller(mySystem)
-
-# mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
 
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
+
+# Show graph of system (with control components)
+mySystem.show_graph(show_control=pnl.ALL, show_dimensions=pnl.ALL)
 
 # configure EVC components
 mySystem.controller.control_signals[0].intensity_cost_function = pnl.Exponential(rate=0.8046).function

@@ -687,6 +687,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, ObjectiveMechanismError
         from psyneulink.components.states.inputstate import EXPONENT_INDEX, WEIGHT_INDEX
+        from psyneulink.components.functions.function import FunctionError
 
         monitored_output_states = None
 
@@ -709,15 +710,26 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if isinstance(self.objective_mechanism, list):
             monitored_output_states = [None] * len(self.objective_mechanism)
             for i, item in enumerate(self.objective_mechanism):
+                # If it is a 4-item tuple, convert to MonitoredOutputStateTuple for treatment below
+                if isinstance(item, tuple) and len(item)==4:
+                    item = MonitoredOutputStateTuple(item[0],item[1],item[2],item[3])
                 # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
                 # Otherwise, assume it is a valid form of InputSate specification, and pass to ObjectiveMechanism
                 if isinstance(item, MonitoredOutputStateTuple):
+                    # If matrix is specified, let it determine the variable
+                    if item.matrix is not None:
+                        variable = None
+                    # Otherwise, use OutputState's value as variable for InputState
+                    else:
+                        variable = item.output_state.value
                     # Create InputState specification dictionary:
                     monitored_output_states[i] = {NAME: item.output_state.name,
-                                                  VARIABLE: item.output_state.value,
+                                                  VARIABLE: variable,
                                                   WEIGHT:item.weight,
                                                   EXPONENT:item.exponent,
                                                   PROJECTIONS:[(item.output_state, item.matrix)]}
+                else:
+                    monitored_output_states[i] = item
 
         # INSTANTIATE ObjectiveMechanism
 
@@ -736,8 +748,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                                function=LinearCombination(operation=PRODUCT),
                                                                name=self.name + '_ObjectiveMechanism')
 
-            except ObjectiveMechanismError as e:
-                raise ObjectiveMechanismError(e)
+            except (ObjectiveMechanismError, FunctionError) as e:
+                raise ObjectiveMechanismError("Error creating {} for {}: {}".format(OBJECTIVE_MECHANISM, self.name, e))
 
         # Print monitored_output_states
         if self.prefs.verbosePref:
@@ -844,6 +856,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                             reference_value=defaultControlAllocation,
                                             modulation=self.modulation,
                                             state_spec=control_signal)
+        # MODIFIED 1/17/18 NEW: [MOVED HERE FROM _assign_as_controller]
+        control_signal.owner = self
+        # MODIFIED 1/17/18 END
 
         if control_signal.index is SEQUENTIAL:
             control_signal.index = len(self.allocation_policy)-1
@@ -859,12 +874,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                        "exceeds the number of items of its {} ({})".
                                        format(ControlSignal.__name__, self.name, control_signal.index,
                                               ALLOCATION_POLICY, len(self.allocation_policy)))
-
-        # Add ControlProjection(s) to ControlMechanism's list of ControlProjections
-        try:
-            self.control_projections.extend(control_signal.efferents)
-        except AttributeError:
-            self.control_projections = control_signal.efferents.copy()
 
         # Update control_signal_costs to accommodate instantiated Projection
         try:
@@ -996,16 +1005,24 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # DO *NOT* ASSIGN AS CONTROLLER FOR SYSTEM... LET THE SYSTEM HANDLE THAT
         # Assign the current System to the ControlMechanism
 
-        # First, validate that all of the ControlMechanism's monitored_output_states and controlled parameters
+        # Validate that all of the ControlMechanism's monitored_output_states and controlled parameters
         #    are in the new System
         system._validate_monitored_states_in_system(self.monitored_output_states)
         system._validate_control_signals(self.control_signals)
 
-        # Next, get any OutputStates specified in the **monitored_output_states** argument of the System's
-        #    constructor and/or in a MONITOR_FOR_CONTROL specification for individual OutputStates and/or Mechanisms,
-        #    and add them to the ControlMechanism's monitored_output_states attribute and to its
-        #    ObjectiveMechanisms monitored_output_states attribute
+        # Get any and all OutputStates specified in:
+        # - **monitored_output_states** argument of the System's constructor
+        # - in a MONITOR_FOR_CONTROL specification for individual OutputStates and/or Mechanisms
+        # - already being montiored by the ControlMechanism being assigned
         monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
+
+        # Don't add any OutputStates that are already being monitored by the ControlMechanism's ObjectiveMechanism
+        for i, monitored_output_state in enumerate(monitored_output_states.copy()):
+            if monitored_output_state.output_state in self.monitored_output_states:
+                del monitored_output_states[i]
+
+        # Add all other monitored_output_states to the ControlMechanism's monitored_output_states attribute
+        #    and to its ObjectiveMechanisms monitored_output_states attribute
         self.add_monitored_output_states(monitored_output_states)
 
         # The system does NOT already have a controller,
@@ -1028,7 +1045,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         for control_signal_spec in system_control_signals:
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-            control_signal.owner = self
+            # MODIFIED 1/17/18 OLD: [MOVED TO _instantiate_control_signal]
+            # control_signal.owner = self
+            # MODIFIED 1/17/18 END
             self.control_signals.append(control_signal)
 
         # If it HAS been assigned a System, make sure it is the current one
@@ -1073,6 +1092,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
     @property
     def monitored_output_states_weights_and_exponents(self):
         return self._objective_mechanism.monitored_output_states_weights_and_exponents
+
+    @property
+    def control_projections(self):
+        return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
 
 
 
