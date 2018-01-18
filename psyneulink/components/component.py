@@ -1447,9 +1447,9 @@ class Component(object):
         # Provide opportunity for subclasses to filter final set of params in class-specific way
         # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
         self._filter_params(params)
-
         # Create property on self for each parameter in user_params:
         #    these WILL be validated whenever they are assigned a new value
+
         self._create_attributes_for_params(make_as_properties=True, **self.user_params)
 
         # Create attribute on self for each parameter in paramClassDefaults not in user_params:
@@ -1484,14 +1484,19 @@ class Component(object):
             and assign value provided in kwargs as its default value.
         """
         if make_as_properties:
+            # getter returns backing field value
+            # setter runs validation [_assign_params()], updates user_params
+
             for arg_name, arg_value in kwargs.items():
                 if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
-                    setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
-                setattr(self, '_'+arg_name, arg_value)
+                    # create property
+                    setattr(self.__class__, arg_name, make_property(arg_name))
+                # assign default value
+                setattr(self,  "_"+arg_name, arg_value)
+                    # setattr(self, "_"+arg_name, arg_value)
         else:
             for arg_name, arg_value in kwargs.items():
                 setattr(self, arg_name, arg_value)
-
 
     def _check_args(self, variable=None, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params.
@@ -2086,6 +2091,7 @@ class Component(object):
         :return none:
         """
         for param_name, param_value in request_set.items():
+            # setattr(self, "_"+param_name, param_value)
 
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
@@ -2093,6 +2099,7 @@ class Component(object):
                 if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES}:  # added SIZE here (7/5/17, CW)
                     continue
                 # function is a class, so function_params has not yet been implemented
+                self._function = request_set[FUNCTION]
                 if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
                     continue
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
@@ -2461,7 +2468,7 @@ class Component(object):
             - if self.function IS implemented, it is assigned to params[FUNCTION]
             - if self.function IS NOT implemented: program error (should have been caught in _validate_function)
         Upon successful completion:
-            - self.function === self.paramsCurrent[FUNCTION]
+            - self._function === self.paramsCurrent[FUNCTION]
             - self.execute should always return the output of self.function in the first item of its output array;
                  this is done by Function.execute;  any subclass override should do the same, so that...
             - self.value == value[0] returned by self.execute
@@ -2652,7 +2659,10 @@ class Component(object):
             self.instance_defaults.value = value
 
     def _instantiate_attributes_after_function(self, context=None):
-        pass
+        if hasattr(self, "_parameter_states"):
+            for param_state in self._parameter_states:
+                setattr(self.__class__, "mod_"+param_state.name, make_property_mod(param_state.name))
+
 
     def initialize(self):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
@@ -2929,39 +2939,13 @@ class Component(object):
 
 COMPONENT_BASE_CLASS = Component
 
-
-def make_property(name, default_value):
+def make_property(name):
     backing_field = '_' + name
 
     def getter(self):
-        try:
-            # Get value of function param from ParameterState.value of owner
-            #    case: request is for the value of a Function parameter for which the owner has a ParameterState
-            #    example: slope or intercept parameter of a Linear Function)
-            #    rationale: most common and therefore requires the greatest efficiency
-            #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
-            from psyneulink.components.functions.function import Function
-            if not isinstance(self, Function):
-                raise TypeError
-            return self.owner._parameter_states[name].value
-        except (AttributeError, TypeError):
-            try:
-                # Get value of param from Component's own ParameterState.value
-                #    case: request is for value of a parameter of a Mechanism or Projection that has a ParameterState
-                #    example: matrix parameter of a MappingProjection)
-                #    rationale: next most common case
-                #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
-                return self._parameter_states[name].value
-            except (AttributeError, TypeError):
-                # Get value of param from Component's attribute
-                #    case: request is for the value of an attribute for which the Component has no ParameterState
-                #    rationale: least common case
-                #    example: parameter of a Function belonging to a state (which don't themselves have ParameterStates)
-                #    note: use backing_field since referencing property rather than item in _parameter_states)
-                return getattr(self, backing_field)
+        return getattr(self, backing_field)
 
     def setter(self, val):
-
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
             val_type = val.__class__.__name__
             curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
@@ -2983,18 +2967,34 @@ def make_property(name, default_value):
             param_state_owner = self
 
         # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
-        if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
-            param_state = param_state_owner._parameter_states[name]
-
-            # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
-            # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
-            # 'reset_initializer'
-            if hasattr(param_state.function_object, 'initializer'):
-                param_state.function_object.reset_initializer = val
+        # if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
+        #     param_state = param_state_owner._parameter_states[name]
+        #
+        #     # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
+        #     # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
+        #     # 'reset_initializer'
+        #     if hasattr(param_state.function_object, 'initializer'):
+        #         param_state.function_object.reset_initializer = val
 
     # Create the property
     prop = property(getter).setter(setter)
-
     # # Install some documentation
     # prop.__doc__ = docs[name]
+    return prop
+
+def make_property_mod(param_name):
+
+    def getter(self):
+        try:
+            return self._parameter_states[param_name].value
+        except TypeError:
+            raise ComponentError("{} does not have a '{}' ParameterState."
+                                 .format(self.name, param_name))
+
+    def setter(self, value):
+        raise ComponentError("Cannot set to {}'s mod_{} directly because it is computed by the ParameterState."
+                             .format(self.name, param_name))
+
+    prop = property(getter).setter(setter)
+
     return prop
