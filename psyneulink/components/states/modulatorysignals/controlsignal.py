@@ -190,11 +190,16 @@ which it belongs is executed.  When this occurs, the ControlMechanism provides t
 <ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its `intensity` for
 that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>` to set the
 `value <ParameterState.value>` \\(s) of the `ParameterState(s) <ParameterState>` to which the ControlSignal projects.
-Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal controls. See
-`ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  The ControlSignal's
-`intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost` attribute. That is used
-by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to evaluate an
-`allocation_policy <ControlMechanism.allocation_policy>`, and adjust the ControlSignal's `allocation
+
+Recall that the ParameterState value is referenced anywhere that the controlled parameter is used in computation, and
+that it does not update until the component to which the ParameterState belongs executes. If the distinction between the
+base value stored in the parameter attribute (i.e. MyTransferMech.function_object.gain) and the value of the
+ParameterState is unfamiliar, see `Parameter State documentation <ParameterState>` for more details, or see
+`ModulatorySignal_Modulation` for a detailed description of how modulation operates.
+
+The ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost`
+attribute. That is used by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to
+evaluate an `allocation_policy <ControlMechanism.allocation_policy>`, and adjust the ControlSignal's `allocation
 <ControlSignal.allocation>` for the next `TRIAL`.
 
 .. note::
