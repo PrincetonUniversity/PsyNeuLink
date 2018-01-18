@@ -68,19 +68,21 @@ the `OutputStates it monitors <ControlMechanism_ObjectiveMechanism>` and the `pa
 attributes, respectively.  In addition, these can be specified in the **monitor_for_control** and **control_signal**
 arguments of the `System`, as described below.
 
-* **monitor_for_control** argument -- used to specify OutputStates of Mechanisms in the System that be monitored by the
-  `ObjectiveMechanism` associated with the System's `controller <System.controller>` (see
+* **monitor_for_control** argument -- used to specify OutputStates of Mechanisms in the System that should be
+  monitored by the `ObjectiveMechanism` associated with the System's `controller <System.controller>` (see
   `ControlMechanism_ObjectiveMechanism`);  these are used in addition to any specified for the ControlMechanism or
   its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `System` using
-  any of the ways used to specify the *monitored_output_states* argument of the constructor for an ObjectiveMechanism
-  (see `ObjectiveMechanism_Monitored_Output_States`).  In addition, the **monitor_for_control** argument supports two
+  any of the ways used to specify the *monitored_output_states* for an ObjectiveMechanism (see
+  `ObjectiveMechanism_Monitored_Output_States`).  In addition, the **monitor_for_control** argument supports two
   other forms of specification:
 
   * **string** -- must be the `name <OutputState.name>` of an `OutputState` of a `Mechanism <Mechanism>` in the System
-    (see third example under `System_Control_Examples`);  any OutputState with that name, including ones with the
-    same name belonging to different Mechanisms within the System, will be monitored. If an OutputState of a particular
-    Mechanism is desired, and it shares its name with ones of other Mechanisms, then it must be referenced explicitly
-    (see `InputState specification<InputState_Specification>`, and examples under `System_Control_Examples`).
+    (see third example under `System_Control_Examples`).  This can be used anywhere a reference to an OutputState can
+    ordinarily be used (e.g., in an `InputState tuple specification <InputState_Tuple_Specification>`). Any OutputState
+    with a name matching the string will be monitored, including ones with the same name that belong to different
+    Mechanisms within the System. If an OutputState of a particular Mechanism is desired, and it shares its name with
+    other Mechanisms in the System, then it must be referenced explicitly (see `InputState specification
+    <InputState_Specification>`, and examples under `System_Control_Examples`).
   |
   * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
     single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
