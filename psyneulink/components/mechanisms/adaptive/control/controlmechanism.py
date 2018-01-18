@@ -1044,10 +1044,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
             control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
+            # FIX: 1/18/18 - CHECK FOR SAME NAME IN _instantiate_control_signal
             # # Don't add any that are already on the ControlMechanism
-            # if all(projection.receiver in [] or projection in control_signal.efferents):
-            #     del OUTPUT_STATE ASSIGNMENT OF CONTROL SIGNAL
-            #     continue
+            if control_signal.name in self.control_signals.names and (self.verbosePref or system.verbosePref):
+                warnings.warn("{} specified for {} has same name (\'{}\') "
+                              "as one in controller ({}) being assigned to the {}."
+                              "".format(ControlSignal.__name__, system.name,
+                                        control_signal.name, self.name, system.__class__.__name__))
             self.control_signals.append(control_signal)
 
         # If it HAS been assigned a System, make sure it is the current one
