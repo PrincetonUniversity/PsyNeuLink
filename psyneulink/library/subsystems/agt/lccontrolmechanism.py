@@ -565,8 +565,8 @@ class LCControlMechanism(ControlMechanism):
             controls (listed in its `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` attribute).
 
         control_projections : List[ControlProjection]
-            list of `ControlProjections <ControlProjection>` sent by the LCControlMechanism's `ControlSignal`, each of which
-            projects to the `ParameterState` for the `multiplicative_param <Function_Modulatory_Params>` of the
+            list of `ControlProjections <ControlProjection>` sent by the LCControlMechanism's `ControlSignal`, each of
+            which projects to the `ParameterState` for the `multiplicative_param <Function_Modulatory_Params>` of the
             `function <Mechanism_Base.function>` of one of the Mechanisms listed in `modulated_mechanisms
             <LCControlMechanism.modulated_mechanisms>` attribute.
     COMMENT
@@ -893,9 +893,8 @@ class LCControlMechanism(ControlMechanism):
         for mech in mechanisms:
             self.modulated_mechanisms.append(mech)
             parameter_state = mech._parameter_states[mech.multiplicative_param]
-            control_projection = ControlProjection(sender=self.control_signals[0],
-                                                   receiver=parameter_state)
-            self.control_projections.append(control_projection)
+            ControlProjection(sender=self.control_signals[0],
+                              receiver=parameter_state)
 
     @tc.typecheck
     def remove_modulated_mechanisms(self, mechanisms:list):
@@ -921,13 +920,6 @@ class LCControlMechanism(ControlMechanism):
             # Delete ControlProjection from recipient ParameterState
             index = parameter_state.mod_afferents[control_projection]
             del(parameter_state.mod_afferents[index])
-
-            # Delete ControlProjection from self.control_projections
-            index = self.control_projections[control_projection]
-            del(self.control_projections[index])
-
-            # Delete ControlProjection
-            del(control_projection)
 
             # Delete Mechanism from self.modulated_mechanisms
             index = self.modulated_mechanisms.index(mech)

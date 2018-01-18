@@ -872,12 +872,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                        format(ControlSignal.__name__, self.name, control_signal.index,
                                               ALLOCATION_POLICY, len(self.allocation_policy)))
 
-        # Add ControlProjection(s) to ControlMechanism's list of ControlProjections
-        try:
-            self.control_projections.extend(control_signal.efferents)
-        except AttributeError:
-            self.control_projections = control_signal.efferents.copy()
-
         # Update control_signal_costs to accommodate instantiated Projection
         try:
             self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
@@ -1093,6 +1087,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
     @property
     def monitored_output_states_weights_and_exponents(self):
         return self._objective_mechanism.monitored_output_states_weights_and_exponents
+
+    @property
+    def control_projections(self):
+        return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
 
 
 

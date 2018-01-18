@@ -586,9 +586,8 @@ class LCMechanism(ControlMechanism):
         for mech in mechanisms:
             self.modulated_mechanisms.append(mech)
             parameter_state = mech._parameter_states[mech.multiplicative_param]
-            control_projection = ControlProjection(sender=self.control_signals[0],
-                                                   receiver=parameter_state)
-            self.control_projections.append(control_projection)
+            ControlProjection(sender=self.control_signals[0],
+                              receiver=parameter_state)
 
     @tc.typecheck
     def remove_modulated_mechanisms(self, mechanisms:list):
@@ -614,10 +613,6 @@ class LCMechanism(ControlMechanism):
             # Delete ControlProjection from recipient ParameterState
             index = parameter_state.mod_afferents[control_projection]
             del(parameter_state.mod_afferents[index])
-
-            # Delete ControlProjection from self.control_projections
-            index = self.control_projections[control_projection]
-            del(self.control_projections[index])
 
             # Delete ControlProjection
             del(control_projection)
