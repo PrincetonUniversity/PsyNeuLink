@@ -692,6 +692,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        reference_value_name=AUTO,
                                        params=None,
                                        context=context)
+            self.auto = d
             if state is not None:
                 self._parameter_states[AUTO] = state
             else:
@@ -701,10 +702,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         # if HETERO not in param_keys:
         # MODIFIED 9/23/17 NEW [JDC]:
         # if self.hetero is not None:
+
         if HETERO not in param_keys and AUTO in param_keys:
         # MODIFIED 9/23/17 END
+
             m = specified_matrix.copy()
             np.fill_diagonal(m, 0.0)
+            self.hetero = m
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
                                        name=HETERO,
@@ -717,7 +721,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 raise RecurrentTransferError("Failed to create ParameterState for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
-
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputStates
         """
@@ -728,46 +731,12 @@ class RecurrentTransferMechanism(TransferMechanism):
 
 
         # [9/23/17 JDC: WHY IS THIS GETTING DONE HERE RATHER THAN IN _instantiate_attributes_before_function ??]
-        auto = self.params[AUTO]
-        hetero = self.params[HETERO]
-        if auto is not None and hetero is not None:
-            a = get_auto_matrix(auto, size=self.size[0])
-            if a is None:
-                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of"
-                                             " type {}. Instead, the `auto` parameter should be a number, 1D array, "
-                                             "2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, auto, type(auto)))
-            c = get_hetero_matrix(hetero, size=self.size[0])
-            if c is None:
-                raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was "
-                                             "of type {}. Instead, the `hetero` parameter should be a number, 1D array "
-                                             "of length one, 2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, hetero, type(hetero)))
-            self.matrix = a + c
-        elif auto is not None:
-            self.matrix = get_auto_matrix(auto, size=self.size[0])
-            if self.matrix is None:
-                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `auto` parameter should be a number, 1D array, "
-                                           "2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, auto, type(auto)))
 
-        elif hetero is not None:
-            self.matrix = get_hetero_matrix(hetero, size=self.size[0])
-            if self.matrix is None:
-                raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `hetero` parameter should be a number, 1D array of "
-                                           "length one, 2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, hetero, type(hetero)))
-
-        # MODIFIED 9/23/17 NEW [JDC]:
-        else:
+        if self.auto is None and self.hetero is None:
             self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
             if self.matrix is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
-        # MODIFIED 9/23/17 END:
-
 
         # (7/19/17 CW) this line of code is now questionable, given the changes to matrix and the recurrent projection
         if isinstance(self.matrix, AutoAssociativeProjection):
@@ -838,21 +807,17 @@ class RecurrentTransferMechanism(TransferMechanism):
             return a + c
         else:
             # if auto and hetero are not yet instantiated, then just use the standard method of attribute retrieval
-            # (simplified version of Component's basic make_property getter)
-            name = 'matrix'
             backing_field = '_matrix'
-            # MODIFIED 9/23/17 NEW [JDC]:
-            try:
-                return self.recurrent_projection.matrix
-            except (AttributeError, TypeError):
-            # MODIFIED 9/23/17 END:
-                try:
-                    return self._parameter_states[name].value
-                except (AttributeError, TypeError):
-                    return getattr(self, backing_field)
+            # try:
+            #     return self.recurrent_projection.matrix
+            # except (AttributeError, TypeError):
+            # KAM MODIFIED 1/9/18 -- removed parameter state value look up (now reserved for 'mod_' params)
+            return getattr(self, backing_field)
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
+        if hasattr(self, "recurrent_projection"):
+            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = val
         if hasattr(self, '_parameter_states')\
                 and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
             if hasattr(self, 'size'):
@@ -878,6 +843,47 @@ class RecurrentTransferMechanism(TransferMechanism):
                 if hasattr(param_state.function_object, 'initializer'):
                     param_state.function_object.reset_initializer = val
 
+    @property
+    def auto(self):
+        return getattr(self, "_auto")
+
+    @auto.setter
+    def auto(self, val):
+
+        if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
+            val_type = val.__class__.__name__
+            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + "auto" + ' of ' + self.name
+            # self.prev_context = "nonsense" + str(curr_context)
+            self._assign_params(request_set={"auto": val}, context=curr_context)
+        else:
+            setattr(self, "_auto", val)
+
+        if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_states:
+            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = self.matrix
+
+        # Update user_params dict with new value
+        self.user_params.__additem__("auto", val)
+
+    @property
+    def hetero(self):
+        return getattr(self, "_hetero")
+
+    @hetero.setter
+    def hetero(self, val):
+
+        if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
+            val_type = val.__class__.__name__
+            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + "hetero" + ' of ' + self.name
+            # self.prev_context = "nonsense" + str(curr_context)
+            self._assign_params(request_set={"hetero": val}, context=curr_context)
+        else:
+            setattr(self, "_hetero", val)
+
+        if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_states:
+            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = self.matrix
+
+        # Update user_params dict with new value
+        self.user_params.__additem__("hetero", val)
     @property
     def learning_enabled(self):
         return self._learning_enabled
