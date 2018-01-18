@@ -654,6 +654,9 @@ class MappingProjection(PathwayProjection_Base):
 
         self.function_object.matrix = matrix
 
+        if hasattr(self, "_parameter_states"):
+            self.parameter_states["matrix"].function_object.previous_value = matrix
+
     @property
     def _matrix_spec(self):
         """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
