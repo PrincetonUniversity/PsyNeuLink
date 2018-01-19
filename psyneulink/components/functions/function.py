@@ -4338,7 +4338,7 @@ class LCAIntegrator(
         applies to the corresponding element of `variable <LCAIntegrator.variable>`.
 
     noise : float, function, list, or 1d np.array
-        specifies random value to be added in each call to `function <LCAIntegrator.function>`.
+        specifies a value to be added in each call to `function <LCAIntegrator.function>`.
 
         If noise is a list or array, it must be the same length as `variable <LCAIntegrator.default_variable>`.
 
