@@ -6,27 +6,30 @@ Overview
 --------
 
 
-This model seeks to investigate the role of the Locus Coeruleus in mediating the attentional blink. The attentional
-blink refers to the temporary impairment in perceiving the 2nd of 2 targets presented in close temporal proximity.
+This model implements a hypothesis concerning the role of the `locus coeruleus (LC)
+<http://www.scholarpedia.org/article/Locus_coeruleus>`_ in mediating the `attentional blink
+<http://www.scholarpedia.org/article/Attentional_blink>`_. The attentional blink refers to the temporary impairment
+in perceiving the second of two targets presented in close temporal proximity.
 
-During the attentional blink paradigm, on each trial a list of letters is presented to subjects, colored in black on a
-grey background. Additionally, two numbers are presented during each trial and the task is to correctly identify which
-two digits between 2-9 were presented. A vast amount of studies showed that the probability of correctly identifying
-both digits accurately depends on the lag between the two target stimuli.
-More precisely, if T2 is presented right after T1 it is possible to identify both  between 200 ms and 300 ms after the onset
-of the first target (T1) accuracy decreases. However, presenting the second target stimulus T2 right after the first
-target stimulus T1, subjects performance is as accurate as with lags longer than 400ms between T1 and T2.
+In the `attentional blink paradigm <http://www.scholarpedia.org/article/Attentional_blink>`_, each trial consists of a
+rapidly presented sequence of stimuli, one of which is marked as a target (e.g., by being a different color, or by being
+a digit rather than a letter).  The participant is asked to observe the sequence, then do their best to identify the
+target (T1) as well as the stimulus that immediately follows it (T2).  A consistent finding is that the  accuracy of
+identifying both T1 and T2 correctly depends on the lag between them. In particular, accuracy is high when T2 is
+presented *immediately* after the first target (T1), but drops when T2 is presented between 200 and 300ms after the
+onset of T1, and then is restored at delays longer than 400ms.
 
-The model by Nieuwenhuis et al. (2005) shows that the findings on the attentional blink paradigm can be explained by
-the mechanics of the Locus Ceruleus. This model aims to bridge findings from behavioral psychology and findings from
-neurophysiology with a neurocomputational theory.
+The model described by Nieuwenhuis et al. (2005) suggests that these findings can be explained by phasic activation
+of LC in response to T1, and the concomitant effects of norepinephrine (NE) release on neural gain, followed by
+refractoriness of the LC/NE response.  The model demonstrates that accuracy in identifying T2 depends on:
+* whether T1 was accurately identified;
+* the lag between T1 and T2;
+* the `mode of the LC <LCControlMechanism_Modes_Of_Operation>` (`phasic or tonic <https://www.ncbi.nlm.nih.gov/pubmed/8027789>`_).
 
-With this model it is possible to simulate that subjects behavior on identifying the second target stimuli T2 accurately
-depends on:
+The Figure below show the behavior of the model for a single execution of with a lag of 200ms, corresponding to the
+conditions reported in Figure 3 of Nieuwenhuis et al. (2005) (note that their Figure reports the average over 1000
+executions).
 
-* whether T1 was accurately identified
-*  the lag between T1 and T2
-* the mode of the LC
 
 .. _Nieuwenhuis2005_PsyNeuLink_Fig:
 
@@ -42,14 +45,10 @@ depends on:
    :align: left
    :alt: Nieuwenhuis et al. 2005 plot produced by MATLAB
 
-This example illustrates Figure 3 from the Nieuwenhuis et al. (2005) paper. A time difference between the onset of
-T1 and T2 of 100 ms is framed as lag 1. In this example we simulate a time difference of 200 ms, i.e. lag 2 and one
-execution only. Note that in the Nieuwenhuis et al. (2005) paper the Figure shows the average activation over 1000
-executions.
-
-The model consists of two networks. A behavioral network, feeding forward information from the input layer,
-to the decision layer, to the response layer, and a LC control mechanism, projecting gain to both, the behavioral layer
-and the response layer.
+The model consists of two subsystems: a behavioral network, in which stimulus information feeds forward from an input
+layer, via a decision layer, to a response layer;  and an `LCControlMechanism` that receives a `MappingProjection`
+from the decision layer, and sends `ControlProjections <ControlProjection>` to the decision and response layers that
+regulate the gain of their `LogisticFunction`.
 
 
 Creating Nieuwenhuis et al. (2005)
@@ -84,3 +83,4 @@ This LCControlMechanism projects a gain control signal to the DECISION LAYER and
 
 
 Script: :download:`Download Nieuwenhuis2005Model.py <../../Scripts/Models/Nieuwenhuis2005Model.py>`
+
