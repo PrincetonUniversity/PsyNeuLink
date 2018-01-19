@@ -4283,7 +4283,7 @@ class LCAIntegrator(
 
     .. math::
 
-        rate \\dot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+        rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
 
     COMMENT:
     `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + \
