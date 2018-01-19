@@ -121,19 +121,25 @@ COMMENT
 When a TransferMechanism is executed, it transforms its input using its `function <TransferMechanism.function>` and
 the following parameters (in addition to any specified for the `function <TransferMechanism.function>`):
 
-    * `noise <TransferMechanism.noise>`: applied element-wise to the input before transforming it.
-    ..
-    * `clip <TransferMechanism.clip>`: caps all elements of the `function <TransferMechanism.function>` result by
-      the lower and upper values specified by clip.
-    ..
+
     * `integrator_mode <TransferMechanism.integrator_mode>`: determines whether the input will be time-averaged before
-      passing through the function of the mechanisms. When `integrator_mode <TransferMechanism.integrator_mode>` is set
-      to True, the TransferMechanism exponentially time-averages its input before transforming it.
-    ..
+      passing through the function of the mechanism. When `integrator_mode <TransferMechanism.integrator_mode>` is set to
+      True, the TransferMechanism exponentially time-averages its input, by executing its `integrator_function
+      <TransferMechanism.integrator_function>`, before executing its `function <TransferMechanism.function>`. When
+      `integrator_mode <TransferMechanism.integrator_mode>` is False, the `integrator_function
+      <TransferMechanism.integrator_function>` is ignored, and time-averaging does not occur.
+
     * `smoothing_factor <TransferMechanism.smoothing_factor>`: if the `integrator_mode <TransferMechanism.integrator_mode>`
       attribute is set to True, the `smoothing_factor <TransferMechanism.smoothing_factor>` attribute is the rate of
-      integration (a higher value specifies a faster rate); if `integrator_mode <TransferMechanism.integrator_mode>` is
-      False, `smoothing_factor <TransferMechanism.smoothing_factor>` is ignored and time-averaging does not occur.
+      integration (a higher value specifies a faster rate); if `integrator_mode <TransferMechanism.integrator_mode>` is False,
+      `smoothing_factor <TransferMechanism.smoothing_factor>` is ignored and time-averaging does not occur.
+
+    * `noise <TransferMechanism.noise>`: applied element-wise to the output of its `integrator_function
+      <TransferMechanism.integrator_function>` or its `function <TransferMechanism.function>`, depending on whether
+      `integrator_mode <TransferMechanism.integrator_mode>` is True or False.
+
+    * `clip <TransferMechanism.clip>`: caps all elements of the `function <TransferMechanism.function>` result by the lower
+       =and upper values specified by clip.
 
 After each execution of the Mechanism the result of `function <TransferMechanism.function>` applied to each
 `InputState` is assigned as an item of the Mechanism's `value <TransferMechanism.value>`, and the `value
@@ -340,9 +346,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         COMMENT
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the result of the `function <TransferMechanism.function>`:
-        if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
-        if it is a function, it must return a scalar value.
+        a value added to the result of the `function <TransferMechanism.function>` or to the result of
+        `integrator_function <TransferMechanism.integrator_function>`, depending on whether `integrator_mode
+        <TransferMechanism.integrator_mode>` is True or False. See `noise <TransferMechanism.noise>` for more details.
 
     smoothing_factor : float : default 0.5
         the smoothing factor for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
@@ -407,9 +413,22 @@ class TransferMechanism(ProcessingMechanism_Base):
         COMMENT
 
     noise : float or function
-        a stochastically-sampled value added to the output of the `function <TransferMechanism.function>`:
-        if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
-        if it is a function, it must return a scalar value.
+        When `integrator_mode <TransferMechanism.integrator_mode>` is set to True, noise is passed into the
+        `integrator_function <TransferMechanism.integrator_function>`. Otherwise, noise is added to the output
+        of the `function <TransferMechanism.function>`.
+
+        If noise is a list or array, it must be the same length as `variable
+        <TransferMechanism.default_variable>`.
+
+        If noise is specified as a single float or function, while `variable <TransferMechanism.variable>` is a
+        list or array, noise will be applied to each variable element. In the case of a noise function, this means that
+        the function will be executed separately for each variable element.
+
+        .. note::
+            In order to generate random noise, we recommend selecting a probability distribution function
+            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
+            the noise will simply be an offset that remains the same across all executions.
 
     smoothing_factor : float : default 0.5
         the smoothing factor for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
@@ -417,9 +436,28 @@ class TransferMechanism(ProcessingMechanism_Base):
 
           result = (smoothing_factor * current input) + ( (1-smoothing_factor) * result on previous time_step)
 
-    integrator_mode : booleane
-        when set to True, the Mechanism time averages its input according to an exponentially weighted moving average
-        (see `smoothing_factor <TransferMechanisms.smoothing_factor>`).
+    integrator_function:
+        When *integrator_mode* is set to True, the TransferMechanism executes its `integrator_function <TransferMechanism.integrator_function>`,
+        which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator <AdaptiveIntegrator>` for more details on what it computes.
+        Keep in mind that the `smoothing_factor <TransferMechanism.smoothing_factor>` parameter of the `TransferMechanism` corresponds to the
+        `rate <TransferMechanismIntegrator.rate>` of the `TransferMechanismIntegrator`.
+
+    integrator_mode:
+        **When integrator_mode is set to True:**
+
+        the variable of the mechanism is first passed into the following equation:
+
+        .. math::
+            value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
+
+        The result of the integrator function above is then passed into the `mechanism's function <TransferMechanism.function>`. Note that
+        on the first execution, *initial_value* sets previous_value.
+
+        **When integrator_mode is set to False:**
+
+        The variable of the mechanism is passed into the `function of the mechanism <TransferMechanism.function>`. The mechanism's
+        `integrator_function <TransferMechanism.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
+        *initial_value*, and *time_step_size*) are ignored.
 
     clip : Optional[Tuple[float, float]]
         determines the allowable range of the result: the first value specifies the minimum allowable value
