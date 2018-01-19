@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Components &mdash; PsyNeuLink 0.4.1.1+1.g862b8c1 documentation</title>
+  <title>Components &mdash; PsyNeuLink 0.4.1.1+181.g49e7740 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.1.1+1.g862b8c1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.1.1+181.g49e7740 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Core" href="Core.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.1.1+1
+                0.4.1.1+181
               </div>
             
           
@@ -211,10 +211,10 @@ of a <a class="reference internal" href="Process.html"><span class="doc">Process
 </div>
 <div class="section" id="component-structure">
 <span id="id1"></span><h2>Component Structure<a class="headerlink" href="#component-structure" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="core-configurable-attributes">
-<span id="component-configurable-attributes"></span><h3>Core Configurable Attributes<a class="headerlink" href="#core-configurable-attributes" title="Permalink to this headline">¶</a></h3>
-<p>Every Component has the following set of core attributes that govern its operation, and that can be specified in
-corresponding arguments of its constructor, or by assigning them directly (see <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">Specifying Parameters</span></a>):</p>
+<div class="section" id="core-structural-attributes">
+<span id="component-structural-attributes"></span><h3>Core Structural Attributes<a class="headerlink" href="#core-structural-attributes" title="Permalink to this headline">¶</a></h3>
+<p>Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
+user once the component is constructed, with the one exception of <a class="reference internal" href="#component-prefs"><span class="std std-ref">prefs</span></a>.</p>
 <ul id="component-variable">
 <li><p class="first"><strong>variable</strong> - used as the input to its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.  Specification of the <strong>default_variable</strong>
 argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
@@ -316,14 +316,24 @@ preference (see <code class="xref any docutils literal"><span class="pre">Prefer
 </div>
 <div class="section" id="core-informational-attributes">
 <span id="component-informational-attributes"></span><h3>Core Informational Attributes<a class="headerlink" href="#core-informational-attributes" title="Permalink to this headline">¶</a></h3>
-<ul class="simple" id="component-user-params">
-<li><strong>user_params</strong> - this contains a dictionary of all of the configurable parameters for a given Component.
-The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict">UserDict</a>). The
+<ul id="component-user-params">
+<li><p class="first"><strong>user_params</strong> - a dictionary intended to provide a simple reference to all of the relevant features of a component.
+The dictionary contains two main types of parameters:</p>
+<blockquote>
+<div><p>(1) configurable parameters, meaning component-specific parameters that may or may not have a parameter state. A user
+can change the value of a configurable parameter at any time. For example, on the TransferMechanism, clip,
+initial_value, and integrator_mode are all available in user_params and do not have ParameterStates; noise and
+smooothing_factor are also available in user_params and do have ParameterStates.</p>
+<p>(2) informational parameters. For example, on the TransferMechanism, input_states, output_states, function, and
+function_params are all available in user_params.</p>
+</div></blockquote>
+<p>The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict">UserDict</a>). The
 value of an entry can be accessed in the standard manner (e.g., <code class="docutils literal"><span class="pre">my_component.user_params[`PARAMETER</span> <span class="pre">NAME`]</span></code>);
 as can its full list of entries (e.g., <code class="docutils literal"><span class="pre">my_component.user_params</span></code>).  However, because it is read-only,
-it cannot be used to make assignments.  Rather, changes to the value of a parameter
+it cannot be used to make assignments.  Rather, changes to the value of a parameter, if allowed,
 must be made by assigning a value to the attribute for that parameter directly (e.g., <code class="docutils literal"><span class="pre">my_component.my_parameter</span></code>),
-or using the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.assign_params" title="psyneulink.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.</li>
+or using the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.assign_params" title="psyneulink.components.component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.</p>
+</li>
 </ul>
 <ul class="simple" id="component-function-object">
 <li><strong>function_object</strong> - the <a class="reference internal" href="#psyneulink.components.component.Component.function_object" title="psyneulink.components.component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute refers to the PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> assigned to the
@@ -550,7 +560,7 @@ This is a convenience method that calls the <a class="reference internal" href="
 
 <dl class="method">
 <dt id="psyneulink.components.component.Component.set_log_conditions">
-<code class="descname">set_log_conditions</code><span class="sig-paren">(</span><em>items                            log_condition=EXECUTION</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.component.Component.set_log_conditions" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_log_conditions</code><span class="sig-paren">(</span><em>items                                log_condition=EXECUTION</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.component.Component.set_log_conditions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Specifies items to be logged; these must be be <a class="reference internal" href="#psyneulink.components.component.Component.loggable_items" title="psyneulink.components.component.Component.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Component’s
 <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>. This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.set_log_conditions" title="psyneulink.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal"><span class="pre">set_log_conditions</span></code></a> method
 of the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
@@ -621,7 +631,7 @@ This is a convenience method that calls the <a class="reference internal" href="
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.1.1+1.g862b8c1',
+            VERSION:'0.4.1.1+181.g49e7740',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
