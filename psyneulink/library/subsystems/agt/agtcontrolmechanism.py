@@ -353,13 +353,11 @@ class AGTControlMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    time_scale=TimeScale.TRIAL,
                     context=None):
         """Updates AGTControlMechanism's ControlSignal based on input and mode parameter value
         """
         return self.function(variable=variable,
                              params=runtime_params,
-                             time_scale=time_scale,
                              context=context)
 
     @property

@@ -346,7 +346,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     def _execute(self,
                 variable=None,
                 runtime_params=None,
-                time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute AutoAssociativeLearningMechanism. function and return learning_signal
 

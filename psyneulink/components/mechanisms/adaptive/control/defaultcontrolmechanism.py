@@ -126,7 +126,6 @@ class DefaultControlMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    time_scale=TimeScale.TRIAL,
                     context=None):
 
         return self.input_values or [defaultControlAllocation]

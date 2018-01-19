@@ -212,7 +212,7 @@ def test_EVC_gratton():
     mechanism_prefs = ComponentPreferenceSet(
         prefs={
             kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-            kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)
+            kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
         }
     )
 
