@@ -66,7 +66,7 @@ the variable of the mechanism is first passed into the following equation:
 .. math::
     leak \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
 
-The result of integrator function above is then passed into the `mechanism's function <LCA.function>`. Note that on the
+The result of the integrator function above is then passed into the `mechanism's function <LCA.function>`. Note that on the
 first execution, *initial_value* sets previous_value.
 
 **When integrator_mode is set to False:**
@@ -406,7 +406,7 @@ class LCA(RecurrentTransferMechanism):
         .. math::
             leak \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
 
-        The result of integrator function above is then passed into the `mechanism's function <LCA.function>`. Note that
+        The result of the integrator function above is then passed into the `mechanism's function <LCA.function>`. Note that
         on the first execution, *initial_value* sets previous_value.
 
         **When integrator_mode is set to False:**

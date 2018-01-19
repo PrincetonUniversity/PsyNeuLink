@@ -384,6 +384,29 @@ class KWTA(RecurrentTransferMechanism):
         is set to the value of `clip <KWTA.clip>` it exceeds.  If `function <KWTA.function>`
         is `Logistic`, `clip <KWTA.clip>` is set by default to (0,1).
 
+    integrator_function:
+        When *integrator_mode* is set to True, the KWTA executes its `integrator_function <KWTA.integrator_function>`,
+        which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator <AdaptiveIntegrator>` for more details on what it computes.
+        Keep in mind that the `smoothing_factor <KWTA.smoothing_factor>` parameter of the `KWTA` corresponds to the
+        `rate <KWTAIntegrator.rate>` of the `KWTAIntegrator`.
+
+    integrator_mode:
+        **When integrator_mode is set to True:**
+
+        the variable of the mechanism is first passed into the following equation:
+
+        .. math::
+            value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
+
+        The result of the integrator function above is then passed into the `mechanism's function <KWTA.function>`. Note that
+        on the first execution, *initial_value* sets previous_value.
+
+        **When integrator_mode is set to False:**
+
+        The variable of the mechanism is passed into the `function of the mechanism <KWTA.function>`. The mechanism's
+        `integrator_function <KWTA.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
+        *initial_value*, and *time_step_size*) are ignored.
+
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
 

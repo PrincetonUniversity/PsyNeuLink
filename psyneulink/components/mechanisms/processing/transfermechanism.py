@@ -127,7 +127,7 @@ the following parameters (in addition to any specified for the `function <Transf
       True, the TransferMechanism exponentially time-averages its input, by executing its `integrator_function
       <TransferMechanism.integrator_function>`, before executing its `function <TransferMechanism.function>`. When
       `integrator_mode <TransferMechanism.integrator_mode>` is False, the `integrator_function
-      <TransferMechanism.integrator_function>` is ignored, and time-averaging does not occur. 
+      <TransferMechanism.integrator_function>` is ignored, and time-averaging does not occur.
 
     * `smoothing_factor <TransferMechanism.smoothing_factor>`: if the `integrator_mode <TransferMechanism.integrator_mode>`
       attribute is set to True, the `smoothing_factor <TransferMechanism.smoothing_factor>` attribute is the rate of
@@ -436,9 +436,28 @@ class TransferMechanism(ProcessingMechanism_Base):
 
           result = (smoothing_factor * current input) + ( (1-smoothing_factor) * result on previous time_step)
 
-    integrator_mode : booleane
-        when set to True, the Mechanism time averages its input according to an exponentially weighted moving average
-        (see `smoothing_factor <TransferMechanisms.smoothing_factor>`).
+    integrator_function:
+        When *integrator_mode* is set to True, the TransferMechanism executes its `integrator_function <TransferMechanism.integrator_function>`,
+        which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator <AdaptiveIntegrator>` for more details on what it computes.
+        Keep in mind that the `smoothing_factor <TransferMechanism.smoothing_factor>` parameter of the `TransferMechanism` corresponds to the
+        `rate <TransferMechanismIntegrator.rate>` of the `TransferMechanismIntegrator`.
+
+    integrator_mode:
+        **When integrator_mode is set to True:**
+
+        the variable of the mechanism is first passed into the following equation:
+
+        .. math::
+            value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
+
+        The result of the integrator function above is then passed into the `mechanism's function <TransferMechanism.function>`. Note that
+        on the first execution, *initial_value* sets previous_value.
+
+        **When integrator_mode is set to False:**
+
+        The variable of the mechanism is passed into the `function of the mechanism <TransferMechanism.function>`. The mechanism's
+        `integrator_function <TransferMechanism.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
+        *initial_value*, and *time_step_size*) are ignored.
 
     clip : Optional[Tuple[float, float]]
         determines the allowable range of the result: the first value specifies the minimum allowable value
