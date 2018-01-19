@@ -41,6 +41,7 @@ Integrator Functions:
 
 Distribution Functions:
   * `NormalDist`
+  * `UniformToNormalDist`
   * `ExponentialDist`
   * `UniformDist`
   * `GammaDist`
@@ -215,7 +216,7 @@ __all__ = [
     'PROPENSITY', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
-    'UniformDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
+    'UniformDist', 'UniformToNormalDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
     'WT_MATRIX_SENDERS_DIM'
 ]
 
