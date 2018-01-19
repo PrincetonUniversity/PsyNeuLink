@@ -10,6 +10,7 @@ from psyneulink.components.system import System
 from psyneulink.globals.keywords import SOFT_CLAMP
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 
+
 logger = logging.getLogger(__name__)
 
 

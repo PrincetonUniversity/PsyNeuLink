@@ -56,9 +56,10 @@ to access its `entries <Log.entries>`:
     * `loggable_items <Log.loggable_items>` -- a dictionary with the items that can be logged in a Component's `log
       <Component.log>`;  the key for each entry is the name of a Component,  and the value is it current `LogCondition`.
     ..
-    * `set_log_conditions <Log.set_log_conditions>` -- used to assign the LogCondition for one or more Components.  Components can be
-      specified by their names, a reference to the Component object, in a tuple that specifies the `LogCondition` to
-      assign to that Component, or in a list with a `LogCondition` to be applied to multiple items at once.
+    * `set_log_conditions <Log.set_log_conditions>` -- used to assign the LogCondition for one or more Components.
+      Components can be specified by their names, a reference to the Component object, in a tuple that specifies the
+      `LogCondition` to assign to that Component, or in a list with a `LogCondition` to be applied to multiple items
+      at once.
     ..
     * `log_values <Log.log_values>` -- used to the `value <Component.value>` of one or more Components in the Log
       programmatically ("manually").  Components can be specified by their names or references to the objects.
@@ -108,12 +109,21 @@ LogConditions
 ~~~~~~~~~~~~~
 
 Configuring a Component to be logged is done using a `LogCondition`, that specifies the conditions under which its
-`value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_conditions <Log.set_log_conditions>`
-method of a Log, or directly by specifying a LogCondition for the value a Component's `logPref  <Compnent.logPref>` item
-of its `prefs <Component.prefs>` attribute.  The former is easier, and allows multiple Components to be specied at
-once, while the latter affords more control over the specification (see `Preferences`).  LogConditions are treated as
-binary "flags", and can be combined to permit logging under more than one condition, using bitwise operators on
-LogConditions (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
+`value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_conditions
+<Log.set_log_conditions>` method of a Log, or directly by specifying a LogCondition for the value a Component's
+`logPref  <Compnent.logPref>` item of its `prefs <Component.prefs>` attribute.  The former is easier, and allows
+multiple Components to be specied at once, while the latter affords more control over the specification (see
+`Preferences`).  LogConditions are treated as binary "flags", and can be combined to permit logging under more than
+one condition using bitwise operators on LogConditions.  For convenience, they can also be referred to by their
+names, and combined by specifying a list.  For example, all of the following specify that the `value
+<Mechanism_Base.value>` of ``my_mech`` be logged both during execution and learning::
+
+    >>> import psyneulink as pnl
+    >>> my_mech = pnl.TransferMechanism()
+    >>> my_mech.set_log_conditions('value', pnl.LogCondition.EXECUTION | pnl.LogCondition.LEARNING)
+    >>> my_mech.set_log_conditions('value', pnl.LogCondition.EXECUTION + pnl.LogCondition.LEARNING)
+    >>> my_mech.set_log_conditions('value', [pnl.EXECUTION, LEARNING])
+
 
 .. note::
    Currently, the `VALIDATION` `LogCondition` is not implemented.
@@ -122,20 +132,19 @@ LogConditions (e.g., LogCondition.EXECUTION | LogCondition.LEARNING).
    COMMENT
 
 .. note::
-   Using the `INITIALIZATION` `LogCondition` to log the `value <Component.value>` of a Component during its
-   initialization requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
+   Using `LogCondition.INITIALIZATION` to log the `value <Component.value>` of a Component during its initialization
+   requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
 
    COMMENT:
    FIX: THIS EXAMPLE CAN'T CURRENTLY BE EXECUTED AS IT PERMANENTLY SETS THE LogPref FOR ALL TransferMechanism
    COMMENT
-    >>> import psyneulink as pnl
-    >>> T = pnl.TransferMechanism(
+    >>> my_mech = pnl.TransferMechanism(
     ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
 .. hint::
-   To log the `value <Component.value>` of a Component at the start or end of a `TRIAL`, use its `log_values
-   <Component.log_values>` method in the **call_before_trial** or **call_after_trial** arguments of the System's
-   `run <System.run>` method.
+   `LogCondition.TRIAL` logs the `value <Component.value>` of a Component at the end of a `TRIAL`.  To log its
+   `value <Component.value>` at the start of a `TRIAL`, use its `log_values <Component.log_values>` method in the
+   **call_before_trial** argument of the System's `run <System.run>` method.
 
 .. _Log_Execution:
 
@@ -166,9 +175,9 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     COMMENT
     # Show the loggable items (and their current LogConditions) of each Mechanism and the Projection between them:
     >> my_mech_A.loggable_items
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'time_constant': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
+    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'smoothing_factor': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
     >> my_mech_B.loggable_items
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'time_constant': 'OFF'}
+    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'smoothing_factor': 'OFF'}
     >> proj_A_to_B.loggable_items
     {'value': 'OFF', 'matrix': 'OFF'}
 
@@ -179,10 +188,13 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
 Note that since no LogCondition was specified, the default (LogCondition.EXECUTION) is used. Executing the Process
 generates entries in the Logs, that can then be displayed in several ways::
 
+    COMMENT:
+        disable this test due to inconsistent whitespacing across machines
+    COMMENT
     # Execute the System twice (to generate some values in the logs):
-    >>> my_system.execute()
+    >> my_system.execute()
     [array([ 0.,  0.,  0.])]
-    >>> my_system.execute()
+    >> my_system.execute()
     [array([ 0.,  0.,  0.])]
 
     COMMENT:
@@ -380,7 +392,7 @@ import numpy as np
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.utilities import ContentAddressableList, AutoNumber, is_component
 from psyneulink.globals.keywords \
-    import INITIALIZING, EXECUTING, VALIDATE, CONTROL, LEARNING, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
+    import INITIALIZING, EXECUTING, VALIDATE, CONTROL, LEARNING, TRIAL, RUN, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
 
 
 __all__ = [
@@ -394,24 +406,22 @@ class LogCondition(IntEnum):
     OFF = 0
     """No recording."""
     INITIALIZATION =     1<<1       # 2
-    """Record during initial assignment."""
+    """Record value during initial assignment."""
     VALIDATION =         1<<2       # 4
     """Record value during validation."""
     EXECUTION =          1<<3       # 8
     """Record all value assignments during any execution of the Component."""
     PROCESSING =         1<<4       # 16
     """Record all value assignments during processing phase of Composition execution."""
-    # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-    # LEARNING =         1<<5       # 32
-    LEARNING = (1<<5) + EXECUTION   # 40
+    LEARNING =           1<<5       # 32
     """Record all value assignments during learning phase of Composition execution."""
     CONTROL =            1<<6       # 64
     """Record all value assignments during control phase of Composition execution."""
     # FIX: TRIAL, RUN, VALUE_ASSIGNMENT & FINAL NOT YET IMPLEMENTED:
     TRIAL =              1<<7       # 128
-    # """Record value at the end of a TRIAL."""
+    """Record value at the end of a TRIAL."""
     RUN =                1<<8       # 256
-    # """Record value at the end of a RUN."""
+    """Record value at the end of a RUN."""
     VALUE_ASSIGNMENT =   1<<9       # 512
     # """Record final value assignments during Composition execution."""
     FINAL =             1<<10       # 1024
@@ -425,6 +435,27 @@ class LogCondition(IntEnum):
     # def _log_level_max(cls):
     #     return max([cls[i].value for i in list(cls.__members__) if cls[i] is not LogCondition.ALL_ASSIGNMENTS])
 
+    @classmethod
+    def _get_condition_string(cls, condition, string=None):
+        """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
+        if string:
+            string += ": "
+        else:
+            string = ""
+        flagged_items = []
+        # If OFF or ALL_ASSIGNMENTS, just return that
+        if condition in (LogCondition.ALL_ASSIGNMENTS, LogCondition.OFF):
+            return condition.name
+        # Otherwise, append each flag's name to the string
+        for c in list(cls.__members__):
+            # Skip ALL_ASSIGNMENTS (handled above)
+            if c is LogCondition.ALL_ASSIGNMENTS.name:
+                continue
+            if LogCondition[c] & condition:
+               flagged_items.append(c)
+        string += ", ".join(flagged_items)
+        return string
+
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
@@ -432,6 +463,8 @@ TIME_NOT_SPECIFIED = 'Time Not Specified'
 
 def _get_log_context(context):
 
+    if isinstance(context, LogCondition):
+        return context
     context_flag = LogCondition.OFF
     if INITIALIZING in context:
         context_flag |= LogCondition.INITIALIZATION
@@ -443,7 +476,11 @@ def _get_log_context(context):
         context_flag |= LogCondition.CONTROL
     if LEARNING in context:
         context_flag |= LogCondition.LEARNING
-    if COMMAND_LINE in context:
+    if context == LogCondition.TRIAL.name:
+        context_flag |= LogCondition.TRIAL
+    if context == LogCondition.RUN.name:
+        context_flag |= LogCondition.RUN
+    if context == LogCondition.COMMAND_LINE.name:
         context_flag |= LogCondition.COMMAND_LINE
     return context_flag
 
@@ -628,7 +665,7 @@ class Log:
     Attributes
     ----------
 
-    owner : Compoment
+    owner : Component
         the `Component <Component>` to which the Log belongs (and assigned as its `log <Component.log>` attribute).
 
     loggable_components : ContentAddressableList
@@ -694,11 +731,18 @@ class Log:
 
         def assign_log_level(item, level):
 
-            try:
-                level = LogCondition[level] if isinstance(level, str) else level
-            except KeyError:
-                raise LogError("\'{}\' is not a value of {}".
-                               format(level, LogCondition.__name__))
+            # Handle multiple level assignments (as LogConditions or strings in a list)
+            if not isinstance(level, list):
+                level = [level]
+            levels = LogCondition.OFF
+            for l in level:
+                try:
+                    l = LogCondition[l.upper()] if isinstance(l, str) else l
+                except KeyError:
+                    raise LogError("\'{}\' is not a value of {}".
+                                   format(l, LogCondition.__name__))
+                levels |= l
+            level = levels
 
             if not item in self.loggable_items:
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
@@ -720,20 +764,20 @@ class Log:
 
         for item in items:
             if isinstance(item, (str, Component)):
-                # self.add_entries(item)
                 if isinstance(item, Component):
                     item = item.name
                 assign_log_level(item, log_condition)
             else:
-                # self.add_entries(item[0])
                 assign_log_level(item[0], item[1])
 
-    def _log_value(self, value, context=None):
+    def _log_value(self, value, time=None, context=None):
         """Add LogEntry to an entry in the Log
 
-        Identifies the context in which the call is being made, which is assigned to the context field of the
-        `LogEntry`, along with the current time stamp and value itself
-
+        If **value** is a LogEntry, it is assigned to the entry
+        If **context** is a LogCondition, it is used to determine whether the entry should be made;
+           **time** must be passed;  the name of the LogCondition(s) specified are assigned to the context of LogEntry
+        Otherwise, uses string (or Component) passed in **context**, or searches stack (see note) to determine the
+        context, and uses that to determine the scheduler and, from that, the time;
         If value is None, uses owner's `value <Component.value>` attribute.
 
         .. note::
@@ -746,57 +790,69 @@ class Log:
         from psyneulink.components.component import Component
         programmatic = False
 
+        if isinstance(value, LogEntry):
+            self.entries[self.owner.name] = value
 
-        if context is COMMAND_LINE:
-            # If _log_value is being called programmatically,
-            #    flag for later and set context to None to get context from the stack
-            programmatic = True
-            context = None
+        else:
 
-        # Get context from the stack
-        if context is None:
-            curr_frame = inspect.currentframe()
-            prev_frame = inspect.getouterframes(curr_frame, 2)
-            i = 1
-            # Search stack for first frame (most recent call) with a context specification
-            while context is None:
-                try:
-                    context = inspect.getargvalues(prev_frame[i][0]).locals['context']
-                except KeyError:
-                    # Try earlier frame
-                    i += 1
-                except IndexError:
-                    # Ran out of frames, so just set context to empty string
-                    context = ""
-                else:
-                    break
+            if isinstance(context, LogCondition):
+                context_flags = context
+                context = LogCondition._get_condition_string(context)
+                if not time:
+                    raise LogError("Use of LogCondition ({}) by {} to specify context requires specification of time".
+                                   format(context, self.owner.name ))
 
-        # If context is a Component object, it must be during its initialization, so assign accordingly:
-        if isinstance(context, Component):
-            context = "{} of {}".format(INITIALIZING, context.name)
+            # Get context
+            else:
+                if context is COMMAND_LINE:
+                    # If _log_value is being called programmatically,
+                    #    flag for later and set context to None to get context from the stack
+                    programmatic = True
+                    context = None
 
-        # No context was specified in any frame
-        if context is None:
-            raise LogError("PROGRAM ERROR: No context specification found in any frame")
+                # Get context from the stack
+                if context is None:
+                    curr_frame = inspect.currentframe()
+                    prev_frame = inspect.getouterframes(curr_frame, 2)
+                    i = 1
+                    # Search stack for first frame (most recent call) with a context specification
+                    while context is None:
+                        try:
+                            context = inspect.getargvalues(prev_frame[i][0]).locals['context']
+                        except KeyError:
+                            # Try earlier frame
+                            i += 1
+                        except IndexError:
+                            # Ran out of frames, so just set context to empty string
+                            context = ""
+                        else:
+                            break
 
-        if not isinstance(context, str):
-            raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
+                # If context is a Component object, it must be during its initialization, so assign accordingly:
+                if isinstance(context, Component):
+                    context = "{} of {}".format(INITIALIZING, context.name)
 
-        # Context is an empty string, but called programatically
-        if not context and programmatic:
-            context = COMMAND_LINE
-            # context = self.owner.prev_context + "FROM " + COMMAND_LINE
-            # context = self.owner.prev_context
+                # No context was specified in any frame
+                if context is None:
+                    raise LogError("PROGRAM ERROR: No context specification found in any frame")
 
-        context_flags = _get_log_context(context)
+                if not isinstance(context, str):
+                    raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
 
-        log_pref = self.owner.prefs.logPref if self.owner.prefs else None
+                # Context is an empty string, but called programatically
+                if not context and programmatic:
+                    context = COMMAND_LINE
+                    # context = self.owner.prev_context + "FROM " + COMMAND_LINE
+                    # context = self.owner.prev_context
 
-        # Log value if logging condition is satisfied or called for programmatically
-        if (log_pref and log_pref == context_flags) or context_flags & LogCondition.COMMAND_LINE:
-        # FIX: IMPLEMENT EXECUTION+LEARNING CONDITION
-        # if log_pref and log_pref | context_flags:
-            self.entries[self.owner.name] = LogEntry(self._get_time(context, context_flags), context, value)
+                context_flags = _get_log_context(context)
+
+            log_pref = self.owner.prefs.logPref if self.owner.prefs else None
+
+            # Get time and log value if logging condition is satisfied or called for programmatically
+            if (log_pref and log_pref & context_flags) or context_flags & LogCondition.COMMAND_LINE:
+                time = time or self._get_time(context, context_flags)
+                self.entries[self.owner.name] = LogEntry(time, context, value)
 
         if context is not COMMAND_LINE:
             self.owner.prev_context = context
@@ -850,7 +906,8 @@ class Log:
         # Get System in which it is being (or was last) executed (if any):
 
         # If called from COMMAND_LINE, get context for last time value was assigned:
-        if context_flags & LogCondition.COMMAND_LINE:
+        # if context_flags & LogCondition.COMMAND_LINE:
+        if context_flags & (LogCondition.COMMAND_LINE | LogCondition.RUN | LogCondition.TRIAL):
             execution_context = self.owner.prev_context
             context_flags = _get_log_context(execution_context)
         else:
@@ -985,12 +1042,14 @@ class Log:
                       entries:tc.optional(tc.any(str, list, is_component))=ALL,
                       width:int=120,
                       display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
+                      long_context=False
                       ):
         """
         print_entries(          \
               entries=ALL,      \
               width=120,        \
               display=None      \
+              long_context=Full \
             )
 
         Print summary of the Log's entries in a (human-readable) table format.
@@ -1013,6 +1072,10 @@ class Log:
             specified items;  the widths of the columns for the items is dynamically adjusted, based on how many
             are specified, allowing more information about one to be shown by omitting others (this is useful 
             if the context strings are long and/or the values are arrays).
+
+        long_context : bool : default False
+            specifies the use of the full context string in the display;  this can be informative, but can also take up
+            more space in each line of the display.
             
         """
 
@@ -1032,6 +1095,7 @@ class Log:
         if not isinstance(display, list):
             display = [display]
 
+        # Set option_flags for specified options
         option_flags = options.NONE
         if TIME in display:
             option_flags |= options.TIME
@@ -1042,6 +1106,7 @@ class Log:
         if ALL in display:
             option_flags = options.ALL
 
+        # Default widths
         full_width = width
         item_name_width = 15
         time_width = 10
@@ -1052,7 +1117,20 @@ class Log:
         value_spacer = " ".ljust(value_spacer_width)
         base_width = item_name_width
 
-        # FIX: COULD "ALGORITHMIZE" THIS:
+        # Set context_width based on long_context option (length of context string) or context flags
+        if option_flags & options.CONTEXT:
+            c_width = 0
+            for entry in entries:
+                for datum in self.logged_entries[entry]:
+                    if long_context:
+                        context = datum.context
+                    else:
+                        context = LogCondition._get_condition_string(_get_log_context(datum.context))
+                    c_width = max(c_width, len(context))
+            context_width = min(context_width, c_width)
+
+        # Set other widths based on options:
+        # FIX: "ALGORITHMIZE" THIS:
         if option_flags == options.TIME:
             pass
         elif option_flags == options.CONTEXT:
@@ -1067,7 +1145,7 @@ class Log:
             context_width = full_width - value_width
             value_width = full_width - context_width
         elif option_flags == options.ALL:
-            pass
+            value_width = full_width - context_width
         else:
             raise LogError("PROGRAM ERROR:  unrecognized state of option_flags: {}".format(option_flags))
 
@@ -1097,23 +1175,36 @@ class Log:
             else:
                 import numpy as np
                 for i, item in enumerate(datum):
+
                     time, context, value = item
-                    if len(context) > context_width:
-                        context = context[:context_width-3] + "..."
-                    value = str(value).replace('\n',',')
-                    if len(value) > value_width:
-                        value = value[:value_width-3].rstrip() + "..."
-                    time_str = _time_string(time)
+
                     entry_name = self._alias_owner_name(entry_name)
                     data_str = repr(entry_name).ljust(item_name_width, spacer)
+
                     if options.TIME & option_flags:
+                        time_str = _time_string(time)
                         data_str = data_str + time_str.ljust(time_width)
+
                     if options.CONTEXT & option_flags:
-                        data_str = data_str + repr(context).ljust(context_width, spacer)
+                        if long_context:
+                            # Use context from LogEntry
+                            context = repr(context)
+                        else:
+                            # Get names of LogCondition flag(s) from parse of context string
+                            context = LogCondition._get_condition_string(_get_log_context(context))
+                        if len(context) > context_width:
+                            context = context[:context_width-3] + "..."
+                        data_str = data_str + context.ljust(context_width, spacer)
+
                     if options.VALUE & option_flags:
+                        value = str(value).replace('\n',',')
+                        if len(value) > value_width:
+                            value = value[:value_width-3].rstrip() + "..."
                         format_str = "{{:2.{0}}}".format(value_width)
                         data_str = data_str + value_spacer + format_str.format(value).ljust(value_width)
+
                     print(data_str)
+
                 if len(datum) > 1:
                     print("\n")
 
@@ -1237,25 +1328,26 @@ class Log:
             time_col = iter(time_values)
             for datum in self.logged_entries[entry]:
                 if time_values:
-                # MODIFIED 12/14/17 OLD:
-                    while datum.time != next(time_col,None):
-                        row.append(None)
-                value = None if datum.value is None else np.array(datum.value).tolist()
-                row.append(value)
-                # # MODIFIED 12/14/17 NEW:
-                #     for i in range(len(time_values)):
-                #         time = next(time_col,None)
-                #         if time is None:
-                #             break
-                #         if datum.time != time:
-                #             row.append(None)
-                #             continue
-                #         value = None if datum.value is None else datum.value.tolist()
-                #         row.append(value)
-                #         break
-                # else:
-                #     value = None if datum.value is None else datum.value.tolist()
-                #     row.append(value)
+                    # time_col = iter(time_values)
+                # # MODIFIED 12/14/17 OLD:
+                #     while datum.time != next(time_col,None):
+                #         row.append(None)
+                # value = None if datum.value is None else np.array(datum.value).tolist()
+                # row.append(value)
+                # MODIFIED 12/14/17 NEW:
+                    for i in range(len(time_values)):
+                        time = next(time_col,None)
+                        if time is None:
+                            break
+                        if datum.time != time:
+                            row.append(None)
+                            continue
+                        value = None if datum.value is None else np.array(datum.value).tolist()
+                        row.append(value)
+                        break
+                else:
+                    value = None if datum.value is None else datum.value.tolist()
+                    row.append(value)
                 # MODIFIED 12/14/17 END
 
             if header:
@@ -1363,7 +1455,7 @@ class Log:
                 if entry not in self.logged_entries:
                     # raise LogError("{} is not currently being logged by {} (try using set_log_conditions)".
                     #                format(repr(entry), self.owner.name))
-                    print("\n{} is not currently being logged by {} (try using set_log_conditions)".
+                    print("\n{} is not currently being logged by {} or has not data (try using set_log_conditions)".
                           format(repr(entry), self.owner.name))
         return entries
 
@@ -1392,10 +1484,12 @@ class Log:
         for c in self.loggable_components:
             name = self._alias_owner_name(c.name)
             try:
-                log_pref = c.logPref.name
+                # log_pref_names = c.logPref.name
+                log_pref_names = LogCondition._get_condition_string(c.logPref)
             except:
-                log_pref = None
-            loggable_items[name] = log_pref
+                log_pref_names = None
+                # log_pref_names = LogCondition._get_condition_string(c.logPref)
+            loggable_items[name] = log_pref_names
         return loggable_items
 
     @property
@@ -1437,3 +1531,41 @@ class Log:
 
     # def save_log(self):
     #     print("Saved")
+
+def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL, LogCondition.RUN), context):
+    # FIX: ALSO CHECK TIME FOR scheduler_learning, AND CHECK DATE FOR BOTH, AND USE WHICHEVER IS LATEST
+    # FIX:  BUT WHAT IF THIS PARTICULAR COMPONENT WAS RUN IN THE LAST TIME_STEP??
+    for mech in composition.mechanisms:
+        for component in mech.log.loggable_components:
+            if component.logPref & curr_condition:
+                # value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
+                #                   composition.scheduler_processing.clock.simple_time.trial,
+                #                   composition.scheduler_processing.clock.simple_time.time_step),
+                #                  # context,
+                #                  curr_condition,
+                #                  component.value)
+                # component.log._log_value(value=value, context=context)
+                component.log._log_value(value=component.value, context=curr_condition.name)
+
+        for proj in mech.afferents:
+            for component in proj.log.loggable_components:
+                if component.logPref & curr_condition:
+                    # value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
+                    #                   composition.scheduler_processing.clock.simple_time.trial,
+                    #                   composition.scheduler_processing.clock.simple_time.time_step),
+                    #                  context,
+                    #                  component.value)
+                    # component.log._log_value(value, context)
+                    component.log._log_value(value=component.value, context=curr_condition.name)
+
+
+    # FIX: IMPLEMENT ONCE projections IS ADDED AS ATTRIBUTE OF Composition
+    # for proj in composition.projections:
+    #     for component in proj.log.loggable_components:
+    #         if component.logPref & curr_condition:
+    #             value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
+    #                               composition.scheduler_processing.clock.simple_time.trial,
+    #                               composition.scheduler_processing.clock.simple_time.time_step),
+    #                              context,
+    #                              component.value)
+    #             component.log._log_value(value, context)

@@ -908,11 +908,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         variable = self._update_variable(super()._validate_variable(variable, context))
 
         if len(variable) != 3:
-            raise LearningMechanismError("Variable for {} ({}) must have three items ({}, {}, and {})".
-                                format(self.name, variable,
-                                       ACTIVATION_INPUT,
-                                       ACTIVATION_OUTPUT,
-                                       ERROR_SIGNAL))
+            raise LearningMechanismError("Variable for {} ({}) must have three "
+                                         "items ({}, {}, and {})".
+                                         format(self.name, variable,
+                                                ACTIVATION_INPUT,
+                                                ACTIVATION_OUTPUT,
+                                                ERROR_SIGNAL))
 
         # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
         for i in range(len(variable)):
@@ -1107,7 +1108,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             for learning_signal in self.learning_signals:
                 # Instantiate LearningSignal
 
-                params = {LEARNED_PARAM:MATRIX}
+                params = {LEARNED_PARAM: MATRIX}
 
                 # Parses learning_signal specifications (in call to State._parse_state_spec)
                 #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
@@ -1136,8 +1137,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _execute(self,
                 variable=None,
                 runtime_params=None,
-
-                time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute LearningMechanism function and return learning_signal
 
@@ -1149,7 +1148,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                                 params=runtime_params,
                                                                 context=context)
 
-        if not INITIALIZING in context and self.reportOutputPref:
+        if INITIALIZING not in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal, self.error_signal]
@@ -1216,24 +1215,27 @@ def _instantiate_error_signal_projection(sender, receiver):
     elif isinstance(sender, LearningMechanism):
         sender = sender.output_states[ERROR_SIGNAL]
     else:
-        raise LearningMechanismError("Sender of the error signal Projection {} must be either "
-                                     "an ObjectiveMechanism or a LearningMechanism".
-                                     format(sender))
+        raise LearningMechanismError("Sender of the error signal Projection {} "
+                                     "must be either an ObjectiveMechanism or "
+                                     "a LearningMechanism".format(sender))
 
     if isinstance(receiver, LearningMechanism):
         receiver = receiver.input_states[ERROR_SIGNAL]
     else:
-        raise LearningMechanismError("Receiver of the error signal Projection {} must be a LearningMechanism".
-                                     format(receiver))
+        raise LearningMechanismError("Receiver of the error signal Projection "
+                                     "{} must be a LearningMechanism".format(receiver))
 
     if len(sender.value) != len(receiver.value):
-        raise LearningMechanismError("The length of the OutputState ({}) for the sender ({}) of "
-                                     "the error signal Projection does not match "
-                                     "the length of the InputState ({}) for the receiver ({})".
-                                     format(len(sender.value), sender.owner.name,
-                                            len(receiver.value),receiver.owner.name))
+        raise LearningMechanismError("The length of the OutputState ({}) for "
+                                     "the sender ({}) of the error signal "
+                                     "Projection does not match the length of "
+                                     "the InputState ({}) for the receiver "
+                                     "({})".format(len(sender.value),
+                                                   sender.owner.name,
+                                                   len(receiver.value),
+                                                   receiver.owner.name))
 
     return MappingProjection(sender=sender,
                              receiver=receiver,
                              matrix=IDENTITY_MATRIX,
-                             name = sender.owner.name + ' ' + OUTCOME)
+                             name=sender.owner.name + ' ' + OUTCOME)

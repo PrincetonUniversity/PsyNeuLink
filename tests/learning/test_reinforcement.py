@@ -4,9 +4,11 @@ import pytest
 
 from psyneulink.components.functions.function import PROB
 from psyneulink.components.functions.function import Reinforcement, SoftMax
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import \
+    TransferMechanism
 from psyneulink.components.process import Process
-from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+from psyneulink.components.projections.modulatory.learningprojection import \
+    LearningProjection
 from psyneulink.components.system import System
 
 
@@ -47,7 +49,7 @@ def test_reinforcement():
         print("\n\n**** TRIAL: ", system.scheduler_processing.clock.simple_time)
 
     def show_weights():
-        print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].matrix)
+        print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].mod_matrix)
         print('\nAction selected:  {}; predicted reward: {}'.format(
             np.nonzero(action_selection.output_states.value)[0][0],
             action_selection.output_states.value[np.nonzero(action_selection.output_states.value)[0][0]],
@@ -97,7 +99,7 @@ def test_reinforcement():
                 [0.        , 0.        , 0.        ],
             ])
         ])),
-        (reward_prediction_weights.matrix, np.array([
+        (reward_prediction_weights.mod_matrix, np.array([
             [ 1.,          0.,          0.,        ],
             [ 0.,          3.71496434,  0.,        ],
             [ 0.,          0.,          2.283625,  ],
@@ -119,6 +121,6 @@ def test_reinforcement():
     for i in range(len(expected_output)):
         val, expected = expected_output[i]
         # setting absolute tolerance to be in accordance with reference_output precision
-        # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
+        # if you do not specify, assert_allclose will use a relative tolerance of 1e-07,
         # which WILL FAIL unless you gather higher precision values to use as reference
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))

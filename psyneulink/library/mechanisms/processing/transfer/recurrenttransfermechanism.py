@@ -7,7 +7,7 @@
 
 # NOTES:
 #  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
-#  * NOW THAT NOISE AND TIME_CONSTANT ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#  * NOW THAT NOISE AND SMOOTHING_FACTOR ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
@@ -186,7 +186,6 @@ __all__ = [
     'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
 ]
 
-
 class RecurrentTransferError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -257,7 +256,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     hetero=None,                       \
     initial_value=None,                \
     noise=0.0,                         \
-    time_constant=1.0,                 \
+    smoothing_factor=0.5,                 \
     clip=(float:min, float:max),      \
     learning_rate=None,                \
     learning_function=Hebbian,         \
@@ -331,12 +330,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when `integrator_mode
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
-         result = (time_constant * variable) +
-         (1-time_constant * input to mechanism's function on the previous time step)
+         result = (smoothing_factor * variable) +
+         (1-smoothing_factor * input to mechanism's function on the previous time step)
 
     clip : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`:
@@ -396,8 +395,8 @@ class RecurrentTransferMechanism(TransferMechanism):
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
-        determines the starting value for time-averaged input (only relevant if `time_constant
-        <RecurrentTransferMechanism.time_constant>` parameter is not 1.0).
+        determines the starting value for time-averaged input (only relevant if `smoothing_factor
+        <RecurrentTransferMechanism.smoothing_factor>` parameter is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
@@ -407,11 +406,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float
-        the time constant for exponential time averaging of input when `integrator_mode
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when `integrator_mode
         <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
-          result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+          result = (smoothing_factor * current input) + (1-smoothing_factor * result on previous time_step)
 
     clip : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
@@ -515,7 +514,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  hetero=None,
                  initial_value=None,
                  noise=0.0,
-                 time_constant: is_numeric_or_none=1.0,
+                 smoothing_factor: is_numeric_or_none=0.5,
                  integrator_mode=False,
                  clip=None,
                  input_states:tc.optional(tc.any(list, dict)) = None,
@@ -523,7 +522,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None,
@@ -568,10 +566,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                          noise=noise,
                          integrator_mode=integrator_mode,
 
-                         time_constant=time_constant,
+                         smoothing_factor=smoothing_factor,
                          clip=clip,
                          output_states=output_states,
-                         time_scale=time_scale,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -695,6 +692,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        reference_value_name=AUTO,
                                        params=None,
                                        context=context)
+            self.auto = d
             if state is not None:
                 self._parameter_states[AUTO] = state
             else:
@@ -704,10 +702,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         # if HETERO not in param_keys:
         # MODIFIED 9/23/17 NEW [JDC]:
         # if self.hetero is not None:
+
         if HETERO not in param_keys and AUTO in param_keys:
         # MODIFIED 9/23/17 END
+
             m = specified_matrix.copy()
             np.fill_diagonal(m, 0.0)
+            self.hetero = m
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
                                        name=HETERO,
@@ -720,7 +721,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 raise RecurrentTransferError("Failed to create ParameterState for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
-
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputStates
         """
@@ -731,46 +731,12 @@ class RecurrentTransferMechanism(TransferMechanism):
 
 
         # [9/23/17 JDC: WHY IS THIS GETTING DONE HERE RATHER THAN IN _instantiate_attributes_before_function ??]
-        auto = self.params[AUTO]
-        hetero = self.params[HETERO]
-        if auto is not None and hetero is not None:
-            a = get_auto_matrix(auto, size=self.size[0])
-            if a is None:
-                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of"
-                                             " type {}. Instead, the `auto` parameter should be a number, 1D array, "
-                                             "2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, auto, type(auto)))
-            c = get_hetero_matrix(hetero, size=self.size[0])
-            if c is None:
-                raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was "
-                                             "of type {}. Instead, the `hetero` parameter should be a number, 1D array "
-                                             "of length one, 2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, hetero, type(hetero)))
-            self.matrix = a + c
-        elif auto is not None:
-            self.matrix = get_auto_matrix(auto, size=self.size[0])
-            if self.matrix is None:
-                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `auto` parameter should be a number, 1D array, "
-                                           "2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, auto, type(auto)))
 
-        elif hetero is not None:
-            self.matrix = get_hetero_matrix(hetero, size=self.size[0])
-            if self.matrix is None:
-                raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `hetero` parameter should be a number, 1D array of "
-                                           "length one, 2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, hetero, type(hetero)))
-
-        # MODIFIED 9/23/17 NEW [JDC]:
-        else:
+        if self.auto is None and self.hetero is None:
             self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
             if self.matrix is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
-        # MODIFIED 9/23/17 END:
-
 
         # (7/19/17 CW) this line of code is now questionable, given the changes to matrix and the recurrent projection
         if isinstance(self.matrix, AutoAssociativeProjection):
@@ -805,7 +771,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 time_scale = TimeScale.TRIAL,
                  context=None):
         """Implement decay
         """
@@ -817,16 +782,15 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,
-                                time_scale=time_scale,
                                 context=context)
 
-    def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
+    def _update_parameter_states(self, runtime_params=None, context=None):
         for state in self._parameter_states:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
             # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
             # projection's _update_parameter_states, and accordingly are not updated here
             if state.name != AUTO or state.name != HETERO:
-                state.update(params=runtime_params, time_scale=time_scale, context=context)
+                state.update(params=runtime_params, context=context)
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
@@ -843,21 +807,17 @@ class RecurrentTransferMechanism(TransferMechanism):
             return a + c
         else:
             # if auto and hetero are not yet instantiated, then just use the standard method of attribute retrieval
-            # (simplified version of Component's basic make_property getter)
-            name = 'matrix'
             backing_field = '_matrix'
-            # MODIFIED 9/23/17 NEW [JDC]:
-            try:
-                return self.recurrent_projection.matrix
-            except (AttributeError, TypeError):
-            # MODIFIED 9/23/17 END:
-                try:
-                    return self._parameter_states[name].value
-                except (AttributeError, TypeError):
-                    return getattr(self, backing_field)
+            # try:
+            #     return self.recurrent_projection.matrix
+            # except (AttributeError, TypeError):
+            # KAM MODIFIED 1/9/18 -- removed parameter state value look up (now reserved for 'mod_' params)
+            return getattr(self, backing_field)
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
+        if hasattr(self, "recurrent_projection"):
+            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = val
         if hasattr(self, '_parameter_states')\
                 and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
             if hasattr(self, 'size'):
@@ -883,6 +843,47 @@ class RecurrentTransferMechanism(TransferMechanism):
                 if hasattr(param_state.function_object, 'initializer'):
                     param_state.function_object.reset_initializer = val
 
+    @property
+    def auto(self):
+        return getattr(self, "_auto")
+
+    @auto.setter
+    def auto(self, val):
+
+        if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
+            val_type = val.__class__.__name__
+            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + "auto" + ' of ' + self.name
+            # self.prev_context = "nonsense" + str(curr_context)
+            self._assign_params(request_set={"auto": val}, context=curr_context)
+        else:
+            setattr(self, "_auto", val)
+
+        if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_states:
+            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = self.matrix
+
+        # Update user_params dict with new value
+        self.user_params.__additem__("auto", val)
+
+    @property
+    def hetero(self):
+        return getattr(self, "_hetero")
+
+    @hetero.setter
+    def hetero(self, val):
+
+        if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
+            val_type = val.__class__.__name__
+            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + "hetero" + ' of ' + self.name
+            # self.prev_context = "nonsense" + str(curr_context)
+            self._assign_params(request_set={"hetero": val}, context=curr_context)
+        else:
+            setattr(self, "_hetero", val)
+
+        if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_states:
+            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = self.matrix
+
+        # Update user_params dict with new value
+        self.user_params.__additem__("hetero", val)
     @property
     def learning_enabled(self):
         return self._learning_enabled

@@ -6,7 +6,7 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.system import System
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE, SLOPE, CONTROL
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
@@ -212,7 +212,7 @@ def test_EVC_gratton():
     mechanism_prefs = ComponentPreferenceSet(
         prefs={
             kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-            kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)
+            kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
         }
     )
 
@@ -467,6 +467,8 @@ def test_EVC_gratton():
         0.2645,  0.28289958,  0.98320731, 100.,
     ]
 
+    Flanker_Rep.set_log_conditions((SLOPE, CONTROL))
+
     mySystem.run(
         num_trials=nTrials,
         inputs=stim_list_dict,
@@ -478,6 +480,40 @@ def test_EVC_gratton():
         atol=1e-08,
         verbose=True,
     )
+
+    # log_val = Flanker_Rep.log.nparray(SLOPE, header=False)
+    # trial_vals = [[1], [2], [3], [4], [5],
+    #               [6], [7], [8], [9], [10],
+    #               [11], [12], [13], [14], [15],
+    #               [16], [17], [18], [19], [20],
+    #               [21], [22], [23], [24], [25],
+    #               [27], [28], [29], [30], [31],
+    #               [32], [33], [34], [35], [36],
+    #               [37], [38], [39], [40], [41],
+    #               [42], [43], [44], [45], [46],
+    #               [47], [48], [49], [50], [51],
+    #               [53], [54], [55], [56], [57],
+    #               [58], [59], [60], [61], [62],
+    #               [63], [64], [65], [66], [67],
+    #               [68], [69], [70], [71], [72],
+    #               [73], [74], [75], [76], [77]]
+    # slope_vals = [[1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8],
+    #               [1.0], [1.2], [1.4], [1.6], [1.8]]
+    # np.testing.assert_allclose(pytest.helpers.expand_np_nd(log_val[1][0:]), trial_vals, atol=1e-08, verbose=True)
+    # np.testing.assert_allclose(pytest.helpers.expand_np_nd(log_val[3][0:]), slope_vals, atol=1e-08, verbose=True)
 
 
 def test_laming_validation_specify_control_signals():

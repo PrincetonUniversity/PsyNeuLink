@@ -13,15 +13,35 @@
 Overview
 --------
 
-ParameterStates belong to either a `Mechanism <Mechanism>` or a `Projection` and are used to represent, and possibly
-modify the, values of all of the `configurable parameters <ParameterState_Configurable_Parameters>` of the `Component
-<Component>` or those of its `function <Component_Function>`. A ParameterState can receive one or more
-`ControlProjections  <ControlProjection>` and/or `LearningProjections <LearningProjection>` that modify the value of
-the parameter. The Projections received by a ParameterState are listed in its `mod_afferents
-<ParameterState.mod_afferents>` attribute.  The ParameterState's `function <ParameterState.function>` combines the
-values of those Projections, and uses the result to modify the value of the parameter, that is then used by the
-Component or its `function <Component.function>` when it executes.
+ParameterStates belong to either a `Mechanism <Mechanism>` or a `Projection <Projection>`. A ParameterState is created
+to represent each eligible `configurable parameter <ParameterState_Configurable_Parameters>` of the `Mechanism
+<Mechanism>` or a `Projection <Projection>`, as well as those of the component's `function <Component_Function>`. A
+ParameterState provides the current value of the parameter it represents during any relevant computations, and serves as
+an interface for parameter modulation.
 
+A ParameterState can receive one or more `ControlProjections  <ControlProjection>` and/or `LearningProjections
+<LearningProjection>` that modify the value returned by the ParameterState according to the ParameterState's
+`function <ParameterState.function>`. The Projections received by a ParameterState  are listed in its `mod_afferents
+<ParameterState.mod_afferents>` attribute.
+
+When the Mechanism or Projection to which a ParameterState belongs executes, that component and its function use the
+ParameterState's value -- not the parameter attribute's value -- for any computation. A ParameterState's corresponding
+attribute on the Mechanism, Projection, or Function to which it belongs (i.e. MyTransferMech.function_object.gain),
+stores the "base value" of that parameter. The base value of a parameter is the variable of the ParameterState's
+function. The base value can be viewed or changed at any time through this attribute.
+
+The ParameterState value is available on the ParameterState itself, as well as the mod_name attribute of the Mechanism
+or Projection to which it belongs (i.e. MyTransferMech.mod_gain would return the value of the "gain" ParameterState
+of the MyTransferMech mechanism.)
+
+.. note::
+    Either of these options for looking up the value of the ParameterState will return the parameter state value that
+    was used during the most recent execution. This means that if the value of MyTransferMech.function_object.gain (the
+    base value) is updated after execution #1, the base value will change immediately, but the ParameterState value (and
+    MyTransferMech.mod_gain) will not be computed again until execution #2.
+
+    As a result, if either MyTransferMech.mod_gain or MyTransferMech.parameter_states["gain"].value is viewed in between
+    execution #1 and execution #2, it will return the gain parameter state value that was used during execution 1.
 
 .. _ParameterState_Creation:
 
@@ -65,7 +85,7 @@ Specifying Parameters
 Parameters can be specified in one of several places:
 
     * In the **argument** of the constructor for the `Component <Component>` to which the parameter belongs
-      (see `Component_Configurable_Attributes` for additional details).
+      (see `Component_Structural_Attributes` for additional details).
     ..
     * In a *parameter specification dictionary* assigned to the **params** argument in the constructor for the
       Component to which the parameter belongs. The entry for each parameter must use the name of the parameter
@@ -200,15 +220,21 @@ The example below shows how to specify the parameters in the first example using
     ...                                     pnl.GAIN:(0.5,pnl.ControlSignal),
     ...                                     pnl.BIAS:(1.0,pnl.ControlSignal(modulation=pnl.ModulationParam.ADDITIVE))}})
 
-There are several things to note here.  First, the parameter specification dictionary must be assigned to the
-**params** argument of the constructor.  Second, both methods for specifying a parameter -- directly in an argument
-for the parameter, or in an entry of a parameter specification dictionary -- can be used within the same constructor.
-If a particular parameter is specified in both ways (as is the case for **noise** in the example), the value in the
-parameter specification dictionary takes priority (i.e., it is the value that will be assigned to the parameter).  If
-the parameter is specified in a parameter specification dictionary, the key for the parameter must be a string that is
-the same as the name of parameter (i.e., identical to how it appears as an arg in the constructor; as is shown
+There are several things to note here.
+
+First, the parameter specification dictionary must be assigned to the **params** argument of the constructor. Note that
+if the parameter is specified in a parameter specification dictionary, the key for the parameter must be a string that
+is the same as the name of parameter (i.e., identical to how it appears as an arg in the constructor; as is shown
 for **noise** in the example), or using a keyword that resolves to such a string (as shown for *NOISE* in the
-example).  Finally, the keyword *FUNCTION_PARAMS* can be used in a parameter specification dictionary to specify
+example).
+
+Second, both methods for specifying a parameter -- directly in an argument for the parameter, or in an entry of a
+parameter specification dictionary -- can be used within the same constructor.
+
+If a particular parameter is specified in both ways (as is the case for **noise** in the example), the value in the
+parameter specification dictionary takes priority (i.e., it is the value that will be assigned to the parameter).
+
+Finally, the keyword *FUNCTION_PARAMS* can be used in a parameter specification dictionary to specify
 parameters of the Component's `function <Component.function>`, as shown for the **gain** and **bias** parameters of
 the Logistic function in the example.
 
@@ -525,7 +551,7 @@ class ParameterState(State_Base):
         # If the parameter is not in either the owner's user_params dict or its function_params dict, throw exception
         if not self.name in self.owner.user_params.keys() and not self.name in self.owner.function_params.keys():
             raise ParameterStateError("Name of requested ParameterState ({}) does not refer to a valid parameter "
-                                      "of the component ({}) or it function ({})".
+                                      "of the component ({}) or its function ({})".
                                       format(self.name,
                                              # self.owner.function_object.__class__.__name__,
                                              self.owner.name,
@@ -578,6 +604,7 @@ class ParameterState(State_Base):
         # MODIFIED 7/8/17
         # FIX:  THIS SHOULD ALSO LOOK FOR OTHER FORMS OF SPECIFICATION
         # FIX:  OF A PathwayProjection (E.G., TARGET STATE OR MECHANISM)
+
         from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
         pathway_projections = [proj for proj in projections if isinstance(proj, PathwayProjection_Base)]
         if pathway_projections:
@@ -1022,7 +1049,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                   context=context)
         if state:
             owner._parameter_states[param_name] = state
-
 
 def _is_legal_param_value(owner, value):
 

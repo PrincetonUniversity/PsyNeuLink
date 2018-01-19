@@ -23,6 +23,7 @@ values produced by the LC in each figure, all *without noise*.
    :align: left
    :alt: Gilzenrat et al. 2002 plot produced by MATLAB
 
+
 Similar plots *with noise* were included in the original
 `Gilzenrat et al. (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ paper in
 figures 4A and 5A.

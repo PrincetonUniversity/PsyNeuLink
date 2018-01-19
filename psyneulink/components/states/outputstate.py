@@ -393,7 +393,7 @@ the OutputState is assigned to a Mechanism, by including *INDEX* and *CALCULATE*
     ...                                   pnl.CALCULATE: pnl.Stability(metric=pnl.ENTROPY).function }])
 
 COMMENT:
-   ADD VERSION IN WHICH INDEX IS SPECIFICED USING DDM_standard_output_states
+   ADD VERSION IN WHICH INDEX IS SPECIFIED USING DDM_standard_output_states
 COMMENT
 
 In this example, ``my_mech`` is configured with three OutputStates.  The first two are `Standard OutputStates
@@ -889,6 +889,7 @@ class OutputState(State_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if INDEX in target_set:
+
             # If INDEX specification is SEQUENTIAL:
             #    - can't yet determine relationship to default_value
             #    - can't yet evaluate calculate function (below)
@@ -897,11 +898,11 @@ class OutputState(State_Base):
                 return
             else:
                 try:
-                    self.owner.default_value[target_set[INDEX]]
+                    self.owner.instance_defaults.value[target_set[INDEX]]
                 except IndexError:
                     raise OutputStateError("Value of \'{}\' argument for {} ({}) is greater than the number "
                                            "of items in the output_values ({}) for its owner Mechanism ({})".
-                                           format(INDEX, self.name, target_set[INDEX], self.owner.default_value,
+                                           format(INDEX, self.name, target_set[INDEX], self.owner.instance_defaults.value,
                                                   self.owner.name))
 
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
@@ -925,7 +926,7 @@ class OutputState(State_Base):
                                                format(index, self.name, self.owner.name))
                     return
 
-                default_value_item_str = self.owner.default_value[index] if isinstance(index, int) else index
+                default_value_item_str = self.owner.instance_defaults.value[index] if isinstance(index, int) else index
                 error_msg = ("Item {} of value for {} ({}) is not compatible with "
                              "the function specified for the {} parameter of {} ({})".
                              format(index,
@@ -935,10 +936,10 @@ class OutputState(State_Base):
                                     self.name,
                                     target_set[CALCULATE]))
                 try:
-                    function(self.owner.default_value[index], context=context)
+                    function(self.owner.instance_defaults.value[index], context=context)
                 except TypeError:
                     try:
-                        function(self.owner.default_value[index])
+                        function(self.owner.instance_defaults.value[index])
                     except:
                         raise OutputStateError(error_msg)
                 # except IndexError:
@@ -963,7 +964,7 @@ class OutputState(State_Base):
     # MODIFIED 11/15/17 NEW:
     def _instantiate_attributes_before_function(self, context=None):
         if self.variable is None and self.reference_value is None:
-            self.instance_defaults.variable = self.owner.default_value[0]
+            self.instance_defaults.variable = self.owner.instance_defaults.value[0]
     # MODIFIED 11/15/17 END
 
     def _instantiate_attributes_after_function(self, context=None):
@@ -1139,12 +1140,12 @@ class OutputState(State_Base):
                     raise OutputStateError("The {} (2nd) item of the {} specification tuple for {} ({}) "
                                            "must be a number".format(INDEX, OutputState.__name__, owner.name, index))
                 try:
-                    owner.default_value[index]
+                    owner.instance_defaults.value[index]
                 except IndexError:
                     raise OutputStateError("The {0} (2nd) item of the {1} specification tuple for {2} ({3}) is out "
                                            "of bounds for the number of items in {4}'s value ({5}, max index: {6})".
                                            format(INDEX, OutputState.__name__, owner.name, index,
-                                                  owner.name, owner.default_value, len(owner.default_value)-1))
+                                                  owner.name, owner.instance_defaults.value, len(owner.instance_defaults.value)-1))
                 params_dict[INDEX] = index
 
         elif state_specific_spec is not None:
@@ -1201,7 +1202,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
     # Get owner.value
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
-    owner_value = owner.default_value
+    owner_value = owner.instance_defaults.value
 
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
     #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -1217,7 +1218,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         converted_to_2d = np.atleast_2d(owner.value)
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
-            owner_value = owner.default_value
+            owner_value = owner.instance_defaults.value
         # Otherwise, use value converted to 2d np.array
         else:
             owner_value = converted_to_2d
@@ -1370,8 +1371,9 @@ class StandardOutputStates():
         # Validate that all items in output_state_dicts are dicts
         for item in output_state_dicts:
             if not isinstance(item, dict):
-                raise StandardOutputStatesError("All items of {} for {} must be dicts (but {} is not)".
-                                     format(self.__class__.__name__, owner.componentName, item))
+                raise StandardOutputStatesError(
+                    "All items of {} for {} must be dicts (but {} is not)".
+                    format(self.__class__.__name__, owner.componentName, item))
         self.data = output_state_dicts.copy()
 
         # Assign indices
@@ -1379,21 +1381,28 @@ class StandardOutputStates():
         # List was provided, so check that:
         # - it has the appropriate number of items
         # - they are all ints
-        # and then assign each int to the INDEX entry in the corresponding dict in output_state_dicts
+        # and then assign each int to the INDEX entry in the corresponding dict
+        # in output_state_dicts
         # OutputState
         if isinstance(indices, list):
             if len(indices) != len(output_state_dicts):
-                raise StandardOutputStatesError("Length of the list of indices provided to {} for {} ({}) "
-                                       "must equal the number of OutputStates dicts provided ({})"
-                                       "length".format(self.__class__.__name__,
-                                                       owner.name,
-                                                       len(indices),
-                                                       len(output_state_dicts)))
+                raise StandardOutputStatesError("Length of the list of indices "
+                                                "provided to {} for {} ({}) "
+                                                "must equal the number of "
+                                                "OutputStates dicts provided "
+                                                "({}) length".format(
+                        self.__class__.__name__,
+                        owner.name,
+                        len(indices),
+                        len(output_state_dicts)))
 
             if not all(isinstance(item, int) for item in indices):
-                raise StandardOutputStatesError("All the items in the list of indices provided to {} for {} of {}) "
-                                               "must be ints".
-                                               format(self.__class__.__name__, self.name, owner.name))
+                raise StandardOutputStatesError("All the items in the list of "
+                                                "indices provided to {} for {} "
+                                                "of {}) must be ints".
+                                                format(self.__class__.__name__,
+                                                       self.name,
+                                                       owner.name))
 
             for index, state_dict in zip(indices, self.data):
                 state_dict[INDEX] = index

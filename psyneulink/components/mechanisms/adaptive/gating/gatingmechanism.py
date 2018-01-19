@@ -158,6 +158,7 @@ Class Reference
 
 import numpy as np
 import typecheck as tc
+
 import warnings
 
 from psyneulink.components.component import InitStatus
@@ -417,6 +418,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         from psyneulink.globals.registry import register_category
 
         # Create registry for GatingSignals (to manage names)
+
         register_category(entry=GatingSignal,
                           base_class=State_Base,
                           registry=self._stateRegistry,
@@ -476,7 +478,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         Returns GatingSignal (OutputState)
         """
-
         from psyneulink.components.states.state import _instantiate_state
 
         # Parse gating_signal specifications (in call to State._parse_state_spec)
@@ -555,7 +556,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    time_scale=TimeScale.TRIAL,
                     context=None):
         """Updates GatingSignals based on inputs
         """
@@ -565,11 +565,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,
-                                time_scale=time_scale,
                                 context=context)
         # gating_policy = self.function(variable=variable,
         #                               function_params=function_params,
-        #                               time_scale=time_scale,
         #                               context=context)
         # return gating_policy
 

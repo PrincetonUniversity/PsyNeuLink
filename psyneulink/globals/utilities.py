@@ -71,6 +71,7 @@ OTHER
 * `ContentAddressableList`
 * `make_readonly_property`
 * `get_class_attributes`
+* `insert_list`
 
 """
 
@@ -88,7 +89,7 @@ from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES,
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_np_array', 'convert_all_elements_to_np_array', 'get_class_attributes',
     'get_modulationOperation_name', 'get_value_from_array', 'is_component', 'is_distance_metric', 'is_matrix',
-    'is_matrix_spec',
+    'insert_list', 'is_matrix_spec',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
@@ -145,14 +146,14 @@ class AutoNumber(IntEnum):
 
     Sample:
 
-        class NumberedList(AutoNumber):
-            FIRST_ITEM = ()
-            SECOND_ITEM = ()
+        >>> class NumberedList(AutoNumber):
+        ...    FIRST_ITEM = ()
+        ...    SECOND_ITEM = ()
 
-        >>>NumberedList.FIRST_ITEM.value
-         0
-        >>>NumberedList.SECOND_ITEM.value
-         1
+        >>> NumberedList.FIRST_ITEM.value
+        0
+        >>> NumberedList.SECOND_ITEM.value
+        1
 
     Adapted from AutoNumber example for Enum at https://docs.python.org/3/library/enum.html#enum.IntEnum:
     Notes:
@@ -192,7 +193,7 @@ def optional_parameter_spec(param):
     return parameter_spec(param)
 
 
-def parameter_spec(param):
+def parameter_spec(param, numeric_only=None):
     """Test whether param is a legal PsyNeuLink parameter specification
 
     Used with typecheck
@@ -224,6 +225,9 @@ def parameter_spec(param):
                            Projection))
         or param in MODULATORY_SPEC_KEYWORDS
         or param in parameter_keywords):
+        if numeric_only:
+            if not is_numeric(param):
+                return False
         return True
     return False
 
@@ -325,7 +329,7 @@ def iscompatible(candidate, reference=None, **kargs):
     try:
         with warnings.catch_warnings():
             warnings.simplefilter(action='ignore', category=FutureWarning)
-            if reference and (candidate == reference):
+            if reference is not None and (candidate == reference):
                 return True
     except ValueError:
         # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
@@ -746,6 +750,7 @@ class ContentAddressableList(UserList):
     of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputStates <OutputState>`, keyed by their
     names.  Therefore, ``my_mech.output_states.names`` returns the names of all of the Mechanism's OutputStates::
 
+        >>> import psyneulink as pnl
         >>> print(pnl.DDM().output_states.names)
         ['DECISION_VARIABLE', 'RESPONSE_TIME']
 
@@ -1075,3 +1080,8 @@ def convert_all_elements_to_np_array(arr):
             elementwise_subarr[i] = subarr[i]
 
         return elementwise_subarr
+
+
+def insert_list(list1, position, list2):
+    """Insert list2 into list1 at position"""
+    return list1[:position] + list2 + list1[position:]

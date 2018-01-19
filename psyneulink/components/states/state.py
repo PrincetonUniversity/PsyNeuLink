@@ -90,7 +90,7 @@ In general, States are created automatically by the objects to which they belong
 or by specifying the State in the constructor for its owner.  For example, unless otherwise specified, when a
 `Mechanism <Mechanism>` is created it creates a default `InputState` and `OutputState` for itself, and whenever any
 Component is created, it automatically creates a `ParameterState` for each of its `configurable parameters
-<Component_Configurable_Attributes>` and those of its `function <Component_Function>`. States are also created in
+<Component_Structural_Attributes>` and those of its `function <Component_Function>`. States are also created in
 response to explicit specifications.  For example, InputStates and OutputStates can be specified in the constructor for
 a Mechanism (see `Mechanism_State_Specification`); and ParameterStates are specified in effect when the value of a
 parameter for any Component or its `function <Component.function>` is specified in the constructor for that Component
@@ -157,9 +157,9 @@ A State can be specified using any of the following:
           `MappingProjection` to the Mechanism's `primary InputState <InputState_Primary>` or from its `primary
           OutputState <OutputState_Primary>`, depending upon the type of Mechanism and context of specification.  It
           can also be accompanied by one or more State specification entries described below, to create one or more
-          Projections to/from those States (see `examples <State_State_Name_Entry_Example>`).
+          Projections to/from those specific States (see `examples <State_State_Name_Entry_Example>`).
       ..
-      * *<STATES_KEYWORD>:List[<str or State.name>,...]
+      * <STATES_KEYWORD>:List[<str or State.name>,...]
          this must accompany a *MECHANISM* entry (described above), and is used to specify its State(s) by name.
          Each entry must use one of the following keywords as its key, and there can be no more than one of each:
             - *INPUT_STATES*
@@ -386,7 +386,7 @@ automatically creates an InputState, ParameterStates for its parameters, includi
     print(my_mech.input_states)
     > [(InputState InputState-0)]
     print(my_mech.parameter_states)
-    > [(ParameterState intercept), (ParameterState slope), (ParameterState noise), (ParameterState time_constant)]
+    > [(ParameterState intercept), (ParameterState slope), (ParameterState noise), (ParameterState smoothing_factor)]
     print(my_mech.output_states)
     > [(OutputState RESULT)]
 
@@ -1839,16 +1839,17 @@ class State_Base(State):
         raise StateError("PROGRAM ERROR: {} does not implement _parse_state_specific_specs method".
                          format(self.__class__.__name__))
 
-    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
+    def update(self, params=None, context=None):
         """Update each projection, combine them, and assign return result
 
         Call update for each projection in self.path_afferents (passing specified params)
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
-        Returns combined values of
+        Returns combined values of projections, modulated by any mod_afferents
     """
 
-        # region SET UP ------------------------------------------------------------------------------------------------
+        # SET UP ------------------------------------------------------------------------------------------------
+
         # Get State-specific param_specs
         try:
             # Get State params
@@ -1857,24 +1858,22 @@ class State_Base(State):
             self.stateParams = {}
         except (AttributeError):
             raise StateError("PROGRAM ERROR: paramsType not specified for {}".format(self.name))
-        #endregion
 
-        # Flag format of input
-        if isinstance(self.value, numbers.Number):
-            # Treat as single real value
-            value_is_number = True
-        else:
-            # Treat as vector (list or np.array)
-            value_is_number = False
+        # # Flag format of input
+        # if isinstance(self.value, numbers.Number):
+        #     # Treat as single real value
+        #     value_is_number = True
+        # else:
+        #     # Treat as vector (list or np.array)
+        #     value_is_number = False
 
-        # region AGGREGATE INPUT FROM PROJECTIONS -----------------------------------------------------------------------------
+        # AGGREGATE INPUT FROM PROJECTIONS -----------------------------------------------------------------------
 
         # Get type-specific params from PROJECTION_PARAMS
         mapping_params = merge_param_dicts(self.stateParams, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         learning_projection_params = merge_param_dicts(self.stateParams, LEARNING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         control_projection_params = merge_param_dicts(self.stateParams, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
         gating_projection_params = merge_param_dicts(self.stateParams, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        #endregion
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
         self._path_proj_values = []
@@ -1899,7 +1898,6 @@ class State_Base(State):
             raise StateError("PROGRAM ERROR: Object ({}) of type {} has a {}, but this is only allowed for "
                              "Mechanisms and MappingProjections".
                              format(self.owner.name, self.owner.__class__.__name__, self.__class__.__name__,))
-
 
         modulatory_override = False
 
@@ -1944,7 +1942,6 @@ class State_Base(State):
             if not projection_params:
                 projection_params = None
 
-            # FIX: UPDATE FOR LEARNING
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection) and not LEARNING in context:
@@ -1952,7 +1949,6 @@ class State_Base(State):
                 projection_value = projection.value * 0.0
             else:
                 projection_value = projection.execute(params=projection_params,
-                                                      time_scale=time_scale,
                                                       context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
@@ -2017,8 +2013,8 @@ class State_Base(State):
             function_params = None
         self.value = self._execute(function_params=function_params, context=context)
 
-    def execute(self, input=None, time_scale=None, params=None, context=None):
-        return self.function(variable=input, params=params, time_scale=time_scale, context=context)
+    def execute(self, input=None, params=None, context=None):
+        return self.function(variable=input, params=params, context=context)
 
     @property
     def owner(self):
@@ -2321,7 +2317,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
     state_type = state_spec_dict.pop(STATE_TYPE, None)
     if REFERENCE_VALUE_NAME in state_spec_dict:
         del state_spec_dict[REFERENCE_VALUE_NAME]
-    if state_spec_dict[PARAMS] and  REFERENCE_VALUE_NAME in state_spec_dict[PARAMS]:
+    if state_spec_dict[PARAMS] and REFERENCE_VALUE_NAME in state_spec_dict[PARAMS]:
         del state_spec_dict[PARAMS][REFERENCE_VALUE_NAME]
 
     # Implement default State
@@ -2446,6 +2442,7 @@ def _parse_state_spec(state_type=None,
         import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
     from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
     from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+    from psyneulink.components.projections.projection import _get_projection_value_shape
 
 
     # Get all of the standard arguments passed from _instantiate_state (i.e., those other than state_spec) into a dict
@@ -2620,7 +2617,7 @@ def _parse_state_spec(state_type=None,
 
         if sender is not None and matrix is not None and matrix is not AUTO_ASSIGN_MATRIX:
             sender = _get_state_for_socket(owner=owner,state_spec=sender,state_types=state_dict[STATE_TYPE])
-            projection_value = np.zeros(matrix.shape[sender.value.ndim :])
+            projection_value = _get_projection_value_shape(sender, matrix)
 
         reference_value = state_dict[REFERENCE_VALUE]
         # If State's reference_value is not specified, but Projection's value is, use projection_spec's value
@@ -2727,14 +2724,18 @@ def _parse_state_spec(state_type=None,
 
                 mech = state_specific_args[MECHANISM]
                 if not isinstance(mech, Mechanism):
-                    raise StateError("Value of the {} entry ({}) in the specification dictionary "
-                                     "for {} of {} is not a {}".
-                                     format(MECHANISM, mech, state_type.__name__, owner.name, Mechanism.__name__))
+                    raise StateError("Value of the {} entry ({}) in the "
+                                     "specification dictionary for {} of {} is "
+                                     "not a {}".format(MECHANISM,
+                                                       mech,
+                                                       state_type.__name__,
+                                                       owner.name,
+                                                       Mechanism.__name__))
 
                 # For States with which the one being specified can connect:
                 for STATES in state_type.connectsWithAttribute:
 
-                   if STATES in state_specific_args:
+                    if STATES in state_specific_args:
                         state_specs = state_specific_args[STATES]
                         state_specs = state_specs if isinstance(state_specs, list) else [state_specs]
                         for state_spec in state_specs:
@@ -2745,8 +2746,13 @@ def _parse_state_spec(state_type=None,
                                 state = state_attr[state]
                             except:
                                 name = owner.name if not 'unnamed' in owner.name else 'a ' + owner.__class__.__name__
-                                raise StateError("Unrecognized name ({}) for {} of {} in specification of {} for {}".
-                                                 format(state, STATES, mech.name, state_type.__name__, name))
+                                raise StateError("Unrecognized name ({}) for {} "
+                                                 "of {} in specification of {} "
+                                                 "for {}".format(state,
+                                                                 STATES,
+                                                                 mech.name,
+                                                                 state_type.__name__,
+                                                                 name))
                             # If state_spec was a tuple, put state back in as its first item and use as projection spec
                             if isinstance(state_spec, tuple):
                                 state = (state,) + state_spec[1:]
@@ -2771,10 +2777,13 @@ def _parse_state_spec(state_type=None,
                     params[PROJECTIONS] = state_specific_args[key]
                     del state_specific_args[key]
                 else:
-                    raise StateError("There is more than one entry of the {} specification dictionary for {} ({}) "
-                                     "that is not a keyword; there should be only one (used to name the State, "
-                                     "with a list of Projection specifications".
-                                     format(state_type.__name__, owner.name,
+                    raise StateError("There is more than one entry of the {} "
+                                     "specification dictionary for {} ({}) "
+                                     "that is not a keyword; there should be "
+                                     "only one (used to name the State, with a "
+                                     "list of Projection specifications".
+                                     format(state_type.__name__,
+                                            owner.name,
                                             ", ".join([s for s in list(state_specific_args.keys())])))
 
             for param in state_type.stateAttributes:
@@ -2906,8 +2915,11 @@ def _get_state_for_socket(owner,
                 proj_type = proj_spec[PROJECTION_TYPE]
         # MODIFIED 11/25/17 END:
 
-        # Get State type if it is appropriate for the specified socket of the Projection's type
-        s = next((s for s in state_types if s.__name__ in getattr(proj_type.sockets, projection_socket)), None)
+        # Get State type if it is appropriate for the specified socket of the
+        #  Projection's type
+        s = next((s for s in state_types if
+                  s.__name__ in getattr(proj_type.sockets, projection_socket)),
+                 None)
         if s:
             try:
                 # Return State associated with projection_socket if proj_spec is an actual Projection

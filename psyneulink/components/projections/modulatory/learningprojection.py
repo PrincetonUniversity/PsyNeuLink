@@ -115,7 +115,7 @@ additional details).
 
 .. note::
    The `weight <MappingProjection.weight>` and `exponent <MappingProjection.exponent>` attributes of a
-   LearningProjection are not commonly used, and are implemented largely for generalit and compatibility with other
+   LearningProjection are not commonly used, and are implemented largely for generality and compatibility with other
    types of `Projection`.  They are distinct from, and are applied in addition to the LearningProjection's
    `learning_rate <LearningProjection.learning_rate>` attribute.  As noted under  `Projection
    <Projection_Weight_Exponent>`, they are not normalized and thus their effects aggregate if a ParameterState
@@ -183,7 +183,6 @@ from psyneulink.globals.utilities import iscompatible, parameter_spec
 __all__ = [
     'DefaultTrainingMechanism', 'LearningProjection', 'LearningProjectionError', 'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDER_DIM',
 ]
-
 # Params:
 
 parameter_keywords.update({LEARNING_PROJECTION, LEARNING})
@@ -595,7 +594,7 @@ class LearningProjection(ModulatoryProjection_Base):
         learned_projection.has_learning_projection = True
 
 
-    def execute(self, input=None, time_scale=None, params=None, context=None):
+    def execute(self, input=None, params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
@@ -616,9 +615,8 @@ class LearningProjection(ModulatoryProjection_Base):
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate
 
-
         if not INITIALIZING in context and self.reportOutputPref:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, self.weight_change_matrix))
+            print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(self.weight_change_matrix)))
 
         return self.value
 

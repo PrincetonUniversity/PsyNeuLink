@@ -187,7 +187,7 @@ class KWTA(RecurrentTransferMechanism):
     hetero=None,                \
     initial_value=None,         \
     noise=0.0,                  \
-    time_constant=1.0,          \
+    smoothing_factor=1.0,          \
     k_value=0.5,                \
     threshold=0,                \
     ratio=0.5,                  \
@@ -244,7 +244,7 @@ class KWTA(RecurrentTransferMechanism):
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
-        `time_constant <KWTA.time_constant>` is not 1.0).
+        `smoothing_factor <KWTA.smoothing_factor>` is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
@@ -254,12 +254,12 @@ class KWTA(RecurrentTransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when `integrator_mode <KWTA.integrator_mode>` is set
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when `integrator_mode <KWTA.integrator_mode>` is set
         to True ::
 
-         result = (time_constant * current input) +
-         (1-time_constant * result on previous time_step)
+         result = (smoothing_factor * current input) +
+         (1-smoothing_factor * result on previous time_step)
 
     k_value : number : default 0.5
         specifies the proportion or number of the elements of `variable <KWTA.variable>` that should be at or above
@@ -328,7 +328,7 @@ class KWTA(RecurrentTransferMechanism):
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
-        (only relevant if `time_constant <KWTA.time_constant>` parameter is not 1.0).
+        (only relevant if `smoothing_factor <KWTA.smoothing_factor>` parameter is not 1.0).
         COMMENT:
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
@@ -338,11 +338,11 @@ class KWTA(RecurrentTransferMechanism):
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
-    time_constant : float
-        the time constant for exponential time averaging of input when `integrator_mode <KWTA.integrator_mode>` is set
+    smoothing_factor : float : default 0.5
+        the smoothing factor for exponential time averaging of input when `integrator_mode <KWTA.integrator_mode>` is set
         to True::
 
-          result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+          result = (smoothing_factor * current input) + (1-smoothing_factor * result on previous time_step)
 
     k_value : number
         determines the number or proportion of elements of `variable <KWTA.variable>` that should be above the
@@ -441,7 +441,7 @@ class KWTA(RecurrentTransferMechanism):
                  hetero: is_numeric_or_none=None,
                  initial_value=None,
                  noise: is_numeric_or_none = 0.0,
-                 time_constant: is_numeric_or_none = 1.0,
+                 smoothing_factor: is_numeric_or_none = 0.5,
                  integrator_mode=False,
                  k_value: is_numeric_or_none = 0.5,
                  threshold: is_numeric_or_none = 0,
@@ -451,7 +451,6 @@ class KWTA(RecurrentTransferMechanism):
                  clip=None,
                  input_states:tc.optional(tc.any(list, dict)) = None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
@@ -488,10 +487,9 @@ class KWTA(RecurrentTransferMechanism):
                          integrator_mode=integrator_mode,
                          initial_value=initial_value,
                          noise=noise,
-                         time_constant=time_constant,
+                         smoothing_factor=smoothing_factor,
                          clip=clip,
                          output_states=output_states,
-                         time_scale=time_scale,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -507,46 +505,36 @@ class KWTA(RecurrentTransferMechanism):
         # so it shouldn't be a problem)
         self.indexOfInhibitionInputState = len(self.input_states) - 1
 
-        # try:
-        #     int_k_value = int(self.k_value[0])
-        # except TypeError: # if self.k_value is a single value rather than a list or array
-        #     int_k_value = int(self.k_value)
-        # # ^ this is hacky but necessary for now, since something is
-        # # incorrectly turning self.k_value into an array of floats
-        # n = self.size[0]
-        # if (self.k_value[0] > 0) and (self.k_value[0] < 1):
-        #     k = int(round(self.k_value[0] * n))
-        # elif (int_k_value < 0):
-        #     k = n - int_k_value
-        # else:
-        #     k = int_k_value
-        #
-        # self.int_k = k
-
     def _kwta_scale(self, current_input, context=None):
+        k_value = self.get_current_mechanism_param("k_value")
+        threshold = self.get_current_mechanism_param("threshold")
+        average_based = self.get_current_mechanism_param("average_based")
+        ratio = self.get_current_mechanism_param("ratio")
+        inhibition_only = self.get_current_mechanism_param("inhibition_only")
+
         try:
-            int_k_value = int(self.k_value[0])
-        except TypeError: # if self.k_value is a single value rather than a list or array
-            int_k_value = int(self.k_value)
+            int_k_value = int(k_value[0])
+        except TypeError: # if k_value is a single value rather than a list or array
+            int_k_value = int(k_value)
         # ^ this is hacky but necessary for now, since something is
-        # incorrectly turning self.k_value into an array of floats
+        # incorrectly turning k_value into an array of floats
         n = self.size[0]
-        if (self.k_value[0] > 0) and (self.k_value[0] < 1):
-            k = int(round(self.k_value[0] * n))
+        if (k_value[0] > 0) and (k_value[0] < 1):
+            k = int(round(k_value[0] * n))
         elif (int_k_value < 0):
             k = n - int_k_value
         else:
             k = int_k_value
         # k = self.int_k
 
-        diffs = self.threshold - current_input[0]
+        diffs = threshold - current_input[0]
 
         sorted_diffs = sorted(diffs)
 
-        if self.average_based:
+        if average_based:
             top_k_mean = np.mean(sorted_diffs[0:k])
             other_mean = np.mean(sorted_diffs[k:n])
-            final_diff = other_mean * self.ratio + top_k_mean * (1 - self.ratio)
+            final_diff = other_mean * ratio + top_k_mean * (1 - ratio)
         else:
             if k == 0:
                 final_diff = sorted_diffs[k]
@@ -556,15 +544,15 @@ class KWTA(RecurrentTransferMechanism):
                 raise KWTAError("k value ({}) is greater than the length of the first input ({}) for KWTA mechanism {}".
                                 format(k, current_input[0], self.name))
             else:
-                final_diff = sorted_diffs[k] * self.ratio + sorted_diffs[k-1] * (1 - self.ratio)
+                final_diff = sorted_diffs[k] * ratio + sorted_diffs[k-1] * (1 - ratio)
 
 
 
-        if self.inhibition_only and final_diff > 0:
+        if inhibition_only and final_diff > 0:
             final_diff = 0
 
         new_input = np.array(current_input[0] + final_diff)
-        if (sum(new_input > self.threshold) > k) and not self.average_based:
+        if (sum(new_input > threshold) > k) and not average_based:
             warnings.warn("KWTA scaling was not successful: the result was too high. The original input was {}, "
                           "and the KWTA-scaled result was {}".format(current_input, new_input))
         new_input = list(new_input)
@@ -617,26 +605,23 @@ class KWTA(RecurrentTransferMechanism):
     def execute(self,
                 input=None,
                 runtime_params=None,
-                time_scale=TimeScale.TRIAL,
                 ignore_execution_id=False,
                 context=None):
         if isinstance(input, str) or (isinstance(input, (list, np.ndarray)) and isinstance(input[0], str)):
             raise KWTAError("input ({}) to {} was a string, which is not supported for {}".
                             format(input, self, self.__class__.__name__))
-        return super().execute(input=input, runtime_params=runtime_params, time_scale=time_scale,
+        return super().execute(input=input, runtime_params=runtime_params,
                                ignore_execution_id=ignore_execution_id, context=context)
 
     def _execute(self,
                 variable=None,
                 runtime_params=None,
-                time_scale = TimeScale.TRIAL,
                 context=None):
 
         variable = self._update_variable(self._kwta_scale(variable, context=context))
 
         return super()._execute(variable=variable,
                        runtime_params=runtime_params,
-                       time_scale=time_scale,
                        context=context)
 
         # NOTE 7/10/17 CW: this version of KWTA executes scaling _before_ noise or integration is applied. This can be
@@ -660,7 +645,7 @@ class KWTA(RecurrentTransferMechanism):
         # variable (float): set to self.value (= self.input_value)
         # - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
         #     + NOISE (float)
-        #     + TIME_CONSTANT (float)
+        #     + SMOOTHING_FACTOR (float)
         #     + RANGE ([float, float])
         # - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
         # - context (str)
@@ -700,7 +685,7 @@ class KWTA(RecurrentTransferMechanism):
         #
         # #region ASSIGN PARAMETER VALUES
         #
-        # time_constant = self.time_constant
+        # smoothing_factor = self.smoothing_factor
         # range = self.range
         # noise = self.noise
         #
@@ -720,7 +705,7 @@ class KWTA(RecurrentTransferMechanism):
         #                                     self.instance_defaults.variable,
         #                                     initializer = self.initial_value,
         #                                     noise = self.noise,
-        #                                     rate = self.time_constant
+        #                                     rate = self.smoothing_factor
         #                                     )
         #
         #     current_input = self.integrator_function.execute(variable,
@@ -728,7 +713,7 @@ class KWTA(RecurrentTransferMechanism):
         #                                                      # params={INITIALIZER: self.previous_input,
         #                                                      #         INTEGRATION_TYPE: ADAPTIVE,
         #                                                      #         NOISE: self.noise,
-        #                                                      #         RATE: self.time_constant}
+        #                                                      #         RATE: self.smoothing_factor}
         #                                                      # context=context
         #                                                      # name=Integrator.componentName + '_for_' + self.name
         #                                                      )

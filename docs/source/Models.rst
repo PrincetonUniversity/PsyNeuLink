@@ -5,3 +5,7 @@ Fully executable scripts that implement published models used to simulate a set 
 illustrate principles of neural and/or psychological function.
 
 • `GilzenratModel`
+
+• `MontagueModel`
+
+• `NieuwenhuisModel`

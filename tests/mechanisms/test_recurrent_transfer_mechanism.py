@@ -43,7 +43,6 @@ class TestMatrixSpec:
             results.append(recurrent_mech.value)
         s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
               call_after_trial=record_trial)
-        print(results)
 
     def test_recurrent_mech_auto_auto_hetero(self):
 
@@ -52,7 +51,6 @@ class TestMatrixSpec:
                                                     auto=3.0,
                                                     hetero=-7.0)
 
-        print(recurrent_mech.recurrent_projection)
         p = Process(pathway=[T, recurrent_mech])
 
         s = System(processes=[p])
@@ -62,10 +60,6 @@ class TestMatrixSpec:
             results.append(recurrent_mech.value)
         s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
               call_after_trial=record_trial)
-        print(results)
-
-
-
 
 class TestRecurrentTransferMechanismInputs:
 
@@ -454,7 +448,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=NormalDist(),
-                time_constant=1.0,
+                smoothing_factor=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -466,7 +460,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=Reinforcement(),
-                time_constant=1.0,
+                smoothing_factor=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -478,7 +472,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=ConstantIntegrator(),
-                time_constant=1.0,
+                smoothing_factor=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -490,7 +484,7 @@ class TestRecurrentTransferMechanismFunction:
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 function=Reduce(),
-                time_constant=1.0,
+                smoothing_factor=1.0,
                 integrator_mode=True
             )
             R.execute([0, 0, 0, 0])
@@ -499,12 +493,12 @@ class TestRecurrentTransferMechanismFunction:
 
 class TestRecurrentTransferMechanismTimeConstant:
 
-    def test_recurrent_mech_time_constant_0_8(self):
+    def test_recurrent_mech_smoothing_factor_0_8(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            time_constant=0.8,
+            smoothing_factor=0.8,
             integrator_mode=True
         )
         val = R.execute([1, 1, 1, 1])
@@ -512,12 +506,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([1, 1, 1, 1])
         np.testing.assert_allclose(val, [[.96, .96, .96, .96]])
 
-    def test_recurrent_mech_time_constant_0_8_initial_0_5(self):
+    def test_recurrent_mech_smoothing_factor_0_8_initial_0_5(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            time_constant=0.8,
+            smoothing_factor=0.8,
             initial_value=np.array([[0.5, 0.5, 0.5, 0.5]]),
             integrator_mode=True
         )
@@ -526,12 +520,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([1, 2, 3, 4])
         np.testing.assert_allclose(val, [[.98, 1.78, 2.5800000000000005, 3.3800000000000003]])  # due to inevitable floating point errors
 
-    def test_recurrent_mech_time_constant_0_8_initial_1_8(self):
+    def test_recurrent_mech_smoothing_factor_0_8_initial_1_8(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            time_constant=0.8,
+            smoothing_factor=0.8,
             initial_value=np.array([[1.8, 1.8, 1.8, 1.8]]),
             integrator_mode=True
         )
@@ -542,12 +536,12 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([-4, -3, 0, 1])
         np.testing.assert_allclose(val, [[-2.8336, -2.0336000000000003, .36639999999999995, 1.1663999999999999]])
 
-    def test_recurrent_mech_time_constant_0_8_initial_1_2(self):
+    def test_recurrent_mech_smoothing_factor_0_8_initial_1_2(self):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            time_constant=0.8,
+            smoothing_factor=0.8,
             initial_value=np.array([[-1, 1, -2, 2]]),
             integrator_mode=True
         )
@@ -596,6 +590,26 @@ class TestRecurrentTransferMechanismInProcess:
         np.testing.assert_allclose(R.value, [[-1.0, 4.0, 2.0, 11.5]])
         np.testing.assert_allclose(T.value, [[16.5, 16.5, 16.5]])
 
+    def test_transfer_mech_process_matrix_change(self):
+        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+        T1 = TransferMechanism(
+            size=4,
+            function=Linear)
+        proj = MappingProjection(matrix=[[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]])
+        T2 = TransferMechanism(
+            size=4,
+            function=Linear)
+
+        p = Process(size=4, pathway=[T1, proj, T2])
+
+        p.run(inputs={T1: [[1, 2, 3, 4]]})
+        proj.matrix = [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
+        assert np.allclose(proj.matrix, [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]])
+        # p.run(inputs={T1: [[1, 2, 3, 4]]})
+        T1.execute([[1, 2, 3, 4]])
+        proj.execute(context="EXECUTING testing projection")
+        assert np.allclose(proj.matrix, np.array([[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]))
+
     def test_recurrent_mech_process_matrix_change(self):
         R = RecurrentTransferMechanism(
             size=4,
@@ -606,6 +620,7 @@ class TestRecurrentTransferMechanismInProcess:
             function=Linear)
         p = Process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.matrix = [[2, 0, 1, 3]] * 4
+
         p.run(inputs={T: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(T.value, [[1, 2, 3, 4]])
         np.testing.assert_allclose(R.value, [[1, 2, 3, 4]])
@@ -698,7 +713,7 @@ class TestRecurrentTransferMechanismInSystem:
         s.run(inputs={R: [[-1.5, 0, 1, 2]]})
         np.testing.assert_allclose(R.value, [[-.5, 4, 10, 0]])
         np.testing.assert_allclose(T.value, [[13.5, 13.5, 13.5, 13.5, 13.5]])
-        R.hetero = [[-1, 2, 3, 1.5]] * 4
+        R.hetero = np.array([[-1, 2, 3, 1.5]] * 4)
         s.run(inputs={R: [[12, 11, 10, 9]]})
         np.testing.assert_allclose(R.value, [[-2.5, 38, 50.5, 29.25]])
         np.testing.assert_allclose(T.value, [[115.25, 115.25, 115.25, 115.25, 115.25]])
@@ -752,7 +767,7 @@ class TestRecurrentTransferMechanismInSystem:
                                        )
         # Test that all of these are the same:
         np.testing.assert_allclose(
-            R.matrix,
+            R.recurrent_projection.mod_matrix,
             [
                 [0.1,  0.1, 0.1, 0.1],
                 [0.1, 0.1, 0.1, 0.1],
@@ -775,7 +790,7 @@ class TestRecurrentTransferMechanismInSystem:
         p.execute([1, 1, 0, 0])
         np.testing.assert_allclose(R.value, [[1.28, 1.28, 0.28, 0.28]])
         np.testing.assert_allclose(
-            R.matrix,
+            R.recurrent_projection.mod_matrix,
             [
                 [0.18192000000000003, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
                 [0.18192000000000003, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
@@ -786,7 +801,7 @@ class TestRecurrentTransferMechanismInSystem:
         p.execute([1, 1, 0, 0])
         np.testing.assert_allclose(R.value, [[1.5317504, 1.5317504, 0.3600704, 0.3600704]])
         np.testing.assert_allclose(
-            R.matrix,
+            R.recurrent_projection.mod_matrix,
             [
                 [0.299232964395008, 0.299232964395008, 0.14549689896140802, 0.14549689896140802],
                 [0.299232964395008, 0.299232964395008, 0.14549689896140802, 0.14549689896140802],

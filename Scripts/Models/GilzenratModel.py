@@ -4,17 +4,11 @@ This implements a model of Locus Coeruleus / Norepinephrine (LC/NE) function des
 and electrophysiological data (from LC recordings) in non-human primates.
 
 """
-from matplotlib import pyplot as plt
-import sys
 import numpy as np
+import psyneulink as pnl
+import sys
 
-from psyneulink.library.mechanisms.processing.transfer.lca import LCA
-from psyneulink.components.functions.function import Linear, Logistic, NormalDist
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
+from matplotlib import pyplot as plt
 
 # Define Variables ----------------------------------------------------------------------------------------------------
 
@@ -44,99 +38,121 @@ high_C = True
 if high_C:
     C = 0.95            # Mode ("coherence")
     initial_hv = 0.07   # Initial value for h(v)
-    initial_u=0.14      # initial value u
+    initial_u = 0.14      # initial value u
 else:
     C = 0.55            # Mode ("coherence")
     initial_hv = 0.2    # Initial value for h(v)
     initial_u = 0.2     # initial value u
 
-initial_v = (initial_hv - (1-C)*d)/C    # get initial v from initial h(v)
+initial_v = (initial_hv - (1 - C) * d) / C    # get initial v from initial h(v)
 
 # Create mechanisms ---------------------------------------------------------------------------------------------------
 
 # Input Layer --- [ Target, Distractor ]
-input_layer = TransferMechanism(size=2,
-                                initial_value=np.array([[0.0, 0.0]]),
-                                name='INPUT LAYER')
+input_layer = pnl.TransferMechanism(
+    size=2,
+    initial_value=np.array([[0.0, 0.0]]),
+    name='INPUT LAYER'
+)
 
 # Create Decision Layer  --- [ Target, Distractor ]
 
-decision_layer = LCA(size=2,
-                     time_step_size=dt,
-                     leak=-1.0,
-                     self_excitation=w_XiXi,
-                     competition=w_XiXj,
-                     #  Recurrent matrix: [  w_XiXi   -w_XiXj ]
-                     #                    [ -w_XiXj    w_XiXi ]
-                     function=Logistic(bias=b_decision),
-                     noise=NormalDist(standard_dev=SD).function,
-                     integrator_mode=True,
-                     name='DECISION LAYER')
+decision_layer = pnl.LCA(
+    size=2,
+    time_step_size=dt,
+    leak=-1.0,
+    self_excitation=w_XiXi,
+    competition=w_XiXj,
+    #  Recurrent matrix: [  w_XiXi   -w_XiXj ]
+    #                    [ -w_XiXj    w_XiXi ]
+    function=pnl.Logistic(bias=b_decision),
+    noise=pnl.NormalDist(standard_dev=SD).function,
+    integrator_mode=True,
+    name='DECISION LAYER'
+)
 
 # Create Response Layer  --- [ Target ]
 
-response_layer = LCA(size=1,
-                     time_step_size=dt,
-                     leak=-1.0,
-                     self_excitation=w_X3X3,
-                     #  Recurrent matrix: [w_X3X3]
-                     #  Competition param does not apply because there is only one unit
-                     function=Logistic(bias=b_response),
-                     noise=NormalDist(standard_dev=SD).function,
-                     integrator_mode=True,
-                     name='RESPONSE')
+response_layer = pnl.LCA(
+    size=1,
+    time_step_size=dt,
+    leak=-1.0,
+    self_excitation=w_X3X3,
+    #  Recurrent matrix: [w_X3X3]
+    #  Competition param does not apply because there is only one unit
+    function=pnl.Logistic(bias=b_response),
+    noise=pnl.NormalDist(standard_dev=SD).function,
+    integrator_mode=True,
+    name='RESPONSE'
+)
 
 # Connect mechanisms --------------------------------------------------------------------------------------------------
 
 # Weight matrix from Input Layer --> Decision Layer
-input_weights = np.array([[w_XiIi, w_XiIj],
-                          [w_XiIj, w_XiIi]])
+input_weights = np.array([
+    [w_XiIi, w_XiIj],
+    [w_XiIj, w_XiIi]
+])
 
 # Weight matrix from Decision Layer --> Response Layer
-output_weights = np.array([[w_X3X1],
-                           [0.00]])
+output_weights = np.array([
+    [w_X3X1],
+    [0.00]
+])
 
-decision_process = Process(pathway=[input_layer,
-                                    input_weights,
-                                    decision_layer,
-                                    output_weights,
-                                    response_layer],
-                           name='DECISION PROCESS')
+decision_process = pnl.Process(
+    pathway=[
+        input_layer,
+        input_weights,
+        decision_layer,
+        output_weights,
+        response_layer
+    ],
+    name='DECISION PROCESS'
+)
 
 # Monitor decision layer in order to modulate gain --------------------------------------------------------------------
 
-LC = LCControlMechanism(integration_method="EULER",
-                        threshold_FHN=a,
-                        uncorrelated_activity_FHN=d,
-                        base_level_gain=G,
-                        scaling_factor_gain=k,
-                        time_step_size_FHN=dt,
-                        mode_FHN=C,
-                        time_constant_v_FHN=tau_v,
-                        time_constant_w_FHN=tau_u,
-                        a_v_FHN=-1.0,
-                        b_v_FHN=1.0,
-                        c_v_FHN=1.0,
-                        d_v_FHN=0.0,
-                        e_v_FHN=-1.0,
-                        f_v_FHN=1.0,
-                        a_w_FHN=1.0,
-                        b_w_FHN=-1.0,
-                        c_w_FHN=0.0,
-                        t_0_FHN=0.0,
-                        initial_v_FHN=initial_v,
-                        initial_w_FHN=initial_u,
-                        objective_mechanism=ObjectiveMechanism(function=Linear,
-                                                               monitored_output_states=[(decision_layer,
-                                                                                        None,
-                                                                                        None,
-                                                                                        np.array([[w_vX1],
-                                                                                                  [0.0]]))],
-                                                               name='LC ObjectiveMechanism'),
-                        modulated_mechanisms=[decision_layer, response_layer],  # Modulate gain of decision & response layers
-                        name='LC')
+LC = pnl.LCControlMechanism(
+    integration_method="EULER",
+    threshold_FHN=a,
+    uncorrelated_activity_FHN=d,
+    base_level_gain=G,
+    scaling_factor_gain=k,
+    time_step_size_FHN=dt,
+    mode_FHN=C,
+    time_constant_v_FHN=tau_v,
+    time_constant_w_FHN=tau_u,
+    a_v_FHN=-1.0,
+    b_v_FHN=1.0,
+    c_v_FHN=1.0,
+    d_v_FHN=0.0,
+    e_v_FHN=-1.0,
+    f_v_FHN=1.0,
+    a_w_FHN=1.0,
+    b_w_FHN=-1.0,
+    c_w_FHN=0.0,
+    t_0_FHN=0.0,
+    initial_v_FHN=initial_v,
+    initial_w_FHN=initial_u,
+    objective_mechanism=pnl.ObjectiveMechanism(
+        function=pnl.Linear,
+        monitored_output_states=[(
+            decision_layer,
+            None,
+            None,
+            np.array([
+                [w_vX1],
+                [0.0]]
+            )
+        )],
+        name='LC ObjectiveMechanism'
+    ),
+    modulated_mechanisms=[decision_layer, response_layer],  # Modulate gain of decision & response layers
+    name='LC'
+)
 
-task = System(processes=[decision_process])
+task = pnl.System(processes=[decision_process])
 
 # This displays a diagram of the System
 task.show_graph(show_dimensions=True)
@@ -155,15 +171,19 @@ stimulus_dictionary = {input_layer: np.repeat(np.array([[0.0, 0.0], [1.0, 0.0]])
 # Record results & run model ------------------------------------------------------------------------------------------
 
 # Function to compute h(v) from LC's v value
-def h_v(v,C,d):
-    return C*v + (1-C)*d
+
+
+def h_v(v, C, d):
+    return C * v + (1 - C) * d
+
 
 # Initialize output arrays for plotting and storing values
-LC_results_h_of_v = [h_v(initial_v,C,d)]
+LC_results_h_of_v = [h_v(initial_v, C, d)]
 LC_results_u = [initial_u]
 decision_layer_target_values = [0.0]
 decision_layer_distractor_values = [0.0]
 response_layer_values = [0.0]
+
 
 def record_trial():
     # After each trial, store all of the following values:
@@ -175,55 +195,65 @@ def record_trial():
 
     # Progress bar
     current_trial_num = len(LC_results_h_of_v)
-    if current_trial_num%50 == 0:
-        percent = int(round((float(current_trial_num) / trials)*100))
-        sys.stdout.write("\r"+ str(percent) +"% complete")
+    if current_trial_num % 50 == 0:
+        percent = int(round((float(current_trial_num) / trials) * 100))
+        sys.stdout.write("\r" + str(percent) + "% complete")
         sys.stdout.flush()
+
 
 # Initialize progress bar
 sys.stdout.write("\r0% complete")
 sys.stdout.flush()
 
 # Run the model
-task.run(inputs=stimulus_dictionary,
-         num_trials=trials,
-         call_after_trial=record_trial)
+task.run(
+    inputs=stimulus_dictionary,
+    num_trials=trials,
+    call_after_trial=record_trial
+)
 
 # Plot results of all units into one figure ---------------------------------------------------------------------------
 
-# import matplotlib
-# matplotlib.use('Agg')
-import numpy as np
 
 # Create x axis "t" for plotting
 t = np.arange(0.0, 20.02, 0.02)
 
 # Plot target unit, distraction unit, response unit, h(v), and u using the values that were recorded after each trial
-plt.plot(t,
-         decision_layer_target_values,
-         label="target unit",
-         color = 'green')
-plt.plot(t,
-         decision_layer_distractor_values,
-         label="distraction unit",
-         color = 'red')
-plt.plot(t,
-         response_layer_values,
-         label="response unit",
-         color = 'magenta')
-plt.plot(t,
-         LC_results_h_of_v,
-         label="h(v)",
-         color = 'b')
-plt.plot(t,
-         LC_results_u,
-         label="u",
-         color = 'black')
+plt.plot(
+    t,
+    decision_layer_target_values,
+    label="target unit",
+    color='green'
+)
+plt.plot(
+    t,
+    decision_layer_distractor_values,
+    label="distraction unit",
+    color='red'
+)
+plt.plot(
+    t,
+    response_layer_values,
+    label="response unit",
+    color='magenta'
+)
+plt.plot(
+    t,
+    LC_results_h_of_v,
+    label="h(v)",
+    color='b'
+)
+plt.plot(
+    t,
+    LC_results_u,
+    label="u",
+    color='black'
+)
 
 plt.xlabel('Time')
 plt.ylabel('Activation')
 plt.legend(loc='upper left')
-plt.xlim((0.0,20.0))
+plt.xlim((0.0, 20.0))
 plt.ylim((-0.2, 1.2))
 x_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
 plt.xticks(x_values)
@@ -236,4 +266,3 @@ task.show()
 
 # This displays a diagram of the System
 task.show_graph()
-

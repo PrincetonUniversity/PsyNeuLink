@@ -140,7 +140,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                  default_input_value=None,
                  size=None,
                  function = Linear(slope = 1, intercept=0.0),
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

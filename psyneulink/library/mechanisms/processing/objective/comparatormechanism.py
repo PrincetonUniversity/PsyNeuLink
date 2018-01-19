@@ -22,7 +22,7 @@ Creating a ComparatorMechanism
 ------------------------------
 
 ComparatorMechanisms are generally created automatically when other PsyNeuLink components are created (such as
-`LearningMechanism <LearningMechanism_Creation>`.  A ComparatorMechanism can also be created directly by calling
+`LearningMechanisms <LearningMechanism_Creation>`).  A ComparatorMechanism can also be created directly by calling
 its constructor.  Its **sample** and **target** arguments are used to specify the OutputStates that provide the
 sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their
 specification, which are special versions of an ObjectiveMechanism's **monitored_output_states** argument).  When the
@@ -39,7 +39,7 @@ If these differ, the **input_states** argument can be used to explicitly specify
 *SAMPLE* and *TARGET* InputStates, to insure they are compatible with one another (as well as to customize their
 names, if desired).  If the **input_states** argument is used, *both* the sample and target InputStates must be
 specified.  Any of the formats for `specifying InputStates <InputState_Specification>` can be used in the argument.
-If values are assigned for the InputStates, they must be of equal length and type.  Their types must be
+If values are assigned for the InputStates, they must be of equal length and type.  Their types must
 also be compatible with the value of the OutputStates specified in the **sample** and **target** arguments.  However,
 the length specified for an InputState can differ from its corresponding OutputState;  in that case, by default, the
 MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, OutputStates of differing lengths can be mapped
@@ -59,12 +59,12 @@ constructor.  The InputStates are listed in the Mechanism's `input_states <Compa
 and named, respectively, *SAMPLE* and *TARGET*.  The OutputStates from which they receive their projections (specified
 in the **sample** and **target** arguments) are listed in the Mechanism's `sample <ComparatorMechanism.sample>` and
 `target <ComparatorMechanism.target>` attributes as well as in its `monitored_output_states
-<Comparator.monitored_output_states>` attribute. The ComparatorMechanism's `function <ComparatorMechanism.function>`
+<ComparatorMechanism.monitored_output_states>` attribute. The ComparatorMechanism's `function <ComparatorMechanism.function>`
 compares the value of the sample and target InputStates.  By default, it uses a `LinearCombination` function,
 assigning the sample InputState a `weight <LinearCombination.weight>` of *-1* and the target a `weight
 <LinearCombination.weight>` of *1*, so that the sample is subtracted from the target.  However, the `function
 <ComparatorMechanism.function>` can be customized, so long as it is replaced with one that takes two arrays with the
-same format as its inputs, and generates a similar array as its result. The result is assigned as the value of the
+same format as its inputs and generates a similar array as its result. The result is assigned as the value of the
 Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`) OutputState.
 
 .. _ComparatorMechanism_Function:
@@ -72,9 +72,9 @@ Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`) OutputState.
 Execution
 ---------
 
-When an ComparatorMechanism is executed, it updates its input_states with the values of the OutputStates specified
+When a ComparatorMechanism is executed, it updates its input_states with the values of the OutputStates specified
 in its **sample** and **target** arguments, and then uses its `function <ComparatorMechanism.function>` to
-compare these.  By default, the result is assigned as to the `value <ComparatorMechanism.value>` of its *OUTCOME*
+compare these.  By default, the result is assigned to the `value <ComparatorMechanism.value>` of its *OUTCOME*
 `output_state <ComparatorMechanism.output_state>`, and as the first item of the Mechanism's
 `output_values <ComparatorMechanism.output_values>` attribute.
 
@@ -128,6 +128,7 @@ Class Reference
 
 import numpy as np
 import typecheck as tc
+
 from collections import Iterable
 
 from psyneulink.components.functions.function import LinearCombination
@@ -137,11 +138,10 @@ from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, TIME_SCALE, VARIABLE, kwPreferenceSetName
+from psyneulink.globals.keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'COMPARATOR_OUTPUT', 'ComparatorMechanism', 'ComparatorMechanismError', 'MSE', 'SSE',
@@ -149,6 +149,7 @@ __all__ = [
 
 SSE = 'SSE'
 MSE = 'MSE'
+
 
 class COMPARATOR_OUTPUT():
     """
@@ -293,8 +294,8 @@ class ComparatorMechanism(ObjectiveMechanism):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ComparatorMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the ComparatorMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
 
@@ -313,7 +314,6 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME: SSE,
@@ -459,7 +459,8 @@ class ComparatorMechanism(ObjectiveMechanism):
         #    - validate that there are exactly two items in default_variable or input_states list
         #    - if there is an input_states list, parse it and use it to update sample and target dicts
         if input_states:
-            input_states[INPUT_STATES]
+            input_states = input_states[INPUT_STATES]
+            # print("type input_states = {}".format(type(input_states)))
             if not isinstance(input_states, list):
                 raise ComparatorMechanismError("If an \'{}\' argument is included in the constructor for a {} "
                                                "it must be a list with two {} specifications.".
