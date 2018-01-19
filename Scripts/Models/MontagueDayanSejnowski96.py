@@ -1,38 +1,30 @@
 """
-This implements a model of mesolimbic dopamine cell activity during monkey 
+This implements a model of mesolimbic dopamine cell activity during monkey
 conditioning as found in `Montague, Dayan, and Sejnowski (1996) in PsyNeuLink
 <http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_
 """
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
 import numpy as np
+import psyneulink as pnl
 
-from psyneulink.globals.keywords import SAMPLE
-from psyneulink.components.mechanisms.processing.transfermechanism import \
-    TransferMechanism
-from psyneulink.components.projections.modulatory.learningprojection import \
-    LearningProjection
-from psyneulink.components.projections.pathway.mappingprojection import \
-    MappingProjection
-from psyneulink.components.process import Process
-from psyneulink.components.system import System
-from psyneulink.components.functions.function import Linear, TDLearning
+# needed for 3d plotting in full_experiment and response_extinction
+from mpl_toolkits import mplot3d
 
 
 def model_training():
     """
-    This creates the plot for figure 5A in the Montague paper. Figure 5A is 
+    This creates the plot for figure 5A in the Montague paper. Figure 5A is
     a 'plot of ∂(t) over time for three trials during training (1, 30, and 50).'
     """
-    sample = TransferMechanism(
-            default_variable=np.zeros(60),
-            name=SAMPLE
+    sample = pnl.TransferMechanism(
+        default_variable=np.zeros(60),
+        name=pnl.SAMPLE
     )
 
-    action_selection = TransferMechanism(
-            default_variable=np.zeros(60),
-            function=Linear(slope=1.0, intercept=1.0),
-            name='Action Selection'
+    action_selection = pnl.TransferMechanism(
+        default_variable=np.zeros(60),
+        function=pnl.Linear(slope=1.0, intercept=1.0),
+        name='Action Selection'
     )
 
     stimulus_onset = 41
@@ -54,19 +46,21 @@ def model_training():
     targets[74][reward_delivery] = 0
     targets[89][reward_delivery] = 0
 
-    MappingProjection(sender=sample,
-                      receiver=action_selection,
-                      matrix=np.full((60, 60), 0.0))
+    pnl.MappingProjection(
+        sender=sample,
+        receiver=action_selection,
+        matrix=np.full((60, 60), 0.0)
+    )
+    learning_projection = pnl.LearningProjection(
+        learning_function=pnl.TDLearning(learning_rate=0.3)
+    )
 
-    learning_projection = LearningProjection(
-            learning_function=TDLearning(learning_rate=0.3))
-
-    p = Process(
-            default_variable=np.zeros(60),
-            pathway=[sample, action_selection],
-            learning=learning_projection,
-            size=60,
-            target=np.zeros(60)
+    p = pnl.Process(
+        default_variable=np.zeros(60),
+        pathway=[sample, action_selection],
+        learning=learning_projection,
+        size=60,
+        target=np.zeros(60)
     )
     trial = 0
 
@@ -79,12 +73,12 @@ def model_training():
         delta_vals[trial] = s.mechanisms[2].value
         trial += 1
 
-        print('Reward prediction weights: \n',
-              np.diag(
-                      action_selection.input_state.path_afferents[
-                          0].matrix))
-        print("\nAction selection value: {}".format(
-                action_selection.value[0][0]))
+        print(
+            'Reward prediction weights: \n{0}'.format(
+                np.diag(action_selection.input_state.path_afferents[0].matrix)
+            )
+        )
+        print("\nAction selection value: {}".format(action_selection.value[0][0]))
 
     input_list = {
         sample: samples
@@ -94,17 +88,17 @@ def model_training():
         action_selection: targets
     }
 
-    s = System(processes=[p])
+    s = pnl.System(processes=[p])
 
     delta_vals = np.zeros((120, 60))
 
-    results = s.run(
-            num_trials=120,
-            inputs=input_list,
-            targets=target_list,
-            learning=True,
-            call_before_trial=print_header,
-            call_after_trial=store_delta_vals
+    s.run(
+        num_trials=120,
+        inputs=input_list,
+        targets=target_list,
+        learning=True,
+        call_before_trial=print_header,
+        call_after_trial=store_delta_vals
     )
     with plt.style.context('seaborn'):
         plt.plot(delta_vals[0], "-o", label="Trial 1")
@@ -121,19 +115,19 @@ def model_training():
 
 def model_training_full_experiment():
     """
-    This creates the plot for figure 5B in the Montague paper. Figure 5B shows 
-    the 'entire time course of model responses (trials 1-150).' The setup is 
+    This creates the plot for figure 5B in the Montague paper. Figure 5B shows
+    the 'entire time course of model responses (trials 1-150).' The setup is
     the same as in Figure 5A, except that training begins at trial 10.
     """
-    sample = TransferMechanism(
-            default_variable=np.zeros(60),
-            name=SAMPLE
+    sample = pnl.TransferMechanism(
+        default_variable=np.zeros(60),
+        name=pnl.SAMPLE
     )
 
-    action_selection = TransferMechanism(
-            default_variable=np.zeros(60),
-            function=Linear(slope=1.0, intercept=1.0),
-            name='Action Selection'
+    action_selection = pnl.TransferMechanism(
+        default_variable=np.zeros(60),
+        function=pnl.Linear(slope=1.0, intercept=1.0),
+        name='Action Selection'
     )
 
     stimulus_onset = 41
@@ -154,19 +148,22 @@ def model_training_full_experiment():
     for t in no_reward_trials:
         targets[t][reward_delivery] = 0
 
-    MappingProjection(sender=sample,
-                      receiver=action_selection,
-                      matrix=np.zeros((60, 60)))
+    pnl.MappingProjection(
+        sender=sample,
+        receiver=action_selection,
+        matrix=np.zeros((60, 60))
+    )
 
-    learning_projection = LearningProjection(
-            learning_function=TDLearning(learning_rate=0.3))
+    learning_projection = pnl.LearningProjection(
+        learning_function=pnl.TDLearning(learning_rate=0.3)
+    )
 
-    p = Process(
-            default_variable=np.zeros(60),
-            pathway=[sample, action_selection],
-            learning=learning_projection,
-            size=60,
-            target=np.zeros(60)
+    p = pnl.Process(
+        default_variable=np.zeros(60),
+        pathway=[sample, action_selection],
+        learning=learning_projection,
+        size=60,
+        target=np.zeros(60)
     )
     trial = 0
 
@@ -187,17 +184,17 @@ def model_training_full_experiment():
         action_selection: targets
     }
 
-    s = System(processes=[p])
+    s = pnl.System(processes=[p])
 
     delta_vals = np.zeros((120, 60))
 
-    results = s.run(
-            num_trials=120,
-            inputs=input_list,
-            targets=target_list,
-            learning=True,
-            call_before_trial=print_header,
-            call_after_trial=store_delta_vals
+    s.run(
+        num_trials=120,
+        inputs=input_list,
+        targets=target_list,
+        learning=True,
+        call_before_trial=print_header,
+        call_after_trial=store_delta_vals
     )
     with plt.style.context('seaborn'):
         fig = plt.figure()
@@ -214,19 +211,19 @@ def model_training_full_experiment():
 
 def model_training_response_extinction():
     """
-    This creates the plot for Figure 5C in the Montague paper. Figure 5C shows 
-    'extinction of response to the sensory cue.' The setup is the same as 
+    This creates the plot for Figure 5C in the Montague paper. Figure 5C shows
+    'extinction of response to the sensory cue.' The setup is the same as
     Figure 5A, except that reward delivery stops at trial 70
     """
-    sample = TransferMechanism(
-            default_variable=np.zeros(60),
-            name=SAMPLE
+    sample = pnl.TransferMechanism(
+        default_variable=np.zeros(60),
+        name=pnl.SAMPLE
     )
 
-    action_selection = TransferMechanism(
-            default_variable=np.zeros(60),
-            function=Linear(slope=1.0, intercept=1.0),
-            name='Action Selection'
+    action_selection = pnl.TransferMechanism(
+        default_variable=np.zeros(60),
+        function=pnl.Linear(slope=1.0, intercept=1.0),
+        name='Action Selection'
     )
 
     stimulus_onset = 42
@@ -246,19 +243,22 @@ def model_training_response_extinction():
 
     print("targets = {}".format(targets))
 
-    MappingProjection(sender=sample,
-                      receiver=action_selection,
-                      matrix=np.zeros((60, 60)))
+    pnl.MappingProjection(
+        sender=sample,
+        receiver=action_selection,
+        matrix=np.zeros((60, 60))
+    )
 
-    learning_projection = LearningProjection(
-            learning_function=TDLearning(learning_rate=0.3))
+    learning_projection = pnl.LearningProjection(
+        learning_function=pnl.TDLearning(learning_rate=0.3)
+    )
 
-    p = Process(
-            default_variable=np.zeros(60),
-            pathway=[sample, action_selection],
-            learning=learning_projection,
-            size=60,
-            target=np.zeros(60)
+    p = pnl.Process(
+        default_variable=np.zeros(60),
+        pathway=[sample, action_selection],
+        learning=learning_projection,
+        size=60,
+        target=np.zeros(60)
     )
 
     trial = 0
@@ -275,7 +275,7 @@ def model_training_response_extinction():
         action_selection: targets
     }
 
-    s = System(processes=[p])
+    s = pnl.System(processes=[p])
 
     delta_vals = np.zeros((150, 60))
     trial = 0
@@ -285,13 +285,13 @@ def model_training_response_extinction():
         delta_vals[trial] = s.mechanisms[2].value
         trial += 1
 
-    results = s.run(
-            num_trials=150,
-            inputs=input_list,
-            targets=target_list,
-            learning=True,
-            call_before_trial=print_header,
-            call_after_trial=store_delta_vals
+    s.run(
+        num_trials=150,
+        inputs=input_list,
+        targets=target_list,
+        learning=True,
+        call_before_trial=print_header,
+        call_after_trial=store_delta_vals
     )
     with plt.style.context('seaborn'):
         fig = plt.figure()
