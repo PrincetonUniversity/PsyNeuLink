@@ -1,0 +1,4 @@
+#!/bin/bash
+# used for mybinder.org hosting of tutorial notebook
+pip3 install .
+pip3 install -r tutorial_requirements.txt
