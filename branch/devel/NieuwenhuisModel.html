@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Nieuwenhuis et al. (2005) &mdash; PsyNeuLink 0.4.2.0+13.gdddb87b documentation</title>
+  <title>Nieuwenhuis et al. (2005) &mdash; PsyNeuLink 0.4.2.0+20.g9c3aab1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.2.0+13.gdddb87b documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.2.0+20.g9c3aab1 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.2.0+13
+                0.4.2.0+20
               </div>
             
           
@@ -166,53 +166,83 @@
 in perceiving the second of two targets presented in close temporal proximity.</p>
 <p>In the <a class="reference external" href="http://www.scholarpedia.org/article/Attentional_blink">attentional blink paradigm</a>, each trial consists of a
 rapidly presented sequence of stimuli, one of which is marked as a target (e.g., by being a different color, or by being
-a digit rather than a letter).  The participant is asked to observe the sequence, then do their best to identify the
-target (T1) as well as the stimulus that immediately follows it (T2).  A consistent finding is that the  accuracy of
-identifying both T1 and T2 correctly depends on the lag between them. In particular, accuracy is high when T2 is
-presented <em>immediately</em> after the first target (T1), but drops when T2 is presented between 200 and 300ms after the
-onset of T1, and then is restored at delays longer than 400ms.</p>
+a digit rather than a letter).  The participant is asked to observe the sequence, then identify the target (T1) as well
+as the stimulus that immediately follows it (T2).  A consistent finding is that accuracy with which both T1 and T2 are
+identified depends on the lag between them. In particular, accuracy is high when T2 is presented <em>immediately</em> after T1,
+drops when T2 is presented between 200 and 300ms after the onset of T1, and is restored at delays longer than 400ms.</p>
 <p>The model described by Nieuwenhuis et al. (2005) suggests that these findings can be explained by phasic activation
 of LC in response to T1, and the concomitant effects of norepinephrine (NE) release on neural gain, followed by
-refractoriness of the LC/NE response.  The model demonstrates that accuracy in identifying T2 depends on:
-* whether T1 was accurately identified;
-* the lag between T1 and T2;
-* the <a class="reference internal" href="LCControlMechanism.html#lccontrolmechanism-modes-of-operation"><span class="std std-ref">mode of the LC</span></a> (<a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/8027789">phasic or tonic</a>).</p>
-<p>The Figure below show the behavior of the model for a single execution of with a lag of 200ms, corresponding to the
-conditions reported in Figure 3 of Nieuwenhuis et al. (2005) (note that their Figure reports the average over 1000
-executions).</p>
+refractoriness of the LC/NE system after a phasice response.  The model demonstrates that accuracy in identifying T2
+depends on:</p>
+<blockquote>
+<div><ul class="simple">
+<li>whether T1 was accurately identified;</li>
+<li>the lag between T1 and T2;</li>
+<li>the <a class="reference internal" href="LCControlMechanism.html#lccontrolmechanism-modes-of-operation"><span class="std std-ref">mode of the LC</span></a>
+(phasic or tonic – see <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/8027789">https://www.ncbi.nlm.nih.gov/pubmed/8027789</a>).</li>
+</ul>
+</div></blockquote>
+<p>The Figure below shows the behavior of the model for a single execution of a trial with a lag of 200ms (without noise),
+corresponding to the conditions reported in Figure 3 of Nieuwenhuis et al. (2005; averaged over 1000 executions with
+noise).</p>
 <div class="figure align-left" id="nieuwenhuis2005-psyneulink-fig" style="width: 45%">
 <img alt="Nieuwenhuis et al. 2005 plot produced by PsyNeuLink" src="_images/Nieuwenhuis2005_psyneulink.svg" /></div>
 <div class="figure align-left" id="nieuwenhuis2005-matlab-fig" style="width: 45%">
 <img alt="Nieuwenhuis et al. 2005 plot produced by MATLAB" src="_images/Nieuwenhuis2005_MATLAB.svg" /></div>
-<p>The model consists of two subsystems: a behavioral network, in which stimulus information feeds forward from an input
-layer, via a decision layer, to a response layer;  and an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> that receives a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
-from the decision layer, and sends <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to the decision and response layers that
-regulate the gain of their <code class="xref any docutils literal"><span class="pre">LogisticFunction</span></code>.</p>
 </div>
-<div class="section" id="creating-nieuwenhuis-et-al-2005">
-<h2>Creating Nieuwenhuis et al. (2005)<a class="headerlink" href="#creating-nieuwenhuis-et-al-2005" title="Permalink to this headline">¶</a></h2>
-<p>After setting global variables, weights and initial values the behavioral network is created with 3 layers,
-i.e. INPUT LAYER, DECISION LAYER, and RESPONSE LAYER. The INPUT LAYER is constructed with a TransferMechansim of size 3,
-and a Linear function with the default slope set to 1.0 and the intercept set to 0.0.</p>
-<p>The DECISION LAYER is implemented with a LCA mechanism where each element is connected to every other element with
-mutually inhibitory weights and self-excitation weights, defined in PsyNeuLink as <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.competition" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a>, <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.self_excitation" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a>, and
-<a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak"><code class="xref any py py-attr docutils literal"><span class="pre">leak</span></code></a>. <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak"><code class="xref any py py-attr docutils literal"><span class="pre">leak</span></code></a> defines the sign of the off-diagonals, here the mutually inhibitory weights. The ordinary differential
-equation that describes the change in state with respect to time is implemented in the LCA mechanism with the
-<a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.integrator_mode" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> set to True and setting the <code class="xref any docutils literal"><span class="pre">time_step_size</span></code>.</p>
-<p>The final step is to implement the RESPONSE LAYER:
-The RESPONSE LAYER is implemented as the DECISION LAYER with a <a class="reference internal" href="LCA.html"><span class="doc">LCA</span></a> mechanism and the parameters specified as in the
-paper. (WATCH OUT !!! In the paper the weight “Mutual inhibition among response units” is not defined, but needs to be
-set to 0.0 in order to reproduce the paper)</p>
-<p>The weights of the behavioral network are created with two numpy arrays.</p>
-<p>The LC is implemented with a <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a>. The <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> has a FitzHugh–Nagumo system implemented.
-All parameters from this system are specified as in the paper. Additionally, the <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> can only monitor
-output states that come from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>. Thus, a <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> is created in the
-<a class="reference internal" href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> parameter with a <a class="reference internal" href="Function.html#linear"><span class="std std-ref">Linear</span></a> function set to it’s
-default values and the <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
-parameter set to decision_layer with the weights projecting from T1, T2 and the distraction element to the
-<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>. Note that the weights from the distraction unit are set to 0.0 since the paper did not implement
-weights from the distraction unit to the LC. The parameters G and k are set inside the <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a>.
-This LCControlMechanism projects a gain control signal to the DECISION LAYER and the RESPONSE LAYER.</p>
+<div class="section" id="the-model">
+<h2>The Model<a class="headerlink" href="#the-model" title="Permalink to this headline">¶</a></h2>
+<p>The model is comprised of two subsystems: a behavioral network, in which stimulus information feeds forward from an
+input layer, via a decision layer, to a response layer;  and an LC subystem that regulates the gain of the units in
+the decision and response layers.  Each of the layers in the behavioral network is implemented as a pathway of
+<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> and <a class="reference internal" href="LCA.html"><span class="doc">LCA</span></a> Mechanisms, and the LC subystem uses an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> and
+associated <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, as shown in the figure below:</p>
+<div class="figure align-left" id="nieuwenhuis2005-system-graph" style="width: 45%">
+<img alt="Nieuwenhuis System Graph" src="_images/Nieuwenhuis_SystemGraph.svg" /></div>
+<div class="section" id="behavioral-network">
+<h3>Behavioral Network<a class="headerlink" href="#behavioral-network" title="Permalink to this headline">¶</a></h3>
+<p><strong>INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with size=3, and uses a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with slope=1.0
+and intercept=0.0.</p>
+<p><strong>DECISION LAYER</strong>: an <a class="reference internal" href="LCA.html"><span class="doc">LCA</span></a> Mechanism of size=3, with a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function with a slope=1.0 and intercept=0.0, each element of which has a self-excitatory weight
+with a strength specified by the <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.self_excitation" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> parameter set to 2.5; a leak specified by the <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak"><code class="xref any py py-attr docutils literal"><span class="pre">leak</span></code></a> parameter set to -1.0;  and every element of which is connected to every other element by mutually inhibitory weights
+with a strength specified by the <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.competition" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> parameter set to 1.0.  An ordinary differential equation
+describes the change in state over time, implemented in the LCA mechanism by setting its <code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> to <code class="xref any docutils literal"><span class="pre">True</span></code> and setting a <code class="xref any docutils literal"><span class="pre">time_step_size</span></code> to 0.02.
+The output values of the <a class="reference internal" href="LCA.html"><span class="doc">LCA</span></a> Mechanism can be evaluated with the <a class="reference internal" href="Log.html#module-psyneulink.globals.log" title="psyneulink.globals.log"><code class="xref any py py-mod docutils literal"><span class="pre">log</span></code></a> function.</p>
+<p><strong>RESPONSE LAYER</strong>: an <a class="reference internal" href="LCA.html"><span class="doc">LCA</span></a> Mechanism of size=2, implemented as in the DECISION LAYER, with a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function with
+a slope=1.0 and intercept=0.0; the <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.self_excitation" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> parameter set to 2.0, the leak
+<a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak"><code class="xref any py py-attr docutils literal"><span class="pre">leak</span></code></a> set to -1.0, and mutually inhibitory weights specified by <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.competition" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> set to 0.
+The output values of the <a class="reference internal" href="LCA.html"><span class="doc">LCA</span></a> Mechanism can be evaluated with the <a class="reference internal" href="Log.html#module-psyneulink.globals.log" title="psyneulink.globals.log"><code class="xref any py py-mod docutils literal"><span class="pre">log</span></code></a> function.</p>
+<dl class="docutils">
+<dt><strong>CONNECTIONS</strong>:  The weights of the behavioral network are implemented as <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.</dt>
+<dd>The one from the <em>INPUT_LAYER</em> to the <em>DECISION_LAYER</em> uses a numpy array with a value of 1.5 for the diagonal to and
+a value of 0.33 for the off-diagonal as its <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter;  and the one from
+the <em>DECISION_LAYER</em> to the <em>RESPONSE LAYER</em> uses a numpy array of 3.5 for the diagonal and 0 for the off-diagonal as
+its <a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter.</dd>
+</dl>
+</div>
+<div class="section" id="lc-subsystem">
+<h3>LC Subsystem<a class="headerlink" href="#lc-subsystem" title="Permalink to this headline">¶</a></h3>
+<p>The LC is implemented as a <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> and its associated <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.  An LCControlMechanism
+uses a <code class="xref any docutils literal"><span class="pre">FitzHugh–Nagumo</span></code> integrator function to simulate the population-level activity of the LC (see <code class="xref any docutils literal"><span class="pre">Gilzenrat</span>
+<span class="pre">Model</span></code>), parameterized as described in the paper. The ObjectiveMechanism is specified in the <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> argument of the LCControlMechanism constructor with a <a class="reference internal" href="Function.html#linear"><span class="std std-ref">Linear</span></a>
+function of slope=1 and intercept=0, and its <a class="reference internal" href="LCControlMechanism.html#psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states" title="psyneulink.library.subsystems.agt.lccontrolmechanism.LCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
+argument specified as the <em>DECISION LAYER</em> with a matrix specifying the connection from each of its elements to the
+<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>. The weight from the distractor element of the <em>DECISION LAYER</em> is set to 0.0 since, as in the
+original model, the distractor stimulus is assumed not to elicit an LC response. The two weights from the target 1 and
+target 2 elements are set to 0.3.
+Note the linear projection from the <em>DECISION LAYER</em> to the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> leads to an input state of length one
+to the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>. The <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> used does not represent a specific mechanism listed in
+the paper, but is required in PsyNeuLink when a <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> is implemented.
+The parameters <code class="xref any docutils literal"><span class="pre">G</span></code> = 0.5 and <code class="xref any docutils literal"><span class="pre">k</span></code> = 1.5 are set inside the <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a>.
+The LCControlMechanism sends <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to the <em>DECISION LAYER</em> and <em>RESPONSE LAYER</em>, that
+regulate the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic.gain" title="psyneulink.components.functions.function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter of their <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Functions.</p>
+<p>The <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> outputs the values <code class="xref any docutils literal"><span class="pre">u</span></code>, <code class="xref any docutils literal"><span class="pre">v</span></code> and
+<code class="xref any docutils literal"><span class="pre">gain</span></code>. The constructor can output these values using the <a class="reference internal" href="Log.html#module-psyneulink.globals.log" title="psyneulink.globals.log"><code class="xref any py py-mod docutils literal"><span class="pre">log</span></code></a> function.</p>
+</div>
+</div>
+<div class="section" id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="Run.html#environment.run" title="environment.run"><code class="xref any py py-func docutils literal"><span class="pre">run</span></code></a> function executes the model, with a list of stimulus inputs specified and the number of executions specified.</p>
 <p>Script: <a class="reference download internal" href="_downloads/Nieuwenhuis2005Model.py" download=""><code class="xref download docutils literal"><span class="pre">Download</span> <span class="pre">Nieuwenhuis2005Model.py</span></code></a></p>
 </div>
 </div>
@@ -252,7 +282,7 @@ This LCControlMechanism projects a gain control signal to the DECISION LAYER and
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.2.0+13.gdddb87b',
+            VERSION:'0.4.2.0+20.g9c3aab1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
