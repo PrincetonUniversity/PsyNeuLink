@@ -712,26 +712,15 @@ class Component(object):
 
     class _DefaultsMeta(type, _DefaultsAliases):
         def __repr__(self):
-            return '{0} :\n{1}'.format(super().__repr__(), self.show())
+            return '{0} :\n{1}'.format(super().__repr__(), str(self))
 
         def __str__(self):
-            return self.show()
-
-        def values(self):
-            '''
-                Returns
-                -------
-                A dictionary consisting of the non-hidden and non-function attributes
-            '''
-            return self._values(self)
-
-        def show(self):
-            '''
-                Returns
-                -------
-                A pretty string version of the non-hidden and non-function attributes
-            '''
-            return self._show(self)
+            try:
+                return self.show()
+            except TypeError:
+                # InstanceDefaults (and any instance of _DefaultsMeta) does not have a
+                # classmethod show(), so revert to default type repr in this case
+                return super().__repr__()
 
     class Defaults(metaclass=_DefaultsMeta):
         def _values(self):
@@ -744,7 +733,28 @@ class Component(object):
             vals = self.values()
             return '(\n\t{0}\n)'.format('\n\t'.join(sorted(['{0} = {1},'.format(k, vals[k]) for k in vals])))
 
+        @classmethod
+        def values(cls):
+            '''
+                Returns
+                -------
+                A dictionary consisting of the non-hidden and non-function attributes
+            '''
+            return cls._values(cls)
+
+        @classmethod
+        def show(cls):
+            '''
+                Returns
+                -------
+                A pretty string version of the non-hidden and non-function attributes
+            '''
+            return cls._show(cls)
+
     class ClassDefaults(Defaults):
+        def __init__(self):
+            raise TypeError('ClassDefaults is not meant to be instantiated')
+
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         variable = np.array([0])
 
@@ -754,7 +764,7 @@ class Component(object):
                 setattr(self, param, kwargs[param])
 
         def __repr__(self):
-            return '{0} :\n{1}'.format(super().__repr__(), self.__str__())
+            return '{0} :\n{1}'.format(super().__repr__(), str(self))
 
         def __str__(self):
             return self.show()
