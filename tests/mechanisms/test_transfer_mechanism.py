@@ -9,6 +9,8 @@ from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.globals.utilities import UtilitiesError
+from psyneulink.components.process import Process
+from psyneulink.components.system import System
 
 
 
@@ -798,3 +800,141 @@ class TestTransferMechanismMultipleInputStates:
         print("VALUES ----- \n\n", val)
         print("EXPECTED VALUES ----- \n\n", expected_val)
         assert all(all(a==b for a,b in zip(x,y)) for x,y in zip(val, expected_val))
+
+class TestIntegratorMode:
+    def test_previous_value_persistence_execute(self):
+        T = TransferMechanism(name="T",
+                              initial_value=0.5,
+                              integrator_mode=True,
+                              smoothing_factor=0.1,
+                              noise=0.0)
+
+        assert np.allclose(T.previous_value, 0.5)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+        T.execute(1.0)
+        # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
+        # linear fn: 0.55*1.0 = 0.55
+        assert np.allclose(T.previous_value, 0.55)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+        T.execute(1.0)
+        # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
+        # linear fn: 0.595*1.0 = 0.595
+        assert np.allclose(T.previous_value, 0.595)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+    def test_previous_value_persistence_run(self):
+        T = TransferMechanism(name="T",
+                              initial_value=0.5,
+                              integrator_mode=True,
+                              smoothing_factor=0.1,
+                              noise=0.0)
+        P = Process(name="P",
+                    pathway=[T])
+        S = System(name="S",
+                   processes=[P])
+
+        assert np.allclose(T.previous_value, 0.5)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+        S.run(inputs={T: 1.0}, num_trials=2)
+        # Trial 1
+        # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
+        # linear fn: 0.55*1.0 = 0.55
+        # Trial 2
+        # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
+        # linear fn: 0.595*1.0 = 0.595
+        assert np.allclose(T.previous_value, 0.595)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+        S.run(inputs={T: 2.0}, num_trials=2)
+        # Trial 3
+        # integration: 0.9*0.595 + 0.1*2.0 + 0.0 = 0.7355  --->  previous value = 0.7355
+        # linear fn: 0.7355*1.0 = 0.7355
+        # Trial 4
+        # integration: 0.9*0.7355 + 0.1*2.0 + 0.0 = 0.86195  --->  previous value = 0.86195
+        # linear fn: 0.86195*1.0 = 0.86195
+
+        assert np.allclose(T.previous_value, 0.86195)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+    def test_previous_value_reset_initializer_execute(self):
+        T = TransferMechanism(name="T",
+                              initial_value=0.5,
+                              integrator_mode=True,
+                              smoothing_factor=0.1,
+                              noise=0.0)
+
+        assert np.allclose(T.previous_value, 0.5)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+        T.execute(1.0)
+        # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
+        # linear fn: 0.55*1.0 = 0.55
+        assert np.allclose(T.previous_value, 0.55)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+        T.integrator_function.reset_initializer = 0.5
+
+        assert np.allclose(T.previous_value, 0.5)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+        T.execute(1.0)
+        # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
+        # linear fn: 0.55*1.0 = 0.55
+        assert np.allclose(T.previous_value, 0.55)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+
+    def test_previous_reset_initializer_run(self):
+        T = TransferMechanism(name="T",
+                              initial_value=0.5,
+                              integrator_mode=True,
+                              smoothing_factor=0.1,
+                              noise=0.0)
+        P = Process(name="P",
+                    pathway=[T])
+        S = System(name="S",
+                   processes=[P])
+
+        assert np.allclose(T.previous_value, 0.5)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+        S.run(inputs={T: 1.0}, num_trials=2)
+        # Trial 1
+        # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
+        # linear fn: 0.55*1.0 = 0.55
+        # Trial 2
+        # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
+        # linear fn: 0.595*1.0 = 0.595
+        assert np.allclose(T.previous_value, 0.595)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+        T.integrator_function.reset_initializer = 0.5
+
+        assert np.allclose(T.previous_value, 0.5)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
+
+        S.run(inputs={T: 1.0}, num_trials=2)
+        # Trial 3
+        # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
+        # linear fn: 0.55*1.0 = 0.55
+        # Trial 4
+        # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
+        # linear fn: 0.595*1.0 = 0.595
+        assert np.allclose(T.previous_value, 0.595)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.5)
