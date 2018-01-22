@@ -586,6 +586,9 @@ class RecurrentTransferMechanism(TransferMechanism):
     """
     componentType = RECURRENT_TRANSFER_MECHANISM
 
+    class ClassDefaults(TransferMechanism.ClassDefaults):
+        variable = np.array([[0]])
+
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
 
     standard_output_states = TransferMechanism.standard_output_states.copy()
