@@ -326,9 +326,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         COMMENT
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the result of the `function <RecurrentTransferMechanism.function>`:
-        if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
-        if it is a function, it must return a scalar value.
+        a value added to the result of the `function <RecurrentTransferMechanism.function>` or to the result of
+        `integrator_function <RecurrentTransferMechanism.integrator_function>`, depending on whether `integrator_mode
+        <RecurrentTransferMechanism.integrator_mode>` is True or False. See `noise <RecurrentTransferMechanism.noise>`
+        for more details.
 
     smoothing_factor : float : default 0.5
         the smoothing factor for exponential time averaging of input when `integrator_mode
@@ -401,10 +402,46 @@ class RecurrentTransferMechanism(TransferMechanism):
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
+    integrator_function:
+        When *integrator_mode* is set to True, the RecurrentTransferMechanism executes its `integrator_function <RecurrentTransferMechanism.integrator_function>`,
+        which is the `AdaptiveIntegrator`. See `AdaptiveIntegrator <AdaptiveIntegrator>` for more details on what it computes.
+        Keep in mind that the `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>` parameter of the `RecurrentTransferMechanism` corresponds to the
+        `rate <RecurrentTransferMechanismIntegrator.rate>` of the `RecurrentTransferMechanismIntegrator`.
+
+    integrator_mode:
+        **When integrator_mode is set to True:**
+
+        the variable of the mechanism is first passed into the following equation:
+
+        .. math::
+            value = previous\\_value(1-smoothing\\_factor) + variable \\cdot smoothing\\_factor + noise
+
+        The result of the integrator function above is then passed into the `mechanism's function <RecurrentTransferMechanism.function>`. Note that
+        on the first execution, *initial_value* sets previous_value.
+
+        **When integrator_mode is set to False:**
+
+        The variable of the mechanism is passed into the `function of the mechanism <RecurrentTransferMechanism.function>`. The mechanism's
+        `integrator_function <RecurrentTransferMechanism.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
+        *initial_value*, and *time_step_size*) are ignored.
+
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the output of the `function <RecurrentTransferMechanism.function>`:
-        if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
-        if it is a function, it must return a scalar value.
+        When `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is set to True, noise is passed into the
+        `integrator_function <RecurrentTransferMechanism.integrator_function>`. Otherwise, noise is added to the output
+        of the `function <RecurrentTransferMechanism.function>`.
+
+        If noise is a list or array, it must be the same length as `variable
+        <RecurrentTransferMechanism.default_variable>`.
+
+        If noise is specified as a single float or function, while `variable <RecurrentTransferMechanism.variable>` is a
+        list or array, noise will be applied to each variable element. In the case of a noise function, this means that
+        the function will be executed separately for each variable element.
+
+        .. note::
+            In order to generate random noise, we recommend selecting a probability distribution function
+            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
+            the noise will simply be an offset that remains the same across all executions.
 
     smoothing_factor : float : default 0.5
         the smoothing factor for exponential time averaging of input when `integrator_mode
