@@ -13,8 +13,9 @@ Overview
 --------
 
 An UnrestrictedProcessingMechanism is the simplest mechanism in PsyNeuLink. It does not have any extra arguments or
-specialized validation. Any valid PsyNeuLink Function, including a `UserDefinedFunction` may be the function of an
-UnrestricedProcessingMechanism.
+specialized validation. Almost any PsyNeuLink Function, including the `UserDefinedFunction`, may be the function of an
+UnrestricedProcessingMechanism. `LinearMatrix` and `BackPropagation` cannot be the function of an
+UnrestrictedProcessingMechanism.
 
 .. _UnrestrictedProcessingMechanism_Creation:
 
