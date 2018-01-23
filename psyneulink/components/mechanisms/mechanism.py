@@ -1213,8 +1213,7 @@ class Mechanism_Base(Mechanism):
         # params = self._assign_args_to_param_dicts(**kwargs)
 
         self._execution_id = None
-        self.is_finished = False
-
+        self._is_finished = False
         # Register with MechanismRegistry or create one
         if not context is VALIDATE:
             register_category(entry=self,
@@ -2377,6 +2376,13 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.parameterstate import ParameterState
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
+    @property
+    def is_finished(self):
+        return self._is_finished
+
+    @is_finished.setter
+    def is_finished(self, value):
+        self._is_finished = value
 
     @property
     def input_state(self):
