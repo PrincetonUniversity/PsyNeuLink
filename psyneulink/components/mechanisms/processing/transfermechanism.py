@@ -674,6 +674,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         if output_states is None or output_states is RESULTS:
             output_states = [RESULTS]
 
+        initial_value = self._parse_arg_initial_value(initial_value)
+
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
                                                   input_states=input_states,
@@ -700,6 +702,9 @@ class TransferMechanism(ProcessingMechanism_Base):
             context=self,
             input_states=input_states,
         )
+
+    def _parse_arg_initial_value(self, initial_value):
+        return self._parse_arg_variable(initial_value)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and Mechanism params
