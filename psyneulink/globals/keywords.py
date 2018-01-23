@@ -511,6 +511,7 @@ KWTA = "KWTA"
 INTEGRATOR_MECHANISM = "IntegratorMechanism"
 DDM_MECHANISM = "DDM"
 COMPOSITION_INTERFACE_MECHANISM = "CompositionInterfaceMechanism"
+UNRESTRICTED_PROCESSING_MECHANISM = "UnrestrictedProcessingMechanism"
 
 # Functions:
 ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
