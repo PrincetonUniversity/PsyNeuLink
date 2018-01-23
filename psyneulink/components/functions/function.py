@@ -4055,13 +4055,15 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         raise FunctionError("Integrator is not meant to be called explicitly")
 
     @property
-    def reset_initializer(self):
+    def reinitialize(self):
         return self._initializer
 
-    @reset_initializer.setter
-    def reset_initializer(self, val):
+    @reinitialize.setter
+    def reinitialize(self, val):
         self._initializer = val
+        self.value = val
         self.previous_value = val
+
 
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------

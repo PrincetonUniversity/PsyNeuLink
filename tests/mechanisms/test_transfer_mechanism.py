@@ -882,7 +882,7 @@ class TestIntegratorMode:
         assert np.allclose(T.initial_value, 0.5)
         assert np.allclose(T.integrator_function.initializer, 0.5)
 
-        T.integrator_function.reset_initializer = 0.5
+        T.integrator_function.reinitialize = 0.5
 
         assert np.allclose(T.previous_value, 0.5)
         assert np.allclose(T.initial_value, 0.5)
@@ -922,7 +922,7 @@ class TestIntegratorMode:
         assert np.allclose(T.initial_value, 0.5)
         assert np.allclose(T.integrator_function.initializer, 0.5)
 
-        T.integrator_function.reset_initializer = 0.5
+        T.integrator_function.reinitialize = 0.5
 
         assert np.allclose(T.previous_value, 0.5)
         assert np.allclose(T.initial_value, 0.5)

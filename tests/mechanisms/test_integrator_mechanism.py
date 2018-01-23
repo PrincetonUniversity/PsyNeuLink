@@ -160,7 +160,7 @@ class TestResetInitializer:
         val = float(I.execute(10))
 
         # testing initializer
-        I.function_object.reset_initializer = 5.0
+        I.function_object.reinitialize = 5.0
 
         val2 = float(I.execute(0))
 
@@ -180,7 +180,7 @@ class TestResetInitializer:
         # rate = 1, noise = 0, so in this case, returns 10.0
 
         # testing initializer
-        I.function_object.reset_initializer = 1.0
+        I.function_object.reinitialize = 1.0
         val2 = float(I.execute(1))
 
         assert [val, val2] == [5.0, 1.0]
@@ -199,7 +199,7 @@ class TestResetInitializer:
         # rate = 1.0, noise = 0, so in this case returns 1.0
 
         # testing initializer
-        I.function_object.reset_initializer = 10.0
+        I.function_object.reinitialize = 10.0
         val2 = float(I.execute())
 
         assert [val, val2] == [1.0, 11.0]
@@ -215,7 +215,7 @@ class TestResetInitializer:
         val = float(I.execute(10))
 
         # testing initializer
-        I.function_object.reset_initializer = 1.0
+        I.function_object.reinitialize = 1.0
         val2 = float(I.execute(0))
 
         assert [val, val2] == [10.0, 1.0]
@@ -531,7 +531,7 @@ class TestIntegratorNoise:
 
         val = float(I.execute(10))
 
-        I.function_object.reset_initializer = 5.0
+        I.function_object.reinitialize = 5.0
 
         val2 = float(I.execute(0))
 

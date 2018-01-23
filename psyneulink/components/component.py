@@ -2992,9 +2992,9 @@ def make_property(name):
         #
         #     # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
         #     # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
-        #     # 'reset_initializer'
+        #     # 'reinitialize'
         #     if hasattr(param_state.function_object, 'initializer'):
-        #         param_state.function_object.reset_initializer = val
+        #         param_state.function_object.reinitialize = val
 
     # Create the property
     prop = property(getter).setter(setter)
