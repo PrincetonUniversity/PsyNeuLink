@@ -73,7 +73,7 @@ arguments **smoothing_factor** and **initial_value** in the mechanism's construc
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
     ...                                                        integrator_mode=True,
     ...                                                        smoothing_factor=0.1,
-    ...                                                        initial_value=np.array[[0.2]])
+    ...                                                        initial_value=np.array([[0.2]]))
 
 .. note::
     If `integrator_mode <TransferMechanism.integrator_mode>` is False, then the arguments **smoothing_factor** and
