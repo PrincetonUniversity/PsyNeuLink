@@ -1052,12 +1052,13 @@ class Component(object):
                         warnings.warn("The size arg of {} conflicts with the length "
                                       "of its variable arg ({}) at element {}: variable takes precedence".
                                       format(self.name, size, variable))
-                for i in range(len(size)):
-                    if size[i] != len(variable[i]):
-                        if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-                            warnings.warn("The size arg of {} ({}) conflicts with the length "
-                                          "of its variable arg ({}) at element {}: variable takes precedence".
-                                          format(self.name, size[i], variable[i], i))
+                else:
+                    for i in range(len(size)):
+                        if size[i] != len(variable[i]):
+                            if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                                warnings.warn("The size arg of {} ({}) conflicts with the length "
+                                              "of its variable arg ({}) at element {}: variable takes precedence".
+                                              format(self.name, size[i], variable[i], i))
 
         return variable
 

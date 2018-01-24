@@ -2825,6 +2825,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         """
 
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        # NOTE CW 12/21/17: self.paramsCurrent[SLOPE] (and other similar code) is failing to respond to runtime_params
+        # self.paramsCurrent[SLOPE] responds correctly to runtime_params
         slope = self.paramsCurrent[SLOPE]
         intercept = self.paramsCurrent[INTERCEPT]
         outputType = self.functionOutputType
