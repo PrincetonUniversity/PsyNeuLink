@@ -73,7 +73,7 @@ The `integrator_function <TransferMechanism.integrator_function>` of a TransferM
 `AdaptiveIntegrator`. Two parameters of the `AdaptiveIntegrator` are exposed on the TransferMechanism. Specifying the
 arguments **smoothing_factor** and/or **initial_value** in the mechanism's constructor will actually set the mechanism's
 `integrator_function <TransferMechanism.integrator_function>` to an `AdaptiveIntegrator` with those values specified for
-`rate <AdaptiveIntegrator.rate>` and `initial_value <AdaptiveIntegrator.initial_value>`, respectively.
+`rate <AdaptiveIntegrator.rate>` and `initializer <AdaptiveIntegrator.initializer>`, respectively.
 
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
     ...                                                        integrator_mode=True,
@@ -195,7 +195,7 @@ In some cases, it may be useful to reset the integration of the mechanism back t
 one. This can be done using the `reinitialize <AdaptiveIntegrator.reinitialize>` property on the mechanism's
 `integrator_function <TransferMechanism.integrator_function>`. The `reinitialize <AdaptiveIntegrator.reinitialize>`
 property sets the `integrator_function's <TransferMechanism.integrator_function>`
-`initial_value <AdaptiveIntegrator.initial_value>`, `previous_value <AdaptiveIntegrator.previous_value>`, and
+`initializer <AdaptiveIntegrator.initializer>`, `previous_value <AdaptiveIntegrator.previous_value>`, and
 `value <AdaptiveIntegrator.value>` attributes to a specified value.
 
 A use case for `reinitialize <AdaptiveIntegrator.reinitialize>` is demonstrated in the following example:

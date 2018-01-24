@@ -3855,6 +3855,15 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <Integrator.variable>` is integrated.
 
+    reinitialize: float or np.array
+        sets
+
+        - `previous_value <Integrator.previous_value>`
+        - `initializer <Integrator.initial_value>`
+        - `value <Integrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -4156,6 +4165,15 @@ class SimpleIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
 
+    reinitialize : float or np.array
+        sets
+
+        - `previous_value <SimpleIntegrator.previous_value>`
+        - `initializer <SimpleIntegrator.initializer>`
+        - `value <SimpleIntegrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -4362,6 +4380,15 @@ class LCAIntegrator(
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
+
+    reinitialize : float or np.array
+        sets
+
+        - `previous_value <LCAIntegrator.previous_value>`
+        - `initializer <LCAIntegrator.initializer>`
+        - `value <LCAIntegrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4570,6 +4597,15 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         `previous_value <ConstantIntegrator.previous_value>` is set.
 
         If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
+
+    reinitialize : float or np.array
+        sets
+
+        - `previous_value <ConstantIntegrator.previous_value>`
+        - `initializer <ConstantIntegrator.initializer>`
+        - `value <ConstantIntegrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
@@ -4781,6 +4817,15 @@ class AdaptiveIntegrator(
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
+
+    reinitialize : float or np.array
+        sets
+
+        - `previous_value <AdaptiveIntegrator.previous_value>`
+        - `initializer <AdaptiveIntegrator.initializer>`
+        - `value <AdaptiveIntegrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -5068,6 +5113,19 @@ class DriftDiffusionIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
+    reinitialize : list of floats or np.arrays
+        sets
+
+        - `previous_value <DriftDiffusionIntegrator.previous_value>`
+        - `initializer <DriftDiffusionIntegrator.initializer>`
+        - `value <DriftDiffusionIntegrator.value>`
+
+        to the quantity specified in reinitialize[0].
+
+        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in reinitialize[1].
+
+        Effectively begins accumulation over again at the original starting point and time, or new ones
+
     threshold : float : default 0.0
         when used properly determines the threshold (boundaries) of the drift diffusion process (i.e., at which the
         integration process is assumed to terminate).
@@ -5308,6 +5366,20 @@ class OrnsteinUhlenbeckIntegrator(
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <OrnsteinUhlenbeckIntegrator.variable>` is integrated.
+
+    reinitialize : list of floats or np.arrays
+        sets
+
+        - `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`
+        - `initializer <OrnsteinUhlenbeckIntegrator.initializer>`
+        - `value <OrnsteinUhlenbeckIntegrator.value>`
+
+        to the quantity specified in reinitialize[0]
+
+        Sets `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>` to the quantity specified in reinitialize[1].
+
+        Effectively begins accumulation over again at the specified value and time
+
 
     previous_time : float
         stores previous time at which the function was executed and accumulates with each execution according to
@@ -5810,6 +5882,25 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     time_constant_w : float : default 12.5
         scaling factor on the dv/dt equation
 
+    reinitialize : list of floats or np.arrays
+        sets
+
+        - `previous_v <DriftDiffusionIntegrator.previous_v>`
+        - `initial_v <DriftDiffusionIntegrator.initial_v>`
+
+        to the quantity specified in reinitialize[0].
+
+        Sets
+
+        - `previous_w <DriftDiffusionIntegrator.previous_w>`
+        - `initial_w <DriftDiffusionIntegrator.initial_w>`
+
+        to the quantity specified in reinitialize[1].
+
+        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in reinitialize[2].
+
+        Effectively begins accumulation over again at the specified v, w, and time.
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
@@ -6296,6 +6387,15 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
         will be added.
 
+    reinitialize : float or np.array
+        sets
+
+        - `previous_value <AccumulatorIntegrator.previous_value>`
+        - `initializer <AccumulatorIntegrator.initializer>`
+        - `value <AccumulatorIntegrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -6621,6 +6721,25 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
     previous_long_term_utility : 1d np.array
         stores previous value with which `variable <AGTUtilityIntegrator.variable>` is integrated using the EWMA filter and
         long term parameters
+
+    reinitialize : list of floats or np.arrays
+        sets
+
+        - `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>`
+        - `initial_short_term_utility <AGTUtilityIntegrator.initial_short_term_utility>`
+
+        to the quantity specified in reinitialize[0].
+
+        Sets
+
+        - `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`
+        - `initial_long_term_utility <AGTUtilityIntegrator.initial_long_term_utility>`
+
+        to the quantity specified in reinitialize[1].
+
+        sets `value <AGTUtilityIntegrator.value>` to the to the quantity specified in reinitialize[2].
+
+        This effectively begins accumulation over again at the specified utilities.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
