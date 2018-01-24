@@ -41,6 +41,34 @@ class TestReinitialize:
         assert("FHNIntegrator requires exactly three items (v, w, time) in order to reinitialize. Only "
                "one item (4.0) was provided to reinitialize" in str(error_text.value))
 
+    def test_AGTUtility_valid_reinitialization(self):
+        I = IntegratorMechanism(name="I",
+                function=AGTUtilityIntegrator())
+        I.execute(1.0)
+        assert np.allclose([[0.9]], I.function_object.reinitialize[0])
+        assert np.allclose([[0.1]], I.function_object.reinitialize[1])
+
+        I.function_object.reinitialize = 0.2, 0.08
+
+        assert np.allclose([[0.2]], I.function_object.reinitialize[0])
+        assert np.allclose([[0.08]], I.function_object.reinitialize[1])
+
+    def test_AGTUtility_invalid_reinitialization_too_many_items(self):
+        I = IntegratorMechanism(name="I",
+                function=AGTUtilityIntegrator())
+        with pytest.raises(FunctionError) as error_text:
+            I.function_object.reinitialize = 4.0, 0.1, 10.0
+        assert("AGTUtilityIntegrator requires exactly two items (short term utility, long term utility) in order to reinitialize" in
+               str(error_text.value) and "3 items ((4.0, 0.1, 10.0)) were provided to reinitialize" in str(error_text.value))
+
+    def test_AGTUtility_invalid_reinitialization_too_few_items(self):
+        I = IntegratorMechanism(name="I",
+                function=AGTUtilityIntegrator())
+        with pytest.raises(FunctionError) as error_text:
+            I.function_object.reinitialize = 4.0
+        assert("AGTUtilityIntegrator requires exactly two items (short term utility, long term utility) in order to reinitialize. Only "
+               "one item (4.0) was provided to reinitialize" in str(error_text.value))
+
 class TestIntegratorFunctions:
 
     def test_simple_integrator(self):

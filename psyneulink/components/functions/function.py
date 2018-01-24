@@ -7055,6 +7055,31 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
             self.previous_short_term_utility = short_term_utility
 
         return adjusted_value
+
+    @property
+    def reinitialize(self):
+        return self.previous_short_term_utility, self.previous_long_term_utility
+
+    @reinitialize.setter
+    def reinitialize(self, value):
+        try:
+            short, long = value
+            self._initial_short_term_utility = short
+            self.previous_short_term_utility = short
+            self._initial_long_term_utility = long
+            self.previous_long_term_utility = long
+
+        except (ValueError, TypeError):
+            num_items = len(np.atleast_1d(value))
+            if num_items == 1:
+                raise FunctionError("AGTUtilityIntegrator requires exactly two items (short term utility, long term utility) in order to "
+                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value,
+                                                                                                               self.name))
+            raise FunctionError("AGTUtilityIntegrator requires exactly two items (short term utility, long term utility) in order to "
+                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value,
+                                                                                                       self.name))
+
+
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
