@@ -69,6 +69,63 @@ class TestReinitialize:
         assert("AGTUtilityIntegrator requires exactly two items (short term utility, long term utility) in order to reinitialize. Only "
                "one item (4.0) was provided to reinitialize" in str(error_text.value))
 
+    def test_integrator_simple_with_reinitialize(self):
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=SimpleIntegrator(
+            ),
+        )
+    #     # P = Process(pathway=[I])
+
+        #  returns previous_value + rate*variable + noise
+        # so in this case, returns 10.0
+        val = float(I.execute(10))
+
+        # testing initializer
+        I.function_object.reinitialize = 5.0
+
+        val2 = float(I.execute(0))
+
+        assert [val, val2] == [10.0, 5.0]
+
+    def test_integrator_adaptive_with_reinitialize(self):
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=AdaptiveIntegrator(
+                rate=0.5
+            ),
+        )
+        # val = float(I.execute(10)[0])
+        # P = Process(pathway=[I])
+        val = float(I.execute(10))
+        # returns (rate)*variable + (1-rate*previous_value) + noise
+        # rate = 1, noise = 0, so in this case, returns 10.0
+
+        # testing initializer
+        I.function_object.reinitialize = 1.0
+        val2 = float(I.execute(1))
+
+        assert [val, val2] == [5.0, 1.0]
+
+    def test_integrator_constant_with_reinitialize(self):
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=ConstantIntegrator(
+                rate=1.0
+            ),
+        )
+        # val = float(I.execute(10)[0])
+        # P = Process(pathway=[I])
+        val = float(I.execute())
+        # returns previous_value + rate + noise
+        # rate = 1.0, noise = 0, so in this case returns 1.0
+
+        # testing initializer
+        I.function_object.reinitialize = 10.0
+        val2 = float(I.execute())
+
+        assert [val, val2] == [1.0, 11.0]
+
 class TestIntegratorFunctions:
 
     def test_simple_integrator(self):
@@ -200,85 +257,6 @@ class TestIntegratorFunctions:
         # P = Process(pathway=[I])
         val = float(I.execute(10))
         assert val == 5
-
-
-class TestResetInitializer:
-
-    def test_integrator_simple_with_reset_intializer(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            function=SimpleIntegrator(
-            ),
-        )
-    #     # P = Process(pathway=[I])
-
-        #  returns previous_value + rate*variable + noise
-        # so in this case, returns 10.0
-        val = float(I.execute(10))
-
-        # testing initializer
-        I.function_object.reinitialize = 5.0
-
-        val2 = float(I.execute(0))
-
-        assert [val, val2] == [10.0, 5.0]
-
-    def test_integrator_adaptive_with_reset_intializer(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            function=AdaptiveIntegrator(
-                rate=0.5
-            ),
-        )
-        # val = float(I.execute(10)[0])
-        # P = Process(pathway=[I])
-        val = float(I.execute(10))
-        # returns (rate)*variable + (1-rate*previous_value) + noise
-        # rate = 1, noise = 0, so in this case, returns 10.0
-
-        # testing initializer
-        I.function_object.reinitialize = 1.0
-        val2 = float(I.execute(1))
-
-        assert [val, val2] == [5.0, 1.0]
-
-    def test_integrator_constant_with_reset_intializer(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            function=ConstantIntegrator(
-                rate=1.0
-            ),
-        )
-        # val = float(I.execute(10)[0])
-        # P = Process(pathway=[I])
-        val = float(I.execute())
-        # returns previous_value + rate + noise
-        # rate = 1.0, noise = 0, so in this case returns 1.0
-
-        # testing initializer
-        I.function_object.reinitialize = 10.0
-        val2 = float(I.execute())
-
-        assert [val, val2] == [1.0, 11.0]
-
-    def test_integrator_diffusion_with_reset_intializer(self):
-        I = IntegratorMechanism(
-            name='IntegratorMechanism',
-            function=DriftDiffusionIntegrator(
-            ),
-        )
-        # val = float(I.execute(10)[0])
-        # P = Process(pathway=[I])
-        val = float(I.execute(10))
-
-        # testing initializer
-        I.function_object.reinitialize = 1.0
-        val2 = float(I.execute(0))
-
-        assert [val, val2] == [10.0, 1.0]
-
-# ======================================= INPUT TESTS ============================================
-
 
 class TestIntegratorInputs:
     # Part 1: VALID INPUT:
