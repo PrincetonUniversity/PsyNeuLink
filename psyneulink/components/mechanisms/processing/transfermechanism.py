@@ -202,18 +202,18 @@ A use case for `reinitialize <AdaptiveIntegrator.reinitialize>` is demonstrated 
 
 Create a `System` with a TransferMechanism in integrator_mode:
 
-    >>> my_time_averaged_transfer_mechanism = pnl.TransferMechanism(function=pnl.Linear,
-    ...                                                        integrator_mode=True,
-    ...                                                        smoothing_factor=0.1,
-    ...                                                        initial_value=np.array([[0.2]]))
-    >>> my_process = pnl.Process(pathway=[my_time_averaged_transfer_mechanism])
+    >>> my_time_averaged_transfer_mechanism = pnl.TransferMechanism(function=pnl.Linear,        #doctest: +SKIP
+    ...                                                        integrator_mode=True,            #doctest: +SKIP
+    ...                                                        smoothing_factor=0.1,            #doctest: +SKIP
+    ...                                                        initial_value=np.array([[0.2]])) #doctest: +SKIP
+    >>> my_process = pnl.Process(pathway=[my_time_averaged_transfer_mechanism]) #doctest: +SKIP
     >>> my_system = pnl.System(processes=[my_process])  #doctest: +SKIP
 
 Then run the system for 5 trials:
 
     >>> # RUN 1:
-    >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
-    ...               num_trials=5)
+    >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},        #doctest: +SKIP
+    ...               num_trials=5)                                               #doctest: +SKIP
     >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.527608)  #doctest: +SKIP
 
 After RUN 1, my_time_averaged_transfer_mechanism's integrator_function will preserve its state (its position along its
@@ -223,8 +223,8 @@ Run the system again to observe that my_time_averaged_transfer_mechanism's integ
 where it left off:
 
     >>> # RUN 2:
-    >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
-    ...               num_trials=5)
+    >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},          #doctest: +SKIP
+    ...               num_trials=5)                                                 #doctest: +SKIP
     >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.72105725)  #doctest: +SKIP
 
 The integrator_function's `reinitialize <AdaptiveIntegrator.reinitialize>` property is useful in cases when the
@@ -237,8 +237,8 @@ Run the system again to observe that my_time_averaged_transfer_mechanism's integ
 at 0.2, following the exact same trajectory as in RUN 1:
 
     >>> # RUN 3
-    >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
-    ...               num_trials=5)
+    >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},        #doctest: +SKIP
+    ...               num_trials=5)                                               #doctest: +SKIP
     >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.527608)  #doctest: +SKIP
 
 Because `reinitialize <AdaptiveIntegrator.reinitialize>` was set to 0.2 (its original initial_value),
