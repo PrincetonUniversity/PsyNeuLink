@@ -19,17 +19,9 @@ Overview
 --------
 
 An LCA is a subclass of `RecurrentTransferMechanism` that implements a single-layered leaky competitive accumulator
-network, in which each element is connected to every other element with mutually inhibitory weights.  All of the
-inhibitory weights have the same value, specified by its `competition <LCA.competition>` parameter.  In the case that
-it has two elements, the value of its `competition <LCA.competition>` parameter is equal to its `leak
-<LCA.leak>` parameter, and the two are of sufficient magnitude, it implements a close
-approximation of a `DDM` Mechanism
-(see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and
-`Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
-
-.. note::
-
-    The LCA's recurrent projection matrix always has self_excitation on the diagonal and -competition off-diagonal.
+network, in which each element is connected to every other element with mutually inhibitory weights. The LCA's recurrent
+projection matrix *always* consists of `self_excitation <LCA.self_excitation>` on the diagonal and -`competition
+<LCA.competition>` off-diagonal.
 
     COMMENT:
     .. math::
@@ -42,25 +34,46 @@ approximation of a `DDM` Mechanism
         \\end{bmatrix}
     COMMENT
 
+When all of the following conditions are true:
+
+- The `LCA` mechanism has two elements
+- The value of its `competition <LCA.competition>` parameter is equal to its `leak <LCA.leak>` parameter
+- `Competition <LCA.competition>` and `leak <LCA.leak>` are of sufficient magnitude
+
+then the `LCA` implements a close approximation of a `DDM` Mechanism (see `Usher & McClelland, 2001;
+<http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and `Bogacz et al (2006)
+<https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
+
 .. _Recurrent_Transfer_Creation:
 
 Creating an LCA
 ---------------
 
-An LCA can be created directly by calling its constructor.  The set of mutually inhibitory connections are implemented as a recurrent `MappingProjection`
+An LCA can be created directly by calling its constructor.
+
+The self-excitatory and mutually-inhibitory connections are implemented as a recurrent `MappingProjection`
 with a `matrix <LCA.matrix>` in which the diagonal consists of uniform weights specified by **self_excitation** and the
-off-diagonal consists of uniform *negative* weights specified by the **competition** argument of the LCA's constructor.
+off-diagonal consists of uniform weights specified by the *negative* of the **competition** argument.
 
-COMMENT:
+The *noise*, *leak*, *initial_value*, and *time_step_size* arguments are used to implement the `LCAIntegrator`
+as the `LCA.integrator_function <LCA.integrator_function>` of the mechanism. *integrator_mode* determines whether the
+`LCA.integrator_function <LCA.integrator_function>` will execute.
+
+**When integrator_mode is set to True:**
+
+the variable of the mechanism is first passed into the following equation:
+
 .. math::
+    leak \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
 
-    \\begin{bmatrix}
-        excitation    &  - competition  &  - competition  &  - competition  \
-        - competition &  excitation     &  - competition  &  - competition  \
-        - competition &  - competition  &  excitation     &  - competition  \
-        - competition &  - competition  &  - competition  &  excitation     \
-    \\end{bmatrix}
-COMMENT
+The result of the integrator function above is then passed into the `mechanism's function <LCA.function>`. Note that on the
+first execution, *initial_value* sets previous_value.
+
+**When integrator_mode is set to False:**
+
+The variable of the mechanism is passed into the `function of the mechanism <LCA.function>`. The mechanism's
+`integrator_function <LCA.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
+*initial_value*, and *time_step_size*) are ignored.
 
 COMMENT:
 The default format of its `variable <LCA.variable>`, and default values of its `inhibition
@@ -73,14 +86,30 @@ COMMENT
 Structure
 ---------
 
-The distinguishing feature of an LCA is its `matrix <LCA.matrix>` of uniform negative weights.  It also has, in
-addition to its `primary OutputState <OutputState_Primary>` (which contains the current value of the elements of the
-LCA) and the OutputStates of a RecurrentTransferMechanism, it has two additional OutputStates: `MAX_VS_NEXT <LCA.LCA_OUTPUT.MAX_VS_NEXT>` and
-`MAX_VS_AVG <MAX_VS_AVG>`.  Both are two element arrays that track the element of the LCA with the currently highest value relative
-to the value of the others.  The two elements of the `MAX_VS_NEXT` OutputState contain, respectively, the index of the
-LCA element with the greatest value, and the difference between its value and the next highest one;  `MAX_VS_AVG`
+The key distinguishing features of an LCA are:
+
+1. its `integrator_function <LCA.integrator_function>`, which implements the `LCAIntegrator`. (Note that a
+standard `RecurrentTransferMechanism` would implement the `AdaptiveIntegratorFunction` as its `integrator_function
+<RecurrentTransferMechanism.integrator_function>`)
+
+2. its `matrix <LCA.matrix>` consisting of `self_excitation <LCA.self_excitation>` and `competition <LCA.competition>`
+off diagonal.
+
+In addition to its `primary OutputState <OutputState_Primary>` (which contains the current value of the
+elements of the LCA) and the OutputStates of a RecurrentTransferMechanism, it has two additional OutputStates:
+
+- `MAX_VS_NEXT <LCA.LCA_OUTPUT.MAX_VS_NEXT>`
+- `MAX_VS_AVG <MAX_VS_AVG>`
+
+Both are two element arrays that track the element of the LCA with the currently highest value relative
+to the value of the others.
+
+The two elements of the `MAX_VS_NEXT` OutputState contain, respectively, the index of the
+LCA element with the greatest value, and the difference between its value and the next highest one. `MAX_VS_AVG`
 contains the index of the LCA element with the greatest value, and the difference between its value and the average
-of all the others.  For an LCA with only two elements, `MAX_VS_NEXT` implements a close approximation of the
+of all the others.
+
+For an LCA with only two elements, `MAX_VS_NEXT` implements a close approximation of the
 `threshold <DDM.threshold>` parameter of a `DDM`
 (see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and
 `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
@@ -215,12 +244,22 @@ class LCA(RecurrentTransferMechanism):
         competition=1.0,                   \
         self_excitation=0.0,               \
         noise=0.0,                         \
+        integrator_mode = True             \
+        time_step_size = 0.1               \
         clip=(float:min, float:max),       \
         params=None,                       \
         name=None,                         \
-        prefs=None)                        \
+        prefs=None)
 
     Subclass of `RecurrentTransferMechanism` that implements a Leaky Competitive Accumulator.
+
+    The key distinguishing features of an LCA are:
+
+    1. its `integrator_function <LCA.integrator_function>`, which implements the `LCAIntegrator`. (where *rate*
+    = *leak*)
+
+    2. its `matrix <LCA.matrix>` consisting of `self_excitation <LCA.self_excitation>` and `competition
+    <LCA.competition>` off diagonal.
 
     COMMENT:
         Description
@@ -278,9 +317,17 @@ class LCA(RecurrentTransferMechanism):
         `LCAIntegrator function  <LCAIntegrator>` computes.
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the result of the `function <TransferMechanism.function>`:
-        if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
-        if it is a function, it must return a scalar value.
+        a value added to the result of the `function <LCA.function>` or to the result of `integrator_function
+        <LCA.integrator_function>`, depending on whether `integrator_mode <LCA.integrator_mode>` is True or False. See
+        `noise <LCA.noise>` for more details.
+
+    integrator_mode : boolean : default True
+        determines whether the LCA will execute its `integrator_function <LCA.integrator_function>`. See
+        `integrator_mode <LCA.integrator_mode>` for more details.
+
+    time_step_size : float : default 0.1
+        sets the time_step_size used by the mechanism's `integrator_function <LCA.integrator_function>`. See
+        `integrator_mode <LCA.integrator_mode>` for more details.
 
     clip : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
@@ -338,10 +385,6 @@ class LCA(RecurrentTransferMechanism):
         a `MappingProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
         back to it `primary inputState <Mechanism_InputStates>`.
 
-
-    COMMENT:
-       THE FOLLOWING IS THE CURRENT ASSIGNMENT
-    COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
         (only relevant if `beta <TransferMechanism.beta>` parameter is not 1.0).
@@ -349,10 +392,44 @@ class LCA(RecurrentTransferMechanism):
             Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
         COMMENT
 
+    integrator_function:
+        When *integrator_mode* is set to True, the LCA executes its `integrator_function <LCA.integrator_function>`,
+        which is the `LCAIntegrator`. See `LCAIntegrator <LCAIntegrator>` for more details on what it computes.
+        Keep in mind that the `leak <LCA.leak>` parameter of the `LCA` determines the `rate <LCAIntegrator.rate>` of the
+        `LCAIntegrator`.
+
+    integrator_mode:
+        **When integrator_mode is set to True:**
+
+        the variable of the mechanism is first passed into the following equation:
+
+        .. math::
+            leak \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+
+        The result of the integrator function above is then passed into the `mechanism's function <LCA.function>`. Note that
+        on the first execution, *initial_value* sets previous_value.
+
+        **When integrator_mode is set to False:**
+
+        The variable of the mechanism is passed into the `function of the mechanism <LCA.function>`. The mechanism's
+        `integrator_function <LCA.integrator_function>` is skipped entirely, and all related arguments (*noise*, *leak*,
+        *initial_value*, and *time_step_size*) are ignored.
+
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the output of the `function <LCA.function>`:
-        if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
-        if it is a function, it must return a scalar value.
+        When `integrator_mode <LCA.integrator_mode>` is set to True, noise is passed into the `integrator_function
+        <LCA.integrator_function>`. Otherwise, noise is added to the output of the `function <LCA.function>`.
+
+        If noise is a list or array, it must be the same length as `variable <LCA.default_variable>`.
+
+        If noise is specified as a single float or function, while `variable <LCA.variable>` is a list or array,
+        noise will be applied to each variable element. In the case of a noise function, this means that the function
+        will be executed separately for each variable element.
+
+        .. note::
+            In order to generate random noise, we recommend selecting a probability distribution function
+            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
+            the noise will simply be an offset that remains the same across all executions.
 
     clip : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
@@ -448,7 +525,6 @@ class LCA(RecurrentTransferMechanism):
                  time_step_size=0.1,
                  clip=None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -493,7 +569,6 @@ class LCA(RecurrentTransferMechanism):
                          noise=noise,
                          clip=clip,
                          output_states=output_states,
-                         time_scale=time_scale,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -502,7 +577,6 @@ class LCA(RecurrentTransferMechanism):
     def _execute(self,
                  variable=None,
                  runtime_params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
         """Execute TransferMechanism function and return transform of input
 
@@ -550,10 +624,11 @@ class LCA(RecurrentTransferMechanism):
 
         #region ASSIGN PARAMETER VALUES
 
-        beta = self.beta
-        clip = self.clip
-        noise = self.noise
-        time_step_size = self.time_step_size
+        leak = self.get_current_mechanism_param("leak")
+        clip = self.get_current_mechanism_param("clip")
+        noise = self.get_current_mechanism_param("noise")
+        initial_value = self.get_current_mechanism_param("initial_value")
+        time_step_size = self.get_current_mechanism_param("time_step_size")
 
         #endregion
         #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
@@ -563,30 +638,28 @@ class LCA(RecurrentTransferMechanism):
 
         # Update according to time-scale of integration
         if integrator_mode:
-        # if time_scale is TimeScale.TIME_STEP:
-
             if not self.integrator_function:
 
                 self.integrator_function = LCAIntegrator(
                                             variable,
-                                            initializer=self.initial_value,
-                                            noise=self.noise,
-                                            time_step_size=self.time_step_size,
-                                            rate=self.leak,
+                                            initializer=initial_value,
+                                            noise=noise,
+                                            time_step_size=time_step_size,
+                                            rate=leak,
                                             owner=self)
 
             current_input = self.integrator_function.execute(variable,
                                                         # Should we handle runtime params?
-                                                              params={INITIALIZER: self.initial_value,
-                                                                      NOISE: self.noise,
-                                                                      RATE: self.leak,
-                                                                      TIME_STEP_SIZE: self.time_step_size},
+                                                              params={INITIALIZER: initial_value,
+                                                                      NOISE: noise,
+                                                                      RATE: leak,
+                                                                      TIME_STEP_SIZE: time_step_size},
                                                               context=context
 
                                                              )
         else:
         # elif time_scale is TimeScale.TRIAL:
-            noise = self._try_execute_param(self.noise, variable)
+            noise = self._try_execute_param(noise, variable)
             # formerly: current_input = self.input_state.value + noise
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
             # when the input is given as a string.

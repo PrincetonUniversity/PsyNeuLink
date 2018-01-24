@@ -348,6 +348,7 @@ Class Reference
 ---------------
 
 """
+import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import FHNIntegrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
@@ -565,8 +566,8 @@ class LCControlMechanism(ControlMechanism):
             controls (listed in its `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` attribute).
 
         control_projections : List[ControlProjection]
-            list of `ControlProjections <ControlProjection>` sent by the LCControlMechanism's `ControlSignal`, each of which
-            projects to the `ParameterState` for the `multiplicative_param <Function_Modulatory_Params>` of the
+            list of `ControlProjections <ControlProjection>` sent by the LCControlMechanism's `ControlSignal`, each of
+            which projects to the `ParameterState` for the `multiplicative_param <Function_Modulatory_Params>` of the
             `function <Mechanism_Base.function>` of one of the Mechanisms listed in `modulated_mechanisms
             <LCControlMechanism.modulated_mechanisms>` attribute.
     COMMENT
@@ -819,14 +820,12 @@ class LCControlMechanism(ControlMechanism):
                                            format(MODULATED_MECHANISMS, self.name, mech, MULTIPLICATIVE_PARAM))
 
     def _instantiate_output_states(self, context=None):
-        """Instantiate ControlSignal and assign ControlProjections to Mechanisms in self.modulated_mechanisms
+        """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms
 
         If **modulated_mechanisms** argument of constructor was specified as *ALL*,
             assign all ProcessingMechanisms in Compositions to which LCControlMechanism belongs to self.modulated_mechanisms
-        Instantiate ControlSignal with Projections to the ParameterState for the multiplicative_param of every
+        Instantiate ControlSignal with Projection to the ParameterState for the multiplicative_param of every
            Mechanism listed in self.modulated_mechanisms
-
-        Returns ControlSignal (OutputState)
         """
         from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
@@ -870,16 +869,22 @@ class LCControlMechanism(ControlMechanism):
     def _execute(self,
                     variable=None,
                     runtime_params=None,
-                    time_scale=TimeScale.TRIAL,
                     context=None):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
         output_values = self.function(variable=variable,
                              params=runtime_params,
-                             time_scale=time_scale,
                              context=context)
+
         gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
+
+        # # MODIFIED 1/17/18 OLD:
         return gain_t, gain_t, output_values[0], output_values[1], output_values[2]
+        # # MODIFIED 1/17/18 NEW:
+        # output_values = np.array(output_values).reshape(3,1)
+        # return np.vstack((gain_t, gain_t, output_values))
+        # # MODIFIED 1/17/18 END
+
 
 
     @tc.typecheck
@@ -897,9 +902,8 @@ class LCControlMechanism(ControlMechanism):
         for mech in mechanisms:
             self.modulated_mechanisms.append(mech)
             parameter_state = mech._parameter_states[mech.multiplicative_param]
-            control_projection = ControlProjection(sender=self.control_signals[0],
-                                                   receiver=parameter_state)
-            self.control_projections.append(control_projection)
+            ControlProjection(sender=self.control_signals[0],
+                              receiver=parameter_state)
 
     @tc.typecheck
     def remove_modulated_mechanisms(self, mechanisms:list):
@@ -925,13 +929,6 @@ class LCControlMechanism(ControlMechanism):
             # Delete ControlProjection from recipient ParameterState
             index = parameter_state.mod_afferents[control_projection]
             del(parameter_state.mod_afferents[index])
-
-            # Delete ControlProjection from self.control_projections
-            index = self.control_projections[control_projection]
-            del(self.control_projections[index])
-
-            # Delete ControlProjection
-            del(control_projection)
 
             # Delete Mechanism from self.modulated_mechanisms
             index = self.modulated_mechanisms.index(mech)

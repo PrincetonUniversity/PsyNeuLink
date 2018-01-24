@@ -186,24 +186,24 @@ Projection in context:
 
      * **State specification** -- specifies the `State <State_Specification>` to connect with (**not** the one being
        connected; that is determined from context)
-
+     |
      * **weight** -- must be a value specifying the `weight <Projection_Base.weight>` of the Projection;  it can be
        `None`, in which case it is ignored, but there must be a specification present;
-
+     |
      * **exponent** -- must be a value specifying the `exponent <Projection_Base.exponent>` of the Projection;  it
-     can be `None`, in which case it is ignored, but there must be a specification present;
-
+       can be `None`, in which case it is ignored, but there must be a specification present;
+     |
      * **Projection specification** -- this is optional but, if included, msut be a `Projection specification
        <Projection_Specification>`;  it can take any of the forms of a Projection specification described above for
        any Projection subclass; it can be used to provide additional specifications for the Projection, such as its
        `matrix <MappingProjection.matrix>` if it is a `MappingProjection`.
 
     .. note::
-       A ProjectionTuple should not be confused with a `4-item InputState specification tuple <
-       InputState_Tuple_Specification>`, which also contains weight and exponent items.  In a ProjectionTuple, those
+       A ProjectionTuple should not be confused with a `4-item InputState specification tuple
+       <InputState_Tuple_Specification>`, which also contains weight and exponent items.  In a ProjectionTuple, those
        items specify the weight and/or exponent assigned to the *Projection* (see `Projection_Weight_Exponent`),
-       whereas in an InputState specification tuple they specify the weight and/or exponent of the **InputState**
-       (see `InputState_Weights_And_Exponents`).
+       whereas in an `InputState specification tuple <InputState_Weights_And_Exponents>` they specify the weight
+       and/or exponent of the **InputState**.
 
     Any (but not all) of the items can be `None`.  If the State specification is `None`, then there must be a
     Projection specification (used to infer the State to be connected with).  If the Projection specification is
@@ -385,6 +385,7 @@ COMMENT
 import inspect
 import warnings
 
+import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
@@ -392,11 +393,11 @@ from psyneulink.components.shellclasses import Mechanism, Process_Base, Projecti
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.components.states.state import StateError
 from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from psyneulink.globals.log import LogCondition, LogEntry, _get_log_context
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
-from psyneulink.globals.utilities import ContentAddressableList, iscompatible, is_numeric, is_matrix, type_match
-from psyneulink.globals.log import LogCondition, LogEntry, _get_log_context
+from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
 
 __all__ = [
     'kpProjectionTimeScaleLogEntry', 'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS', 'ProjectionError',
@@ -846,6 +847,7 @@ class Projection_Base(Projection):
 
     def _instantiate_attributes_after_function(self, context=None):
         self._instantiate_receiver(context=context)
+        super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_receiver(self, context=None):
         """Call receiver's owner to add projection to its afferents list
@@ -882,10 +884,10 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
+    def _update_parameter_states(self, runtime_params=None, context=None):
         for state in self._parameter_states:
             state_name = state.name
-            state.update(params=runtime_params, time_scale=time_scale, context=context)
+            state.update(params=runtime_params, context=context)
 
             # Assign ParameterState's value to parameter value in runtime_params
             if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
@@ -1070,8 +1072,8 @@ def _parse_projection_spec(projection_spec,
 
     All keys in kwargs must be from PROJECTION_ARGS
 
-    If projection_spec is or resolves to a Projection object, returns State object.
-    Otherwise, return State specification dictionary using any arguments provided as defaults
+    If projection_spec is or resolves to a Projection object, returns Projection object.
+    Otherwise, return Projection specification dictionary using any arguments provided as defaults
     """
 
     bad_arg = next((key for key in kwargs if not key in PROJECTION_ARGS), None)
@@ -1609,7 +1611,6 @@ def _parse_connection_specs(connectee_state_type,
 
     return connect_with_states
 
-
 @tc.typecheck
 def _validate_connection_request(
         owner,                                   # Owner of State seeking connection
@@ -1764,6 +1765,11 @@ def _validate_connection_request(
     #    (e.g., value or a name that will be used in context to instantiate it)
     return False
 
+def _get_projection_value_shape(sender, matrix):
+    """Return shape of a Projection's value given its sender and matrix"""
+    from psyneulink.components.functions.function import get_matrix
+    matrix = get_matrix(matrix)
+    return np.zeros(matrix.shape[sender.value.ndim :])
 
 # IMPLEMENTATION NOTE: MOVE THIS TO ModulatorySignals WHEN THAT IS IMPLEMENTED
 @tc.typecheck
@@ -2053,4 +2059,3 @@ context=context)
                                                       name=sender.name+'.output_states')
 
     output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
-

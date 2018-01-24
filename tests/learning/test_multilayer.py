@@ -107,9 +107,9 @@ def test_multilayer():
         i = s.input
         t = s.target_input_states[0].value
         print('\nOLD WEIGHTS: \n')
-        print('- Input Weights: \n', Input_Weights.matrix)
-        print('- Middle Weights: \n', Middle_Weights.matrix)
-        print('- Output Weights: \n', Output_Weights.matrix)
+        print('- Input Weights: \n', Input_Weights.mod_matrix)
+        print('- Middle Weights: \n', Middle_Weights.mod_matrix)
+        print('- Output Weights: \n', Output_Weights.mod_matrix)
         print('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
         print('ACTIVITY FROM OLD WEIGHTS: \n')
         print('- Middle 1: \n', Hidden_Layer_1.value)
@@ -146,18 +146,18 @@ def test_multilayer():
     expected_output = [
         (Output_Layer.output_states.values, [np.array([0.22686074, 0.25270212, 0.91542149])]),
         (objective_output_layer.output_states[MSE].value, np.array(0.04082589331852094)),
-        (Input_Weights.matrix, np.array([
+        (Input_Weights.mod_matrix, np.array([
             [ 0.09900247, 0.19839653, 0.29785764, 0.39739191, 0.49700232],
             [ 0.59629092, 0.69403786, 0.79203411, 0.89030237, 0.98885379],
         ])),
-        (Middle_Weights.matrix, np.array([
+        (Middle_Weights.mod_matrix, np.array([
             [ 0.09490249, 0.10488719, 0.12074013, 0.1428774 ],
             [ 0.29677354, 0.30507726, 0.31949676, 0.3404652 ],
             [ 0.49857336, 0.50526254, 0.51830509, 0.53815062],
             [ 0.70029406, 0.70544225, 0.71717037, 0.73594383],
             [ 0.90192903, 0.90561554, 0.91609668, 0.93385292],
         ])),
-        (Output_Weights.matrix, np.array([
+        (Output_Weights.mod_matrix, np.array([
             [-0.74447522, -0.71016859, 0.31575293],
             [-0.50885177, -0.47444784, 0.56676582],
             [-0.27333719, -0.23912033, 0.8178167 ],

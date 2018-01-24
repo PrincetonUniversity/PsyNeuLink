@@ -166,8 +166,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the IntegratorMechanism; if it is not specified in the **prefs** argument of the 
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet 
+        the `PreferenceSet` for the IntegratorMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
 
     """
@@ -178,7 +178,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'IntegratorMechanismCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
         # Sets template for variable (input)
@@ -186,7 +186,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # TIME_SCALE: TimeScale.TRIAL,
         OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
 
     })
@@ -197,8 +196,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
+                 input_states:tc.optional(tc.any(list, dict))=None,
                  function=AdaptiveIntegrator(rate=0.5),
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -221,6 +220,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         super(IntegratorMechanism, self).__init__(variable=default_variable,
                                                   size=size,
+                                                  input_states=input_states,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,

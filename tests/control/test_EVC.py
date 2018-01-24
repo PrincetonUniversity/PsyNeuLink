@@ -212,7 +212,7 @@ def test_EVC_gratton():
     mechanism_prefs = ComponentPreferenceSet(
         prefs={
             kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-            kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)
+            kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
         }
     )
 
@@ -342,6 +342,8 @@ def test_EVC_gratton():
     # Show characteristics of system:
     mySystem.show()
     mySystem.controller.show()
+
+    # mySystem.show_graph(show_control=True)
 
     # configure EVC components
     mySystem.controller.control_signals[0].intensity_cost_function = Exponential(rate=0.8046).function

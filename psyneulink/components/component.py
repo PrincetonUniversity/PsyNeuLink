@@ -52,13 +52,13 @@ of a `Process`), as appropriate.
 Component Structure
 -------------------
 
-.. _Component_Configurable_Attributes:
+.. _Component_Structural_Attributes:
 
-Core Configurable Attributes
+Core Structural Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every Component has the following set of core attributes that govern its operation, and that can be specified in
-corresponding arguments of its constructor, or by assigning them directly (see `ParameterState_Specification`):
+Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
+user once the component is constructed, with the one exception of `prefs <Component_Prefs>`.
 
 .. _Component_Variable:
 
@@ -164,12 +164,22 @@ Core Informational Attributes
 
 .. _Component_User_Params:
 
-* **user_params** - this contains a dictionary of all of the configurable parameters for a given Component.
+* **user_params** - a dictionary intended to provide a simple reference to all of the relevant features of a component.
+  The dictionary contains two main types of parameters:
+
+   (1) configurable parameters, meaning component-specific parameters that may or may not have a parameter state. A user
+   can change the value of a configurable parameter at any time. For example, on the TransferMechanism, clip,
+   initial_value, and integrator_mode are all available in user_params and do not have ParameterStates; noise and
+   smooothing_factor are also available in user_params and do have ParameterStates.
+
+   (2) informational parameters. For example, on the TransferMechanism, input_states, output_states, function, and
+   function_params are all available in user_params.
+
   The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
   <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
   as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
-  it cannot be used to make assignments.  Rather, changes to the value of a parameter
+  it cannot be used to make assignments.  Rather, changes to the value of a parameter, if allowed,
   must be made by assigning a value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``),
   or using the Component's `assign_params <Component.assign_params>` method.
 
@@ -355,13 +365,8 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
+from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MAPPING_PROJECTION, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.keywords import COMMAND_LINE, DEFERRED_INITIALIZATION, DEFERRED_DEFAULT_NAME, COMPONENT_INIT, \
-    CONTEXT, CONTROL, CONTROL_PROJECTION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, LOG_ENTRIES, \
-    INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, \
-    OUTPUT_STATES, \
-    PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, \
-    SIZE, USER_PARAMS, VALUE, VARIABLE, MODULATORY_SPEC_KEYWORDS, kwComponentCategory
 # from psyneulink.globals.log import Log, LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
@@ -371,7 +376,7 @@ __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
     'InitStatus', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
 ]
-# Testing pull request 
+# Testing pull request
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
 DeferredInitRegistry = {}
@@ -689,53 +694,86 @@ class Component(object):
     componentCategory = None
     componentType = None
 
+    class _DefaultsAliases:
+        '''
+        Used to create aliases for both ClassDefaults and InstanceDefaults, via properties.
+        e.g. to simply alias foo and bar:
 
-    class Defaults(object):
-        def _attributes(obj):
-            return {k: getattr(obj, k) for k in dir(obj) if k[:2]+k[-2:] != '____' and not callable(getattr(obj, k))}
+        @property
+        def foo(self):
+            return self.bar
+
+        @foo.setter
+        def foo(self, value):
+            self.bar = value
+
+        '''
+        pass
+
+    class _DefaultsMeta(type, _DefaultsAliases):
+        def __repr__(self):
+            return '{0} :\n{1}'.format(super().__repr__(), str(self))
+
+        def __str__(self):
+            try:
+                return self.show()
+            except TypeError:
+                # InstanceDefaults (and any instance of _DefaultsMeta) does not have a
+                # classmethod show(), so revert to default type repr in this case
+                return super().__repr__()
+
+    class Defaults(metaclass=_DefaultsMeta):
+        def _values(self):
+            return {
+                k: getattr(self, k) for k in dir(self) + dir(type(self))
+                if (k[:1] != '_' and not callable(getattr(self, k)))
+            }
+
+        def _show(self):
+            vals = self.values()
+            return '(\n\t{0}\n)'.format('\n\t'.join(sorted(['{0} = {1},'.format(k, vals[k]) for k in vals])))
 
         @classmethod
         def values(cls):
             '''
                 Returns
                 -------
-                A dictionary consisting of the non-dunder and non-function attributes of **obj**
+                A dictionary consisting of the non-hidden and non-function attributes
             '''
-            return cls._attributes(cls)
-
-        def _show(obj):
-            vals = obj.values()
-            return '(\n\t{0}\n)'.format('\n\t'.join(['{0} = {1},'.format(k, vals[k]) for k in vals]))
+            return cls._values(cls)
 
         @classmethod
         def show(cls):
             '''
                 Returns
                 -------
-                A pretty string version of the non-dunder and non-function attributes of **obj**
+                A pretty string version of the non-hidden and non-function attributes
             '''
             return cls._show(cls)
 
     class ClassDefaults(Defaults):
+        def __init__(self):
+            raise TypeError('ClassDefaults is not meant to be instantiated')
+
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         variable = np.array([0])
 
-    class InstanceDefaults(Defaults):
+    class InstanceDefaults(Defaults, _DefaultsAliases):
         def __init__(self, **kwargs):
             for param in kwargs:
                 setattr(self, param, kwargs[param])
 
-        def values(self):
-            return self._attributes()
-
-        def show(self):
-            return self._show()
-
         def __repr__(self):
-            return '{0} :\n{1}'.format(super().__repr__(), self.__str__())
+            return '{0} :\n{1}'.format(super().__repr__(), str(self))
 
         def __str__(self):
             return self.show()
+
+        def values(self):
+            return self._values()
+
+        def show(self):
+            return self._show()
 
     initMethod = INIT_FULL_EXECUTE_METHOD
 
@@ -1419,9 +1457,9 @@ class Component(object):
         # Provide opportunity for subclasses to filter final set of params in class-specific way
         # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
         self._filter_params(params)
-
         # Create property on self for each parameter in user_params:
         #    these WILL be validated whenever they are assigned a new value
+
         self._create_attributes_for_params(make_as_properties=True, **self.user_params)
 
         # Create attribute on self for each parameter in paramClassDefaults not in user_params:
@@ -1456,14 +1494,19 @@ class Component(object):
             and assign value provided in kwargs as its default value.
         """
         if make_as_properties:
+            # getter returns backing field value
+            # setter runs validation [_assign_params()], updates user_params
+
             for arg_name, arg_value in kwargs.items():
                 if not any(hasattr(parent_class, arg_name) for parent_class in self.__class__.mro()):
-                    setattr(self.__class__, arg_name, make_property(arg_name, arg_value))
-                setattr(self, '_'+arg_name, arg_value)
+                    # create property
+                    setattr(self.__class__, arg_name, make_property(arg_name))
+                # assign default value
+                setattr(self,  "_"+arg_name, arg_value)
+                    # setattr(self, "_"+arg_name, arg_value)
         else:
             for arg_name, arg_value in kwargs.items():
                 setattr(self, arg_name, arg_value)
-
 
     def _check_args(self, variable=None, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params.
@@ -2058,6 +2101,7 @@ class Component(object):
         :return none:
         """
         for param_name, param_value in request_set.items():
+            # setattr(self, "_"+param_name, param_value)
 
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
@@ -2065,6 +2109,7 @@ class Component(object):
                 if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES}:  # added SIZE here (7/5/17, CW)
                     continue
                 # function is a class, so function_params has not yet been implemented
+                self._function = request_set[FUNCTION]
                 if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
                     continue
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
@@ -2433,7 +2478,7 @@ class Component(object):
             - if self.function IS implemented, it is assigned to params[FUNCTION]
             - if self.function IS NOT implemented: program error (should have been caught in _validate_function)
         Upon successful completion:
-            - self.function === self.paramsCurrent[FUNCTION]
+            - self._function === self.paramsCurrent[FUNCTION]
             - self.execute should always return the output of self.function in the first item of its output array;
                  this is done by Function.execute;  any subclass override should do the same, so that...
             - self.value == value[0] returned by self.execute
@@ -2606,28 +2651,33 @@ class Component(object):
         if not context:
             context = "DIRECT CALL"
         try:
-            self.value = self.execute(variable=self.instance_defaults.variable, context=context)
+            value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:
             try:
-                self.value = self.execute(input=self.instance_defaults.variable, context=context)
+                value = self.execute(input=self.instance_defaults.variable, context=context)
             except TypeError:
-                self.value = self.execute(context=context)
-        if self.value is None:
+                value = self.execute(context=context)
+        if value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+
+        self.value = value
         try:
             # Could be mutable, so assign copy
-            self._default_value = self.value.copy()
+            self.instance_defaults.value = value.copy()
         except AttributeError:
             # Immutable, so just assign value
-            self._default_value = self.value
+            self.instance_defaults.value = value
 
     def _instantiate_attributes_after_function(self, context=None):
-        pass
+        if hasattr(self, "_parameter_states"):
+            for param_state in self._parameter_states:
+                setattr(self.__class__, "mod_"+param_state.name, make_property_mod(param_state.name))
+
 
     def initialize(self):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def execute(self, input=None, params=None, time_scale=None, context=None):
+    def execute(self, input=None, params=None, context=None):
         raise ComponentError("{} class must implement execute".format(self.__class__.__name__))
 
     def _update_value(self, context=None):
@@ -2848,8 +2898,8 @@ class Component(object):
     from psyneulink.globals.log import LogCondition
     def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
         """
-        set_log_conditions(               \
-            items                \
+        set_log_conditions(          \
+            items                    \
             log_condition=EXECUTION  \
         )
 
@@ -2899,39 +2949,13 @@ class Component(object):
 
 COMPONENT_BASE_CLASS = Component
 
-
-def make_property(name, default_value):
+def make_property(name):
     backing_field = '_' + name
 
     def getter(self):
-        try:
-            # Get value of function param from ParameterState.value of owner
-            #    case: request is for the value of a Function parameter for which the owner has a ParameterState
-            #    example: slope or intercept parameter of a Linear Function)
-            #    rationale: most common and therefore requires the greatest efficiency
-            #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
-            from psyneulink.components.functions.function import Function
-            if not isinstance(self, Function):
-                raise TypeError
-            return self.owner._parameter_states[name].value
-        except (AttributeError, TypeError):
-            try:
-                # Get value of param from Component's own ParameterState.value
-                #    case: request is for value of a parameter of a Mechanism or Projection that has a ParameterState
-                #    example: matrix parameter of a MappingProjection)
-                #    rationale: next most common case
-                #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
-                return self._parameter_states[name].value
-            except (AttributeError, TypeError):
-                # Get value of param from Component's attribute
-                #    case: request is for the value of an attribute for which the Component has no ParameterState
-                #    rationale: least common case
-                #    example: parameter of a Function belonging to a state (which don't themselves have ParameterStates)
-                #    note: use backing_field since referencing property rather than item in _parameter_states)
-                return getattr(self, backing_field)
+        return getattr(self, backing_field)
 
     def setter(self, val):
-
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
             val_type = val.__class__.__name__
             curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
@@ -2953,18 +2977,34 @@ def make_property(name, default_value):
             param_state_owner = self
 
         # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
-        if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
-            param_state = param_state_owner._parameter_states[name]
-
-            # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
-            # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
-            # 'reset_initializer'
-            if hasattr(param_state.function_object, 'initializer'):
-                param_state.function_object.reset_initializer = val
+        # if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
+        #     param_state = param_state_owner._parameter_states[name]
+        #
+        #     # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
+        #     # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
+        #     # 'reset_initializer'
+        #     if hasattr(param_state.function_object, 'initializer'):
+        #         param_state.function_object.reset_initializer = val
 
     # Create the property
     prop = property(getter).setter(setter)
-
     # # Install some documentation
     # prop.__doc__ = docs[name]
+    return prop
+
+def make_property_mod(param_name):
+
+    def getter(self):
+        try:
+            return self._parameter_states[param_name].value
+        except TypeError:
+            raise ComponentError("{} does not have a '{}' ParameterState."
+                                 .format(self.name, param_name))
+
+    def setter(self, value):
+        raise ComponentError("Cannot set to {}'s mod_{} directly because it is computed by the ParameterState."
+                             .format(self.name, param_name))
+
+    prop = property(getter).setter(setter)
+
     return prop
