@@ -99,17 +99,22 @@ The `LCControlMechanism` outputs the values `u <LCControlMechanism.u>`, `v <LCCo
 `gain <LCControlMechanism.gain>`.
 
 
-**COMBINED VALUES**: an `ObjectiveMechanism`, specified in the **objective_mechanism** argument of the
+**COMBINE VALUES**: an `ObjectiveMechanism`, specified in the **objective_mechanism** argument of the
 LCControlMechanism constructor, with a `Linear <Linear>` function of **slope**=1 and **intercept**=0.  Its
 **monitored_output_states** argument is assigned a `2-item tuple <InputState_State_Mechanism_Tuple>` specifying the
-*DECISION LAYER* and a matrix to use for the `MappingProjection` from it to the `ObjectiveMechanism` (named *COMBINE
-VALUES*).  The matrix is assigned as a 3x1 numpy array, with weights of 0.3 for the first two elements corresponding
-to the T1 and T2 elements of the `DECISION LAYER`, and 0.0 for the one corresponding to the distractor unit.  The
-latter implements the assumption that the distractor stimulus does not elicit an LC response.  The *COMBINED VALUES*
-Mechanism conveys its output as the input to the LC. Note that although the *COMBINED VALUES* Mechanism is not
-strictly needed -- the *DECISION LAYER* could, in principle, project directly to the LC (as it does in Niewenhuis et
-al.,2005) -- it conforms to the convention that PsyNeuLink `ControlMechanisms <ControlMechanism>` are associated with
-an `ObjectiveMechanism` from which they receive their input.
+*DECISION LAYER* and a matrix for the `MappingProjection` from it to *COMBINE VALUES*.  The matrix is
+assigned as a 3x1 numpy array, with weights of 0.3 for its first two elements and 0.0 for its third, corresponding to
+T1, T2 and distractor units in the *DECISION LAYER*, respectively.  This causes the *COMBINE VALUES* Mechanism to
+combine the values of the T1 and T2 distrctor units, and ignore the value of the distractor unit, implementing the
+assumption that the distractor stimulus does not elicit an LC response.  The *COMBINED VALUES* Mechanism conveys its
+output as the input to the LC.
+
+.. note::
+  Although the *COMBINED VALUES* Mechanism is not strictly needed -- the same `MappingProjection` and `matrix
+  <MappingProjection.matrix>` used to combine the values of the *DECISION LAYER* and project to the *COMBINE VALUES*
+  Mechanism could project directly to the LC (as it does in Niewenhuis et al.,2005) -- the use of *COMBINE VALUES*
+  conforms to the convention that PsyNeuLink `ControlMechanisms <ControlMechanism>` are associated with an
+  `ObjectiveMechanism` from which they receive their input.
 
 
 Execution
