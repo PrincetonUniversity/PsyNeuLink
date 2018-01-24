@@ -30,6 +30,7 @@ The Figure below shows the behavior of the model for a single execution of a tri
 corresponding to the conditions reported in Figure 3 of Nieuwenhuis et al. (2005; averaged over 1000 executions with
 noise).
 
+XXX GENERTE FIGURE WITH ADD show_dimensions=True
 
 .. _Nieuwenhuis2005_PsyNeuLink_Fig:
 
@@ -57,63 +58,66 @@ associated `ObjectiveMechanism`, as shown in the figure below:
 .. _Nieuwenhuis2005_System_Graph:
 
 .. figure:: _static/Nieuwenhuis_SystemGraph.svg
-   :figwidth: 45 %
-   :align: left
+   :figwidth: 100 %
+   :align: center
    :alt: Nieuwenhuis System Graph
 
-Behavioral Network
-~~~~~~~~~~~~~~~~~~
+Behavioral Network Subsystem
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**INPUT LAYER**:  a `TransferMechanism` with size=3, and uses a `Linear` function with slope=1.0
-and intercept=0.0.
+**INPUT LAYER**:  a `TransferMechanism` with **size**=3 (one element for the input to the T1, T2 and distractor units
+of the *DECISION LAYER*, respectively), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
 
-**DECISION LAYER**: an `LCA` Mechanism of size=3, with a `Logistic` Function with a slope=1.0 and intercept=0.0, each element of which has a self-excitatory weight
-with a strength specified by the `self_excitation <LCA.self_excitation>` parameter set to 2.5; a leak specified by the `leak
-<LCA.leak>` parameter set to -1.0;  and every element of which is connected to every other element by mutually inhibitory weights
-with a strength specified by the `competition <LCA.competition>` parameter set to 1.0.  An ordinary differential equation
-describes the change in state over time, implemented in the LCA mechanism by setting its `integrator_mode <LCA
-.integrator_mode>` to `True` and setting a `time_step_size <LCA.time_step_size>` to 0.02.
-The output values of the `LCA` Mechanism can be evaluated with the `log` function.
+**DECISION LAYER**: an `LCA` Mechanism of **size**=3 (one element for the T1, T2 and distractor units, respectively),
+and assigned a `Logistic` Function with a slope=1.0 and intercept=0.0.  Each element has a self-excitatory connection
+with a weight specified by **self_excitation**=2.5, a **leak**=-1.0, and every element is connected to every other
+element by mutually inhibitory connections with a weight specified by **competition**=1.0.  An ordinary differential
+equation describes the change in state over time, implemented in the LCA mechanism by setting
+**integrator_mode**=`True` and **time_step_size**=0.02.
 
-**RESPONSE LAYER**: an `LCA` Mechanism of size=2, implemented as in the DECISION LAYER, with a `Logistic` Function with
-a slope=1.0 and intercept=0.0; the `self_excitation <LCA.self_excitation>` parameter set to 2.0, the leak
-`leak<LCA.leak>` set to -1.0, and mutually inhibitory weights specified by `competition <LCA.competition>` set to 0.
-The output values of the `LCA` Mechanism can be evaluated with the `log` function.
+**RESPONSE LAYER**: an `LCA` Mechanism of **size**=2, with one element each for the response to T1 and T2,
+respectively, **self_excitation**=2.0, **leak**=-1.0, and no mutually inhibitory weights (**competition**=0).
 
-
-**CONNECTIONS**:  The weights of the behavioral network are implemented as `MappingProjections <MappingProjection>`.
-  The one from the *INPUT_LAYER* to the *DECISION_LAYER* uses a numpy array with a value of 1.5 for the diagonal to and
-  a value of 0.33 for the off-diagonal as its `matrix <MappingProjection.matrix>` parameter;  and the one from
-  the *DECISION_LAYER* to the *RESPONSE LAYER* uses a numpy array of 3.5 for the diagonal and 0 for the off-diagonal as
-  its `matrix <MappingProjection.matrix>` parameter.
+**PROJECTIONS**:  The weights of the behavioral network are implemented as `MappingProjections <MappingProjection>`.
+The `matrix <MappingProjection.matrix>` parameter for the one from the *INPUT_LAYER* to the *DECISION_LAYER* uses a
+numpy array with a value of 1.5 for the diagonal elements and a value of 0.33 for the off-diagonal elements; the one
+from the *DECISION_LAYER* to the *RESPONSE LAYER* uses a numpy array with 3.5 for the diagonal elements and 0 for the
+off-diagonal elements.
 
 LC Subsystem
 ~~~~~~~~~~~~
 
-The LC is implemented as a `LCControlMechanism` and its associated `ObjectiveMechanism`.  An LCControlMechanism
-uses a `FitzHugh–Nagumo` integrator function to simulate the population-level activity of the LC (see `Gilzenrat
-Model`), parameterized as described in the paper. The ObjectiveMechanism is specified in the `objective_mechanism
-<LCControlMechanism.objective_mechanism>` argument of the LCControlMechanism constructor with a `Linear <Linear>`
-function of slope=1 and intercept=0, and its `monitored_output_states <LCControlMechanism.monitored_output_states>`
-argument specified as the *DECISION LAYER* with a matrix specifying the connection from each of its elements to the
-`ObjectiveMechanism`. The weight from the distractor element of the *DECISION LAYER* is set to 0.0 since, as in the
-original model, the distractor stimulus is assumed not to elicit an LC response. The two weights from the target 1 and
-target 2 elements are set to 0.3.
-Note the linear projection from the *DECISION LAYER* to the `ObjectiveMechanism` leads to an input state of length one
-to the `ObjectiveMechanism`. The `ObjectiveMechanism` used does not represent a specific mechanism listed in
-the paper, but is required in PsyNeuLink when a `LCControlMechanism` is implemented.
-The parameters `G <LCControlMechanism.G>` = 0.5 and `k <LCControlMechanism.k>` = 1.5 are set inside the `LCControlMechanism`.
-The LCControlMechanism sends `ControlProjections <ControlProjection>` to the *DECISION LAYER* and *RESPONSE LAYER*, that
-regulate the `gain <Logistic.gain>` parameter of their `Logistic` Functions.
+**LC**: an `LCControlMechanism`, which uses a `FitzHugh–Nagumo` integrator function to simulate the population-level
+activity of the LC (see `GilzenratModel`), parameterized as described in Nieuwenhuis et al (2005) with
 
+XXX?? **base_level_gain**=0.05 and **scaling_factor**1.5 [WHY SIGNLE OUT THESE PARAMETER TO MENTION?]
+**G**=0.5 and **k**=1.5.  The LC sends `ControlProjections <ControlProjection>` to the *DECISION LAYER* and
+*RESPONSE LAYER*, that regulate the `gain <Logistic.gain>` parameter of their `Logistic` Functions.
+
+XXX ?? WHAT ARE THESE AND HOW ARE THEY USED:
 The `LCControlMechanism` outputs the values `u <LCControlMechanism.u>`, `v <LCControlMechanism.v>` and
-`gain <LCControlMechanism.gain>`. The constructor can output these values using the `log` function.
+`gain <LCControlMechanism.gain>`.
+
+
+**COMBINED VALUES**: an `ObjectiveMechanism`, specified in the **objective_mechanism** argument of the
+LCControlMechanism constructor, with a `Linear <Linear>` function of **slope**=1 and **intercept**=0.  Its
+**monitored_output_states** argument is assigned a `2-item tuple <InputState_State_Mechanism_Tuple>` specifying the
+*DECISION LAYER* and a matrix to use for the `MappingProjection` from it to the `ObjectiveMechanism` (named *COMBINE
+VALUES*).  The matrix is assigned as a 3x1 numpy array, with weights of 0.3 for the first two elements corresponding
+to the T1 and T2 elements of the `DECISION LAYER`, and 0.0 for the one corresponding to the distractor unit.  The
+latter implements the assumption that the distractor stimulus does not elicit an LC response.  The *COMBINED VALUES*
+Mechanism conveys its output as the input to the LC. Note that although the *COMBINED VALUES* Mechanism is not
+strictly needed -- the *DECISION LAYER* could, in principle, project directly to the LC (as it does in Niewenhuis et
+al.,2005) -- it conforms to the convention that PsyNeuLink `ControlMechanisms <ControlMechanism>` are associated with
+an `ObjectiveMechanism` from which they receive their input.
 
 
 Execution
 ---------
 
 The `run` function executes the model, with a list of stimulus inputs specified and the number of executions specified.
+
+XXX ??WHAT DOES ALL THE PLOTTING AND OUTPUT STUFF DO/REPORT?
 
 Script: :download:`Download Nieuwenhuis2005Model.py <../../Scripts/Models/Nieuwenhuis2005Model.py>`
 
