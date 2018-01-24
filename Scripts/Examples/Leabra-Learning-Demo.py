@@ -21,7 +21,7 @@ import numpy as np
 ### building the LeabraMechanism
 n_input = 4  # don't change this!
 n_output = 2  # don't change this!
-n_hidden = 1
+n_hidden = 0
 Leab = pnl.LeabraMechanism(input_size=n_input, output_size=n_output, hidden_layers=n_hidden,
                         hidden_sizes=None, training_flag=True, quarter_size=20)
 
