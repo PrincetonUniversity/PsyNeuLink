@@ -878,7 +878,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 param_state = self._parameter_states[name]
 
                 if hasattr(param_state.function_object, 'initializer'):
-                    param_state.function_object.reset_initializer = val
+                    param_state.function_object.reinitialize = val
 
     @property
     def auto(self):
