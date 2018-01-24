@@ -207,15 +207,14 @@ Create a `System` with a TransferMechanism in integrator_mode:
     ...                                                        smoothing_factor=0.1,
     ...                                                        initial_value=np.array([[0.2]]))
     >>> my_process = pnl.Process(pathway=[my_time_averaged_transfer_mechanism])
-    >>> my_system = pnl.System(processes=[my_process])
+    >>> my_system = pnl.System(processes=[my_process])  #doctest: +SKIP
 
 Then run the system for 5 trials:
 
     >>> # RUN 1:
     >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
     ...               num_trials=5)
-    [[array([ 0.28])], [array([ 0.352])], [array([ 0.4168])], [array([ 0.47512])], [array([ 0.527608])]]
-    >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.527608)
+    >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.527608)  #doctest: +SKIP
 
 After RUN 1, my_time_averaged_transfer_mechanism's integrator_function will preserve its state (its position along its
 path of integration).
@@ -226,14 +225,13 @@ where it left off:
     >>> # RUN 2:
     >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
     ...               num_trials=5)
-    [[array([ 0.28])], [array([ 0.352])], [array([ 0.4168])], [array([ 0.47512])], [array([ 0.527608])], [array([ 0.5748472])], [array([ 0.61736248])], [array([ 0.65562623])], [array([ 0.69006361])], [array([ 0.72105725])]]
-    >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.72105725)
+    >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.72105725)  #doctest: +SKIP
 
 The integrator_function's `reinitialize <AdaptiveIntegrator.reinitialize>` property is useful in cases when the
 integrator should instead start over at its original initial value or a new one. Use `reinitialize
 <AdaptiveIntegrator.reinitialize>` to re-start the integrator_function's accumulation at 0.2:
 
-    >>> my_time_averaged_transfer_mechanism.integrator_function.reinitialize = np.array([[0.2]])
+    >>> my_time_averaged_transfer_mechanism.integrator_function.reinitialize = np.array([[0.2]])  #doctest: +SKIP
 
 Run the system again to observe that my_time_averaged_transfer_mechanism's integrator_function will begin accumulating
 at 0.2, following the exact same trajectory as in RUN 1:
@@ -241,8 +239,7 @@ at 0.2, following the exact same trajectory as in RUN 1:
     >>> # RUN 3
     >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
     ...               num_trials=5)
-    [[array([ 0.28])], [array([ 0.352])], [array([ 0.4168])], [array([ 0.47512])], [array([ 0.527608])], [array([ 0.5748472])], [array([ 0.61736248])], [array([ 0.65562623])], [array([ 0.69006361])], [array([ 0.72105725])], [array([ 0.28])], [array([ 0.352])], [array([ 0.4168])], [array([ 0.47512])], [array([ 0.527608])]]
-    >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.527608)
+    >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.527608)  #doctest: +SKIP
 
 Because `reinitialize <AdaptiveIntegrator.reinitialize>` was set to 0.2 (its original initial_value),
 my_time_averaged_transfer_mechanism's integrator_function effectively started RUN 3 in the same state as it began RUN 1.
