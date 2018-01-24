@@ -110,7 +110,7 @@ from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'build_leabra_network', 'convert_to_2d_input', 'input_state_names', 'LeabraError', 'LeabraFunction', 'LeabraMechanism',
-    'LEARNING_TARGET', 'MAIN_INPUT', 'MAIN_OUTPUT', 'output_state_name', 'test_leabra_network', 'train_leabra_network',
+    'LEARNING_TARGET', 'MAIN_INPUT', 'MAIN_OUTPUT', 'output_state_name', 'run_leabra_network', 'train_leabra_network',
 ]
 
 # Used to name input_states and output_states:
@@ -210,7 +210,8 @@ class LeabraFunction(Function_Base):
                  context=componentName + INITIALIZING):
 
         if not leabra_available:
-            raise LeabraError('leabra python module is not installed')
+            raise LeabraError('leabra python module is not installed. Please install it from '
+                              'https://github.com/benureau/leabra')
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(network=network,
@@ -258,17 +259,18 @@ class LeabraFunction(Function_Base):
                  context=None):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        # HACK: otherwise the INITIALIZING function executions affect aspects of the leabra learning algorithm
+        # HACK: otherwise the INITIALIZING function executions impact the state of the leabra network
         if INITIALIZING in context:
             output_size = len(self.network.layers[-1].units)
             return np.zeros(output_size)
 
         if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
-            variable = convert_to_2d_input(variable)[0]  # FIX: buggy, doesn't handle lists well. hacky conversion from 2D arrays into 1D arrays
-            return test_leabra_network(self.network, input_pattern=variable)  # potentially append an array of zeros to make output format consistent
+            if isinstance(variable[0], (list, np.ndarray)):
+                variable = variable[0]
+            return run_leabra_network(self.network, input_pattern=variable)
 
         else:
-            variable = convert_to_2d_input(variable)  # FIX: buggy, doesn't handle lists well
+            # variable = convert_to_2d_input(variable)  # FIX: buggy, doesn't handle lists well
             if len(variable) != 2:
                 raise LeabraError("Input Error: the input given ({}) for training was not the right format: the input "
                                   "should be a 2D array containing two vectors, corresponding to the input and the "
@@ -326,6 +328,12 @@ class LeabraMechanism(ProcessingMechanism_Base):
         If **leabra_net** argument is provided and `training_flag` is None, then the existing learning rules of the
         **leabra_net** will be preserved.
 
+    quarter_size : int : default 50
+        an integer specifying how many times the Leabra network cycles each time it is run. Lower values of
+        quarter_size result in shorter execution times, though very low values may cause slight fluctuations in output.
+        Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
+        a given trial.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
@@ -373,6 +381,12 @@ class LeabraMechanism(ProcessingMechanism_Base):
         its weights using the "leabra" algorithm, based on the training pattern (which is read from its second output
         state). The `training_flag` attribute can be changed after initialization, causing the leabra network to
         start/stop learning.
+
+    quarter_size : int : default 50
+        an integer specifying how many times the Leabra network cycles each time it is run. Lower values of
+        quarter_size result in shorter execution times, though very low values may cause slight fluctuations in output.
+        Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
+        a given trial.
 
     network : leabra.Network
         the leabra.Network object which is executed by the LeabraMechanism. For more info about leabra Networks,
@@ -437,6 +451,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                  hidden_layers=0,
                  hidden_sizes=None,
                  training_flag=None,
+                 quarter_size=50,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
@@ -451,13 +466,15 @@ class LeabraMechanism(ProcessingMechanism_Base):
             output_size = len(leabra_network.layers[-1].units)
             hidden_layers = len(leabra_network.layers) - 2
             hidden_sizes = list(map(lambda x: len(x.units), leabra_network.layers))[1:-2]
-            training_flag = None
+            quarter_size = leabra_network.spec.quarter_size
+            training_flag = infer_training_flag_from_network(leabra_network)
         else:
             if hidden_sizes is None:
                 hidden_sizes = input_size
             if training_flag is None:
                 training_flag = False
-            leabra_network = build_leabra_network(input_size, output_size, hidden_layers, hidden_sizes, training_flag)
+            leabra_network = build_leabra_network(input_size, output_size, hidden_layers, hidden_sizes,
+                                                  training_flag, quarter_size)
 
         function = LeabraFunction(network=leabra_network)
 
@@ -472,6 +489,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                                                   hidden_layers=hidden_layers,
                                                   hidden_sizes=hidden_sizes,
                                                   training_flag=training_flag,
+                                                  quarter_size=quarter_size,
                                                   params=params)
 
         super().__init__(size=[input_size, output_size],
@@ -479,6 +497,24 @@ class LeabraMechanism(ProcessingMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
+
+    def execute(self,
+                input = None,
+                runtime_params = None,
+                time_scale = TimeScale.TRIAL,
+                ignore_execution_id = False,
+                context = None):
+
+        if runtime_params:
+            if "training_flag" in runtime_params.keys():
+                self.training_flag = runtime_params["training_flag"]
+                del runtime_params["training_flag"]
+
+        return super().execute(input = input,
+                               runtime_params = runtime_params,
+                               time_scale = time_scale,
+                               ignore_execution_id = ignore_execution_id,
+                               context = context)
 
     @property
     def training_flag(self):
@@ -488,18 +524,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
     def training_flag(self, value):
         if self._training_flag is value:
             return
-        elif value is True:
-            conns = self.function_object.network.connections  # the connections between layers in the Leabra network
-            for i in range(len(conns)):
-                conns[i].spec.lrule = 'leabra'  # change each connection's learning rule
-            self._training_flag = value
-        elif value is False:
-            conns = self.function_object.network.connections
-            for i in range(len(conns)):
-                conns[i].spec.lrule = 'None'  # change each connection's learning rule to None
-            self._training_flag = value
-        elif value is None:
-            self._training_flag = value
+        set_training(self.function_object.network, value)
+        self._training_flag = value
 
     @property
     def network(self):
@@ -508,14 +534,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
     @network.setter
     def network(self, value):
         self.function_object.network = value
-
-    def _self_learner_function(self, self_learn_value):
-        if self_learn_value is True:
-            pass
-        elif self_learn_value is False:
-            pass
-        else:
-            pass
 
 
 def convert_to_2d_input(array_like):
@@ -533,13 +551,10 @@ def convert_to_2d_input(array_like):
         return [np.array([array_like])]
 
 
-def build_leabra_network(n_input, n_output, n_hidden, hidden_sizes=None, training_flag=None):
+def build_leabra_network(n_input, n_output, n_hidden, hidden_sizes=None, training_flag=None, quarter_size=50):
 
     # specifications
-    if training_flag is True:
-        learning_rule = 'leabra'
-    else:
-        learning_rule = None
+    learning_rule = 'leabra' if training_flag is True else None
     unit_spec = leabra.UnitSpec(adapt_on=True, noisy_act=True)
     layer_spec = leabra.LayerSpec(lay_inhib=True)
     conn_spec = leabra.ConnectionSpec(proj='full', rnd_type='uniform', rnd_mean=0.75, rnd_var=0.2, lrule=learning_rule)
@@ -567,26 +582,62 @@ def build_leabra_network(n_input, n_output, n_hidden, hidden_sizes=None, trainin
     connections.append(last_conn)
     layers.append(output_layer)
 
-    network_spec = leabra.NetworkSpec(quarter_size=50)
-    network = leabra.Network(layers=layers, connections=connections)
+    network_spec = leabra.NetworkSpec(quarter_size=quarter_size)
+    network = leabra.Network(layers=layers, connections=connections, spec=network_spec)
 
     return network
 
 
-def test_leabra_network(network, input_pattern):
+def run_leabra_network(network, input_pattern):
     assert len(network.layers[0].units) == len(input_pattern)
-    network.set_inputs({'input_layer': input_pattern})
 
-    network.trial()
+    # check training flag: should be handled earlier, but just in case
+    # we temporarily set training false, then turn it on again after we are done
+    # TODO: maybe add a warning message here?
+    if infer_training_flag_from_network(network):
+        set_training(network, False)
+        network.set_inputs({'input_layer': input_pattern})
+        network.set_outputs({})  # clear network._outputs
+        network.trial()
+        set_training(network, True)
+    else:
+        network.set_inputs({'input_layer': input_pattern})
+        network.set_outputs({})  # clear network._outputs
+        network.trial()
     return [unit.act_m for unit in network.layers[-1].units]
 
 
 def train_leabra_network(network, input_pattern, output_pattern):
     assert len(network.layers[0].units) == len(input_pattern)
-
     assert len(network.layers[-1].units) == len(output_pattern)
-    network.set_inputs({'input_layer': input_pattern})
-    network.set_outputs({'output_layer': output_pattern})
 
-    network.trial()
+    # check training flag: should be handled earlier, but just in case
+    # we temporarily set training true, then turn it off again after we are done
+    # TODO: maybe add a warning message here?
+    if not infer_training_flag_from_network(network):
+        set_training(network, True)
+        network.set_inputs({'input_layer': input_pattern})
+        network.set_outputs({'output_layer': output_pattern})
+        network.trial()
+        set_training(network, False)
+    else:
+        network.set_inputs({'input_layer': input_pattern})
+        network.set_outputs({'output_layer': output_pattern})
+        network.trial()
+
     return [unit.act_m for unit in network.layers[-1].units]
+
+
+# infer whether the network is using the None or 'leabra' training rule
+# this currently assumes either all connections or no connections are being trained
+def infer_training_flag_from_network(network):
+    return False if network.connections[0].spec.lrule is None else True
+
+
+def set_training(network, val):
+    if val is None or val is False:
+        for conn in network.connections:
+            conn.spec.lrule = None
+    else:
+        for conn in network.connections:
+            conn.spec.lrule = 'leabra'
