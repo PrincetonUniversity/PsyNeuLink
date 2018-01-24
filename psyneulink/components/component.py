@@ -291,7 +291,8 @@ COMMENT:
       _instantiate_function method checks that the input of the Component's `function <Comonent.function>` is compatible
       with its `variable <Component.variable>`).
 
-      * `_handle_size <Component._handle_size>` converts the `variable <Component.variable>` and `size <Component.size>` arguments to the correct dimensions (for `Mechanism <Mechanism>`, this is a 2D array and 1D
+      * `_handle_size <Component._handle_size>` converts the `variable <Component.variable>` and `size <Component.size>`
+        arguments to the correct dimensions (for `Mechanism <Mechanism>`, this is a 2D array and 1D
         array, respectively). If **variable** is not passed as an argument, this method attempts to infer `variable
         <Component.variable>` from the **size** argument, and vice versa if the **size** argument is missing.
         The _handle_size method then checks that the **size** and **variable** arguments are compatible.
@@ -2590,7 +2591,8 @@ class Component(object):
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
                 from psyneulink.components.functions.function import UserDefinedFunction
-                self.function = UserDefinedFunction(function=function, context=context).function
+                self.function = UserDefinedFunction(variable=self.instance_defaults.variable, owner=self,
+                                                    function=function, context=context).function
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
