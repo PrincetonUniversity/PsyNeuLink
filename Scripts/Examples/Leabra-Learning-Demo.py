@@ -37,12 +37,12 @@ p_target = pnl.Process(pathway=[T_target, target_projection, Leab])
 sys = pnl.System(processes=[p_input, p_target])
 
 ### building the learning data
-n = 50
+n = 1000
 inputs = [None] * n
 targets = [None] * n
 print("here's what the inputs/targets will look like:")
 for i in range(n):
-    nums = np.random.randint(0, 7, size=2)
+    nums = np.random.randint(0, 7, size=2) * 0.1
     a = nums[0]
     b = nums[1]
     inputs[i] = [a, a, b, b]
@@ -66,5 +66,7 @@ for i in range(n_trials):
 
 Leab.training_flag = False
 
-print(Leab.execute([[3, 3, 1, 1], [0, 0]]))
-print(Leab.execute([[1, 1, 4, 4], [0, 0]]))
+print(Leab.execute([[.3, .3, .1, .1], [0, 0]]))
+print(Leab.execute([[.1, .1, .4, .4], [0, 0]]))
+print(Leab.execute([[.2, .2, .6, .6], [0, 0]]))
+print(Leab.execute([[.3, .3, .4, .4], [0, 0]]))
