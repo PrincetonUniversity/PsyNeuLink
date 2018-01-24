@@ -4065,7 +4065,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     @property
     def reinitialize(self):
-        return self._initializer
+        return self.previous_value
 
     @reinitialize.setter
     def reinitialize(self, val):
@@ -4504,6 +4504,17 @@ class LCAIntegrator(
             self.previous_value = adjusted_value
 
         return adjusted_value
+
+    @property
+    def reinitialize(self):
+        return self.previous_value
+
+    @reinitialize.setter
+    def reinitialize(self, val):
+        self._initializer = val
+        self.value = val
+        self.previous_value = val
+        self.previous_time = 0.0
 
 
 class ConstantIntegrator(Integrator):  # --------------------------------------------------------------------------------
@@ -5269,6 +5280,27 @@ class DriftDiffusionIntegrator(
         # FIX?
         # Current output format is [[[decision_variable]], time]
         return adjusted_value
+
+    @property
+    def reinitialize(self):
+        return self.previous_value, self.previous_time
+
+    @reinitialize.setter
+    def reinitialize(self, value):
+        try:
+            val, time = value
+            self._initializer = val
+            self.value = val
+            self.previous_value = val
+            self.previous_time = time
+        except (ValueError, TypeError):
+            num_items = len(np.atleast_1d(value))
+            if num_items == 1:
+                raise FunctionError("DriftDiffusionIntegrator requires exactly two items (position, time) in order to "
+                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value, self.name))
+
+            raise FunctionError("DriftDiffusionIntegrator requires exactly two items (position, time) in order to "
+                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value, self.name))
 
 class OrnsteinUhlenbeckIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
