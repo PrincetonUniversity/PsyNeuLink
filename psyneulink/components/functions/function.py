@@ -5546,6 +5546,26 @@ class OrnsteinUhlenbeckIntegrator(
 
         return adjusted_value
 
+    @property
+    def reinitialize(self):
+        return self.previous_value, self.previous_time
+
+    @reinitialize.setter
+    def reinitialize(self, value):
+        try:
+            val, time = value
+            self._initializer = val
+            self.value = val
+            self.previous_value = val
+            self.previous_time = time
+        except (ValueError, TypeError):
+            num_items = len(np.atleast_1d(value))
+            if num_items == 1:
+                raise FunctionError("OrnsteinUhlenbeckIntegrator requires exactly two items (position, time) in order to "
+                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value, self.name))
+
+            raise FunctionError("OrnsteinUhlenbeckIntegrator requires exactly two items (position, time) in order to "
+                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value, self.name))
 
 class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -6012,7 +6032,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         self.previous_v = self.initial_v
         self.previous_w = self.initial_w
-        self.previous_t = self.t_0
+        self.previous_time = self.t_0
         super().__init__(
             default_variable=default_variable,
             params=params,
@@ -6257,7 +6277,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         if integration_method == "RK4":
             approximate_values = self._runge_kutta_4_FHN(self.previous_v,
                                                          self.previous_w,
-                                                         self.previous_t,
+                                                         self.previous_time,
                                                          dv_dt,
                                                          dw_dt,
                                                          time_step_size,
@@ -6280,7 +6300,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         elif integration_method == "EULER":
             approximate_values = self._euler_FHN(self.previous_v,
                                                          self.previous_w,
-                                                         self.previous_t,
+                                                         self.previous_time,
                                                          dv_dt,
                                                          dw_dt,
                                                          time_step_size,
@@ -6305,10 +6325,33 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         if not context or INITIALIZING not in context:
             self.previous_v = approximate_values[0]
             self.previous_w = approximate_values[1]
-            self.previous_t += time_step_size
+            self.previous_time += time_step_size
 
-        return self.previous_v, self.previous_w, self.previous_t
+        return self.previous_v, self.previous_w, self.previous_time
 
+    @property
+    def reinitialize(self):
+        return self.previous_v, self.previous_w, self.previous_time
+
+    @reinitialize.setter
+    def reinitialize(self, value):
+        try:
+            v, w, time = value
+            self._initial_v = v
+            self.previous_v = v
+            self._initial_w = w
+            self.previous_w = w
+            self.previous_time = time
+            self.value = v, w, time
+
+        except (ValueError, TypeError):
+            num_items = len(np.atleast_1d(value))
+            if num_items == 1:
+                raise FunctionError("FHNIntegrator requires exactly three items (v, w, time) in order to "
+                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value, self.name))
+
+            raise FunctionError("FHNIntegrator requires exactly three items (v, w, time) in order to "
+                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value, self.name))
 
 class AccumulatorIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """

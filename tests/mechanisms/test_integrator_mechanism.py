@@ -9,8 +9,37 @@ from psyneulink.components.mechanisms.processing.integratormechanism import Inte
 from psyneulink.scheduling.time import TimeScale
 
 
+class TestReinitialize:
+    def test_FHN_valid_reinitialization(self):
+        I = IntegratorMechanism(name="I",
+                function=FHNIntegrator())
+        I.execute(1.0)
+        assert np.allclose([[0.05127053]], I.function_object.reinitialize[0])
+        assert np.allclose([[0.00276967]], I.function_object.reinitialize[1])
+        assert np.allclose([[ 0.05]], I.function_object.reinitialize[2])
 
-# ======================================= FUNCTION TESTS ============================================
+        I.function_object.reinitialize = 0.01, 0.02, 0.03
+
+        I.execute(1.0)
+        assert np.allclose([[0.06075727]], I.function_object.reinitialize[0])
+        assert np.allclose([[0.02274597]], I.function_object.reinitialize[1])
+        assert np.allclose([[0.08]], I.function_object.reinitialize[2])
+
+    def test_FHN_invalid_reinitialization_too_many_items(self):
+        I = IntegratorMechanism(name="I",
+                function=FHNIntegrator())
+        with pytest.raises(FunctionError) as error_text:
+            I.function_object.reinitialize = 4.0, 0.1, 10.0, 20.0
+        assert("FHNIntegrator requires exactly three items (v, w, time) in order to reinitialize" in
+               str(error_text.value) and "4 items ((4.0, 0.1, 10.0, 20.0)) were provided to reinitialize" in str(error_text.value))
+
+    def test_FHN_invalid_reinitialization_too_few_items(self):
+        I = IntegratorMechanism(name="I",
+                function=FHNIntegrator())
+        with pytest.raises(FunctionError) as error_text:
+            I.function_object.reinitialize = 4.0
+        assert("FHNIntegrator requires exactly three items (v, w, time) in order to reinitialize. Only "
+               "one item (4.0) was provided to reinitialize" in str(error_text.value))
 
 class TestIntegratorFunctions:
 
