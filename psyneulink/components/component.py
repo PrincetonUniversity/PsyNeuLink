@@ -1590,6 +1590,7 @@ class Component(object):
                     self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
             self.runtime_params_in_use = True
 
+        # CW 1/24/18: This elif block appears to be accidentally deleting self.input_states
         # Otherwise, reset paramsCurrent to paramInstanceDefaults
         elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
             # Can't do the following since function could still be a class ref rather than abound method (see below)
@@ -2580,7 +2581,8 @@ class Component(object):
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
                 from psyneulink.components.functions.function import UserDefinedFunction
-                self.function = UserDefinedFunction(function=function, context=context).function
+                self.function = UserDefinedFunction(variable=self.instance_defaults.variable, owner=self,
+                                                    function=function, context=context).function
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
