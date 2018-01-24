@@ -68,7 +68,7 @@ Behavioral Network Subsystem
 **INPUT LAYER**:  a `TransferMechanism` with **size**=3 (one element for the input to the T1, T2 and distractor units
 of the *DECISION LAYER*, respectively), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
 
-**DECISION LAYER**: an `LCA` Mechanism of **size**=3 (one element for the T1, T2 and distractor units, respectively),
+**DECISION LAYER**: an `LCA` Mechanism of **size**=3 (one element each for the T1, T2 and distractor units),
 and assigned a `Logistic` Function with a slope=1.0 and intercept=0.0.  Each element has a self-excitatory connection
 with a weight specified by **self_excitation**=2.5, a **leak**=-1.0, and every element is connected to every other
 element by mutually inhibitory connections with a weight specified by **competition**=1.0.  An ordinary differential
@@ -102,12 +102,11 @@ The `LCControlMechanism` outputs the values `u <LCControlMechanism.u>`, `v <LCCo
 **COMBINE VALUES**: an `ObjectiveMechanism`, specified in the **objective_mechanism** argument of the
 LCControlMechanism constructor, with a `Linear <Linear>` function of **slope**=1 and **intercept**=0.  Its
 **monitored_output_states** argument is assigned a `2-item tuple <InputState_State_Mechanism_Tuple>` specifying the
-*DECISION LAYER* and a matrix for the `MappingProjection` from it to *COMBINE VALUES*.  The matrix is
-assigned as a 3x1 numpy array, with weights of 0.3 for its first two elements and 0.0 for its third, corresponding to
-T1, T2 and distractor units in the *DECISION LAYER*, respectively.  This causes the *COMBINE VALUES* Mechanism to
-combine the values of the T1 and T2 distrctor units, and ignore the value of the distractor unit, implementing the
-assumption that the distractor stimulus does not elicit an LC response.  The *COMBINED VALUES* Mechanism conveys its
-output as the input to the LC.
+*DECISION LAYER* and a matrix for the `MappingProjection` from it to *COMBINE VALUES*.  The matrix is assigned as a
+3x1 numpy array, with weights of 0.3 for its first two elements and 0.0 for its third, corresponding to
+T1, T2 and distractor units in the *DECISION LAYER*, respectively.  This combines the values of the T1 and T2 units,
+and ignores the value of the distractor unit, implementing the assumption that the distractor stimulus does not
+elicit an LC response.  The *COMBINED VALUES* Mechanism conveys this combined value as the input to the LC.
 
 .. note::
   Although the *COMBINED VALUES* Mechanism is not strictly needed -- the same `MappingProjection` and `matrix
