@@ -30,7 +30,12 @@ The Figure below shows the behavior of the model for a single execution of a tri
 corresponding to the conditions reported in Figure 3 of Nieuwenhuis et al. (2005; averaged over 1000 executions with
 noise).
 
-XXX GENERTE FIGURE WITH ADD show_dimensions=True
+.. _Nieuwenhuis2005_System_Graph:
+
+.. figure:: _static/Nieuwenhuis_SystemGraph.svg
+   :figwidth: 100 %
+   :align: center
+   :alt: Nieuwenhuis System Graph
 
 .. _Nieuwenhuis2005_PsyNeuLink_Fig:
 
@@ -55,12 +60,6 @@ the decision and response layers.  Each of the layers in the behavioral network 
 `TransferMechanism <TransferMechanism>` and `LCA` Mechanisms, and the LC subystem uses an `LCControlMechanism` and
 associated `ObjectiveMechanism`, as shown in the figure below:
 
-.. _Nieuwenhuis2005_System_Graph:
-
-.. figure:: _static/Nieuwenhuis_SystemGraph.svg
-   :figwidth: 100 %
-   :align: center
-   :alt: Nieuwenhuis System Graph
 
 Behavioral Network Subsystem
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -88,16 +87,12 @@ LC Subsystem
 ~~~~~~~~~~~~
 
 **LC**: an `LCControlMechanism`, which uses a `FitzHugh–Nagumo` integrator function to simulate the population-level
-activity of the LC (see `GilzenratModel`), parameterized as described in Nieuwenhuis et al (2005) with
-
-XXX?? **base_level_gain**=0.05 and **scaling_factor**1.5 [WHY SIGNLE OUT THESE PARAMETER TO MENTION?]
-**G**=0.5 and **k**=1.5.  The LC sends `ControlProjections <ControlProjection>` to the *DECISION LAYER* and
-*RESPONSE LAYER*, that regulate the `gain <Logistic.gain>` parameter of their `Logistic` Functions.
-
-XXX ?? WHAT ARE THESE AND HOW ARE THEY USED:
-The `LCControlMechanism` outputs the values `u <LCControlMechanism.u>`, `v <LCControlMechanism.v>` and
-`gain <LCControlMechanism.gain>`.
-
+activity of the LC (see `GilzenratModel`).
+The `LCControlMechanism` outputs `v <LCControlMechanism.v>` that later computes the LC activity;
+the norepinephrine (NE) output `u <LCControlMechanism.u>`, and `gain <LCControlMechanism.gain>`.
+Gain is adjusted with the linear function composed with the **base_level_gain**=0.5 and
+**scaling_factor**1.5 inside the `LCControlMechanism`. The LC sends `ControlProjections <ControlProjection>` to the
+*DECISION LAYER* and *RESPONSE LAYER*, that regulate the `gain <Logistic.gain>` parameter of their `Logistic` Functions.
 
 **COMBINE VALUES**: an `ObjectiveMechanism`, specified in the **objective_mechanism** argument of the
 LCControlMechanism constructor, with a `Linear <Linear>` function of **slope**=1 and **intercept**=0.  Its
@@ -115,13 +110,13 @@ elicit an LC response.  The *COMBINED VALUES* Mechanism conveys this combined va
   conforms to the convention that PsyNeuLink `ControlMechanisms <ControlMechanism>` are associated with an
   `ObjectiveMechanism` from which they receive their input.
 
-
 Execution
 ---------
-
-The `run` function executes the model, with a list of stimulus inputs specified and the number of executions specified.
-
-XXX ??WHAT DOES ALL THE PLOTTING AND OUTPUT STUFF DO/REPORT?
+The input stimuli are defined as numpy arrays after the model is specified.
+The `System.show_graph` produces a graph of the system.
+The `run` function executes the model.
+The LC activity is computed with the function h(v) = C * v + (1 - C) * d, with C = 0.90 and d = 0.5.
+To plot the LC activity and the NE output the `log` function is used.
 
 Script: :download:`Download Nieuwenhuis2005Model.py <../../Scripts/Models/Nieuwenhuis2005Model.py>`
 
