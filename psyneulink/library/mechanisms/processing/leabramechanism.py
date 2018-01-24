@@ -511,7 +511,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
         return super().execute(input = input,
                                runtime_params = runtime_params,
-                               time_scale = time_scale,
                                ignore_execution_id = ignore_execution_id,
                                context = context)
 
