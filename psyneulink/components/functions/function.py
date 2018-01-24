@@ -3855,8 +3855,8 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <Integrator.variable>` is integrated.
 
-    reinitialize: float or np.array
-        sets
+    reinitialize : float or np.array
+        Sets
 
         - `previous_value <Integrator.previous_value>`
         - `initializer <Integrator.initial_value>`
@@ -4166,7 +4166,7 @@ class SimpleIntegrator(
         stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
 
     reinitialize : float or np.array
-        sets
+        Sets
 
         - `previous_value <SimpleIntegrator.previous_value>`
         - `initializer <SimpleIntegrator.initializer>`
@@ -4382,7 +4382,7 @@ class LCAIntegrator(
         stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
 
     reinitialize : float or np.array
-        sets
+        Sets
 
         - `previous_value <LCAIntegrator.previous_value>`
         - `initializer <LCAIntegrator.initializer>`
@@ -4610,7 +4610,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
 
     reinitialize : float or np.array
-        sets
+        Sets
 
         - `previous_value <ConstantIntegrator.previous_value>`
         - `initializer <ConstantIntegrator.initializer>`
@@ -4830,7 +4830,7 @@ class AdaptiveIntegrator(
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
 
     reinitialize : float or np.array
-        sets
+        Sets
 
         - `previous_value <AdaptiveIntegrator.previous_value>`
         - `initializer <AdaptiveIntegrator.initializer>`
@@ -5124,8 +5124,10 @@ class DriftDiffusionIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
-    reinitialize : list of floats or np.arrays
-        sets
+    reinitialize : float or np.array
+        Takes 2 items (i.e my_integrator.reinitialize = 1.0, 2.0), each of which is a float or array
+
+        Sets
 
         - `previous_value <DriftDiffusionIntegrator.previous_value>`
         - `initializer <DriftDiffusionIntegrator.initializer>`
@@ -5399,8 +5401,8 @@ class OrnsteinUhlenbeckIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <OrnsteinUhlenbeckIntegrator.variable>` is integrated.
 
-    reinitialize : list of floats or np.arrays
-        sets
+    reinitialize : float or np.array
+        Sets
 
         - `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`
         - `initializer <OrnsteinUhlenbeckIntegrator.initializer>`
@@ -5934,8 +5936,10 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     time_constant_w : float : default 12.5
         scaling factor on the dv/dt equation
 
-    reinitialize : list of floats or np.arrays
-        sets
+    reinitialize : float or np.array
+        Takes 3 items (i.e my_integrator.reinitialize = 1.0, 2.0, 3.0), each of which is a float or array 
+
+        Sets
 
         - `previous_v <DriftDiffusionIntegrator.previous_v>`
         - `initial_v <DriftDiffusionIntegrator.initial_v>`
@@ -6463,7 +6467,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         will be added.
 
     reinitialize : float or np.array
-        sets
+        Sets
 
         - `previous_value <AccumulatorIntegrator.previous_value>`
         - `initializer <AccumulatorIntegrator.initializer>`
@@ -6797,8 +6801,10 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         stores previous value with which `variable <AGTUtilityIntegrator.variable>` is integrated using the EWMA filter and
         long term parameters
 
-    reinitialize : list of floats or np.arrays
-        sets
+    reinitialize : float or np.array
+        Takes 2 items (i.e my_integrator.reinitialize = 1.0, 2.0), each of which is a float or array
+
+        Sets
 
         - `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>`
         - `initial_short_term_utility <AGTUtilityIntegrator.initial_short_term_utility>`

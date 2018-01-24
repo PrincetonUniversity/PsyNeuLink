@@ -231,12 +231,12 @@ where it left off:
 
 The integrator_function's `reinitialize <AdaptiveIntegrator.reinitialize>` property is useful in cases when the
 integrator should instead start over at its original initial value or a new one. Use `reinitialize
-<AdaptiveIntegrator.reinitialize>` to re-start the integrator_function's accumulation at 0.2.
+<AdaptiveIntegrator.reinitialize>` to re-start the integrator_function's accumulation at 0.2:
 
     >>> my_time_averaged_transfer_mechanism.integrator_function.reinitialize = np.array([[0.2]])
 
 Run the system again to observe that my_time_averaged_transfer_mechanism's integrator_function will begin accumulating
-at 0.2, following the exact same trajectory as in RUN 1.
+at 0.2, following the exact same trajectory as in RUN 1:
 
     >>> # RUN 3
     >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
