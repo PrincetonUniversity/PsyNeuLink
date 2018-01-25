@@ -23,8 +23,8 @@ refractoriness of the LC/NE system after a phasice response.  The model demonstr
 depends on:
    * whether T1 was accurately identified;
    * the lag between T1 and T2;
-   * the `mode of the LC <LCControlMechanism_Modes_Of_Operation>`
-     (phasic or tonic -- see `<https://www.ncbi.nlm.nih.gov/pubmed/8027789>`_).
+   * the `mode <LCControlMechanism.mode_Modes_Of_Operation>` of the LC
+   (phasic or tonic -- see `<https://www.ncbi.nlm.nih.gov/pubmed/8027789>`_).
 
 The Figure below shows the behavior of the model for a single execution of a trial with a lag of 200ms (without noise),
 corresponding to the conditions reported in Figure 3 of Nieuwenhuis et al. (2005; averaged over 1000 executions with
@@ -57,7 +57,7 @@ associated `ObjectiveMechanism`, as shown in the figure below:
 
 .. _Nieuwenhuis2005_System_Graph:
 
-.. figure:: _static/Nieuwenhuis_SystemGraph.svg
+.. figure:: _static/Nieuwenhuis_System_Graph.svg
    :figwidth: 50 %
    :align: center
    :alt: Nieuwenhuis System Graph
@@ -93,6 +93,7 @@ LCControlMechanism - uses the FHNIntegratorFunction to implement a FitzHugh-Nagu
 population-level activity of the LC.
 
 The LCControlMechanism outputs three values on each execution:
+
    * v (excitation variable of the FHN model) representing the state (or net input in connectionist terms) of the LC
    * w (relaxation variable of the FHN model) representing noradrenergic output of the LC
    * gain(t), where g(t) = G + k w(t), and G = **base_level_gain**, k = **scaling_factor**, and w(t) = the current
