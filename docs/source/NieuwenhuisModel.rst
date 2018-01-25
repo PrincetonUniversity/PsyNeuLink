@@ -58,7 +58,7 @@ associated `ObjectiveMechanism`, as shown in the figure below:
 .. _Nieuwenhuis2005_System_Graph:
 
 .. figure:: _static/Nieuwenhuis_SystemGraph.svg
-   :figwidth: 100 %
+   :figwidth: 50 %
    :align: center
    :alt: Nieuwenhuis System Graph
 
