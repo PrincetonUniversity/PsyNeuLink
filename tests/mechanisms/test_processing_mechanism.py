@@ -47,6 +47,12 @@ class TestProcessingMechanismFunctions:
         PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
 
+    def test_processing_mechanism_LinearMatrix_function(self):
+        PM1 = ProcessingMechanism(function=LinearMatrix()
+                                  )
+        PM1.execute(1.0)
+        # assert np.allclose(PM1.value, 1.0)
+
     def test_processing_mechanism_SimpleIntegrator_function(self):
         PM1 = ProcessingMechanism(function=SimpleIntegrator)
         PM1.execute(1.0)
