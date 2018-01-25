@@ -317,7 +317,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
     hidden_sizes : int or List[int] : default input_size
         if specified, this should be a list of integers, specifying the size of each hidden layer. If **hidden_sizes**
         is a list, the number of integers in **hidden_sizes** should be equal to the number of hidden layers. If not
-        specified, hidden layers will default to the same size as the input layer.
+        specified, hidden layers will default to the same size as the input layer. If hidden_sizes is a single integer,
+        then all hidden layers are of that size.
 
     training_flag : boolean : default None
         a boolean specifying whether the leabra network should be learning. If True, the leabra network will adjust

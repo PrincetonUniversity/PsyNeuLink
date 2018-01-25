@@ -51,7 +51,7 @@ class TestLeabraMechInit:
         L = LeabraMechanism(input_size=4, output_size=4, hidden_layers=2, training_flag=False)
         val = L.execute([[1, 2, 3, 4], [0, 0, 0, 0]])
         assert L.hidden_layers == 2
-        assert L.hidden_sizes[0] == 4
+        assert L.hidden_sizes == 4
         assert len(val[0]) == 4
 
 class TestLeabraMechRuntimeParams:
@@ -63,30 +63,32 @@ class TestLeabraMechRuntimeParams:
         hidden_sizes = None
         inputs = [[.1, .2, .3, .4], [.4, .5, .6, .7], [-.6, -.7, -.8, -.9]]
         train_input = [1, 0, -1]
-
+        random.seed(10)
         L1 = LeabraMechanism(input_size=n_input, output_size=n_output, hidden_layers=n_hidden,
                              hidden_sizes=None, training_flag=False)  # training flag is false
+        random.seed(10)
         L2 = LeabraMechanism(input_size=n_input, output_size=n_output, hidden_layers=n_hidden,
                              hidden_sizes=None, training_flag=True)  # training flag is true
+        random.seed(10)
         net = build_leabra_network(n_input, n_output, n_hidden, hidden_sizes, False)
 
         pnl_output1_1 = L1.execute(input=[inputs[0], train_input], runtime_params={"training_flag": False})
         pnl_output2_1 = L2.execute(input=[inputs[0], train_input], runtime_params={"training_flag": False})
         net_output_1 = run_leabra_network(net, input_pattern=inputs[0])
-        np.testing.assert_allclose(pnl_output1_1, net_output_1, atol=1e-08)
-        np.testing.assert_allclose(pnl_output2_1, net_output_1, atol=1e-08)
+        np.testing.assert_allclose(pnl_output1_1[0], net_output_1, atol=1e-08)
+        np.testing.assert_allclose(pnl_output2_1[0], net_output_1, atol=1e-08)
 
         pnl_output1_2 = L1.execute(input=[inputs[1], train_input], runtime_params={"training_flag": True})
         pnl_output2_2 = L2.execute(input=[inputs[1], train_input], runtime_params={"training_flag": True})
         net_output_2 = train_leabra_network(net, input_pattern=inputs[1], output_pattern=train_input)
-        np.testing.assert_allclose(pnl_output1_2, net_output_2, atol=1e-08)
-        np.testing.assert_allclose(pnl_output2_2, net_output_2, atol=1e-08)
+        np.testing.assert_allclose(pnl_output1_2[0], net_output_2, atol=1e-08)
+        np.testing.assert_allclose(pnl_output2_2[0], net_output_2, atol=1e-08)
 
         pnl_output1_3 = L1.execute(input=[inputs[2], train_input], runtime_params={"training_flag": False})
         pnl_output2_3 = L2.execute(input=[inputs[2], train_input], runtime_params={"training_flag": False})
         net_output_3 = run_leabra_network(net, input_pattern=inputs[2])
-        np.testing.assert_allclose(pnl_output1_3, net_output_3, atol=1e-08)
-        np.testing.assert_allclose(pnl_output2_3, net_output_3, atol=1e-08)
+        np.testing.assert_allclose(pnl_output1_3[0], net_output_3, atol=1e-08)
+        np.testing.assert_allclose(pnl_output2_3[0], net_output_3, atol=1e-08)
 
     def test_leabra_runtime_in_system(self):
         pass
