@@ -99,8 +99,10 @@ The LCControlMechanism outputs three values on each execution:
    * gain(t), where g(t) = G + k w(t), and G = **base_level_gain**, k = **scaling_factor**, and w(t) = the current
      noradrenergic output
 
-The LC sends gain(t) to the *DECISION LAYER* and *RESPONSE LAYER* via `ControlProjections <ControlProjection>` in order to modulate the `gain <Logistic.gain>` parameter of their `Logistic` Functions.
+The LC sends gain(t) to the *DECISION LAYER* and *RESPONSE LAYER* via `ControlProjections <ControlProjection>` in order
+to modulate the `gain <Logistic.gain>` parameter of their `Logistic` Functions.
 Overall LC activity can be computed from v using the function h(v) = C * v + (1 - C) * d, where C = 0.90 and d = 0.5
+(please see Execution for further explanation).
 
 **COMBINE VALUES**: an `ObjectiveMechanism`, specified in the **objective_mechanism** argument of the
 LCControlMechanism constructor, with a `Linear <Linear>` function of **slope**=1 and **intercept**=0.  Its
@@ -122,10 +124,13 @@ Execution
 ---------
 The total stimulus input is split into 11 periods of execution, each of which is 100 time steps long. During each period
 one of the three behavioral units get activated (input=1), with the other two behavioral units switched off (input=0).
-In this particular simulation T1 gets activated during the forth time period and T2 gets activated during the sixth time
-period. During all other time period the distraction unit receives an input.
+In this particular simulation target unit 1 (T1) gets activated during the fourth time period and target unit 2 (T2)
+gets activated during the sixth time period. During all other time period the distraction unit gets activated.
+The model gets executed with the `run` function and the graph of the system gets computed with the
+`show_graph <System.show_grah>` function.
 To reproduce Figure 3 of the Nieuwenhuis et al. (2005) paper, the output values w and v of the `LCControlMechanism` are
-logged for every execution with the `log` function, and subsequently plotted.
+logged for every execution with the `log` function. h(v) gets computed for every time step. Finally, h(v) and w are
+plotted.
 
 Script: :download:`Download Nieuwenhuis2005Model.py <../../Scripts/Models/Nieuwenhuis2005Model.py>`
 
