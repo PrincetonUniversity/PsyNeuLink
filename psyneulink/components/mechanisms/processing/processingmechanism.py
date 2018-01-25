@@ -19,6 +19,11 @@ receives its input either from another Mechanism, or from the input to a `Proces
 executed.  Similarly, its output is generally conveyed to another Mechanism or used as the output for a Process
 or System.
 
+The ProcessingMechanism is the simplest mechanism in PsyNeuLink. It does not have any extra arguments or
+specialized validation. Almost any PsyNeuLink Function, including the `UserDefinedFunction`, may be the function of a
+ProcessingMechanism. `LinearMatrix` and `BackPropagation` cannot be the function of a ProcessingMechanism. Subtypes of
+ProcessingMechanism have more specialized features, and often have restrictions on which Functions are allowed.
+
 The output of a ProcessingMechanism may also be used by an `AdaptiveMechanism <AdaptiveMechanism>` to modify the
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
 AdaptiveMechanisms in the Process and/or System to which they belong, so that any modifications made by the
@@ -29,31 +34,68 @@ AdaptiveMechanism are available to all ProcessingMechanisms in the next `TRIAL`.
 Creating a ProcessingMechanism
 ------------------------------
 
-A ProcessingMechanism can be created by using the standard Python method of calling the constructor for the desired
-type. Some types of ProcessingMechanism (for example, `ObjectiveMechanisms <ObjectiveMechanism>`) are also created
-when a System or Process is created, if `learning <LINK>` and/or `control <LINK>` have been specified for it.
+A ProcessingMechanism is created by calling its constructor.
 
-.. _AdaptiveMechanism_Structure:
+Its `function <ProcessingMechanism.function>` is specified in the **function** argument, which may be the name of a
+`Function <Function>` class:
+
+    >>> import psyneulink as pnl
+    >>> my_linear_processing_mechanism = pnl.ProcessingMechanism(function=pnl.Linear)
+
+in which case all of the function's parameters will be set to their default values.
+
+Alternatively, the **function** argument may be a call to a Function constructor, in which case values may be specified
+for the Function's parameters:
+
+    >>> my_logistic_processing_mechanism = pnl.ProcessingMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
+
+
+.. _ProcessingMechanism_Structure:
 
 Structure
 ---------
 
-A ProcessingMechanism has the same basic structure as a `Mechanism <Mechanisms>`.  See the documentation for
+A ProcessingMechanism has the same basic structure as a `Mechanism <Mechanism>`.  See the documentation for
 individual subtypes of ProcessingMechanism for more specific information about their structure.
 
-.. _Comparator_Execution:
+.. _ProcessingMechanism_Execution:
 
 Execution
 ---------
 
-A ProcessingMechanism always executes before any `AdaptiveMechanisms <AdaptiveMechanism>` in the `Process
-<Process_Execution>` or `System <System_Execution>` to which it belongs.
+Three main tasks are completed each time a ProcessingMechanism executes:
+
+1. The ProcessingMechanism updates its `InputState`(s), and their values are used to assemble `variable
+<ProcessingMechanism.variable>`. Each InputState `value <InputState.value>` (often there is only one `InputState`) is
+added to an outer array, such that each item of variable corresponds to an InputState `value <InputState.value>`.
+
+2. The ProcessingMechanism's `variable <ProcessingMechanism.variable>` is handed off as the input to the
+ProcessingMechanism's `function <ProcessingMechanism.function>`, and the function executes.
+
+3. The result of the ProcessingMechanism's `function <ProcessingMechanism.function>` is placed in the Mechanism's
+`value <ProcessingMechanism.value>` attribute, and OutputStates are generated based on `value
+<ProcessingMechanism.value>`.
+
+A ProcessingMechanism may be executed by calling its execute method directly:
+
+    >>> my_simple_processing_mechanism = pnl.ProcessingMechanism()      #doctest: +SKIP
+    >>> my_simple_processing_mechanism.execute(1.0)                     #doctest: +SKIP
+
+This option is intended for testing and debugging purposes.
+
+More commonly, a mechanism is executed when the `Process <Process_Execution>` or `System <System_Execution>` to which it
+belongs is run. A ProcessingMechanism always executes before any `AdaptiveMechanisms <AdaptiveMechanism>` in the same
+`Process` or `System`.
 
 """
 
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+import typecheck as tc
+from psyneulink.globals.keywords import PROCESSING_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
+from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.components.functions.function import Linear
 
 __all__ = [
     'ProcessingMechanismError',
@@ -126,12 +168,6 @@ class ProcessingMechanism_Base(Mechanism_Base):
         # Let mechanism itself do validation of the input
         pass
 
-import typecheck as tc
-
-from psyneulink.globals.keywords import PROCESSING_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
-from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-
 __all__ = [
     'DEFAULT_RATE', 'ProcessingMechanism', 'ProcessingMechanismError'
 ]
@@ -173,8 +209,8 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it takes precedence over the specification of **size**.
         As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+            P1 = ProcessingMechanism(size = [3, 2])
+            P2 = ProcessingMechanism(default_variable = [[0, 0, 0], [0, 0]])
 
     function : PsyNeuLink Function : default Linear
         specifies the function used to compute the output
@@ -194,7 +230,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
     variable : value: default
-        the input to Mechanism's ``function``.
+        the input to Mechanism's `function`.
 
     name : str
         the name of the ProcessingMechanism; if it is not specified in the **name** argument of the constructor, a
@@ -225,8 +261,6 @@ class ProcessingMechanism(ProcessingMechanism_Base):
 
     })
 
-    from psyneulink.components.functions.function import Linear
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -237,8 +271,6 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
-        """
 
         if default_variable is None and size is None:
             default_variable = self.ClassDefaults.variable
@@ -254,11 +286,5 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                                                   name=name,
                                                   prefs=prefs,
                                                   context=self)
-
-    # MODIFIED 6/2/17 NEW:
-    @property
-    def previous_value(self):
-        return self.function_object.previous_value
-    # MODIFIED 6/2/17 END
 
 
