@@ -951,7 +951,7 @@ class ArgumentTherapy(Function_Base):
 
 class UserDefinedFunction(Function_Base):
     """
-    Function_Base(           \
+    UserDefinedFunction(           \
          function,           \
          variable=None,      \
          params=None,        \
