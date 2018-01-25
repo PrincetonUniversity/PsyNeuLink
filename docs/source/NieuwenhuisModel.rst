@@ -93,13 +93,10 @@ LCControlMechanism - uses the FHNIntegratorFunction to implement a FitzHugh-Nagu
 population-level activity of the LC.
 
 The LCControlMechanism outputs three values on each execution:
-
-  v (excitation variable of the FHN model) representing the state (or net input in connectionist terms) of the LC
-
-  w (relaxation variable of the FHN model) representing noradrenergic output of the LC
-
- gain(t), where g(t) = G + k w(t), and G = **base_level_gain**, k = **scaling_factor**, and w(t) = the current
- noradrenergic output
+   * v (excitation variable of the FHN model) representing the state (or net input in connectionist terms) of the LC
+   * w (relaxation variable of the FHN model) representing noradrenergic output of the LC
+   * gain(t), where g(t) = G + k w(t), and G = **base_level_gain**, k = **scaling_factor**, and w(t) = the current
+     noradrenergic output
 
 The LC sends gain(t) to the *DECISION LAYER* and *RESPONSE LAYER* via `ControlProjections <ControlProjection>` in order to modulate the `gain <Logistic.gain>` parameter of their `Logistic` Functions.
 Overall LC activity can be computed from v using the function h(v) = C * v + (1 - C) * d, where C = 0.90 and d = 0.5
