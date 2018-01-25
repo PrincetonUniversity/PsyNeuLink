@@ -1109,7 +1109,7 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         return np.asarray(arr, dtype=cast_to)
 
     if not isinstance(arr, collections.Iterable) or isinstance(arr, str):
-        return np.asarray(arr)
+        return np.array(arr)
 
     if isinstance(arr, np.matrix):
         if arr.dtype == object:
@@ -1118,9 +1118,12 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
             return arr
 
     subarr = [convert_all_elements_to_np_array(x, cast_from, cast_to) for x in arr]
-    try:
-        return np.array(subarr)
-    except ValueError:
+
+    if all([subarr[i].shape == subarr[0].shape for i in range(1, len(subarr))]):
+        # the elements are all uniform in shape, so we can use numpy's standard behavior
+        return np.asarray(subarr)
+    else:
+        # the elements are nonuniform, so create an array that just wraps them individually
         # numpy cannot easily create arrays with subarrays of certain dimensions, workaround here
         # https://stackoverflow.com/q/26885508/3131666
         len_subarr = len(subarr)
