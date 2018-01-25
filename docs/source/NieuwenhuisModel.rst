@@ -30,12 +30,7 @@ The Figure below shows the behavior of the model for a single execution of a tri
 corresponding to the conditions reported in Figure 3 of Nieuwenhuis et al. (2005; averaged over 1000 executions with
 noise).
 
-.. _Nieuwenhuis2005_System_Graph:
 
-.. figure:: _static/Nieuwenhuis_SystemGraph.svg
-   :figwidth: 100 %
-   :align: center
-   :alt: Nieuwenhuis System Graph
 
 .. _Nieuwenhuis2005_PsyNeuLink_Fig:
 
@@ -60,6 +55,12 @@ the decision and response layers.  Each of the layers in the behavioral network 
 `TransferMechanism <TransferMechanism>` and `LCA` Mechanisms, and the LC subystem uses an `LCControlMechanism` and
 associated `ObjectiveMechanism`, as shown in the figure below:
 
+.. _Nieuwenhuis2005_System_Graph:
+
+.. figure:: _static/Nieuwenhuis_SystemGraph.svg
+   :figwidth: 100 %
+   :align: center
+   :alt: Nieuwenhuis System Graph
 
 Behavioral Network Subsystem
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,13 +87,22 @@ off-diagonal elements.
 LC Subsystem
 ~~~~~~~~~~~~
 
-**LC**: an `LCControlMechanism`, which uses a `FitzHugh–Nagumo` integrator function to simulate the population-level
-activity of the LC (see `GilzenratModel`).
-The `LCControlMechanism` outputs `v <LCControlMechanism.v>` that later computes the LC activity;
-the norepinephrine (NE) output `u <LCControlMechanism.u>`, and `gain <LCControlMechanism.gain>`.
-Gain is adjusted with the linear function composed with the **base_level_gain**=0.5 and
-**scaling_factor**1.5 inside the `LCControlMechanism`. The LC sends `ControlProjections <ControlProjection>` to the
-*DECISION LAYER* and *RESPONSE LAYER*, that regulate the `gain <Logistic.gain>` parameter of their `Logistic` Functions.
+**LC**:
+
+LCControlMechanism - uses the FHNIntegratorFunction to implement a FitzHugh-Nagumo model as a simulation of the
+population-level activity of the LC.
+
+The LCControlMechanism outputs three values on each execution:
+
+  v (excitation variable of the FHN model) representing the state (or net input in connectionist terms) of the LC
+
+  w (relaxation variable of the FHN model) representing noradrenergic output of the LC
+
+ gain(t), where g(t) = G + k w(t), and G = **base_level_gain**, k = **scaling_factor**, and w(t) = the current
+ noradrenergic output
+
+The LC sends gain(t) to the *DECISION LAYER* and *RESPONSE LAYER* via `ControlProjections <ControlProjection>` in order to modulate the `gain <Logistic.gain>` parameter of their `Logistic` Functions.
+Overall LC activity can be computed from v using the function h(v) = C * v + (1 - C) * d, where C = 0.90 and d = 0.5
 
 **COMBINE VALUES**: an `ObjectiveMechanism`, specified in the **objective_mechanism** argument of the
 LCControlMechanism constructor, with a `Linear <Linear>` function of **slope**=1 and **intercept**=0.  Its
@@ -112,11 +122,12 @@ elicit an LC response.  The *COMBINED VALUES* Mechanism conveys this combined va
 
 Execution
 ---------
-The input stimuli are defined as numpy arrays after the model is specified.
-The `System.show_graph` produces a graph of the system.
-The `run` function executes the model.
-The LC activity is computed with the function h(v) = C * v + (1 - C) * d, with C = 0.90 and d = 0.5.
-To plot the LC activity and the NE output the `log` function is used.
+The total stimulus input is split into 11 periods of execution, each of which is 100 time steps long. During each period
+one of the three behavioral units get activated (input=1), with the other two behavioral units switched off (input=0).
+In this particular simulation T1 gets activated during the forth time period and T2 gets activated during the sixth time
+period. During all other time period the distraction unit receives an input.
+To reproduce Figure 3 of the Nieuwenhuis et al. (2005) paper, the output values w and v of the `LCControlMechanism` are
+logged for every execution with the `log` function, and subsequently plotted.
 
 Script: :download:`Download Nieuwenhuis2005Model.py <../../Scripts/Models/Nieuwenhuis2005Model.py>`
 
