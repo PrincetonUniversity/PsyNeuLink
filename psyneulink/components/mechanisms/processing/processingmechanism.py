@@ -15,11 +15,13 @@ Overview
 --------
 
 A ProcessingMechanism is a type of `Mechanism <>` that transforms its input in some way.  A ProcessingMechanism always
-receives its input either from another ProcessingMechanism, or from the input to a `Process` or `System` when it is
-executed.  Similarly, its output is generally conveyed to another ProcessingMechanism or used as the ouput for a Process
-or System.  However, the output of a ProcessingMechanism may also be used by an `AdaptiveMechanism <AdaptiveMechanism>`
-to modify the parameters of other components (or its own). ProcessingMechanisms are always executed before all
-AdaptiveMechanisms in the Process and/or System to which they belong, so that any modificatons made by the
+receives its input either from another Mechanism, or from the input to a `Process` or `System` when it is
+executed.  Similarly, its output is generally conveyed to another Mechanism or used as the output for a Process
+or System.
+
+The output of a ProcessingMechanism may also be used by an `AdaptiveMechanism <AdaptiveMechanism>` to modify the
+parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
+AdaptiveMechanisms in the Process and/or System to which they belong, so that any modifications made by the
 AdaptiveMechanism are available to all ProcessingMechanisms in the next `TRIAL`.
 
 .. _ProcessingMechanism_Creation:
@@ -123,3 +125,140 @@ class ProcessingMechanism_Base(Mechanism_Base):
     def _validate_inputs(self, inputs=None):
         # Let mechanism itself do validation of the input
         pass
+
+import typecheck as tc
+
+from psyneulink.globals.keywords import PROCESSING_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
+from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+
+__all__ = [
+    'DEFAULT_RATE', 'ProcessingMechanism', 'ProcessingMechanismError'
+]
+
+# ProcessingMechanism parameter keywords:
+DEFAULT_RATE = 0.5
+
+class ProcessingMechanismError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
+
+
+class ProcessingMechanism(ProcessingMechanism_Base):
+    """
+    ProcessingMechanism(                            \
+    default_variable=None,                               \
+    size=None,                                              \
+    function=Linear, \
+    params=None,                                            \
+    name=None,                                              \
+    prefs=None)
+
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that does not have any specialized features.
+
+    Arguments
+    ---------
+
+    default_variable : number, list or np.ndarray
+        the input to the Mechanism to use if none is provided in a call to its
+        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
+        also serves as a template to specify the length of `variable <ProcessingMechanism.variable>` for
+        `function <ProcessingMechanism.function>`, and the `primary outputState <OutputState_Primary>` of the
+        Mechanism.
+
+    size : int, list or np.ndarray of ints
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
+        As an example, the following mechanisms are equivalent::
+            T1 = TransferMechanism(size = [3, 2])
+            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+
+    function : PsyNeuLink Function : default Linear
+        specifies the function used to compute the output
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        the Mechanism, parameters for its `function <ProcessingMechanism.function>`, and/or a custom function and its
+        parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    name : str : default see `name <ProcessingMechanism.name>`
+        specifies the name of the ProcessingMechanism.
+
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the ProcessingMechanism; see `prefs <ProcessingMechanism.prefs>` for details.
+
+    Attributes
+    ----------
+    variable : value: default
+        the input to Mechanism's ``function``.
+
+    name : str
+        the name of the ProcessingMechanism; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the ProcessingMechanism; if it is not specified in the **prefs** argument of the
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+
+    """
+
+    componentType = PROCESSING_MECHANISM
+
+    classPreferenceLevel = PreferenceLevel.TYPE
+    # These will override those specified in TypeDefaultPreferences
+    classPreferences = {
+        kwPreferenceSetName: 'ProcessingMechanismCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        # Sets template for variable (input)
+        variable = [[0]]
+
+    paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
+
+    })
+
+    from psyneulink.components.functions.function import Linear
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 size=None,
+                 input_states:tc.optional(tc.any(list, dict))=None,
+                 function=Linear,
+                 params=None,
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
+        """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
+        """
+
+        if default_variable is None and size is None:
+            default_variable = self.ClassDefaults.variable
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(function=function,
+                                                  params=params)
+
+        super(ProcessingMechanism, self).__init__(variable=default_variable,
+                                                  size=size,
+                                                  input_states=input_states,
+                                                  params=params,
+                                                  name=name,
+                                                  prefs=prefs,
+                                                  context=self)
+
+    # MODIFIED 6/2/17 NEW:
+    @property
+    def previous_value(self):
+        return self.function_object.previous_value
+    # MODIFIED 6/2/17 END
+
+
