@@ -3,22 +3,48 @@ import pytest
 import typecheck
 
 from psyneulink.components.component import ComponentError
-from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, Linear, NormalDist
-from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DDMError
-from psyneulink.scheduling.condition import WhenFinished, While
-from psyneulink.scheduling.scheduler import Scheduler
+from psyneulink.scheduling.condition import WhenFinished
 from psyneulink.scheduling.time import TimeScale
-# ======================================= FUNCTION TESTS ============================================
 
-# VALID FUNCTIONS:
+class TestReinitialize:
+    def test_valid_reinitialization(self):
+        D = DDM(name="D",
+                function=DriftDiffusionIntegrator())
+        D.execute(1.0)
+        assert np.allclose([[1.0]], D.function_object.reinitialize[0])
+        assert np.allclose([1.0], D.function_object.reinitialize[1])
 
-# ------------------------------------------------------------------------------------------------
-# TEST 1
-# function = Integrator
+        D.execute(2.0)
+        assert np.allclose([[3.0]], D.function_object.reinitialize[0])
+        assert np.allclose([2.0], D.function_object.reinitialize[1])
+
+        D.function_object.reinitialize = 4.0, 0.1
+
+        D.execute(2.0)
+        assert np.allclose([[6.0]], D.function_object.reinitialize[0])
+        assert np.allclose([1.1], D.function_object.reinitialize[1])
+
+    def test_invalid_reinitialization_too_many_items(self):
+        D = DDM(name="D",
+                function=DriftDiffusionIntegrator())
+        with pytest.raises(FunctionError) as error_text:
+            D.function_object.reinitialize = 4.0, 0.1, 10.0
+        assert("DriftDiffusionIntegrator requires exactly two items (position, time) in order to reinitialize" in
+               str(error_text.value) and "3 items ((4.0, 0.1, 10.0)) were provided to reinitialize" in str(error_text.value))
+
+    def test_invalid_reinitialization_too_few_items(self):
+        D = DDM(name="D",
+                function=DriftDiffusionIntegrator())
+        with pytest.raises(FunctionError) as error_text:
+            D.function_object.reinitialize = 4.0
+        assert("DriftDiffusionIntegrator requires exactly two items (position, time) in order to reinitialize. Only "
+               "one item (4.0) was provided to reinitialize" in str(error_text.value))
+
+
 
 class TestThreshold:
     def test_threshold_param(self):
