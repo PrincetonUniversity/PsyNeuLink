@@ -9,17 +9,19 @@
 
 """
 
+.. _Leabra_Mechanism_Overview:
+
 Overview
 --------
 A LeabraMechanism is a subclass of `ProcessingMechanism` that wraps a leabra network. Leabra is an artificial neural
-network algorithm (`O'Reilly, 1996 <ftp://grey.colorado.edu/pub/oreilly/thesis/oreilly_thesis.all.pdf>`). For more
+network algorithm (`O'Reilly, 1996 <ftp://grey.colorado.edu/pub/oreilly/thesis/oreilly_thesis.all.pdf>`_). For more
 info about leabra, please see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>`_.
 
 .. note::
     The LeabraMechanism uses the leabra Python package, which can be found
-    `here <https://github.com/benureau/leabra>` at Github. While the LeabraMechanism should always match the output
-    of an equivalent network in the leabra package, the leabra package itself is still in development, so it is not
-    guaranteed to be correct yet.
+    `here <https://github.com/benureau/leabra>`_ at Github. You may need to install the Python leabra package in order
+    to use the LeabraMechanism. While the LeabraMechanism should always match the output of an equivalent network in
+    the leabra package, the leabra package itself is still in development, so it is not guaranteed to be correct yet.
 
 .. _Leabra_Mechanism_Creation:
 
@@ -32,8 +34,8 @@ of the output layer (**output_size**), number of hidden layers (**hidden_layers*
 0.55 and 0.95. Alternatively, users can provide a leabra Network object from the leabra package as an argument
 (**leabra_net**), in which case the **leabra_net** will be used as the network wrapped by the LeabraMechanism.
 This option requires users to be familiar with the leabra package, but allows more flexibility in specifying parameters.
-In either method of creating a LeabraMechanism, the **training_flag** argument specifies whether the network should be
-learning (updating its weights) or not.
+In the former method of creating a LeabraMechanism, the **training_flag** argument specifies whether the network should
+be learning (updating its weights) or not.
 
 .. _Leabra_Mechanism_Structure:
 
@@ -41,24 +43,26 @@ Structure
 ---------
 
 The LeabraMechanism has an attribute `training_flag <LeabraMechanism.training_flag>` which can be set to True/False to
-determine whether the network is currently learning.
+determine whether the network is currently learning. The `training_flag <LeabraMechanism.training_flag>` can also be
+changed after creation of the LeabraMechanism, causing it to start/stop learning.
 
 .. note::
     If the training_flag is True, the network will learn using the Leabra learning algorithm. Other algorithms may be
     added later.
 
-The LeabraMechanism has two `InputState`s: the *MAIN_INPUT* InputState and the *LEARNING_TARGET* InputState. The
+The LeabraMechanism has two InputStates: the *MAIN_INPUT* `InputState` and the *LEARNING_TARGET* InputState. The
 *MAIN_INPUT* InputState is the input to the leabra network, while the *LEARNING_TARGET* InputState is the learning
 target for the LeabraMechanism. The input to the *MAIN_INPUT* InputState should have length equal to
 `input_size <LeabraMechanism.input_size>` and the input to the *LEARNING_TARGET* InputState should have length equal to
 `output_size <LeabraMechanism.output_size>`.
 
 .. note::
-    Currently, there is a bug where LeabraMechanism (and other `Mechanism`s with multiple input states) cannot be
+    Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input states) cannot be
     used as `ORIGIN Mechanisms <System_Mechanisms>` for a `System`. If you desire to use a LeabraMechanism as an ORIGIN
-    Mechanism, you can work around this bug by creating two `TransferMechanism`s as ORIGIN Mechanisms instead, and have
-    these two TransferMechanisms pass their output to the InputStates of the LeabraMechanism. Here is an example of
-    how to do this::
+    Mechanism, you can work around this bug by creating two `TransferMechanisms <Transfer_Overview>` as ORIGIN
+    Mechanisms instead, and have these two TransferMechanisms pass their output to the InputStates of the
+    LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
+    *LEARNING_TARGET* InputState of L (L.input_states[1])::
         L = LeabraMechanism(input_size=input_size, output_size=output_size)
         T1 = TransferMechanism(name='T1', size=input_size, function=Linear)
         T2 = TransferMechanism(name='T2', size=output_size, function=Linear)
@@ -75,8 +79,8 @@ Execution
 
 The LeabraMechanism passes input and training data to the leabra Network it wraps, and the LeabraMechanism passes its
 leabra Network's output (after one "trial", default 200 cycles in PsyNeuLink) to its primary `OutputState`. For details
-on Leabra, please see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>` and
-the `leabra code on Github <https://github.com/benureau/leabra>`.
+on Leabra, see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>`_ and the
+`leabra Python package on Github <https://github.com/benureau/leabra>`_.
 
 .. _Leabra_Mechanism_Reference:
 
@@ -98,14 +102,15 @@ from psyneulink.components.functions.function import Function_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.globals.keywords import FUNCTION, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, kwPreferenceSetName
+from psyneulink.globals.keywords import FUNCTION, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE,\
+    LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'build_leabra_network', 'convert_to_2d_input', 'input_state_names', 'LeabraError', 'LeabraFunction', 'LeabraMechanism',
-    'LEARNING_TARGET', 'MAIN_INPUT', 'MAIN_OUTPUT', 'output_state_name', 'test_leabra_network', 'train_leabra_network',
+    'LEARNING_TARGET', 'MAIN_INPUT', 'MAIN_OUTPUT', 'output_state_name', 'run_leabra_network', 'train_leabra_network',
 ]
 
 # Used to name input_states and output_states:
@@ -136,7 +141,8 @@ class LeabraFunction(Function_Base):
 
     .. _LeabraFunction:
 
-    Transform variable by providing it as input to the leabra network inside the LeabraFunction.
+    LeabraFunction is a custom function that lives inside the LeabraMechanism. As a function, it transforms the
+    variable by providing it as input to the leabra network inside the LeabraFunction.
 
     Arguments
     ---------
@@ -193,7 +199,7 @@ class LeabraFunction(Function_Base):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class ClassDefaults(Function_Base.ClassDefaults):
-        variable = [0]
+        variable = [[0], [0]]
 
     def __init__(self,
                  default_variable=None,
@@ -204,7 +210,8 @@ class LeabraFunction(Function_Base):
                  context=componentName + INITIALIZING):
 
         if not leabra_available:
-            raise LeabraError('leabra python module is not installed')
+            raise LeabraError('leabra python module is not installed. Please install it from '
+                              'https://github.com/benureau/leabra')
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(network=network,
@@ -251,17 +258,18 @@ class LeabraFunction(Function_Base):
                  context=None):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        # HACK: otherwise the INITIALIZING function executions affect aspects of the leabra learning algorithm
+        # HACK: otherwise the INITIALIZING function executions impact the state of the leabra network
         if INITIALIZING in context:
             output_size = len(self.network.layers[-1].units)
             return np.zeros(output_size)
 
         if (not hasattr(self, "owner")) or (not hasattr(self.owner, "training_flag")) or self.owner.training_flag is False:
-            variable = convert_to_2d_input(variable)[0]  # FIX: buggy, doesn't handle lists well. hacky conversion from 2D arrays into 1D arrays
-            return test_leabra_network(self.network, input_pattern=variable)  # potentially append an array of zeros to make output format consistent
+            if isinstance(variable[0], (list, np.ndarray)):
+                variable = variable[0]
+            return run_leabra_network(self.network, input_pattern=variable)
 
         else:
-            variable = convert_to_2d_input(variable)  # FIX: buggy, doesn't handle lists well
+            # variable = convert_to_2d_input(variable)  # FIX: buggy, doesn't handle lists well
             if len(variable) != 2:
                 raise LeabraError("Input Error: the input given ({}) for training was not the right format: the input "
                                   "should be a 2D array containing two vectors, corresponding to the input and the "
@@ -308,7 +316,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
     hidden_sizes : int or List[int] : default input_size
         if specified, this should be a list of integers, specifying the size of each hidden layer. If **hidden_sizes**
-        if a list, the number of integers in **hidden_sizes** should be equal to the number of hidden layers. If not
+        is a list, the number of integers in **hidden_sizes** should be equal to the number of hidden layers. If not
         specified, hidden layers will default to the same size as the input layer.
 
     training_flag : boolean : default None
@@ -318,6 +326,12 @@ class LeabraMechanism(ProcessingMechanism_Base):
         start/stop learning. If None, `training_flag` will default to False if **leabra_net** argument is not provided.
         If **leabra_net** argument is provided and `training_flag` is None, then the existing learning rules of the
         **leabra_net** will be preserved.
+
+    quarter_size : int : default 50
+        an integer specifying how many times the Leabra network cycles each time it is run. Lower values of
+        quarter_size result in shorter execution times, though very low values may cause slight fluctuations in output.
+        Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
+        a given trial.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -367,6 +381,12 @@ class LeabraMechanism(ProcessingMechanism_Base):
         state). The `training_flag` attribute can be changed after initialization, causing the leabra network to
         start/stop learning.
 
+    quarter_size : int : default 50
+        an integer specifying how many times the Leabra network cycles each time it is run. Lower values of
+        quarter_size result in shorter execution times, though very low values may cause slight fluctuations in output.
+        Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
+        a given trial.
+
     network : leabra.Network
         the leabra.Network object which is executed by the LeabraMechanism. For more info about leabra Networks,
         please see the `leabra package <https://github.com/benureau/leabra>` on Github.
@@ -405,6 +425,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
     componentType = LEABRA_MECHANISM
 
+    is_self_learner = True  # CW 11/27/17: a flag; "True" if the mechanism self-learns. Declared in ProcessingMechanism
+
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
@@ -427,13 +449,15 @@ class LeabraMechanism(ProcessingMechanism_Base):
                  output_size=1,
                  hidden_layers=0,
                  hidden_sizes=None,
-                 training_flag=False,
+                 training_flag=None,
+                 quarter_size=50,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
                  context=componentType + INITIALIZING):
         if not leabra_available:
-            raise LeabraError('leabra python module is not installed')
+            raise LeabraError('leabra python module is not installed. Please install it from '
+                              'https://github.com/benureau/leabra')
 
         if leabra_net is not None:
             leabra_network = leabra_net
@@ -441,13 +465,15 @@ class LeabraMechanism(ProcessingMechanism_Base):
             output_size = len(leabra_network.layers[-1].units)
             hidden_layers = len(leabra_network.layers) - 2
             hidden_sizes = list(map(lambda x: len(x.units), leabra_network.layers))[1:-2]
-            training_flag = None
+            quarter_size = leabra_network.spec.quarter_size
+            training_flag = infer_training_flag_from_network(leabra_network)
         else:
             if hidden_sizes is None:
                 hidden_sizes = input_size
             if training_flag is None:
                 training_flag = False
-            leabra_network = build_leabra_network(input_size, output_size, hidden_layers, hidden_sizes, training_flag)
+            leabra_network = build_leabra_network(input_size, output_size, hidden_layers, hidden_sizes,
+                                                  training_flag, quarter_size)
 
         function = LeabraFunction(network=leabra_network)
 
@@ -462,6 +488,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                                                   hidden_layers=hidden_layers,
                                                   hidden_sizes=hidden_sizes,
                                                   training_flag=training_flag,
+                                                  quarter_size=quarter_size,
                                                   params=params)
 
         super().__init__(size=[input_size, output_size],
@@ -469,6 +496,23 @@ class LeabraMechanism(ProcessingMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
+
+    def execute(self,
+                input = None,
+                runtime_params = None,
+                time_scale = TimeScale.TRIAL,
+                ignore_execution_id = False,
+                context = None):
+
+        if runtime_params:
+            if "training_flag" in runtime_params.keys():
+                self.training_flag = runtime_params["training_flag"]
+                del runtime_params["training_flag"]
+
+        return super().execute(input = input,
+                               runtime_params = runtime_params,
+                               ignore_execution_id = ignore_execution_id,
+                               context = context)
 
     @property
     def training_flag(self):
@@ -478,18 +522,8 @@ class LeabraMechanism(ProcessingMechanism_Base):
     def training_flag(self, value):
         if self._training_flag is value:
             return
-        elif value is True:
-            conns = self.function_object.network.connections  # the connections between layers in the Leabra network
-            for i in range(len(conns)):
-                conns[i].spec.lrule = 'leabra'  # change each connection's learning rule
-            self._training_flag = value
-        elif value is False:
-            conns = self.function_object.network.connections
-            for i in range(len(conns)):
-                conns[i].spec.lrule = 'None'  # change each connection's learning rule to None
-            self._training_flag = value
-        elif value is None:
-            self._training_flag = value
+        set_training(self.function_object.network, value)
+        self._training_flag = value
 
     @property
     def network(self):
@@ -498,8 +532,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
     @network.setter
     def network(self, value):
         self.function_object.network = value
-# assumes that within lists and arrays, all elements are the same type
-# also this is written sub-optimally: some cases should be broken off into more if statements for speed
 
 
 def convert_to_2d_input(array_like):
@@ -517,13 +549,10 @@ def convert_to_2d_input(array_like):
         return [np.array([array_like])]
 
 
-def build_leabra_network(n_input, n_output, n_hidden, hidden_sizes=None, training_flag=None):
+def build_leabra_network(n_input, n_output, n_hidden, hidden_sizes=None, training_flag=None, quarter_size=50):
 
     # specifications
-    if training_flag is True:
-        learning_rule = 'leabra'
-    else:
-        learning_rule = None
+    learning_rule = 'leabra' if training_flag is True else None
     unit_spec = leabra.UnitSpec(adapt_on=True, noisy_act=True)
     layer_spec = leabra.LayerSpec(lay_inhib=True)
     conn_spec = leabra.ConnectionSpec(proj='full', rnd_type='uniform', rnd_mean=0.75, rnd_var=0.2, lrule=learning_rule)
@@ -551,66 +580,62 @@ def build_leabra_network(n_input, n_output, n_hidden, hidden_sizes=None, trainin
     connections.append(last_conn)
     layers.append(output_layer)
 
-    network_spec = leabra.NetworkSpec(quarter_size=50)
-    network = leabra.Network(layers=layers, connections=connections)
+    network_spec = leabra.NetworkSpec(quarter_size=quarter_size)
+    network = leabra.Network(layers=layers, connections=connections, spec=network_spec)
 
     return network
 
 
-def test_leabra_network(network, input_pattern):
+def run_leabra_network(network, input_pattern):
     assert len(network.layers[0].units) == len(input_pattern)
-    network.set_inputs({'input_layer': input_pattern})
 
-    network.trial()
+    # check training flag: should be handled earlier, but just in case
+    # we temporarily set training false, then turn it on again after we are done
+    # TODO: maybe add a warning message here?
+    if infer_training_flag_from_network(network):
+        set_training(network, False)
+        network.set_inputs({'input_layer': input_pattern})
+        network.set_outputs({})  # clear network._outputs
+        network.trial()
+        set_training(network, True)
+    else:
+        network.set_inputs({'input_layer': input_pattern})
+        network.set_outputs({})  # clear network._outputs
+        network.trial()
     return [unit.act_m for unit in network.layers[-1].units]
 
 
 def train_leabra_network(network, input_pattern, output_pattern):
-    """Run one trial on the network"""
     assert len(network.layers[0].units) == len(input_pattern)
-
     assert len(network.layers[-1].units) == len(output_pattern)
-    network.set_inputs({'input_layer': input_pattern})
-    network.set_outputs({'output_layer': output_pattern})
 
-    network.trial()
+    # check training flag: should be handled earlier, but just in case
+    # we temporarily set training true, then turn it off again after we are done
+    # TODO: maybe add a warning message here?
+    if not infer_training_flag_from_network(network):
+        set_training(network, True)
+        network.set_inputs({'input_layer': input_pattern})
+        network.set_outputs({'output_layer': output_pattern})
+        network.trial()
+        set_training(network, False)
+    else:
+        network.set_inputs({'input_layer': input_pattern})
+        network.set_outputs({'output_layer': output_pattern})
+        network.trial()
+
     return [unit.act_m for unit in network.layers[-1].units]
 
-# FIX: add/test compatibility with the np.matrix data type
-# def convert_to_2d_input(array_like, num_input_states = None):
-#     if isinstance(array_like, numbers.Number) or (isinstance(array_like, np.ndarray) and np.ndim(array_like) == 0):
-#         return [np.atleast_1d([array_like])]
-#     elif isinstance(array_like, (np.ndarray, list)):
-#         if isinstance(array_like[0], (np.ndarray, list)):
-#             if isinstance(array_like[0][0], (np.ndarray, list)) and not isinstance(array_like[0][0], np.matrix):
-#                 print("WARNING: array_like ({}) is at least 3D, which may cause conversion errors".format(array_like))
-#             if num_input_states is None or num_input_states == len(array_like):
-#                 out = []
-#                 for a in array_like:
-#                     out.append(np.atleast_1d(a))
-#                 return out
-#             elif num_input_states == 1:
-#                 return [np.atleast_2d(array_like)]
-#             else:
-#                 print("WARNING: The number of input states ({}) does not seem compatible with the input ({}).".
-#                               format(num_input_states, array_like))
-#                 out = []
-#                 for a in array_like:
-#                     out.append(np.atleast_1d(a))
-#                 return out
-#         elif isinstance(array_like[0], numbers.Number):
-#             if num_input_states is None or num_input_states == 1:
-#                 return [np.atleast_1d(array_like)]
-#             elif num_input_states == len(array_like):
-#                 out = []
-#                 for a in array_like:
-#                     out.append(np.atleast_1d(a))
-#                 return out
-#             else:
-#                 print("WARNING: The number of input states ({}) does not seem compatible with the input ({}).".
-#                               format(num_input_states, array_like))
-#                 return [np.atleast_1d(array_like)]
-#         else:
-#             return np.atleast_2d(array_like)  # this is hacky; mainly for supporting legacy code
-#     else:
-#         return np.atleast_2d(array_like)  # this is hacky; mainly for supporting legacy code
+
+# infer whether the network is using the None or 'leabra' training rule
+# this currently assumes either all connections or no connections are being trained
+def infer_training_flag_from_network(network):
+    return False if network.connections[0].spec.lrule is None else True
+
+
+def set_training(network, val):
+    if val is None or val is False:
+        for conn in network.connections:
+            conn.spec.lrule = None
+    else:
+        for conn in network.connections:
+            conn.spec.lrule = 'leabra'

@@ -41,9 +41,9 @@ def test_reinforcement():
     reward_values = [10, 10, 10]
 
     # Must initialize reward (won't be used, but needed for declaration of lambda function)
-    action_selection.output_states.value = [0, 0, 1]
+    action_selection.output_state.value = [0, 0, 1]
     # Get reward value for selected action)
-    reward = lambda: [reward_values[int(np.nonzero(action_selection.output_states.value)[0])]]
+    reward = lambda: [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
 
     def print_header(system):
         print("\n\n**** TRIAL: ", system.scheduler_processing.clock.simple_time)
@@ -51,8 +51,8 @@ def test_reinforcement():
     def show_weights():
         print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].mod_matrix)
         print('\nAction selected:  {}; predicted reward: {}'.format(
-            np.nonzero(action_selection.output_states.value)[0][0],
-            action_selection.output_states.value[np.nonzero(action_selection.output_states.value)[0][0]],
+            np.nonzero(action_selection.output_state.value)[0][0],
+            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)[0][0]],
         ))
 
     input_list = {input_layer: [[1, 1, 1]]}
