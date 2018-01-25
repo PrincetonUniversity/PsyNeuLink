@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LeabraMechanism &mdash; PsyNeuLink 0.4.2.0+43.ga8d618d documentation</title>
+  <title>LeabraMechanism &mdash; PsyNeuLink 0.4.2.0+44.g8f0555b documentation</title>
   
 
   
@@ -35,7 +35,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.2.0+43.ga8d618d documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.2.0+44.g8f0555b documentation" href="index.html"/>
+        <link rel="up" title="Processing Mechanisms" href="ProcessingMechanisms.html"/>
+        <link rel="next" title="Adaptive Mechanisms" href="AdaptiveMechanisms.html"/>
+        <link rel="prev" title="PredictionErrorMechanism" href="PredictionErrorMechanism.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +67,7 @@
             
             
               <div class="version">
-                0.4.2.0+43
+                0.4.2.0+44
               </div>
             
           
@@ -88,12 +91,31 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Components.html">Components</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="TransferMechanisms.html">Transfer Mechanisms</a></li>
+<li class="toctree-l5"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ObjectiveMechanisms.html">Objective Mechanisms</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">LeabraMechanism</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="AdaptiveMechanisms.html">Adaptive Mechanisms</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="Projections.html">Projections</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Compositions.html">Compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Models.html">Models</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -138,6 +160,14 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
+          <li><a href="Library.html">Library</a> &raquo;</li>
+        
+          <li><a href="Components.html">Components</a> &raquo;</li>
+        
+          <li><a href="Mechanisms.html">Mechanisms</a> &raquo;</li>
+        
+          <li><a href="ProcessingMechanisms.html">Processing Mechanisms</a> &raquo;</li>
+        
       <li>LeabraMechanism</li>
     
     
@@ -160,16 +190,16 @@
   <div class="section" id="module-psyneulink.library.mechanisms.processing.leabramechanism">
 <span id="leabramechanism"></span><h1>LeabraMechanism<a class="headerlink" href="#module-psyneulink.library.mechanisms.processing.leabramechanism" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="leabra-mechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A LeabraMechanism is a subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> that wraps a leabra network. Leabra is an artificial neural
-network algorithm (<code class="xref any docutils literal"><span class="pre">O'Reilly,</span> <span class="pre">1996</span></code>). For more
+network algorithm (<a class="reference external" href="ftp://grey.colorado.edu/pub/oreilly/thesis/oreilly_thesis.all.pdf">O’Reilly, 1996</a>). For more
 info about leabra, please see <a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Leabra">O’Reilly and Munakata, 2016</a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The LeabraMechanism uses the leabra Python package, which can be found
-<code class="xref any docutils literal"><span class="pre">here</span></code> at Github. While the LeabraMechanism should always match the output
-of an equivalent network in the leabra package, the leabra package itself is still in development, so it is not
-guaranteed to be correct yet.</p>
+<a class="reference external" href="https://github.com/benureau/leabra">here</a> at Github. You may need to install the Python leabra package in order
+to use the LeabraMechanism. While the LeabraMechanism should always match the output of an equivalent network in
+the leabra package, the leabra package itself is still in development, so it is not guaranteed to be correct yet.</p>
 </div>
 </div>
 <div class="section" id="creating-a-leabramechanism">
@@ -180,30 +210,32 @@ of the output layer (<strong>output_size</strong>), number of hidden layers (<st
 0.55 and 0.95. Alternatively, users can provide a leabra Network object from the leabra package as an argument
 (<strong>leabra_net</strong>), in which case the <strong>leabra_net</strong> will be used as the network wrapped by the LeabraMechanism.
 This option requires users to be familiar with the leabra package, but allows more flexibility in specifying parameters.
-In either method of creating a LeabraMechanism, the <strong>training_flag</strong> argument specifies whether the network should be
-learning (updating its weights) or not.</p>
+In the former method of creating a LeabraMechanism, the <strong>training_flag</strong> argument specifies whether the network should
+be learning (updating its weights) or not.</p>
 </div>
 <div class="section" id="structure">
 <span id="leabra-mechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>The LeabraMechanism has an attribute <a class="reference internal" href="#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> which can be set to True/False to
-determine whether the network is currently learning.</p>
+determine whether the network is currently learning. The <a class="reference internal" href="#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> can also be
+changed after creation of the LeabraMechanism, causing it to start/stop learning.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">If the training_flag is True, the network will learn using the Leabra learning algorithm. Other algorithms may be
 added later.</p>
 </div>
-<p>The LeabraMechanism has two <a class="reference internal" href="#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.input_size" title="psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.input_size"><code class="xref any py py-attr docutils literal"><span class="pre">InputState`s:</span> <span class="pre">the</span> <span class="pre">*MAIN_INPUT*</span> <span class="pre">InputState</span> <span class="pre">and</span> <span class="pre">the</span> <span class="pre">*LEARNING_TARGET*</span> <span class="pre">InputState.</span> <span class="pre">The</span>
-<span class="pre">*MAIN_INPUT*</span> <span class="pre">InputState</span> <span class="pre">is</span> <span class="pre">the</span> <span class="pre">input</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">leabra</span> <span class="pre">network,</span> <span class="pre">while</span> <span class="pre">the</span> <span class="pre">*LEARNING_TARGET*</span> <span class="pre">InputState</span> <span class="pre">is</span> <span class="pre">the</span> <span class="pre">learning</span>
-<span class="pre">target</span> <span class="pre">for</span> <span class="pre">the</span> <span class="pre">LeabraMechanism.</span> <span class="pre">The</span> <span class="pre">input</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">*MAIN_INPUT*</span> <span class="pre">InputState</span> <span class="pre">should</span> <span class="pre">have</span> <span class="pre">length</span> <span class="pre">equal</span> <span class="pre">to</span>
-<span class="pre">`input_size</span></code></a> and the input to the <em>LEARNING_TARGET</em> InputState should have length equal to
+<p>The LeabraMechanism has two InputStates: the <em>MAIN_INPUT</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> and the <em>LEARNING_TARGET</em> InputState. The
+<em>MAIN_INPUT</em> InputState is the input to the leabra network, while the <em>LEARNING_TARGET</em> InputState is the learning
+target for the LeabraMechanism. The input to the <em>MAIN_INPUT</em> InputState should have length equal to
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.input_size" title="psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.input_size"><code class="xref any py py-attr docutils literal"><span class="pre">input_size</span></code></a> and the input to the <em>LEARNING_TARGET</em> InputState should have length equal to
 <a class="reference internal" href="#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.output_size" title="psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.output_size"><code class="xref any py py-attr docutils literal"><span class="pre">output_size</span></code></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Currently, there is a bug where LeabraMechanism (and other <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">Mechanism`s with multiple input states) cannot be
-used as `ORIGIN Mechanisms</span></a> for a <a class="reference internal" href="System.html"><span class="doc">System</span></a>. If you desire to use a LeabraMechanism as an ORIGIN
-Mechanism, you can work around this bug by creating two <a href="#id1"><span class="problematic" id="id2">`</span></a>TransferMechanism`s as ORIGIN Mechanisms instead, and have
-these two TransferMechanisms pass their output to the InputStates of the LeabraMechanism. Here is an example of
-how to do this:</p>
+<p>Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input states) cannot be
+used as <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">ORIGIN Mechanisms</span></a> for a <a class="reference internal" href="System.html"><span class="doc">System</span></a>. If you desire to use a LeabraMechanism as an ORIGIN
+Mechanism, you can work around this bug by creating two <a class="reference internal" href="TransferMechanism.html#transfer-overview"><span class="std std-ref">TransferMechanisms</span></a> as ORIGIN
+Mechanisms instead, and have these two TransferMechanisms pass their output to the InputStates of the
+LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
+<em>LEARNING_TARGET</em> InputState of L (L.input_states[1]):</p>
 <div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">L</span> <span class="o">=</span> <span class="n">LeabraMechanism</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span> <span class="n">output_size</span><span class="o">=</span><span class="n">output_size</span><span class="p">)</span>
 <span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;T1&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">input_size</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
 <span class="n">T2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;T2&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">output_size</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
@@ -220,15 +252,16 @@ how to do this:</p>
 <span id="leabra-mechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The LeabraMechanism passes input and training data to the leabra Network it wraps, and the LeabraMechanism passes its
 leabra Network’s output (after one “trial”, default 200 cycles in PsyNeuLink) to its primary <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>. For details
-on Leabra, please see <code class="xref any docutils literal"><span class="pre">O'Reilly</span> <span class="pre">and</span> <span class="pre">Munakata,</span> <span class="pre">2016</span></code> and
-the <code class="xref any docutils literal"><span class="pre">leabra</span> <span class="pre">code</span> <span class="pre">on</span> <span class="pre">Github</span></code>.</p>
+on Leabra, see <a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Leabra">O’Reilly and Munakata, 2016</a> and the
+<a class="reference external" href="https://github.com/benureau/leabra">leabra Python package on Github</a>.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="leabra-mechanism-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.library.mechanisms.processing.leabramechanism.LeabraFunction">
 <em class="property">class </em><code class="descclassname">psyneulink.library.mechanisms.processing.leabramechanism.</code><code class="descname">LeabraFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>network=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.mechanisms.processing.leabramechanism.LeabraFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p id="leabrafunction">Transform variable by providing it as input to the leabra network inside the LeabraFunction.</p>
+<dd><p id="leabrafunction">LeabraFunction is a custom function that lives inside the LeabraMechanism. As a function, it transforms the
+variable by providing it as input to the leabra network inside the LeabraFunction.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -289,14 +322,19 @@ and the other arguments that specify the network are ignored (<strong>input_size
 <li><strong>output_size</strong> (<em>int : default 1</em>) – an integer specifying how many units are in (the size of) the final layer (output) of the leabra network.</li>
 <li><strong>hidden_layers</strong> (<em>int : default 0</em>) – an integer specifying how many hidden layers are in the leabra network.</li>
 <li><strong>hidden_sizes</strong> (<em>int</em><em> or </em><em>List</em><em>[</em><em>int</em><em>] </em><em>: default input_size</em>) – if specified, this should be a list of integers, specifying the size of each hidden layer. If <strong>hidden_sizes</strong>
-if a list, the number of integers in <strong>hidden_sizes</strong> should be equal to the number of hidden layers. If not
-specified, hidden layers will default to the same size as the input layer.</li>
+is a list, the number of integers in <strong>hidden_sizes</strong> should be equal to the number of hidden layers. If not
+specified, hidden layers will default to the same size as the input layer. If hidden_sizes is a single integer,
+then all hidden layers are of that size.</li>
 <li><strong>training_flag</strong> (<em>boolean : default None</em>) – a boolean specifying whether the leabra network should be learning. If True, the leabra network will adjust
 its weights using the “leabra” algorithm, based on the training pattern (which is read from its second output
 state). The <a class="reference internal" href="#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> attribute can be changed after initialization, causing the leabra network to
 start/stop learning. If None, <a class="reference internal" href="#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> will default to False if <strong>leabra_net</strong> argument is not provided.
 If <strong>leabra_net</strong> argument is provided and <a class="reference internal" href="#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal"><span class="pre">training_flag</span></code></a> is None, then the existing learning rules of the
 <strong>leabra_net</strong> will be preserved.</li>
+<li><strong>quarter_size</strong> (<em>int : default 50</em>) – an integer specifying how many times the Leabra network cycles each time it is run. Lower values of
+quarter_size result in shorter execution times, though very low values may cause slight fluctuations in output.
+Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
+a given trial.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
 the dictionary override any assigned to those parameters in arguments of the constructor.</li>
@@ -364,6 +402,15 @@ start/stop learning.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.quarter_size">
+<code class="descname">quarter_size</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.quarter_size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int : default 50</em> – an integer specifying how many times the Leabra network cycles each time it is run. Lower values of
+quarter_size result in shorter execution times, though very low values may cause slight fluctuations in output.
+Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
+a given trial.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.network">
 <code class="descname">network</code><a class="headerlink" href="#psyneulink.library.mechanisms.processing.leabramechanism.LeabraMechanism.network" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>leabra.Network</em> – the leabra.Network object which is executed by the LeabraMechanism. For more info about leabra Networks,
@@ -419,12 +466,6 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="psyneulink.library.mechanisms.processing.leabramechanism.train_leabra_network">
-<code class="descclassname">psyneulink.library.mechanisms.processing.leabramechanism.</code><code class="descname">train_leabra_network</code><span class="sig-paren">(</span><em>network</em>, <em>input_pattern</em>, <em>output_pattern</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.mechanisms.processing.leabramechanism.train_leabra_network" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run one trial on the network</p>
-</dd></dl>
-
 </div>
 </div>
 
@@ -435,6 +476,15 @@ if it is not specified, a default is assigned using <code class="xref any docuti
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="AdaptiveMechanisms.html" class="btn btn-neutral float-right" title="Adaptive Mechanisms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="PredictionErrorMechanism.html" class="btn btn-neutral" title="PredictionErrorMechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
@@ -463,7 +513,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.2.0+43.ga8d618d',
+            VERSION:'0.4.2.0+44.g8f0555b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
