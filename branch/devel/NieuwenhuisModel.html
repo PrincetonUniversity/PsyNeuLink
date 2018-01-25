@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Nieuwenhuis et al. (2005) &mdash; PsyNeuLink 0.4.2.0+44.g8f0555b documentation</title>
+  <title>Nieuwenhuis et al. (2005) &mdash; PsyNeuLink 0.4.2.0+53.ge88da9e documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.2.0+44.g8f0555b documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.2.0+53.ge88da9e documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.2.0+44
+                0.4.2.0+53
               </div>
             
           
@@ -207,11 +207,11 @@ and intercept=0.0.</p>
 with a strength specified by the <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.self_excitation" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> parameter set to 2.5; a leak specified by the <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak"><code class="xref any py py-attr docutils literal"><span class="pre">leak</span></code></a> parameter set to -1.0;  and every element of which is connected to every other element by mutually inhibitory weights
 with a strength specified by the <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.competition" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> parameter set to 1.0.  An ordinary differential equation
 describes the change in state over time, implemented in the LCA mechanism by setting its <code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> to <code class="xref any docutils literal"><span class="pre">True</span></code> and setting a <code class="xref any docutils literal"><span class="pre">time_step_size</span></code> to 0.02.
-The output values of the <a class="reference internal" href="LCA.html"><span class="doc">LCA</span></a> Mechanism can be evaluated with the <a class="reference internal" href="Log.html#module-psyneulink.globals.log" title="psyneulink.globals.log"><code class="xref any py py-mod docutils literal"><span class="pre">log</span></code></a> function.</p>
+The output values of the <a class="reference internal" href="LCA.html"><span class="doc">LCA</span></a> Mechanism can be evaluated with the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> function.</p>
 <p><strong>RESPONSE LAYER</strong>: an <a class="reference internal" href="LCA.html"><span class="doc">LCA</span></a> Mechanism of size=2, implemented as in the DECISION LAYER, with a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function with
 a slope=1.0 and intercept=0.0; the <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.self_excitation" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> parameter set to 2.0, the leak
 <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.leak"><code class="xref any py py-attr docutils literal"><span class="pre">leak</span></code></a> set to -1.0, and mutually inhibitory weights specified by <a class="reference internal" href="LCA.html#psyneulink.library.mechanisms.processing.transfer.lca.LCA.competition" title="psyneulink.library.mechanisms.processing.transfer.lca.LCA.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> set to 0.
-The output values of the <a class="reference internal" href="LCA.html"><span class="doc">LCA</span></a> Mechanism can be evaluated with the <a class="reference internal" href="Log.html#module-psyneulink.globals.log" title="psyneulink.globals.log"><code class="xref any py py-mod docutils literal"><span class="pre">log</span></code></a> function.</p>
+The output values of the <a class="reference internal" href="LCA.html"><span class="doc">LCA</span></a> Mechanism can be evaluated with the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> function.</p>
 <dl class="docutils">
 <dt><strong>CONNECTIONS</strong>:  The weights of the behavioral network are implemented as <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.</dt>
 <dd>The one from the <em>INPUT_LAYER</em> to the <em>DECISION_LAYER</em> uses a numpy array with a value of 1.5 for the diagonal to and
@@ -237,12 +237,12 @@ The parameters <code class="xref any docutils literal"><span class="pre">G</span
 The LCControlMechanism sends <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to the <em>DECISION LAYER</em> and <em>RESPONSE LAYER</em>, that
 regulate the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic.gain" title="psyneulink.components.functions.function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter of their <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Functions.</p>
 <p>The <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> outputs the values <code class="xref any docutils literal"><span class="pre">u</span></code>, <code class="xref any docutils literal"><span class="pre">v</span></code> and
-<code class="xref any docutils literal"><span class="pre">gain</span></code>. The constructor can output these values using the <a class="reference internal" href="Log.html#module-psyneulink.globals.log" title="psyneulink.globals.log"><code class="xref any py py-mod docutils literal"><span class="pre">log</span></code></a> function.</p>
+<code class="xref any docutils literal"><span class="pre">gain</span></code>. The constructor can output these values using the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> function.</p>
 </div>
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference internal" href="Time.html#psyneulink.scheduling.time.Time.run" title="psyneulink.scheduling.time.Time.run"><code class="xref any py py-attr docutils literal"><span class="pre">run</span></code></a> function executes the model, with a list of stimulus inputs specified and the number of executions specified.</p>
+<p>The <a class="reference internal" href="Scheduler.html#psyneulink.scheduling.scheduler.Scheduler.run" title="psyneulink.scheduling.scheduler.Scheduler.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> function executes the model, with a list of stimulus inputs specified and the number of executions specified.</p>
 <p>Script: <a class="reference download internal" href="_downloads/Nieuwenhuis2005Model.py" download=""><code class="xref download docutils literal"><span class="pre">Download</span> <span class="pre">Nieuwenhuis2005Model.py</span></code></a></p>
 </div>
 </div>
@@ -282,7 +282,7 @@ regulate the <a class="reference internal" href="Function.html#psyneulink.compon
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.2.0+44.g8f0555b',
+            VERSION:'0.4.2.0+53.ge88da9e',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
