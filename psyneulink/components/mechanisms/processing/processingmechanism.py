@@ -123,6 +123,8 @@ class ProcessingMechanism_Base(Mechanism_Base):
 
     componentType = "ProcessingMechanism"
 
+    is_self_learner = False  # CW 11/27/17: a flag; "True" if this mech learns on its own. See use in LeabraMechanism
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
