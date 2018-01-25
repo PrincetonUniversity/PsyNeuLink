@@ -26,7 +26,7 @@ import warnings
 warnings.filterwarnings("ignore", message=r".*numpy.dtype size changed.*")
 
 random_seed_value = 1  # feel free to change this value
-random.seed(random_seed_value)  # setting the random seed ensures the two Leabra networks are identical (see line 68)
+random.seed(random_seed_value)
 num_trials = 10  # how many trials should we run?
 hidden_layers = 4  # how many hidden layers are there?
 hidden_sizes = [2, 3, 4, 5]  # how big is each hidden layer?
@@ -90,7 +90,10 @@ leabra_net = pnl.build_leabra_network(
 print('\nRunning Leabra in Leabra...')
 start_time = time.process_time()
 for i in range(num_trials):
-    pnl.train_leabra_network(leabra_net, input_pattern[i].copy(), training_pattern[i].copy())
+    if train_flag is True:
+        pnl.train_leabra_network(leabra_net, input_pattern[i].copy(), training_pattern[i].copy())
+    else:
+        pnl.run_leabra_network(leabra_net, input_pattern[i].copy())
 end_time = time.process_time()
 print('Time to run Leabra on its own: ', end_time - start_time, "seconds")
 print('Leabra Output: ', [unit.act_m for unit in leabra_net.layers[-1].units], type([unit.act_m for unit in leabra_net.layers[-1].units][0]))

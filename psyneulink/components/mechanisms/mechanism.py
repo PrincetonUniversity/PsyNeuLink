@@ -1342,7 +1342,14 @@ class Mechanism_Base(Mechanism):
         # Pass default_variable or one based on size to _parse_state_spe as default
         # FIX: THIS REALLY ISN'T RIGHT:  NEED TO BASE IT ON SHAPE REQUESTED IN SIZE
         # dv = [0]*size if default_variable is None and size is not None else default_variable
-        dv = np.zeros(size) if default_variable is None and size is not None else default_variable
+        if default_variable is None and size is not None:
+            size = np.atleast_1d(size)
+            dv = [None] * len(size)
+            for i, n in enumerate(size):
+                dv[i] = np.zeros(n)
+        else:
+            dv = default_variable
+        # dv = np.zeros(size) if default_variable is None and size is not None else default_variable
         dv = convert_to_np_array(dv,2).tolist() if dv is not None else None
         # dv = convert_to_np_array(default_variable,2).tolist() if default_variable is not None else None
         for i, s in enumerate(input_states):
