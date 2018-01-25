@@ -57,6 +57,9 @@ Learning Functions:
   * `BackPropagation`
   * `TDLearning`
 
+Custom Function:
+  * `UserDefinedFunction`
+
 .. _Function_Overview:
 
 Overview
