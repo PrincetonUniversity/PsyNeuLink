@@ -42,7 +42,7 @@ inputs = [None] * n
 targets = [None] * n
 print("here's what the inputs/targets will look like:")
 for i in range(n):
-    nums = np.random.randint(0, 7, size=2) * 0.1
+    nums = np.random.randint(0, 7, size=2) * 0.4
     a = nums[0]
     b = nums[1]
     inputs[i] = [a, a, b, b]
@@ -58,10 +58,10 @@ for i in range(n):
         print("target", i, ":", targets[i])
 
 ### do the training
-n_trials = 100
+n_trials = 50
 for i in range(n_trials):
-    if i % 25 == 0:
-        print("trial", i)
+    if i % 10 == 0:
+        print("trial", i, "out of", n_trials)
     system_output = sys.run(inputs = {T_input: inputs, T_target: targets})
 
 Leab.training_flag = False
