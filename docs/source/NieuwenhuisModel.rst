@@ -58,7 +58,7 @@ associated `ObjectiveMechanism`, as shown in the figure below:
 .. _Nieuwenhuis2005_System_Graph:
 
 .. figure:: _static/Nieuwenhuis2005_System_Graph.svg
-   :figwidth: 50 %
+   :figwidth: 75 %
    :align: center
    :alt: Nieuwenhuis System Graph
 
@@ -87,22 +87,22 @@ off-diagonal elements.
 LC Subsystem
 ~~~~~~~~~~~~
 
-**LC**:
+**LC**: an `LCControlMechanism`, that uses the FHNIntegratorFunction to implement a FitzHugh-Nagumo model as a
+simulation of the population-level activity of the LC. The LCControlMechanism outputs three values on each execution:
 
-LCControlMechanism - uses the FHNIntegratorFunction to implement a FitzHugh-Nagumo model as a simulation of the
-population-level activity of the LC.
+.. _Nieuwenhuis_LC_Params:
 
-The LCControlMechanism outputs three values on each execution:
+   * *v* (excitation variable of the FHN model) representing the state (or net input in connectionist terms) of the LC
+   ..
+   * *w* (relaxation variable of the FHN model) representing noradrenergic output of the LC
+   ..
+   * :math:`gain(t)`, where :math:`g(t) = G + k w(t), G` = **base_level_gain**, *k* = **scaling_factor**, and
+     *w(t)* = the current noradrenergic output
 
-   * v (excitation variable of the FHN model) representing the state (or net input in connectionist terms) of the LC
-   * w (relaxation variable of the FHN model) representing noradrenergic output of the LC
-   * gain(t), where g(t) = G + k w(t), and G = **base_level_gain**, k = **scaling_factor**, and w(t) = the current
-     noradrenergic output
-
-The LC sends gain(t) to the *DECISION LAYER* and *RESPONSE LAYER* via `ControlProjections <ControlProjection>` in order
-to modulate the `gain <Logistic.gain>` parameter of their `Logistic` Functions.
-Overall LC activity can be computed from v using the function h(v) = C * v + (1 - C) * d, where C = 0.90 and d = 0.5
-(please see Execution for further explanation).
+The LC sends gain(*t*) to the *DECISION LAYER* and *RESPONSE LAYER* via `ControlProjections <ControlProjection>` in
+order to modulate the `gain <Logistic.gain>` parameter of their `Logistic` Functions.
+Overall LC activity can be computed from *v* using the function :math:`h(v) = C * v + (1 - C) * d`,
+where *C* =0.90 and *d* = 0.5 (see `Nieuwenhuis_Execution` for additional details).
 
 **COMBINE VALUES**: an `ObjectiveMechanism`, specified in the **objective_mechanism** argument of the
 LCControlMechanism constructor, with a `Linear <Linear>` function of **slope**=1 and **intercept**=0.  Its
@@ -120,17 +120,19 @@ elicit an LC response.  The *COMBINED VALUES* Mechanism conveys this combined va
   conforms to the convention that PsyNeuLink `ControlMechanisms <ControlMechanism>` are associated with an
   `ObjectiveMechanism` from which they receive their input.
 
+.. _Nieuwenhuis_Execution:
+
 Execution
 ---------
-The total stimulus input is split into 11 periods of execution, each of which is 100 time steps long. During each period
-one of the three behavioral units get activated (input=1), with the other two behavioral units switched off (input=0).
-In this particular simulation target unit 1 (T1) gets activated during the fourth time period and target unit 2 (T2)
-gets activated during the sixth time period. During all other time period the distraction unit gets activated.
-The model gets executed with the `run` function and the graph of the system gets computed with the
-`show_graph <System.show_grah>` function.
-To reproduce Figure 3 of the Nieuwenhuis et al. (2005) paper, the output values w and v of the `LCControlMechanism` are
-logged for every execution with the `log` function. h(v) gets computed for every time step. Finally, h(v) and w are
-plotted.
+
+The stimulus presentation sequence is split into 11 periods of execution, each of which is 100 time steps long. During
+each period, one of the three elements of the *INPUT LAYER* is assigned a value of 1 (activated) while the other two
+are assigned a value of 0.  For the first three time periods, the distractor element is activated.  T1 is activated
+during the fourth time period, followed in the fifther period by the distractor, and then by T2 during the sixth time
+period.  During all other time period the distraction unit is activated. To reproduce Figure 3 of the Nieuwenhuis et
+al. (2005) paper, the `log` function is used to record the output values of parameters `w <Nieuwenhuis_LC_Params>`
+and `v <Nieuwenhuis_LC_Params>` for every execution of the `LCControlMechanism`. The function `h(v)
+<Nieuwenhuis_LC_Params>` is computed for every time step, and h(v) and *w* are plotted.
 
 Script: :download:`Download Nieuwenhuis2005Model.py <../../Scripts/Models/Nieuwenhuis2005Model.py>`
 
