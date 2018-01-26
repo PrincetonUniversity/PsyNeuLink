@@ -1,5 +1,5 @@
-Nieuwenhuis et al. (2005)
-=========================
+Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005)
+================================================================
 `"The Role of the Locus Coeruleus in Mediating the Attentional Blink: A Neurocomputational Theory" <https://research.vu.nl/ws/files/2063874/Nieuwenhuis%20Journal%20of%20Experimental%20Psychology%20-%20General%20134(3)-2005%20u.pdf>`_
 
 Overview
