@@ -987,13 +987,15 @@ class UserDefinedFunction(Function_Base):
         >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
         >>> 
 
+    Note that Most custom functions can ignore the :keyword:`params` and :keyword:`context` arguments, since
+    :keyword:`variable` is the input to the function.
+
     .. note::
-        Most custom functions can ignore the :keyword:`params` and :keyword:`context` arguments, since
-        :keyword:`variable` is the input to the function. Note that variable's format may be slightly different
-        than expected, because PsyNeuLink sometimes changes the formatting while processing the input. For example,
-        sometimes PsyNeuLink converts an input of [1, 2, 3] to [[1, 2, 3]]. If your custom_function, for example,
-        returns the sum of the input, you should use `sum(variable[0])` in this case rather than `sum(variable)`.
-        When in doubt, add a `print(variable)` statement into your custom function to verify variable's format.
+        Note that variable's format may be slightly different than expected, because PsyNeuLink sometimes changes the
+        formatting while processing the input. For example, sometimes PsyNeuLink converts an input of [1, 2, 3] to
+        [[1, 2, 3]]. If your custom_function returns the sum of the input, you should use `sum(variable[0])` in this
+        case rather than `sum(variable)`. When in doubt, add a `print(variable)` or `print(type(variable))` statement into your custom function to verify
+        variable's format.
 
 
     Arguments
