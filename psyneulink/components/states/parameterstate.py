@@ -238,6 +238,42 @@ Finally, the keyword *FUNCTION_PARAMS* can be used in a parameter specification 
 parameters of the Component's `function <Component.function>`, as shown for the **gain** and **bias** parameters of
 the Logistic function in the example.
 
+The example below shows how to access ParameterState values vs base values, and demonstrates their differences:
+
+    >>> my_transfer_mechanism = pnl.TransferMechanism(              #doctest: +SKIP
+    ...                      noise=5.0,                             #doctest: +SKIP
+    ...                      function=pnl.Linear(slope=2.0))        #doctest: +SKIP
+    >>> assert my_transfer_mechanism.noise == 5.0                   #doctest: +SKIP
+    >>> assert my_transfer_mechanism.mod_noise == [5.0]             #doctest: +SKIP
+    >>> assert my_transfer_mechanism.function_object.slope == 2.0   #doctest: +SKIP
+    >>> assert my_transfer_mechanism.mod_slope == [2.0]             #doctest: +SKIP
+
+Notice that the noise attribute, which stores the base value for the noise ParameterState of my_transfer_mechanism, is
+on my_transfer_mechanism, while the slope attribute, which stores the base value for the slope ParameterState of
+my_transfer_mechanism, is on my_transfer_mechanism's function. However, mod_noise and mod_slope are both properties on
+my_transfer_mechanism.
+
+    >>> my_transfer_mechanism.noise = 4.0                           #doctest: +SKIP
+    >>> my_transfer_mechanism.function_object.slope = 1.0           #doctest: +SKIP
+    >>> assert my_transfer_mechanism.noise == 4.0                   #doctest: +SKIP
+    >>> assert my_transfer_mechanism.mod_noise == [5.0]             #doctest: +SKIP
+    >>> assert my_transfer_mechanism.function_object.slope == 1.0   #doctest: +SKIP
+    >>> assert my_transfer_mechanism.mod_slope == [2.0]             #doctest: +SKIP
+
+When the base values of noise and slope are updated, we can inspect these attributes immediately and observe that they
+have changed. We do not observe a change in mod_noise or mod_slope because the ParameterState value will not update
+until the mechanism executes.
+
+    >>> my_transfer_mechanism.execute([10.0])                       #doctest: +SKIP
+    >>> assert my_transfer_mechanism.noise == 4.0                   #doctest: +SKIP
+    >>> assert my_transfer_mechanism.mod_noise == [4.0]             #doctest: +SKIP
+    >>> assert my_transfer_mechanism.function_object.slope == 1.0   #doctest: +SKIP
+    >>> assert my_transfer_mechanism.mod_slope == 1.0               #doctest: +SKIP
+
+Now that the mechanism has executed, we can see that each ParameterState evaluated its function with the base value,
+producing a modulated noise value of 4.0 and a modulated slope value of 1.0. These values were used by
+my_transfer_mechanism and its Linear function when the mechanism executed.
+
 .. _ParameterState_Structure:
 
 Structure

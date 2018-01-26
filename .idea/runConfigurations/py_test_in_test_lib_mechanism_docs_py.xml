@@ -9,6 +9,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="" />
+    <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" runner="coverage.py" sample_coverage="true" />
     <option name="_new_keywords" value="&quot;&quot;" />
     <option name="_new_additionalArguments" value="&quot;&quot;" />
     <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/documentation/library/test_lib_mechanism_docs.py&quot;" />

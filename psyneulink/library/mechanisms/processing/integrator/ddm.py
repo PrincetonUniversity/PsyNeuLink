@@ -942,11 +942,22 @@ class DDM(ProcessingMechanism_Base):
 
     @property
     def is_finished(self):
-        if abs(self.function_object.previous_value[0][0]) >= self.function_object.get_current_function_param(THRESHOLD) and \
-                isinstance(self.function.__self__, Integrator):
+        # find the single numeric entry in previous_value
+        single_value = self.function_object.previous_value
+        # indexing into a matrix doesn't reduce dimensionality
+        if not isinstance(single_value, (np.matrix, str)):
+            while True:
+                try:
+                    single_value = single_value[0]
+                except (IndexError, TypeError):
+                    break
+
+        if (
+            abs(single_value) >= self.function_object.get_current_function_param(THRESHOLD)
+            and isinstance(self.function.__self__, Integrator)
+        ):
             logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name,
                                                                    self.function_object.get_current_function_param(
                                                                        THRESHOLD)))
             return True
         return self._is_finished
-
