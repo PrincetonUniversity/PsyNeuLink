@@ -866,12 +866,9 @@ class DDM(ProcessingMechanism_Base):
         if isinstance(self.function.__self__, Integrator):
 
             result = self.function(variable, context=context)
+
             if INITIALIZING not in context:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
-            if abs(result) >= self.function_object.get_current_function_param(THRESHOLD):
-                logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name,
-                                                                       self.function_object.get_current_function_param(THRESHOLD)))
-                self.is_finished = True
 
             return np.array([result, [self.function_object.previous_time]])
 
@@ -900,8 +897,8 @@ class DDM(ProcessingMechanism_Base):
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
             else:
-                raise DDMError("PROGRAM ERROR: Unrecognized analytic fuction ({}) for DDM".
-                               format(self.function.__self__))
+                raise DDMError("The function specified ({}) for {} is not a valid function selection for the DDM".
+                               format(self.function_object.name, self.name))
 
             # Convert ER to decision variable:
             threshold = float(self.function_object.get_current_function_param(THRESHOLD))
@@ -942,3 +939,25 @@ class DDM(ProcessingMechanism_Base):
             #     Returns: value
             #     """
             #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
+
+    @property
+    def is_finished(self):
+        # find the single numeric entry in previous_value
+        single_value = self.function_object.previous_value
+        # indexing into a matrix doesn't reduce dimensionality
+        if not isinstance(single_value, (np.matrix, str)):
+            while True:
+                try:
+                    single_value = single_value[0]
+                except (IndexError, TypeError):
+                    break
+
+        if (
+            abs(single_value) >= self.function_object.get_current_function_param(THRESHOLD)
+            and isinstance(self.function.__self__, Integrator)
+        ):
+            logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name,
+                                                                   self.function_object.get_current_function_param(
+                                                                       THRESHOLD)))
+            return True
+        return self._is_finished

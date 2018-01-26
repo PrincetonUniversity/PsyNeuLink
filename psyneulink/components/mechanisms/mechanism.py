@@ -1213,8 +1213,7 @@ class Mechanism_Base(Mechanism):
         # params = self._assign_args_to_param_dicts(**kwargs)
 
         self._execution_id = None
-        self.is_finished = False
-
+        self._is_finished = False
         # Register with MechanismRegistry or create one
         if not context is VALIDATE:
             register_category(entry=self,
@@ -1343,7 +1342,14 @@ class Mechanism_Base(Mechanism):
         # Pass default_variable or one based on size to _parse_state_spe as default
         # FIX: THIS REALLY ISN'T RIGHT:  NEED TO BASE IT ON SHAPE REQUESTED IN SIZE
         # dv = [0]*size if default_variable is None and size is not None else default_variable
-        dv = np.zeros(size) if default_variable is None and size is not None else default_variable
+        if default_variable is None and size is not None:
+            size = np.atleast_1d(size)
+            dv = [None] * len(size)
+            for i, n in enumerate(size):
+                dv[i] = np.zeros(n)
+        else:
+            dv = default_variable
+        # dv = np.zeros(size) if default_variable is None and size is not None else default_variable
         dv = convert_to_np_array(dv,2).tolist() if dv is not None else None
         # dv = convert_to_np_array(default_variable,2).tolist() if default_variable is not None else None
         for i, s in enumerate(input_states):
@@ -2377,6 +2383,13 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.parameterstate import ParameterState
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
+    @property
+    def is_finished(self):
+        return self._is_finished
+
+    @is_finished.setter
+    def is_finished(self, value):
+        self._is_finished = value
 
     @property
     def input_state(self):

@@ -602,7 +602,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                          initial_value=initial_value,
                          noise=noise,
                          integrator_mode=integrator_mode,
-
                          smoothing_factor=smoothing_factor,
                          clip=clip,
                          output_states=output_states,
@@ -878,7 +877,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                 param_state = self._parameter_states[name]
 
                 if hasattr(param_state.function_object, 'initializer'):
-                    param_state.function_object.reset_initializer = val
+                    param_state.function_object.reinitialize = val
 
     @property
     def auto(self):
