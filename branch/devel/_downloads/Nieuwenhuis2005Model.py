@@ -104,12 +104,11 @@ input_weights = np.array([
 
 # Weight matrix from Decision Layer --> Response Layer
 output_weights = np.array([
-    [decwt, 0.0],                            # Projection weight from decision layer from T1 and T2 but not distraction unit (row 3 set to all zeros) to response layer
-    [0.0, decwt],                            # Need a 3 by 2 matrix, to project from decision layer with 3 units to response layer with 2 units
+    [decwt, 0.0],  # Weight from T1 and T2 but not distractor unit (row 3 set to all zeros) to response layer
+    [0.0, decwt],  # Need a 3 by 2 matrix, to project from decision layer with 3 units to response layer with 2 units
     [0.0, 0.0]
 ])
 
-# The process will connect the layers and weights.
 decision_process = pnl.Process(
     pathway=[
         input_layer,
@@ -125,9 +124,9 @@ decision_process = pnl.Process(
 
 # This LCControlMechanism modulates gain.
 LC = pnl.LCControlMechanism(
-    integration_method="EULER",                 # We set the integration method to Euler like in the paper
-    threshold_FHN=a,                            # Here we use the Euler method for integration and we want to set the parameters,
-    uncorrelated_activity_FHN=d,                # for the FitzHugh–Nagumo system.
+    integration_method="EULER",       # We set the integration method to Euler like in the paper
+    threshold_FHN=a,                  # Here we use the Euler method for integration and we want to set the parameters,
+    uncorrelated_activity_FHN=d,      # for the FitzHugh–Nagumo system.
     time_step_size_FHN=dt,
     mode_FHN=C,
     time_constant_v_FHN=tau_v,
@@ -142,14 +141,14 @@ LC = pnl.LCControlMechanism(
     b_w_FHN=-1.0,
     c_w_FHN=0.0,
     t_0_FHN=0.0,
-    base_level_gain=G,                          # Additionally, we set the parameters k and G to compute the gain equation.
+    base_level_gain=G,                # Additionally, we set the parameters k and G to compute the gain equation
     scaling_factor_gain=k,
-    initial_v_FHN=initial_v,                    # Initialize v
-    initial_w_FHN=initial_w,                    # Initialize w
+    initial_v_FHN=initial_v,          # Initialize v
+    initial_w_FHN=initial_w,          # Initialize w
     objective_mechanism=pnl.ObjectiveMechanism(
         function=pnl.Linear,
         monitored_output_states=[(
-            decision_layer,  # Project the output of T1 and T2 but not the distraction unit of the decision layer to the LC with a linear function.
+            decision_layer,  # Project output of T1 and T2 but not distractor from decision layer to LC
             np.array([[lcwt], [lcwt], [0.0]])
         )],
         name='Combine values'
@@ -158,13 +157,13 @@ LC = pnl.LCControlMechanism(
     name='LC'
 )
 
-# This is under construction:
-LC.loggable_items
+# Log value of LC
 LC.set_log_conditions('value')
 
-
+# Set initial gain to G + k*initial_w, when the System runs the very first time,
+# since the decison layer executes before the LC and hence needs one initial gain value to start with.
 for output_state in LC.output_states:
-    output_state.value *= G + k * initial_w     # Set initial gain to G + k*initial_w, when the System runs the very first time, since the decison layer executes before the LC and hence needs one initial gain value to start with.
+    output_state.value *= G + k * initial_w
 
 # Now, we specify the processes of the System, which in this case is just the decision_process
 task = pnl.System(processes=[decision_process])
@@ -172,7 +171,7 @@ task = pnl.System(processes=[decision_process])
 # Create Stimulus -----------------------------------------------------------------------------------------------------
 
 # In the paper, each period has 100 time steps, so we will create 11 time periods.
-# As described in the paper in figure 3, during the first 3 time periods the distractor units are given an input fixed to 1.
+# As described in the paper in figure 3, during the first 3 time periods input to distractor units is fixed to 1.
 # Then T1 gets turned on during time period 4 with an input of 1.
 # T2 gets turns on with some lag from T1 onset on, in this example we turn T2 on with Lag 2 and an input of 1
 # Between T1 and T2 and after T2 the distractor unit is on.
@@ -192,7 +191,8 @@ stimulus_T10 = np.repeat(np.array([[0, 0, 1]]), num_time_steps, axis=0)
 stimulus_T11 = np.repeat(np.array([[0, 0, 1]]), num_time_steps, axis=0)
 
 # Concatenate the 11 arrays to one array with 1100 rows and 3 columns.
-time = np.concatenate((stimulus_T1, stimulus_T2, stimulus_T3, stimulus_T4, stimulus_T5, stimulus_T6, stimulus_T7, stimulus_T8, stimulus_T9, stimulus_T10, stimulus_T11), axis=0)
+time = np.concatenate((stimulus_T1, stimulus_T2, stimulus_T3, stimulus_T4, stimulus_T5, stimulus_T6,
+                       stimulus_T7, stimulus_T8, stimulus_T9, stimulus_T10, stimulus_T11), axis=0)
 
 # assign inputs to input_layer (Origin Mechanism) for each trial
 stim_list_dict = {input_layer: time}
@@ -225,7 +225,7 @@ for i in range(trials):
 t = np.linspace(0,trials,trials)            # Create array for x axis with same length then LC_results_v
 fig = plt.figure()                          # Instantiate figure
 ax = plt.gca()                              # Get current axis for plotting
-ax2 = ax.twinx()                            # Create twin axis to have a different y-axis on the right hand side of the figure
+ax2 = ax.twinx()                            # Create twin axis with a different y-axis on the right side of the figure
 ax.plot(t, LC_results_hv, label="h(v)")      # Plot h(v)
 ax2.plot(t, LC_results_w, label="w", color = 'red') # Plot w
 h1, l1 = ax.get_legend_handles_labels()
