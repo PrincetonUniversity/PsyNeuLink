@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.functions.function import Reduce, LinearCombination, CombineMeans, Linear, Exponential, Logistic, SoftMax, LinearMatrix, Integrator, SimpleIntegrator, ConstantIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, AccumulatorIntegrator, FHNIntegrator, AGTUtilityIntegrator, BogaczEtAl, NavarroAndFuss, NormalDist, UniformToNormalDist, ExponentialDist, UniformDist, GammaDist, WaldDist, Stability, Distance, Hebbian, Reinforcement, BackPropagation, TDLearning
 
 class TestProcessingMechanismFunctions:
@@ -48,10 +49,22 @@ class TestProcessingMechanismFunctions:
         # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_LinearMatrix_function(self):
-        PM1 = ProcessingMechanism(function=LinearMatrix()
-                                  )
-        PM1.execute(1.0)
+        # PM1 = ProcessingMechanism(function=LinearMatrix()
+        #                           )
+        # PM1.execute(1.0)
         # assert np.allclose(PM1.value, 1.0)
+        PM2 = ProcessingMechanism(function=LinearMatrix(matrix=[4.0])
+                                  )
+        PM2.execute(1.0)
+        # assert np.allclose(PM1.value, 1.0)
+
+        PM3 = ProcessingMechanism(function=LinearMatrix(default_variable=np.atleast_2d([1.0, 2.0, 3.0]),
+                                                        matrix=[[1.0, 0.0, 0.0],
+                                                                [0.0, 2.0, 0.0],
+                                                                [0.0, 0.0, 3.0]]),
+                                  default_variable=np.atleast_2d([1.0, 2.0, 3.0]))
+
+        print(PM3.execute([1.0, 2.0, 3.0]))
 
     def test_processing_mechanism_SimpleIntegrator_function(self):
         PM1 = ProcessingMechanism(function=SimpleIntegrator)
