@@ -1254,6 +1254,11 @@ class Component(object):
 
             arg_name = parse_arg(arg)
 
+            # parse the argument either by specialized parser or generic
+            try:
+                kwargs[arg_name] = getattr(self, '_parse_arg_' + arg_name)(kwargs[arg_name])
+            except AttributeError:
+                kwargs[arg_name] = self._parse_arg_generic(kwargs[arg_name])
 
             # The params arg is never a default (nor is anything in it)
             if arg_name is PARAMS or arg_name is VARIABLE:
@@ -2042,6 +2047,12 @@ class Component(object):
     # ---------------------------------------------------------
     # Argument parsers
     # ---------------------------------------------------------
+
+    def _parse_arg_generic(self, arg_val):
+        """
+            Argument parser for any argument that does not have a specialized parser
+        """
+        return arg_val
 
     def _parse_arg_variable(self, variable):
         """

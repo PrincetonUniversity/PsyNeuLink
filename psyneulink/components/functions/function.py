@@ -637,6 +637,12 @@ class Function_Base(Function):
                          prefs=prefs,
                          context=context)
 
+    def _parse_arg_generic(self, arg_val):
+        if isinstance(arg_val, list):
+            return np.asarray(arg_val)
+        else:
+            return arg_val
+
     def _validate_parameter_spec(self, param, param_name, numeric_only=True):
         """Validates function param
         Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s"""
