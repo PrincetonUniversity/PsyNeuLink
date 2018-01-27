@@ -2821,7 +2821,7 @@ def _parse_state_spec(state_type=None,
             state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
     elif state_dict[REFERENCE_VALUE] is not None:
         if not iscompatible(state_dict[VARIABLE], state_dict[REFERENCE_VALUE]):
-            if context is not None and context in '_parse_arg_input_states':
+            if context is not None and context in '_handle_arg_input_states':
                 from psyneulink.components.mechanisms.mechanism import MechanismError
                 raise MechanismError('default variable determined from the specified input_states spec ({0}) '
                                      'is not compatible with the specified default variable ({1})'.
