@@ -3377,24 +3377,24 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         self._matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
-    def _validate_variable(self, variable, context=None):
-        """Insure that variable passed to LinearMatrix is a max 2D np.array
-
-        :param variable: (max 2D np.array)
-        :param context:
-        :return:
-        """
-        variable = self._update_variable(super()._validate_variable(variable, context))
-
-        # Check that variable <= 2D
-        try:
-            if not variable.ndim <= 2:
-                raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(variable, self.__class__.__name__))
-        except AttributeError:
-            raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be a numpy.ndarray".
-                                    format(variable, self.__class__.__name__))
-
-        return variable
+    # def _validate_variable(self, variable, context=None):
+    #     """Insure that variable passed to LinearMatrix is a max 2D np.array
+    #
+    #     :param variable: (max 2D np.array)
+    #     :param context:
+    #     :return:
+    #     """
+    #     variable = self._update_variable(super()._validate_variable(variable, context))
+    #
+    #     # Check that variable <= 2D
+    #     try:
+    #         if not variable.ndim <= 2:
+    #             raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(variable, self.__class__.__name__))
+    #     except AttributeError:
+    #         raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be a numpy.ndarray".
+    #                                 format(variable, self.__class__.__name__))
+    #
+    #     return variable
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -3584,42 +3584,13 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if param_name == MATRIX:
                 #     # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
                     if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
-                        pass
-                #         print("self.instance_defaults.variable = ", self.instance_defaults.variable)
-                #
-                #         # get dimensions specified by:
-                #         #   variable (sender): width/cols/outer index
-                #         #   kwReceiver param: height/rows/inner index
-                #
-                #         weight_matrix = np.matrix(param_value)
-                #         if 'U' in repr(weight_matrix.dtype):
-                #             raise FunctionError("Non-numeric entry in MATRIX "
-                #                                 "specification ({}) for the {} "
-                #                                 "function of {}".format(param_value,
-                #                                                         self.name,
-                #                                                         self.owner_name))
-                #
-                #         if weight_matrix.ndim != 2:
-                #             raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
-                #                                 format(weight_matrix.ndim, self.name, self.owner_name))
-                #
-                #         matrix_rows = weight_matrix.shape[0]
-                #         matrix_cols = weight_matrix.shape[1]
-                #
-                #         # Check that number of rows equals length of sender vector (variable)
-                #         if matrix_rows != len(self.instance_defaults.variable):
-                #             raise FunctionError("The number of rows ({}) of the "
-                #                                 "matrix provided for {} function "
-                #                                 "of {} does not equal the length "
-                #                                 "({}) of the sender vector "
-                #                                 "(variable)".format(matrix_rows,
-                #                                                     self.name,
-                #                                                     self.owner_name,
-                #                                                     len(self.instance_defaults.variable)))
-                #
-                #     # Auto, full or random connectivity matrix requested (using keyword):
-                #     # Note:  assume that these will be properly processed by caller
-                #     #        (e.g., MappingProjection._instantiate_receiver)
+                        if np.size(np.atleast_2d(param_value), 0) != np.size(np.atleast_2d(self.instance_defaults.variable),1):
+                            raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. "
+                                                "The shapes of variable {} and matrix {} are not compatible for "
+                                                "multiplication".format(self.name,
+                                                                        np.shape(np.atleast_2d(self.instance_defaults.variable)),
+                                                                        np.shape(np.atleast_2d(param_value))))
+
                     elif param_value in MATRIX_KEYWORD_VALUES:
                         raise FunctionError("{} is not a valid specification for the matrix parameter of {}. Keywords "
                                             "may only be used to specify the matrix parameter of a Projection's "
@@ -3630,7 +3601,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                             format(param_value, self.name, self.owner.name))
 
                     elif param_value is None:
-                        raise FunctionError("TEMP ERROR: param value is None.")
+                        continue
 
                     else:
                         raise FunctionError("Value of {} param ({}) for the {} function of {} "
@@ -3642,6 +3613,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                    MATRIX_KEYWORD_NAMES))
 
     def _instantiate_attributes_before_function(self, context=None):
+        if self.matrix is None:
+            variable_length = np.size(np.atleast_2d(self.instance_defaults.variable), 1)
+            self.matrix = np.ones(shape=(variable_length, variable_length))
         self.matrix = self.instantiate_matrix(self.matrix)
 
     def instantiate_matrix(self, specification, context=None):
