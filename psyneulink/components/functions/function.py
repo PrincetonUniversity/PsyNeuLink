@@ -978,8 +978,8 @@ class UserDefinedFunction(Function_Base):
 
     This is used to "wrap" custom functions in the PsyNeuLink Function API. It is automatically invoked and applied to
     user-defined functions that are assigned to the `function <Component.function>` attribute of a PsyNeuLink component
-    (other than a Function itself). For example, if you want a ProcessingMechanism that takes in an input vector
-    of length 3, then calculates the sum and adds 2, you could write::
+    (other than a Function itself). UserDefinedFunction is generally used with `ProcessingMechanism`. For example, if
+    you want a mechanism that takes in a vector of length 3, then calculates the sum and adds 2, you could write::
 
         >>> import psyneulink as pnl
         >>> def myFunction(variable, params, context):
@@ -987,15 +987,41 @@ class UserDefinedFunction(Function_Base):
         >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
         >>> myMech.execute(input = [1, 2, 3])
 
-    Note that most custom functions ignore the :keyword:`params` and :keyword:`context` arguments, since
-    :keyword:`variable` is the input to the function.
+    Equivalently, you can also explicitly create a `UserDefinedFunction` and use it as the function::
+
+        >>> import psyneulink as pnl
+        >>> def myFunction(variable, params, context):
+        ...     return sum(variable[0]) + 2
+        >>> U = pnl.UserDefinedFunction(custom_function=myFunction, default_variable = [[0, 0, 0]])
+        >>> myMech = pnl.ProcessingMechanism(function = U, size = 3, name = 'myMech')
+        >>> myMech.execute(input = [1, 2, 3])
 
     .. note::
-        Note that variable's format may be slightly different than expected, because PsyNeuLink sometimes changes the
-        formatting while processing the input. For example, sometimes PsyNeuLink converts an input of [1, 2, 3] to
-        [[1, 2, 3]]. If your custom_function returns the sum of the input, you should use `sum(variable[0])` in this
-        case rather than `sum(variable)`. When in doubt, add a `print(variable)` or `print(type(variable))` statement into your custom function to verify
-        variable's format.
+        Be sure to match the **default_variable** argument of the `UserDefinedFunction` with the **default_variable**
+        of the mechanism. (In this example, for `myMech`, `size = 3` is equivalent to `default_variable = [[0, 0, 0]]`.)
+
+    Custom functions can be as elaborate as desired, and can even include PsyNeuLink functions indirectly, such as::
+
+        >>> import psyneulink as pnl
+        >>> L = pnl.Logistic(gain = 2)
+        >>> def myFunction(variable, params, context):
+        ...     return L.function(variable) + 2
+        >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
+        >>> myMech.execute(input = [1, 2, 3])
+
+    Custom functions should generally ignore the **params** and **context** arguments, since **variable** is
+    the input to the function.
+
+    COMMENT:
+        CW 1/29/18: Adding params for custom functions sounds useful, but slightly thorny.
+    COMMENT
+
+    .. note::
+        Note that variable's format may be slightly different than you expect, because PsyNeuLink may change the
+        formatting while processing the input. For example, PsyNeuLink converts an input of [1, 2, 3] to [[1, 2, 3]].
+        If your custom_function returns the sum of the input, you should use `sum(variable[0])` in this case rather
+        than `sum(variable)`. When in doubt, add a `print(variable)` or `print(type(variable))` statement
+        in your custom function to verify the variable's format.
 
 
     Arguments
