@@ -1861,8 +1861,10 @@ class System(System_Base):
     def _instantiate_target_inputs(self, context=None):
 
         if self.learning and self.targets is None:
+            # MODIFIED CW and KM 1/29/18: changed below from error to warning
             if not self.target_mechanisms:
-                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no target_mechanisms".
+                if self.verbosePref:
+                    warnings.warn("PROGRAM ERROR: Learning has been specified for {} but it has no target_mechanisms".
                                   format(self.name))
             # # MODIFIED 6/25/17 OLD:
             # raise SystemError("Learning has been specified for {} so its \'targets\' argument must also be specified".
