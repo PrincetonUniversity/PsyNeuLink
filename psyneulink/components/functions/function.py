@@ -57,6 +57,9 @@ Learning Functions:
   * `BackPropagation`
   * `TDLearning`
 
+Custom Function:
+  * `UserDefinedFunction`
+
 .. _Function_Overview:
 
 Overview
@@ -186,7 +189,7 @@ from random import randint
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
-from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -948,34 +951,95 @@ class ArgumentTherapy(Function_Base):
 
 class UserDefinedFunction(Function_Base):
     """
-    Function_Base(           \
-         function,           \
-         variable=None,      \
+    UserDefinedFunction(           \
+         custom_function=None,           \
+         default_variable=None,      \
          params=None,        \
          owner=None,         \
          name=None,          \
          prefs=None          \
     )
+    COMMENT:
+        CW 1/25/18: Below is the documentation from before I modified the UserDefinedFunction. I leave it here as a
+        comment. Also, this doc is a bit long: should it be a separate doc page?
 
-    Implement user-defined Function.
+        Implement user-defined Function.
 
-    This is used to "wrap" custom functions in the PsyNeuLink `Function API <LINK>`.
-    It is automatically invoked and applied to any function that is assigned to the `function <Component.function>`
-    attribute of a PsyNeuLink component (other than a Function itself).  The function can take any arguments and
-    return any values.  However, if UserDefinedFunction is used to create a custom version of another PsyNeuLink
-    `Function <Function>`, then it must conform to the requirements of that Function's type.
+        This is used to "wrap" custom functions in the PsyNeuLink `Function API <LINK>`.
+        It is automatically invoked and applied to any function that is assigned to the `function <Component.function>`
+        attribute of a PsyNeuLink component (other than a Function itself).  The function can take any arguments and
+        return any values.  However, if UserDefinedFunction is used to create a custom version of another PsyNeuLink
+        `Function <Function>`, then it must conform to the requirements of that Function's type.
+
+        .. note::
+            Currently the arguments for the `function <UserDefinedFunction.function>` of a UserDefinedFunction are NOT
+            assigned as attributes of the UserDefinedFunction object or its owner, nor to its :keyword:`user_params` dict.
+    COMMENT
+
+    This is used to "wrap" custom functions in the PsyNeuLink Function API. It is automatically invoked and applied to
+    user-defined functions that are assigned to the `function <Component.function>` attribute of a PsyNeuLink component
+    (other than a Function itself). UserDefinedFunction is generally used with `ProcessingMechanism`. For example, if
+    you want a mechanism that takes in a vector of length 3, then calculates the sum and adds 2, you could write::
+
+        >>> import psyneulink as pnl
+        >>> def myFunction(variable, params, context):
+        ...     return sum(variable[0]) + 2
+        >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
+        >>> myMech.execute(input = [1, 2, 3])
+
+    Equivalently, you can also explicitly create a `UserDefinedFunction` and use it as the function::
+
+        >>> import psyneulink as pnl
+        >>> def myFunction(variable, params, context):
+        ...     return sum(variable[0]) + 2
+        >>> U = pnl.UserDefinedFunction(custom_function=myFunction, default_variable = [[0, 0, 0]])
+        >>> myMech = pnl.ProcessingMechanism(function = U, size = 3, name = 'myMech')
+        >>> myMech.execute(input = [1, 2, 3])
 
     .. note::
-       Currently the arguments for the `function <UserDefinedFunction.function>` of a UserDefinedFunction are NOT
-       assigned as attributes of the UserDefinedFunction object or its owner, nor to its :keyword:`user_params` dict.
+        Be sure to match the **default_variable** argument of the `UserDefinedFunction` with the **default_variable**
+        of the mechanism. (In this example, for `myMech`, `size = 3` is equivalent to `default_variable = [[0, 0, 0]]`.)
+
+    Custom functions can be as elaborate as desired, and can even include PsyNeuLink functions indirectly, such as::
+
+        >>> import psyneulink as pnl
+        >>> L = pnl.Logistic(gain = 2)
+        >>> def myFunction(variable, params, context):
+        ...     return L.function(variable) + 2
+        >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
+        >>> myMech.execute(input = [1, 2, 3])
+
+    Custom functions should generally ignore the **params** and **context** arguments, since **variable** is
+    the input to the function.
+
+    COMMENT:
+        CW 1/29/18: Adding params for custom functions sounds useful, but slightly thorny.
+    COMMENT
+
+    .. note::
+        Note that variable's format may be slightly different than you expect, because PsyNeuLink may change the
+        formatting while processing the input. For example, PsyNeuLink converts an input of [1, 2, 3] to [[1, 2, 3]].
+        If your custom_function returns the sum of the input, you should use `sum(variable[0])` in this case rather
+        than `sum(variable)`. When in doubt, add a `print(variable)` or `print(type(variable))` statement
+        in your custom function to verify the variable's format.
+
 
     Arguments
     ---------
 
-    function : function
+    COMMENT:
+        CW 1/26/18: Again, commented here is the old version, because I'm afraid I may have missed some functionality.
+        custom_function : function
         specifies function to "wrap." It can be any function, take any arguments (including standard ones,
         such as :keyword:`params` and :keyword:`context`) and return any value(s), so long as these are consistent
         with the context in which the UserDefinedFunction will be used.
+    COMMENT
+    custom_function : function
+        specifies the function to "wrap." It can be any function, but like any PsyNeuLink function it must take three
+        named arguments: :keyword:`variable` (the input to the function), :keyword:`params`, and :keyword:`context`. The
+        `custom_function` can return any value(s), so long as they fit with the context. For example, if the dimensions
+        of your custom function's output change, then it is not appropriate to pass your function's output to a
+        `MappingProjection`, since the `MappingProjection` expects input of consistent dimensions.
 
     variable : value : default ClassDefaults.variable
         specifies the format and a default value for the input to `function <Function>`.
@@ -1001,8 +1065,8 @@ class UserDefinedFunction(Function_Base):
         format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
         they are specified by the Function's :keyword:`ClassDefaults.variable`.
 
-    function : function
-        called by the Function's `owner <Function_Base.owner>` when it is executed.
+    custom_function : function
+        the user-specified function: called by the Function's `owner <Function_Base.owner>` when it is executed.
 
     COMMENT:
     functionOutputTypeConversion : Bool : False
@@ -1036,22 +1100,23 @@ class UserDefinedFunction(Function_Base):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION_OUTPUT_TYPE_CONVERSION: False,
-        PARAMETER_STATE_PARAMS: None
+        PARAMETER_STATE_PARAMS: None,
+        CUSTOM_FUNCTION: None
     })
 
     @tc.typecheck
     def __init__(self,
-                 function,
-                 variable=None,
+                 custom_function=None,
+                 default_variable=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context=componentName + INITIALIZING):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(params=params)
-        self.user_defined_function = function
+        params = self._assign_args_to_param_dicts(custom_function=custom_function, params=params)
+        # self.custom_function = custom_function
 
-        super().__init__(default_variable=variable,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -1059,11 +1124,11 @@ class UserDefinedFunction(Function_Base):
 
         self.functionOutputType = None
 
-        # IMPLEMENT: PARSE ARGUMENTS FOR user_defined_function AND ASSIGN TO user_params
+        # IMPLEMENT: PARSE ARGUMENTS FOR custom_function AND ASSIGN TO user_params
 
     def function(self,
                  **kwargs):
-        return self.user_defined_function(**kwargs)
+        return self.custom_function(**kwargs)
 
 
 # region **********************************  COMBINATION FUNCTIONS  ****************************************************
