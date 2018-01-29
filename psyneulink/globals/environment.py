@@ -916,7 +916,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.target_mechanism.target)))
+                                          np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
         return
 
     if object_type is PROCESS:
@@ -927,7 +927,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
 
-            if target_len != np.size(object.target_mechanism.input_states[TARGET].instance_defaults.variable):
+            if target_len != np.size(object.target_mechanisms[0].input_states[TARGET].instance_defaults.variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -935,7 +935,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.target_mechanism.target)))
+                                          np.size(object.target_mechanisms[0].target)))
 
             if any(np.size(target) != target_len for target in target_array):
                 raise RunError("Not all of the targets specified for {} are of the same length".
