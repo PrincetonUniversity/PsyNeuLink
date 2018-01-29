@@ -1408,6 +1408,9 @@ class Mechanism_Base(Mechanism):
             input_states = [input_states]
 
         for i, s in enumerate(input_states):
+            # default if not determined later
+            variable = InputState.ClassDefaults.variable
+
             parsed_spec = _parse_state_spec(
                 owner=self,
                 state_type=InputState,
@@ -1437,13 +1440,10 @@ class Mechanism_Base(Mechanism):
             else:
                 variable = parsed_spec.instance_defaults.variable
 
-            try:
-                if variable is None:
-                    variable = InputState.ClassDefaults.variable
-                elif not InputState._state_spec_allows_override_variable(s):
-                    variable_was_specified = True
-            except UnboundLocalError:
+            if variable is None:
                 variable = InputState.ClassDefaults.variable
+            elif not InputState._state_spec_allows_override_variable(s):
+                variable_was_specified = True
 
             default_variable_from_input_states.append(variable)
 
