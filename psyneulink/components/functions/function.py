@@ -978,16 +978,16 @@ class UserDefinedFunction(Function_Base):
 
     This is used to "wrap" custom functions in the PsyNeuLink Function API. It is automatically invoked and applied to
     user-defined functions that are assigned to the `function <Component.function>` attribute of a PsyNeuLink component
-    (other than a Function itself). For example, if you want a ProcessingMechanism that calculates the sum of its
-    input and adds 2, and takes in an input vector of length 3, you might write::
+    (other than a Function itself). For example, if you want a ProcessingMechanism that takes in an input vector
+    of length 3, then calculates the sum and adds 2, you could write::
 
         >>> import psyneulink as pnl
         >>> def myFunction(variable, params, context):
         ...     return sum(variable[0]) + 2
         >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
-        >>> 
+        >>> myMech.execute(input = [1, 2, 3])
 
-    Note that Most custom functions can ignore the :keyword:`params` and :keyword:`context` arguments, since
+    Note that most custom functions ignore the :keyword:`params` and :keyword:`context` arguments, since
     :keyword:`variable` is the input to the function.
 
     .. note::
