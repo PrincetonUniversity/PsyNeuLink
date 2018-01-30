@@ -1424,12 +1424,12 @@ class Mechanism_Base(Mechanism):
                         pass
             else:
                 if input_states_variable_was_specified:
-                    if iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_states):
-                        default_variable = default_variable_from_input_states
-                    else:
-                        raise MechanismError('default variable determined from the specified input_states spec ({0}) '
-                                             'is not compatible with the specified default variable ({1})'.
-                                             format(default_variable_from_input_states, default_variable
+                    if not iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_states):
+                        raise MechanismError(
+                            'default variable determined from the specified input_states spec ({0}) '
+                            'is not compatible with the specified default variable ({1})'.format(
+                                default_variable_from_input_states,
+                                default_variable
                             )
                         )
                 else:
