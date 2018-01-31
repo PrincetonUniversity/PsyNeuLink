@@ -1,14 +1,14 @@
 import numpy as np
 import pytest
 
+from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
-from psyneulink.components.projections.projection import ProjectionError
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.states.state import StateError
+from psyneulink.components.projections.projection import ProjectionError
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, VARIABLE, RESULTS
+from psyneulink.components.states.state import StateError
+from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
 
 mismatches_default_variable_error_text = 'not compatible with the specified default variable'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
@@ -708,89 +708,41 @@ class TestInputStateSpec:
     # ------------------------------------------------------------------------------------------------
     # THOROUGH TESTING OF mech, 2-item, 3-item and 4-item tuple specifications with and without default_variable/size
     # (some of these may be duplicative of tests above)
-        
-    def test_mech_and_tuple_specifications_with_and_without_default_variable_or_size(self):
 
-        t = TransferMechanism(size=3)
+    # pytest does not support fixtures in parametrize, but a class member is enough for this test
+    transfer_mech = TransferMechanism(size=3)
 
-        # ADD TESTING WITH THIS IN PLACE OF t:
-        # p = MappingProjection(sender=t)
+    @pytest.mark.parametrize('default_variable, size, input_states, variable_len', [
+        # default_variable tests
+        ([0, 0], None, [transfer_mech], 2),
+        ([0, 0], None, [(transfer_mech, None)], 2),
+        ([0, 0], None, [(transfer_mech, 1, 1)], 2),
+        ([0, 0], None, [((RESULTS, transfer_mech), 1, 1)], 2),
+        ([0, 0], None, [(transfer_mech, 1, 1, None)], 2),
+        # size tests
+        (None, 2, [transfer_mech], 2),
+        (None, 2, [(transfer_mech, None)], 2),
+        (None, 2, [(transfer_mech, 1, 1)], 2),
+        (None, 2, [(transfer_mech, 1, 1, None)], 2),
+        # no default_variable or size tests
+        (None, None, [transfer_mech], 3),
+        (None, None, [(transfer_mech, None)], 3),
+        (None, None, [(transfer_mech, 1, 1)], 3),
+        (None, None, [(transfer_mech, 1, 1, None)], 3),
+    ])
+    def test_mech_and_tuple_specifications_with_and_without_default_variable_or_size(
+        self,
+        default_variable,
+        size,
+        input_states,
+        variable_len,
+    ):
+        # ADD TESTING WITH THIS IN PLACE OF transfer_mech:
+        # p = MappingProjection(sender=transfer_mech)
 
-
-        # Specification of default_variable or size (constrain InputState variable)
-        
-        # default_variable, mech
         T = TransferMechanism(
-                default_variable=[0, 0],
-                input_states=[t])
-        assert len(T.input_states[0].variable)==2
-        
-        # default_variable, 2-item tuple
-        T = TransferMechanism(
-                default_variable=[0, 0],
-                input_states=[(t,None)])
-        assert len(T.input_states[0].variable)==2
-        
-        # default_variable, 3-item tuple
-        T = TransferMechanism(
-                default_variable=[0, 0],
-                input_states=[(t,1,1)])
-        assert len(T.input_states[0].variable)==2
-
-        # default_variable, 3-item tuple with embedded (State name, Mechanism) tuple
-        T = TransferMechanism(
-                default_variable=[0, 0],
-                input_states=[((RESULTS, t),1,1)])
-        assert len(T.input_states[0].variable)==2
-
-        # default_variable, 4-item tuple
-        T = TransferMechanism(
-                default_variable=[0, 0],
-                input_states=[(t,1,1,None)])
-        assert len(T.input_states[0].variable)==2
-        
-        # size, mech
-        T = TransferMechanism(
-                size=2,
-                input_states=[t])
-        assert len(T.input_states[0].variable)==2
-        
-        # size, 2-item tuple
-        T = TransferMechanism(
-                size=2,
-                input_states=[(t,None)])
-        assert len(T.input_states[0].variable)==2
-        
-        # size, 3-item tuple
-        T = TransferMechanism(
-                size=2,
-                input_states=[(t,1,1)])
-        assert len(T.input_states[0].variable)==2
-        
-        # size, 4-item tuple
-        T = TransferMechanism(
-                size=2,
-                input_states=[(t,1,1,None)])
-        assert len(T.input_states[0].variable)==2
-        
-        # No specification of default_variable or size (use sender's value)
-        
-        # no variable spec, mech
-        T = TransferMechanism(
-                input_states=[t])
-        assert len(T.input_states[0].variable)==3
-        
-        # no variable spec, 2-item tuple
-        T = TransferMechanism(
-                input_states=[(t,None)])
-        assert len(T.input_states[0].variable)==3
-        
-        # no variable spec, 3-item tuple
-        T = TransferMechanism(
-                input_states=[(t,1,1)])
-        assert len(T.input_states[0].variable)==3
-        
-        # no variable spec, 4-item tuple
-        T = TransferMechanism(
-                input_states=[(t,1,1,None)])
-        assert len(T.input_states[0].variable)==3
+            default_variable=default_variable,
+            size=size,
+            input_states=input_states
+        )
+        assert len(T.input_states[0].instance_defaults.variable) == variable_len

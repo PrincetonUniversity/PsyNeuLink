@@ -444,6 +444,7 @@ Class Reference
 ---------------
 
 """
+import collections
 import numbers
 import warnings
 
@@ -1043,6 +1044,34 @@ class InputState(State_Base):
                                   format(self.__class__.__name__, state_specific_spec))
 
         return state_spec, params_dict
+
+    @staticmethod
+    def _state_spec_allows_override_variable(spec):
+        '''
+        Returns
+        -------
+            True - if **spec** outlines a spec for creating an InputState whose variable can be
+                overridden by a default_variable or size argument
+            False - otherwise
+
+            ex: specifiying an InputState with a Mechanism allows overriding
+        '''
+        if isinstance(spec, Mechanism):
+            return True
+        if isinstance(spec, collections.Iterable):
+            # generally 2-4 tuple spec, but allows list spec
+            for item in spec:
+                if isinstance(item, Mechanism):
+                    return True
+                # handles tuple spec where first item of tuple is itself a (name, Mechanism) tuple
+                elif (
+                    isinstance(item, collections.Iterable)
+                    and len(item) >= 2
+                    and isinstance(item[1], Mechanism)
+                ):
+                    return True
+
+        return False
 
     @property
     def pathway_projections(self):

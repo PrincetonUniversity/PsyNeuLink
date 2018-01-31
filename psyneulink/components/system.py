@@ -1861,9 +1861,13 @@ class System(System_Base):
     def _instantiate_target_inputs(self, context=None):
 
         if self.learning and self.targets is None:
+            # MODIFIED CW and KM 1/29/18: changed below from error to warning
             if not self.target_mechanisms:
-                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no target_mechanisms".
+                if self.verbosePref:
+                    warnings.warn("WARNING: Learning has been specified for {} but it has no target_mechanisms. This "
+                                  "is okay if the learning (e.g. Hebbian learning) does not need a target.".
                                   format(self.name))
+                return
             # # MODIFIED 6/25/17 OLD:
             # raise SystemError("Learning has been specified for {} so its \'targets\' argument must also be specified".
             #                   format(self.name))
@@ -2673,8 +2677,11 @@ class System(System_Base):
         if isinstance(self.targets, function_type):
             self.current_targets = self.targets()
 
-        if self.current_targets is None:
-           raise SystemError("No targets were specified in the call to execute {} with learning".format(self.name))
+        # MODIFIED CW 1/29/18: removed this because some learning (e.g. Hebbian) doesn't need targets
+        # if self.current_targets is None:
+            # if self.verbosePref:
+                # warnings.warn("No targets were specified in the call to execute {} with learning. This is okay if "
+                #               "your learning (e.g. Hebbian learning) does not need a target.".format(self.name))
 
         for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
         # Assign each item of targets to the value of the targetInputState for the TARGET mechanism

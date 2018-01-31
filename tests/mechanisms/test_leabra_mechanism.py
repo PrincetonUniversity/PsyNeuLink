@@ -17,7 +17,10 @@ from psyneulink.components.process import Process
 from psyneulink.components.system import System
 from psyneulink.globals.keywords import LEARNING
 
-@pytest.mark.skipif(not leabra_available, reason='Leabra package is unavailable')
+@pytest.mark.skipif(
+    not leabra_available,
+    reason='leabra python module is not installed. Please install it from https://github.com/benureau/leabra'
+)
 class TestLeabraMechInit:
 
     def test_leabra_init_empty(self):
@@ -54,6 +57,11 @@ class TestLeabraMechInit:
         assert L.hidden_sizes == 4
         assert len(val[0]) == 4
 
+
+@pytest.mark.skipif(
+    not leabra_available,
+    reason='leabra python module is not installed. Please install it from https://github.com/benureau/leabra'
+)
 class TestLeabraMechRuntimeParams:
 
     def test_leabra_runtime_alone(self):
@@ -93,7 +101,11 @@ class TestLeabraMechRuntimeParams:
     def test_leabra_runtime_in_system(self):
         pass
 
-@pytest.mark.skipif(not leabra_available, reason='Leabra package is unavailable')
+
+@pytest.mark.skipif(
+    not leabra_available,
+    reason='leabra python module is not installed. Please install it from https://github.com/benureau/leabra'
+)
 class TestLeabraMechPrecision:
 
     def test_leabra_prec_no_train(self):
