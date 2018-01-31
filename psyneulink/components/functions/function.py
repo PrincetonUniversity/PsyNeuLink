@@ -3352,6 +3352,22 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
 
+        When LinearMatrix is the `function <Projection.function>` of a projection:
+
+            - the matrix specification must be compatible with the variables of the `sender <Projection.sender>` and
+              `receiver <Projection.receiver>`
+
+            - a matrix keyword specification generates a matrix based on the sender and receiver shapes
+
+        When LinearMatrix is instantiated on its own, or as the function of `Mechanism` or `State`:
+
+            - the matrix specification must be compatible with the function's own `variable <LinearMatrix.variable>`
+
+            - if matrix is not specified, a square identity matrix is generated based on the number of columns in
+              `variable <LinearMatrix.variable>`
+
+            - matrix keywords are not valid matrix specifications
+
     bounds : None
 
     params : Dict[param keyword: param value] : default None
@@ -3679,8 +3695,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def _instantiate_attributes_before_function(self, context=None):
         if self.matrix is None and not hasattr(self.owner, "receiver"):
             variable_length = np.size(np.atleast_2d(self.instance_defaults.variable), 1)
-            self.matrix = np.ones(shape=(variable_length, variable_length))
-
+            self.matrix = np.identity(variable_length)
         self.matrix = self.instantiate_matrix(self.matrix)
 
     def instantiate_matrix(self, specification, context=None):

@@ -173,7 +173,7 @@ class TestLinearMatrixFunction:
                                                    default_variable=[[0.0, 0.0]])
         PM_default_len_2_var.execute([[1.0, 2.0]])
 
-        assert np.allclose(PM_default_len_2_var.value, [[3., 3.]])
+        assert np.allclose(PM_default_len_2_var.value, [[1.0, 2.0]])
 
         PM_default_2d_var = ProcessingMechanism(function=LinearMatrix(default_variable=[[0.0, 0.0],
                                                                                         [0.0, 0.0],
@@ -181,13 +181,17 @@ class TestLinearMatrixFunction:
                                                    default_variable=[[0.0, 0.0],
                                                                      [0.0, 0.0],
                                                                      [0.0, 0.0]])
+
+        #  [1.0   0.0]           [1.0   0.0]
+        #  [0.0   2.0]    *      [0.0   1.0]
+        #  [3.0   0.0]
         PM_default_2d_var.execute([[1.0, 0.0],
                                    [0.0, 2.0],
                                    [3.0, 0.0]])
 
-        assert np.allclose(PM_default_2d_var.value, [[1.0, 1.0],
-                                                     [2.0, 2.0],
-                                                     [3.0, 3.0]])
+        assert np.allclose(PM_default_2d_var.value, [[1.0, 0.0],
+                                                     [0.0, 2.0],
+                                                     [3.0, 0.0]])
 
         # PM_float = ProcessingMechanism(function=LinearMatrix(matrix=4.0))
         # PM_float.execute(1.0)
