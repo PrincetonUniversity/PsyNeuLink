@@ -3412,7 +3412,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         super()._validate_params(request_set, target_set, context)
 
         param_set = target_set
-        # check whether the owner is a projection
+        # proxy for checking whether the owner is a projection
         if hasattr(self.owner, "receiver"):
             sender = self.instance_defaults.variable
             # Note: this assumes variable is a 1D np.array, as enforced by _validate_variable
@@ -3577,45 +3577,45 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if message:
                 raise FunctionError(message)
 
-        # owner is not a projection (probably a mechanism)
+        # owner is a mechanism, state
+        # OR function was defined on its own (no owner)
         else:
-            for param_name, param_value in param_set.items():
-                # Matrix specification param
-                if param_name == MATRIX:
-                #     # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
-                    if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
-                        if np.size(np.atleast_2d(param_value), 0) != np.size(np.atleast_2d(self.instance_defaults.variable),1):
-                            raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. "
-                                                "The shapes of variable {} and matrix {} are not compatible for "
-                                                "multiplication".format(self.name,
-                                                                        np.shape(np.atleast_2d(self.instance_defaults.variable)),
-                                                                        np.shape(np.atleast_2d(param_value))))
+            if MATRIX in param_set:
+                param_value = param_set(MATRIX)
 
-                    elif param_value in MATRIX_KEYWORD_VALUES:
-                        raise FunctionError("{} is not a valid specification for the matrix parameter of {}. Keywords "
-                                            "may only be used to specify the matrix parameter of a Projection's "
-                                            "LinearMatrix function. When the LinearMatrix function is implemented in a "
-                                            "mechanism, such as {}, the correct matrix cannot be determined from a "
-                                            "keyword. Instead, the matrix must be fully specified as a float, list, "
-                                            "np.ndarray, or np.matrix".
-                                            format(param_value, self.name, self.owner.name))
+                # numeric value specified; verify that it is compatible with variable
+                if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
+                    if np.size(np.atleast_2d(param_value), 0) != np.size(np.atleast_2d(self.instance_defaults.variable),1):
+                        raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. "
+                                            "The shapes of variable {} and matrix {} are not compatible for "
+                                            "multiplication".format(self.name,
+                                                                    np.shape(np.atleast_2d(self.instance_defaults.variable)),
+                                                                    np.shape(np.atleast_2d(param_value))))
 
-                    elif param_value is None:
-                        continue
+                # keyword matrix specified - not valid outside of a projection
+                elif param_value in MATRIX_KEYWORD_VALUES:
+                    raise FunctionError("{} is not a valid specification for the matrix parameter of {}. Keywords "
+                                        "may only be used to specify the matrix parameter of a Projection's "
+                                        "LinearMatrix function. When the LinearMatrix function is implemented in a "
+                                        "mechanism, such as {}, the correct matrix cannot be determined from a "
+                                        "keyword. Instead, the matrix must be fully specified as a float, list, "
+                                        "np.ndarray, or np.matrix".
+                                        format(param_value, self.name, self.owner.name))
 
-                    else:
-                        raise FunctionError("Value of {} param ({}) for the {} function of {} "
-                                            "must be a matrix, a number (for filler), or a matrix keyword ({})".
-                                            format(param_name,
-                                                   param_value,
-                                                   self.name,
-                                                   self.owner_name,
-                                                   MATRIX_KEYWORD_NAMES))
+                # The only remaining valid option is matrix = None (sorted out in instantiate_attribs_before_fn)
+                elif param_value is not None:
+                    raise FunctionError("Value of the matrix param ({}) for the {} function of {} "
+                                        "must be a matrix, a number (for filler), or a matrix keyword ({})".
+                                        format(param_value,
+                                               self.name,
+                                               self.owner_name,
+                                               MATRIX_KEYWORD_NAMES))
 
     def _instantiate_attributes_before_function(self, context=None):
-        if self.matrix is None:
+        if self.matrix is None and not hasattr(self.owner, "receiver"):
             variable_length = np.size(np.atleast_2d(self.instance_defaults.variable), 1)
             self.matrix = np.ones(shape=(variable_length, variable_length))
+
         self.matrix = self.instantiate_matrix(self.matrix)
 
     def instantiate_matrix(self, specification, context=None):

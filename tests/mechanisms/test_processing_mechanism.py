@@ -233,9 +233,19 @@ class TestLinearMatrixFunction:
         assert np.allclose(PM_matrix.value, 4.0)
 
     def test_invalid_matrix_specs(self):
-        # Note: default matrix specification is None
+
         with pytest.raises(FunctionError) as error_text:
-            PM_mismatched_float = ProcessingMechanism(function=LinearMatrix(default_variable=[[0.0, 0.0],
+            PM_mismatched_float = ProcessingMechanism(function=LinearMatrix(default_variable=0.0,
+                                                                        matrix=[[1.0, 0.0, 0.0, 0.0],
+                                                                                [0.0, 2.0, 0.0, 0.0],
+                                                                                [0.0, 0.0, 3.0, 0.0],
+                                                                                [0.0, 0.0, 0.0, 4.0]]),
+                                                  default_variable=0.0)
+        assert "Specification of matrix and/or default_variable" in str(error_text.value) and \
+               "not compatible for multiplication" in str(error_text.value)
+
+        with pytest.raises(FunctionError) as error_text:
+            PM_mismatched_matrix = ProcessingMechanism(function=LinearMatrix(default_variable=[[0.0, 0.0],
                                                                                           [0.0, 0.0],
                                                                                           [0.0, 0.0]],
                                                                         matrix=[[1.0, 0.0, 0.0, 0.0],
