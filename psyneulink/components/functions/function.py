@@ -4189,19 +4189,13 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         return value
 
+    def reinitialize(self, new_previous_value):
+        self._initializer = new_previous_value
+        self.value = new_previous_value
+        self.previous_value = new_previous_value
+
     def function(self, *args, **kwargs):
         raise FunctionError("Integrator is not meant to be called explicitly")
-
-    @property
-    def reinitialize(self):
-        return self.previous_value
-
-    @reinitialize.setter
-    def reinitialize(self, val):
-        self._initializer = val
-        self.value = val
-        self.previous_value = val
-
 
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
@@ -4634,17 +4628,11 @@ class LCAIntegrator(
 
         return adjusted_value
 
-    @property
-    def reinitialize(self):
-        return self.previous_value
-
-    @reinitialize.setter
-    def reinitialize(self, val):
-        self._initializer = val
-        self.value = val
-        self.previous_value = val
+    def reinitialize(self, new_previous_value):
+        self._initializer = new_previous_value
+        self.value = new_previous_value
+        self.previous_value = new_previous_value
         self.previous_time = 0.0
-
 
 class ConstantIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -5412,26 +5400,15 @@ class DriftDiffusionIntegrator(
         # Current output format is [[[decision_variable]], time]
         return adjusted_value
 
-    @property
-    def reinitialize(self):
-        return self.previous_value, self.previous_time
-
-    @reinitialize.setter
-    def reinitialize(self, value):
-        try:
-            val, time = value
-            self._initializer = val
-            self.value = val
-            self.previous_value = val
-            self.previous_time = time
-        except (ValueError, TypeError):
-            num_items = len(np.atleast_1d(value))
-            if num_items == 1:
-                raise FunctionError("DriftDiffusionIntegrator requires exactly two items (position, time) in order to "
-                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value, self.name))
-
-            raise FunctionError("DriftDiffusionIntegrator requires exactly two items (position, time) in order to "
-                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value, self.name))
+    def reinitialize(self, new_previous_value=None, new_previous_time=None):
+        if new_previous_value is None:
+            new_previous_value = self.instance_defaults.initializer
+        if new_previous_time is None:
+            new_previous_time = self.instance_defaults.t0
+        self._initializer = new_previous_value
+        self.value = new_previous_value
+        self.previous_value = new_previous_value
+        self.previous_time = new_previous_time
 
 class OrnsteinUhlenbeckIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
