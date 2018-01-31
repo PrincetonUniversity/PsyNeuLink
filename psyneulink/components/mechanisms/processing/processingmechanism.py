@@ -21,7 +21,7 @@ or System.
 
 The ProcessingMechanism is the simplest mechanism in PsyNeuLink. It does not have any extra arguments or
 specialized validation. Almost any PsyNeuLink Function, including the `UserDefinedFunction`, may be the function of a
-ProcessingMechanism. `LinearMatrix` and `BackPropagation` cannot be the function of a ProcessingMechanism. Subtypes of
+ProcessingMechanism. Currently, the only exception is `BackPropagation`. Subtypes of
 ProcessingMechanism have more specialized features, and often have restrictions on which Functions are allowed.
 
 The output of a ProcessingMechanism may also be used by an `AdaptiveMechanism <AdaptiveMechanism>` to modify the
