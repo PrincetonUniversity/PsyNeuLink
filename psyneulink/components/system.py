@@ -2683,7 +2683,7 @@ class System(System_Base):
                 # warnings.warn("No targets were specified in the call to execute {} with learning. This is okay if "
                 #               "your learning (e.g. Hebbian learning) does not need a target.".format(self.name))
 
-        for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
+        for i in range(len(self.target_mechanisms)):
         # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
         #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
             self.target_input_states[i].value = self.current_targets[i]
