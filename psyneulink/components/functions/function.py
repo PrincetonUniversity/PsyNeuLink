@@ -3646,7 +3646,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # OR function was defined on its own (no owner)
         else:
             if MATRIX in param_set:
-                param_value = param_set(MATRIX)
+                param_value = param_set[MATRIX]
 
                 # numeric value specified; verify that it is compatible with variable
                 if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
