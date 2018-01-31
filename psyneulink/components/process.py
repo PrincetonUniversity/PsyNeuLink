@@ -2035,9 +2035,6 @@ class Process(Process_Base):
 
             target = np.atleast_1d(target)
 
-            print("target mech target name = {}".format(target_mech_target.name))
-            print("target = {}".format(target))
-
             # Check that length of process' target input matches length of TARGET Mechanism's target input
             if len(target) != len(target_mech_target.instance_defaults.variable):
                 raise ProcessError("Length of target ({}) does not match length of input for TARGET Mechanism {} ({})".
