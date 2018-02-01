@@ -1793,6 +1793,24 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.projections.projection import _add_projection_from
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
+    def reinitialize(self, *args):
+        from psyneulink.components.functions.function import Integrator
+
+        # If the primary function of the mechanism is an integrator:
+        # (1) reinitialize it, (2) update value, (3) update output states
+        if isinstance(self.function_object, Integrator):
+            new_value = self.function_object.reinitialize(*args)
+            self.value = new_value
+            self._update_output_states(context="REINITIALIZING")
+
+        # If the mechanism has an auxiliary integrator function:
+        # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
+        # (3) update value, (4) update output states
+        elif hasattr(self, "integrator_function"):
+            new_input = self.function_object.reinitialize(*args)
+            self.value = self.function(new_input, context="REINITIALIZING")
+            self._update_output_states(context="REINITIALIZING")
+
     def get_current_mechanism_param(self, param_name):
         try:
             return self._parameter_states[param_name].value
@@ -2320,7 +2338,6 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.state import _parse_state_type
         from psyneulink.components.states.inputstate import InputState, _instantiate_input_states
         from psyneulink.components.states.outputstate import OutputState, _instantiate_output_states
-
         # Put in list to standardize treatment below
         if not isinstance(states, list):
             states = [states]
