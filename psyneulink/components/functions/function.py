@@ -4189,7 +4189,9 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         return value
 
-    def reinitialize(self, new_previous_value, **kwargs):
+    def reinitialize(self, new_previous_value=None, **kwargs):
+        if new_previous_value is None:
+            new_previous_value = self.instance_defaults.initializer
         self._initializer = new_previous_value
         self.value = new_previous_value
         self.previous_value = new_previous_value
@@ -5403,7 +5405,7 @@ class DriftDiffusionIntegrator(
         self.value = new_previous_value
         self.previous_value = new_previous_value
         self.previous_time = new_previous_time
-        return self.value
+        return np.atleast_1d(new_previous_value), np.atleast_1d(new_previous_time)
 
 class OrnsteinUhlenbeckIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
@@ -7094,13 +7096,13 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         long_term_rate = self.get_current_function_param("long_term_rate")
 
         # Integrate Short Term Utility:
-        short_term_utility=self._EWMA_filter(self.previous_short_term_utility,
-                                            short_term_rate,
-                                            variable)
+        short_term_utility = self._EWMA_filter(self.previous_short_term_utility,
+                                               short_term_rate,
+                                               variable)
         # Integrate Long Term Utility:
         long_term_utility = self._EWMA_filter(self.previous_long_term_utility,
-                                            long_term_rate,
-                                            variable)
+                                              long_term_rate,
+                                              variable)
 
         value = self.combine_utilities(short_term_utility, long_term_utility)
 
@@ -7118,9 +7120,9 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         operation = self.get_current_function_param(OPERATION)
         offset = self.get_current_function_param(OFFSET)
 
-        short_term_utility_logistic=self._logistic(variable=short_term_utility,
-                                                    gain=short_term_gain,
-                                                    bias=short_term_bias)
+        short_term_utility_logistic = self._logistic(variable=short_term_utility,
+                                                     gain=short_term_gain,
+                                                     bias=short_term_bias)
         self.short_term_utility_logistic = short_term_utility_logistic
 
         long_term_utility_logistic = self._logistic(variable=long_term_utility,
@@ -7143,13 +7145,18 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
         return value + offset
 
-    def reinitialize(self, short, long):
+    def reinitialize(self, short=None, long=None):
+        if short is None:
+            short = self.instance_defaults.initial_short_term_utility
+        if long is None:
+            long = self.instance_defaults.initial_long_term_utility
         self._initial_short_term_utility = short
         self.previous_short_term_utility = short
         self._initial_long_term_utility = long
         self.previous_long_term_utility = long
-        self.value = self.combine_utilities(long, short)
+        self.value = self.combine_utilities(short, long)
         return self.value
+#
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'

@@ -1800,7 +1800,7 @@ class Mechanism_Base(Mechanism):
         # (1) reinitialize it, (2) update value, (3) update output states
         if isinstance(self.function_object, Integrator):
             new_value = self.function_object.reinitialize(*args)
-            self.value = new_value
+            self.value = np.atleast_2d(new_value)
             self._update_output_states(context="REINITIALIZING")
 
         # If the mechanism has an auxiliary integrator function:
