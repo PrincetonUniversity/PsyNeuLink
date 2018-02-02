@@ -280,8 +280,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    # ClassDefaults.variable = None
-
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,

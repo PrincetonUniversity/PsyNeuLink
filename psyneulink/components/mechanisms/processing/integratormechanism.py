@@ -202,7 +202,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        # self.ClassDefaults.variable = default_variable or [[0]]
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 

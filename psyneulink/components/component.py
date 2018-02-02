@@ -990,18 +990,16 @@ class Component(object):
             default_variable = self._handle_size(size, default_variable)
 
             if default_variable is None or default_variable is NotImplemented:
+                self._default_variable_handled = True
                 return None
             else:
                 self._variable_not_specified = False
         else:
             self._variable_not_specified = False
 
-        # fixes a problem where we would have list objects within numpy arrays, and so multiplying them by a scalar
-        # wouldn't do an arithmetic operation, but rather a list-size operation
-        default_variable = convert_all_elements_to_np_array(default_variable, cast_from=numbers.Number, cast_to=float)
-
         self._default_variable_handled = True
-        return np.asarray(default_variable)
+
+        return convert_to_np_array(default_variable, dimension=1)
 
     # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
     # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
@@ -1738,11 +1736,6 @@ class Component(object):
         if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
             # if variable has been passed then validate and, if OK, assign as self.instance_defaults.variable
             variable = self._update_variable(self._validate_variable(variable, context=context))
-            # if self.instance_defaults.variable is None:
-            if variable is None:
-                self.instance_defaults.variable = self.ClassDefaults.variable
-            else:
-                self.instance_defaults.variable = variable
 
         # If no params were passed, then done
         if request_set is None and target_set is None and default_set is None:
@@ -2068,7 +2061,6 @@ class Component(object):
             return variable
 
         variable = np.atleast_1d(variable)
-        # variable = convert_all_elements_to_np_array(variable)
 
         try:
             # if variable has a single int/float/etc. within some number of dimensions, and the
@@ -2079,7 +2071,7 @@ class Component(object):
         except AttributeError:
             pass
 
-        return variable
+        return convert_all_elements_to_np_array(variable)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Validation methods
@@ -2113,14 +2105,6 @@ class Component(object):
             raise ComponentError("Assignment of class ({}) as a variable (for {}) is not allowed".
                                  format(variable.__name__, self.name))
 
-        pre_converted_variable_class_default = self.ClassDefaults.variable
-
-        # FIX: SAYS "list of np.ndarrays" BELOW, WHICH WOULD BE A 2D ARRAY, BUT CONVERSION BELOW ONLY INDUCES 1D ARRAY
-        # FIX: NOTE:  VARIABLE (BELOW) IS CONVERTED TO ONLY 1D ARRAY
-        # Convert self.ClassDefaults.variable to list of np.ndarrays
-        self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 1)
-        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 1)
-
         # If variable is not specified, then:
         #    - assign to (??now np-converted version of) self.ClassDefaults.variable
         #    - mark as not having been specified
@@ -2149,7 +2133,7 @@ class Component(object):
         if self.variableClassDefault_locked:
             if not variable.dtype is self.ClassDefaults.variable.dtype:
                 message = "Variable for {0} (in {1}) must be a {2}".\
-                    format(self.componentName, context, pre_converted_variable_class_default.__class__.__name__)
+                    format(self.componentName, context, self.ClassDefaults.variable.__class__.__name__)
                 raise ComponentError(message)
 
         return variable

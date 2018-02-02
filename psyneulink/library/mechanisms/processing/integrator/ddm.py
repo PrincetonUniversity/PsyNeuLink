@@ -291,11 +291,11 @@ from collections import Iterable
 
 from psyneulink.components.component import method_type
 from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
-from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -463,7 +463,6 @@ class DDM(ProcessingMechanism_Base):
             + componentType (str): DDM
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + ClassDefaults.variable (value):  STARTING_POINT
             + paramClassDefaults (dict): {
                                           kwDDM_AnalyticSolution: kwBogaczEtAl,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>

@@ -873,7 +873,7 @@ class System(System_Base):
         #           format(self.name, self.names.__str__().strip("[]")))
 
     def _validate_variable(self, variable, context=None):
-        """Convert self.ClassDefaults.variable, self.instance_defaults.variable, and variable to 2D np.array: \
+        """Convert variable to 2D np.array: \
         one 1D value for each input state
         """
         super(System, self)._validate_variable(variable, context)
@@ -882,7 +882,7 @@ class System(System_Base):
         if variable is None:
             return
 
-        return convert_to_np_array(variable, 2)
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate controller, processes and initial_values
