@@ -1110,6 +1110,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
                 params = {LEARNED_PARAM: MATRIX}
 
+                # FIX: 2/2/18:
+                # If specification for LearningSignal is a LearningProjection
+                #     and
+
                 # Parses learning_signal specifications (in call to State._parse_state_spec)
                 #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
                 learning_signal = _instantiate_state(state_type=LearningSignal,
@@ -1128,8 +1132,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         super()._instantiate_output_states(context=context)
 
-        # Reassign learning_signals to capture any user_defined LearningSignals instantiated by in call to super
-        #   and to assign to a ContentAddressableList
+        # Reassign learning_signals to capture any user_defined LearningSignals instantiated in call to super
+        #   and assign them to a ContentAddressableList
         self._learning_signals = ContentAddressableList(component_type=LearningSignal,
                                                         list=[state for state in self.output_states if
                                                                   isinstance(state, LearningSignal)])

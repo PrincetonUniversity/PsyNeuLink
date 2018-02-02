@@ -3,12 +3,12 @@ import numpy as np
 import psyneulink as pnl
 
 input_layer = pnl.TransferMechanism(
-    default_variable=[0, 0, 0],
+    size=3,
     name='Input Layer'
 )
 
 action_selection = pnl.TransferMechanism(
-    default_variable=[0, 0, 0],
+    size=3,
     function=pnl.SoftMax(
         output=pnl.PROB,
         gain=1.0
