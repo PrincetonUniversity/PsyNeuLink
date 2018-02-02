@@ -291,7 +291,8 @@ COMMENT:
       _instantiate_function method checks that the input of the Component's `function <Comonent.function>` is compatible
       with its `variable <Component.variable>`).
 
-      * `_handle_size <Component._handle_size>` converts the `variable <Component.variable>` and `size <Component.size>` arguments to the correct dimensions (for `Mechanism <Mechanism>`, this is a 2D array and 1D
+      * `_handle_size <Component._handle_size>` converts the `variable <Component.variable>` and `size <Component.size>`
+        arguments to the correct dimensions (for `Mechanism <Mechanism>`, this is a 2D array and 1D
         array, respectively). If **variable** is not passed as an argument, this method attempts to infer `variable
         <Component.variable>` from the **size** argument, and vice versa if the **size** argument is missing.
         The _handle_size method then checks that the **size** and **variable** arguments are compatible.
@@ -1316,7 +1317,6 @@ class Component(object):
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
                     from psyneulink.components.functions.function import Function
-                    from inspect import isfunction
 
                     # It is a PsyNeuLink Function
                     # IMPLEMENTATION NOTE:  REPLACE THIS WITH "CONTINUE" ONCE _instantiate_function IS REFACTORED TO
@@ -1331,10 +1331,11 @@ class Component(object):
                                                                 function.user_params_for_instantiation[param_name])
 
                     # It is a generic function
-                    elif isfunction(function):
+                    elif inspect.isfunction(function):
                         # Assign as is (i.e., don't convert to class), since class is generic
                         # (_instantiate_function also tests for this and leaves it as is)
                         params[FUNCTION] = function
+                        params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
                         if hasattr(self, '_prefs') and self.verbosePref:
                             warnings.warn("{} is not a PsyNeuLink Function, "
                                           "therefore runtime_params cannot be used".format(default(arg).__name__))
@@ -2111,7 +2112,7 @@ class Component(object):
                     continue
                 # function is a class, so function_params has not yet been implemented
                 self._function = request_set[FUNCTION]
-                if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
+                if param_name is FUNCTION_PARAMS and (inspect.isclass(self.function) or inspect.isfunction(self.function)):
                     continue
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
@@ -2581,8 +2582,8 @@ class Component(object):
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
                 from psyneulink.components.functions.function import UserDefinedFunction
-                self.function = UserDefinedFunction(variable=self.instance_defaults.variable, owner=self,
-                                                    function=function, context=context).function
+                self.function = UserDefinedFunction(default_variable=self.instance_defaults.variable, owner=self,
+                                                    custom_function=function, context=context).function
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
@@ -2974,6 +2975,10 @@ def make_property(name):
         from psyneulink.components.functions.function import Function_Base
         if isinstance(self, Function_Base) and self.owner:
             param_state_owner = self.owner
+            # NOTE CW 1/26/18: if you're getting an error (such as "self.owner has no attribute function_params", or
+            # "function_params" has no attribute __additem__ (this happens when it's a dict rather than a
+            # ReadOnlyOrderedDict)) it may be caused by function_params not being included in paramInstanceDefaults,
+            # which may be caused by _assign_args_to_param_dicts() bugs. LMK, if you're getting bugs here like that.
             self.owner.function_params.__additem__(name, val)
         else:
             param_state_owner = self
