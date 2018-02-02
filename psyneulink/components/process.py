@@ -878,10 +878,7 @@ class Process(Process_Base):
         variable = self._update_variable(super(Process, self)._validate_variable(variable, context))
 
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
-        if self.ClassDefaults.variable is not None:
-            self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
-        if self.instance_defaults.variable is not None:
-            self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
+
         if variable is not None:
             variable = self._update_variable(convert_to_np_array(variable, 2))
 

@@ -441,27 +441,20 @@ import typecheck as tc
 from toposort import toposort, toposort_flatten
 
 from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type
-from psyneulink.components.mechanisms.mechanism import MechanismList
-from psyneulink.components.mechanisms.processing.objectivemechanism import \
-    DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
-from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary \
-    import _get_learning_mechanisms, _assign_error_signal_projections
+from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary import _assign_error_signal_projections, _get_learning_mechanisms
+from psyneulink.components.mechanisms.mechanism import MechanismList
+from psyneulink.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
 from psyneulink.components.process import Process, ProcessList, ProcessTuple
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import \
-    ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, EXPONENT, \
-    FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, \
-    LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, \
-    SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, WEIGHT, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, WEIGHT, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import \
-    AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, insert_list
+from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, insert_list, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -888,8 +881,6 @@ class System(System_Base):
         # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
         if variable is None:
             return
-        self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
-        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
 
         return convert_to_np_array(variable, 2)
 
