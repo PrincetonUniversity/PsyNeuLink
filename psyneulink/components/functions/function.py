@@ -3984,15 +3984,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <Integrator.variable>` is integrated.
 
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <Integrator.previous_value>`
-        - `initializer <Integrator.initial_value>`
-        - `value <Integrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
-
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -4190,12 +4181,22 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         return value
 
     def reinitialize(self, new_previous_value=None, **kwargs):
+        """
+            Sets
+
+            - `previous_value <Integrator.previous_value>`
+            - `initializer <Integrator.initial_value>`
+            - `value <Integrator.value>`
+
+            to the quantity specified, which effectively begins accumulation over again at the specified value
+        """
         if new_previous_value is None:
             new_previous_value = self.instance_defaults.initializer
         self._initializer = new_previous_value
         self.value = new_previous_value
         self.previous_value = new_previous_value
         return self.value
+
     def function(self, *args, **kwargs):
         raise FunctionError("Integrator is not meant to be called explicitly")
 
@@ -5558,7 +5559,7 @@ class OrnsteinUhlenbeckIntegrator(
                  offset: parameter_spec = 0.0,
                  time_step_size=1.0,
                  t0=0.0,
-                 decay = 1.0,
+                 decay=1.0,
                  initializer=ClassDefaults.variable,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -6439,7 +6440,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         self.previous_w = new_previous_w
         self.previous_time = new_previous_time
         self.value = new_previous_v, new_previous_w, new_previous_time
-        return self.value
+        return [new_previous_v], [new_previous_w], [new_previous_time]
 
 class AccumulatorIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """

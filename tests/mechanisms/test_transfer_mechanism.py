@@ -13,7 +13,6 @@ from psyneulink.components.process import Process
 from psyneulink.components.system import System
 
 
-
 class TestTransferMechanismInputs:
     # VALID INPUTS
 
@@ -882,7 +881,7 @@ class TestIntegratorMode:
         assert np.allclose(T.initial_value, 0.5)
         assert np.allclose(T.integrator_function.initializer, 0.5)
 
-        T.integrator_function.reinitialize = 0.5
+        T.integrator_function.reinitialize(0.5)
 
         assert np.allclose(T.previous_value, 0.5)
         assert np.allclose(T.initial_value, 0.5)
@@ -922,11 +921,19 @@ class TestIntegratorMode:
         assert np.allclose(T.initial_value, 0.5)
         assert np.allclose(T.integrator_function.initializer, 0.5)
 
-        T.integrator_function.reinitialize = 0.5
+        T.integrator_function.reinitialize(0.9)
+
+        assert np.allclose(T.previous_value, 0.9)
+        assert np.allclose(T.initial_value, 0.5)
+        assert np.allclose(T.integrator_function.initializer, 0.9)
+        assert np.allclose(T.value, 0.595)
+
+        T.reinitialize(0.5)
 
         assert np.allclose(T.previous_value, 0.5)
         assert np.allclose(T.initial_value, 0.5)
         assert np.allclose(T.integrator_function.initializer, 0.5)
+        assert np.allclose(T.value, 0.5)
 
         S.run(inputs={T: 1.0}, num_trials=2)
         # Trial 3

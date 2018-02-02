@@ -1807,7 +1807,9 @@ class Mechanism_Base(Mechanism):
         # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output states
         elif hasattr(self, "integrator_function"):
-            new_input = self.function_object.reinitialize(*args)
+            new_input = self.integrator_function.reinitialize(*args)
+            if hasattr(self, "initial_value"):
+                self.initial_value = np.atleast_1d(*args)[0]
             self.value = self.function(new_input, context="REINITIALIZING")
             self._update_output_states(context="REINITIALIZING")
 

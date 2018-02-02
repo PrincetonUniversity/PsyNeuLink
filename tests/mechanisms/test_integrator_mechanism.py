@@ -3,9 +3,10 @@ import pytest
 
 from psyneulink.components.functions.function import AGTUtilityIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
 from psyneulink.components.functions.function import AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, NormalDist, SimpleIntegrator
-from psyneulink.components.functions.function import FunctionError
+from psyneulink.components.functions.function import LCAIntegrator, FunctionError
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
+
 from psyneulink.scheduling.time import TimeScale
 
 
@@ -217,6 +218,133 @@ class TestReinitialize:
         assert np.allclose(I.function_object.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_states[0].value, 0.0)
+
+    def test_OU_valid(self):
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=OrnsteinUhlenbeckIntegrator(),
+        )
+
+        # previous_value + (decay * previous_value - rate * variable) * time_step_size + noise
+        # decay=1.0, initializer=0.0, rate=1.0, time_step_size=1.0, noise=0.0
+        # returns 0.0 + (1.0*0.0 - 1.0*10.0*1.0) + 0.0 = -10.0
+        I.execute(2.0)
+        assert np.allclose(I.value, -2.0)
+        assert np.allclose(I.output_state.value, -2.0)
+
+        # reinitialize function
+        I.function_object.reinitialize(5.0)
+        assert np.allclose(I.function_object.value, 5.0)
+        assert np.allclose(I.value, -2.0)
+        assert np.allclose(I.output_states[0].value, -2.0)
+
+        # reinitialize function without value spec
+        I.function_object.reinitialize()
+        assert np.allclose(I.function_object.value, 0.0)
+        assert np.allclose(I.value, -2.0)
+        assert np.allclose(I.output_states[0].value, -2.0)
+
+        # reinitialize mechanism
+        I.reinitialize(4.0)
+        assert np.allclose(I.function_object.value, 4.0)
+        assert np.allclose(I.value, 4.0)
+        assert np.allclose(I.output_states[0].value, 4.0)
+
+        I.execute(1.0)
+        # 4.0 + (1.0 * 4.0 - 1.0 * 1.0) * 1.0 = 4 + 3 = 7
+        assert np.allclose(I.value, 7.0)
+        assert np.allclose(I.output_states[0].value, 7.0)
+
+        # reinitialize mechanism without value spec
+        I.reinitialize()
+        assert np.allclose(I.function_object.value, 0.0)
+        assert np.allclose(I.value, 0.0)
+        assert np.allclose(I.output_states[0].value, 0.0)
+
+    def test_Accumulator_valid(self):
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=AccumulatorIntegrator(increment=0.1),
+        )
+
+        #  returns previous_value * rate + noise + increment
+        # initializer = 0.0, rate = 1.0, noise = 0.0, increment = 0.1
+        # returns 0.0*1.0 + 0.0 + 0.1 = 0.1
+        I.execute(10000)
+        assert np.allclose(I.value, 0.1)
+        assert np.allclose(I.output_state.value, 0.1)
+
+        # reinitialize function
+        I.function_object.reinitialize(2.0)
+        assert np.allclose(I.function_object.value, 2.0)
+        assert np.allclose(I.value, 0.1)
+        assert np.allclose(I.output_states[0].value, 0.1)
+
+        # reinitialize function without value spec
+        I.function_object.reinitialize()
+        assert np.allclose(I.function_object.value, 0.0)
+        assert np.allclose(I.value, 0.1)
+        assert np.allclose(I.output_states[0].value, 0.1)
+
+        # reinitialize mechanism
+        I.reinitialize(5.0)
+        assert np.allclose(I.function_object.value, 5.0)
+        assert np.allclose(I.value, 5.0)
+        assert np.allclose(I.output_states[0].value, 5.0)
+
+        I.execute(10000)
+        #  5.0 * 1.0 + 0.0 + 0.1
+        assert np.allclose(I.value, 5.1)
+        assert np.allclose(I.output_states[0].value, 5.1)
+
+        # reinitialize mechanism without value spec
+        I.reinitialize()
+        assert np.allclose(I.function_object.value, 0.0)
+        assert np.allclose(I.value, 0.0)
+        assert np.allclose(I.output_states[0].value, 0.0)
+
+    def test_LCA_valid(self):
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=LCAIntegrator(),
+        )
+
+        # previous_value + (rate*previous_value + new_value)*time_step_size + noise
+        # initializer=0.0, rate=1.0, time_step_size=0.1, noise=0.0
+        # returns 0.0 + (1.0*0.0 + 2.0)*0.1 = 2.0
+        I.execute(2.0)
+        assert np.allclose(I.value, 0.2)
+        assert np.allclose(I.output_state.value, 0.2)
+
+        # reinitialize function
+        I.function_object.reinitialize(5.0)
+        assert np.allclose(I.function_object.value, 5.0)
+        assert np.allclose(I.value, 0.2)
+        assert np.allclose(I.output_states[0].value, 0.2)
+
+        # reinitialize function without value spec
+        I.function_object.reinitialize()
+        assert np.allclose(I.function_object.value, 0.0)
+        assert np.allclose(I.value, 0.2)
+        assert np.allclose(I.output_states[0].value, 0.2)
+
+        # reinitialize mechanism
+        I.reinitialize(4.0)
+        assert np.allclose(I.function_object.value, 4.0)
+        assert np.allclose(I.value, 4.0)
+        assert np.allclose(I.output_states[0].value, 4.0)
+
+        I.execute(1.0)
+        # 4.0 + (1.0*4.0 + 1.0)*0.1 + 0.0
+        assert np.allclose(I.value, 4.5)
+        assert np.allclose(I.output_states[0].value, 4.5)
+
+        # reinitialize mechanism without value spec
+        I.reinitialize()
+        assert np.allclose(I.function_object.value, 0.0)
+        assert np.allclose(I.value, 0.0)
+        assert np.allclose(I.output_states[0].value, 0.0)
+
 
 class TestIntegratorFunctions:
 
@@ -658,7 +786,7 @@ class TestIntegratorNoise:
 
         val = float(I.execute(10))
 
-        I.function_object.reinitialize = 5.0
+        I.function_object.reinitialize(5.0)
 
         val2 = float(I.execute(0))
 
