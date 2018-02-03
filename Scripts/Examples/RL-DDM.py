@@ -7,36 +7,28 @@ input_layer = pnl.TransferMechanism(
     name='Input Layer'
 )
 
-# action_selection = pnl.TransferMechanism(
-#     default_variable=[0, 0, 0],
-#     function=pnl.SoftMax(
-#         output=pnl.PROB,
-#         gain=1.0
-#     ),
-#     name='Action Selection'
-# )
-
 def decision_variable_to_one_hot(x):
     if x > 0:
         return [1,0]
     else:
         return [0,1]
 
-
 action_selection = pnl.DDM(
     function=pnl.BogaczEtAl(
         # drift_rate=pnl.CONTROL,
         # threshold=pnl.CONTROL,
         # starting_point=pnl.CONTROL,
-        # noise=pnl.CONTROL
-        # drift_rate=pnl.ControlSignal,
-        # threshold=pnl.ControlSignal,
-        # starting_point=pnl.ControlSignal,
-        # noise=pnl.ControlSignal
-        drift_rate=pnl.ControlSignal(),
-        threshold=pnl.ControlSignal(),
-        starting_point=pnl.ControlSignal(),
-        noise=pnl.ControlSignal()
+        # noise=pnl.CONTROL,
+        #
+        drift_rate=pnl.ControlSignal,
+        threshold=pnl.ControlSignal,
+        starting_point=pnl.ControlSignal,
+        noise=pnl.ControlSignal
+
+        # drift_rate=pnl.ControlSignal(),
+        # threshold=pnl.ControlSignal(),
+        # starting_point=pnl.ControlSignal(),
+        # noise=pnl.ControlSignal()
     ),
     output_states=[{pnl.NAME: 'ACTION VECTOR',
                     pnl.INDEX: 0,
