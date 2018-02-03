@@ -583,8 +583,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             objective_mechanism._learning_role = TARGET
 
         try:
-            lc.error_projection = \
-            objective_mechanism.input_state.path_afferents[0]
+            lc.error_projection = objective_mechanism.input_state.path_afferents[0]
             # FIX: THIS IS TO FORCE ASSIGNMENT (SINCE IT DOESN'T SEEM TO BE
             # ASSIGNED BY TEST BELOW)
         except AttributeError:

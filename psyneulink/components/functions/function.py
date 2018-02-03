@@ -9406,7 +9406,10 @@ class Reinforcement(LearningFunction):  # --------------------------------------
             `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`.
 
         error signal : 1d np.array
+            COMMENT:
             same as value received in `error_signal <Reinforcement.error_signal>` argument.
+            COMMENT
+            1d array of error terms (the diagonal elements of the weight change matrix)
 
         """
 
@@ -9430,13 +9433,11 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        # self.return_val.error_signal = error_array
-        # self.return_val.learning_signal = weight_change_matrix
-        #
-        # # return:
-        # # - weight_change_matrix and error_array
-        # return list(self.return_val)
-        return [weight_change_matrix, error_array]
+        # # MODIFIED 2/2/18 OLD:
+        # return [weight_change_matrix, error_array]
+        # MODIFIED 2/2/18 NEW:
+        return [error_array, error_array]
+        # MODIFIED 2/2/18 END
 
 
 # Argument names:
