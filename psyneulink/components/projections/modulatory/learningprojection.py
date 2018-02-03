@@ -616,15 +616,26 @@ class LearningProjection(ModulatoryProjection_Base):
         #    and the latter is a diagonal matrix (square, with values only along the main diagonal)
         #    and the learning_signal is the same as the matrix,
         #    then transform the learning_signal into a diagonal matrix of the same dimension as the matrix
-        # NOTE: CURRENT VERSION ONLY WORKS FOR learning_signal.ndim =1 and matrix.ndim = 2
+        # Otherwise, if the learning_signal and matrix are not the same shape,
+        #    try expanding dim of learning_signal by making each of its items (along axis 0) an array
+        # Example:
+        #    If learning_signal is from a LearningMechanism that uses Reinforcement Function, then it is a 1d array:
+        #        if the matrix being modified is a 2d array, then convert the learning_signal to a 2d diagonal matrix;
+        #        if the matrix being modified is a 1d array, then expand it so that each item is a 1d array
+        # NOTE: The current version is only guaranteed to work learning_signal.ndim =1 and matrix.ndim = 2
         if (
                 (learning_signal.ndim < matrix.ndim) and
                 np.allclose(matrix,np.diag(np.diag(matrix))) and
                 len(learning_signal)==len(np.diag(matrix))):
             learning_signal = np.diag(learning_signal)
-        else:
+        elif learning_signal.shape != matrix.shape:
             # Convert 1d array into 2d array to match format of a Projection.matrix
             learning_signal = np.expand_dims(learning_signal, axis=1)
+            if learning_signal.shape != matrix.shape:
+                raise LearningProjectionError("Problem modifying learning_signal from {} ({}) "
+                                              "to match the matrix of {} it is attempting to modify ({})".
+                                              format(self.sender.owner.name, learning_signal,
+                                                     self.receiver.owner.name, matrix))
         # MODIFIED 2/2/18 END
 
         self.weight_change_matrix = self.function(variable=learning_signal,
