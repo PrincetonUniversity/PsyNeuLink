@@ -67,7 +67,7 @@ input_list = {input_layer: [[1, 1]]}
 s = pnl.System(
         processes=[p],
         targets=[0],
-        # controller=pnl.EVCControlMechanism
+        controller=pnl.EVCControlMechanism
 )
 
 # s.show_graph(show_learning=pnl.ALL, show_dimensions=True)
