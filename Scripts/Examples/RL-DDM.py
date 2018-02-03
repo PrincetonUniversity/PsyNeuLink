@@ -25,6 +25,14 @@ def decision_variable_to_one_hot(x):
 
 action_selection = pnl.DDM(
     function=pnl.BogaczEtAl(
+        # drift_rate=pnl.CONTROL,
+        # threshold=pnl.CONTROL,
+        # starting_point=pnl.CONTROL,
+        # noise=pnl.CONTROL
+        # drift_rate=pnl.ControlSignal,
+        # threshold=pnl.ControlSignal,
+        # starting_point=pnl.ControlSignal,
+        # noise=pnl.ControlSignal
         drift_rate=pnl.ControlSignal(),
         threshold=pnl.ControlSignal(),
         starting_point=pnl.ControlSignal(),
@@ -72,19 +80,20 @@ def show_weights():
         )
     )
 
-input_list = {input_layer: [[1, 1, 1]]}
+input_list = {input_layer: [[1, 1]]}
 
 s = pnl.System(
-    processes=[p],
-    targets=[0]
+        processes=[p],
+        targets=[0],
+        controller=pnl.EVCControlMechanism
 )
 
-s.show_graph(show_learning=pnl.ALL, show_dimensions=True)
+# s.show_graph(show_learning=pnl.ALL, show_dimensions=True)
 
-# s.run(
-#     num_trials=10,
-#     inputs=input_list,
-#     targets=reward,
-#     call_before_trial=functools.partial(print_header, s),
-#     call_after_trial=show_weights
-# )
+s.run(
+    num_trials=10,
+    inputs=input_list,
+    targets=reward,
+    call_before_trial=functools.partial(print_header, s),
+    call_after_trial=show_weights
+)
