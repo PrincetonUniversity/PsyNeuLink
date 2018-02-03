@@ -621,6 +621,7 @@ class DDM(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
+                 # input_states:tc.optional(tc.any(list, dict))=None,
                  function=BogaczEtAl(drift_rate=1.0,
                                      starting_point=0.0,
                                      threshold=1.0,
@@ -646,6 +647,7 @@ class DDM(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
+                                                  # input_states=input_states,
                                                   output_states=output_states,
                                                   params=params)
 
