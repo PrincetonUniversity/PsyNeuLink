@@ -13,7 +13,7 @@ def decision_variable_to_one_hot(x):
     if x > 0:
         return [1,0]
     else:
-        return [0,1]
+        return [0,-1]
 
 # Takes sum of input layer elements as external component of drift rate
 # Notes:
@@ -27,17 +27,21 @@ action_selection = pnl.DDM(
         starting_point=pnl.CONTROL,
         noise=pnl.CONTROL,
     ),
-    output_states=[{pnl.NAME: 'ACTION VECTOR',
-                    pnl.INDEX: 0,
+    output_states=[{pnl.NAME:'ACTION VECTOR',
+                    pnl.INDEX:0,
                     pnl.CALCULATE: decision_variable_to_one_hot}],
     name='DDM'
 )
 
-# Specifies Reinforcement as the learning function for all projections generated for the Process
-#    (in this case, the one between the input_layer and action_selection Mechanisms).
+# Construct Process
+# Notes:
+#    The np.array specifies the matrix used as the Mapping Projection from input_layer to action_selection,
+#        which insures the left element of the input favors the left action (positive value of DDM decision variable),
+#        and the right element favors the right action (negative value of DDM decision variable)
+#    The learning argument specifies Reinforcement as the learning function for the Projection
 p = pnl.Process(
     default_variable=[0, 0],
-    pathway=[input_layer, action_selection],
+    pathway=[input_layer, np.array([[1],[-1]]), action_selection],
     learning=pnl.LearningProjection(learning_function=pnl.Reinforcement(learning_rate=0.05)),
     target=0
 )
@@ -45,13 +49,18 @@ p = pnl.Process(
 # Prints initial weight matrix for the Projection from the input_layer to the action_selection Mechanism
 print('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
 
-# Specify reward values for corresponding one-hot coded actions specified by action_selection.output_state.value
+# Specify reward values for the (one-hot coded) actions returned by action_selection.output_state.value
+# Note:  the first (uncommented) reward array favors the left action,
+#        and the second (commented) one favors the right action;  it must be negative,
+#             since a negative weight change is needed to strengthen the negative value of the connection weight
+#             from the right element of the input_layer to the DDM (see above).
+#        (a future version will implement a variant of DDM that makes its use for value-based encoding more intuitive)
 reward_values = [10, 0]
+# reward_values = [0, -10]
 
 # Used by System to generate a reward on each trial based on the outcome of the action_selection (DDM) Mechanism
 def reward():
     return [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
-
 
 # Used by *call_before_trial* and *call_after_trial* to generate printouts.
 # Note:  should be replaced by use of logging functionality that has now been implemented.
@@ -67,10 +76,10 @@ def show_weights():
     )
 
 # Input stimuli and corresponding targets (rewards) for run of the System.
-# Note:  this list contains two sets of stimuli and corresponding rewards;  they will be used in sequence,
-#        and the sequence will be recycled for as many trials as specified by the *num_trials* argument
-#        in the call the the System's run method see below)
-input_list = {input_layer: [[1, 0],[0, 1]]}
+# Note:  for illustrative purposes, this list contains two sets of stimuli and corresponding rewards;
+#        they will be used in sequence, and the sequence will be recycled for as many trials as specified by the
+#        *num_trials* argument in the call the the System's run method see below)
+input_list = {input_layer: [[1, 1],[1, 1]]}
 
 s = pnl.System(
         processes=[p],
