@@ -1110,10 +1110,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
                 params = {LEARNED_PARAM: MATRIX}
 
-                # FIX: 2/2/18:
-                # If specification for LearningSignal is a LearningProjection
-                #     and
-
                 # Parses learning_signal specifications (in call to State._parse_state_spec)
                 #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
                 learning_signal = _instantiate_state(state_type=LearningSignal,

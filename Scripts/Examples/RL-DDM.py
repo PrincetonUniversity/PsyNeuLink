@@ -25,10 +25,10 @@ def decision_variable_to_one_hot(x):
 
 action_selection = pnl.DDM(
     function=pnl.BogaczEtAl(
-        # drift_rate=pnl.ControlSignal,
-        # threshold=pnl.ControlSignal,
-        # starting_point=pnl.ControlSignal,
-        # noise=pnl.ControlSignal
+        drift_rate=pnl.ControlSignal(),
+        threshold=pnl.ControlSignal(),
+        starting_point=pnl.ControlSignal(),
+        noise=pnl.ControlSignal()
     ),
     output_states=[{pnl.NAME: 'ACTION VECTOR',
                     pnl.INDEX: 0,

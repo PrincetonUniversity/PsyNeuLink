@@ -9433,14 +9433,11 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        # self.return_val.error_signal = error_array
-        # self.return_val.learning_signal = weight_change_matrix
-        #
-        # # return:
-        # # - weight_change_matrix and error_array
-        # return list(self.return_val)
+        # # MODIFIED 2/2/18 OLD:
         # return [weight_change_matrix, error_array]
+        # MODIFIED 2/2/18 NEW:
         return [error_array, error_array]
+        # MODIFIED 2/2/18 END
 
 
 # Argument names:

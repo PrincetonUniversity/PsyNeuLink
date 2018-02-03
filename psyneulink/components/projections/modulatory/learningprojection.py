@@ -608,7 +608,24 @@ class LearningProjection(ModulatoryProjection_Base):
         # if self.learning_rate:
         #     params.update({SLOPE:self.learning_rate})
 
-        self.weight_change_matrix = self.function(variable=self.sender.value,
+
+        learning_signal = self.sender.value
+        # MODIFIED 2/2/18 NEW:
+        # If learning_signal (self.sender.value) is lower dimensional than matrix being trained (self.receiver.value)
+        #    and the latter is a diagonal matrix (square, with values only along the diagonals)
+        #    and the weight_change_matrix is the same length as the diagonal,
+        #    then transform the weight_change_matrix into a diagonal matrix of the same dimension as the matrix
+        # CURRENT VERSION ONLY WORKS FOR self.weight_change_matrix.ndim = 1 and self.receiver.value.ndim = 2
+        # learning_signal = np.diag(self.sender.value)
+        matrix = self.receiver.value
+        if (
+                (learning_signal.ndim < matrix.ndim) and
+                np.allclose(matrix,np.diag(np.diag(matrix))) and
+                len(learning_signal)==len(np.diag(matrix))):
+            learning_signal = np.diag(learning_signal)
+        # MODIFIED 2/2/18 END
+
+        self.weight_change_matrix = self.function(variable=learning_signal,
                                                   params=params,
                                                   context=context)
 
