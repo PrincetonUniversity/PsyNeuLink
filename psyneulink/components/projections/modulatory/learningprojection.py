@@ -608,8 +608,6 @@ class LearningProjection(ModulatoryProjection_Base):
         # if self.learning_rate:
         #     params.update({SLOPE:self.learning_rate})
 
-
-        # MODIFIED 2/2/18 NEW:
         learning_signal = self.sender.value
         matrix = self.receiver.value
         # If learning_signal is lower dimensional than matrix being trained
@@ -636,7 +634,6 @@ class LearningProjection(ModulatoryProjection_Base):
                                               "to match the matrix of {} it is attempting to modify ({})".
                                               format(self.sender.owner.name, learning_signal,
                                                      self.receiver.owner.name, matrix))
-        # MODIFIED 2/2/18 END
 
         self.weight_change_matrix = self.function(variable=learning_signal,
                                                   params=params,
