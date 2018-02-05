@@ -1216,8 +1216,7 @@ class Mechanism_Base(Mechanism):
         # params = self._assign_args_to_param_dicts(**kwargs)
 
         self._execution_id = None
-        self.is_finished = False
-
+        self._is_finished = False
         # Register with MechanismRegistry or create one
         if not context is VALIDATE:
             register_category(entry=self,
@@ -1344,7 +1343,7 @@ class Mechanism_Base(Mechanism):
 
         return variable
 
-    def _parse_arg_input_states(self, default_variable, size, input_states):
+    def _parse_arg_input_states(self, input_states):
         '''
         Takes user-inputted argument **input_states** and returns an instance_defaults.variable-like
         object that it represents
@@ -1365,18 +1364,13 @@ class Mechanism_Base(Mechanism):
         if not isinstance(input_states, Iterable):
             input_states = [input_states]
 
-        # Pass default_variable or one based on size to _parse_state_spe as default
-        # FIX: THIS REALLY ISN'T RIGHT:  NEED TO BASE IT ON SHAPE REQUESTED IN SIZE
-        # dv = [0]*size if default_variable is None and size is not None else default_variable
-        dv = np.zeros(size) if default_variable is None and size is not None else default_variable
-        dv = convert_to_np_array(dv,2).tolist() if dv is not None else None
-        # dv = convert_to_np_array(default_variable,2).tolist() if default_variable is not None else None
         for i, s in enumerate(input_states):
-            parsed_spec = _parse_state_spec(owner=self,
-                                            variable=dv[i] if dv is not None else None,
-                                            state_type=InputState,
-                                            state_spec=s,
-                                            context='_parse_arg_input_states')
+            parsed_spec = _parse_state_spec(
+                owner=self,
+                state_type=InputState,
+                state_spec=s,
+                context='_parse_arg_input_states'
+            )
 
             if isinstance(parsed_spec, dict):
                 try:
@@ -1403,10 +1397,10 @@ class Mechanism_Base(Mechanism):
             try:
                 if variable is None:
                     variable = InputState.ClassDefaults.variable
-                else:
+                elif not InputState._state_spec_allows_override_variable(s):
                     variable_was_specified = True
             except UnboundLocalError:
-                   variable = InputState.ClassDefaults.variable
+                variable = InputState.ClassDefaults.variable
 
             default_variable_from_input_states.append(variable)
 
@@ -1426,15 +1420,13 @@ class Mechanism_Base(Mechanism):
 
         # handle specifying through params dictionary
         try:
-            default_variable_from_input_states, input_states_variable_was_specified = \
-                self._parse_arg_input_states(default_variable, size, params[INPUT_STATES])
+            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(params[INPUT_STATES])
         except (TypeError, KeyError):
             pass
 
         if default_variable_from_input_states is None:
             # fallback to standard arg specification
-            default_variable_from_input_states, input_states_variable_was_specified = \
-                self._parse_arg_input_states(default_variable, size, input_states)
+            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(input_states)
 
         if default_variable_from_input_states is not None:
             if default_variable is None:
@@ -1457,12 +1449,12 @@ class Mechanism_Base(Mechanism):
                         pass
             else:
                 if input_states_variable_was_specified:
-                    if iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_states):
-                        default_variable = default_variable_from_input_states
-                    else:
-                        raise MechanismError('default variable determined from the specified input_states spec ({0}) '
-                                             'is not compatible with the specified default variable ({1})'.
-                                             format(default_variable_from_input_states, default_variable
+                    if not iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_states):
+                        raise MechanismError(
+                            'default variable determined from the specified input_states spec ({0}) '
+                            'is not compatible with the specified default variable ({1})'.format(
+                                default_variable_from_input_states,
+                                default_variable
                             )
                         )
                 else:
@@ -2417,7 +2409,7 @@ class Mechanism_Base(Mechanism):
         # _instantiate_state_list(self, input_states, InputState)
         if input_states:
             # FIX: 11/9/17
-            added_variable, added_input_state = self._parse_arg_input_states(self.variable, self.size, input_states)
+            added_variable, added_input_state = self._parse_arg_input_states(input_states)
             if added_input_state:
                 old_variable = self.instance_defaults.variable.tolist()
                 old_variable.extend(added_variable)
@@ -2443,6 +2435,13 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.parameterstate import ParameterState
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
+    @property
+    def is_finished(self):
+        return self._is_finished
+
+    @is_finished.setter
+    def is_finished(self, value):
+        self._is_finished = value
 
     @property
     def input_state(self):

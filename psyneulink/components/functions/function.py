@@ -41,6 +41,7 @@ Integrator Functions:
 
 Distribution Functions:
   * `NormalDist`
+  * `UniformToNormalDist`
   * `ExponentialDist`
   * `UniformDist`
   * `GammaDist`
@@ -55,6 +56,9 @@ Learning Functions:
   * `Reinforcement`
   * `BackPropagation`
   * `TDLearning`
+
+Custom Function:
+  * `UserDefinedFunction`
 
 .. _Function_Overview:
 
@@ -185,7 +189,7 @@ from random import randint
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
-from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -215,7 +219,7 @@ __all__ = [
     'PROPENSITY', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
-    'UniformDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
+    'UniformDist', 'UniformToNormalDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
     'WT_MATRIX_SENDERS_DIM'
 ]
 
@@ -629,10 +633,6 @@ class Function_Base(Function):
                           name=name,
                           context=context)
         self.owner = owner
-        if self.owner is not None:
-            self.owner_name = ' ' + self.owner.name
-        else:
-            self.owner_name = ''
 
         super().__init__(default_variable=default_variable,
                          param_defaults=params,
@@ -658,7 +658,7 @@ class Function_Base(Function):
         """Validates function param
         Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s"""
         if not parameter_spec(param, numeric_only):
-            owner_name = 'of ' + self.owner.name if self.owner else ""
+            owner_name = 'of ' + self.owner_name if self.owner else ""
             raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
                                 format(param, param_name, self.__class__.__name__, owner_name))
 
@@ -739,6 +739,13 @@ class Function_Base(Function):
         for param_name, param_value in sorted(self.user_params.items()):
             print("\t{}: {}".format(param_name, param_value))
         print('')
+
+    @property
+    def owner_name(self):
+        try:
+            return self.owner.name
+        except AttributeError:
+            return '<no owner>'
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
@@ -989,34 +996,95 @@ class ArgumentTherapy(Function_Base):
 
 class UserDefinedFunction(Function_Base):
     """
-    Function_Base(           \
-         function,           \
-         variable=None,      \
+    UserDefinedFunction(           \
+         custom_function=None,           \
+         default_variable=None,      \
          params=None,        \
          owner=None,         \
          name=None,          \
          prefs=None          \
     )
+    COMMENT:
+        CW 1/25/18: Below is the documentation from before I modified the UserDefinedFunction. I leave it here as a
+        comment. Also, this doc is a bit long: should it be a separate doc page?
 
-    Implement user-defined Function.
+        Implement user-defined Function.
 
-    This is used to "wrap" custom functions in the PsyNeuLink `Function API <LINK>`.
-    It is automatically invoked and applied to any function that is assigned to the `function <Component.function>`
-    attribute of a PsyNeuLink component (other than a Function itself).  The function can take any arguments and
-    return any values.  However, if UserDefinedFunction is used to create a custom version of another PsyNeuLink
-    `Function <Function>`, then it must conform to the requirements of that Function's type.
+        This is used to "wrap" custom functions in the PsyNeuLink `Function API <LINK>`.
+        It is automatically invoked and applied to any function that is assigned to the `function <Component.function>`
+        attribute of a PsyNeuLink component (other than a Function itself).  The function can take any arguments and
+        return any values.  However, if UserDefinedFunction is used to create a custom version of another PsyNeuLink
+        `Function <Function>`, then it must conform to the requirements of that Function's type.
+
+        .. note::
+            Currently the arguments for the `function <UserDefinedFunction.function>` of a UserDefinedFunction are NOT
+            assigned as attributes of the UserDefinedFunction object or its owner, nor to its :keyword:`user_params` dict.
+    COMMENT
+
+    This is used to "wrap" custom functions in the PsyNeuLink Function API. It is automatically invoked and applied to
+    user-defined functions that are assigned to the `function <Component.function>` attribute of a PsyNeuLink component
+    (other than a Function itself). UserDefinedFunction is generally used with `ProcessingMechanism`. For example, if
+    you want a mechanism that takes in a vector of length 3, then calculates the sum and adds 2, you could write::
+
+        >>> import psyneulink as pnl
+        >>> def myFunction(variable, params, context):
+        ...     return sum(variable[0]) + 2
+        >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
+        >>> myMech.execute(input = [1, 2, 3])
+
+    Equivalently, you can also explicitly create a `UserDefinedFunction` and use it as the function::
+
+        >>> import psyneulink as pnl
+        >>> def myFunction(variable, params, context):
+        ...     return sum(variable[0]) + 2
+        >>> U = pnl.UserDefinedFunction(custom_function=myFunction, default_variable = [[0, 0, 0]])
+        >>> myMech = pnl.ProcessingMechanism(function = U, size = 3, name = 'myMech')
+        >>> myMech.execute(input = [1, 2, 3])
 
     .. note::
-       Currently the arguments for the `function <UserDefinedFunction.function>` of a UserDefinedFunction are NOT
-       assigned as attributes of the UserDefinedFunction object or its owner, nor to its :keyword:`user_params` dict.
+        Be sure to match the **default_variable** argument of the `UserDefinedFunction` with the **default_variable**
+        of the mechanism. (In this example, for `myMech`, `size = 3` is equivalent to `default_variable = [[0, 0, 0]]`.)
+
+    Custom functions can be as elaborate as desired, and can even include PsyNeuLink functions indirectly, such as::
+
+        >>> import psyneulink as pnl
+        >>> L = pnl.Logistic(gain = 2)
+        >>> def myFunction(variable, params, context):
+        ...     return L.function(variable) + 2
+        >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
+        >>> myMech.execute(input = [1, 2, 3])
+
+    Custom functions should generally ignore the **params** and **context** arguments, since **variable** is
+    the input to the function.
+
+    COMMENT:
+        CW 1/29/18: Adding params for custom functions sounds useful, but slightly thorny.
+    COMMENT
+
+    .. note::
+        Note that variable's format may be slightly different than you expect, because PsyNeuLink may change the
+        formatting while processing the input. For example, PsyNeuLink converts an input of [1, 2, 3] to [[1, 2, 3]].
+        If your custom_function returns the sum of the input, you should use `sum(variable[0])` in this case rather
+        than `sum(variable)`. When in doubt, add a `print(variable)` or `print(type(variable))` statement
+        in your custom function to verify the variable's format.
+
 
     Arguments
     ---------
 
-    function : function
+    COMMENT:
+        CW 1/26/18: Again, commented here is the old version, because I'm afraid I may have missed some functionality.
+        custom_function : function
         specifies function to "wrap." It can be any function, take any arguments (including standard ones,
         such as :keyword:`params` and :keyword:`context`) and return any value(s), so long as these are consistent
         with the context in which the UserDefinedFunction will be used.
+    COMMENT
+    custom_function : function
+        specifies the function to "wrap." It can be any function, but like any PsyNeuLink function it must take three
+        named arguments: :keyword:`variable` (the input to the function), :keyword:`params`, and :keyword:`context`. The
+        `custom_function` can return any value(s), so long as they fit with the context. For example, if the dimensions
+        of your custom function's output change, then it is not appropriate to pass your function's output to a
+        `MappingProjection`, since the `MappingProjection` expects input of consistent dimensions.
 
     variable : value : default ClassDefaults.variable
         specifies the format and a default value for the input to `function <Function>`.
@@ -1042,8 +1110,8 @@ class UserDefinedFunction(Function_Base):
         format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
         they are specified by the Function's :keyword:`ClassDefaults.variable`.
 
-    function : function
-        called by the Function's `owner <Function_Base.owner>` when it is executed.
+    custom_function : function
+        the user-specified function: called by the Function's `owner <Function_Base.owner>` when it is executed.
 
     COMMENT:
     functionOutputTypeConversion : Bool : False
@@ -1077,22 +1145,23 @@ class UserDefinedFunction(Function_Base):
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION_OUTPUT_TYPE_CONVERSION: False,
-        PARAMETER_STATE_PARAMS: None
+        PARAMETER_STATE_PARAMS: None,
+        CUSTOM_FUNCTION: None
     })
 
     @tc.typecheck
     def __init__(self,
-                 function,
-                 variable=None,
+                 custom_function=None,
+                 default_variable=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context=componentName + INITIALIZING):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(params=params)
-        self.user_defined_function = function
+        params = self._assign_args_to_param_dicts(custom_function=custom_function, params=params)
+        # self.custom_function = custom_function
 
-        super().__init__(default_variable=variable,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -1100,11 +1169,11 @@ class UserDefinedFunction(Function_Base):
 
         self.functionOutputType = None
 
-        # IMPLEMENT: PARSE ARGUMENTS FOR user_defined_function AND ASSIGN TO user_params
+        # IMPLEMENT: PARSE ARGUMENTS FOR custom_function AND ASSIGN TO user_params
 
     def function(self,
                  **kwargs):
-        return self.user_defined_function(**kwargs)
+        return self.custom_function(**kwargs)
 
 
 # region **********************************  COMBINATION FUNCTIONS  ****************************************************
@@ -3703,6 +3772,22 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
 
+        When LinearMatrix is the `function <Projection.function>` of a projection:
+
+            - the matrix specification must be compatible with the variables of the `sender <Projection.sender>` and
+              `receiver <Projection.receiver>`
+
+            - a matrix keyword specification generates a matrix based on the sender and receiver shapes
+
+        When LinearMatrix is instantiated on its own, or as the function of `Mechanism` or `State`:
+
+            - the matrix specification must be compatible with the function's own `variable <LinearMatrix.variable>`
+
+            - if matrix is not specified, a square identity matrix is generated based on the number of columns in
+              `variable <LinearMatrix.variable>`
+
+            - matrix keywords are not valid matrix specifications
+
     bounds : None
 
     params : Dict[param keyword: param value] : default None
@@ -3771,7 +3856,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  matrix:tc.optional(is_matrix) = None,
                  params=None,
                  owner=None,
@@ -3793,24 +3878,24 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         self._matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
-    def _validate_variable(self, variable, context=None):
-        """Insure that variable passed to LinearMatrix is a max 2D np.array
-
-        :param variable: (max 2D np.array)
-        :param context:
-        :return:
-        """
-        variable = self._update_variable(super()._validate_variable(variable, context))
-
-        # Check that variable <= 2D
-        try:
-            if not variable.ndim <= 2:
-                raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(variable, self.__class__.__name__))
-        except AttributeError:
-            raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be a numpy.ndarray".
-                                    format(variable, self.__class__.__name__))
-
-        return variable
+    # def _validate_variable(self, variable, context=None):
+    #     """Insure that variable passed to LinearMatrix is a max 2D np.array
+    #
+    #     :param variable: (max 2D np.array)
+    #     :param context:
+    #     :return:
+    #     """
+    #     variable = self._update_variable(super()._validate_variable(variable, context))
+    #
+    #     # Check that variable <= 2D
+    #     try:
+    #         if not variable.ndim <= 2:
+    #             raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(variable, self.__class__.__name__))
+    #     except AttributeError:
+    #         raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be a numpy.ndarray".
+    #                                 format(variable, self.__class__.__name__))
+    #
+    #     return variable
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -3826,166 +3911,211 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
 
         super()._validate_params(request_set, target_set, context)
+
         param_set = target_set
-        sender = self.instance_defaults.variable
-        # Note: this assumes variable is a 1D np.array, as enforced by _validate_variable
-        sender_len = sender.size
+        # proxy for checking whether the owner is a projection
+        if hasattr(self.owner, "receiver"):
+            sender = self.instance_defaults.variable
+            # Note: this assumes variable is a 1D np.array, as enforced by _validate_variable
+            sender_len = sender.size
 
-        # FIX: RELABEL sender -> input AND receiver -> output
-        # FIX: THIS NEEDS TO BE CLEANED UP:
-        #      - AT LEAST CHANGE THE NAME FROM kwReceiver TO output_template OR SOMETHING LIKE THAT
-        #      - MAKE ARG?  OR ADD OTHER PARAMS:  E.G., FILLER?
-        #      - OR REFACTOR TO INCLUDE AS MATRIX SPEC:
-        #                  IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
-        #                     IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
-        #                     IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
-        #                     NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
-        #      - DOCUMENT WHEN DONE
-        # MODIFIED 3/26/17 OLD:
-        # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
-        # First try to get receiver from specification in params
-        if RECEIVER in param_set:
-            self.receiver = param_set[RECEIVER]
-            # Check that specification is a list of numbers or an np.array
-            if ((isinstance(self.receiver, list) and all(isinstance(elem, numbers.Number) for elem in self.receiver)) or
-                    isinstance(self.receiver, np.ndarray)):
-                self.receiver = np.atleast_1d(self.receiver)
-            else:
-                raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
-                                    format(self.receiver, self.name))
-        # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
-        else:
-            if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
-                print("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
-                      format(sender_len))
-            self.receiver = param_set[RECEIVER] = sender
-
-        receiver_len = len(self.receiver)
-
-        # Check rest of params
-        message = ""
-        for param_name, param_value in param_set.items():
-
-            # Receiver param already checked above
-            if param_name is RECEIVER:
-                continue
-
-            # Not currently used here
-            if param_name in function_keywords:
-                continue
-
-            if param_name is AUTO_DEPENDENT:
-                continue
-
-            # Matrix specification param
-            elif param_name == MATRIX:
-
-                # A number (to be used as a filler), so OK
-                if isinstance(param_value, numbers.Number):
-                    continue
-
-                # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
-                elif isinstance(param_value, (list, np.ndarray, np.matrix)):
-                    # get dimensions specified by:
-                    #   variable (sender): width/cols/outer index
-                    #   kwReceiver param: height/rows/inner index
-
-                    weight_matrix = np.matrix(param_value)
-                    if 'U' in repr(weight_matrix.dtype):
-                        raise FunctionError("Non-numeric entry in MATRIX "
-                                            "specification ({}) for the {} "
-                                            "function of {}".format(param_value,
-                                                                    self.name,
-                                                                    self.owner.name))
-
-                    if weight_matrix.ndim != 2:
-                        raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
-                                            format(weight_matrix.ndim, self.name, self.owner.name))
-
-                    matrix_rows = weight_matrix.shape[0]
-                    matrix_cols = weight_matrix.shape[1]
-
-                    # Check that number of rows equals length of sender vector (variable)
-                    if matrix_rows != sender_len:
-                        raise FunctionError("The number of rows ({}) of the "
-                                            "matrix provided for {} function "
-                                            "of {} does not equal the length "
-                                            "({}) of the sender vector "
-                                            "(variable)".format(matrix_rows,
-                                                                self.name,
-                                                                self.owner.name,
-                                                                sender_len))
-
-                # Auto, full or random connectivity matrix requested (using keyword):
-                # Note:  assume that these will be properly processed by caller
-                #        (e.g., MappingProjection._instantiate_receiver)
-                elif param_value in MATRIX_KEYWORD_VALUES:
-                    continue
-
-                # Identity matrix requested (using keyword), so check send_len == receiver_len
-                elif param_value in {IDENTITY_MATRIX, HOLLOW_MATRIX}:
-                    # Receiver length doesn't equal sender length
-                    if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
-                        # if self.owner.prefs.verbosePref:
-                        #     print ("Identity matrix requested, but length of receiver ({0})"
-                        #            " does not match length of sender ({1});  sender length will be used".
-                        #            format(receiver_len, sender_len))
-                        # # Set receiver to sender
-                        # param_set[kwReceiver] = sender
-                        raise FunctionError("{} requested for the {} function of {}, "
-                                            "but length of receiver ({}) does not match length of sender ({})".
-                                            format(param_value, self.name, self.owner.name, receiver_len, sender_len))
-                    continue
-
-                # list used to describe matrix, so convert to 2D np.array and pass to validation of matrix below
-                elif isinstance(param_value, list):
-                    try:
-                        param_value = np.atleast_2d(param_value)
-                    except (ValueError, TypeError) as error_msg:
-                        raise FunctionError("Error in list specification ({}) of matrix for the {} function of {}: {})".
-                                            # format(param_value, self.__class__.__name__, error_msg))
-                                            format(param_value, self.name, self.owner.name, error_msg))
-
-                # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
-                elif isinstance(param_value, str):
-                    try:
-                        param_value = np.matrix(param_value)
-                    except (ValueError, TypeError) as error_msg:
-                        raise FunctionError("Error in string specification ({}) of the matrix "
-                                            "for the {} function of {}: {})".
-                                            # format(param_value, self.__class__.__name__, error_msg))
-                                            format(param_value, self.name, self.owner.name, error_msg))
-
-                # function so:
-                # - assume it uses random.rand()
-                # - call with two args as place markers for cols and rows
-                # -  validate that it returns an np.array or np.matrix
-                elif isinstance(param_value, function_type):
-                    test = param_value(1, 1)
-                    if not isinstance(test, (np.ndarray, np.matrix)):
-                        raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
-                                            "that returns a value ({}) that is neither a matrix nor an array".
-                                            # format(param_value, self.__class__.__name__, test))
-                                            format(self.name, self.owner.name, param_value, test))
-
+            # FIX: RELABEL sender -> input AND receiver -> output
+            # FIX: THIS NEEDS TO BE CLEANED UP:
+            #      - AT LEAST CHANGE THE NAME FROM kwReceiver TO output_template OR SOMETHING LIKE THAT
+            #      - MAKE ARG?  OR ADD OTHER PARAMS:  E.G., FILLER?
+            #      - OR REFACTOR TO INCLUDE AS MATRIX SPEC:
+            #                  IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
+            #                     IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
+            #                     IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
+            #                     NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
+            #      - DOCUMENT WHEN DONE
+            # MODIFIED 3/26/17 OLD:
+            # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
+            # First try to get receiver from specification in params
+            if RECEIVER in param_set:
+                self.receiver = param_set[RECEIVER]
+                # Check that specification is a list of numbers or an np.array
+                if ((isinstance(self.receiver, list) and all(
+                        isinstance(elem, numbers.Number) for elem in self.receiver)) or
+                        isinstance(self.receiver, np.ndarray)):
+                    self.receiver = np.atleast_1d(self.receiver)
                 else:
-                    raise FunctionError("Value of {} param ({}) for the {} function of {} "
-                                        "must be a matrix, a number (for filler), or a matrix keyword ({})".
-                                        format(param_name,
-                                               param_value,
-                                               self.name,
-                                               self.owner.name,
-                                               MATRIX_KEYWORD_NAMES))
+                    raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
+                                        format(self.receiver, self.name))
+            # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
             else:
-                message += "Unrecognized param ({}) specified for the {} function of {}\n".format(param_name,
-                                                                                                self.componentName,
-                                                                                                self.owner.name)
-                continue
+                if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
+                    print("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
+                          format(sender_len))
+                self.receiver = param_set[RECEIVER] = sender
 
-        if message:
-            raise FunctionError(message)
+            receiver_len = len(self.receiver)
+
+            # Check rest of params
+            message = ""
+            for param_name, param_value in param_set.items():
+
+                # Receiver param already checked above
+                if param_name is RECEIVER:
+                    continue
+
+                # Not currently used here
+                if param_name in function_keywords:
+                    continue
+
+                if param_name is AUTO_DEPENDENT:
+                    continue
+
+                # Matrix specification param
+                elif param_name == MATRIX:
+
+                    # A number (to be used as a filler), so OK
+                    if isinstance(param_value, numbers.Number):
+                        continue
+
+                    # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
+                    elif isinstance(param_value, (list, np.ndarray, np.matrix)):
+                        # get dimensions specified by:
+                        #   variable (sender): width/cols/outer index
+                        #   kwReceiver param: height/rows/inner index
+
+                        weight_matrix = np.matrix(param_value)
+                        if 'U' in repr(weight_matrix.dtype):
+                            raise FunctionError("Non-numeric entry in MATRIX "
+                                                "specification ({}) for the {} "
+                                                "function of {}".format(param_value,
+                                                                        self.name,
+                                                                        self.owner_name))
+
+                        if weight_matrix.ndim != 2:
+                            raise FunctionError("The matrix provided for the {} function of {} must be 2d (it is {}d".
+                                                format(weight_matrix.ndim, self.name, self.owner_name))
+
+                        matrix_rows = weight_matrix.shape[0]
+                        matrix_cols = weight_matrix.shape[1]
+
+                        # Check that number of rows equals length of sender vector (variable)
+                        if matrix_rows != sender_len:
+                            raise FunctionError("The number of rows ({}) of the "
+                                                "matrix provided for {} function "
+                                                "of {} does not equal the length "
+                                                "({}) of the sender vector "
+                                                "(variable)".format(matrix_rows,
+                                                                    self.name,
+                                                                    self.owner_name,
+                                                                    sender_len))
+
+                    # Auto, full or random connectivity matrix requested (using keyword):
+                    # Note:  assume that these will be properly processed by caller
+                    #        (e.g., MappingProjection._instantiate_receiver)
+                    elif param_value in MATRIX_KEYWORD_VALUES:
+                        continue
+
+                    # Identity matrix requested (using keyword), so check send_len == receiver_len
+                    elif param_value in {IDENTITY_MATRIX, HOLLOW_MATRIX}:
+                        # Receiver length doesn't equal sender length
+                        if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
+                            # if self.owner.prefs.verbosePref:
+                            #     print ("Identity matrix requested, but length of receiver ({0})"
+                            #            " does not match length of sender ({1});  sender length will be used".
+                            #            format(receiver_len, sender_len))
+                            # # Set receiver to sender
+                            # param_set[kwReceiver] = sender
+                            raise FunctionError("{} requested for the {} function of {}, "
+                                                "but length of receiver ({}) does not match length of sender ({})".
+                                                format(param_value, self.name, self.owner_name, receiver_len,
+                                                       sender_len))
+                        continue
+
+                    # list used to describe matrix, so convert to 2D np.array and pass to validation of matrix below
+                    elif isinstance(param_value, list):
+                        try:
+                            param_value = np.atleast_2d(param_value)
+                        except (ValueError, TypeError) as error_msg:
+                            raise FunctionError(
+                                "Error in list specification ({}) of matrix for the {} function of {}: {})".
+                                # format(param_value, self.__class__.__name__, error_msg))
+                                format(param_value, self.name, self.owner_name, error_msg))
+
+                    # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
+                    elif isinstance(param_value, str):
+                        try:
+                            param_value = np.matrix(param_value)
+                        except (ValueError, TypeError) as error_msg:
+                            raise FunctionError("Error in string specification ({}) of the matrix "
+                                                "for the {} function of {}: {})".
+                                                # format(param_value, self.__class__.__name__, error_msg))
+                                                format(param_value, self.name, self.owner_name, error_msg))
+
+                    # function so:
+                    # - assume it uses random.rand()
+                    # - call with two args as place markers for cols and rows
+                    # -  validate that it returns an np.array or np.matrix
+                    elif isinstance(param_value, function_type):
+                        test = param_value(1, 1)
+                        if not isinstance(test, (np.ndarray, np.matrix)):
+                            raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
+                                                "that returns a value ({}) that is neither a matrix nor an array".
+                                                # format(param_value, self.__class__.__name__, test))
+                                                format(self.name, self.owner_name, param_value, test))
+
+                    elif param_value is None:
+                        raise FunctionError("TEMP ERROR: param value is None.")
+
+                    else:
+                        raise FunctionError("Value of {} param ({}) for the {} function of {} "
+                                            "must be a matrix, a number (for filler), or a matrix keyword ({})".
+                                            format(param_name,
+                                                   param_value,
+                                                   self.name,
+                                                   self.owner_name,
+                                                   MATRIX_KEYWORD_NAMES))
+                else:
+                    message += "Unrecognized param ({}) specified for the {} function of {}\n".format(param_name,
+                                                                                                      self.componentName,
+                                                                                                      self.owner_name)
+                    continue
+            if message:
+                raise FunctionError(message)
+
+        # owner is a mechanism, state
+        # OR function was defined on its own (no owner)
+        else:
+            if MATRIX in param_set:
+                param_value = param_set[MATRIX]
+
+                # numeric value specified; verify that it is compatible with variable
+                if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
+                    if np.size(np.atleast_2d(param_value), 0) != np.size(np.atleast_2d(self.instance_defaults.variable),1):
+                        raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. "
+                                            "The shapes of variable {} and matrix {} are not compatible for "
+                                            "multiplication".format(self.name,
+                                                                    np.shape(np.atleast_2d(self.instance_defaults.variable)),
+                                                                    np.shape(np.atleast_2d(param_value))))
+
+                # keyword matrix specified - not valid outside of a projection
+                elif param_value in MATRIX_KEYWORD_VALUES:
+                    raise FunctionError("{} is not a valid specification for the matrix parameter of {}. Keywords "
+                                        "may only be used to specify the matrix parameter of a Projection's "
+                                        "LinearMatrix function. When the LinearMatrix function is implemented in a "
+                                        "mechanism, such as {}, the correct matrix cannot be determined from a "
+                                        "keyword. Instead, the matrix must be fully specified as a float, list, "
+                                        "np.ndarray, or np.matrix".
+                                        format(param_value, self.name, self.owner.name))
+
+                # The only remaining valid option is matrix = None (sorted out in instantiate_attribs_before_fn)
+                elif param_value is not None:
+                    raise FunctionError("Value of the matrix param ({}) for the {} function of {} "
+                                        "must be a matrix, a number (for filler), or a matrix keyword ({})".
+                                        format(param_value,
+                                               self.name,
+                                               self.owner_name,
+                                               MATRIX_KEYWORD_NAMES))
 
     def _instantiate_attributes_before_function(self, context=None):
+        if self.matrix is None and not hasattr(self.owner, "receiver"):
+            variable_length = np.size(np.atleast_2d(self.instance_defaults.variable), 1)
+            self.matrix = np.identity(variable_length)
         self.matrix = self.instantiate_matrix(self.matrix)
 
     def instantiate_matrix(self, specification, context=None):
@@ -4000,31 +4130,34 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         :return matrix: (2D list)
         """
+        from psyneulink.components.projections.projection import Projection
+        if isinstance(self.owner, Projection):
+            # Matrix provided (and validated in _validate_params); convert to np.array
+            if isinstance(specification, np.matrix):
+                return np.array(specification)
 
-        # Matrix provided (and validated in _validate_params); convert to np.array
-        if isinstance(specification, np.matrix):
-            return np.array(specification)
+            sender = self.instance_defaults.variable
+            sender_len = sender.shape[0]
+            try:
+                receiver = self.receiver
+            except:
+                raise FunctionError("Can't instantiate matrix specification ({}) for the {} function of {} "
+                                    "since its receiver has not been specified".
+                                    format(specification, self.name, self.owner_name))
+                # receiver = sender
+            receiver_len = receiver.shape[0]
 
-        sender = self.instance_defaults.variable
-        sender_len = sender.shape[0]
-        try:
-            receiver = self.receiver
-        except:
-            raise FunctionError("Can't instantiate matrix specification ({}) for the {} function of {} "
-                                "since its receiver has not been specified".
-                                format(specification, self.name, self.owner.name))
-            # receiver = sender
-        receiver_len = receiver.shape[0]
+            matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
 
-        matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
-
-        # This should never happen (should have been picked up in validate_param or above)
-        if matrix is None:
-            raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function that returns "
-                                "one, a matrix specification keyword ({}), or a number (filler)".
-                                format(specification, self.name, self.owner.name, MATRIX_KEYWORD_NAMES))
+            # This should never happen (should have been picked up in validate_param or above)
+            if matrix is None:
+                raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function that returns "
+                                    "one, a matrix specification keyword ({}), or a number (filler)".
+                                    format(specification, self.name, self.owner_name, MATRIX_KEYWORD_NAMES))
+            else:
+                return matrix
         else:
-            return matrix
+            return np.array(specification)
 
     def function(self,
                  variable=None,
@@ -4070,7 +4203,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         if matrix is None:
             raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
-                                format(keyword, self.name, self.owner.name))
+                                format(keyword, self.name, self.owner_name))
         else:
             return matrix
 
@@ -4270,6 +4403,15 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <Integrator.variable>` is integrated.
+
+    reinitialize : float or np.array
+        Sets
+
+        - `previous_value <Integrator.previous_value>`
+        - `initializer <Integrator.initial_value>`
+        - `value <Integrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4471,13 +4613,15 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         raise FunctionError("Integrator is not meant to be called explicitly")
 
     @property
-    def reset_initializer(self):
-        return self._initializer
+    def reinitialize(self):
+        return self.previous_value
 
-    @reset_initializer.setter
-    def reset_initializer(self, val):
+    @reinitialize.setter
+    def reinitialize(self, val):
         self._initializer = val
+        self.value = val
         self.previous_value = val
+
 
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
@@ -4569,6 +4713,15 @@ class SimpleIntegrator(
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
+
+    reinitialize : float or np.array
+        Sets
+
+        - `previous_value <SimpleIntegrator.previous_value>`
+        - `initializer <SimpleIntegrator.initializer>`
+        - `value <SimpleIntegrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4699,7 +4852,7 @@ class LCAIntegrator(
 
     .. math::
 
-        rate \\dot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+        rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
 
     COMMENT:
     `rate <LCAIntegrator.rate>` * `previous_value <LCAIntegrator.previous_value>` + \
@@ -4754,7 +4907,7 @@ class LCAIntegrator(
         applies to the corresponding element of `variable <LCAIntegrator.variable>`.
 
     noise : float, function, list, or 1d np.array
-        specifies random value to be added in each call to `function <LCAIntegrator.function>`.
+        specifies a value to be added in each call to `function <LCAIntegrator.function>`.
 
         If noise is a list or array, it must be the same length as `variable <LCAIntegrator.default_variable>`.
 
@@ -4776,6 +4929,15 @@ class LCAIntegrator(
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
+
+    reinitialize : float or np.array
+        Sets
+
+        - `previous_value <LCAIntegrator.previous_value>`
+        - `initializer <LCAIntegrator.initializer>`
+        - `value <LCAIntegrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4892,6 +5054,17 @@ class LCAIntegrator(
 
         return adjusted_value
 
+    @property
+    def reinitialize(self):
+        return self.previous_value
+
+    @reinitialize.setter
+    def reinitialize(self, val):
+        self._initializer = val
+        self.value = val
+        self.previous_value = val
+        self.previous_time = 0.0
+
 
 class ConstantIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -4984,6 +5157,15 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         `previous_value <ConstantIntegrator.previous_value>` is set.
 
         If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
+
+    reinitialize : float or np.array
+        Sets
+
+        - `previous_value <ConstantIntegrator.previous_value>`
+        - `initializer <ConstantIntegrator.initializer>`
+        - `value <ConstantIntegrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
@@ -5195,6 +5377,15 @@ class AdaptiveIntegrator(
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
+
+    reinitialize : float or np.array
+        Sets
+
+        - `previous_value <AdaptiveIntegrator.previous_value>`
+        - `initializer <AdaptiveIntegrator.initializer>`
+        - `value <AdaptiveIntegrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -5617,6 +5808,21 @@ class DriftDiffusionIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
+    reinitialize : float or np.array
+        Takes 2 items (i.e my_integrator.reinitialize = 1.0, 2.0), each of which is a float or array
+
+        Sets
+
+        - `previous_value <DriftDiffusionIntegrator.previous_value>`
+        - `initializer <DriftDiffusionIntegrator.initializer>`
+        - `value <DriftDiffusionIntegrator.value>`
+
+        to the quantity specified in reinitialize[0].
+
+        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in reinitialize[1].
+
+        Effectively begins accumulation over again at the original starting point and time, or new ones
+
     threshold : float : default 0.0
         when used properly determines the threshold (boundaries) of the drift diffusion process (i.e., at which the
         integration process is assumed to terminate).
@@ -5761,6 +5967,27 @@ class DriftDiffusionIntegrator(
         # Current output format is [[[decision_variable]], time]
         return adjusted_value
 
+    @property
+    def reinitialize(self):
+        return self.previous_value, self.previous_time
+
+    @reinitialize.setter
+    def reinitialize(self, value):
+        try:
+            val, time = value
+            self._initializer = val
+            self.value = val
+            self.previous_value = val
+            self.previous_time = time
+        except (ValueError, TypeError):
+            num_items = len(np.atleast_1d(value))
+            if num_items == 1:
+                raise FunctionError("DriftDiffusionIntegrator requires exactly two items (position, time) in order to "
+                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value, self.name))
+
+            raise FunctionError("DriftDiffusionIntegrator requires exactly two items (position, time) in order to "
+                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value, self.name))
+
 class OrnsteinUhlenbeckIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
@@ -5857,6 +6084,20 @@ class OrnsteinUhlenbeckIntegrator(
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <OrnsteinUhlenbeckIntegrator.variable>` is integrated.
+
+    reinitialize : float or np.array
+        Sets
+
+        - `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`
+        - `initializer <OrnsteinUhlenbeckIntegrator.initializer>`
+        - `value <OrnsteinUhlenbeckIntegrator.value>`
+
+        to the quantity specified in reinitialize[0]
+
+        Sets `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>` to the quantity specified in reinitialize[1].
+
+        Effectively begins accumulation over again at the specified value and time
+
 
     previous_time : float
         stores previous time at which the function was executed and accumulates with each execution according to
@@ -5991,6 +6232,26 @@ class OrnsteinUhlenbeckIntegrator(
 
         return adjusted_value
 
+    @property
+    def reinitialize(self):
+        return self.previous_value, self.previous_time
+
+    @reinitialize.setter
+    def reinitialize(self, value):
+        try:
+            val, time = value
+            self._initializer = val
+            self.value = val
+            self.previous_value = val
+            self.previous_time = time
+        except (ValueError, TypeError):
+            num_items = len(np.atleast_1d(value))
+            if num_items == 1:
+                raise FunctionError("OrnsteinUhlenbeckIntegrator requires exactly two items (position, time) in order to "
+                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value, self.name))
+
+            raise FunctionError("OrnsteinUhlenbeckIntegrator requires exactly two items (position, time) in order to "
+                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value, self.name))
 
 class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -6359,6 +6620,27 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     time_constant_w : float : default 12.5
         scaling factor on the dv/dt equation
 
+    reinitialize : float or np.array
+        Takes 3 items (i.e my_integrator.reinitialize = 1.0, 2.0, 3.0), each of which is a float or array 
+
+        Sets
+
+        - `previous_v <DriftDiffusionIntegrator.previous_v>`
+        - `initial_v <DriftDiffusionIntegrator.initial_v>`
+
+        to the quantity specified in reinitialize[0].
+
+        Sets
+
+        - `previous_w <DriftDiffusionIntegrator.previous_w>`
+        - `initial_w <DriftDiffusionIntegrator.initial_w>`
+
+        to the quantity specified in reinitialize[1].
+
+        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in reinitialize[2].
+
+        Effectively begins accumulation over again at the specified v, w, and time.
+
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
@@ -6438,7 +6720,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         self.previous_v = self.initial_v
         self.previous_w = self.initial_w
-        self.previous_t = self.t_0
+        self.previous_time = self.t_0
         super().__init__(
             default_variable=default_variable,
             params=params,
@@ -6683,7 +6965,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         if integration_method == "RK4":
             approximate_values = self._runge_kutta_4_FHN(self.previous_v,
                                                          self.previous_w,
-                                                         self.previous_t,
+                                                         self.previous_time,
                                                          dv_dt,
                                                          dw_dt,
                                                          time_step_size,
@@ -6706,7 +6988,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         elif integration_method == "EULER":
             approximate_values = self._euler_FHN(self.previous_v,
                                                          self.previous_w,
-                                                         self.previous_t,
+                                                         self.previous_time,
                                                          dv_dt,
                                                          dw_dt,
                                                          time_step_size,
@@ -6731,10 +7013,33 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         if not context or INITIALIZING not in context:
             self.previous_v = approximate_values[0]
             self.previous_w = approximate_values[1]
-            self.previous_t += time_step_size
+            self.previous_time += time_step_size
 
-        return self.previous_v, self.previous_w, self.previous_t
+        return self.previous_v, self.previous_w, self.previous_time
 
+    @property
+    def reinitialize(self):
+        return self.previous_v, self.previous_w, self.previous_time
+
+    @reinitialize.setter
+    def reinitialize(self, value):
+        try:
+            v, w, time = value
+            self._initial_v = v
+            self.previous_v = v
+            self._initial_w = w
+            self.previous_w = w
+            self.previous_time = time
+            self.value = v, w, time
+
+        except (ValueError, TypeError):
+            num_items = len(np.atleast_1d(value))
+            if num_items == 1:
+                raise FunctionError("FHNIntegrator requires exactly three items (v, w, time) in order to "
+                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value, self.name))
+
+            raise FunctionError("FHNIntegrator requires exactly three items (v, w, time) in order to "
+                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value, self.name))
 
 class AccumulatorIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -6844,6 +7149,15 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
         will be added.
+
+    reinitialize : float or np.array
+        Sets
+
+        - `previous_value <AccumulatorIntegrator.previous_value>`
+        - `initializer <AccumulatorIntegrator.initializer>`
+        - `value <AccumulatorIntegrator.value>`
+
+        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -7171,6 +7485,27 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         stores previous value with which `variable <AGTUtilityIntegrator.variable>` is integrated using the EWMA filter and
         long term parameters
 
+    reinitialize : float or np.array
+        Takes 2 items (i.e my_integrator.reinitialize = 1.0, 2.0), each of which is a float or array
+
+        Sets
+
+        - `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>`
+        - `initial_short_term_utility <AGTUtilityIntegrator.initial_short_term_utility>`
+
+        to the quantity specified in reinitialize[0].
+
+        Sets
+
+        - `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`
+        - `initial_long_term_utility <AGTUtilityIntegrator.initial_long_term_utility>`
+
+        to the quantity specified in reinitialize[1].
+
+        sets `value <AGTUtilityIntegrator.value>` to the to the quantity specified in reinitialize[2].
+
+        This effectively begins accumulation over again at the specified utilities.
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -7410,6 +7745,31 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
             self.previous_short_term_utility = short_term_utility
 
         return adjusted_value
+
+    @property
+    def reinitialize(self):
+        return self.previous_short_term_utility, self.previous_long_term_utility
+
+    @reinitialize.setter
+    def reinitialize(self, value):
+        try:
+            short, long = value
+            self._initial_short_term_utility = short
+            self.previous_short_term_utility = short
+            self._initial_long_term_utility = long
+            self.previous_long_term_utility = long
+
+        except (ValueError, TypeError):
+            num_items = len(np.atleast_1d(value))
+            if num_items == 1:
+                raise FunctionError("AGTUtilityIntegrator requires exactly two items (short term utility, long term utility) in order to "
+                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value,
+                                                                                                               self.name))
+            raise FunctionError("AGTUtilityIntegrator requires exactly two items (short term utility, long term utility) in order to "
+                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value,
+                                                                                                       self.name))
+
+
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
@@ -9822,7 +10182,10 @@ class Reinforcement(LearningFunction):  # --------------------------------------
             `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`.
 
         error signal : 1d np.array
+            COMMENT:
             same as value received in `error_signal <Reinforcement.error_signal>` argument.
+            COMMENT
+            1d array of error terms (the diagonal elements of the weight change matrix)
 
         """
 
@@ -9846,13 +10209,11 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        # self.return_val.error_signal = error_array
-        # self.return_val.learning_signal = weight_change_matrix
-        #
-        # # return:
-        # # - weight_change_matrix and error_array
-        # return list(self.return_val)
-        return [weight_change_matrix, error_array]
+        # # MODIFIED 2/2/18 OLD:
+        # return [weight_change_matrix, error_array]
+        # MODIFIED 2/2/18 NEW:
+        return [error_array, error_array]
+        # MODIFIED 2/2/18 END
 
 
 # Argument names:
@@ -10195,7 +10556,7 @@ class BackPropagation(LearningFunction):
         #           "-error_signal (dE_DA): {}\n    "
         #           "-derivative (dA_dW): {}\n    "
         #           "-error_derivative (dE_dW): {}\n".
-        #           format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
+        #           format(self.owner_name, self.activation_input, dE_dA, dA_dW ,dE_dW))
 
         # self.return_val.error_signal = dE_dW
         # self.return_val.learning_signal = weight_change_matrix

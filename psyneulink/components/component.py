@@ -52,13 +52,13 @@ of a `Process`), as appropriate.
 Component Structure
 -------------------
 
-.. _Component_Configurable_Attributes:
+.. _Component_Structural_Attributes:
 
-Core Configurable Attributes
+Core Structural Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every Component has the following set of core attributes that govern its operation, and that can be specified in
-corresponding arguments of its constructor, or by assigning them directly (see `ParameterState_Specification`):
+Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
+user once the component is constructed, with the one exception of `prefs <Component_Prefs>`.
 
 .. _Component_Variable:
 
@@ -164,12 +164,22 @@ Core Informational Attributes
 
 .. _Component_User_Params:
 
-* **user_params** - this contains a dictionary of all of the configurable parameters for a given Component.
+* **user_params** - a dictionary intended to provide a simple reference to all of the relevant features of a component.
+  The dictionary contains two main types of parameters:
+
+   (1) configurable parameters, meaning component-specific parameters that may or may not have a parameter state. A user
+   can change the value of a configurable parameter at any time. For example, on the TransferMechanism, clip,
+   initial_value, and integrator_mode are all available in user_params and do not have ParameterStates; noise and
+   smooothing_factor are also available in user_params and do have ParameterStates.
+
+   (2) informational parameters. For example, on the TransferMechanism, input_states, output_states, function, and
+   function_params are all available in user_params.
+
   The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
   <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
   as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
-  it cannot be used to make assignments.  Rather, changes to the value of a parameter
+  it cannot be used to make assignments.  Rather, changes to the value of a parameter, if allowed,
   must be made by assigning a value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``),
   or using the Component's `assign_params <Component.assign_params>` method.
 
@@ -281,7 +291,8 @@ COMMENT:
       _instantiate_function method checks that the input of the Component's `function <Comonent.function>` is compatible
       with its `variable <Component.variable>`).
 
-      * `_handle_size <Component._handle_size>` converts the `variable <Component.variable>` and `size <Component.size>` arguments to the correct dimensions (for `Mechanism <Mechanism>`, this is a 2D array and 1D
+      * `_handle_size <Component._handle_size>` converts the `variable <Component.variable>` and `size <Component.size>`
+        arguments to the correct dimensions (for `Mechanism <Mechanism>`, this is a 2D array and 1D
         array, respectively). If **variable** is not passed as an argument, this method attempts to infer `variable
         <Component.variable>` from the **size** argument, and vice versa if the **size** argument is missing.
         The _handle_size method then checks that the **size** and **variable** arguments are compatible.
@@ -702,26 +713,15 @@ class Component(object):
 
     class _DefaultsMeta(type, _DefaultsAliases):
         def __repr__(self):
-            return '{0} :\n{1}'.format(super().__repr__(), self.show())
+            return '{0} :\n{1}'.format(super().__repr__(), str(self))
 
         def __str__(self):
-            return self.show()
-
-        def values(self):
-            '''
-                Returns
-                -------
-                A dictionary consisting of the non-hidden and non-function attributes
-            '''
-            return self._values(self)
-
-        def show(self):
-            '''
-                Returns
-                -------
-                A pretty string version of the non-hidden and non-function attributes
-            '''
-            return self._show(self)
+            try:
+                return self.show()
+            except TypeError:
+                # InstanceDefaults (and any instance of _DefaultsMeta) does not have a
+                # classmethod show(), so revert to default type repr in this case
+                return super().__repr__()
 
     class Defaults(metaclass=_DefaultsMeta):
         def _values(self):
@@ -732,9 +732,30 @@ class Component(object):
 
         def _show(self):
             vals = self.values()
-            return '(\n\t{0}\n)'.format('\n\t'.join(['{0} = {1},'.format(k, vals[k]) for k in vals]))
+            return '(\n\t{0}\n)'.format('\n\t'.join(sorted(['{0} = {1},'.format(k, vals[k]) for k in vals])))
+
+        @classmethod
+        def values(cls):
+            '''
+                Returns
+                -------
+                A dictionary consisting of the non-hidden and non-function attributes
+            '''
+            return cls._values(cls)
+
+        @classmethod
+        def show(cls):
+            '''
+                Returns
+                -------
+                A pretty string version of the non-hidden and non-function attributes
+            '''
+            return cls._show(cls)
 
     class ClassDefaults(Defaults):
+        def __init__(self):
+            raise TypeError('ClassDefaults is not meant to be instantiated')
+
         exclude_from_parameter_states = [INPUT_STATES, OUTPUT_STATES]
         variable = np.array([0])
 
@@ -744,7 +765,7 @@ class Component(object):
                 setattr(self, param, kwargs[param])
 
         def __repr__(self):
-            return '{0} :\n{1}'.format(super().__repr__(), self.__str__())
+            return '{0} :\n{1}'.format(super().__repr__(), str(self))
 
         def __str__(self):
             return self.show()
@@ -969,10 +990,8 @@ class Component(object):
             If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
-        # TODO: to get rid of the allLists bug, consider replacing np.atleast_2d with a similar method
         if size is not NotImplemented:
 
-            # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
             #     variable = self.ClassDefaults.variable
             # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
@@ -996,7 +1015,6 @@ class Component(object):
                                       "integer, its value changed to {}.".format(x, int_x))
                 return int_x
 
-            #region Convert variable (if given) to a 2D array, and size (if given) to a 1D integer array
             if variable is not None:
                 variable = np.array(variable)
                 if variable.dtype == object:
@@ -1025,9 +1043,7 @@ class Component(object):
 
             if size is not None:
                 size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
-            # endregion
 
-            # region If variable is None, make it a 2D array of zeros each with length=size[i]
             # implementation note: for good coding practices, perhaps add setting to enable easy change of the default
             # value of variable (though it's an unlikely use case), which is an array of zeros at the moment
             if variable is None and size is not None:
@@ -1041,11 +1057,9 @@ class Component(object):
                                          "was unable to infer variable from the size argument, {}. size should be"
                                          " an integer or an array or list of integers. Either size or "
                                          "variable must be specified.".format(size))
-            # endregion
 
             # the two regions below (creating size if it's None and/or expanding it) are probably obsolete (7/7/17 CW)
 
-            # region If size is None, then make it a 1D array of scalars with size[i] = length(variable[i])
             if size is None and variable is not None:
                 size = []
                 try:
@@ -1059,7 +1073,6 @@ class Component(object):
                                 format(self.name, variable))
             # endregion
 
-            # region If length(size) = 1 and variable is not None, then expand size to length(variable)
             if size is not None and variable is not None:
                 if len(size) == 1 and len(variable) > 1:
                     new_size = np.empty(len(variable))
@@ -1070,8 +1083,6 @@ class Component(object):
             # param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
             # self.user_params_for_instantiation['size'] = None  # 7/5/17 VERY HACKY: See Changyan's Notes on this.
 
-            # MODIFIED 6/28/17 (CW): Because size was changed to always be a 1D array, the check below was changed
-            # to a for loop iterating over each element of variable and size
             # Both variable and size are specified
             if variable is not None and size is not None:
                 # If they conflict, give warning
@@ -1079,14 +1090,14 @@ class Component(object):
                     if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
                         warnings.warn("The size arg of {} conflicts with the length "
                                       "of its variable arg ({}) at element {}: variable takes precedence".
-                                      format(self.name, size[i], variable[i], i))
+                                      format(self.name, size, variable))
                 else:
                     for i in range(len(size)):
                         if size[i] != len(variable[i]):
                             if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
                                 warnings.warn("The size arg of {} ({}) conflicts with the length "
-                                                 "of its variable arg ({}) at element {}: variable takes precedence".
-                                                 format(self.name, size[i], variable[i], i))
+                                              "of its variable arg ({}) at element {}: variable takes precedence".
+                                              format(self.name, size[i], variable[i], i))
 
         return variable
 
@@ -1306,7 +1317,6 @@ class Component(object):
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
                     from psyneulink.components.functions.function import Function
-                    from inspect import isfunction
 
                     # It is a PsyNeuLink Function
                     # IMPLEMENTATION NOTE:  REPLACE THIS WITH "CONTINUE" ONCE _instantiate_function IS REFACTORED TO
@@ -1321,10 +1331,11 @@ class Component(object):
                                                                 function.user_params_for_instantiation[param_name])
 
                     # It is a generic function
-                    elif isfunction(function):
+                    elif inspect.isfunction(function):
                         # Assign as is (i.e., don't convert to class), since class is generic
                         # (_instantiate_function also tests for this and leaves it as is)
                         params[FUNCTION] = function
+                        params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
                         if hasattr(self, '_prefs') and self.verbosePref:
                             warnings.warn("{} is not a PsyNeuLink Function, "
                                           "therefore runtime_params cannot be used".format(default(arg).__name__))
@@ -1580,6 +1591,7 @@ class Component(object):
                     self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
             self.runtime_params_in_use = True
 
+        # CW 1/24/18: This elif block appears to be accidentally deleting self.input_states
         # Otherwise, reset paramsCurrent to paramInstanceDefaults
         elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
             # Can't do the following since function could still be a class ref rather than abound method (see below)
@@ -2100,7 +2112,7 @@ class Component(object):
                     continue
                 # function is a class, so function_params has not yet been implemented
                 self._function = request_set[FUNCTION]
-                if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
+                if param_name is FUNCTION_PARAMS and (inspect.isclass(self.function) or inspect.isfunction(self.function)):
                     continue
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
@@ -2570,7 +2582,8 @@ class Component(object):
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
                 from psyneulink.components.functions.function import UserDefinedFunction
-                self.function = UserDefinedFunction(function=function, context=context).function
+                self.function = UserDefinedFunction(default_variable=self.instance_defaults.variable, owner=self,
+                                                    custom_function=function, context=context).function
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
@@ -2868,7 +2881,8 @@ class Component(object):
             return self._log
         except AttributeError:
             if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete".
+                raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete "
+                                     "or appropriately configuring a system to which it belongs".
                                      format(self.name, 'log'))
             else:
                 raise AttributeError
@@ -2962,6 +2976,10 @@ def make_property(name):
         from psyneulink.components.functions.function import Function_Base
         if isinstance(self, Function_Base) and self.owner:
             param_state_owner = self.owner
+            # NOTE CW 1/26/18: if you're getting an error (such as "self.owner has no attribute function_params", or
+            # "function_params" has no attribute __additem__ (this happens when it's a dict rather than a
+            # ReadOnlyOrderedDict)) it may be caused by function_params not being included in paramInstanceDefaults,
+            # which may be caused by _assign_args_to_param_dicts() bugs. LMK, if you're getting bugs here like that.
             self.owner.function_params.__additem__(name, val)
         else:
             param_state_owner = self
@@ -2972,9 +2990,9 @@ def make_property(name):
         #
         #     # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
         #     # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
-        #     # 'reset_initializer'
+        #     # 'reinitialize'
         #     if hasattr(param_state.function_object, 'initializer'):
-        #         param_state.function_object.reset_initializer = val
+        #         param_state.function_object.reinitialize = val
 
     # Create the property
     prop = property(getter).setter(setter)

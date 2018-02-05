@@ -146,12 +146,17 @@ Tutorial
 
 :download:`Download PsyNeuLink Tutorial.ipynb <../../tutorial/PsyNeuLink Tutorial.ipynb>`
 
-PsyNeuLink includes a tutorial, available :download:`here <../../tutorial/PsyNeuLink Tutorial.ipynb>`, that provides examples of how to create basic Components
+PsyNeuLink includes a :download:`tutorial <../../tutorial/PsyNeuLink Tutorial.ipynb>`, that provides examples of how to create basic Components
 in PsyNeuLink, and combine them into Processes and a System.  The examples include construction of a simple
 decision making process using a Drift Diffusion Model, a neural network model of the Stroop effect, and a
 backpropagation network for learning the XOR problem.
 
-The tutorial currently requires python 3.5, and additional packages; to install the required tutorial packages, you may use PyPI:
+The tutorial can be run in a browser by clicking the badge below, or `this link <https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master>`__.
+
+.. image:: https://mybinder.org/badge.svg
+    :target: https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master
+
+To run the tutorial locally, you must run python 3.5 and install additional packages:
 
 ::
 

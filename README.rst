@@ -1,5 +1,7 @@
 .. image:: https://badge.fury.io/py/psyneulink.svg
     :target: https://badge.fury.io/py/psyneulink
+.. image:: https://mybinder.org/badge.svg
+    :target: https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master
 
 PsyNeuLink
 ==========
@@ -119,7 +121,12 @@ in PsyNeuLink, and combine them into Processes and a System.  The examples inclu
 decision making process using a Drift Diffusion Model, a neural network model of the Stroop effect, and a
 backpropagation network for learning the XOR problem.
 
-The tutorial currently requires additional packages; to install the required tutorial packages, you may use PyPI:
+The tutorial can be run in a browser by clicking the badge below or `this link <https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master>`__.
+
+.. image:: https://mybinder.org/badge.svg
+    :target: https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master
+
+To run the tutorial locally, you must run python 3.5 and install additional packages:
 
 ::
 

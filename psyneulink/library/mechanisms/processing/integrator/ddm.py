@@ -295,6 +295,7 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -620,6 +621,7 @@ class DDM(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
+                 # input_states:tc.optional(tc.any(list, dict))=None,
                  function=BogaczEtAl(drift_rate=1.0,
                                      starting_point=0.0,
                                      threshold=1.0,
@@ -645,6 +647,7 @@ class DDM(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
+                                                  # input_states=input_states,
                                                   output_states=output_states,
                                                   params=params)
 
@@ -799,6 +802,8 @@ class DDM(ProcessingMechanism_Base):
                     raise DDMError("The lowest value of {} for the {} "
                                    "assigned to the {} param of {} must be >= zero".
                                    format(ALLOCATION_SAMPLES, ControlSignal.__name__, THRESHOLD, self.name, threshold))
+            elif _is_control_spec(threshold):
+                pass
             else:
                 raise DDMError("PROGRAM ERROR: unrecognized specification for {} of {} ({})".
                                format(THRESHOLD, self.name, threshold))
@@ -866,12 +871,9 @@ class DDM(ProcessingMechanism_Base):
         if isinstance(self.function.__self__, Integrator):
 
             result = self.function(variable, context=context)
+
             if INITIALIZING not in context:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
-            if abs(result) >= self.function_object.get_current_function_param(THRESHOLD):
-                logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name,
-                                                                       self.function_object.get_current_function_param(THRESHOLD)))
-                self.is_finished = True
 
             return np.array([result, [self.function_object.previous_time]])
 
@@ -900,8 +902,8 @@ class DDM(ProcessingMechanism_Base):
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
             else:
-                raise DDMError("PROGRAM ERROR: Unrecognized analytic fuction ({}) for DDM".
-                               format(self.function.__self__))
+                raise DDMError("The function specified ({}) for {} is not a valid function selection for the DDM".
+                               format(self.function_object.name, self.name))
 
             # Convert ER to decision variable:
             threshold = float(self.function_object.get_current_function_param(THRESHOLD))
@@ -942,3 +944,25 @@ class DDM(ProcessingMechanism_Base):
             #     Returns: value
             #     """
             #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
+
+    @property
+    def is_finished(self):
+        # find the single numeric entry in previous_value
+        single_value = self.function_object.previous_value
+        # indexing into a matrix doesn't reduce dimensionality
+        if not isinstance(single_value, (np.matrix, str)):
+            while True:
+                try:
+                    single_value = single_value[0]
+                except (IndexError, TypeError):
+                    break
+
+        if (
+            abs(single_value) >= self.function_object.get_current_function_param(THRESHOLD)
+            and isinstance(self.function.__self__, Integrator)
+        ):
+            logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name,
+                                                                   self.function_object.get_current_function_param(
+                                                                       THRESHOLD)))
+            return True
+        return self._is_finished

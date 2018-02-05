@@ -41,9 +41,9 @@ def test_reinforcement():
     reward_values = [10, 10, 10]
 
     # Must initialize reward (won't be used, but needed for declaration of lambda function)
-    action_selection.output_states.value = [0, 0, 1]
+    action_selection.output_state.value = [0, 0, 1]
     # Get reward value for selected action)
-    reward = lambda: [reward_values[int(np.nonzero(action_selection.output_states.value)[0])]]
+    reward = lambda: [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
 
     def print_header(system):
         print("\n\n**** TRIAL: ", system.scheduler_processing.clock.simple_time)
@@ -51,8 +51,8 @@ def test_reinforcement():
     def show_weights():
         print('Reward prediction weights: \n', action_selection.input_states[0].path_afferents[0].mod_matrix)
         print('\nAction selected:  {}; predicted reward: {}'.format(
-            np.nonzero(action_selection.output_states.value)[0][0],
-            action_selection.output_states.value[np.nonzero(action_selection.output_states.value)[0][0]],
+            np.nonzero(action_selection.output_state.value)[0][0],
+            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)[0][0]],
         ))
 
     input_list = {input_layer: [[1, 1, 1]]}
@@ -91,14 +91,8 @@ def test_reinforcement():
         (action_selection.output_states.values, [np.array([0., 3.38417298, 0.])]),
         (pytest.helpers.expand_np_ndarray(mech_objective_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array([6.61582702]), np.array(43.7691671006736)])),
         (pytest.helpers.expand_np_ndarray(mech_learning_input_to_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array(
-                [0.        , 0.33079135, 0.        ]
-            ),
-            np.array([
-                [0.        , 0.        , 0.        ],
-                [0.        , 0.33079135, 0.        ],
-                [0.        , 0.        , 0.        ],
-            ])
-        ])),
+                [0.0, 0.33079135078125005, 0.0, 0.0, 0.33079135078125005, 0.0]
+        )])),
         (reward_prediction_weights.mod_matrix, np.array([
             [ 1.,          0.,          0.,        ],
             [ 0.,          3.71496434,  0.,        ],
