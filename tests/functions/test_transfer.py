@@ -24,7 +24,7 @@ test_data = [
     (Function.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_VAL}}, None, np.where(softmax_helper == np.max(softmax_helper), np.max(softmax_helper), 0)),
     (Function.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}}, None, np.where(softmax_helper == np.max(softmax_helper), 1, 0)),
     ### Skip probabilistic since it has no-deterministic result ###
-    (Function.LinearMatrix, test_var, {'matrix':test_matrix}, "typecheck fails", np.dot(test_var, test_matrix)),
+    (Function.LinearMatrix, test_var.tolist(), {'matrix':test_matrix.tolist()}, None, np.dot(test_var, test_matrix)),
 ]
 
 # use list, naming function produces ugly names
