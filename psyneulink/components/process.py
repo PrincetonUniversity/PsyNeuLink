@@ -1835,6 +1835,7 @@ class Process(Process_Base):
                     raise ProcessError("PROGRAM ERROR:  non-ControlProjection found to ParameterState for a Mechanism")
                 # MODIFIED 5/2/17 END
 
+        # CHANGYAN NOTE: check this spot
         # Label monitoring mechanisms and add _learning_mechs to _mechs for execution
         if self._learning_mechs:
 
@@ -2033,9 +2034,6 @@ class Process(Process_Base):
             target_mech_target = target_mech.input_states[TARGET]
 
             target = np.atleast_1d(target)
-
-            print("target mech target name = {}".format(target_mech_target.name))
-            print("target = {}".format(target))
 
             # Check that length of process' target input matches length of TARGET Mechanism's target input
             if len(target) != len(target_mech_target.instance_defaults.variable):

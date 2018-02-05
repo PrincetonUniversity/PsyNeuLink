@@ -8,7 +8,8 @@ try:
 except ImportError:
     leabra_available = False
 
-from psyneulink.library.mechanisms.processing.leabramechanism import LeabraMechanism, build_leabra_network, train_leabra_network
+from psyneulink.library.mechanisms.processing.leabramechanism import LeabraMechanism,\
+    build_leabra_network, run_leabra_network, train_leabra_network
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.functions.function import Linear, Logistic
@@ -16,8 +17,11 @@ from psyneulink.components.process import Process
 from psyneulink.components.system import System
 from psyneulink.globals.keywords import LEARNING
 
-@pytest.mark.skipif(not leabra_available, reason='Leabra package is unavailable')
-class TestLeabraMechanismInit:
+@pytest.mark.skipif(
+    not leabra_available,
+    reason='leabra python module is not installed. Please install it from https://github.com/benureau/leabra'
+)
+class TestLeabraMechInit:
 
     def test_leabra_init_empty(self):
         L = LeabraMechanism()
@@ -43,27 +47,66 @@ class TestLeabraMechanismInit:
         assert L.input_size == 3
         assert L.output_size == 3
         assert L.name == 'L1'
-        assert val.tolist() == [[0, 0, 0]]
+        assert np.sum(np.abs(val)) <= 0.001
 
     # NOTE 11/3/17 CW: I have no intuition about what these values should be, so I'm not "testing" output values for now
     def test_leabra_init_no_hidden_sizes(self):
         L = LeabraMechanism(input_size=4, output_size=4, hidden_layers=2, training_flag=False)
         val = L.execute([[1, 2, 3, 4], [0, 0, 0, 0]])
         assert L.hidden_layers == 2
-        assert L.hidden_sizes[0] == 4
+        assert L.hidden_sizes == 4
         assert len(val[0]) == 4
 
-# identical to test_leabra_network; but run_network has a different name to avoid pytest collisions
-@pytest.mark.skipif(not leabra_available, reason='Leabra package is unavailable')
-def run_network(network, input_pattern):
-    assert len(network.layers[0].units) == len(input_pattern)
-    network.set_inputs({'input_layer': input_pattern})
 
-    network.trial()
-    return [unit.act_m for unit in network.layers[-1].units]
+@pytest.mark.skipif(
+    not leabra_available,
+    reason='leabra python module is not installed. Please install it from https://github.com/benureau/leabra'
+)
+class TestLeabraMechRuntimeParams:
 
-@pytest.mark.skipif(not leabra_available, reason='Leabra package is unavailable')
-class TestLeabraMechanismPrecision:
+    def test_leabra_runtime_alone(self):
+        n_input = 4
+        n_output = 3
+        n_hidden = 2
+        hidden_sizes = None
+        inputs = [[.1, .2, .3, .4], [.4, .5, .6, .7], [-.6, -.7, -.8, -.9]]
+        train_input = [1, 0, -1]
+        random.seed(10)
+        L1 = LeabraMechanism(input_size=n_input, output_size=n_output, hidden_layers=n_hidden,
+                             hidden_sizes=None, training_flag=False)  # training flag is false
+        random.seed(10)
+        L2 = LeabraMechanism(input_size=n_input, output_size=n_output, hidden_layers=n_hidden,
+                             hidden_sizes=None, training_flag=True)  # training flag is true
+        random.seed(10)
+        net = build_leabra_network(n_input, n_output, n_hidden, hidden_sizes, False)
+
+        pnl_output1_1 = L1.execute(input=[inputs[0], train_input], runtime_params={"training_flag": False})
+        pnl_output2_1 = L2.execute(input=[inputs[0], train_input], runtime_params={"training_flag": False})
+        net_output_1 = run_leabra_network(net, input_pattern=inputs[0])
+        np.testing.assert_allclose(pnl_output1_1[0], net_output_1, atol=1e-08)
+        np.testing.assert_allclose(pnl_output2_1[0], net_output_1, atol=1e-08)
+
+        pnl_output1_2 = L1.execute(input=[inputs[1], train_input], runtime_params={"training_flag": True})
+        pnl_output2_2 = L2.execute(input=[inputs[1], train_input], runtime_params={"training_flag": True})
+        net_output_2 = train_leabra_network(net, input_pattern=inputs[1], output_pattern=train_input)
+        np.testing.assert_allclose(pnl_output1_2[0], net_output_2, atol=1e-08)
+        np.testing.assert_allclose(pnl_output2_2[0], net_output_2, atol=1e-08)
+
+        pnl_output1_3 = L1.execute(input=[inputs[2], train_input], runtime_params={"training_flag": False})
+        pnl_output2_3 = L2.execute(input=[inputs[2], train_input], runtime_params={"training_flag": False})
+        net_output_3 = run_leabra_network(net, input_pattern=inputs[2])
+        np.testing.assert_allclose(pnl_output1_3[0], net_output_3, atol=1e-08)
+        np.testing.assert_allclose(pnl_output2_3[0], net_output_3, atol=1e-08)
+
+    def test_leabra_runtime_in_system(self):
+        pass
+
+
+@pytest.mark.skipif(
+    not leabra_available,
+    reason='leabra python module is not installed. Please install it from https://github.com/benureau/leabra'
+)
+class TestLeabraMechPrecision:
 
     def test_leabra_prec_no_train(self):
         in_size = 4
@@ -72,8 +115,8 @@ class TestLeabraMechanismPrecision:
         num_trials = 2
         train = False
         inputs = [[0, 1, -1, 2]] * num_trials
-        train_data = [[0] * out_size] * num_trials
-        precision = 0.00001  # how far we accept error between PNL and Leabra output
+        train_data = [[10] * out_size] * num_trials
+        precision = 0.000000001  # how far we accept error between PNL and Leabra output
         random_seed = 1  # because Leabra network initializes with small random weights
         random.seed(random_seed)
         L_spec = LeabraMechanism(input_size=in_size, output_size=out_size, hidden_layers=num_hidden, training_flag=train)
@@ -100,7 +143,7 @@ class TestLeabraMechanismPrecision:
         for i in range(num_trials):
             out_spec = s_spec.run(inputs={T1_spec: inputs[i], T2_spec: train_data[i]})
             pnl_output_spec = out_spec[-1][0]
-            leabra_output = run_network(leabra_net, inputs[i])
+            leabra_output = run_leabra_network(leabra_net, inputs[i])
             diffs_spec = np.abs(np.array(pnl_output_spec) - np.array(leabra_output))
             out_net = s_net.run(inputs={T1_net: inputs[i], T2_net: train_data[i]})
             pnl_output_net = out_net[-1][0]
@@ -109,7 +152,7 @@ class TestLeabraMechanismPrecision:
         out_spec = s_spec.run(inputs={T1_spec: inputs, T2_spec: train_data})
         pnl_output_spec = np.array(out_spec[-1][0])
         for i in range(len(inputs)):
-            leabra_output = np.array(run_network(leabra_net, inputs[i]))
+            leabra_output = np.array(run_leabra_network(leabra_net, inputs[i]))
         diffs_spec = np.abs(pnl_output_spec - leabra_output)
         out_net = s_net.run(inputs={T1_net: inputs, T2_net: train_data})
         pnl_output_net = np.array(out_net[-1][0])
@@ -124,10 +167,11 @@ class TestLeabraMechanismPrecision:
         train = True
         inputs = [[0, 1, .5, -.2]] * num_trials
         train_data = [[.2, .5, 1, -.5]] * num_trials
-        precision = 0.00001  # how far we accept error between PNL and Leabra output
-        random_seed = 1  # because Leabra network initializes with small random weights
+        precision = 0.000000001  # how far we accept error between PNL and Leabra output
+        random_seed = 2  # because Leabra network initializes with small random weights
         random.seed(random_seed)
-        L_spec = LeabraMechanism(input_size=in_size, output_size=out_size, hidden_layers=num_hidden, training_flag=train)
+        L_spec = LeabraMechanism(input_size=in_size, output_size=out_size, hidden_layers=num_hidden,
+                                 training_flag=train)
         random.seed(random_seed)
         leabra_net = build_leabra_network(in_size, out_size, num_hidden, None, train)
         leabra_net2 = copy.deepcopy(leabra_net)
@@ -166,6 +210,8 @@ class TestLeabraMechanismPrecision:
         pnl_output_net = np.array(out_net[-1][0])
         diffs_net = np.abs(pnl_output_net - leabra_output)
         assert all(diffs_spec < precision) and all(diffs_net < precision)
+        # assert np.sum(np.abs(pnl_output_spec - np.array(train_data[0]))) < 0.1
+        # assert np.sum(np.abs(pnl_output_net - np.array(train_data[0]))) < 0.1
 
     # do one round of training, one round of non-training
     def test_leabra_prec_half_train(self):
@@ -176,8 +222,8 @@ class TestLeabraMechanismPrecision:
         train = True
         inputs = [[0, 1, .5, -.2]] * num_trials
         train_data = [[.2, .5, 1, -.5]] * num_trials
-        precision = 0.00001  # how far we accept error between PNL and Leabra output
-        random_seed = 1  # because Leabra network initializes with small random weights
+        precision = 0.000000001  # how far we accept error between PNL and Leabra output
+        random_seed = 3  # because Leabra network initializes with small random weights
         random.seed(random_seed)
         L_spec = LeabraMechanism(input_size=in_size, output_size=out_size, hidden_layers=num_hidden, training_flag=train)
         random.seed(random_seed)
@@ -210,19 +256,26 @@ class TestLeabraMechanismPrecision:
             diffs_net = np.abs(np.array(pnl_output_net) - np.array(leabra_output))
             assert all(diffs_spec < precision) and all(diffs_net < precision)
 
+        # assert np.sum(np.abs(pnl_output_spec - np.array(train_data[0]))) < 0.1
+        # assert np.sum(np.abs(pnl_output_net - np.array(train_data[0]))) < 0.1
+
+        # set all learning rules false
+        for conn in leabra_net.connections:
+            conn.spec.lrule = None
         L_net.training_flag = False
         L_spec.training_flag = False
+
         for i in range(num_trials):  # non-training round
             out_spec = s_spec.run(inputs={T1_spec: inputs[i], T2_spec: train_data[i]})
             pnl_output_spec = out_spec[-1][0]
-            leabra_output = run_network(leabra_net, inputs[i])
+            leabra_output = run_leabra_network(leabra_net, inputs[i])
             diffs_spec = np.abs(np.array(pnl_output_spec) - np.array(leabra_output))
             out_net = s_net.run(inputs={T1_net: inputs[i], T2_net: train_data[i]})
             pnl_output_net = out_net[-1][0]
             diffs_net = np.abs(np.array(pnl_output_net) - np.array(leabra_output))
             assert all(diffs_spec < precision) and all(diffs_net < precision)
-#
-# class TestLeabraMechanismInSystem:
+
+# class TestLeabraMechInSystem:
 #
 #     def test_leabra_mech_learning(self):
 #         T1 = TransferMechanism(size=5, function=Linear)

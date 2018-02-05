@@ -343,6 +343,8 @@ def test_EVC_gratton():
     mySystem.show()
     mySystem.controller.show()
 
+    # mySystem.show_graph(show_control=True)
+
     # configure EVC components
     mySystem.controller.control_signals[0].intensity_cost_function = Exponential(rate=0.8046).function
     mySystem.controller.control_signals[1].intensity_cost_function = Exponential(rate=0.8046).function

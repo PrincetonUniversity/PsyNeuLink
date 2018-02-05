@@ -835,16 +835,16 @@ def _adjust_target_dict(object, stimuli):
     #   targets in the system's target_mechanisms list, by reassigning targets to an OrderedDict:
     from collections import OrderedDict
     ordered_targets = OrderedDict()
-    for target in object.target_mechanisms:
+    for target_mech in object.target_mechanisms:
         # Get the process to which the TARGET mechanism belongs:
         try:
             process = next(projection.sender.owner for
-                           projection in target.input_states[TARGET].path_afferents if
+                           projection in target_mech.input_states[TARGET].path_afferents if
                            isinstance(projection.sender, ProcessInputState))
         except StopIteration:
             raise RunError("PROGRAM ERROR: No process found for TARGET Mechanism ({}) "
                            "supposed to be in target_mechanisms for {}".
-                           format(target.name, object.name))
+                           format(target_mech.name, object.name))
         # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
         terminal_mech = process.terminal_mechanisms[0]
         try:
@@ -916,7 +916,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.target_mechanism.target)))
+                                          np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
         return
 
     if object_type is PROCESS:
@@ -927,7 +927,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
 
-            if target_len != np.size(object.target_mechanism.input_states[TARGET].instance_defaults.variable):
+            if target_len != np.size(object.target_mechanisms[0].input_states[TARGET].instance_defaults.variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -935,7 +935,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.target_mechanism.target)))
+                                          np.size(object.target_mechanisms[0].target)))
 
             if any(np.size(target) != target_len for target in target_array):
                 raise RunError("Not all of the targets specified for {} are of the same length".
@@ -995,11 +995,10 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             # FIX: MAKE SURE THAT ITEMS IN targets ARE ALIGNED WITH CORRESPONDING object.target_mechanisms
             target_array = np.atleast_2d(targets)
 
+            # FIX CW 1/31/18: this loop is not interpreting targets correctly, I think. Needs to be tested for systems
+            # with multiple target mechanisms.
             for target, targetMechanism in zip(targets, object.target_mechanisms):
                 target_len = np.size(target)
-                print("size of target mech instance defaults var = {}".format(np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
-                print("target = {}".format(target))
-                print("length of target mech instance defaults var = {}".format(len(targetMechanism.input_states[TARGET].instance_defaults.variable)))
                 if target_len != np.size(targetMechanism.input_states[TARGET].instance_defaults.variable):
                     if num_targets_per_set > 1:
                         plural = 's'
