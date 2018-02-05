@@ -1311,9 +1311,7 @@ class Log:
             max_len = max([len(self.logged_entries[self._dealias_owner_name(e)]) for e in entries])
 
             # If there are no time values, only support entries of the same length
-            print("entries =", entries)
-            for e in entries:
-                print("e = ", self._dealias_owner_name(e))
+            # Must dealias both e and zeroth entry because either/both of these could be 'value'
             if not all(len(self.logged_entries[self._dealias_owner_name(e)])==len(self.logged_entries[self._dealias_owner_name(entries[0])])for e in entries):
                 raise LogError("nparray output requires that all entries have time values or are of equal length")
 
@@ -1361,8 +1359,154 @@ class Log:
             npa.append(row)
 
         npa = np.array(npa, dtype=object)
-        return(npa)
 
+        return npa
+
+    def nparray_dictionary(self,
+                           entries=None,
+                           owner_name:bool=False):
+        """
+        nparray_dictionary(                 \
+            entries=None,        \
+            owner_name=False):   \
+            )
+
+        Returns a Python ordered dictionary. Keys are logged items, ordered in the same order as they are specified in
+        the **entries** argument, plus Time. Values are numpy arrays in which each item is the data for that time point of the
+        component specified in the Key.
+
+        - - - - example - - - - 
+
+        If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not `None`),
+        then the first three rows are time indices for the run, trial and time_step of each data item, respectively.
+        Each subsequent row is the times series of data for a given entry.  If there is no data for a given entry
+        at a given time point, it is entered as `None`.
+
+        If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
+        System), then all of the entries must have the same number of data (LogEntry) items, and the first row is a
+        sequential index (starting with 0) that simply designates the data item number.
+
+        .. note::
+           For data without time stamps, the nth items in each entry correspond (i.e., ones in the same column)
+           are not guaranteed to have been logged at the same time point.
+
+        If header is `True`, the first item of each row is a header field: for time indices it is either "Run",
+        "Trial", and "Time_step", or "Index" if any data are missing time stamps.  For subsequent rows it is the name
+        of the Component logged in that entry (see **owner_name** argument below for formatting).
+
+
+        Arguments
+        ---------
+
+        entries : string, Component or list containing either : default ALL
+            specifies the entries of the Log to be included in the output;  they must be `loggable_items
+            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are included.
+
+        COMMENT:
+        time : TimeScale or ALL : default ALL
+            specifies the "granularity" of how the time of an entry is reported.  *ALL* (same as `TIME_STEP
+            <TimeScale.TIME_STEP>) reports every entry in the Log in a separate column (axis 1) of the np.array
+            returned.
+        COMMENT
+
+        header : bool : default True
+            specifies whether or not to include a header in each row with the name of the Component for that entry.
+
+        owner_name : bool : default False
+            specifies whether or not to include the Log's `owner <Log.owner>` in the header of each field;
+            if it is True, the format of the header for each field is "<Owner name>[<entry name>]";
+            otherwise, it is "<entry name>".
+
+        Returns:
+            2d np.array
+        """
+
+        entries = self._validate_entries_arg(entries, logged=True)
+
+        if not entries:
+            return None
+
+        if owner_name is True:
+            owner_name_str = self.owner.name
+            lb = "["
+            rb = "]"
+        else:
+            owner_name_str = lb = rb = ""
+
+        # Get time values for all entries and sort them
+        time_values = []
+        for entry in entries:
+            entry = self._dealias_owner_name(entry)
+            time_values.extend([item.time
+                                for item in self.logged_entries[entry]
+                                if all(i is not None for i in item.time)])
+        # Insure that all time values are assigned, get rid of duplicates, and sort
+        if all(all(i is not None for i in t) for t in time_values):
+            time_values = sorted(list(set(time_values)))
+        npa = []
+
+        # Create time rows (one for each time scale)
+        if time_values:
+            for i in range(NUM_TIME_SCALES):
+                row = [[t[i]] for t in time_values]
+                time_header = [TIME_SCALE_NAMES[i].capitalize()]
+                row = [time_header] + row
+                npa.append(row)
+        # If any time values are empty, revert to indexing the entries;
+        #    this requires that all entries have the same length
+        else:
+            max_len = max([len(self.logged_entries[self._dealias_owner_name(e)]) for e in entries])
+
+            # If there are no time values, only support entries of the same length
+            # Must dealias both e and zeroth entry because either/both of these could be 'value'
+            if not all(len(self.logged_entries[self._dealias_owner_name(e)])==len(self.logged_entries[self._dealias_owner_name(entries[0])])for e in entries):
+                raise LogError("nparray output requires that all entries have time values or are of equal length")
+
+            npa = np.arange(max_len).reshape(max_len,1).tolist()
+
+
+
+        # For each entry, iterate through its LogEntry tuples:
+        #    for each LogEntry tuple, check whether its time matches that of the next column:
+        #        if so, enter it in the entry's list
+        #        if not, enter `None` and check for a match in the next time column
+        for entry in entries:
+            entry = self._dealias_owner_name(entry)
+            row = []
+            time_col = iter(time_values)
+            for datum in self.logged_entries[entry]:
+                if time_values:
+                    # time_col = iter(time_values)
+                # # MODIFIED 12/14/17 OLD:
+                #     while datum.time != next(time_col,None):
+                #         row.append(None)
+                # value = None if datum.value is None else np.array(datum.value).tolist()
+                # row.append(value)
+                # MODIFIED 12/14/17 NEW:
+                    for i in range(len(time_values)):
+                        time = next(time_col,None)
+                        if time is None:
+                            break
+                        if datum.time != time:
+                            row.append(None)
+                            continue
+                        value = None if datum.value is None else np.array(datum.value).tolist()
+                        row.append(value)
+                        break
+                else:
+                    value = None if datum.value is None else datum.value.tolist()
+                    row.append(value)
+                # MODIFIED 12/14/17 END
+
+            if header:
+                entry_header = "{}{}{}{}".format(owner_name_str, lb, self._alias_owner_name(entry), rb)
+                row = [entry_header] + row
+            npa.append(row)
+
+        npa = np.array(npa, dtype=object)
+
+        return npa
     @tc.typecheck
     def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'"):
         """
