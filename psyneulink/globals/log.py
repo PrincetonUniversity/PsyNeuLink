@@ -1288,6 +1288,7 @@ class Log:
         # Get time values for all entries and sort them
         time_values = []
         for entry in entries:
+            entry = self._dealias_owner_name(entry)
             time_values.extend([item.time
                                 for item in self.logged_entries[entry]
                                 if all(i is not None for i in item.time)])
@@ -1324,6 +1325,7 @@ class Log:
         #        if so, enter it in the entry's list
         #        if not, enter `None` and check for a match in the next time column
         for entry in entries:
+            entry = self._dealias_owner_name(entry)
             row = []
             time_col = iter(time_values)
             for datum in self.logged_entries[entry]:
@@ -1452,7 +1454,7 @@ class Log:
                 if self._alias_owner_name(entry) not in self.loggable_items:
                     raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
             if logged:
-                if entry not in self.logged_entries:
+                if entry not in self.logged_entries and entry != 'value':
                     # raise LogError("{} is not currently being logged by {} (try using set_log_conditions)".
                     #                format(repr(entry), self.owner.name))
                     print("\n{} is not currently being logged by {} or has not data (try using set_log_conditions)".
