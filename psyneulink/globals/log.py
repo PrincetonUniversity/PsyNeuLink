@@ -1308,10 +1308,13 @@ class Log:
         # If any time values are empty, revert to indexing the entries;
         #    this requires that all entries have the same length
         else:
-            max_len = max([len(self.logged_entries[e]) for e in entries])
+            max_len = max([len(self.logged_entries[self._dealias_owner_name(e)]) for e in entries])
 
             # If there are no time values, only support entries of the same length
-            if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
+            print("entries =", entries)
+            for e in entries:
+                print("e = ", self._dealias_owner_name(e))
+            if not all(len(self.logged_entries[self._dealias_owner_name(e)])==len(self.logged_entries[self._dealias_owner_name(entries[0])])for e in entries):
                 raise LogError("nparray output requires that all entries have time values or are of equal length")
 
             npa = np.arange(max_len).reshape(max_len,1).tolist()
