@@ -4159,6 +4159,74 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         else:
             return np.array(specification)
 
+    def get_param_struct_type(self):
+        # TODO: move this to a nicer, shareable place
+        def nested_len(x):
+            try:
+                return sum(nested_len(y) for y in x)
+            except:
+                return 1
+        with pnlvm.LLVMBuilderContext() as ctx:
+            matrix_ty = ir.ArrayType(ctx.float_ty, nested_len(self.matrix))
+            param_type = ir.LiteralStructType((matrix_ty,))
+        return param_type
+
+    def get_param_initializer(self):
+        return tuple([self.matrix,])
+
+    def _gen_llvm_function(self):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_name = ctx.module.get_unique_name("linear_matrix")
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            func_ty = ir.FunctionType(ir.VoidType(),
+                (self.get_param_struct_type().as_pointer(),
+                 vec_ty.as_pointer(), vec_ty.as_pointer()))
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
+            params, vi, vo = llvm_func.args
+            for a in params, vi, vo:
+                a.attributes.add('nonnull')
+                a.attributes.add('noalias')
+
+            builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
+            vector_length = ctx.int32_ty(self._variable_length)
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+            vec_in = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            matrix = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            vec_out = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.call(builtin, [vec_in, matrix, vector_length, vector_length, vec_out])
+            builder.ret_void()
+        return func_name
+
+    def bin_function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+
+        # TODO: Port this to llvm
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        bf = self._llvmBinFunction
+
+        ret = np.zeros(len(variable))
+
+        par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+
+        ct_param = np.array(self.matrix).ctypes.data_as(ctypes.POINTER(par_struct_ty))
+
+        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
+        bf(ct_param, ct_vi, ct_vo)
+
+        return ret
+
     def function(self,
                  variable=None,
                  params=None,
