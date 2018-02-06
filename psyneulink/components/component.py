@@ -373,6 +373,8 @@ from psyneulink.globals.preferences.componentpreferenceset import ComponentPrefe
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
 
+import psyneulink.llvm as pnlvm
+
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
     'InitStatus', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
@@ -973,6 +975,28 @@ class Component(object):
         self._instantiate_attributes_after_function(context=context)
 
         self.init_status = InitStatus.INITIALIZED
+
+        self.__llvm_function_name = None
+        self.__llvm_regenerate = True
+        self.__llvm_bin_function = None
+        self.__llvm_recompile = True
+
+        self.nv_state = None
+
+    @property
+    def llvmSymbolName(self):
+        if self.__llvm_regenerate:
+            self.__llvm_function_name = self._gen_llvm_function()
+            self.__llvm_regenerate = False
+            self.__llvm_recompile = True
+        return self.__llvm_function_name
+
+    @property
+    def _llvmBinFunction(self):
+        if self.__llvm_recompile:
+            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self.llvmSymbolName)
+            self.__llvm_recompile = False
+        return self.__llvm_bin_function
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
