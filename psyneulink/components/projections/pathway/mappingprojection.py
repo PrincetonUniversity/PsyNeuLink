@@ -269,6 +269,11 @@ from psyneulink.globals.log import LogCondition, LogEntry
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
+import functools
+import ctypes
+import psyneulink.llvm as pnlvm
+from llvmlite import ir
+
 __all__ = [
     'MappingError', 'MappingProjection',
 ]
@@ -497,6 +502,12 @@ class MappingProjection(PathwayProjection_Base):
                          prefs=prefs,
                          context=self)
 
+        try:
+            mapping_input_len = len(self.instance_defaults.variable)
+        except TypeError:
+            mapping_input_len = 1
+        self._variable_length = mapping_input_len
+
     def _instantiate_parameter_states(self, context=None):
 
         super()._instantiate_parameter_states(context=context)
@@ -510,6 +521,7 @@ class MappingProjection(PathwayProjection_Base):
 
         self._parameter_states[MATRIX].function_object = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
                                                                             initializer=matrix,
+                                                                            default_variable=self.instance_defaults.variable,
                                                                             # rate=initial_rate
                                                                                )
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function
@@ -532,6 +544,8 @@ class MappingProjection(PathwayProjection_Base):
             mapping_input_len = len(self.instance_defaults.variable)
         except TypeError:
             mapping_input_len = 1
+        self._variable_length = mapping_input_len
+
         try:
             receiver_len = len(self.receiver.instance_defaults.variable)
         except TypeError:
@@ -699,3 +713,63 @@ class MappingProjection(PathwayProjection_Base):
     def logPref(self, setting):
         self.prefs.logPref = setting
         self.parameter_states[MATRIX].logPref = setting
+
+    def get_param_struct_type(self):
+        param_type_list = [self.function_object.get_param_struct_type()]
+        return ir.LiteralStructType(param_type_list)
+
+
+    def get_context_struct_type(self):
+        context_type_list = [self.function_object.get_context_struct_type()]
+        context_type = ir.LiteralStructType(context_type_list)
+        return context_type
+
+
+    def get_output_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            output_type = ir.LiteralStructType([vec_ty])
+            return output_type
+
+
+    def get_input_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            input_type = ir.LiteralStructType([vec_ty])
+            return input_type
+
+
+    def get_param_initializer(self):
+        return tuple(self.function_object.get_param_initializer(),);
+
+
+    def _gen_llvm_function(self):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_ty = ir.FunctionType(ir.VoidType(),
+                (self.get_param_struct_type().as_pointer(),
+                 self.get_context_struct_type().as_pointer(),
+                 self.get_input_struct_type().as_pointer(),
+                 self.get_output_struct_type().as_pointer()))
+
+            func_name = ctx.module.get_unique_name("mapping projection")
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            params, state, si, so = llvm_func.args
+            for p in params, state, si, so:
+                p.attributes.add('nonnull')
+                p.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+            vi = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+            mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builder.call(main_function, [mf_params, vi, vo])
+
+            builder.ret_void()
+        return func_name
