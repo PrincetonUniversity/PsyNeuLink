@@ -7,3 +7,4 @@ Processing Mechanisms
    TransferMechanisms
    IntegratorMechanisms
    ObjectiveMechanisms
+   LeabraMechanism

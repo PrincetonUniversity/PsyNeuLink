@@ -1,5 +1,5 @@
-MontagueModel
-=============
+Dopamine and Temporal Differences Learning (Montague et al., 1996)
+==================================================================
 
 This implements a model of the mesolimbic dopamine cell activity during monkey
 conditioning as found in `Montague, Dayan, and Sejnowski (1996). <http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_

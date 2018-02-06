@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Process &mdash; PsyNeuLink 0.4.2.1 documentation</title>
+  <title>Process &mdash; PsyNeuLink 0.4.3.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.2.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.3.0 documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Composition.html"/>
         <link rel="next" title="Scheduling" href="Scheduling.html"/>
         <link rel="prev" title="System" href="System.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.2.1
+                0.4.3.0
               </div>
             
           
@@ -744,7 +744,7 @@ until the number of <code class="xref any docutils literal"><span class="pre">TR
 <li><strong>initialize</strong> (<em>bool default False</em>) – specifies whether to call the Process` <a class="reference internal" href="#psyneulink.components.process.Process.initialize" title="psyneulink.components.process.Process.initialize"><code class="xref any py py-meth docutils literal"><span class="pre">initialize</span></code></a> method before executing
 each <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>;  if it is <code class="xref any docutils literal"><span class="pre">False</span></code>, then <a class="reference internal" href="#psyneulink.components.process.Process.initialize" title="psyneulink.components.process.Process.initialize"><code class="xref any py py-meth docutils literal"><span class="pre">initialize</span></code></a> is called only <em>once</em>,
 before the first <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> executed.</li>
-<li><strong>initial_values</strong> (<em>ProcessingMechanism</em><em>, </em><em>List</em><em>[</em><a class="reference internal" href="#psyneulink.components.process.Process.input" title="psyneulink.components.process.Process.input"><em>input</em></a><em>] or </em><em>np.ndarray</em><em>(</em><a class="reference internal" href="#psyneulink.components.process.Process.input" title="psyneulink.components.process.Process.input"><em>input</em></a><em>)</em><em>] </em><em>: default None</em>) – specifies the values used to initialize <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> designated as
+<li><strong>initial_values</strong> (<a class="reference internal" href="ProcessingMechanism.html#psyneulink.components.mechanisms.processing.processingmechanism.ProcessingMechanism" title="psyneulink.components.mechanisms.processing.processingmechanism.ProcessingMechanism"><em>ProcessingMechanism</em></a><em>, </em><em>List</em><em>[</em><a class="reference internal" href="#psyneulink.components.process.Process.input" title="psyneulink.components.process.Process.input"><em>input</em></a><em>] or </em><em>np.ndarray</em><em>(</em><a class="reference internal" href="#psyneulink.components.process.Process.input" title="psyneulink.components.process.Process.input"><em>input</em></a><em>)</em><em>] </em><em>: default None</em>) – specifies the values used to initialize <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> designated as
 <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a> whenever the Process’ <a class="reference internal" href="#psyneulink.components.process.Process.initialize" title="psyneulink.components.process.Process.initialize"><code class="xref any py py-meth docutils literal"><span class="pre">initialize</span></code></a> method is called. The key
 for each entry must be a ProcessingMechanism <a class="reference internal" href="#process-mechanism-initialize-cycle"><span class="std std-ref">designated</span></a>
 <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>, and the value must be a number, list or np.array that is compatible with the format
@@ -845,7 +845,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.2.1',
+            VERSION:'0.4.3.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
