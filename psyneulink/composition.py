@@ -343,6 +343,8 @@ class Composition(object):
         self.mechanisms = []
         self.input_mechanisms = {}
 
+        self.projections = []
+
         self._scheduler_processing = None
         self._scheduler_learning = None
 
@@ -469,6 +471,7 @@ class Composition(object):
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
+            self.projections.append(projection)
 
     def add_linear_processing_pathway(self, pathway):
         # First, verify that the pathway begins with a mechanism
@@ -1066,10 +1069,12 @@ class Composition(object):
 
     def get_param_struct_type(self):
         param_type_list = [m.get_param_struct_type() for m in self.mechanisms]
+        param_type_list += [p.get_param_struct_type() for p in self.projections]
         return ir.LiteralStructType(param_type_list)
 
     def get_context_struct_type(self):
         ctx_type_list = [m.get_context_struct_type() for m in self.mechanisms]
+        ctx_type_list += [p.get_context_struct_type() for p in self.projections]
         return ir.LiteralStructType(ctx_type_list)
 
     def get_data_struct_type(self):
@@ -1105,7 +1110,9 @@ class Composition(object):
         data = [tupleize(inputs[m]) if m in inputs else tuple(m.instance_defaults.variable) for m in self.input_mechanisms.keys()]
         self.__data_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())(tuple(data))
         if reinit or self.__params_struct is None:
-            params = tuple([m.get_param_initializer() for m in self.mechanisms])
+            params = [m.get_param_initializer() for m in self.mechanisms]
+            params += [tupleize(p.get_param_initializer()) for p in self.projections]
+            params = tuple(params)
             self.__params_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())(*params) # FIXME: I have no idea why this needs *
         if reinit or self.__context_struct is None:
             self.__context_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_context_struct_type())()
@@ -1113,13 +1120,15 @@ class Composition(object):
     def __gen_mech_wrapper(self, mech):
         idx = self.mechanisms.index(mech)
         #TODO should this use mechanism role?
-        if mech in self.input_mechanisms.keys():
+        is_input_mechanism = mech in self.input_mechanisms.keys()
+        if is_input_mechanism:
             vi_idx = list(self.input_mechanisms.keys()).index(mech)
         else:
             # Get projection
             par = self.graph.get_parents_from_component(mech)
             assert len(par) == 1
             par_proj = par[0].component
+            proj_idx = len(self.mechanisms) + self.projections.index(par_proj)
 
             # Get parent mechanism
             par = self.graph.get_parents_from_component(par_proj)
@@ -1147,10 +1156,17 @@ class Composition(object):
             builder = ir.IRBuilder(block)
 
             context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
             vo = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vo_idx)])
 
+            if not is_input_mechanism:
+                proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(proj_idx)])
+                proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
+                proj_vo = builder.alloca(mech.get_input_struct_type())
+                builder.call(proj_function, [proj_params, context, vi, proj_vo])
+                vi = proj_vo
+
+            params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             mech_function = ctx.get_llvm_function(mech.llvmSymbolName)
             builder.call(mech_function, [params, context, vi, vo])
             builder.ret_void()

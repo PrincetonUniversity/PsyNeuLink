@@ -4172,7 +4172,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.matrix,])
+        # FIXME: This is ridiculous
+        return [tuple([tuple(np.array(self.matrix).flatten().tolist())])]
 
     def _gen_llvm_function(self):
         func_name = None
