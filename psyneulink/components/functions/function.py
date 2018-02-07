@@ -193,7 +193,7 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIV
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, is_distance_metric, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
+from psyneulink.globals.utilities import AutoNumber, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
@@ -8685,12 +8685,32 @@ class Distance(ObjectiveFunction):
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if len(variable) != 2:
-            raise FunctionError("variable for {} ({}) must have two items".format(self.name, variable))
+        err_two_items = FunctionError("variable for {} ({}) must have two items".format(self.name, variable))
 
-        if len(variable[0]) != len(variable[1]):
-            raise FunctionError("The lengths of the items in the variable for {} ({},{}) must be equal".
-                format(self.name, len(variable[0]), len(variable[1])))
+        try:
+            if len(variable) != 2:
+                raise err_two_items
+        except TypeError:
+            raise err_two_items
+
+        try:
+            if len(variable[0]) != len(variable[1]):
+                raise FunctionError(
+                    "The lengths of the items in the variable for {0} ({1},{2}) must be equal".format(
+                        self.name,
+                        variable[0],
+                        variable[1]
+                    )
+                )
+        except TypeError:
+            if is_iterable(variable[0]) ^ is_iterable(variable[1]):
+                raise FunctionError(
+                    "The lengths of the items in the variable for {0} ({1},{2}) must be equal".format(
+                        self.name,
+                        variable[0],
+                        variable[1]
+                    )
+                )
 
     def function(self,
                  variable=None,
