@@ -103,7 +103,247 @@ class TestLog:
         )
         assert T.logged_items == {'value': 'INITIALIZATION'}
 
+    def test_log_dictionary_without_time(self):
 
+        T1 = pnl.TransferMechanism(name='T1',
+                                    size=2)
+        T2 = pnl.TransferMechanism(name='T2',
+                                    size=2)
+        PS = pnl.Process(name='PS', pathway=[T1, T2])
+        PJ = T2.path_afferents[0]
 
+        assert T1.loggable_items == {'InputState-0': 'OFF',
+                                     'slope': 'OFF',
+                                     'RESULTS': 'OFF',
+                                     'intercept': 'OFF',
+                                     'noise': 'OFF',
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'OFF'}
+        assert T2.loggable_items == {'InputState-0': 'OFF',
+                                     'slope': 'OFF',
+                                     'RESULTS': 'OFF',
+                                     'intercept': 'OFF',
+                                     'noise': 'OFF',
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'OFF'}
+        assert PJ.loggable_items == {'matrix': 'OFF',
+                                     'value': 'OFF'}
 
+        T1.set_log_conditions(pnl.SLOPE)
+        T1.set_log_conditions(pnl.RESULTS)
+        T1.set_log_conditions(pnl.VALUE)
+        PJ.set_log_conditions(pnl.MATRIX)
+        T2.set_log_conditions(pnl.SLOPE)
+        T2.set_log_conditions(pnl.RESULTS)
+        T2.set_log_conditions(pnl.VALUE)
+
+        assert T1.loggable_items == {'InputState-0': 'OFF',
+                                     'slope': 'EXECUTION',
+                                     'RESULTS': 'EXECUTION',
+                                     'intercept': 'OFF',
+                                     'noise': 'OFF',
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'EXECUTION'}
+        assert T2.loggable_items == {'InputState-0': 'OFF',
+                                     'slope': 'EXECUTION',
+                                     'RESULTS': 'EXECUTION',
+                                     'intercept': 'OFF',
+                                     'noise': 'OFF',
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'EXECUTION'}
+        assert PJ.loggable_items == {'matrix': 'EXECUTION',
+                                     'value': 'OFF'}
+
+        PS.execute([1.0, 2.0])
+        PS.execute([3.0, 4.0])
+        PS.execute([5.0, 6.0])
+
+        assert T1.logged_items == {'RESULTS': 'EXECUTION',
+                                   'slope': 'EXECUTION',
+                                   'value': 'EXECUTION'}
+        assert T2.logged_items == {'RESULTS': 'EXECUTION',
+                                   'slope': 'EXECUTION',
+                                   'value': 'EXECUTION'}
+        assert PJ.logged_items == {'matrix': 'EXECUTION'}
+
+        log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'slope', 'RESULTS'])
+
+        expected_values_T1 = [[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]]
+        expected_slopes_T1 = [[1.0], [1.0], [1.0]]
+        expected_results_T1 = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
+
+        assert np.allclose(expected_values_T1, log_dict_T1['value'])
+        assert np.allclose(expected_slopes_T1, log_dict_T1['slope'])
+        assert np.allclose(expected_results_T1, log_dict_T1['RESULTS'])
+
+        assert list(log_dict_T1.keys()) == ['Index', 'value', 'slope', 'RESULTS']
+
+        log_dict_T1_reorder = T1.log.nparray_dictionary(entries=['slope', 'value', 'RESULTS'])
+
+        assert list(log_dict_T1_reorder.keys()) == ['Index', 'slope', 'value', 'RESULTS']
+
+    def test_log_dictionary_with_time(self):
+
+        T1 = pnl.TransferMechanism(name='T1',
+                                   size=2)
+        T2 = pnl.TransferMechanism(name='T2',
+                                   function=pnl.Linear(slope=2.0),
+                                   size=2)
+        PS = pnl.Process(name='PS', pathway=[T1, T2])
+        SYS = pnl.System(name='SYS', processes=[PS])
+
+        assert T1.loggable_items == {'InputState-0': 'OFF',
+                                     'slope': 'OFF',
+                                     'RESULTS': 'OFF',
+                                     'intercept': 'OFF',
+                                     'noise': 'OFF',
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'OFF'}
+        assert T2.loggable_items == {'InputState-0': 'OFF',
+                                     'slope': 'OFF',
+                                     'RESULTS': 'OFF',
+                                     'intercept': 'OFF',
+                                     'noise': 'OFF',
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'OFF'}
+
+        T1.set_log_conditions(pnl.SLOPE)
+        T1.set_log_conditions(pnl.RESULTS)
+        T1.set_log_conditions(pnl.VALUE)
+
+        assert T1.loggable_items == {'InputState-0': 'OFF',
+                                     'slope': 'EXECUTION',
+                                     'RESULTS': 'EXECUTION',
+                                     'intercept': 'OFF',
+                                     'noise': 'OFF',
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'EXECUTION'}
+
+        T2.set_log_conditions(pnl.SLOPE)
+        T2.set_log_conditions(pnl.RESULTS)
+        T2.set_log_conditions(pnl.VALUE)
+
+        assert T2.loggable_items == {'InputState-0': 'OFF',
+                                     'slope': 'EXECUTION',
+                                     'RESULTS': 'EXECUTION',
+                                     'intercept': 'OFF',
+                                     'noise': 'OFF',
+                                     'smoothing_factor': 'OFF',
+                                     'value': 'EXECUTION'}
+
+        # RUN ZERO  |  TRIALS ZERO, ONE, TWO ----------------------------------
+
+        SYS.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
+
+        assert T1.logged_items == {'RESULTS': 'EXECUTION',
+                                   'slope': 'EXECUTION',
+                                   'value': 'EXECUTION'}
+        assert T2.logged_items == {'RESULTS': 'EXECUTION',
+                                   'slope': 'EXECUTION',
+                                   'value': 'EXECUTION'}
+
+        # T1 log after zero-th run -------------------------------------------
+
+        log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'slope', 'RESULTS'])
+
+        expected_run_T1 = [[0], [0], [0]]
+        expected_trial_T1 = [[0], [1], [2]]
+        expected_time_step_T1 = [[0], [0], [0]]
+        expected_values_T1 = [[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]]
+        expected_slopes_T1 = [[1.0], [1.0], [1.0]]
+        expected_results_T1 = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
+
+        assert np.allclose(expected_run_T1, log_dict_T1['Run'])
+        assert np.allclose(expected_trial_T1, log_dict_T1['Trial'])
+        assert np.allclose(expected_time_step_T1, log_dict_T1['Time_step'])
+        assert np.allclose(expected_values_T1, log_dict_T1['value'])
+        assert np.allclose(expected_slopes_T1, log_dict_T1['slope'])
+        assert np.allclose(expected_results_T1, log_dict_T1['RESULTS'])
+
+        # T2 log after zero-th run --------------------------------------------
+
+        log_dict_T2 = T2.log.nparray_dictionary(entries=['value', 'slope', 'RESULTS'])
+
+        expected_run_T2 = [[0], [0], [0]]
+        expected_trial_T2 = [[0], [1], [2]]
+        expected_time_step_T2 = [[1], [1], [1]]
+        expected_values_T2 = [[[2.0, 4.0]], [[6.0, 8.0]], [[10.0, 12.0]]]
+        expected_slopes_T2 = [[2.0], [2.0], [2.0]]
+        expected_results_T2 = [[2.0, 4.0], [6.0, 8.0], [10.0, 12.0]]
+
+        assert np.allclose(expected_run_T2, log_dict_T2['Run'])
+        assert np.allclose(expected_trial_T2, log_dict_T2['Trial'])
+        assert np.allclose(expected_time_step_T2, log_dict_T2['Time_step'])
+        assert np.allclose(expected_values_T2, log_dict_T2['value'])
+        assert np.allclose(expected_slopes_T2, log_dict_T2['slope'])
+        assert np.allclose(expected_results_T2, log_dict_T2['RESULTS'])
+
+        # RUN ONE  |  TRIALS ZERO, ONE, TWO -------------------------------------
+
+        SYS.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
+
+        # T1 log after first run -------------------------------------------
+
+        log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'slope', 'RESULTS'])
+
+        # expected_run_T1_2 = [[1], [1], [1]]
+        expected_run_T1_2 = [[0], [0], [0]] + expected_run_T1
+        expected_trial_T1_2 = [[0], [1], [2]] + expected_trial_T1
+        expected_time_step_T1_2 = [[0], [0], [0]] + expected_time_step_T1
+        expected_values_T1_2 = expected_values_T1 + expected_values_T1
+        expected_slopes_T1_2 = expected_slopes_T1 + expected_slopes_T1
+        expected_results_T1_2 = expected_results_T1 + expected_results_T1
+
+        # assert np.allclose(expected_run_T1_2, log_dict_T1['Run'])
+        # assert np.allclose(expected_trial_T1_2, log_dict_T1['Trial'])
+        # assert np.allclose(expected_time_step_T1_2, log_dict_T1['Time_step'])
+        assert np.allclose(expected_values_T1_2, log_dict_T1['value'])
+        assert np.allclose(expected_slopes_T1_2, log_dict_T1['slope'])
+        assert np.allclose(expected_results_T1_2, log_dict_T1['RESULTS'])
+
+        # T2 log after first run -------------------------------------------
+
+        log_dict_T2_2 = T2.log.nparray_dictionary(entries=['value', 'slope', 'RESULTS'])
+
+        expected_run_T2_2 = [[0], [0], [0]] + expected_run_T2
+        expected_trial_T2_2 = [[0], [1], [2]] + expected_trial_T2
+        expected_time_step_T2_2 = [[1], [1], [1]] + expected_time_step_T2
+        expected_values_T2_2 = [[[2.0, 4.0]], [[6.0, 8.0]], [[10.0, 12.0]]] + expected_values_T2
+        expected_slopes_T2_2 = [[2.0], [2.0], [2.0]] + expected_slopes_T2
+        expected_results_T2_2 = [[2.0, 4.0], [6.0, 8.0], [10.0, 12.0]] + expected_results_T2
+
+        # assert np.allclose(expected_run_T2_2, log_dict_T2_2['Run'])
+        # assert np.allclose(expected_trial_T2_2, log_dict_T2_2['Trial'])
+        # assert np.allclose(expected_time_step_T2_2, log_dict_T2_2['Time_step'])
+        assert np.allclose(expected_values_T2_2, log_dict_T2_2['value'])
+        assert np.allclose(expected_slopes_T2_2, log_dict_T2_2['slope'])
+        assert np.allclose(expected_results_T2_2, log_dict_T2_2['RESULTS'])
+
+    def test_log_dictionary_with_scheduler(self):
+        T1 = pnl.TransferMechanism(name='T1',
+                                   integrator_mode=True,
+                                   smoothing_factor=0.5)
+        T2 = pnl.TransferMechanism(name='T2',
+                                   function=pnl.Linear(slope=6.0))
+        PS = pnl.Process(name='PS', pathway=[T1, T2])
+        SYS = pnl.System(name='SYS', processes=[PS])
+
+        def pass_threshold(mech, thresh):
+            results = mech.output_states[0].value
+            for val in results:
+                if abs(val) >= thresh:
+                    return True
+            return False
+
+        terminate_trial = {
+            pnl.TimeScale.TRIAL: pnl.While(pass_threshold, T2, 5.0)
+        }
+
+        T2.set_log_conditions(pnl.VALUE)
+
+        SYS.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
+
+        log_dict_T2 = T2.log.nparray_dictionary(entries=['value'])
+        # from pprint import pprint
+        # pprint(log_dict_T2)
 
