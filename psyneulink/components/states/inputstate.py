@@ -461,7 +461,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus
-from psyneulink.components.functions.function import Linear, LinearCombination
+from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import ADD_STATES, StateError, State_Base, _instantiate_state_list, state_type_keywords
@@ -831,7 +831,7 @@ class InputState(State_Base):
         super()._instantiate_function(context=context)
 
         # Insure that function is Function.LinearCombination
-        if not isinstance(self.function.__self__, (LinearCombination, Linear)):
+        if not isinstance(self.function.__self__, (LinearCombination, Linear, Reduce)):
             raise StateError(
                 "{0} of {1} for {2} is {3}; it must be of LinearCombination "
                 "or Linear type".

@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from psyneulink.components.functions.function import LinearCombination, Reduce
 from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -8,7 +9,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.projections.projection import ProjectionError
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.state import StateError
-from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
+from psyneulink.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
 
 mismatches_default_variable_error_text = 'not compatible with the specified default variable'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
@@ -701,30 +702,34 @@ class TestInputStateSpec:
     # pytest does not support fixtures in parametrize, but a class member is enough for this test
     transfer_mech = TransferMechanism(size=3)
 
-    @pytest.mark.parametrize('default_variable, size, input_states, variable_len', [
+    @pytest.mark.parametrize('default_variable, size, input_states, variable_len_state, variable_len_mech', [
         # default_variable tests
-        ([0, 0], None, [transfer_mech], 2),
-        ([0, 0], None, [(transfer_mech, None)], 2),
-        ([0, 0], None, [(transfer_mech, 1, 1)], 2),
-        ([0, 0], None, [((RESULTS, transfer_mech), 1, 1)], 2),
-        ([0, 0], None, [(transfer_mech, 1, 1, None)], 2),
+        ([0, 0], None, [transfer_mech], 2, 2),
+        ([0, 0], None, [(transfer_mech, None)], 2, 2),
+        ([0, 0], None, [(transfer_mech, 1, 1)], 2, 2),
+        ([0, 0], None, [((RESULTS, transfer_mech), 1, 1)], 2, 2),
+        ([0, 0], None, [(transfer_mech, 1, 1, None)], 2, 2),
         # size tests
-        (None, 2, [transfer_mech], 2),
-        (None, 2, [(transfer_mech, None)], 2),
-        (None, 2, [(transfer_mech, 1, 1)], 2),
-        (None, 2, [(transfer_mech, 1, 1, None)], 2),
+        (None, 2, [transfer_mech], 2, 2),
+        (None, 2, [(transfer_mech, None)], 2, 2),
+        (None, 2, [(transfer_mech, 1, 1)], 2, 2),
+        (None, 2, [(transfer_mech, 1, 1, None)], 2, 2),
         # no default_variable or size tests
-        (None, None, [transfer_mech], 3),
-        (None, None, [(transfer_mech, None)], 3),
-        (None, None, [(transfer_mech, 1, 1)], 3),
-        (None, None, [(transfer_mech, 1, 1, None)], 3),
+        (None, None, [transfer_mech], 3, 3),
+        (None, None, [(transfer_mech, None)], 3, 3),
+        (None, None, [(transfer_mech, 1, 1)], 3, 3),
+        (None, None, [(transfer_mech, 1, 1, None)], 3, 3),
+        # tests of input states with different variable and value shapes
+        ([[0]], None, [{VARIABLE: [[0], [0]], FUNCTION: LinearCombination}], 2, 1),
+        (None, 1, [{VARIABLE: [0, 0], FUNCTION: Reduce(weights=[1, -1])}], 2, 1),
     ])
     def test_mech_and_tuple_specifications_with_and_without_default_variable_or_size(
         self,
         default_variable,
         size,
         input_states,
-        variable_len,
+        variable_len_state,
+        variable_len_mech,
     ):
         # ADD TESTING WITH THIS IN PLACE OF transfer_mech:
         # p = MappingProjection(sender=transfer_mech)
@@ -734,4 +739,5 @@ class TestInputStateSpec:
             size=size,
             input_states=input_states
         )
-        assert len(T.input_states[0].instance_defaults.variable) == variable_len
+        assert len(T.input_states[0].instance_defaults.variable) == variable_len_state
+        assert len(T.instance_defaults.variable[0]) == variable_len_mech

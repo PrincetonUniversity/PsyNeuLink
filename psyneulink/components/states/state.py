@@ -730,7 +730,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
-from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
+from psyneulink.components.functions.function import Function, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXECUTING, EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
@@ -1294,24 +1294,6 @@ class State_Base(State):
         # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
         if var_is_matrix:
             self.instance_defaults.variable = self.instance_defaults.variable[0]
-
-        # Ensure that output of the function (self.value) is compatible with (same format as) its input (self.instance_defaults.variable)
-        #     (this enforces constraint that State functions should only combine values from multiple projections,
-        #     but not transform them in any other way;  so the format of its value should be the same as its variable).
-        if not iscompatible(self.instance_defaults.variable, self.value):
-            raise StateError(
-                "Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
-                " must be the same format as its input ({6}: {7})".format(
-                    type(self.value).__name__,
-                    self.value,
-                    self.function.__self__.componentName,
-                    self.name,
-                    self.__class__.__name__,
-                    self.owner.name,
-                    self.instance_defaults.variable.__class__.__name__,
-                    self.instance_defaults.variable
-                )
-            )
 
     # FIX: PROJECTION_REFACTOR
     #      - MOVE THESE TO Projection, WITH self (State) AS ADDED ARG
@@ -2810,21 +2792,43 @@ def _parse_state_spec(state_type=None,
     # If variable is none, use value:
     if state_dict[VARIABLE] is None:
         if state_dict[VALUE] is not None:
+            # TODO: be careful here - if the state spec has a function that
+            # changes the shape of its variable, this will be incorrect
             state_dict[VARIABLE] = state_dict[VALUE]
         else:
             state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
-    elif state_dict[REFERENCE_VALUE] is not None:
-        if not iscompatible(state_dict[VARIABLE], state_dict[REFERENCE_VALUE]):
-            if context is not None and context in '_handle_arg_input_states':
-                from psyneulink.components.mechanisms.mechanism import MechanismError
-                raise MechanismError('default variable determined from the specified input_states spec ({0}) '
-                                     'is not compatible with the specified default variable ({1})'.
-                                     format(state_dict[VARIABLE], state_dict[REFERENCE_VALUE]))
-            else:
-                name = state_dict[NAME] or state_type.__name__
-                raise StateError("Specification of {} for {} of {} ({}) is not compatible with its {} ({})".
-                                 format(VARIABLE, name, owner.name,
-                                        state_dict[VARIABLE], REFERENCE_VALUE, state_dict[REFERENCE_VALUE]))
+
+    # get the value spec value from the spec function if it exists,
+    # otherwise we can assume there is a default function that does not
+    # affect the shape, so it matches variable
+    try:
+        spec_function = state_dict[PARAMS][FUNCTION]
+        if isinstance(spec_function, Function):
+            spec_function_value = spec_function.execute(state_dict[VARIABLE])
+        elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
+            try:
+                spec_function = spec_function(**state_dict[PARAMS][FUNCTION_PARAMS])
+            except (KeyError, TypeError):
+                spec_function = spec_function()
+            spec_function_value = spec_function.execute(state_dict[VARIABLE])
+        else:
+            raise StateError('state_spec value for function ({0}) must be a Function class or instance'.format(spec_function))
+    except (KeyError, TypeError):
+        spec_function_value = state_dict[VARIABLE]
+
+    # Assign value based on variable if not specified
+    if state_dict[VALUE] is None:
+        state_dict[VALUE] = spec_function_value
+    else:
+        if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
+            raise StateError(
+                'state_spec value specified ({0}) is not compatible with the value '
+                'computed ({1}) from the state_spec function ({2})'.format(
+                    state_dict[VALUE],
+                    spec_function_value,
+                    spec_function
+                )
+            )
 
     return state_dict
 

@@ -1399,10 +1399,11 @@ class Mechanism_Base(Mechanism):
                 state_spec=s,
                 context='_handle_arg_input_states'
             )
+            variable = None
 
             if isinstance(parsed_spec, dict):
                 try:
-                    variable = parsed_spec[VARIABLE]
+                    variable = parsed_spec[VALUE]
                 except KeyError:
                     pass
             elif isinstance(parsed_spec, (Projection, Mechanism, State)):
