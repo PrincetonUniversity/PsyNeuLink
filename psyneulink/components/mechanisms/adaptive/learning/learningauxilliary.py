@@ -1080,20 +1080,42 @@ class LearningComponents(object):
                 raise LearningAuxilliaryError("error_signal_mech not identified: "
                                               "the LearningProjection to error_matrix does not come from a "
                                               "LearningMechanism")
-            # MODIFIED 3/11/17 NEW:
-            # If the learning_mech found has already been assigned to a process that not a process to which the
-            #    preceding mechanism in the sequence (self.activation_mech_input.owner) belongs, then the current
-            #    mechanism (self.activation_mech) is the TERMINAL for its process, so look for an ObjectiveMechanism
-            if learning_mech.processes and not any(process in self.activation_mech_input.owner.processes
+
+            # If the learning_mech found has already been assigned to a process that is not the current Process,
+            #    then the current mechanism (self.activation_mech) may:
+            #    - be the TERMINAL for its process,
+            #    - or it may project to the same next Mechanism as the other Process
+
+            # Get the current Process (the one to which the current and preceding Mechanism in the sequence belong)
+            current_processes = (set(self.activation_mech.processes.keys()).
+                                 intersection(set(self.activation_mech_input.owner.processes.keys())))
+            # if learning_mech.processes and not any(process in self.activation_mech_input.owner.processes
+            #                                        for process in learning_mech.processes):
+            if learning_mech.processes and not any(process in current_processes
                                                    for process in learning_mech.processes):
-                new_learning_proj = next((projection for projection in
-                                          self.activation_mech.output_state.efferents
-                                          if isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
-                if new_learning_proj is None:
-                    return None
+               # Look for an ObjectiveMechanism that projects to the current Mechanism (self.activation_mech)
+                objective_learning_proj = next((projection for projection in
+                                                self.activation_mech.output_state.efferents
+                                                if isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
+                # Return ObjectiveMechanism found as error_signal_mech
+                if objective_learning_proj:
+                    learning_mech = objective_learning_proj.receiver.owner
+
+                # No ObjectiveMechanism was found,
+                #    so check if error_projection projects to another Mechanism in the same Process:
+                #        - if it doesn't, throw an exception
+                #        - if it does, assign learning_mech to any shared Processes, and return as error_signal_mech
+                # elif any(process in learning_proj.receiver.owner.receiver.owner.processes
                 else:
-                    learning_mech = new_learning_proj.receiver.owner
-            # MODIFIED 3/11/17 END
+                    next_mech_processes = set(self.error_projection.receiver.owner.processes.keys())
+                    shared_processes = current_processes.intersection(next_mech_processes)
+                    if not shared_processes:
+                        raise LearningAuxilliaryError("PROGRAM ERROR: expected to find that {} projects "
+                                                      "to another Mechanism in {}".
+                                                      format(self.activation_mech.name, current_processes))
+                    for process in shared_processes:
+                        if not process in learning_mech.processes:
+                            learning_mech.processes[process] = LEARNING
 
             self.error_signal_mech = learning_mech
             return self.error_signal_mech
