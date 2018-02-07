@@ -291,7 +291,7 @@ from collections import Iterable
 
 from psyneulink.components.component import method_type
 from psyneulink.components.functions.function import \
-    BogaczEtAl, DriftDiffusionIntegrator, Integrator, LinearCombination, \
+    BogaczEtAl, DriftDiffusionIntegrator, Integrator, LinearCombination, Reduce, \
     NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -299,7 +299,7 @@ from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, CALCULATE, FUNCTION, FUNCTION_PARAMS, \
-    INDEX, INPUT_STATES, INITIALIZING, NAME, OUTPUT_STATES, VARIABLE, kwPreferenceSetName
+    INDEX, INITIALIZING, NAME, OUTPUT_STATES, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric
@@ -669,10 +669,10 @@ class DDM(ProcessingMechanism_Base):
 
         # If input_format is specified to be ARRAY or VECTOR, instantiate 2-item array as InputState
         if input_format in {ARRAY, VECTOR}:
-            size=2
+            size=1
             input_states=[{NAME:'ARRAY',
                            VARIABLE:[0,0],
-                           FUNCTION: LinearCombination(weights=[1,-1])}
+                           FUNCTION: Reduce(weights=[1,-1])}
                           ]
             output_states = [{NAME: DECISION_VARIABLE_ARRAY, # 1d, len 2, # DECISION_VARIABLE as element 0 or 1
                               INDEX:0,
