@@ -264,6 +264,46 @@ def register_instance(entry, name, base_class, registry, sub_dict):
         else:
             renamed_instance_counts[match.groups()[0]] += 1
 
+def remove_instance_from_registry(registry, category, name=None, component=None):
+    """Remove instance from registry category entry
+
+    Instance to be removed can be specified by a reference to the component or its name.
+    Instance count for the category is decremented
+    If the name of the instance was a
+    """
+
+    registry_entry = registry[category]
+
+    if not (name or component):
+        raise RegistryError("Must specify a name or component to remove an entry of {}".
+                            format(registry.__class__.__name__))
+    if (name and component) and name != component.name:
+        raise RegistryError("Conflicting  name ({}) and component ({}) specified for entry to remove from {}".
+                            format(name, component.name, registry.__class__.__name__))
+    if component and not name:
+        for n, c in registry_entry.instanceDict.items():
+            if component == c:
+                name = n
+
+    # Delete instance
+    del registry_entry.instanceDict[name]
+
+    # Decrement count for instances in entry
+    instance_count = registry_entry.instanceCount - 1
+
+    # If instance's name was a duplicate with appended index, decrement the count for that item (and remove if it is 0)
+    for base_name, count in registry_entry.renamed_instance_counts.items():
+        if base_name in name:
+            registry_entry.renamed_instance_counts[base_name] -= 1
+            if registry_entry.renamed_instance_counts[base_name] == 0:
+                del registry_entry.renamed_instance_counts[base_name]
+            break
+    # Reassign entry with new values
+    registry[category] = RegistryEntry(registry_entry.subclass,
+                                       registry_entry.instanceDict,
+                                       instance_count,
+                                       registry_entry.renamed_instance_counts,
+                                       registry_entry.default)
 
 def clear_registry(registry):
     registry.clear()

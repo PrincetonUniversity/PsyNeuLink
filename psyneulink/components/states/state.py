@@ -763,6 +763,7 @@ state_type_keywords = {STATE_TYPE}
 STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 STATE_SPEC = 'state_spec'
 ADD_STATES = 'ADD_STATES'
+REMOVE_STATES = 'REMOVE_STATES'
 
 def _is_state_class(spec):
     if inspect.isclass(spec) and issubclass(spec, State):
@@ -2289,7 +2290,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         reference_value = reference_value if reference_value is not None else state.reference_value
         if not iscompatible(state.value, reference_value):
             raise StateError("{}'s value attribute ({}) is incompatible with the {} ({}) of its owner ({})".
-                             format(state.name, state.value, REFERENCE_VALUE, state.reference_value, owner.name))
+                             format(state.name, state.value, REFERENCE_VALUE, reference_value, owner.name))
 
         # State has already been assigned to an owner
         if state.owner is not None and not state.owner is owner:

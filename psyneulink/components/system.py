@@ -1727,17 +1727,34 @@ class System(System_Base):
                     #     (to the one for the projection to which error_signal_mech projects)
                     else:
 
-                        # FIX 2/6/18:  learning_mech.input_states[ERROR_SIGNAL] TO MATCH
-                        # FIX          error_signal_mech.output_states[ERROR_SIGNAL] OR JUST CREATE NEW learning_mech
+                        # If the error_signal_mech's OutputState does not match the
+                        #    length of the learning_mech's ERROR_SIGNAL InpuState,
+                        #    then delete the latter and replace it with one that is properly sized
+                        # FIX 2/6/18: DOCUMENT info in IMPLEMENTATION NOTE BELOW
+                        # IMPLEMENTATION NOTE:
+                        #     - this precludes running the error_source in its original Process,
+                        #         since the learning_mech will now be disconnected from the old error_signal_mech
+                        if (len(learning_mech.input_states[ERROR_SIGNAL].value) !=
+                                len(error_signal_mech.output_states[ERROR_SIGNAL].value)):
+                            learning_mech.remove_states(learning_mech.input_states[ERROR_SIGNAL])
+                            learning_mech.add_states(InputState(name=ERROR_SIGNAL,
+                                                                variable=(error_signal_mech.output_states[
+                                                                                 ERROR_SIGNAL].value),
+                                                                projections=[error_signal_mech.output_states[
+                                                                                 ERROR_SIGNAL]]))
+                        else:
+                            mp = MappingProjection(sender=error_signal_mech.output_states[ERROR_SIGNAL],
+                                                   receiver=learning_mech.input_states[ERROR_SIGNAL],
+                                                   matrix=IDENTITY_MATRIX)
+                            if mp is None:
+                                raise SystemError("Could not instantiate a MappingProjection "
+                                                  "from {} to {} for the {} process".
+                                                  format(error_signal_mech.name, learning_mech.name))
 
-                        mp = MappingProjection(sender=error_signal_mech.output_states[ERROR_SIGNAL],
-                                               receiver=learning_mech.input_states[ERROR_SIGNAL],
-                                               matrix=IDENTITY_MATRIX)
-                        if mp is None:
-                            raise SystemError("Could not instantiate a MappingProjection "
-                                              "from {} to {} for the {} process".
-                                              format(error_signal_mech.name, learning_mech.name))
-
+                        # Reassign size of the error_signal for learning_mech's function
+                        #     to be length of the error_signal_mech ERROR_SIGNAL OutputState
+                        learning_mech.function_object.error_signal = \
+                            np.zeros_like(error_signal_mech.output_states[ERROR_SIGNAL].value)
                         # Reassign error_matrix to one for the projection to which the error_signal_mech projects
                         learning_mech.function_object.error_matrix = \
                             error_signal_mech._output_states[LEARNING_SIGNAL].efferents[0].receiver
