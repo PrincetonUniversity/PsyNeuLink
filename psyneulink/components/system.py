@@ -1726,6 +1726,10 @@ class System(System_Base):
                     # and reassign learning_mech.function_object.error_matrix
                     #     (to the one for the projection to which error_signal_mech projects)
                     else:
+
+                        # FIX 2/6/18:  learning_mech.input_states[ERROR_SIGNAL] TO MATCH
+                        # FIX          error_signal_mech.output_states[ERROR_SIGNAL] OR JUST CREATE NEW learning_mech
+
                         mp = MappingProjection(sender=error_signal_mech.output_states[ERROR_SIGNAL],
                                                receiver=learning_mech.input_states[ERROR_SIGNAL],
                                                matrix=IDENTITY_MATRIX)

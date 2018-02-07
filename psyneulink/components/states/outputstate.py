@@ -1270,7 +1270,11 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
                     # If OutputState's calculate function is specified, use it to determine OutputState's vaue
                     if CALCULATE in output_state[PARAMS]:
-                        output_state_value = output_state[PARAMS][CALCULATE](owner_value[index], context=context)
+                        # MODIFIED 2/2/18 OLD:
+                        # output_state_value = output_state[PARAMS][CALCULATE](owner_value[index], context=context)
+                        # MODIFIED 2/2/18 NEW:
+                        output_state_value = output_state[PARAMS][CALCULATE](owner_value[index])
+                        # MODIFIED 2/2/18 END
                     else:
                         output_state_value = owner_value[index]
 
