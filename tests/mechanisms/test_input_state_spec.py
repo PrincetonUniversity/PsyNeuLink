@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from psyneulink.components.functions.function import LinearCombination, Reduce
 from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -8,7 +9,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.projections.projection import ProjectionError
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.state import StateError
-from psyneulink.globals.keywords import INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
+from psyneulink.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
 
 mismatches_default_variable_error_text = 'not compatible with the specified default variable'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
@@ -729,6 +730,9 @@ class TestInputStateSpec:
         (None, None, [(transfer_mech, None)], 3),
         (None, None, [(transfer_mech, 1, 1)], 3),
         (None, None, [(transfer_mech, 1, 1, None)], 3),
+        # tests of input states with different variable and value shapes
+        ([[0]], None, [{VARIABLE: [[0], [0]], FUNCTION: LinearCombination}], 1),
+        (None, 1, [{VARIABLE: [0, 0], FUNCTION: Reduce(weights=[1, -1])}], 1),
     ])
     def test_mech_and_tuple_specifications_with_and_without_default_variable_or_size(
         self,

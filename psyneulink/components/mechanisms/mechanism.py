@@ -1346,10 +1346,11 @@ class Mechanism_Base(Mechanism):
                 state_spec=s,
                 context='_parse_arg_input_states'
             )
+            variable = None
 
             if isinstance(parsed_spec, dict):
                 try:
-                    variable = parsed_spec[VARIABLE]
+                    variable = parsed_spec[VALUE]
                 except KeyError:
                     pass
             elif isinstance(parsed_spec, (Projection, Mechanism, State)):
@@ -1369,13 +1370,10 @@ class Mechanism_Base(Mechanism):
             else:
                 variable = parsed_spec.instance_defaults.variable
 
-            try:
-                if variable is None:
-                    variable = InputState.ClassDefaults.variable
-                elif not InputState._state_spec_allows_override_variable(s):
-                    variable_was_specified = True
-            except UnboundLocalError:
+            if variable is None:
                 variable = InputState.ClassDefaults.variable
+            elif not InputState._state_spec_allows_override_variable(s):
+                variable_was_specified = True
 
             default_variable_from_input_states.append(variable)
 
