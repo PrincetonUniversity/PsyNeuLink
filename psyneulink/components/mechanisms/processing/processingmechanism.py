@@ -275,9 +275,6 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if default_variable is None and size is None:
-            default_variable = self.ClassDefaults.variable
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
