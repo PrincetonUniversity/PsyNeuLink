@@ -864,7 +864,7 @@ class TestIntegratorMode:
         assert np.allclose(T.initial_value, 0.5)
         assert np.allclose(T.integrator_function.initializer, 0.5)
 
-    def test_previous_value_reset_initializer_execute(self):
+    def test_previous_value_reinitialize_execute(self):
         T = TransferMechanism(name="T",
                               initial_value=0.5,
                               integrator_mode=True,
@@ -880,22 +880,40 @@ class TestIntegratorMode:
         assert np.allclose(T.previous_value, 0.55)
         assert np.allclose(T.initial_value, 0.5)
         assert np.allclose(T.integrator_function.initializer, 0.5)
+        assert np.allclose(T.value, 0.55)
 
-        T.integrator_function.reinitialize(0.5)
+        # Reset integrator_function ONLY
+        T.integrator_function.reinitialize(0.6)
 
-        assert np.allclose(T.previous_value, 0.5)
-        assert np.allclose(T.initial_value, 0.5)
-        assert np.allclose(T.integrator_function.initializer, 0.5)
+        assert np.allclose(T.previous_value, 0.6)   # previous_value is a property that looks at integrator_function
+        assert np.allclose(T.initial_value, 0.5)    # initial_value is on mechanism only, does not update with int_fun
+        assert np.allclose(T.integrator_function.initializer, 0.6)  # initializer is on integrator_function
+        assert np.allclose(T.value, 0.55)           # on mechanism only, so does not update until execution
 
         T.execute(1.0)
-        # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
-        # linear fn: 0.55*1.0 = 0.55
-        assert np.allclose(T.previous_value, 0.55)
-        assert np.allclose(T.initial_value, 0.5)
-        assert np.allclose(T.integrator_function.initializer, 0.5)
+        # integration: 0.9*0.6 + 0.1*1.0 + 0.0 = 0.64  --->  previous value = 0.55
+        # linear fn: 0.64*1.0 = 0.64
+        assert np.allclose(T.previous_value, 0.64)   # property that looks at integrator_function
+        assert np.allclose(T.initial_value, 0.5)     # initial_value is on mechanism only, and does not update with exec
+        assert np.allclose(T.integrator_function.initializer, 0.5)     # initializer does not change with execution
+        assert np.allclose(T.value, 0.64)            # on mechanism, but updates with execution
 
+        T.reinitialize(0.4)
+        # linear fn: 0.4*1.0 = 0.4
+        assert np.allclose(T.previous_value, 0.4)   # property that looks at integrator, which updated with mech reset
+        assert np.allclose(T.initial_value, 0.4)    # updates because mechanism was reset
+        assert np.allclose(T.integrator_function.initializer, 0.4)  # on integrator fun, but updates when mech resets
+        assert np.allclose(T.value, 0.4)  # on mechanism, but updates with mech reset
 
-    def test_previous_reset_initializer_run(self):
+        T.execute(1.0)
+        # integration: 0.9*0.4 + 0.1*1.0 + 0.0 = 0.46  --->  previous value = 0.46
+        # linear fn: 0.46*1.0 = 0.46
+        assert np.allclose(T.previous_value, 0.46)  # property that looks at integrator, which updated with mech exec
+        assert np.allclose(T.initial_value, 0.4)                    # on mech, does not update with exec
+        assert np.allclose(T.integrator_function.initializer, 0.4)  # initializer does not change with execution
+        assert np.allclose(T.value, 0.46)  # on mechanism, but updates with exec
+
+    def test_previous_reinitialize_run(self):
         T = TransferMechanism(name="T",
                               initial_value=0.5,
                               integrator_mode=True,
