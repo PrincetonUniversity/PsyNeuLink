@@ -1901,7 +1901,8 @@ class System(System_Base):
                               "default will be used ({})".format(self.name, self.targets))
             # MODIFIED 6/25/17 END
 
-        self.targets = np.atleast_2d(self.targets)
+        # self.targets = np.atleast_2d(self.targets)
+        self.targets = np.array(self.targets)
 
         # Create SystemInputState for each TARGET mechanism in target_mechanisms and
         #    assign MappingProjection from the SystemInputState
