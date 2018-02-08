@@ -7,9 +7,9 @@ class TestLog:
 
     def test_log(self):
 
-        T_1 = pnl.TransferMechanism(name='T_1', size=2)
-        T_2 = pnl.TransferMechanism(name='T_2', size=2)
-        PS = pnl.Process(name='PS', pathway=[T_1, T_2])
+        T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
+        T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
+        PS = pnl.Process(name='log_test_PS', pathway=[T_1, T_2])
         PJ = T_2.path_afferents[0]
 
         assert T_1.loggable_items == {'InputState-0': 'OFF',
@@ -86,7 +86,7 @@ class TestLog:
                         "\'Index\', \'noise\', \'RESULTS\'\n0, 0.0, 0.0 0.0\n1, 0.0, 0.0 0.0\n2, 0.0, 0.0 0.0\n"
 
         assert PJ.log.csv(entries='matrix', owner_name=True, quotes=True) == \
-               "\'Index\', \'MappingProjection from T_1 to T_2[matrix]\'\n" \
+               "\'Index\', \'MappingProjection from log_test_T_1 to log_test_T_2[matrix]\'\n" \
                "\'0\', \'1.0 0.0\' \'0.0 1.0\'\n" \
                "\'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
                "\'2\', \'1.0 0.0\' \'0.0 1.0\'\n"
@@ -105,11 +105,11 @@ class TestLog:
 
     def test_log_dictionary_without_time(self):
 
-        T1 = pnl.TransferMechanism(name='T1',
+        T1 = pnl.TransferMechanism(name='log_test_T1',
                                     size=2)
-        T2 = pnl.TransferMechanism(name='T2',
+        T2 = pnl.TransferMechanism(name='log_test_T2',
                                     size=2)
-        PS = pnl.Process(name='PS', pathway=[T1, T2])
+        PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
         PJ = T2.path_afferents[0]
 
         assert T1.loggable_items == {'InputState-0': 'OFF',
@@ -182,15 +182,41 @@ class TestLog:
 
         assert list(log_dict_T1_reorder.keys()) == ['Index', 'slope', 'value', 'RESULTS']
 
+    def test_run_resets(self):
+        import psyneulink as pnl
+        T1 = pnl.TransferMechanism(name='log_test_T1',
+                                   size=2)
+        T2 = pnl.TransferMechanism(name='log_test_T2',
+                                   size=2)
+        PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
+        SYS = pnl.System(name='log_test_SYS', processes=[PS])
+        T1.set_log_conditions(pnl.SLOPE)
+        T2.set_log_conditions(pnl.SLOPE)
+        SYS.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
+
+        log_array_T1 = T1.log.nparray()
+        log_array_T2 = T2.log.nparray()
+
+        print(log_array_T1)
+        print(log_array_T2)
+
+        SYS.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
+
+        log_array_T1_second_run = T1.log.nparray()
+        log_array_T2_second_run = T2.log.nparray()
+
+        print(log_array_T1_second_run)
+        print(log_array_T2_second_run)
+
     def test_log_dictionary_with_time(self):
 
-        T1 = pnl.TransferMechanism(name='T1',
+        T1 = pnl.TransferMechanism(name='log_test_T1',
                                    size=2)
-        T2 = pnl.TransferMechanism(name='T2',
+        T2 = pnl.TransferMechanism(name='log_test_T2',
                                    function=pnl.Linear(slope=2.0),
                                    size=2)
-        PS = pnl.Process(name='PS', pathway=[T1, T2])
-        SYS = pnl.System(name='SYS', processes=[PS])
+        PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
+        SYS = pnl.System(name='log_test_SYS', processes=[PS])
 
         assert T1.loggable_items == {'InputState-0': 'OFF',
                                      'slope': 'OFF',
@@ -311,7 +337,9 @@ class TestLog:
         expected_values_T2_2 = [[[2.0, 4.0]], [[6.0, 8.0]], [[10.0, 12.0]]] + expected_values_T2
         expected_slopes_T2_2 = [[2.0], [2.0], [2.0]] + expected_slopes_T2
         expected_results_T2_2 = [[2.0, 4.0], [6.0, 8.0], [10.0, 12.0]] + expected_results_T2
-
+        print("RUNS: ", log_dict_T2_2['Run'])
+        print("TRIALS: ", log_dict_T2_2['Trial'])
+        print("TIME_STEPS: ", log_dict_T2_2['Time_step'])
         # assert np.allclose(expected_run_T2_2, log_dict_T2_2['Run'])
         # assert np.allclose(expected_trial_T2_2, log_dict_T2_2['Trial'])
         # assert np.allclose(expected_time_step_T2_2, log_dict_T2_2['Time_step'])
@@ -320,13 +348,13 @@ class TestLog:
         assert np.allclose(expected_results_T2_2, log_dict_T2_2['RESULTS'])
 
     def test_log_dictionary_with_scheduler(self):
-        T1 = pnl.TransferMechanism(name='T1',
+        T1 = pnl.TransferMechanism(name='log_test_T1',
                                    integrator_mode=True,
                                    smoothing_factor=0.5)
-        T2 = pnl.TransferMechanism(name='T2',
+        T2 = pnl.TransferMechanism(name='log_test_T2',
                                    function=pnl.Linear(slope=6.0))
-        PS = pnl.Process(name='PS', pathway=[T1, T2])
-        SYS = pnl.System(name='SYS', processes=[PS])
+        PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
+        SYS = pnl.System(name='log_test_SYS', processes=[PS])
 
         def pass_threshold(mech, thresh):
             results = mech.output_states[0].value
@@ -339,11 +367,18 @@ class TestLog:
             pnl.TimeScale.TRIAL: pnl.While(pass_threshold, T2, 5.0)
         }
 
+        T1.set_log_conditions(pnl.VALUE)
+        T1.set_log_conditions(pnl.SLOPE)
+        T1.set_log_conditions(pnl.RESULTS)
         T2.set_log_conditions(pnl.VALUE)
+        T2.set_log_conditions(pnl.SLOPE)
 
         SYS.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
 
-        log_dict_T2 = T2.log.nparray_dictionary(entries=['value'])
-        # from pprint import pprint
-        # pprint(log_dict_T2)
+        log_dict_T1 = T1.log.nparray_dictionary(entries=['RESULTS', 'slope', 'value'])
+        log_dict_T2 = T2.log.nparray_dictionary(entries=['value', 'slope'])
+
+        assert list(log_dict_T1.keys()) == ['Run', 'Trial', 'Time_step', 'RESULTS', 'slope', 'value']
+        assert list(log_dict_T2.keys()) == ['Run', 'Trial', 'Time_step', 'value', 'slope']
+
 
