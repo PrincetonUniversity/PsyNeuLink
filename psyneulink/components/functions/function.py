@@ -4182,13 +4182,20 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     def reinitialize(self, new_previous_value=None, **kwargs):
         """
+            Effectively begins accumulation over again at the specified value.
+
             Sets
 
             - `previous_value <Integrator.previous_value>`
             - `initializer <Integrator.initial_value>`
             - `value <Integrator.value>`
 
-            to the quantity specified, which effectively begins accumulation over again at the specified value
+            to the quantity specified.
+
+            For specific types of Integrator functions, additional values, such as initial time, must be specified, and
+            additional attributes are reset.
+
+            If no arguments are specified, then the instance default for `initializer <Integrator.initializer>` is used.
         """
         if new_previous_value is None:
             new_previous_value = self.instance_defaults.initializer
@@ -4290,15 +4297,6 @@ class SimpleIntegrator(
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
-
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <SimpleIntegrator.previous_value>`
-        - `initializer <SimpleIntegrator.initializer>`
-        - `value <SimpleIntegrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4507,15 +4505,6 @@ class LCAIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
 
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <LCAIntegrator.previous_value>`
-        - `initializer <LCAIntegrator.initializer>`
-        - `value <LCAIntegrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
-
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -4722,15 +4711,6 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         `previous_value <ConstantIntegrator.previous_value>` is set.
 
         If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
-
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <ConstantIntegrator.previous_value>`
-        - `initializer <ConstantIntegrator.initializer>`
-        - `value <ConstantIntegrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
@@ -4942,15 +4922,6 @@ class AdaptiveIntegrator(
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
-
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <AdaptiveIntegrator.previous_value>`
-        - `initializer <AdaptiveIntegrator.initializer>`
-        - `value <AdaptiveIntegrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -5238,21 +5209,6 @@ class DriftDiffusionIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
-    reinitialize : float or np.array
-        Takes 2 items (i.e my_integrator.reinitialize = 1.0, 2.0), each of which is a float or array
-
-        Sets
-
-        - `previous_value <DriftDiffusionIntegrator.previous_value>`
-        - `initializer <DriftDiffusionIntegrator.initializer>`
-        - `value <DriftDiffusionIntegrator.value>`
-
-        to the quantity specified in reinitialize[0].
-
-        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in reinitialize[1].
-
-        Effectively begins accumulation over again at the original starting point and time, or new ones
-
     threshold : float : default 0.0
         when used properly determines the threshold (boundaries) of the drift diffusion process (i.e., at which the
         integration process is assumed to terminate).
@@ -5398,6 +5354,22 @@ class DriftDiffusionIntegrator(
         return adjusted_value
 
     def reinitialize(self, new_previous_value=None, new_previous_time=None):
+        """
+        In effect, begins accumulation over again at the original starting point and time, or new ones.
+
+        Sets
+
+        - `previous_value <DriftDiffusionIntegrator.previous_value>`
+        - `initializer <DriftDiffusionIntegrator.initializer>`
+        - `value <DriftDiffusionIntegrator.value>`
+
+        to the value specified in the first argument.
+
+        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the value specified in the second argument.
+
+        If no arguments are specified, then the instance defaults for `initializer
+        <DriftDiffusionIntegrator.initializer>` and `t0 <DriftDiffusionIntegrator.t0>` are used.
+        """
         if new_previous_value is None:
             new_previous_value = self.instance_defaults.initializer
         if new_previous_time is None:
@@ -5504,20 +5476,6 @@ class OrnsteinUhlenbeckIntegrator(
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <OrnsteinUhlenbeckIntegrator.variable>` is integrated.
-
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`
-        - `initializer <OrnsteinUhlenbeckIntegrator.initializer>`
-        - `value <OrnsteinUhlenbeckIntegrator.value>`
-
-        to the quantity specified in reinitialize[0]
-
-        Sets `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>` to the quantity specified in reinitialize[1].
-
-        Effectively begins accumulation over again at the specified value and time
-
 
     previous_time : float
         stores previous time at which the function was executed and accumulates with each execution according to
@@ -5653,6 +5611,22 @@ class OrnsteinUhlenbeckIntegrator(
         return adjusted_value
 
     def reinitialize(self, new_previous_value=None, new_previous_time=None):
+        """
+        In effect, begins accumulation over again at the original starting point and time, or new ones.
+
+        Sets
+
+        - `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`
+        - `initializer <OrnsteinUhlenbeckIntegrator.initializer>`
+        - `value <OrnsteinUhlenbeckIntegrator.value>`
+
+        to the value specified in the first argument.
+
+        Sets `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>` to the value specified in the second argument.
+
+        If no arguments are specified, then the instance defaults for `initializer
+        <OrnsteinUhlenbeckIntegrator.initializer>` and `t0 <OrnsteinUhlenbeckIntegrator.t0>` are used.
+        """
         if new_previous_value is None:
             new_previous_value = self.instance_defaults.initializer
         if new_previous_time is None:
@@ -6029,27 +6003,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
     time_constant_w : float : default 12.5
         scaling factor on the dv/dt equation
-
-    reinitialize : float or np.array
-        Takes 3 items (i.e my_integrator.reinitialize = 1.0, 2.0, 3.0), each of which is a float or array 
-
-        Sets
-
-        - `previous_v <DriftDiffusionIntegrator.previous_v>`
-        - `initial_v <DriftDiffusionIntegrator.initial_v>`
-
-        to the quantity specified in reinitialize[0].
-
-        Sets
-
-        - `previous_w <DriftDiffusionIntegrator.previous_w>`
-        - `initial_w <DriftDiffusionIntegrator.initial_w>`
-
-        to the quantity specified in reinitialize[1].
-
-        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in reinitialize[2].
-
-        Effectively begins accumulation over again at the specified v, w, and time.
 
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
@@ -6428,6 +6381,28 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         return self.previous_v, self.previous_w, self.previous_time
 
     def reinitialize(self, new_previous_v=None, new_previous_w=None, new_previous_time=None):
+        """
+        Effectively begins accumulation over again at the specified v, w, and time.
+
+        Sets
+
+        - `previous_v <DriftDiffusionIntegrator.previous_v>`
+        - `initial_v <DriftDiffusionIntegrator.initial_v>`
+
+        to the quantity specified in the first argument.
+
+        Sets
+
+        - `previous_w <DriftDiffusionIntegrator.previous_w>`
+        - `initial_w <DriftDiffusionIntegrator.initial_w>`
+
+        to the quantity specified in the second argument.
+
+        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in the third argument.
+
+        If no arguments are specified, then the instance defaults for `initial_v <FHNIntegrator.initial_v>`, `initial_w
+        <FHNIntegrator.initial_w>` and `t_0 <FHNIntegrator.t_0>` are used.
+        """
         if new_previous_v is None:
             new_previous_v = self.instance_defaults.initial_v
         if new_previous_w is None:
@@ -6550,15 +6525,6 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
         will be added.
-
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <AccumulatorIntegrator.previous_value>`
-        - `initializer <AccumulatorIntegrator.initializer>`
-        - `value <AccumulatorIntegrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -6886,27 +6852,6 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         stores previous value with which `variable <AGTUtilityIntegrator.variable>` is integrated using the EWMA filter and
         long term parameters
 
-    reinitialize : float or np.array
-        Takes 2 items (i.e my_integrator.reinitialize = 1.0, 2.0), each of which is a float or array
-
-        Sets
-
-        - `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>`
-        - `initial_short_term_utility <AGTUtilityIntegrator.initial_short_term_utility>`
-
-        to the quantity specified in reinitialize[0].
-
-        Sets
-
-        - `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`
-        - `initial_long_term_utility <AGTUtilityIntegrator.initial_long_term_utility>`
-
-        to the quantity specified in reinitialize[1].
-
-        sets `value <AGTUtilityIntegrator.value>` to the to the quantity specified in reinitialize[2].
-
-        This effectively begins accumulation over again at the specified utilities.
-
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -7147,6 +7092,33 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         return value + offset
 
     def reinitialize(self, short=None, long=None):
+
+        """
+        Effectively begins accumulation over again at the specified utilities.
+
+        Sets
+
+        - `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>`
+        - `initial_short_term_utility <AGTUtilityIntegrator.initial_short_term_utility>`
+
+        to the quantity specified in the first argument.
+
+        Sets
+
+        - `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`
+        - `initial_long_term_utility <AGTUtilityIntegrator.initial_long_term_utility>`
+
+        to the quantity specified in the second argument.
+
+        sets `value <AGTUtilityIntegrator.value>` by computing it based on the newly updated values for
+        `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>` and
+        `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`.
+
+        If no arguments are specified, then the instance defaults for `initial_short_term_utility
+        <AGTUtilityIntegrator.initial_short_term_utility>` and `initial_long_term_utility
+        <AGTUtilityIntegrator.initial_long_term_utility>` are used.
+        """
+
         if short is None:
             short = self.instance_defaults.initial_short_term_utility
         if long is None:
