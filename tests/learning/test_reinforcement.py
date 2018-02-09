@@ -91,14 +91,8 @@ def test_reinforcement():
         (action_selection.output_states.values, [np.array([0., 3.38417298, 0.])]),
         (pytest.helpers.expand_np_ndarray(mech_objective_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array([6.61582702]), np.array(43.7691671006736)])),
         (pytest.helpers.expand_np_ndarray(mech_learning_input_to_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array(
-                [0.        , 0.33079135, 0.        ]
-            ),
-            np.array([
-                [0.        , 0.        , 0.        ],
-                [0.        , 0.33079135, 0.        ],
-                [0.        , 0.        , 0.        ],
-            ])
-        ])),
+                [0.0, 0.33079135078125005, 0.0, 0.0, 0.33079135078125005, 0.0]
+        )])),
         (reward_prediction_weights.mod_matrix, np.array([
             [ 1.,          0.,          0.,        ],
             [ 0.,          3.71496434,  0.,        ],

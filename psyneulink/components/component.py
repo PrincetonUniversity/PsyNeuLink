@@ -2881,7 +2881,8 @@ class Component(object):
             return self._log
         except AttributeError:
             if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete".
+                raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete "
+                                     "or appropriately configuring a system to which it belongs".
                                      format(self.name, 'log'))
             else:
                 raise AttributeError
