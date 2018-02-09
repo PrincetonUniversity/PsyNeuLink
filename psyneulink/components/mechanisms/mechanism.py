@@ -1800,9 +1800,9 @@ class Mechanism_Base(Mechanism):
             effectively begins the function's accumulation over again at the specified value, and updates related
             attributes on the mechanism.
 
-            If the mechanism's `function <Mechanism.function>` is an `Integrator`:
+            If the mechanism's `function <Mechanism_Base.function>` is an `Integrator`:
 
-                Reinitializing first calls the function's own `reinitialize <Integrator.reinitialize>` method, which
+                `reinitialize <Mechanism_Base.reinitialize>` first calls the function's own `reinitialize <Integrator.reinitialize>` method, which
                 typically sets:
 
                 - `previous_value <Integrator.previous_value>`
@@ -1813,12 +1813,12 @@ class Mechanism_Base(Mechanism):
                 initial time, must be specified, and additional attributes are reset. See individual functions for
                 details.
 
-                Then, the mechanism sets its `value <Mechanism.value` to the quantity specified, and updates its
+                Then, the mechanism sets its `value <Mechanism_Base.value>` to the quantity specified, and updates its
                 `output states <Mechanism_Base.output_state>`.
 
             If the mechanism has an `integrator_function <TransferMechanism.integrator_function>`:
 
-                Reinitializing first calls the `integrator_function's <TransferMechanism.integrator_function>` own
+                `reinitialize <Mechanism_Base.reinitialize>` first calls the `integrator_function's <TransferMechanism.integrator_function>` own
                 `reinitialize <Integrator.reinitialize>` method, which typically sets:
 
                 - `previous_value <Integrator.previous_value>`
@@ -1829,8 +1829,8 @@ class Mechanism_Base(Mechanism):
                 initial time, must be specified, and additional attributes are reset. See individual functions for
                 details.
 
-                Then, the mechanism executes its `function <Mechanism.function>` using the quantity specified as the
-                function's variable. The mechanism's `value <Mechanism.value` is set to the output of its function.
+                Then, the mechanism executes its `function <Mechanism_Base.function>` using the quantity specified as the
+                function's variable. The mechanism's `value <Mechanism_Base.value>` is set to the output of its function.
                 Finally, the mechanism updates its `output states <Mechanism_Base.output_state>`.
         """
         from psyneulink.components.functions.function import Integrator
