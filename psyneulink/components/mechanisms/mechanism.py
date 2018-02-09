@@ -2171,11 +2171,6 @@ class Mechanism_Base(Mechanism):
         """Assign an initial value to the Mechanism's `value <Mechanism_Base.value>` attribute and update its
         `OutputStates <Mechanism_OutputStates>`.
 
-        COMMENT:
-            Takes a number or 1d array and assigns it to the first item of the Mechanism's
-            `value <Mechanism_Base.value>` attribute.
-        COMMENT
-
         Arguments
         ---------
 
@@ -2187,8 +2182,8 @@ class Mechanism_Base(Mechanism):
             if not iscompatible(value, self.value):
                 raise MechanismError("Initialization value ({}) is not compatiable with value of {}".
                                      format(value, append_type_to_name(self)))
-        self.value[0] = value
-        self._update_output_states()
+        self.value = np.atleast_1d(value)
+        self._update_output_states(context="INITIAL_VALUE")
 
     def _execute(self,
                  variable=None,
