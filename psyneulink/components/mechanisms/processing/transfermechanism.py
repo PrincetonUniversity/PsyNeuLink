@@ -191,12 +191,38 @@ After each execution of the Mechanism the result of `function <TransferMechanism
 <OutputState.value>` of each of its `OutputStates <OutputState>`, and to the 1st item of the Mechanism's
 `output_values <TransferMechanism.output_values>` attribute.
 
-In some cases, it may be useful to reset the integration of the mechanism back to the original starting point, or a new
-one. This can be done using the `reinitialize <AdaptiveIntegrator.reinitialize>` property on the mechanism's
-`integrator_function <TransferMechanism.integrator_function>`. The `reinitialize <AdaptiveIntegrator.reinitialize>`
-property sets the `integrator_function's <TransferMechanism.integrator_function>`
-`initializer <AdaptiveIntegrator.initializer>`, `previous_value <AdaptiveIntegrator.previous_value>`, and
-`value <AdaptiveIntegrator.value>` attributes to a specified value.
+
+.. _Transfer_Reinitialization:
+
+Reinitialization
+~~~~~~~~~~~~
+
+In some cases, it may be useful to reset the accumulation of a mechanism back to its original starting point, or a new
+starting point. This is done using the `reinitialize <AdaptiveIntegrator.reinitialize>` method on the mechanism's
+`integrator_function <TransferMechanism.integrator_function>`, or the mechanisms's own `reinitialize
+<TransferMechanism.reinitialize>` method.
+
+The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_function
+<TransferMechanism.integrator_function>` sets:
+
+    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
+    - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
+    - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
+
+    to the specified value.
+
+The `reinitialize <TransferMechanism.reinitialize>` method of the `TransferMechanism` first sets:
+
+    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
+    - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
+    - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
+    - the TransferMechanism's `initial_value <TransferMechanism.initial_value>` attribute
+
+    to the specified value. Then:
+
+    - the specified value is passed into the mechanism's `function <TransferMechanism.function>` and the function is executed
+    - the TransferMechanism's `value <TransferMechanism.value>` attribute is set to the output of the function
+    - the TransferMechanism updates is `output_states <TransferMechanism.output_states>`
 
 A use case for `reinitialize <AdaptiveIntegrator.reinitialize>` is demonstrated in the following example:
 
@@ -227,11 +253,13 @@ where it left off:
     ...               num_trials=5)                                                 #doctest: +SKIP
     >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.72105725)  #doctest: +SKIP
 
-The integrator_function's `reinitialize <AdaptiveIntegrator.reinitialize>` property is useful in cases when the
-integrator should instead start over at its original initial value or a new one. Use `reinitialize
-<AdaptiveIntegrator.reinitialize>` to re-start the integrator_function's accumulation at 0.2:
+The integrator_function's `reinitialize <AdaptiveIntegrator.reinitialize>` method and the TransferMechanism's
+`reinitialize <TransferMechanism.reinitialize>` method are useful in cases when the integration should instead start
+over at the original initial value, or a new one.
 
-    >>> my_time_averaged_transfer_mechanism.integrator_function.reinitialize = np.array([[0.2]])  #doctest: +SKIP
+Use `reinitialize <AdaptiveIntegrator.reinitialize>` to re-start the integrator_function's accumulation at 0.2:
+
+    >>> my_time_averaged_transfer_mechanism.integrator_function.reinitialize(np.array([[0.2]]))  #doctest: +SKIP
 
 Run the system again to observe that my_time_averaged_transfer_mechanism's integrator_function will begin accumulating
 at 0.2, following the exact same trajectory as in RUN 1:
@@ -244,6 +272,13 @@ at 0.2, following the exact same trajectory as in RUN 1:
 Because `reinitialize <AdaptiveIntegrator.reinitialize>` was set to 0.2 (its original initial_value),
 my_time_averaged_transfer_mechanism's integrator_function effectively started RUN 3 in the same state as it began RUN 1.
 As a result, it arrived at the exact same value after 5 trials (with identical inputs).
+
+In the examples above, `reinitialize <AdaptiveIntegrator.reinitialize>` was applied directly to the integrator function.
+The key difference between the `integrator_function's reinitialize <AdaptiveIntegrator.reinitialize>` and the
+`TransferMechanism's reinitialize <TransferMechanism.reinitialize>` is that the latter will also execute the mechanism's
+function and update its output states. This is useful if the mechanism's value or any of its output state values will
+be used or checked *before* the mechanism's next execution. (This is often true if the mechanism is responsible for
+modulating other components or if a `Scheduler` condition depends on the mechanism's activity.)
 
 COMMENT:
 .. _Transfer_Examples:
