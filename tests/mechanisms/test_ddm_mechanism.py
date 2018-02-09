@@ -11,38 +11,68 @@ from psyneulink.scheduling.condition import WhenFinished
 from psyneulink.scheduling.time import TimeScale
 
 class TestReinitialize:
-    def test_valid_reinitialization(self):
-        D = DDM(name="D",
-                function=DriftDiffusionIntegrator())
+
+    def test_valid(self):
+        D = DDM(
+            name='DDM',
+            function=DriftDiffusionIntegrator(),
+        )
+
+        #  returns previous_value + rate * variable * time_step_size  + noise
+        #  0.0 + 1.0 * 1.0 * 1.0 + 0.0
         D.execute(1.0)
-        assert np.allclose([[1.0]], D.function_object.reinitialize[0])
-        assert np.allclose([1.0], D.function_object.reinitialize[1])
+        assert np.allclose(D.value,  [[1.0], [1.0]])
+        assert np.allclose(D.output_states[0].value, 1.0)
+        assert np.allclose(D.output_states[1].value, 1.0)
 
-        D.execute(2.0)
-        assert np.allclose([[3.0]], D.function_object.reinitialize[0])
-        assert np.allclose([2.0], D.function_object.reinitialize[1])
+        # reinitialize function
+        D.function_object.reinitialize(2.0, 0.1)
+        assert np.allclose(D.function_object.value, 2.0)
+        assert np.allclose(D.function_object.previous_value, 2.0)
+        assert np.allclose(D.function_object.previous_time, 0.1)
+        assert np.allclose(D.value,  [[1.0], [1.0]])
+        assert np.allclose(D.output_states[0].value, 1.0)
+        assert np.allclose(D.output_states[1].value, 1.0)
 
-        D.function_object.reinitialize = 4.0, 0.1
+        # reinitialize function without value spec
+        D.function_object.reinitialize()
+        assert np.allclose(D.function_object.value, 0.0)
+        assert np.allclose(D.function_object.previous_value, 0.0)
+        assert np.allclose(D.function_object.previous_time, 0.0)
+        assert np.allclose(D.value, [[1.0], [1.0]])
+        assert np.allclose(D.output_states[0].value, 1.0)
+        assert np.allclose(D.output_states[1].value, 1.0)
 
-        D.execute(2.0)
-        assert np.allclose([[6.0]], D.function_object.reinitialize[0])
-        assert np.allclose([1.1], D.function_object.reinitialize[1])
+        # reinitialize mechanism
+        D.reinitialize(2.0, 0.1)
+        assert np.allclose(D.function_object.value, 2.0)
+        assert np.allclose(D.function_object.previous_value, 2.0)
+        assert np.allclose(D.function_object.previous_time, 0.1)
+        assert np.allclose(D.value, [[2.0], [0.1]])
+        assert np.allclose(D.output_states[0].value, 2.0)
+        assert np.allclose(D.output_states[1].value, 0.1)
 
-    def test_invalid_reinitialization_too_many_items(self):
-        D = DDM(name="D",
-                function=DriftDiffusionIntegrator())
-        with pytest.raises(FunctionError) as error_text:
-            D.function_object.reinitialize = 4.0, 0.1, 10.0
-        assert("DriftDiffusionIntegrator requires exactly two items (position, time) in order to reinitialize" in
-               str(error_text.value) and "3 items ((4.0, 0.1, 10.0)) were provided to reinitialize" in str(error_text.value))
+        D.execute(1.0)
+        #  2.0 + 1.0 = 3.0 ; 0.1 + 1.0 = 1.1
+        assert np.allclose(D.value, [[[3.0]], [[1.1]]])
+        assert np.allclose(D.output_states[0].value, 3.0)
+        assert np.allclose(D.output_states[1].value, 1.1)
 
-    def test_invalid_reinitialization_too_few_items(self):
-        D = DDM(name="D",
-                function=DriftDiffusionIntegrator())
-        with pytest.raises(FunctionError) as error_text:
-            D.function_object.reinitialize = 4.0
-        assert("DriftDiffusionIntegrator requires exactly two items (position, time) in order to reinitialize. Only "
-               "one item (4.0) was provided to reinitialize" in str(error_text.value))
+        # reinitialize mechanism without value spec
+        D.reinitialize()
+        assert np.allclose(D.function_object.value, 0.0)
+        assert np.allclose(D.function_object.previous_value, 0.0)
+        assert np.allclose(D.function_object.previous_time, 0.0)
+        assert np.allclose(D.output_states[0].value[0], 0.0)
+        assert np.allclose(D.output_states[1].value[0], 0.0)
+
+        # reinitialize only decision variable
+        D.reinitialize(1.0)
+        assert np.allclose(D.function_object.value, 1.0)
+        assert np.allclose(D.function_object.previous_value, 1.0)
+        assert np.allclose(D.function_object.previous_time, 0.0)
+        assert np.allclose(D.output_states[0].value[0], 1.0)
+        assert np.allclose(D.output_states[1].value[0], 0.0)
 
 
 
