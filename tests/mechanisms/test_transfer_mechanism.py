@@ -12,7 +12,6 @@ from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 
-
 class TestTransferMechanismInputs:
     # VALID INPUTS
 
@@ -913,7 +912,7 @@ class TestIntegratorMode:
         assert np.allclose(T.integrator_function.initializer, 0.4)  # initializer does not change with execution
         assert np.allclose(T.value, 0.46)  # on mechanism, but updates with exec
 
-    def test_previous_reinitialize_run(self):
+    def test_reinitialize_run(self):
         T = TransferMechanism(name="T",
                               initial_value=0.5,
                               integrator_mode=True,

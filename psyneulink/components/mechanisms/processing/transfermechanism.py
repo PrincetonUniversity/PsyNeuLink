@@ -277,8 +277,9 @@ In the examples above, `reinitialize <AdaptiveIntegrator.reinitialize>` was appl
 The key difference between the `integrator_function's reinitialize <AdaptiveIntegrator.reinitialize>` and the
 `TransferMechanism's reinitialize <TransferMechanism.reinitialize>` is that the latter will also execute the mechanism's
 function and update its output states. This is useful if the mechanism's value or any of its output state values will
-be used or checked *before* the mechanism's next execution. (This is often true if the mechanism is responsible for
-modulating other components or if a `Scheduler` condition depends on the mechanism's activity.)
+be used or checked *before* the mechanism's next execution. (This may be true if, for example, the mechanism is
+`recurrent <RecurrentTransferMechanism>`, the mechanism is responsible for `modulating <ModulatorySignal_Modulation`
+other components, or if a `Scheduler` condition depends on the mechanism's activity.)
 
 COMMENT:
 .. _Transfer_Examples:
