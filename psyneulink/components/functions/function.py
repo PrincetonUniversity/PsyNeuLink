@@ -2636,12 +2636,13 @@ class SoftMax(NormalizingFunction):
             vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_param_struct_type().as_pointer(),
+                self.get_context_struct_type().as_pointer(),
                 vec_ty.as_pointer(), vec_ty.as_pointer()))
             vector_length = ctx.int32_ty(self._variable_length)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
-            params, vi, vo = llvm_func.args
+            params, state, vi, vo = llvm_func.args
             for a in params, vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -2700,13 +2701,14 @@ class SoftMax(NormalizingFunction):
 
         ret = np.zeros(len(variable))
         gain = self.get_current_function_param(GAIN)
-        par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         ct_param = par_struct_ty(gain)
+        ct_state = state_struct_ty()
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
         ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
 
-        bf(ct_param, ct_vi, ct_vo)
+        bf(ct_param, ct_state, ct_vi, ct_vo)
 
         return ret
 
@@ -3044,11 +3046,12 @@ class Linear(TransferFunction):  # ---------------------------------------------
             vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(),
                 (self.get_param_struct_type().as_pointer(),
+                 self.get_context_struct_type().as_pointer(),
                  vec_ty.as_pointer(), vec_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
-            params, vi, vo = llvm_func.args
+            params, state, vi, vo = llvm_func.args
             for a in params, vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -3081,13 +3084,14 @@ class Linear(TransferFunction):  # ---------------------------------------------
         slope = self.get_current_function_param(SLOPE)
         intercept = self.get_current_function_param(INTERCEPT)
 
-        par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         ct_param = par_struct_ty(slope, intercept)
+        ct_state = state_struct_ty()
 
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
         ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
-        bf(ct_param, ct_vi, ct_vo)
+        bf(ct_param, ct_state, ct_vi, ct_vo)
 
         return ret
 
@@ -3330,11 +3334,12 @@ class Exponential(TransferFunction):  # ----------------------------------------
             vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(),
                 (self.get_param_struct_type().as_pointer(),
-                vec_ty.as_pointer(), vec_ty.as_pointer()))
+                 self.get_context_struct_type().as_pointer(),
+                 vec_ty.as_pointer(), vec_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
-            params, vi, vo = llvm_func.args
+            params, state, vi, vo = llvm_func.args
             for a in params, vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -3372,13 +3377,14 @@ class Exponential(TransferFunction):  # ----------------------------------------
         rate = self.get_current_function_param(RATE)
         scale = self.get_current_function_param(SCALE)
 
-        par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         ct_param = par_struct_ty(rate, scale)
+        ct_state = state_struct_ty()
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
         ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
 
-        bf(ct_param, ct_vi, ct_vo)
+        bf(ct_param, ct_state, ct_vi, ct_vo)
 
         return ret
 
@@ -3583,11 +3589,12 @@ class Logistic(TransferFunction):  # -------------------------------------------
             vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(),
                 (self.get_param_struct_type().as_pointer(),
+                 self.get_context_struct_type().as_pointer(),
                  vec_ty.as_pointer(), vec_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
-            params, vi, vo = llvm_func.args
+            params, state, vi, vo = llvm_func.args
             for a in params, vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -3621,13 +3628,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
         bias = self.get_current_function_param(BIAS)
         offset = self.get_current_function_param(OFFSET)
 
-        par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         ct_param = par_struct_ty(gain, bias, offset)
+        ct_state = state_struct_ty()
 
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
         ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
-        bf(ct_param, ct_vi, ct_vo)
+        bf(ct_param, ct_state, ct_vi, ct_vo)
 
         return ret
 
@@ -4148,11 +4156,12 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(),
                 (self.get_param_struct_type().as_pointer(),
+                 self.get_context_struct_type().as_pointer(),
                  vec_ty.as_pointer(), vec_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
-            params, vi, vo = llvm_func.args
+            params, state, vi, vo = llvm_func.args
             for a in params, vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -4183,13 +4192,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         ret = np.zeros(len(variable))
 
-        par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         ct_param = np.array(self.matrix).ctypes.data_as(ctypes.POINTER(par_struct_ty))
+        ct_state = state_struct_ty()
 
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
         ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
-        bf(ct_param, ct_vi, ct_vo)
+        bf(ct_param, ct_state, ct_vi, ct_vo)
 
         return ret
 

@@ -940,6 +940,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
             mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            mf_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
             if self.integrator_mode:
                 assert self.integrator_function is not None
@@ -951,10 +952,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                 builder.call(integrator_function, [if_params, if_state, vi, vtmp])
 
                 # We know that TransferFunction is not stateful, but a consistent interface would be nicer
-                builder.call(main_function, [mf_params, vtmp, vo])
+                builder.call(main_function, [mf_params, mf_state, vtmp, vo])
             else:
                 # We know that TransferFunction is not stateful, but a consistent interface would be nicer
-                builder.call(main_function, [mf_params, vi, vo])
+                builder.call(main_function, [mf_params, mf_state, vi, vo])
 
             if self.clip is not None:
                 kwargs = {"ctx":ctx, "vo":vo, "min_val":self.clip[0], "max_val":self.clip[1]}

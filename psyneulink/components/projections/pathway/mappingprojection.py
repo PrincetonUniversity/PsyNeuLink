@@ -767,9 +767,10 @@ class MappingProjection(PathwayProjection_Base):
             vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
             main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-            mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            f_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-            builder.call(main_function, [mf_params, vi, vo])
+            builder.call(main_function, [f_params, f_state, vi, vo])
 
             builder.ret_void()
         return func_name
