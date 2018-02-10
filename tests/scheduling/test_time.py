@@ -1,3 +1,4 @@
+import psyneulink as pnl
 import pytest
 
 from psyneulink.scheduling.time import Time, TimeHistoryTree, TimeScale
@@ -16,6 +17,19 @@ class TestTime:
     def test_increment(self, base, increment_time_scale, expected):
         base._increment_by_time_scale(increment_time_scale)
         assert base == expected
+
+    def test_multiple_runs(self):
+        t1 = pnl.TransferMechanism()
+        t2 = pnl.TransferMechanism()
+
+        p = pnl.Process(pathway=[t1, t2])
+        s = pnl.System(processes=[p])
+
+        s.run(inputs={t1: [[1.0], [2.0], [3.0]]})
+        assert s.scheduler_processing.clock.time == Time(run=1, trial=0, pass_=0, time_step=0)
+
+        s.run(inputs={t1: [[4.0], [5.0], [6.0]]})
+        assert s.scheduler_processing.clock.time == Time(run=2, trial=0, pass_=0, time_step=0)
 
 
 class TestTimeHistoryTree:
