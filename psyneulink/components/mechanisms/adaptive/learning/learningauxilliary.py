@@ -146,6 +146,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function
+from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.keywords import \
@@ -692,6 +693,30 @@ def _get_learning_mechanisms(mech:Mechanism, composition=None):
                         if isinstance(learning_projection, LearningProjection)])
     return aff, eff
 
+
+def _replace_objective_mechanism_with_learning_mechanisms(objective_mechanism, processing_mechanism, system):
+
+    # Get all LearningMechanisms for Projection to and from sample_mech
+    afferent_learning_mechs, efferent_learning_mechs = _get_learning_mechanisms(processing_mechanism, system)
+
+    # For the LearningMechanism of each Projection to sample_mech that is being learned
+    for aff_lm in afferent_learning_mechs:
+        # Check that aff_lm receives in its ACTIVATION_OUTPUT InputState the same Projection
+        #    that the ObjectMechanism received
+        assert aff_lm.input_states['activation_output'].path_afferents[0].sender == \
+               objective_mechanism.input_states[SAMPLE].path_afferents[0].sender
+        # For each Projection from sample_mech that is being learned,
+        #    add a Projection from its LearningMechanism ERROR_SIGNAL OutputState
+        #    to a newly created ERROR_SIGNAL InputState on afferent_lm
+        for eff_lm in efferent_learning_mechs:
+            # Make sure Projection doesn't already exist
+            if not any(proj.sender.owner == eff_lm for proj in aff_lm.afferents
+                       if ERROR_SIGNAL in proj.receiver.name):
+                aff_lm.add_states(InputState(variable=eff_lm.output_states[ERROR_SIGNAL].value,
+                                             projections=eff_lm.output_states[ERROR_SIGNAL],
+                                             name=ERROR_SIGNAL))
+        if not aff_lm.systems:
+            aff_lm.systems[system] = LEARNING
 
 
 class LearningComponents(object):

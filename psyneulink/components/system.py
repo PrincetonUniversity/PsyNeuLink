@@ -444,7 +444,8 @@ from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
     DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
-from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary import _get_learning_mechanisms
+from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary \
+    import _replace_objective_mechanism_with_learning_mechanisms, _get_learning_mechanisms
 from psyneulink.components.process import Process, ProcessList, ProcessTuple
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
@@ -1640,6 +1641,9 @@ class System(System_Base):
             #                      should project to ObjectiveMechanisms) and always replace internal
             #                      ObjectiveMechanism with projection from a LearningMechanism (if it is available)
 
+            obj_mech = None
+            obj_mech_replaced = False
+
             if isinstance(sender_mech, ObjectiveMechanism):
 
                 # For clarity, rename as obj_mech
@@ -1654,69 +1658,42 @@ class System(System_Base):
                     raise SystemError("{} in {} does not project to a LearningMechanism".
                                       format(obj_mech.name, process.name))
 
-                sample_mech = obj_mech.input_states['SAMPLE'].path_afferents[0].sender.owner
+                sample_mech = obj_mech.input_states[SAMPLE].path_afferents[0].sender.owner
                 if sample_mech != learning_mech.output_source:
                     assert False
 
-                # Its the 1st item in the learning_execution_graph, so it could for a TERMINAL Mechanism of the System
+                # Its the 1st item in the learning_execution_graph, so could be for a TERMINAL Mechanism of the System
                 if len(self.learning_execution_graph) == 0:
 
                     # If sample_mech is NOT for a TERMINAL Mechanism of the current System,
                     #  - obj_mech should NOT be included in the learning_execution_graph and
                     #  - should be replaced with appropriate projections to sample_mechs's afferent LearningMechanisms
                     if not sample_mech.systems[self] is TERMINAL:
-
-                        # Get all LearningMechanisms for Projection to and from sample_mech
-                        afferent_learning_mechs, efferent_learning_mechs = _get_learning_mechanisms(sample_mech, self)
-
-                        # For the LearningMechanism of each Projection to sample_mech that is being learned
-                        for aff_lm in afferent_learning_mechs:
-                            # Check that aff_lm receives in its ACTIVATION_OUTPUT InputState the same Projection
-                            #    that the ObjectMechanism received
-                            assert aff_lm.input_states['activation_output'].path_afferents[0].sender == \
-                                   obj_mech.input_states[SAMPLE].path_afferents[0].sender
-                            # For each Projection from sample_mech that is being learned,
-                            #    add a Projection from its LearningMechanism ERROR_SIGNAL OutputState
-                            #    to a newly created ERROR_SIGNAL InputState on afferent_lm
-                            for eff_lm in efferent_learning_mechs:
-                                # Make sure Projection doesn't already exist
-                                if not any(proj.sender.owner == eff_lm for proj in aff_lm.afferents
-                                           if ERROR_SIGNAL not in proj.receiver.name):
-                                    aff_lm.add_states(InputState(variable=eff_lm.output_states[ERROR_SIGNAL].value,
-                                                                 projections=eff_lm.output_states[ERROR_SIGNAL],
-                                                                 name=ERROR_SIGNAL))
-                        if not sender_mech.systems:
-                            aff_lm.systems[self] = LEARNING
-
+                        _replace_objective_mechanism_with_learning_mechanisms(obj_mech, sample_mech, self)
                         # Don't process ObjectiveMechanism any further (since its been replaced)
                         return
-
-                # FIX: CONTINUE RENAMING sender_mech AS obj_mech BELOW:
 
                 # NOT 1st item in the learning_execution_graph, so it must be for the TERMINAL Mechanism of a Process
                 else:
 
                     # TERMINAL CONVERGENCE
-                    # All of the mechanisms that project to sender_mech
+                    # All of the mechanisms that project to obj_mech
                     #    project to another ObjectiveMechanism already in the learning_graph
                     if all(
                             any((isinstance(receiver_mech, ObjectiveMechanism) and
                                  # its already in a dependency set in the learning_execution_graph
                                  receiver_mech in set.union(*list(self.learning_execution_graph.values())) and
-                                 not receiver_mech is sender_mech)
-                                # receivers of senders to sender_mech
+                                 not receiver_mech is obj_mech)
+                                # receivers of senders to obj_mech
                                 for receiver_mech in [proj.receiver.owner for proj in
                                                       mech.output_state.efferents])
-                            # senders to sender_mech
+                            # senders to obj_mech
                             for mech in [proj.sender.owner
-                                         for proj in sender_mech.input_states[SAMPLE].path_afferents]):
+                                         for proj in obj_mech.input_states[SAMPLE].path_afferents]):
 
-                        # Get the ProcessingMechanism that projected to sender_mech
-                        error_source_mech = sender_mech.input_states[SAMPLE].path_afferents[0].sender.owner
-
-                        # Get the other ObjectiveMechanism to which the error_source projects (in addition to sender_mech)
+                        # Get the other ObjectiveMechanism to which the error_source projects (in addition to obj_mech)
                         other_obj_mech = next((projection.receiver.owner for projection in
-                                               error_source_mech.output_state.efferents if
+                                               sample_mech.output_state.efferents if
                                                isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
                         sender_mech = other_obj_mech
 
@@ -1724,128 +1701,138 @@ class System(System_Base):
                     # None of the mechanisms that project to it are a TERMINAL mechanism
                     elif not all(all(projection.sender.owner.processes[proc] is TERMINAL
                                      for proc in projection.sender.owner.processes)
-                                 for projection in sender_mech.input_states[SAMPLE].path_afferents):
+                                 for projection in obj_mech.input_states[SAMPLE].path_afferents):
 
-                        # Get the ProcessingMechanism that projected to sender_mech
-                        error_source_mech = sender_mech.input_states[SAMPLE].path_afferents[0].sender.owner
+                        # # MODIFIED 2/10/18 OLD:
+                        # # Get other LearningMechanism(s) to which the sample_mech projects (in addition to obj_mech)
+                        # error_signal_mech = next((projection.receiver.owner for projection in
+                        #                           sample_mech.output_state.efferents if
+                        #                           projection.receiver.name is ACTIVATION_INPUT), None)
+                        #
+                        # # Check if learning_mech receives an error_signal_projection
+                        # #    from any other ObjectiveMechanism or LearningMechanism in the system;
+                        # # If it does, get the first one found
+                        # error_signal_projection = next ((projection for projection
+                        #                                  in learning_mech.input_states[ERROR_SIGNAL].path_afferents
+                        #                                  if (isinstance(projection.sender.owner,(ObjectiveMechanism,
+                        #                                                                         LearningMechanism)) and
+                        #                                  not projection.sender.owner is obj_mech and
+                        #                                  self in projection.sender.owner.systems.values())), None)
+                        # # If learning_mech receives another error_signal projection,
+                        # #    reassign obj_mech to the sender of that projection
+                        # # FIX:  NEED TO ALSO REASSIGN learning_mech.function_object.error_matrix TO ONE FOR obj_mech
+                        # if error_signal_projection:
+                        #     if self.verbosePref:
+                        #         warnings.warn("Although {} a TERMINAL Mechanism for the {} Process, it is an "
+                        #                       "INTERNAL Mechanism for other Proesses in the {} System; therefore its "
+                        #                       "ObjectiveMechanism ({}) will be replaced with the {} LearningMechanism".
+                        #                       format(sample_mech.name,
+                        #                              process.name,
+                        #                              self.name,
+                        #                              obj_mech.name,
+                        #                              error_signal_mech))
+                        #     sender_mech = error_signal_projection.sender.owner
+                        #
+                        # # FIX:  FINISH DOCUMENTATION HERE ABOUT HOW THIS IS DIFFERENT THAN ABOVE
+                        # if error_signal_mech is None:
+                        #     raise SystemError("Could not find projection to an {} inputState of a LearningMechanism for"
+                        #                       " the ProcessingMechanism ({}) that projects to {} in the {} process".
+                        #                       format(ACTIVATION_INPUT,
+                        #                                 sample_mech.name,
+                        #                                 sender_mech.name,
+                        #                                 process.name))
+                        #
+                        # # learning_mech does not receive another error_signal projection,
+                        # #     so assign one to it from error_signal_mech
+                        # #     (the other LearningMechanism to which the sample_mech projects)
+                        # # and reassign learning_mech.function_object.error_matrix
+                        # #     (to the one for the projection to which error_signal_mech projects)
+                        # else:
+                        #
+                        #     # FIX: 2/9/18: MAY NOT NEED TO DO THIS IN THE END... JUST ADD A NEW INPUT_STATE, AS ABOVE
+                        #     # If the error_signal_mech's OutputState does not match the
+                        #     #    length of the learning_mech's ERROR_SIGNAL InpuState,
+                        #     #    then delete the latter and replace it with one that is properly sized
+                        #     # FIX 2/6/18: DOCUMENT info in IMPLEMENTATION NOTE BELOW
+                        #     # IMPLEMENTATION NOTE:
+                        #     #     - this precludes running the error_source in its original Process,
+                        #     #         since the learning_mech will now be disconnected from the old error_signal_mech
+                        #
+                        #     # Find ERROR_SIGNAL InputState of learning_mech to which error_signal_mech projects
+                        #     error_signal_input_state = next((input_state for input_state in learning_mech.input_states
+                        #                                     if (ERROR_SIGNAL in input_state.name and
+                        #                                         error_signal_mech ==
+                        #                                         input_state.path_afferents[0].sender.owner)),
+                        #                                     None)
+                        #     # There is none, so create a new ERROR_SIGNAL InputState assign projection to it
+                        #     if not error_signal_input_state:
+                        #         learning_mech.add_states(InputState(name=ERROR_SIGNAL,
+                        #                                             variable=(error_signal_mech.output_states[
+                        #                                                              ERROR_SIGNAL].value),
+                        #                                             projections=[error_signal_mech.output_states[
+                        #                                                              ERROR_SIGNAL]]))
+                        #
+                        #
+                        #     # # Check if lengths are the same
+                        #     # if (len(error_signal_input_state.value) !=
+                        #     #         len(error_signal_mech.output_states[ERROR_SIGNAL].value)):
+                        #     #     # They are NOT, so remove the old ERROR_SIGNAL InputState and replace it with a new one
+                        #     #     learning_mech.remove_states(learning_mech.input_states[ERROR_SIGNAL])
+                        #     #     learning_mech.add_states(InputState(name=ERROR_SIGNAL,
+                        #     #                                         variable=(error_signal_mech.output_states[
+                        #     #                                                          ERROR_SIGNAL].value),
+                        #     #                                         projections=[error_signal_mech.output_states[
+                        #     #                                                          ERROR_SIGNAL]]))
+                        #
+                        #     # REINSTATE TO DEAL WITH ORPHANED LearningMecahnism IF COMPARATOR IS NO LONGER USED
+                        #     # else:
+                        #     #     # FIX: CHECK AGAIN THAT PROJECTION DOESN'T ALREADY EXIST
+                        #     #     mp = MappingProjection(sender=error_signal_mech.output_states[ERROR_SIGNAL],
+                        #     #                            receiver=error_signal_input_state,
+                        #     #                            matrix=IDENTITY_MATRIX)
+                        #     #     if mp is None:
+                        #     #         raise SystemError("Could not instantiate a MappingProjection "
+                        #     #                           "from {} to {} for the {} process".
+                        #     #                           format(error_signal_mech.name, learning_mech.name))
+                        #
+                        #     # Reassign size of the error_signal for learning_mech's function
+                        #     #     to be length of the error_signal_mech ERROR_SIGNAL OutputState
+                        #     learning_mech.function_object.error_signal = \
+                        #         np.zeros_like(error_signal_mech.output_states[ERROR_SIGNAL].value)
+                        #     # Reassign error_matrix to one for the projection to which the error_signal_mech projects
+                        #     learning_mech.function_object.error_matrix = \
+                        #         error_signal_mech._output_states[LEARNING_SIGNAL].efferents[0].receiver
+                        #     # Delete error_matrix parameterState for error_matrix
+                        #     #    (since its value, which was the IDENTITY_MATRIX, is now itself a ParameterState,
+                        #     #     and Components are not allowed  as the value of a ParameterState
+                        #     #     -- see ParameterState._instantiate_parameter_state())
+                        #     if 'error_matrix' in learning_mech._parameter_states:
+                        #         del learning_mech._parameter_states['error_matrix']
+                        #
+                        #     sender_mech = error_signal_mech
+                        # MODIFIED 2/10/18 NEW:
+                        _replace_objective_mechanism_with_learning_mechanisms(obj_mech, sample_mech, self)
+                        obj_mech_replaced = True
 
-                        # Get other LearningMechanism to which the error_source projects (in addition to sender_mech)
-                        error_signal_mech = next((projection.receiver.owner for projection in
-                                                  error_source_mech.output_state.efferents if
-                                                  projection.receiver.name is ACTIVATION_INPUT), None)
-
-                        # Check if learning_mech receives an error_signal_projection
-                        #    from any other ObjectiveMechanism or LearningMechanism in the system;
-                        # If it does, get the first one found
-                        error_signal_projection = next ((projection for projection
-                                                         in learning_mech.input_states[ERROR_SIGNAL].path_afferents
-                                                         if (isinstance(projection.sender.owner,(ObjectiveMechanism,
-                                                                                                LearningMechanism)) and
-                                                         not projection.sender.owner is sender_mech and
-                                                         self in projection.sender.owner.systems.values())), None)
-                        # If learning_mech receives another error_signal projection,
-                        #    reassign sender_mech to the sender of that projection
-                        # FIX:  NEED TO ALSO REASSIGN learning_mech.function_object.error_matrix TO ONE FOR sender_mech
-                        if error_signal_projection:
-                            if self.verbosePref:
-                                warnings.warn("Although {} a TERMINAL Mechanism for the {} Process, it is an "
-                                              "INTERNAL Mechanism for other Proesses in the {} System; therefore its "
-                                              "ObjectiveMechanism ({}) will be replaced with the {} LearningMechanism".
-                                              format(error_source_mech.name,
-                                                     process.name,
-                                                     self.name,
-                                                     sender_mech.name,
-                                                     error_signal_mech))
-                            sender_mech = error_signal_projection.sender.owner
-
-                        # FIX:  FINISH DOCUMENTATION HERE ABOUT HOW THIS IS DIFFERENT THAN ABOVE
-                        if error_signal_mech is None:
-                            raise SystemError("Could not find projection to an {} inputState of a LearningMechanism for"
-                                              " the ProcessingMechanism ({}) that projects to {} in the {} process".
-                                              format(ACTIVATION_INPUT,
-                                                        error_source_mech.name,
-                                                        sender_mech.name,
-                                                        process.name))
-
-                        # learning_mech does not receive another error_signal projection,
-                        #     so assign one to it from error_signal_mech
-                        #     (the other LearningMechanism to which the error_source_mech projects)
-                        # and reassign learning_mech.function_object.error_matrix
-                        #     (to the one for the projection to which error_signal_mech projects)
-                        else:
-
-                            # FIX: 2/9/18: MAY NOT NEED TO DO THIS IN THE END... JUST ADD A NEW INPUT_STATE, AS ABOVE
-                            # If the error_signal_mech's OutputState does not match the
-                            #    length of the learning_mech's ERROR_SIGNAL InpuState,
-                            #    then delete the latter and replace it with one that is properly sized
-                            # FIX 2/6/18: DOCUMENT info in IMPLEMENTATION NOTE BELOW
-                            # IMPLEMENTATION NOTE:
-                            #     - this precludes running the error_source in its original Process,
-                            #         since the learning_mech will now be disconnected from the old error_signal_mech
-
-                            # Find ERROR_SIGNAL InputState of learning_mech to which error_signal_mech projects
-                            error_signal_input_state = next((input_state for input_state in learning_mech.input_states
-                                                            if (ERROR_SIGNAL in input_state.name and
-                                                                error_signal_mech ==
-                                                                input_state.path_afferents[0].sender.owner)),
-                                                            None)
-                            # There is none, so create a new ERROR_SIGNAL InputState assign projection to it
-                            if not error_signal_input_state:
-                                learning_mech.add_states(InputState(name=ERROR_SIGNAL,
-                                                                    variable=(error_signal_mech.output_states[
-                                                                                     ERROR_SIGNAL].value),
-                                                                    projections=[error_signal_mech.output_states[
-                                                                                     ERROR_SIGNAL]]))
+                        # FIX: REPLACE obj_mech WITH eff_lm'S (ONES THAT PROJECT TO/ARE SENDERS TO SAME LM AS obj_mech)
+                        # FIX:  BUT THEN NEED TO ITERATE OVER THOSE AS SENDERS BELOW
+                        # return
+                        # MODIFIED 2/10/18 END
 
 
-                            # # Check if lengths are the same
-                            # if (len(error_signal_input_state.value) !=
-                            #         len(error_signal_mech.output_states[ERROR_SIGNAL].value)):
-                            #     # They are NOT, so remove the old ERROR_SIGNAL InputState and replace it with a new one
-                            #     learning_mech.remove_states(learning_mech.input_states[ERROR_SIGNAL])
-                            #     learning_mech.add_states(InputState(name=ERROR_SIGNAL,
-                            #                                         variable=(error_signal_mech.output_states[
-                            #                                                          ERROR_SIGNAL].value),
-                            #                                         projections=[error_signal_mech.output_states[
-                            #                                                          ERROR_SIGNAL]]))
-
-                            # REINSTATE TO DEAL WITH ORPHANED LearningMecahnism IF COMPARATOR IS NO LONGER USED
-                            # else:
-                            #     # FIX: CHECK AGAIN THAT PROJECTOIN DOESN'T ALREADY EXIST
-                            #     mp = MappingProjection(sender=error_signal_mech.output_states[ERROR_SIGNAL],
-                            #                            receiver=error_signal_input_state,
-                            #                            matrix=IDENTITY_MATRIX)
-                            #     if mp is None:
-                            #         raise SystemError("Could not instantiate a MappingProjection "
-                            #                           "from {} to {} for the {} process".
-                            #                           format(error_signal_mech.name, learning_mech.name))
-
-                            # Reassign size of the error_signal for learning_mech's function
-                            #     to be length of the error_signal_mech ERROR_SIGNAL OutputState
-                            learning_mech.function_object.error_signal = \
-                                np.zeros_like(error_signal_mech.output_states[ERROR_SIGNAL].value)
-                            # Reassign error_matrix to one for the projection to which the error_signal_mech projects
-                            learning_mech.function_object.error_matrix = \
-                                error_signal_mech._output_states[LEARNING_SIGNAL].efferents[0].receiver
-                            # Delete error_matrix parameterState for error_matrix
-                            #    (since its value, which was the IDENTITY_MATRIX, is now itself ParameterState,
-                            #     and Components are not allowed  as the value of a ParameterState
-                            #     -- see ParameterState._instantiate_parameter_state())
-                            if 'error_matrix' in learning_mech._parameter_states:
-                                del learning_mech._parameter_states['error_matrix']
-
-                            sender_mech = error_signal_mech
-
-            # Delete any Projections to Mechanism from Processes or Mechanisms in Processes not in current System
-            for input_state in sender_mech.input_states:
-                for projection in input_state.all_afferents:
-                    sender = projection.sender.owner
-                    system_processes = self.processes
-                    if isinstance(sender, Process_Base):
-                        if not sender in system_processes:
-                            del projection
-                    elif not all(sender_process in system_processes for sender_process in sender.processes):
-                        del projection
+            # # MODIFIED 2/10/18 OLD:
+            # ?? NOT NECESSARY SINCE PROJECTIONS FROM OTHER SYSYTEMS ARE IGNORED DURING EXECUTION AND GRAPH DISPLAY
+            # # Delete any Projections to sender_mech from Processes or Mechanisms in Processes not in current System
+            # for input_state in sender_mech.input_states:
+            #     for projection in input_state.all_afferents:
+            #         sender = projection.sender.owner
+            #         system_processes = self.processes
+            #         if isinstance(sender, Process_Base):
+            #             if not sender in system_processes:
+            #                 del projection
+            #         elif not all(sender_process in system_processes for sender_process in sender.processes):
+            #             del projection
+            # MODIFIED 2/10/18 END
 
             # If sender_mech has no Projections left, raise exception
             if not any(any(projection for projection in input_state.path_afferents)
@@ -1853,57 +1840,68 @@ class System(System_Base):
                 raise SystemError("{} only receives Projections from other Processes or Mechanisms not"
                                   " in the current System ({})".format(sender_mech.name, self.name))
 
+            # For all of the sender_mech's ERROR_SIGNALs and LEARNING_SIGNALs
             for output_state in sender_mech.output_states:
 
+                # Add them to the learning_graph
                 for projection in output_state.efferents:
                     receiver = projection.receiver.owner
-                    try:
-                        self.learningGraph[receiver].add(sender_mech)
-                    except KeyError:
-                        self.learningGraph[receiver] = {sender_mech}
 
-                    # Use toposort to test whether the added dependency produced a cycle (feedback loop)
-                    # Do not include dependency (or receiver on sender) in learning_execution_graph for this Projection
-                    #  and end this branch of the traversal if the receiver has already been encountered,
-                    #  but do mark for initialization
-                    # Notes:
-                    # * This is because it is a feedback connection, which introduces a cycle into the learningGraph
-                    #     that precludes use of toposort to determine order of execution;
-                    #     however, the feedback projection will still be used during execution
-                    #     so the sending mechanism should be designated as INITIALIZE_CYCLE
-                    # * Check for receiver mechanism and not its tuple,
-                    #     since the same mechanism can appear in more than one tuple (e.g., with different phases)
-                    #     and would introduce a cycle irrespective of the tuple in which it appears in the learningGraph
-
-                    if receiver in self.learning_execution_graph:
-                    # if receiver in self.learning_execution_graph_mechs:
-                        # Try assigning receiver as dependent of current mechanism and test toposort
-                        try:
-                            # If receiver already has dependencies in its set, add sender_mech to set
-                            if self.learning_execution_graph[receiver]:
-                                self.learning_execution_graph[receiver].add(sender_mech)
-                            # If receiver set is empty, assign sender_mech to set
-                            else:
-                                self.learning_execution_graph[receiver] = {sender_mech}
-                            # Use toposort to test whether the added dependency produced a cycle (feedback loop)
-                            list(toposort(self.learning_execution_graph))
-                        # If making receiver dependent on sender produced a cycle, remove from learningGraph
-                        except ValueError:
-                            self.learning_execution_graph[receiver].remove(sender_mech)
-                            receiver.systems[self] = CYCLE
-                            continue
-
+                    if obj_mech_replaced:
+                        ignore, senders = _get_learning_mechanisms(sample_mech, self)
                     else:
-                        # Assign receiver as dependent on sender mechanism
-                        try:
-                            # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
-                            # FIX: DOES THAT SCREW UP ORIGINS?
-                            self.learning_execution_graph[receiver].add(sender_mech)
-                        except KeyError:
-                            self.learning_execution_graph[receiver] = {sender_mech}
+                        senders = [sender_mech]
 
-                    if not sender_mech.systems:
-                        sender_mech.systems[self] = LEARNING
+                    for sender_mech in senders:
+                        try:
+                            # FIX: 2/10/18 IF sender_mech IS A REPLACED OBJ_MECH,
+                            # FIX:         THEN SHOULD ADD THE LM THAT PROJECTS TO RECEIVER AS THE SENDER, NOT THE OBJ_MECH
+                            self.learningGraph[receiver].add(sender_mech)
+                        except KeyError:
+                            self.learningGraph[receiver] = {sender_mech}
+
+                        # Use toposort to test whether the added dependency produced a cycle (feedback loop)
+                        # Do not include dependency (or receiver on sender) in learning_execution_graph for this Projection
+                        #  and end this branch of the traversal if the receiver has already been encountered,
+                        #  but do mark for initialization
+                        # Notes:
+                        # * This is because it is a feedback connection, which introduces a cycle into the learningGraph
+                        #     that precludes use of toposort to determine order of execution;
+                        #     however, the feedback projection will still be used during execution
+                        #     so the sending mechanism should be designated as INITIALIZE_CYCLE
+                        # * Check for receiver mechanism and not its tuple,
+                        #     since the same mechanism can appear in more than one tuple (e.g., with different phases)
+                        #     and would introduce a cycle irrespective of the tuple in which it appears in the learningGraph
+
+                        if receiver in self.learning_execution_graph:
+                        # if receiver in self.learning_execution_graph_mechs:
+                            # Try assigning receiver as dependent of current mechanism and test toposort
+                            try:
+                                # If receiver already has dependencies in its set, add sender_mech to set
+                                if self.learning_execution_graph[receiver]:
+                                    self.learning_execution_graph[receiver].add(sender_mech)
+                                # If receiver set is empty, assign sender_mech to set
+                                else:
+                                    self.learning_execution_graph[receiver] = {sender_mech}
+                                # Use toposort to test whether the added dependency produced a cycle (feedback loop)
+                                list(toposort(self.learning_execution_graph))
+                            # If making receiver dependent on sender produced a cycle, remove from learningGraph
+                            except ValueError:
+                                self.learning_execution_graph[receiver].remove(sender_mech)
+                                receiver.systems[self] = CYCLE
+                                continue
+
+                        else:
+                            # Assign receiver as dependent on sender mechanism
+                            try:
+                                # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
+                                # FIX: DOES THAT SCREW UP ORIGINS?
+                                self.learning_execution_graph[receiver].add(sender_mech)
+                            except KeyError:
+                                self.learning_execution_graph[receiver] = {sender_mech}
+
+                        if not sender_mech.systems:
+                            sender_mech.systems[self] = LEARNING
 
                     # Traverse list of mechanisms in process recursively
                     build_dependency_sets_by_traversing_projections(receiver, process)
@@ -1919,8 +1917,8 @@ class System(System_Base):
                 build_dependency_sets_by_traversing_projections(process.learning_mechanisms[0], process)
 
         # FIX: USE TOPOSORT TO FIND, OR AT LEAST CONFIRM, TARGET MECHANISMS, WHICH SHOULD EQUAL COMPARATOR MECHANISMS
-        self.learningexecution_list = toposort_flatten(self.learning_execution_graph, sort=False)
-        # self.learningexecution_list = self._toposort_with_ordered_mechs(self.learning_execution_graph)
+        self.learning_execution_list = toposort_flatten(self.learning_execution_graph, sort=False)
+        # self.learning_execution_list = self._toposort_with_ordered_mechs(self.learning_execution_graph)
 
         # Construct learning_mechanisms and target_mechanisms MechanismLists
 
@@ -1928,7 +1926,7 @@ class System(System_Base):
         self._target_mechs = []
 
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-        for item in self.learningexecution_list:
+        for item in self.learning_execution_list:
             if isinstance(item, MappingProjection):
                 continue
 
@@ -2576,10 +2574,10 @@ class System(System_Base):
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
-        # self.learningexecution_list
+        # self.learning_execution_list
         for mech in self.execution_graph:
             mech._execution_id = self._execution_id
-        for learning_mech in self.learningexecution_list:
+        for learning_mech in self.learning_execution_list:
             learning_mech._execution_id = self._execution_id
         if self.controller is not None:
             self.controller._execution_id = self._execution_id
@@ -2758,7 +2756,7 @@ class System(System_Base):
             i += 1
 
     def _execute_learning(self, context=None):
-        # Execute each LearningMechanism as well as LearningProjections in self.learningexecution_list
+        # Execute each LearningMechanism as well as LearningProjections in self.learning_execution_list
 
         # FIRST, if targets were specified as a function, call the function now
         #    (i.e., after execution of the pathways, but before learning)
