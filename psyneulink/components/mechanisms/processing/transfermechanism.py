@@ -682,13 +682,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         if output_states is None or output_states is RESULTS:
             output_states = [RESULTS]
 
-        def nested_len(x):
-            try:
-                return sum(nested_len(y) for y in x)
-            except:
-                return 1
-        self._variable_length = nested_len(default_variable)
-
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
                                                   input_states=input_states,

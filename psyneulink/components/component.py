@@ -984,6 +984,15 @@ class Component(object):
 
         self.nv_state = None
 
+        # TODO: move this to a nicer, shareable place
+        def nested_len(x):
+            try:
+                return sum(nested_len(y) for y in x)
+            except:
+                return 1
+
+        self._variable_length = nested_len(default_variable)
+
     @property
     def llvmSymbolName(self):
         if self.__llvm_regenerate:

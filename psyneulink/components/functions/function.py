@@ -640,15 +640,6 @@ class Function_Base(Function):
                          prefs=prefs,
                          context=context)
 
-        # TODO: move this to a nicer, shareable place
-        def nested_len(x):
-            try:
-                return sum(nested_len(y) for y in x)
-            except:
-                return 1
-
-        self._variable_length = nested_len(default_variable)
-
     def _validate_parameter_spec(self, param, param_name, numeric_only=True):
         """Validates function param
         Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s"""

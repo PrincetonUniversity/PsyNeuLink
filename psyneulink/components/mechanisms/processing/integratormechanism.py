@@ -230,13 +230,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                   name=name,
                                                   prefs=prefs,
                                                   context=self)
-        def nested_len(x):
-            try:
-                return sum(nested_len(y) for y in x)
-            except:
-                return 1
-        self._variable_length = nested_len(default_variable)
-
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 
     # MODIFIED 6/2/17 NEW:
