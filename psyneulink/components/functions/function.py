@@ -2585,7 +2585,7 @@ class SoftMax(NormalizingFunction):
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.gain])
+        return tuple([self.get_current_function_param(GAIN)])
 
     def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -2699,7 +2699,7 @@ class SoftMax(NormalizingFunction):
         bf = self._llvmBinFunction
 
         ret = np.zeros(len(variable))
-        gain = self.params[GAIN]
+        gain = self.get_current_function_param(GAIN)
         par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         ct_param = par_struct_ty(gain)
@@ -3019,7 +3019,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.slope, self.intercept])
+        return tuple([self.get_current_function_param(SLOPE),
+                      self.get_current_function_param(INTERCEPT)])
 
     def __gen_llvm_linear(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -3077,8 +3078,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         bf = self._llvmBinFunction
 
         ret = np.zeros(len(variable))
-        slope = self.paramsCurrent[SLOPE]
-        intercept = self.paramsCurrent[INTERCEPT]
+        slope = self.get_current_function_param(SLOPE)
+        intercept = self.get_current_function_param(INTERCEPT)
 
         par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
@@ -3306,7 +3307,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.rate, self.scale])
+        return tuple([self.get_current_function_param(RATE),
+                      self.get_current_function_param(SCALE)])
 
     def __gen_llvm_exponential(self, builder, index, ctx, vi, vo, rate, scale):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -3367,8 +3369,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
         bf = self._llvmBinFunction
         ret = np.zeros(len(variable))
 
-        rate = self.paramsCurrent[RATE]
-        scale = self.paramsCurrent[SCALE]
+        rate = self.get_current_function_param(RATE)
+        scale = self.get_current_function_param(SCALE)
 
         par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
@@ -3547,7 +3549,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.gain, self.bias, self.offset])
+        return tuple([self.get_current_function_param(GAIN),
+                      self.get_current_function_param(BIAS),
+                      self.get_current_function_param(OFFSET)])
 
     def __gen_llvm_logistic(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -3613,9 +3617,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         bf = self._llvmBinFunction
 
         ret = np.zeros(len(variable))
-        gain = self.paramsCurrent[GAIN]
-        bias = self.paramsCurrent[BIAS]
-        offset = self.paramsCurrent[OFFSET]
+        gain = self.get_current_function_param(GAIN)
+        bias = self.get_current_function_param(BIAS)
+        offset = self.get_current_function_param(OFFSET)
 
         par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
@@ -5512,7 +5516,9 @@ class AdaptiveIntegrator(
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.rate, self.offset, self.noise])
+        return tuple([self.get_current_function_param(RATE),
+                      self.get_current_function_param(OFFSET),
+                      self.get_current_function_param(NOISE)])
 
 
     def get_context_struct_type(self):
@@ -5604,12 +5610,13 @@ class AdaptiveIntegrator(
         # TODO: port this to LLVM
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        rate = self.paramsCurrent[RATE]
-        offset = self.paramsCurrent[OFFSET]
+        rate = self.get_current_function_param(RATE)
+        offset = self.get_current_function_param(OFFSET)
         # execute noise if it is a function
         # TODO: port this to LLVM
-        noise = self._try_execute_param(self.noise, variable)
-        if hasattr(self.noise, "__len__"):
+        noise = self._try_execute_param(self.get_current_function_param(NOISE),
+                                        variable)
+        if hasattr(noise, "__len__"):
             # Arrays need to be initialized using tuple
             # Take the first input
             noise = tuple(noise[0])
