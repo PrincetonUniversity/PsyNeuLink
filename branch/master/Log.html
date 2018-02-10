@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.3.0 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.3.0+22.gb2e3e85 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.3.0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.3.0+22.gb2e3e85 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.3.0
+                0.4.3.0+22
               </div>
             
           
@@ -91,23 +91,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Component.html">Components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Condition.html">Condition</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Time.html">Time</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Log</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
@@ -189,7 +177,7 @@ they are most easily specified using the Log’s <a class="reference internal" h
 <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> and <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> attributes that identify and track the
 items to be logged, respectively. Entries can also be made by the user programmatically, using the <a class="reference internal" href="#psyneulink.globals.log.Log.log_values" title="psyneulink.globals.log.Log.log_values"><code class="xref any py py-meth docutils literal"><span class="pre">log_values</span></code></a> method. Logging can be useful not only for observing the behavior of a Component in a model, but also
 in debugging the model during construction. The entries of a Log can be displayed in a “human readable” table using
-its <a class="reference internal" href="#psyneulink.globals.log.Log.print_entries" title="psyneulink.globals.log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a> method, and returned in CSV and numpy array formats using its and <a class="reference internal" href="#psyneulink.globals.log.Log.nparray" title="psyneulink.globals.log.Log.nparray"><code class="xref any py py-meth docutils literal"><span class="pre">nparray</span></code></a> and <a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">csv</span></code></a>  methods.</p>
+its <a class="reference internal" href="#psyneulink.globals.log.Log.print_entries" title="psyneulink.globals.log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a> method, and returned in CSV and numpy array formats using its and <a class="reference internal" href="#psyneulink.globals.log.Log.nparray" title="psyneulink.globals.log.Log.nparray"><code class="xref any py py-meth docutils literal"><span class="pre">nparray</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.Log.nparray_dictionary" title="psyneulink.globals.log.Log.nparray_dictionary"><code class="xref any py py-meth docutils literal"><span class="pre">nparray_dictionary</span></code></a> and <a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">csv</span></code></a>  methods.</p>
 </div>
 <div class="section" id="creating-logs-and-entries">
 <span id="log-creation"></span><h2>Creating Logs and Entries<a class="headerlink" href="#creating-logs-and-entries" title="Permalink to this headline">¶</a></h2>
@@ -235,6 +223,9 @@ programmatically (“manually”).  Components can be specified by their names o
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">nparray</span></code></a> – returns a 2d np.array with the <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> in the Log.</li>
+</ul>
+<ul class="simple">
+<li><a class="reference internal" href="#psyneulink.globals.log.Log.nparray_dictionary" title="psyneulink.globals.log.Log.nparray_dictionary"><code class="xref any py py-meth docutils literal"><span class="pre">nparray_dictionary</span></code></a> – returns a dictionary of np.arrays with the <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> in the Log.</li>
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="#psyneulink.globals.log.Log.csv" title="psyneulink.globals.log.Log.csv"><code class="xref any py py-meth docutils literal"><span class="pre">csv</span></code></a> – returns a CSV-formatted string with the <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a> in the Log.</li>
@@ -672,6 +663,54 @@ otherwise, it is “&lt;entry name&gt;”.</li>
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.globals.log.Log.nparray_dictionary">
+<code class="descname">nparray_dictionary</code><span class="sig-paren">(</span><em>entries=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.nparray_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an <a class="reference external" href="https://docs.python.org/3.5/library/collections.html#collections.OrderedDict">OrderedDict</a></p>
+<p><em>Keys:</em></p>
+<blockquote>
+<div><p>Keys of the OrderedDict are strings.</p>
+<p>Keys are the names of logged Components specified in the <strong>entries</strong> argument, plus either Run, Trial, and
+Time_step, or Index.</p>
+<p>If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not <code class="xref any docutils literal"><span class="pre">None</span></code>),
+then the first three keys are Run, Trial and Time_step, respectively.</p>
+<p>If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
+System), then all of the entries must have the same number of data (LogEntry) items, and the first key is Index.</p>
+<p>Then, the logged components follow in the same order as they were specified.</p>
+</div></blockquote>
+<p><em>Values:</em></p>
+<blockquote>
+<div><p>Values of the OrderedDict are numpy arrays.</p>
+<p>The numpy array value for a given component key consists of that logged Component’s data over many time points
+or executions.</p>
+<p>The numpy array values for Run, Trial, and Time_step are counters for each of those time scales. The ith
+elements of the Run, Trial, Time_step and component data arrays can be taken together to represent the value of
+that component during a particular time step of a particular trial of a particular run.</p>
+<p>For example, if log_dict is a log dictionary in which log_dict[‘slope’][5] = 2.0, log_dict[‘Time_step’][5] = 1,
+log_dict[‘Trial’][5] = 2, and log_dict[‘Run’][5] = 0, then the value of slope was 2.0 during the time step 1 of
+trial 2 of run 0. If there is no data for a given entry at a given time point, it is entered as <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
+<p>The numpy array value for Index is a sequential index starting at zero.</p>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For data without time stamps, the nth item in each dictionary key (i.e., data in the same “column”)
+is not guaranteed to have been logged at the same time point across all keys (Components).</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>entries</strong> (<em>string</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a><em> or </em><em>list containing either : default ALL</em>) – specifies the entries of the Log to be included in the output;  they must be <a class="reference internal" href="#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Log that have been logged (i.e., are also <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a>).
+If <strong>entries</strong> is <em>ALL</em> or is not specified, then all <a class="reference internal" href="#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> are included.</li>
+<li><strong>Returns</strong> – 2d np.array</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.globals.log.Log.csv">
 <code class="descname">csv</code><span class="sig-paren">(</span><em>entries=None</em>, <em>owner_name=False</em>, <em>quotes=&quot;'&quot;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.log.Log.csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a CSV-formatted string with headers and values for the specified entries.</p>
@@ -781,7 +820,7 @@ property of its class, and its own <a class="reference internal" href="Component
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.3.0',
+            VERSION:'0.4.3.0+22.gb2e3e85',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
