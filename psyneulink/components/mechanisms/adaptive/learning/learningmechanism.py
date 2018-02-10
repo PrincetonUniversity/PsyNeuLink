@@ -1141,7 +1141,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                                   isinstance(state, LearningSignal)])
 
     def _execute(self,
-                variable=None,
+                Z=None,
                 runtime_params=None,
                 context=None):
         """Execute LearningMechanism function and return learning_signal
