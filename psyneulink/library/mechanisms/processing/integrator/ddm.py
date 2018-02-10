@@ -945,6 +945,15 @@ class DDM(ProcessingMechanism_Base):
             #     """
             #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
 
+    def reinitialize(self, *args):
+        from psyneulink.components.functions.function import Integrator
+
+        # (1) reinitialize function, (2) update mechanism value, (3) update output states
+        if isinstance(self.function_object, Integrator):
+            new_values = self.function_object.reinitialize(*args)
+            self.value = np.array(new_values)
+            self._update_output_states(context="REINITIALIZING")
+
     @property
     def is_finished(self):
         # find the single numeric entry in previous_value
@@ -966,3 +975,4 @@ class DDM(ProcessingMechanism_Base):
                                                                        THRESHOLD)))
             return True
         return self._is_finished
+

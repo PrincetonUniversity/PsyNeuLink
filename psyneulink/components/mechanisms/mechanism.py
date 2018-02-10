@@ -1793,6 +1793,65 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.projections.projection import _add_projection_from
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
+    def reinitialize(self, *args):
+        """
+            If the mechanism's `function <Mechanism.function>` is an `Integrator`, or if the mechanism has and
+            `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
+            effectively begins the function's accumulation over again at the specified value, and updates related
+            attributes on the mechanism.
+
+            If the mechanism's `function <Mechanism_Base.function>` is an `Integrator`:
+
+                `reinitialize <Mechanism_Base.reinitialize>` first calls the function's own `reinitialize <Integrator.reinitialize>` method, which
+                typically sets:
+
+                - `previous_value <Integrator.previous_value>`
+                - `initializer <Integrator.initial_value>`
+                - `value <Integrator.value>`
+
+                to the quantity specified. For specific types of Integrator functions, additional values, such as
+                initial time, must be specified, and additional attributes are reset. See individual functions for
+                details.
+
+                Then, the mechanism sets its `value <Mechanism_Base.value>` to the quantity specified, and updates its
+                `output states <Mechanism_Base.output_state>`.
+
+            If the mechanism has an `integrator_function <TransferMechanism.integrator_function>`:
+
+                `reinitialize <Mechanism_Base.reinitialize>` first calls the `integrator_function's <TransferMechanism.integrator_function>` own
+                `reinitialize <Integrator.reinitialize>` method, which typically sets:
+
+                - `previous_value <Integrator.previous_value>`
+                - `initializer <Integrator.initial_value>`
+                - `value <Integrator.value>`
+
+                to the quantity specified. For specific types of Integrator functions, additional values, such as
+                initial time, must be specified, and additional attributes are reset. See individual functions for
+                details.
+
+                Then, the mechanism executes its `function <Mechanism_Base.function>` using the quantity specified as the
+                function's variable. The mechanism's `value <Mechanism_Base.value>` is set to the output of its function.
+                Finally, the mechanism updates its `output states <Mechanism_Base.output_state>`.
+        """
+        from psyneulink.components.functions.function import Integrator
+
+        # If the primary function of the mechanism is an integrator:
+        # (1) reinitialize it, (2) update value, (3) update output states
+        if isinstance(self.function_object, Integrator):
+            new_value = self.function_object.reinitialize(*args)
+            self.value = np.atleast_2d(new_value)
+            self._update_output_states(context="REINITIALIZING")
+
+        # If the mechanism has an auxiliary integrator function:
+        # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
+        # (3) update value, (4) update output states
+        elif hasattr(self, "integrator_function"):
+            new_input = self.integrator_function.reinitialize(*args)
+            if hasattr(self, "initial_value"):
+                self.initial_value = np.atleast_1d(*args)[0]
+            self.value = self.function(new_input, context="REINITIALIZING")
+            self._update_output_states(context="REINITIALIZING")
+
     def get_current_mechanism_param(self, param_name):
         try:
             return self._parameter_states[param_name].value
@@ -2151,11 +2210,6 @@ class Mechanism_Base(Mechanism):
         """Assign an initial value to the Mechanism's `value <Mechanism_Base.value>` attribute and update its
         `OutputStates <Mechanism_OutputStates>`.
 
-        COMMENT:
-            Takes a number or 1d array and assigns it to the first item of the Mechanism's
-            `value <Mechanism_Base.value>` attribute.
-        COMMENT
-
         Arguments
         ---------
 
@@ -2167,8 +2221,8 @@ class Mechanism_Base(Mechanism):
             if not iscompatible(value, self.value):
                 raise MechanismError("Initialization value ({}) is not compatiable with value of {}".
                                      format(value, append_type_to_name(self)))
-        self.value[0] = value
-        self._update_output_states()
+        self.value = np.atleast_1d(value)
+        self._update_output_states(context="INITIAL_VALUE")
 
     def _execute(self,
                  variable=None,
@@ -2320,7 +2374,6 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.state import _parse_state_type
         from psyneulink.components.states.inputstate import InputState, _instantiate_input_states
         from psyneulink.components.states.outputstate import OutputState, _instantiate_output_states
-
         # Put in list to standardize treatment below
         if not isinstance(states, list):
             states = [states]
