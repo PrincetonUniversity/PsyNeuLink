@@ -709,6 +709,7 @@ class Projection_Base(Projection):
         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState
         # MODIFIED 11/1/17 CW: Added " hasattr(self, "prefs") and" in order to avoid errors. Otherwise, this was being
         # called and yielding an error: " AttributeError: 'MappingProjection' object has no attribute '_prefs' "
+
         if isinstance(self.receiver, Mechanism):
             if (len(self.receiver.input_states) > 1 and hasattr(self, 'prefs') and
                     (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
@@ -717,7 +718,7 @@ class Projection_Base(Projection):
             self.receiver = self.receiver.input_state
 
        # Validate variable, function and params, and assign params to paramInstanceDefaults
-        # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
+        # Note: pass name of Projection (to override assignment of componentName in super.__init__)
         super(Projection_Base, self).__init__(default_variable=variable,
                                               param_defaults=params,
                                               name=self.name,

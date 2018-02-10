@@ -36,8 +36,8 @@ action_selection = pnl.DDM(
 # Construct Process
 # Notes:
 #    The np.array specifies the matrix used as the Mapping Projection from input_layer to action_selection,
-#        which insures the left element of the input favors the LEFT action (positive value of DDM decision variable),
-#        and the right element favors the RIGHT action (negative value of DDM decision variable)
+#        which insures the left element of the input favors the left action (positive value of DDM decision variable),
+#        and the right element favors the right action (negative value of DDM decision variable)
 #    The learning argument specifies Reinforcement as the learning function for the Projection
 p = pnl.Process(
     default_variable=[0, 0],
@@ -46,9 +46,12 @@ p = pnl.Process(
     target=0
 )
 
+# Prints initial weight matrix for the Projection from the input_layer to the action_selection Mechanism
+print('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+
 # Specify reward values for the (one-hot coded) actions returned by action_selection.output_state.value
-# Note:  the first (uncommented) reward array favors the LEFT action,
-#        and the second (commented) one favors the RIGHT action;  it must be negative,
+# Note:  the first (uncommented) reward array favors the left action,
+#        and the second (commented) one favors the right action;  it must be negative,
 #             since a negative weight change is needed to strengthen the negative value of the connection weight
 #             from the right element of the input_layer to the DDM (see above).
 #        (a future version will implement a variant of DDM that makes its use for value-based encoding more intuitive)
@@ -60,15 +63,14 @@ def reward():
     return [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
 
 # Used by *call_before_trial* and *call_after_trial* to generate printouts.
-# Note:  should be replaced by use of log functionality that has now been implemented.
-action_names = ['LEFT','RIGHT']
+# Note:  should be replaced by use of logging functionality that has now been implemented.
 def print_header(system):
     print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
 def show_weights():
     print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
     print(
-        '\nAction selected:  {}\nPredicted reward: {}'.format(
-            action_names[np.nonzero(action_selection.output_state.value)[0][0]],
+        '\nAction selected:  {}; predicted reward: {}'.format(
+            np.nonzero(action_selection.output_state.value)[0][0],
             action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
         )
     )
@@ -87,9 +89,6 @@ s = pnl.System(
 
 # # Shows graph of system (learning components are in orange)
 # s.show_graph(show_learning=pnl.ALL, show_dimensions=True)
-
-# Prints initial weight matrix for the Projection from the input_layer to the action_selection Mechanism
-print('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
 
 # Run System.
 # Note: *targets* is specified as the reward() function (see above).
