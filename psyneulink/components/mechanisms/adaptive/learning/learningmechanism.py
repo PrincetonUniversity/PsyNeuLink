@@ -86,7 +86,7 @@ required to implement learning that do not already exist are also instantiated. 
 Explicit Creation
 ~~~~~~~~~~~~~~~~~
 
-If a LearningMechanism is created explicitly (using its constructor), then it **variable** and **error_source**
+If a LearningMechanism is created explicitly (using its constructor), then its **variable** and **error_source**
 arguments must be specified.  The **variable** must have three items that are compatible (in number and type) with the
 `value <InputState.value>` of the the LearningMechanism's three `InputStates <LearningMechanism_InputStates>`.  The
 **error_source** must be a `ComparatorMechanism` for `single layer learning <LearningMechanism_Single_Layer_Learning>`
@@ -526,7 +526,9 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATES, PARAMS, PROJECTIONS
+from psyneulink.globals.keywords import CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, \
+    INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
+    MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATES, PARAMS, PROJECTIONS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
@@ -616,7 +618,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         function=BackPropagation,                  \
         learning_rate=None,                        \
         learning_signals=LEARNING_SIGNAL,          \
-        modulation=ModulationParam.MULTIPLICATIVE, \
+        modulation=ModulationParam.ADDITIVE,       \
         params=None,                               \
         name=None,                                 \
         prefs=None)
@@ -685,15 +687,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
         <LearningMechanism_Single_Layer_Learning>`, or for the last `MappingProjection` in a learning sequence in
         `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise it must be a `LearningProjection`.
 
-    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict]
+    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] :
+    default *LEARNING_SIGNAL*
         specifies the parameter(s) to be learned (see `learning_signals <LearningMechanism.learning_signals>` for
         details).
 
-    modulation : ModulationParam : ModulationParam.ADDITIVE
+    modulation : ModulationParam : default ModulationParam.ADDITIVE
         specifies the default form of modulation used by the LearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
-    function : LearningFunction or function
+    function : LearningFunction or function : default BackPropagation
         specifies the function used to calculate the LearningMechanism's `learning_signal
         <LearningMechanism.learning_signal>` and `error_signal <LearningMechanism.error_signal>` attributes.  It's
         `variable <Function_Base.variable>` must have three items, each of which must be a list or 1d array of
@@ -701,7 +704,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         *ACTIVATION_OUTPUT*, and *ERROR_SOURCE* InputStates, respectively (see `LearningMechanism_InputStates
         `LearningMechanism_Function` and `LearningMechanism_InputStates` for additional details).
 
-    learning_rate : float
+    learning_rate : float : default None
         specifies the learning rate for the LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
         for details).
 
@@ -928,7 +931,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate error_source as an Objective Mechanism or another LearningMechanism
+        """Validate error_source
+
+        `error_source` argument must be an `ObjectiveMechanism` or another `LearningMechanism`.
+
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
@@ -1143,10 +1149,21 @@ class LearningMechanism(AdaptiveMechanism_Base):
         :return: (2D np.array) self.learning_signal
         """
 
-        # COMPUTE LEARNING SIGNAL (dE/dW):
-        self.learning_signal, self.error_signal = self.function(variable=variable,
-                                                                params=runtime_params,
-                                                                context=context)
+        QQQQ
+        # FIX:  2/10/18 ITERATE THROUGH ERROR_SIGNAL INPUT_STATES
+        # FIX:      GET ERROR_MATRIX FOR EACH AND ADD runtime_params
+        # FIX:      SUM ??learning_signal AND ??error_signal FOR ALL,
+        # FIX:          AND ASSIGN TO self.learning_signal and self.error_signal
+        learing_signals = []
+        error_signals = []
+
+        for e in []
+            variable =
+
+            # Compute learning_signal (dE/dW) for each error_signal:
+            self.learning_signal, self.error_signal = self.function(variable=variable,
+                                                                    params=runtime_params,
+                                                                    context=context)
 
         if INITIALIZING not in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))

@@ -9488,12 +9488,12 @@ class BackPropagation(LearningFunction):
         specifies the derivative for the function of the Mechanism that is the receiver of the
         `error_matrix <BackPropagation.error_matrix>`.
 
-    error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
-        matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
-        If it is specified as a ParameterState it must be one for the `matrix <MappingProjection.matrix>`
-        parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
-        MATRIX parameterState.
-
+    # error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
+    #     matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
+    #     If it is specified as a ParameterState it must be one for the `matrix <MappingProjection.matrix>`
+    #     parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
+    #     MATRIX parameterState.
+    #
     learning_rate : float : default default_learning_rate
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
@@ -9576,7 +9576,6 @@ class BackPropagation(LearningFunction):
                  # default_variable:tc.any(list, np.ndarray),
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
-                 error_matrix=None,
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
@@ -9587,7 +9586,6 @@ class BackPropagation(LearningFunction):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(activation_derivative_fct=activation_derivative_fct,
                                                   error_derivative_fct=error_derivative_fct,
-                                                  error_matrix=error_matrix,
                                                   learning_rate=learning_rate,
                                                   params=params)
 
@@ -9617,7 +9615,7 @@ class BackPropagation(LearningFunction):
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate error_matrix param
+        """Validate learning_rate and error_matrix params
 
         `error_matrix` argument must be one of the following
             - 2d list, np.ndarray or np.matrix
@@ -9651,6 +9649,9 @@ class BackPropagation(LearningFunction):
         # Validate error_matrix specification
         if ERROR_MATRIX in target_set:
 
+            # FIX: 2/10/18:
+            # FIX: NEEDS TO BE CHANGED TO ACCOMDOATE DIFFERENT SIZES OF self.activation_output AND self.error_signal
+            # FIX: BASED ON THEIR VALUE IN THE CALL TO THE FUNCTION (MABYE SET DYNAMICALLY IN function)?
             error_matrix = target_set[ERROR_MATRIX]
 
             from psyneulink.components.states.parameterstate import ParameterState
@@ -9739,13 +9740,17 @@ class BackPropagation(LearningFunction):
             the modifications to make to the matrix.
         """
 
+        if not ERROR_MATRIX in params:
+            raise FunctionError("Call to {} function of {} must include \'ERROR_MATRIX\' in params arg".
+                                format(self.__class__.__name__, self.owner.name))
+
         self._check_args(variable=variable, params=params, context=context)
 
         from psyneulink.components.states.parameterstate import ParameterState
-        if isinstance(self.error_matrix, ParameterState):
-            error_matrix = self.error_matrix.value
+        if isinstance(params[ERROR_MATRIX], ParameterState):
+            error_matrix = params[ERROR_MATRIX].value
         else:
-            error_matrix = self.error_matrix
+            error_matrix = params[ERROR_MATRIX]
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
