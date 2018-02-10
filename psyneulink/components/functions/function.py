@@ -640,11 +640,6 @@ class Function_Base(Function):
                          prefs=prefs,
                          context=context)
 
-        self.__llvm_function_name = None
-        self.__llvm_regenerate = True
-        self.__llvm_bin_function = None
-        self.__llvm_recompile = True
-
         # TODO: move this to a nicer, shareable place
         def nested_len(x):
             try:
@@ -674,31 +669,6 @@ class Function_Base(Function):
             except (AttributeError, TypeError):
 
                 return getattr(self, param_name)
-
-    @property
-    def llvmSymbolName(self):
-        if self.__llvm_regenerate:
-            self.__llvm_function_name = self._gen_llvm_function()
-            self.__llvm_regenerate = False
-            self.__llvm_recompile = True
-        return self.__llvm_function_name
-
-    @property
-    def _llvmBinFunction(self):
-        if self.__llvm_recompile:
-            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self.llvmSymbolName)
-            self.__llvm_recompile = False
-        return self.__llvm_bin_function
-
-
-    def get_context_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            context_type = ir.LiteralStructType([])
-        return context_type
-
-
-    def get_context_initializer(self):
-        return tuple([])
 
     @property
     def functionOutputType(self):
