@@ -132,23 +132,19 @@ Class Reference
 import warnings
 
 import numpy as np
+import typecheck as tc
 
-from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism \
-    import PredictionErrorMechanism
+from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import BackPropagation, Hebbian, \
-    Linear, Reinforcement, TDLearning, LinearCombination, LinearMatrix, \
-    PredictionErrorDeltaFunction
+    Linear, Reinforcement, TDLearning, LinearCombination, LinearMatrix, PredictionErrorDeltaFunction
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism, OUTCOME
-from psyneulink.components.mechanisms.processing.processingmechanism import \
-    ProcessingMechanism_Base
-from psyneulink.components.projections.modulatory.learningprojection import \
-    LearningProjection
-from psyneulink.components.projections.pathway.mappingprojection import \
-    MappingProjection
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, OUTCOME
+from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
@@ -656,6 +652,46 @@ def _instantiate_learning_components(learning_projection, context=None):
     # #       _instantiate_sender method, from which this was called) and that its value be assigned
     # #       (which occurs in its _instantiate_function method).
     # learning_projection.sender = learning_mechanism.output_state
+
+
+@tc.typecheck
+def _get_learning_mechanisms(mech:Mechanism, composition=None):
+    """Return LearningMechanisms for all Projections to and from the specified Mechanism
+
+    If composition is specified, only LearningMechanisms for Projections to Mechanisms belonging to that composition
+    (i.e., Process or System) are included in the list of LearningMechanisms returned
+
+    Returns two lists:
+        - one (aff) with the LearningMechanisms for the Mechanism's afferent projections
+        - the other (eff) with the LearningMechanisms for Mechanism's efferent Projections
+    """
+
+    from psyneulink.components.system import System
+    from psyneulink.components.process import Process
+    aff = []
+    eff = []
+
+    if composition and not isinstance(composition, (Process, System)):
+        raise LearningAuxilliaryError("composition argument for _get_learing_mechanisms ({}) must be a {} or {}".
+                                      format(composition, Process.__name__, System.__name__))
+
+    for projection in mech.path_afferents:
+        if projection.has_learning_projection and (composition is None
+                                                   or composition in projection.receiver.owner.processes
+                                                   or composition in projection.receiver.owner.systems):
+            aff.extend([learning_projection.sender.owner
+                        for learning_projection in projection.parameter_states[MATRIX].mod_afferents
+                        if isinstance(learning_projection, LearningProjection)])
+
+    for projection in mech.efferents:
+        if projection.has_learning_projection and (composition is None
+                                                   or composition in projection.receiver.owner.processes
+                                                   or composition in projection.receiver.owner.systems):
+            eff.extend([learning_projection.sender.owner
+                        for learning_projection in projection.parameter_states[MATRIX].mod_afferents
+                        if isinstance(learning_projection, LearningProjection)])
+    return aff, eff
+
 
 
 class LearningComponents(object):
