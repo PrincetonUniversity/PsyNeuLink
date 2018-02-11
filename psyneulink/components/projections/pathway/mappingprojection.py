@@ -726,17 +726,15 @@ class MappingProjection(PathwayProjection_Base):
 
 
     def get_output_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
-            output_type = ir.LiteralStructType([vec_ty])
-            return output_type
+        # This should be in sync with mechanism input struct type
+        vec_ty = [self.function_object.get_output_struct_type()]
+        return ir.LiteralStructType(vec_ty)
 
 
     def get_input_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
-            input_type = ir.LiteralStructType([vec_ty])
-            return input_type
+        # This should be in sync with mechanism output struct type
+        vec_ty = [self.function_object.get_input_struct_type()]
+        return ir.LiteralStructType(vec_ty)
 
 
     def get_param_initializer(self):
