@@ -884,17 +884,17 @@ class TransferMechanism(ProcessingMechanism_Base):
 
 
     def get_output_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
-            output_type = ir.LiteralStructType([vec_ty])
-            return output_type
+        vec_tys = [self.function_object.get_output_struct_type()]
+        return ir.LiteralStructType(vec_tys)
 
 
     def get_input_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
-            input_type = ir.LiteralStructType([vec_ty])
-            return input_type
+        if self.integrator_mode:
+            vec_tys = [self.integrator_function.get_input_struct_type()]
+        else:
+            vec_tys = [self.function_object.get_input_struct_type()]
+        return ir.LiteralStructType(vec_tys)
+
 
     def get_param_initializer(self):
          param_list = [self.function_object.get_param_initializer()]
