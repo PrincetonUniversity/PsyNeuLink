@@ -2632,13 +2632,12 @@ class SoftMax(NormalizingFunction):
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("softmax")
-            struct_param_ty = self.get_param_struct_type()
-            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(), (
                 self.get_param_struct_type().as_pointer(),
                 self.get_context_struct_type().as_pointer(),
-                vec_ty.as_pointer(), vec_ty.as_pointer()))
-            vector_length = ctx.int32_ty(self._variable_length)
+                self.get_input_struct_type().as_pointer(),
+                self.get_output_struct_type().as_pointer()))
+
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
@@ -2662,6 +2661,7 @@ class SoftMax(NormalizingFunction):
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "max_ptr": max_ptr, "gain":gain, "max_ind_ptr":max_ind_ptr, "exp_sum_ptr":exp_sum_ptr}
             inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
 
+            vector_length = ctx.int32_ty(self._variable_length)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
 
             output_type = self.params[OUTPUT_TYPE]
@@ -3043,11 +3043,11 @@ class Linear(TransferFunction):  # ---------------------------------------------
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("linear")
-            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(),
                 (self.get_param_struct_type().as_pointer(),
                  self.get_context_struct_type().as_pointer(),
-                 vec_ty.as_pointer(), vec_ty.as_pointer()))
+                 self.get_input_struct_type().as_pointer(),
+                 self.get_output_struct_type().as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
@@ -3331,11 +3331,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("exponential")
-            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(),
                 (self.get_param_struct_type().as_pointer(),
                  self.get_context_struct_type().as_pointer(),
-                 vec_ty.as_pointer(), vec_ty.as_pointer()))
+                 self.get_input_struct_type().as_pointer(),
+                 self.get_output_struct_type().as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
@@ -3586,11 +3586,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("logistic")
-            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(),
                 (self.get_param_struct_type().as_pointer(),
                  self.get_context_struct_type().as_pointer(),
-                 vec_ty.as_pointer(), vec_ty.as_pointer()))
+                 self.get_input_struct_type().as_pointer(),
+                 self.get_output_struct_type().as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
@@ -4153,11 +4153,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("linear_matrix")
-            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(),
                 (self.get_param_struct_type().as_pointer(),
                  self.get_context_struct_type().as_pointer(),
-                 vec_ty.as_pointer(), vec_ty.as_pointer()))
+                 self.get_input_struct_type().as_pointer(),
+                 self.get_output_struct_type().as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
@@ -5583,12 +5583,11 @@ class AdaptiveIntegrator(
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("adaptiveintegrator")
-            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(),
                 (self.get_param_struct_type().as_pointer(),
                  self.get_context_struct_type().as_pointer(),
-                 vec_ty.as_pointer(), vec_ty.as_pointer()))
-            vector_length = ctx.int32_ty(self._variable_length)
+                 self.get_input_struct_type().as_pointer(),
+                 self.get_output_struct_type().as_pointer()))
 
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
@@ -5606,6 +5605,7 @@ class AdaptiveIntegrator(
 
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params": params, "state":state}
             inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
+            vector_length = ctx.int32_ty(self._variable_length)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "integrate")
 
             builder.ret_void()
@@ -9452,7 +9452,6 @@ class Distance(ObjectiveFunction):
             func_name = ctx.module.get_unique_name("distance")
             double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
             func_ty = ir.FunctionType(ctx.float_ty, (double_ptr_ty, double_ptr_ty))
-            vector_length = ctx.int32_ty(self._variable_length)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
@@ -9498,6 +9497,7 @@ class Distance(ObjectiveFunction):
                 raise RuntimeError('Unsupported metric')
 
 
+            vector_length = ctx.int32_ty(self._variable_length)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, self.metric)
             ret = builder.load(acc_ptr)
             if (self.metric == EUCLIDEAN):

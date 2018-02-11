@@ -1008,6 +1008,15 @@ class Component(object):
             self.__llvm_recompile = False
         return self.__llvm_bin_function
 
+    def get_input_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ir.ArrayType(ctx.float_ty, self._variable_length)
+
+    def get_output_struct_type(self):
+        # By default same vector as input
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ir.ArrayType(ctx.float_ty, self._variable_length)
+
     def get_context_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
             return ir.LiteralStructType([])
