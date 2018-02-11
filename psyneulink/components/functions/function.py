@@ -9452,7 +9452,6 @@ class BackPropagation(LearningFunction):
         default_variable=ClassDefaults.variable,         \
         activation_derivative_fct=Logistic().derivative, \
         error_derivative_fct=Logistic().derivative,      \
-        error_matrix=None,                               \
         learning_rate=None,                              \
         params=None,                                     \
         name=None,                                       \
@@ -9488,12 +9487,15 @@ class BackPropagation(LearningFunction):
         specifies the derivative for the function of the Mechanism that is the receiver of the
         `error_matrix <BackPropagation.error_matrix>`.
 
-    # error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
-    #     matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
-    #     If it is specified as a ParameterState it must be one for the `matrix <MappingProjection.matrix>`
-    #     parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
-    #     MATRIX parameterState.
-    #
+
+    COMMENT:
+    error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
+        matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
+        If it is specified as a ParameterState it must be one for the `matrix <MappingProjection.matrix>`
+        parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
+        MATRIX parameterState.
+    COMMENT
+
     learning_rate : float : default default_learning_rate
         supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
