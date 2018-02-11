@@ -619,7 +619,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     learning_mechanism = LearningMechanism(variable=[activation_input,
                                                      activation_output,
                                                      error_signal],
-                                           error_source=error_source,
+                                           error_sources=error_source,
                                            function=learning_function,
                                            # learning_signals=[lc.activation_mech_projection],
                                            learning_signals=[learning_projection],

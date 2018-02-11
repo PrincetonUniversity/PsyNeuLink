@@ -8914,9 +8914,9 @@ class LearningFunction(Function_Base):
     variable : list or np.array
         most LearningFunctions take a list or 2d array that must contain three items:
 
-        * the input to the parameter being modified (variable[0]);
-        * the output of the parameter being modified (variable[1]);
-        * the error associated with the output (variable[2]).
+        * the input to the parameter being modified (variable[LEARNING_ACTIVATION_INPUT]);
+        * the output of the parameter being modified (variable[LEARNING_ACTIVATION_OUTPUT]);
+        * the error associated with the output (variable[LEARNING_ERROR_OUTPUT]).
 
         However, the exact specification depends on the funtion's type.
 
@@ -9583,9 +9583,13 @@ class BackPropagation(LearningFunction):
                  prefs: is_pref_set = None,
                  context='Component Init'):
 
+        error_matrix=np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
+                               len(default_variable[LEARNING_ERROR_OUTPUT])))
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(activation_derivative_fct=activation_derivative_fct,
                                                   error_derivative_fct=error_derivative_fct,
+                                                  error_matrix=error_matrix,
                                                   learning_rate=learning_rate,
                                                   params=params)
 
@@ -9740,15 +9744,20 @@ class BackPropagation(LearningFunction):
             the modifications to make to the matrix.
         """
 
-        if params is None or not ERROR_MATRIX in params:
-            if INITIALIZING in context:
-                params.update{ERROR_MATRIX:}
+        if INITIALIZING in context:
+            error_matrix_param = {ERROR_MATRIX:np.zeros((len(variable[LEARNING_ACTIVATION_OUTPUT]),
+                                                         len(variable[LEARNING_ERROR_OUTPUT])))}
+            if params is None:
+                params = error_matrix_param
             else:
-                owner_string = ""
-                if self.owner:
-                    owner_sring = " of " + self.owner.name
-                raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
-                                    format(self.__class__.__name__, owner_string))
+                params.update(error_matrix_param)
+
+        elif params is None or not ERROR_MATRIX in params:
+            owner_string = ""
+            if self.owner:
+                owner_sring = " of " + self.owner.name
+            raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
+                                format(self.__class__.__name__, owner_string))
 
         self._check_args(variable=variable, params=params, context=context)
 
