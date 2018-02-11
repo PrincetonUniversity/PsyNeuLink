@@ -520,7 +520,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
-from psyneulink.components.functions.function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
+from psyneulink.components.functions.function import \
+    BackPropagation, ModulationParam, _is_modulation_param, is_function_type, ERROR_MATRIX
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
@@ -1009,7 +1010,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         self.error_matrices = None
         if self.error_sources:
-            self.error_matrices = np.empty_like(self.error_sources)
+            self.error_matrices = [None] * len(self.error_sources)
             for i, error_source in enumerate(self.error_sources):
                 _instantiate_error_signal_projection(sender=error_source, receiver=self)
                 if isinstance(error_source, ObjectiveMechanism):
@@ -1077,8 +1078,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                                   isinstance(state, LearningSignal)])
 
     def add_states(self, states, context=ADD_STATES):
-        super().add_states(states=states, context=context)
-        assert False, "ADD TO error_sources and error_matrices HERE"
+        """Add error_source and error_matrix for each InputState added"""
+
+        states = super().add_states(states=states, context=context)
+        for input_state in states[INPUT_STATES]:
+            error_source = input_state.path_afferents[0].sender.owner
+            self.error_sources.append(error_source)
+            self.error_matrices.append(error_source.primary_learned_projection.parameters_states[MATRIX])
 
     def _execute(self,
                 variable=None,
@@ -1089,6 +1095,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         :return: (2D np.array) self.learning_signal
         """
 
+        runtime_params = runtime_params or {}
         # DOCUMENT THE FOLLOWING IN DOCSTRING ABOVE (AND FOR LEARNING MECH?):
         # FIX:  2/10/18 ITERATE THROUGH ERROR_SIGNAL INPUT_STATES
         # FIX:      GET ERROR_MATRIX FOR EACH AND ADD runtime_params
@@ -1108,12 +1115,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
         self.learning_signal = np.zeros((len(variable[ACTIVATION_INPUT_INDEX]),
                                          len(variable[ACTIVATION_OUTPUT_INDEX])))
         # FIX: THIS IS PROBABLY NOT CORRECT:
-        self.error_signal = np.zeros_like(self.value[1])
+        self.error_signal = np.zeros_like(variable[ACTIVATION_OUTPUT_INDEX])
 
         for i, error_signal_input in enumerate(error_signal_inputs):
             # Compute learning_signal (dE/dW) for each error_signal:
             function_variable[ERROR_OUTPUT_INDEX] = error_signal_input
-            runtime_params.update(ERROR_MATRIX = self.error_matrices[i])
+            error_matrix_param = {ERROR_MATRIX:self.error_matrices[i]}
+            runtime_params.update(error_matrix_param)
             learning_signal, error_signal = self.function(variable=function_variable,
                                                           params=runtime_params,
                                                           context=context)
@@ -1169,11 +1177,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @property
     def primary_learned_projection(self):
-        return self.learned_projection[0]
+        return self.learned_projections[0]
 
     @property
     def learned_projections(self):
-        return [lp.receiver.owner for lp in self.learning_projections]
+        return [[lp.receiver.owner for lp in learning_signal.efferents] for learning_signal in self.learning_signals]
+        # return [lp.receiver.owner for lp in self.learning_projections]
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
