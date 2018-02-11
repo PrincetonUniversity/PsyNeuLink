@@ -528,8 +528,9 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCO
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.state import ADD_STATES
 from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, \
+from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
     MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATES, PARAMS, PROJECTIONS, SAMPLE, TARGET
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -857,7 +858,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     className = componentType
     suffix = " " + className
 
-    outputStateType = LearningSignal
+    # outputStateType = LearningSignal
 
     stateListAttr = Mechanism_Base.stateListAttr.copy()
     stateListAttr.update({LearningSignal:LEARNING_SIGNALS})
@@ -932,15 +933,23 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                 ACTIVATION_OUTPUT,
                                                 ERROR_SIGNAL,"(s)"))
 
-        # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
+        # Validate that activation_input, activation_output are numeric and lists or 1d np.ndarrays
+        #    and that there is the correct number of error_signal_input_states and and error_matrices:
+        #    (which should be the number of items for error_signals in variable)
+
+        assert ASSERT, "ADD TEST FOR LEN OF VARIABLE AGAINST NUMBER OF ERROR_SIGNALS AND ERROR_MATRICES"
+
         for i in range(len(variable)):
-            item_num_string = ['first', 'second', 'third'][i]
-            item_name = input_state_names[i]
+            item_num_string = "Item {} ".format(i)
+            try:
+                item_name = self.input_states.names[i]
+            except:
+                item_name = input_state_names[i]
             if not np.array(variable[i]).ndim == 1:
-                raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not a list or 1d np.array".
+                raise LearningMechanismError("{} of variable for {} ({}:{}) is not a list or 1d np.array".
                                               format(item_num_string, self.name, item_name, variable[i]))
             if not (is_numeric(variable[i])):
-                raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
+                raise LearningMechanismError("{} of variable for {} ({}:{}) is not numeric".
                                               format(item_num_string, self.name, item_name, variable[i]))
         return variable
 
@@ -1019,7 +1028,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     # IMPLEMENTATION NOTE:
                     #     This assumes that error_source has only one LearningSignal or,
                     #     if it has more, that they are all equivalent
-                    self.error_matrices[i] = error_source.primary_learned_projection.parameters_states[MATRIX]
+                    self.error_matrices[i] = error_source.primary_learned_projection.parameter_states[MATRIX]
 
     def _instantiate_attributes_after_function(self, context=None):
 
@@ -1084,7 +1093,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         for input_state in states[INPUT_STATES]:
             error_source = input_state.path_afferents[0].sender.owner
             self.error_sources.append(error_source)
-            self.error_matrices.append(error_source.primary_learned_projection.parameters_states[MATRIX])
+            self.error_matrices.append(error_source.primary_learned_projection.parameter_states[MATRIX])
 
     def _execute(self,
                 variable=None,
@@ -1092,39 +1101,44 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 context=None):
         """Execute LearningMechanism function and return learning_signal
 
-        :return: (2D np.array) self.learning_signal
-        """
-
-        runtime_params = runtime_params or {}
         # DOCUMENT THE FOLLOWING IN DOCSTRING ABOVE (AND FOR LEARNING MECH?):
-        # FIX:  2/10/18 ITERATE THROUGH ERROR_SIGNAL INPUT_STATES
+        # FIX:  2/10/18 ITERATE THROUGH ERROR_SIGNAL INPUT_STATES (SKIPPING ANY FOR WHICH EXECUTION_ID IS NOT CURRENT)
         # FIX:      GET ERROR_MATRIX FOR EACH AND ADD runtime_params
         # FIX:      SUM ??learning_signal AND ??error_signal FOR ALL,
         # FIX:          AND ASSIGN TO self.learning_signal and self.error_signal
+        """
 
-        # FIX: NEED TO DEAL WITH CASE IN WHICH SENDER IS A COMPARATOR AND ERROR_MATRIX IS FOR ACTIVATION_OUTPUT MP
+        # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
+        current_error_signal_inputs = [s for s in self.error_signal_input_states if
+                                       s.path_afferents[0].sender.owner._execution_id == self._execution_id]
+        curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
+        error_signal_inputs = variable[curr_indices]
+        error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
+        for i, matrix in enumerate(error_matrices):
+            if isinstance(error_matrices[i], ParameterState):
+                error_matrices[i] = error_matrices[i].value
 
+        # Construct variable for function
         function_variable = np.zeros_like(variable[np.array([ACTIVATION_INPUT_INDEX,
                                                              ACTIVATION_OUTPUT_INDEX,
                                                              ERROR_OUTPUT_INDEX])])
         function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
         function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
-        error_signal_inputs = variable[[self.input_states.index(s) for s in self.error_signal_input_states]]
+        runtime_params = runtime_params or {}
 
-        # FIX: NEED TO REPLACE VALUE WITH ACTUAL LEARNING_SIGNAL / MATRIX SHAPE
+        # Template for learning_signal and error_signal outputs
         self.learning_signal = np.zeros((len(variable[ACTIVATION_INPUT_INDEX]),
                                          len(variable[ACTIVATION_OUTPUT_INDEX])))
-        # FIX: THIS IS PROBABLY NOT CORRECT:
         self.error_signal = np.zeros_like(variable[ACTIVATION_OUTPUT_INDEX])
 
-        for i, error_signal_input in enumerate(error_signal_inputs):
-            # Compute learning_signal (dE/dW) for each error_signal:
+        # Compute learning_signal (dE/dW) for each error_signal (and corresponding error-Matrix:
+        for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
             function_variable[ERROR_OUTPUT_INDEX] = error_signal_input
-            error_matrix_param = {ERROR_MATRIX:self.error_matrices[i]}
-            runtime_params.update(error_matrix_param)
+            runtime_params.update({ERROR_MATRIX:error_matrix})
             learning_signal, error_signal = self.function(variable=function_variable,
                                                           params=runtime_params,
                                                           context=context)
+            # Sum learning_signals and error_signals
             self.learning_signal += learning_signal
             self.error_signal += error_signal
 
@@ -1181,9 +1195,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @property
     def learned_projections(self):
-        return [[lp.receiver.owner for lp in learning_signal.efferents] for learning_signal in self.learning_signals]
-        # return [lp.receiver.owner for lp in self.learning_projections]
-
+        return [lp.receiver.owner for ls in self.learning_signals for lp in ls.efferents]
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _instantiate_error_signal_projection(sender, receiver):
