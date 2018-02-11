@@ -86,12 +86,12 @@ required to implement learning that do not already exist are also instantiated. 
 Explicit Creation
 ~~~~~~~~~~~~~~~~~
 
-If a LearningMechanism is created explicitly (using its constructor), then its **variable** and **error_source**
+If a LearningMechanism is created explicitly (using its constructor), then its **variable** and **error_sources**
 arguments must be specified.  The **variable** must have three items that are compatible (in number and type) with the
-`value <InputState.value>` of the the LearningMechanism's three `InputStates <LearningMechanism_InputStates>`.  The
-**error_source** must be a `ComparatorMechanism` for `single layer learning <LearningMechanism_Single_Layer_Learning>`
-or for the last `MappingProjection` in a learning sequence for `multilayer learning
-<LearningMechanism_Multilayer_Learning>`;  otherwise it must be a `LearningProjection`.
+`value <InputState.value>` of the the LearningMechanism's three `InputStates <LearningMechanism_InputStates>`.  Each
+item in **error_sources** must be a `ComparatorMechanism` for `single layer learning
+<LearningMechanism_Single_Layer_Learning>` or for the last `MappingProjection` in a learning sequence for
+`multilayer learning <LearningMechanism_Multilayer_Learning>`; or a `LearningMechanism`.
 
 .. _LearningMechanism_Learning_Signals:
 
@@ -155,7 +155,7 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
 
 The Mechanism from the which the `value <InputState.values>`\\s above are received are listed in the
 LearningMechanism's `input_source <LearningMechanism.input_source>`, `output_source <LearningMechanism.output_source>`,
-and `error_source <LearningMechanism.error_source>` attributes, respectively (see
+and `error_sources <LearningMechanism.error_sources>` attributes, respectively (see
 `LearningMechanism_Additional_Attributes` for additional details).
 
 .. _LearningMechanism_Function:
@@ -300,8 +300,8 @@ refer to the Components being learned and/or its operation:
 * `output_source` - the `Mechanism <Mechanism>` that receives the `primary_learned_projection`, and  provides the
   input to the LearningMechanism's *ACTIVATION_OUTPUT* `InputState <LearningMechanism_Activation_Output>`.
 ..
-* `error_source` - the `ComparatorMechanism` or `LearningMechanism` that calculates the error signal provided to the
-  LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`.
+* `error_sources` - a `ComparatorMechanism`, `LearningMechanism`, or list of them that calculate the error signal(s)
+  provided to the LearningMechanism's *ERROR_SIGNAL(s)* `InputState(s) <LearningMechanism_Input_Error_Signal>`.
 ..
 * `modulation` - the default value used for the `modulation <LearningSignal.modulation>` attribute of
   LearningMechanism's `LearningSignals <LearningSignal>` (i.e. those for which it is not explicitly specified).
@@ -445,7 +445,7 @@ the sequence, then *no* Projection is created or assigned to its LearningMechani
 
 **TARGET Mechanisms**. When a learning function is specified for a LearningMechanism that requires a target (e.g.,
 `BackPropagation` or `Reinforcement`), a `ComparatorMechanism` must be specified to receive the target.  For `multilayer
-learning <LearningMechanism_Multilayer_Learning>`, this is the `error_source <LearningMechanism.error_source>` for the
+learning <LearningMechanism_Multilayer_Learning>`, this is the `error_source <LearningMechanism.error_sources>` for the
 last MappingProjection in each learning sequence.  When learning is specified for a `Composition <Composition>` (i.e.,
 a `Process <Process_Learning_Sequence>` or a `System <System_Execution_Learning>`), the `ComparatorMechanism(s)
 <ComparatorMechanism>` that receive the `targets <Run_Targets>`  are identified and designated as `TARGET` Mechanisms,
@@ -525,6 +525,8 @@ from psyneulink.components.mechanisms.adaptive.adaptivemechanism import Adaptive
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
+from psyneulink.components.states.state import ADD_STATES
+from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.globals.keywords import CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
@@ -536,7 +538,7 @@ from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
-    'DefaultTrainingMechanism', 'ERROR_OUTPUT_INDEX', 'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCE',
+    'DefaultTrainingMechanism', 'ERROR_OUTPUT_INDEX', 'ERROR_SIGNAL', 'ERROR_SIGNAL_INDEX', 'ERROR_SOURCES',
     'LearningMechanism', 'LearningMechanismError', 'input_state_names', 'output_state_names'
 ]
 
@@ -598,7 +600,7 @@ ERROR_SIGNAL = 'error_signal'
 input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
 output_state_names = [ERROR_SIGNAL, LEARNING_SIGNAL]
 
-ERROR_SOURCE = 'error_source'
+ERROR_SOURCES = 'error_sources'
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
@@ -614,7 +616,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     """
     LearningMechanism(                             \
         variable,                                  \
-        error_source,                              \
+        error_sources,                              \
         function=BackPropagation,                  \
         learning_rate=None,                        \
         learning_signals=LEARNING_SIGNAL,          \
@@ -652,7 +654,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             Needs:
             - activation_derivative:  get from FUNCTION of sample_activation_mechanism/receiver_mech
                                       assumes derivative of Logistic unless otherwise specified
-            - error_derivative:  get from FUNCTION of error_source/next_level_mech;  but handled in ObjectiveMechanism
+            - error_derivative:  get from FUNCTION of error_sources/next_level_mech;  but handled in ObjectiveMechanism
 
         Class attributes:
             + className = LEARNING_MECHANISM
@@ -681,11 +683,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         <InputState.value>` of the corresponding `InputState <LearningMechanism_InputStates>` (see `variable
         <LearningMechanism.variable>` for additional details).
 
-    error_source : ComparatorMechanism or LearningMechanism
-        specifies the source of the error signal used by the LearningMechanism's `function
-        <LearningMechanism.function>`.  It must be a `ComparatorMechanism` for `single layer learning
+    error_sources : ComparatorMechanism, LearningMechanism or list of them
+        specifies the source(s) of the error signal(s) used by the LearningMechanism's `function
+        <LearningMechanism.function>`.  Each must be a `ComparatorMechanism` for `single layer learning
         <LearningMechanism_Single_Layer_Learning>`, or for the last `MappingProjection` in a learning sequence in
-        `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise it must be a `LearningProjection`.
+        `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise they must be a `LearningMechanism`.
 
     learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] :
     default *LEARNING_SIGNAL*
@@ -701,7 +703,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         <LearningMechanism.learning_signal>` and `error_signal <LearningMechanism.error_signal>` attributes.  It's
         `variable <Function_Base.variable>` must have three items, each of which must be a list or 1d array of
         numeric values, corresponding to values provided by the LearningMechanism's *ACTIVATION_INPUT*,
-        *ACTIVATION_OUTPUT*, and *ERROR_SOURCE* InputStates, respectively (see `LearningMechanism_InputStates
+        *ACTIVATION_OUTPUT*, and *ERROR_SOURCES* InputStates, respectively (see `LearningMechanism_InputStates
         `LearningMechanism_Function` and `LearningMechanism_InputStates` for additional details).
 
     learning_rate : float : default None
@@ -732,11 +734,15 @@ class LearningMechanism(AdaptiveMechanism_Base):
         has three items that serve as the template for the three inputs required by the LearningMechanism's `function
         <LearningMechanism.function>` (corresponding to its three `InputStates <LearningMechanism_InputStates>`:
         the input to the `primary_learned_projection` (from `input_source`), the output of the Mechanism to which
-        that projects (i.e., of `output_source`); and the error signal (from `error_source`).
+        that projects (i.e., of `output_source`); and the error signal (from `LearningMechanism.error_sources`).
 
     input_states : ContentAddressableList[OutputState]
         list containing the LearningMechanism's three `InputStates <LearningMechanism_InputStates>`:
         *ACTIVATION_INPUT*,  *ACTIVATION_OUTPUT*, and *ERROR_SIGNAL*.
+
+    error_signal_input_states : list[InputStates]
+        list InputStates that receive error_signals from the LearningMechanism's`error_sources
+        <LearningMechanism.error_sources>`.
 
     input_source : ProcessingMechanism
         the Mechanism that sends the `primary_learned_projection`, and projects to the
@@ -746,9 +752,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
         the Mechanism that receives the `primary_learned_projection`, and  projects to the
         LearningMechanism's *ACTIVATION_OUTPUT* `InputState <LearningMechanism_Activation_Output>`.
 
-    error_source : ComparatorMechanism or LearningMechanism
-        the Mechanism that calculates the error signal provided to the
-        LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`.
+    error_sources : list[ComparatorMechanism or LearningMechanism]
+        the Mechanism(s) that calculate the error signal(s) provided to the
+        LearningMechanism's *ERROR_SIGNAL(s)* `InputState(s) <LearningMechanism_Input_Error_Signal>`.
+
+    error_matrices : list[ParameterState]
+        the matrices of the Projections associated with the `error_sources <LearningMechanism.error_sources>`,
+        (i.e., for the next Projection(s) in the learning_sequence, or to the `ComparatorMechanism`);
+        note: these are *not* for the LearningMechanism's `learned_projections <LearningMechanism.learned_projections>`.
 
     primary_learned_projection : MappingProjection
         the Projection with the `matrix <MappingProjection.matrix>` parameter used to generate the
@@ -793,7 +804,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         the changes to the weights of the `matrix <MappingProjection.matrix>` parameter for the LearningMechanism's
         `learned_projections <LearningMechanism.learned_projections>`;  it is calculated to reduce the error signal
         associated with the `primary_learned_projection <LearningMechanism.primary_learned_projection>` and received
-        from the LearningMechanism's `error_source`.  It is assigned as the value of the LearningMechanism's
+        from the LearningMechanism's `error_sources`.  It is assigned as the value of the LearningMechanism's
         `LearningSignal(s) <LearningMechanism_LearningSignal>` and, in turn, its LearningProjection(s).
 
     learning_signals : ContentAddressableList[LearningSignal]
@@ -868,7 +879,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def __init__(self,
                  variable:tc.any(list, np.ndarray),
                  size=None,
-                 error_source:tc.optional(Mechanism)=None,
+                 error_sources:tc.optional(Mechanism)=None,
                  function:is_function_type=BackPropagation,
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
@@ -879,7 +890,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(error_source=error_source,
+        params = self._assign_args_to_param_dicts(error_sources=error_sources,
                                                   function=function,
                                                   learning_signals=learning_signals,
                                                   params=params)
@@ -889,7 +900,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # self.init_args = locals().copy()
         # self.init_args['context'] = self
         # self.init_args['name'] = name
-        # delete self.init_args[ERROR_SOURCE]
+        # delete self.init_args[ERROR_SOURCES]
 
         # # Flag for deferred initialization
         # self.init_status = InitStatus.DEFERRED_INITIALIZATION
@@ -910,13 +921,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         variable = self._update_variable(super()._validate_variable(variable, context))
 
-        if len(variable) != 3:
-            raise LearningMechanismError("Variable for {} ({}) must have three "
-                                         "items ({}, {}, and {})".
+        if len(variable) < 3:
+            raise LearningMechanismError("Variable for {} ({}) must have at least three items ({}, {}, and {}{})".
                                          format(self.name, variable,
                                                 ACTIVATION_INPUT,
                                                 ACTIVATION_OUTPUT,
-                                                ERROR_SIGNAL))
+                                                ERROR_SIGNAL,"(s)"))
 
         # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
         for i in range(len(variable)):
@@ -931,9 +941,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate error_source
+        """Validate error_sources
 
-        `error_source` argument must be an `ObjectiveMechanism` or another `LearningMechanism`.
+        `error_sources` argument must be an `ObjectiveMechanism`, another `LearningMechanism`, or a list of them,
+        and there must be the same number as there are ERROR_SIGNAL InputStates.
 
         """
 
@@ -944,11 +955,23 @@ class LearningMechanism(AdaptiveMechanism_Base):
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.components.projections.projection import _validate_receiver
 
-        if ERROR_SOURCE in target_set and target_set[ERROR_SOURCE] is not None:
-            if not isinstance(target_set[ERROR_SOURCE], (ObjectiveMechanism, LearningMechanism)):
-                raise LearningMechanismError("{} arg for {} ({}) must be an ObjectiveMechanism or another "
-                                             "LearningMechanism".
-                                             format(ERROR_SOURCE, self.name, target_set[ERROR_SOURCE]))
+        if ERROR_SOURCES in target_set and target_set[ERROR_SOURCES] is not None:
+            error_sources = target_set[ERROR_SOURCES]
+            if not isinstance(error_sources, list):
+                error_sources = [error_sources]
+
+            if not len(error_sources) == len(self.error_signal_input_states):
+                raise LearningMechanismError("Number of items specified in \'{}\' arg for {} ({}) "
+                                             "must equal the number of its \'{}\' {}s ()".
+                                             format(ERROR_SOURCES, self.name, len(error_sources),
+                                                    InputState.__name__, ERROR_SIGNAL.upper(),
+                                                    len(self.error_signal_input_states)))
+
+            for error_source in error_sources:
+                if not isinstance(error_source, (ObjectiveMechanism, LearningMechanism)):
+                    raise LearningMechanismError("{} arg for {} ({}) must be an ObjectiveMechanism, another "
+                                                 "LearningMechanism, or list of them".
+                                                 format(ERROR_SOURCES, self.name, error_source))
 
         if LEARNING_SIGNALS in target_set and target_set[LEARNING_SIGNALS]:
 
@@ -959,92 +982,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
             for spec in target_set[LEARNING_SIGNALS]:
                 learning_signal = _parse_state_spec(state_type=LearningSignal, owner=self, state_spec=spec)
 
-                # learning_proj = None  # Projection from LearningSignal to MappingProjection
-                # mapping_proj = None   # MappingProjection that receives Projection from LearningSignal
-                #
-                # # Specification is for a LearningSignal
-                # if isinstance(spec, LearningSignal):
-                #     #  Check that any LearningProjections it has
-                #     #    are to MappingProjections to Mechanisms in the same System
-                #     for learning_proj in spec.efferents:
-                #         _validate_receiver(self,learning_proj, MappingProjection, LEARNING_SIGNAL, context)
-                #     continue
-                #
-                # # Specification is for a ParameterState
-                # elif isinstance(spec, ParameterState):
-                #     param_name = spec.name
-                #     mapping_proj = spec.owner
-                #
-                # # Specification is for a Projection
-                # elif isinstance(spec, Projection):
-                #     if isinstance(spec, LearningProjection):
-                #         param_name = spec.receiver.name
-                #         learning_proj = spec
-                #         mapping_proj = learning_proj.receiver.owner
-                #     elif isinstance(spec, MappingProjection):
-                #         param_name = MATRIX
-                #         mapping_proj = spec
-                #     else:
-                #         raise LearningMechanismError("The {} specified in the {} arg for {} ({}) must be a {}".
-                #                                      format(PROJECTION,
-                #                                             LEARNING_SIGNALS,
-                #                                             self.name,
-                #                                             spec.name,
-                #                                             MAPPING_PROJECTION))
-                #
-                # # Specification is for a tuple (str, MappingProjection):
-                # elif isinstance(spec, tuple):
-                #     param_name = spec[0]
-                #     mapping_proj = spec[1]
-                #     # Check that 1st item is a str (presumably the name of the learned Projection's attribute
-                #     #    for the param to be learned; e.g., 'MATRIX' for MappingProjection)
-                #     if not isinstance(param_name, str):
-                #         raise LearningMechanismError("1st item of tuple in specification of {} for {} ({}) "
-                #                                      "must be a string".format(LEARNING_SIGNAL, self.name, param_name))
-                #     # Check that 2nd item is a MappingProjection
-                #     if not isinstance(mapping_proj, MappingProjection):
-                #         raise LearningMechanismError("2nd item of tuple in specification of {} for {} ({}) "
-                #                                      "must be a {}".
-                #                                      format(LEARNING_SIGNAL,
-                #                                             self.name,
-                #                                             mapping_proj,
-                #                                             MAPPING_PROJECTION))
-                #
-                # # LearningSignal specification dictionary, must have the following entries:
-                # #    NAME:str - must be the name of an attribute of PROJECTION
-                # #    PROJECTION:Projection - must be a MappingProjection
-                # #                            and have an attribute and corresponding ParameterState named NAME
-                # #    PARAMS:dict - entries must be valid LearningSignal parameters (e.g., LEARNING_RATE)
-                # elif isinstance(spec, dict):
-                #     if not NAME in spec:
-                #         raise LearningMechanismError("Specification dict for {} of {} must have a {} entry".
-                #                                     format(LEARNING_SIGNAL, self.name, NAME))
-                #     param_name = spec[NAME]
-                #     if not PROJECTION in spec:
-                #         raise LearningMechanismError("Specification dict for {} of {} must have a {} entry".
-                #                                     format(LEARNING_SIGNAL, self.name, PROJECTION))
-                #     mapping_proj = spec[PROJECTION]
-                #     if not isinstance(mapping_proj, MappingProjection):
-                #         raise LearningMechanismError("{} entry of specification dict for {} of {} must be a {}".
-                #                                     format(PROJECTION, LEARNING_SIGNAL, self.name, MAPPING_PROJECTION))
-                #     # Check that all of the other entries in the specification dictionary
-                #     #    are valid LearningSignal params
-                #     for param in spec:
-                #         if param in {NAME, PROJECTION}:
-                #             continue
-                #         if not hasattr(LearningSignal, param):
-                #             raise LearningMechanismError("Entry in specification dictionary for {} arg of {} ({}) "
-                #                                        "is not a valid {} parameter".
-                #                                        format(LEARNING_SIGNAL, self.name, param,
-                #                                               LearningSignal.__class__.__name__))
-                # else:
-                #     raise LearningMechanismError("PROGRAM ERROR: unrecognized specification for {} arg of {} ({})".
-                #                                 format(LEARNING_SIGNALS, self.name, spec))
-                #     # raise LearningMechanismError("Specification of {} for {} ({}) must be a "
-                #     #                             "ParameterState, Projection, a tuple specifying a parameter and "
-                #     #                              "Projection, a LearningSignal specification dictionary, "
-                #     #                              "or an existing LearningSignal".
-                #     #                             format(CONTROL_SIGNAL, self.name, spec))
 
                 # Validate that the receiver of the LearningProjection (if specified)
                 #     is a MappingProjection and in the same System as self (if specified)
@@ -1058,31 +995,27 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 except KeyError:
                     pass
 
-                # # IMPLEMENTATION NOTE: the tests below allow for the possibility that the MappingProjection
-                # #                      may not yet be fully implemented (e.g., this can occur if the
-                # #                      LearningMechanism being implemented here is as part of a LearningProjection
-                # #                      specification for the MappingProjection's matrix param)
-                # # Check that param_name is the name of a parameter of the MappingProjection to be learned
-                # if not param_name in (set(mapping_proj.user_params) | set(mapping_proj.user_params[FUNCTION_PARAMS])):
-                #     raise LearningMechanismError("{} (in specification of {} for {}) is not an "
-                #                                 "attribute of {} or its function"
-                #                                 .format(param_name, LEARNING_SIGNAL, self.name, mapping_proj))
-                # # Check that the MappingProjection to be learned has a ParameterState for the param
-                # if mapping_proj._parameter_states and not param_name in mapping_proj._parameter_states.names:
-                #     raise LearningMechanismError("There is no ParameterState for the parameter ({}) of {} "
-                #                                 "specified in {} for {}".
-                #                                 format(param_name, mapping_proj.name, LEARNING_SIGNAL, self.name))
-
     def _instantiate_attributes_before_function(self, context=None):
-        """Instantiates MappingProjection from error_source (if specified) to the LearningMechanism
+        """Instantiates MappingProjection(s) from error_sources (if specified) to LearningMechanism
 
-        Also assigns learned_projection attribute (to MappingProjection being learned)
+        Also determines and assigns `error_matrices` from the `error_sources`, identified as the matrix for the
+            Projection with which each error_source is associated.
         """
 
         super()._instantiate_attributes_before_function(context=context)
 
-        if self.error_source:
-            _instantiate_error_signal_projection(sender=self.error_source, receiver=self)
+        self.error_matrices = None
+        if self.error_sources:
+            self.error_matrices = np.empty_like(self.error_sources)
+            for i, error_source in enumerate(self.error_sources):
+                _instantiate_error_signal_projection(sender=error_source, receiver=self)
+                if isinstance(error_source, ObjectiveMechanism):
+                    self.error_matrices[i] = np.identity(len(error_source.input_states[ACTIVATION_OUTPUT]))
+                else:
+                    # IMPLEMENTATION NOTE:
+                    #     This assumes that error_source has only one LearningSignal or,
+                    #     if it has more, that they are all equivalent
+                    self.error_matrices[i] = error_source.primary_learned_projection.parameters_states[MATRIX]
 
     def _instantiate_attributes_after_function(self, context=None):
 
@@ -1140,8 +1073,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                         list=[state for state in self.output_states if
                                                                   isinstance(state, LearningSignal)])
 
+    def add_states(self, states, context=ADD_STATES):
+        super().add_states(states=states, context=context)
+        assert False, "ADD TO error_sources and error_matrices HERE"
+
     def _execute(self,
-                Z=None,
+                variable=None,
                 runtime_params=None,
                 context=None):
         """Execute LearningMechanism function and return learning_signal
@@ -1149,21 +1086,33 @@ class LearningMechanism(AdaptiveMechanism_Base):
         :return: (2D np.array) self.learning_signal
         """
 
-        QQQQ
+        # DOCUMENT THE FOLLOWING IN DOCSTRING ABOVE (AND FOR LEARNING MECH?):
         # FIX:  2/10/18 ITERATE THROUGH ERROR_SIGNAL INPUT_STATES
         # FIX:      GET ERROR_MATRIX FOR EACH AND ADD runtime_params
         # FIX:      SUM ??learning_signal AND ??error_signal FOR ALL,
         # FIX:          AND ASSIGN TO self.learning_signal and self.error_signal
-        learing_signals = []
-        error_signals = []
 
-        for e in []
-            variable =
+        # FIX: NEED TO DEAL WITH CASE IN WHICH SENDER IS A COMPARATOR AND ERROR_MATRIX IS FOR ACTIVATION_OUTPUT MP
 
+        function_variable = np.zeros_like(variable[ACTIVATION_INPUT_INDEX,
+                                          ACTIVATION_OUTPUT_INDEX,
+                                          ERROR_OUTPUT_INDEX])
+        function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
+        function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
+        error_outputs = variable[[self.input_states.index(s) for s in self.error_signal_input_states]]
+
+        self.learning_signal = np.zeros_like(self.value[0])
+        self.error_signal = np.zeros_like(self.value[1])
+
+        for i, error_output in enumerate(error_outputs):
             # Compute learning_signal (dE/dW) for each error_signal:
-            self.learning_signal, self.error_signal = self.function(variable=variable,
-                                                                    params=runtime_params,
-                                                                    context=context)
+            function_variable[ERROR_OUTPUT_INDEX] = error_output
+            runtime_params.update(ERROR_MATRIX = self.error_matrices[i])
+            learning_signal, error_signal = self.function(variable=function_variable,
+                                                          params=runtime_params,
+                                                          context=context)
+            self.learning_signal += learning_signal
+            self.error_signal += error_signal
 
         if INITIALIZING not in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
@@ -1204,6 +1153,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
             return self.input_states[ACTIVATION_OUTPUT].path_afferents[0].sender.owner
         except IndexError:
             return None
+
+    @property
+    def error_signal_input_states(self):
+        return [s for s in self.input_states if ERROR_SIGNAL in s.name]
 
     @property
     def primary_learned_projection(self):

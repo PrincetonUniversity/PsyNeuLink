@@ -137,7 +137,7 @@ import typecheck as tc
 from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
 from psyneulink.components.component import function_type, method_type
 from psyneulink.components.functions.function import BackPropagation, Hebbian, \
-    Linear, Reinforcement, TDLearning, LinearCombination, LinearMatrix, PredictionErrorDeltaFunction
+    Linear, Reinforcement, TDLearning, LinearCombination, LinearMatrix, PredictionErrorDeltaFunction, ERROR_MATRIX
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
@@ -478,7 +478,6 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                               error_signal],
                                             activation_derivative_fct=activation_derivative,
                                             error_derivative_fct=activation_derivative,
-                                            error_matrix=error_matrix,
                                             learning_rate=learning_rate,
                                             context=context)
 

@@ -9740,9 +9740,15 @@ class BackPropagation(LearningFunction):
             the modifications to make to the matrix.
         """
 
-        if not ERROR_MATRIX in params:
-            raise FunctionError("Call to {} function of {} must include \'ERROR_MATRIX\' in params arg".
-                                format(self.__class__.__name__, self.owner.name))
+        if params is None or not ERROR_MATRIX in params:
+            if INITIALIZING in context:
+                params.update{ERROR_MATRIX:}
+            else:
+                owner_string = ""
+                if self.owner:
+                    owner_sring = " of " + self.owner.name
+                raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
+                                    format(self.__class__.__name__, owner_string))
 
         self._check_args(variable=variable, params=params, context=context)
 
