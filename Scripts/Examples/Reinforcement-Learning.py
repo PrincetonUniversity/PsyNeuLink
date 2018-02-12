@@ -67,6 +67,8 @@ s = pnl.System(
     targets=[0]
 )
 
+s.show_graph(show_learning=pnl.ALL)
+
 s.run(
     num_trials=10,
     inputs=input_list,
