@@ -688,10 +688,13 @@ def run(object,
                              context=context)
 
     try:
-        # this will fail on processes, which do not have schedulers
         object.scheduler_processing.date_last_run_end = datetime.datetime.now()
         object.scheduler_learning.date_last_run_end = datetime.datetime.now()
+
+        for sched in [object.scheduler_processing, object.scheduler_learning]:
+            sched.clock._increment_time(TimeScale.RUN)
     except AttributeError:
+        # this will fail on processes, which do not have schedulers
         pass
 
     # Restore learning state

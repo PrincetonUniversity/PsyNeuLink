@@ -827,7 +827,6 @@ class System(System_Base):
         # Required to defer assignment of self.controller by setter
         #     until the rest of the System has been instantiated
         self.status = INITIALIZING
-
         processes = processes or []
         if not isinstance(processes, list):
             processes = [processes]
@@ -2806,10 +2805,7 @@ class System(System_Base):
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
-        # initial_values = initial_values or self.initial_values
-        if initial_values is None and self.initial_values:
-            initial_values = self.initial_values
-
+        self.initial_values = initial_values
 
         logger.debug(inputs)
 
