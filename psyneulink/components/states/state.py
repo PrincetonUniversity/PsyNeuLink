@@ -2498,7 +2498,11 @@ def _parse_state_spec(state_type=None,
 
     # Validate that state_type is a State class
     if isinstance(state_type, str):
-        state_type = StateRegistry[state_type][0]
+        try:
+            state_type = StateRegistry[state_type].subclass
+        except KeyError:
+            raise StateError("{} specified as a string (\'{}\') must be the name of a sublcass of {}".
+                             format(STATE_TYPE, state_type,State.__name__))
         state_dict[STATE_TYPE] = state_type
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
         raise StateError("\'state_type\' arg ({}) must be a sublcass of {}".format(state_type,
