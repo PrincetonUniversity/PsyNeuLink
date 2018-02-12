@@ -957,8 +957,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                 # We know that TransferFunction is not stateful, but a consistent interface would be nicer
                 builder.call(main_function, [mf_params, mf_state, vi, vo])
 
-            if self.clip is not None:
-                kwargs = {"ctx":ctx, "vo":vo, "min_val":self.clip[0], "max_val":self.clip[1]}
+            clip = self.get_current_mechanism_param("clip")
+            if clip is not None:
+                kwargs = {"ctx":ctx, "vo":vo, "min_val":clip[0], "max_val":clip[1]}
                 inner = functools.partial(self.__gen_llvm_clamp, **kwargs)
 
                 vector_length = ctx.int32_ty(self._variable_length)
