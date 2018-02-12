@@ -962,7 +962,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 kwargs = {"ctx":ctx, "vo":vo, "min_val":clip[0], "max_val":clip[1]}
                 inner = functools.partial(self.__gen_llvm_clamp, **kwargs)
 
-                vector_length = ctx.int32_ty(self._variable_length)
+                vector_length = ctx.int32_ty(self.get_output_struct_type().elements[0].count)
                 builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
 
             builder.ret_void()
