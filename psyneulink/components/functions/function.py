@@ -2661,7 +2661,7 @@ class SoftMax(NormalizingFunction):
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "max_ptr": max_ptr, "gain":gain, "max_ind_ptr":max_ind_ptr, "exp_sum_ptr":exp_sum_ptr}
             inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
 
-            vector_length = ctx.int32_ty(self._variable_length)
+            vector_length = ctx.int32_ty(self.get_input_struct_type().count)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
 
             output_type = self.params[OUTPUT_TYPE]
@@ -3063,7 +3063,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
             inner = functools.partial(self.__gen_llvm_linear, **kwargs)
 
-            vector_length = ctx.int32_ty(self._variable_length)
+            vector_length = ctx.int32_ty(self.get_input_struct_type().count)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
 
             builder.ret_void()
@@ -3356,7 +3356,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "rate":rate, "scale":scale}
             inner = functools.partial(self.__gen_llvm_exponential, **kwargs)
 
-            vector_length = ctx.int32_ty(self._variable_length)
+            vector_length = ctx.int32_ty(self.get_input_struct_type().count)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exponential")
 
             builder.ret_void()
@@ -3606,7 +3606,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
             inner = functools.partial(self.__gen_llvm_logistic, **kwargs)
 
-            vector_length = ctx.int32_ty(self._variable_length)
+            vector_length = ctx.int32_ty(self.get_input_struct_type().count)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "logistic")
 
             builder.ret_void()
@@ -4167,7 +4167,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 a.attributes.add('noalias')
 
             builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
-            vector_length = ctx.int32_ty(self._variable_length)
 
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
@@ -4175,7 +4174,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             vec_in = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
             matrix = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
             vec_out = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.call(builtin, [vec_in, matrix, vector_length, vector_length, vec_out])
+
+            input_length = ctx.int32_ty(self.get_input_struct_type().count)
+            output_length = ctx.int32_ty(self.get_output_struct_type().count)
+            builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
             builder.ret_void()
         return func_name
 
@@ -5533,15 +5535,15 @@ class AdaptiveIntegrator(
 
     def get_context_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
-            previous_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            previous_ty = self.get_output_struct_type()
             context_type = ir.LiteralStructType([previous_ty])
         return context_type
 
 
     def get_context_initializer(self, data=None):
         if data is None:
-            # previous value should be extended version of the initializer
-            # for some reason it's nested list
+            # FIXME: previous value should be extended version of the
+            # initializer. for some reason it's nested list
             data = self.previous_value[0]
         return tuple([tuple(data)])
 
@@ -5552,7 +5554,7 @@ class AdaptiveIntegrator(
         rate = builder.load(rate_p)
         offset = builder.load(offset_p)
         if hasattr(self.noise, "__len__") and len(self.noise) != 1:
-            assert len(self.noise) == self._variable_length
+            assert len(self.noise) == self.get_input_struct_type().count
             noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), index])
         else:
             noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -5605,7 +5607,7 @@ class AdaptiveIntegrator(
 
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params": params, "state":state}
             inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
-            vector_length = ctx.int32_ty(self._variable_length)
+            vector_length = ctx.int32_ty(self.get_input_struct_type().count)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "integrate")
 
             builder.ret_void()
@@ -9328,6 +9330,8 @@ class Distance(ObjectiveFunction):
                          context=context)
 
         self.functionOutputType = None
+
+        # Override default detection. The default variable includes two inputs
         self._variable_length = len(default_variable[0])
 
 
