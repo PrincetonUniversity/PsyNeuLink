@@ -532,7 +532,7 @@ from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATES, PARAMS, PROJECTIONS, SAMPLE, TARGET
+    MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, TARGET
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
@@ -858,7 +858,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     className = componentType
     suffix = " " + className
 
-    # outputStateType = LearningSignal
+    outputStateType = LearningSignal
 
     stateListAttr = Mechanism_Base.stateListAttr.copy()
     stateListAttr.update({LearningSignal:LEARNING_SIGNALS})
@@ -872,6 +872,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         CONTROL_PROJECTIONS: None,
         INPUT_STATES:input_state_names,
         OUTPUT_STATES:[{NAME:ERROR_SIGNAL,
+                        STATE_TYPE:OUTPUT_STATE,
                         INDEX:1},
                        {NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
                         INDEX:0}
@@ -1078,6 +1079,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             first_learning_signal = next(state for state in self.output_states if isinstance(state, LearningSignal))
             first_learning_signal.name = LEARNING_SIGNAL
 
+        # FIX: 2/12/18 - NEED TO INSTANTIATE ERROR_SIGNAL AS A REGULAR OUTPUTSTATE, AND LEANRING_SIGNAL AS SUCH
         super()._instantiate_output_states(context=context)
 
         # Reassign learning_signals to capture any user_defined LearningSignals instantiated in call to super

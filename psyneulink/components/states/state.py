@@ -2497,9 +2497,13 @@ def _parse_state_spec(state_type=None,
         reference_value = convert_to_np_array(reference_value,1)
 
     # Validate that state_type is a State class
+    # FIX: 2/12/18 TEMP
+    if isinstance(state_type, str):
+        state_type = StateRegistry[state_type][0]
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
         raise StateError("\'state_type\' arg ({}) must be a sublcass of {}".format(state_type,
                                                                                    State.__name__))
+    # FIX: MOVE THIS UNDER IF, AND USE STRING FOR state_type_name ABOVE
     state_type_name = state_type.__name__
 
     # EXISTING STATES
