@@ -1357,9 +1357,9 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         # Calculate using relevant aggregation operation and return
         if operation is SUM:
-            result = np.sum(variable) * scale + offset
+            result = np.sum(np.atleast_2d(variable), axis=1) * scale + offset
         elif operation is PRODUCT:
-            result = np.product(variable) * scale + offset
+            result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
                                 format(self.get_current_function_param(OPERATION)))
