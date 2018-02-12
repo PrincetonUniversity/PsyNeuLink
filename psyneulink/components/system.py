@@ -1562,7 +1562,6 @@ class System(System_Base):
             # (this avoids duplication from multiple passes through _instantiate_graph)
             if any(self is projection.sender.owner for projection in origin_mech.input_state.path_afferents):
                 continue
-            # MODIFIED 6/27/17 NEW:
             # added a for loop to iterate over origin_mech.input_states to allow for multiple input states in an
             # origin mechanism (useful only if the origin mechanism is a KWTA) Check, for each ORIGIN mechanism,
             # that the length of the corresponding item of self.instance_defaults.variable matches the length of the
@@ -1576,8 +1575,6 @@ class System(System_Base):
                                              len(self.instance_defaults.variable[i][j]),
                                              len(origin_mech.input_states[j].instance_defaults.variable),
                                              origin_mech.name))
-                # MODIFIED 6/27/17 END
-                # MODIFIED 6/27/17 END
                 stimulus_input_state = SystemInputState(owner=self,
                                                         variable=origin_mech.input_states[j].instance_defaults.variable,
                                                         prefs=self.prefs,
@@ -2961,38 +2958,6 @@ class System(System_Base):
         # Add controller to execution list for printing if enabled
         if self.enable_controller:
             sorted_execution_list.append(self.controller)
-
-
-        mech_names_from_exec_list = list(object_item.name for object_item in self.execution_list)
-        mech_names_from_sorted_exec_list = list(object_item.name for object_item in sorted_execution_list)
-
-        # print ("\n\tExecution list: ".format(self.name))
-        # phase = 0
-        # print("\t\tPhase {}:".format(phase))
-        # for object_item in sorted_execution_list:
-        #     if object_item.phase != phase:
-        #         phase = object_item.phase
-        #         print("\t\tPhase {}:".format(phase))
-        #     print ("\t\t\t{}".format(object_item.mechanism.name))
-        #
-        # print ("\n\tOrigin mechanisms: ".format(self.name))
-        # for object_item in self.origin_mechanisms.mechs_sorted:
-        #     print("\t\t{0} (phase: {1})".format(object_item.mechanism.name, object_item.phase))
-        #
-        # print ("\n\tTerminal mechanisms: ".format(self.name))
-        # for object_item in self.terminalMechanisms.mechs_sorted:
-        #     print("\t\t{0} (phase: {1})".format(object_item.mechanism.name, object_item.phase))
-        #     for output_state in object_item.mechanism.output_states:
-        #         print("\t\t\t{0}".format(output_state.name))
-        #
-        # # if any(process.learning for process in self.processes):
-        # if self.learning:
-        #     print ("\n\tTarget mechanisms: ".format(self.name))
-        #     for object_item in self.target_mechanisms.mechs:
-        #         print("\t\t{0} (phase: {1})".format(object_item.mechanism.name, object_item.phase))
-        #
-        # print ("\n---------------------------------------------------------")
-
 
     def inspect(self):
         """Return dictionary with system attributes and values

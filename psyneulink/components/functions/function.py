@@ -9665,9 +9665,6 @@ class BackPropagation(LearningFunction):
         # Validate error_matrix specification
         if ERROR_MATRIX in target_set:
 
-            # FIX: 2/10/18:
-            # FIX: NEEDS TO BE CHANGED TO ACCOMDOATE DIFFERENT SIZES OF self.activation_output AND self.error_signal
-            # FIX: BASED ON THEIR VALUE IN THE CALL TO THE FUNCTION (MABYE SET DYNAMICALLY IN function)?
             error_matrix = target_set[ERROR_MATRIX]
 
             from psyneulink.components.states.parameterstate import ParameterState
@@ -9726,7 +9723,7 @@ class BackPropagation(LearningFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 context=None
+                 context=None,
                  **kwargs):
         """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms
 
@@ -9744,7 +9741,6 @@ class BackPropagation(LearningFunction):
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         -------
 
@@ -9760,17 +9756,23 @@ class BackPropagation(LearningFunction):
         if INITIALIZING in context:
             error_matrix_param = {ERROR_MATRIX:np.zeros((len(variable[LEARNING_ACTIVATION_OUTPUT]),
                                                          len(variable[LEARNING_ERROR_OUTPUT])))}
+
             if params is None:
                 params = error_matrix_param
             else:
                 params.update(error_matrix_param)
 
-        elif params is None or not ERROR_MATRIX in params:
+        elif kwargs is None or not ERROR_MATRIX in kwargs:
             owner_string = ""
             if self.owner:
                 owner_string = " of " + self.owner.name
             raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
                                 format(self.__class__.__name__, owner_string))
+        else:
+            if params is None:
+                params = kwargs
+            else:
+                params.update(kwargs)
 
         self._check_args(variable=variable, params=params, context=context)
 
