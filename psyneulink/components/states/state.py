@@ -2504,7 +2504,7 @@ def _parse_state_spec(state_type=None,
             raise StateError("{} specified as a string (\'{}\') must be the name of a sublcass of {}".
                              format(STATE_TYPE, state_type,State.__name__))
         state_dict[STATE_TYPE] = state_type
-    if not inspect.isclass(state_type) or not issubclass(state_type, State):
+    elif not inspect.isclass(state_type) or not issubclass(state_type, State):
         raise StateError("\'state_type\' arg ({}) must be a sublcass of {}".format(state_type,
                                                                                    State.__name__))
     state_type_name = state_type.__name__
