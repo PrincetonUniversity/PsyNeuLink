@@ -1126,11 +1126,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
         # runtime_params = runtime_params or {}
 
-        # Template for learning_signal and error_signal outputs
-        self.learning_signal = np.zeros((len(variable[ACTIVATION_INPUT_INDEX]),
-                                         len(variable[ACTIVATION_OUTPUT_INDEX])))
-        self.error_signal = np.zeros_like(variable[ACTIVATION_OUTPUT_INDEX])
-
         # Compute learning_signal (dE/dW) for each error_signal (and corresponding error-Matrix:
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
             function_variable[ERROR_OUTPUT_INDEX] = error_signal_input
@@ -1140,8 +1135,15 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                           params=runtime_params,
                                                           context=context)
             # Sum learning_signals and error_signals
-            self.learning_signal += learning_signal
-            self.error_signal += error_signal
+            try:
+                summed_learning_signal += learning_signal
+                summed_error_signal += error_signal
+            except UnboundLocalError:
+                summed_learning_signal = learning_signal
+                summed_error_signal = error_signal
+
+        self.learning_signal = summed_learning_signal
+        self.error_signal = summed_error_signal
 
         if INITIALIZING not in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
