@@ -8908,6 +8908,14 @@ AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
 class LearningFunction(Function_Base):
     """Abstract class of `Function <Function>` used for learning.
 
+    COMMENT:
+    IMPLEMENTATION NOTE:
+       The function method of a LearningFunction *must* include a **kwargs argument, which accomodates
+       Function-specific parameters;  this is to accommodate the ability of LearningMechanisms to call
+       the function of a LearningFunction with arguments that may not be implemented for all LearningFunctions
+       (e.g., error_matrix for BackPropagation) -- these can't be included in the params argument, as those
+       are validated against paramClassDefaults which will not recognize params specific to another Function.
+
     Attributes
     ----------
 
@@ -9124,7 +9132,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
         """Calculate a matrix of weight changes from a 1d array of activity values
 
         Arguments
@@ -9369,7 +9378,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
         """Calculate a matrix of weight changes from a single (scalar) error term
 
         COMMENT:
@@ -9716,7 +9726,8 @@ class BackPropagation(LearningFunction):
     def function(self,
                  variable=None,
                  params=None,
-                 context=None):
+                 context=None
+                 **kwargs):
         """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms
 
         Arguments
@@ -9757,7 +9768,7 @@ class BackPropagation(LearningFunction):
         elif params is None or not ERROR_MATRIX in params:
             owner_string = ""
             if self.owner:
-                owner_sring = " of " + self.owner.name
+                owner_string = " of " + self.owner.name
             raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
                                 format(self.__class__.__name__, owner_string))
 
@@ -9869,7 +9880,7 @@ class TDLearning(Reinforcement):
 
         return variable
 
-    def function(self, variable=None, params=None, context=None):
+    def function(self, variable=None, params=None, context=None, **kwargs):
         return super().function(variable=variable, params=params, context=context)
 
 

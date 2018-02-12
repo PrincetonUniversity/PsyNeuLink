@@ -1124,7 +1124,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                              ERROR_OUTPUT_INDEX])])
         function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
         function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
-        runtime_params = runtime_params or {}
+        # runtime_params = runtime_params or {}
 
         # Template for learning_signal and error_signal outputs
         self.learning_signal = np.zeros((len(variable[ACTIVATION_INPUT_INDEX]),
@@ -1134,8 +1134,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Compute learning_signal (dE/dW) for each error_signal (and corresponding error-Matrix:
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
             function_variable[ERROR_OUTPUT_INDEX] = error_signal_input
-            runtime_params.update({ERROR_MATRIX:error_matrix})
+            # runtime_params.update({ERROR_MATRIX:error_matrix})
             learning_signal, error_signal = self.function(variable=function_variable,
+                                                          error_matrix=error_matrix,
                                                           params=runtime_params,
                                                           context=context)
             # Sum learning_signals and error_signals
