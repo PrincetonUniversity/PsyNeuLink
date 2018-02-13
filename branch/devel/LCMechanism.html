@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCMechanism &mdash; PsyNeuLink 0.4.4.0+7.g3d81a8d documentation</title>
+  <title>LCMechanism &mdash; PsyNeuLink 0.4.4.0+11.gf439d92 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.0+7.g3d81a8d documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.4.0+11.gf439d92 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.4.0+7
+                0.4.4.0+11
               </div>
             
           
@@ -235,10 +235,10 @@ a <a class="reference internal" href="Function.html#psyneulink.components.functi
 </div>
 <div class="section" id="execution">
 <span id="lcmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>Like other <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>, an LCMechanism executes after all of the <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> to which it belongs have <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">executed</span></a> in a <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.
+<p>Like other <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>, an LCMechanism executes after all of the <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> to which it belongs have <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">executed</span></a> in a <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.
 It’s <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.function" title="psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> takes the <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the LCMechanism’s <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> as its input, and generates a response – under the influence of its <a class="reference internal" href="#psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.mode" title="psyneulink.library.mechanisms.adaptive.control.lcmechanism.LCMechanism.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a>
 parameter – that is assigned as the <a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>.  The latter is used by its
-<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modulate the response – in the next <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution –  of the
+<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modulate the response – in the next <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution –  of the
 Mechanisms to which the LCMechanism projects</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -390,7 +390,7 @@ and the <a class="reference internal" href="Function.html#function-modulatory-pa
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.0+7.g3d81a8d',
+            VERSION:'0.4.4.0+11.gf439d92',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
