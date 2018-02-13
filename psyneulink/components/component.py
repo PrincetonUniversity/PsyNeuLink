@@ -2145,6 +2145,17 @@ class Component(object):
 
         return convert_all_elements_to_np_array(variable)
 
+    # ---------------------------------------------------------
+    # Misc parsers
+    # ---------------------------------------------------------
+
+    def _parse_function_variable(self, variable):
+        """
+            Parses the **variable** passed in to a Component into a function_variable that can be used with the
+            Function associated with this Component
+        """
+        return variable
+
     # ------------------------------------------------------------------------------------------------------------------
     # Validation methods
     # ------------------------------------------------------------------------------------------------------------------
@@ -2820,9 +2831,10 @@ class Component(object):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
     def execute(self, variable=None, runtime_params=None, context=None):
-        return self._execute(variable=variable, runtime_params=runtime_params, context=context)
+        function_variable = self._parse_function_variable(variable)
+        return self._execute(variable=variable, function_variable=function_variable, runtime_params=runtime_params, context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None, **kwargs):
+    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None, **kwargs):
 
         from psyneulink.components.functions.function import Function
         if isinstance(self, Function):
@@ -2835,7 +2847,7 @@ class Component(object):
         # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
-        return self.function(variable=variable, params=runtime_params, context=context, **kwargs)
+        return self.function(variable=function_variable, params=runtime_params, context=context, **kwargs)
 
     @property
     def execution_count(self):

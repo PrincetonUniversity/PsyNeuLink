@@ -590,8 +590,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component
-from psyneulink.components.functions.function import Function, \
-    Linear, OneHot, function_type, method_type
+from psyneulink.components.functions.function import Function, Linear, OneHot, function_type, method_type
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.context import ContextFlags
@@ -968,6 +967,33 @@ class OutputState(State_Base):
                          prefs=prefs,
                          context=context)
 
+    def _parse_function_variable(self, variable):
+        # variable is passed to OutputState by _instantiate_function for OutputState
+        if variable is not None:
+            return variable
+        # otherwise, OutputState uses specified item(s) of owner's value
+        else:
+            # variable attribute should not be used for computations!
+            fct_var = self.variable
+
+            # If variable is not specified, check if OutputState has index attribute
+            #    (for backward compatibility with INDEX and ASSIGN)
+            if fct_var is None:
+                try:
+                    # Get indexed item of owner's value
+                    fct_var = self.owner.value[self.index]
+                except IndexError:
+                    # Index is ALL, so use owner's entire value
+                    if self.index is ALL:
+                        fct_var = self.owner.value
+                    else:
+                        raise IndexError
+                except AttributeError:
+                    raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
+                                           format(self.name, self.owner.name))
+
+            return fct_var
+
     def _validate_against_reference_value(self, reference_value):
         """Validate that State.variable is compatible with the reference_value
 
@@ -1031,42 +1057,6 @@ class OutputState(State_Base):
             self._instantiate_projection_from_state(projection_spec=MappingProjection,
                                                     receiver=proj,
                                                     context=context)
-
-    def _execute(self, variable=None, runtime_params=None, context=None):
-        """Call self.function with owner's value as variable
-        """
-
-        # variable is passed to OutputState by _instantiate_function for OutputState
-        if variable is not None:
-            if self.context.initialization_status != ContextFlags.INITIALIZING:
-                raise OutputStateError("PROGRAM ERROR: variable unexpectedly passed to OutputState._execute"
-                                       "for {} of {} when it is being run rather than initialized".
-                                       format(self.name, self.owner.name))
-            fct_var = variable
-
-        # otherwise, OutputState uses specified item(s) of owner's value
-        else:
-            fct_var = self.variable
-
-            # If variable is not specified, check if OutputState has index attribute
-            #    (for backward compatibility with INDEX and ASSIGN)
-            if fct_var is None:
-                try:
-                    # Get indexed item of owner's value
-                    fct_var = self.owner.value[self.index]
-                except IndexError:
-                    # Index is ALL, so use owner's entire value
-                    if self.index is ALL:
-                        fct_var = self.owner.value
-                    else:
-                        raise IndexError
-                except AttributeError:
-                    raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
-                                           format(self.name, self.owner.name))
-
-        return super()._execute(variable=fct_var,
-                                runtime_params=runtime_params,
-                                context=context)
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state

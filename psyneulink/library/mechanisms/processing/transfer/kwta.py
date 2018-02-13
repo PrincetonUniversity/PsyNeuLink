@@ -528,6 +528,16 @@ class KWTA(RecurrentTransferMechanism):
                          prefs=prefs,
                          context=context)
 
+    def _parse_function_variable(self, variable):
+        if variable.dtype.char == "U":
+            raise KWTAError(
+                "input ({0}) to {1} was a string, which is not supported for {2}".format(
+                    variable, self, self.__class__.__name__
+                )
+            )
+
+        return self._kwta_scale(variable)
+
     # adds indexOfInhibitionInputState to the attributes of KWTA
     def _instantiate_attributes_before_function(self, context=None):
 
@@ -634,22 +644,6 @@ class KWTA(RecurrentTransferMechanism):
                 if not (isinstance(threshold_param, (np.ndarray, list)) and len(threshold_param) == 1):
                     raise KWTAError("k-value parameter ({}) for {} must be a single number".
                                     format(threshold_param, self))
-
-    def _execute(self,
-                variable=None,
-                runtime_params=None,
-                context=None):
-
-        if variable.dtype.char == "U":
-            raise KWTAError(
-                "input ({0}) to {1} was a string, which is not supported for {2}".format(
-                    variable, self, self.__class__.__name__
-                )
-            )
-        variable = self._update_variable(self._kwta_scale(variable, context=context))
-        return super()._execute(variable=variable,
-                       runtime_params=runtime_params,
-                       context=context)
 
         # NOTE 7/10/17 CW: this version of KWTA executes scaling _before_ noise or integration is applied. This can be
         # changed, but I think it requires overriding the whole _execute function (as below),

@@ -862,14 +862,14 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
         If there were no PathwayProjections, ignore and return None
         """
 
-        if variable is not None:
-            return self.function(variable, runtime_params, context)
+        if function_variable is not None:
+            return self.function(function_variable, runtime_params, context)
         # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
@@ -882,9 +882,12 @@ class InputState(State_Base):
             #                                 params=runtime_params,
             #                                 context=context)
             # MODIFIED 3/20/18 NEW:
-            combined_values = super()._execute(variable=variable,
-                                                    runtime_params=runtime_params,
-                                                    context=context)
+            combined_values = super()._execute(
+                variable=variable,
+                function_variable=variable,
+                runtime_params=runtime_params,
+                context=context
+            )
             # MODIFIED 3/20/18 END
             return combined_values
         # There were no Projections

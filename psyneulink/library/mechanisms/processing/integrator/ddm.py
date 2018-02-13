@@ -969,10 +969,13 @@ class DDM(ProcessingMechanism_Base):
                                                           context='plot').function
 
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Execute DDM function (currently only trial-level, analytic solution)
         Execute DDM and estimate outcome or calculate trajectory of decision variable
         Currently implements only trial-level DDM (analytic solution) and returns:
@@ -1007,14 +1010,16 @@ class DDM(ProcessingMechanism_Base):
 
         # FIX: 2/5/18: PUT CODE HERE FOR input_format = ARRAY/VECTOR, TO SUBTRACT variable[1] from variable[0]
 
-        if variable is None or np.isnan(variable):
+        if function_variable is None or np.isnan(function_variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
-            variable = self._update_variable(self.instance_defaults.variable)
+            function_variable = self._update_variable(self.instance_defaults.variable)
+
+        function_variable = self._validate_variable(function_variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if isinstance(self.function.__self__, Integrator):
 
-            result = self.function(variable, context=context)
+            result = self.function(function_variable, context=context)
 
             if self.context.initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
@@ -1025,9 +1030,11 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         else:
 
-            result = self.function(variable=variable,
-                                   params=runtime_params,
-                                   context=context)
+            result = self.function(
+                variable=function_variable,
+                params=runtime_params,
+                context=context
+            )
 
             if isinstance(self.function.__self__, BogaczEtAl):
                 return_value = np.array([[0.0], [0.0], [0.0], [0.0]])

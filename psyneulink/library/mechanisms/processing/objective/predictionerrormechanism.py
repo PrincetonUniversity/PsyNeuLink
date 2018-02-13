@@ -298,15 +298,16 @@ class PredictionErrorMechanism(ComparatorMechanism):
                          prefs=prefs,
                          context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _parse_function_variable(self, variable):
         # TODO: update to take sample/reward from variable
         # sample = x(t) in Montague on first run, V(t) on subsequent runs
-
         sample = self.input_states[SAMPLE].value
         reward = self.input_states[TARGET].value
 
-        variable = [sample, reward]
-        delta = super()._execute(variable=variable, runtime_params=runtime_params, context=context)
+        return [sample, reward]
+
+    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
+        delta = super()._execute(variable=variable, function_variable=function_variable, runtime_params=runtime_params, context=context)
         delta = delta[1:]
         delta = np.append(delta, 0)
 

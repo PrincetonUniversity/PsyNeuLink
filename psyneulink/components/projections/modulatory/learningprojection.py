@@ -177,8 +177,7 @@ from psyneulink.components.states.modulatorysignals.learningsignal import Learni
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, \
-    INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.globals.keywords import EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import iscompatible, parameter_spec
@@ -602,7 +601,7 @@ class LearningProjection(ModulatoryProjection_Base):
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = True
 
-    def _execute(self, variable, runtime_params=None, context=None):
+    def _execute(self, variable, function_variable=None, runtime_params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
@@ -616,7 +615,10 @@ class LearningProjection(ModulatoryProjection_Base):
         # if self.learning_rate:
         #     runtime_params.update({SLOPE:self.learning_rate})
 
-        learning_signal = self.sender.value
+        if variable is not None:
+            learning_signal = variable
+        else:
+            learning_signal = self.sender.value
         matrix = self.receiver.value
         # If learning_signal is lower dimensional than matrix being trained
         #    and the latter is a diagonal matrix (square, with values only along the main diagonal)
@@ -645,10 +647,12 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # IMPLEMENTATION NOTE:  skip Projection._execute, as that uses self.sender.value as variable,
         #                       which undermines formatting of it (as learning_signal) above
-        self.weight_change_matrix = super(ShellClass, self)._execute(variable=learning_signal,
-                                                                     runtime_params=runtime_params,
-                                                                     context=context
-                                                                     )
+        self.weight_change_matrix = super(ShellClass, self)._execute(
+            variable=variable,
+            function_variable=learning_signal,
+            runtime_params=runtime_params,
+            context=context
+        )
 
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate

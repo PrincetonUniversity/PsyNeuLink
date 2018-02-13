@@ -903,10 +903,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         return control_signal
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Updates ControlSignals based on inputs
 
         Must be overriden by subclass

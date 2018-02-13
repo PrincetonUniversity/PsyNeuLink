@@ -728,8 +728,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ComponentError, component_keywords, \
-    function_type, method_type
+from psyneulink.components.component import Component, ComponentError, component_keywords, function_type, method_type
 from psyneulink.components.functions.function import Function, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.context import ContextFlags
@@ -1948,8 +1947,11 @@ class State_Base(State):
             if isinstance(projection, LearningProjection) and self.context.execution_phase != ContextFlags.LEARNING:
                 projection_value = projection.value * 0.0
             else:
-                projection_value = projection.execute(runtime_params=projection_params,
-                                                      context=context) # cxt-pass cxt-push
+                projection_value = projection.execute(
+                    variable=projection.sender.value,
+                    runtime_params=projection_params,
+                    context=context  # cxt-pass cxt-push
+                )
 
             # If this is initialization run and projection initialization has been deferred, pass
             if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
@@ -2011,7 +2013,7 @@ class State_Base(State):
             function_params = self.stateParams[FUNCTION_PARAMS]
         except (KeyError, TypeError):
             function_params = None
-        self.value = self._execute(runtime_params=function_params, context=context)
+        self.value = self.execute(runtime_params=function_params, context=context)
 
     @property
     def owner(self):

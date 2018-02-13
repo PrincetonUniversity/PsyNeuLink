@@ -889,10 +889,13 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.output_states.append({NAME: RESULT, VARIABLE: (OWNER_VALUE, i)})
         super()._instantiate_output_states(context=context)
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Execute TransferMechanism function and return transform of input
 
         Execute TransferMechanism function on input, and assign to output_values:
@@ -955,14 +958,15 @@ class TransferMechanism(ProcessingMechanism_Base):
             if not self.integrator_function:
 
                 self.integrator_function = AdaptiveIntegrator(
-                                            variable,
-                                            initializer=initial_value,
-                                            noise=noise,
-                                            rate=smoothing_factor,
-                                            owner=self)
+                    function_variable,
+                    initializer=initial_value,
+                    noise=noise,
+                    rate=smoothing_factor,
+                    owner=self
+                )
                 self.original_integrator_function = self.integrator_function
             current_input = self.integrator_function.execute(
-                variable,
+                function_variable,
                 # Should we handle runtime params?
                 runtime_params={
                     INITIALIZER: self.initial_value,
@@ -972,18 +976,18 @@ class TransferMechanism(ProcessingMechanism_Base):
                 context=context
             )
         else:
-            noise = self._try_execute_param(self.noise, variable)
+            noise = self._try_execute_param(self.noise, function_variable)
             # formerly: current_input = self.input_state.value + noise
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
             # when the input is given as a string.
             if (np.array(noise) != 0).any():
-                current_input = variable + noise
+                current_input = function_variable + noise
             else:
-                current_input = variable
+                current_input = function_variable
 
         if isinstance(self.function_object, TransferFunction):
 
-            outputs = super()._execute(variable=current_input, runtime_params=runtime_params, context=context)
+            outputs = super()._execute(function_variable=current_input, runtime_params=runtime_params, context=context)
             if clip is not None:
                 minCapIndices = np.where(outputs < clip[0])
                 maxCapIndices = np.where(outputs > clip[1])
@@ -993,7 +997,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Apply TransferMechanism's function to each input state separately
             outputs = []
             for elem in current_input:
-                output_item = super()._execute(variable=elem, runtime_params=runtime_params, context=context)
+                output_item = super()._execute(function_variable=elem, runtime_params=runtime_params, context=context)
                 if clip is not None:
                     minCapIndices = np.where(output_item < clip[0])
                     maxCapIndices = np.where(output_item > clip[1])
