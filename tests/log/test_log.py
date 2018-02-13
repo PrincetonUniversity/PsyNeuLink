@@ -377,7 +377,7 @@ class TestLog:
         # Check values T1
         assert np.allclose(log_dict_T1["Run"], [[0], [0], [0]])
         assert np.allclose(log_dict_T1["Trial"], [[0], [0], [0]])
-        assert np.allclose(log_dict_T1["Time_step"], [[0], [0.1], [0.2]])
+        assert np.allclose(log_dict_T1["Time_step"], [[0], [0.01], [0.02]])
         assert np.allclose(log_dict_T1["RESULTS"], [[0.5], [0.75], [0.875]])
         assert np.allclose(log_dict_T1["value"], [[[0.5]], [[0.75]], [[0.875]]])
         assert np.allclose(log_dict_T1["slope"], [[1], [1], [1]])
@@ -385,7 +385,7 @@ class TestLog:
         # Check values T2
         assert np.allclose(log_dict_T2["Run"], [[0], [0], [0]])
         assert np.allclose(log_dict_T2["Trial"], [[0], [0], [0]])
-        assert np.allclose(log_dict_T2["Time_step"], [[1], [1.1], [1.2]])
+        assert np.allclose(log_dict_T2["Time_step"], [[1], [1.01], [1.02]])
         assert np.allclose(log_dict_T2["value"], [[[3]], [[4.5]], [[5.25]]])
         assert np.allclose(log_dict_T2["slope"], [[6], [6], [6]])
 
@@ -423,7 +423,7 @@ class TestLog:
         # Check values
         run_results = [["Run"], [0], [0], [0]]
         trial_results = [["Trial"], [0], [0], [0]]
-        time_step_results = [["Time_step"], [0], [0.1], [0.2]]
+        time_step_results = [["Time_step"], [0], [0.01], [0.02]]
         results_results = ["RESULTS", [0.5], [0.75], [0.875]]
         slope_results = ["slope", [1], [1], [1]]
         value_results = ["value", [[0.5]], [[0.75]], [[0.875]]]
@@ -438,7 +438,7 @@ class TestLog:
         # Check values
         run_results = [["Run"], [0], [0], [0]]
         trial_results = [["Trial"], [0], [0], [0]]
-        time_step_results = [["Time_step"], [1], [1.1], [1.2]]
+        time_step_results = [["Time_step"], [1], [1.01], [1.02]]
         value_results = ["value", [[3]], [[4.5]], [[5.25]]]
         slope_results = ["slope", [6], [6], [6]]
         for i in range(4):
