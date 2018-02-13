@@ -9074,7 +9074,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         self._check_args(variable=variable, params=params, context=context)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
+        #                       1) if no learning_rate is specified for the Mechanism, need to assign None
         #                          so that the process or system can see it is free to be assigned
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
@@ -9358,11 +9358,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        # # MODIFIED 2/2/18 OLD:
-        # return [weight_change_matrix, error_array]
-        # MODIFIED 2/2/18 NEW:
         return [error_array, error_array]
-        # MODIFIED 2/2/18 END
 
 
 # Argument names:
@@ -9637,6 +9633,7 @@ class BackPropagation(LearningFunction):
 
     def function(self,
                  variable=None,
+                 # error_matrix=None,
                  params=None,
                  context=None,
                  **kwargs):
@@ -9688,6 +9685,14 @@ class BackPropagation(LearningFunction):
                 params = kwargs
             else:
                 params.update(kwargs)
+
+        # if INITIALIZING in context and error_matrix is None:
+        #     error_matrix = {ERROR_MATRIX:np.zeros((len(variable[LEARNING_ACTIVATION_OUTPUT]),
+        #                                            len(variable[LEARNING_ERROR_OUTPUT])))}
+        # if params is None:
+        #     params = error_matrix
+        # else:
+        #     params.update(error_matrix)
 
         self._check_args(variable=variable, params=params, context=context)
 
