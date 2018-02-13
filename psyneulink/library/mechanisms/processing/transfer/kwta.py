@@ -150,7 +150,6 @@ Class Reference
 import logging
 import numbers
 import warnings
-
 from collections import Iterable
 
 import numpy as np
@@ -161,7 +160,6 @@ from psyneulink.globals.keywords import INITIALIZING, KWTA, K_VALUE, RATIO, RESU
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'KWTA', 'KWTAError',

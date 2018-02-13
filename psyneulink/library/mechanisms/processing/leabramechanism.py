@@ -90,6 +90,7 @@ Class Reference
 """
 
 import numbers
+
 import numpy as np
 
 try:

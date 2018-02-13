@@ -343,7 +343,6 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'EVCControlMechanism', 'EVCError',

@@ -159,12 +159,11 @@ from psyneulink.components.functions.function import PredictionErrorDeltaFunctio
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import INITIALIZING, LEARNING_RATE, PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
+from psyneulink.globals.keywords import INITIALIZING, PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, kwPreferenceSetName
 from psyneulink.globals.utilities import is_numeric
-from psyneulink.library.mechanisms.processing.objective.comparatormechanism \
-    import ComparatorMechanism, ComparatorMechanismError
+from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, ComparatorMechanismError
 
 __all__ = [
     'PredictionErrorMechanism',

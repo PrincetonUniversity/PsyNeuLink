@@ -540,15 +540,15 @@ import typecheck as tc
 
 from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import \
-    BackPropagation, ModulationParam, _is_modulation_param, is_function_type, ERROR_MATRIX
+    BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
-from psyneulink.components.states.state import ADD_STATES
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
+from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.components.states.state import ADD_STATES
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \

@@ -12,8 +12,7 @@ import inspect
 from collections import namedtuple
 from enum import Enum, IntEnum
 
-from psyneulink.globals.keywords import kwPreferenceSetName, \
-    kwDefaultPreferenceSetOwner
+from psyneulink.globals.keywords import kwDefaultPreferenceSetOwner, kwPreferenceSetName
 from psyneulink.globals.utilities import iscompatible, kwCompatibilityType
 
 __all__ = [

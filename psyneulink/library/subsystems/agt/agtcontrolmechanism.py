@@ -127,7 +127,6 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'AGTControlMechanism', 'AGTControlMechanismError', 'ControlMechanismRegistry', 'MONITORED_OUTPUT_STATE_NAME_SUFFIX',

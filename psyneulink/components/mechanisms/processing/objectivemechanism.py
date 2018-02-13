@@ -321,7 +321,6 @@ Class Reference
 
 """
 import warnings
-
 from collections import Iterable
 
 import typecheck as tc
@@ -332,10 +331,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import PARAMS, PROJECTION, PROJECTIONS, CONTROL, DEFAULT_MATRIX, DEFAULT_VARIABLE, \
-    EXPONENT, EXPONENTS, FUNCTION, \
-    INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
-    kwPreferenceSetName
+from psyneulink.globals.keywords import CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, PARAMS, PROJECTION, PROJECTIONS, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList

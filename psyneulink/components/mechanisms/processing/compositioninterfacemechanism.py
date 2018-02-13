@@ -52,7 +52,6 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = []
 

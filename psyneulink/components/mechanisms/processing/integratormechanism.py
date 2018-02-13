@@ -67,15 +67,15 @@ Class Reference
 ---------------
 
 """
-import typecheck as tc
 from collections import Iterable
 
+import typecheck as tc
+
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.globals.keywords import INTEGRATOR_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, RESULTS, \
+from psyneulink.globals.keywords import INTEGRATOR_MECHANISM, RESULTS, \
     kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'DEFAULT_RATE', 'IntegratorMechanism', 'IntegratorMechanismError'

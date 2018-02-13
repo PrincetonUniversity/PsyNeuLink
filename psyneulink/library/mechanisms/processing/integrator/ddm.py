@@ -328,26 +328,22 @@ Class Reference
 ---------------
 """
 import logging
-import numbers
 import random
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
 
-from collections import Iterable
-
 from psyneulink.components.component import method_type
-from psyneulink.components.functions.function import \
-    BogaczEtAl, DriftDiffusionIntegrator, Integrator, LinearCombination, Reduce, \
-    NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
+from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, Reduce, STARTING_POINT, THRESHOLD
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, \
-    INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES,  OWNER_VALUE, VALUE, VARIABLE, kwPreferenceSetName
+    INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, object_has_single_value

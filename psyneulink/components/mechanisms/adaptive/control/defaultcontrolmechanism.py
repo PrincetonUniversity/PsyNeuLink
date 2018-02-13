@@ -44,7 +44,6 @@ from psyneulink.globals.keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPU
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'DefaultControlMechanism', 'DefaultControlMechanismError'

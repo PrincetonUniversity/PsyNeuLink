@@ -352,8 +352,6 @@ Class Reference
 
 import inspect
 
-from collections import Iterable
-
 import numpy as np
 import typecheck as tc
 
@@ -362,8 +360,8 @@ from psyneulink.components.functions.function import Linear, get_param_value_for
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
-from psyneulink.globals.keywords import CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
 from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities \
@@ -941,7 +939,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     """
     from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
     from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-    from psyneulink.components.states.state import _parse_state_spec
 
     def _get_tuple_for_single_item_modulatory_spec(obj, name, value):
         """Return (<default param value>, <modulatory spec>) for modulatory spec
@@ -1096,7 +1093,6 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
 
 def _is_legal_param_value(owner, value):
 
-    from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
     from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
     from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
 

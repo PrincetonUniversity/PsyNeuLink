@@ -126,10 +126,10 @@ Class Reference
 
 """
 
+from collections import Iterable
+
 import numpy as np
 import typecheck as tc
-
-from collections import Iterable
 
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -317,7 +317,6 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
 
-    from psyneulink.components.functions.function import MULTIPLICATIVE_PARAM, UserDefinedFunction
     standard_output_states.extend([{NAME: SSE,
                                     FUNCTION: lambda x: np.sum(x*x)},
                                    {NAME: MSE,

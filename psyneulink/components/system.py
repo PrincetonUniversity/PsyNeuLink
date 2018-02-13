@@ -429,42 +429,35 @@ import math
 import numbers
 import re
 import warnings
-
 from collections import OrderedDict, namedtuple
 
 import numpy as np
 import typecheck as tc
-
 from toposort import toposort, toposort_flatten
 
 from psyneulink.components.component import Component
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
 from psyneulink.components.process import Process, ProcessList, ProcessTuple
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.projection import Projection
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
-    EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, FUNCTIONS, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, \
-    INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, \
-    PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, WEIGHT, \
-    kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import ALL, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
+    EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, \
+    INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, \
+    PROJECTIONS, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, insert_list, iscompatible
+from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import Projection
-
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
@@ -1594,7 +1587,7 @@ class System(System_Base):
         """Build graph of LearningMechanism and LearningProjections
         """
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
-            LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
+            LearningMechanism
 
         self.learningGraph = OrderedDict()
         self.learning_execution_graph = OrderedDict()

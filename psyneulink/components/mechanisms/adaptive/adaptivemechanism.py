@@ -92,7 +92,6 @@ Class Reference
 ---------------
 
 """
-import numpy as np
 
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.globals.keywords import ADAPTIVE_MECHANISM

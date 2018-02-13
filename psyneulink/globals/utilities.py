@@ -75,14 +75,13 @@ OTHER
 
 """
 
-import collections
 import inspect
 import logging
 import numbers
 import warnings
-
 from enum import Enum, EnumMeta, IntEnum
 
+import collections
 import numpy as np
 
 from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE

@@ -584,7 +584,6 @@ Class Reference
 
 """
 
-import numbers
 import warnings
 
 import numpy as np
@@ -592,20 +591,14 @@ import typecheck as tc
 
 from psyneulink.components.component import Component
 from psyneulink.components.functions.function import Function, \
-    Linear, OneHot, function_type, method_type, is_function_type
-from psyneulink.components.shellclasses import Mechanism, Projection
+    Linear, OneHot, function_type, method_type
+from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, FUNCTION_PARAMS, GATING_SIGNAL,\
-    INDEX, INITIALIZING, INPUT_STATE, INPUT_STATES, \
-    MAPPING_PROJECTION, MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MEAN, MECHANISM_VALUE, MEDIAN, NAME, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, \
-    PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, \
-    PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, \
-    VALUE, VARIABLE, VARIANCE
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM_VALUE, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match, recursive_update
+from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, recursive_update
 
 __all__ = [
     'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
@@ -1009,13 +1002,9 @@ class OutputState(State_Base):
         function_value is converted to returned value by assign function
 
         """
-        from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.states.modulatorysignals.modulatorysignal import \
-            ModulatorySignal, _is_modulatory_spec
-        from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+            _is_modulatory_spec
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.components.projections.projection import ProjectionTuple
-
 
         # Treat as ModulatoryProjection spec if it is a ModulatoryProjection, ModulatorySignal or AdaptiveMechanism
         # or one of those is the first or last item of a ProjectionTuple
@@ -1107,7 +1096,6 @@ class OutputState(State_Base):
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.components.projections.projection import _parse_connection_specs, ProjectionTuple
-        from psyneulink.components.system import MonitoredOutputStatesOption
 
         params_dict = {}
         state_spec = state_specific_spec

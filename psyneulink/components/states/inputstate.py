@@ -453,22 +453,20 @@ Class Reference
 ---------------
 
 """
-import collections
 import numbers
 import warnings
 
+import collections
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component
 from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
-from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.states.state import ADD_STATES, StateError, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
+from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import append_type_to_name, is_numeric, iscompatible
 
 __all__ = [
@@ -764,15 +762,15 @@ class InputState(State_Base):
         """Assign variable to value of Projection in projections
         """
         from psyneulink.components.projections.projection import \
-            Projection, _parse_connection_specs, ProjectionTuple
+            Projection, _parse_connection_specs
 
         if not isinstance(projections, list):
             projections = [projections]
 
-        # Use only first specification in the list returned, and assume any others are the same size 
+        # Use only first specification in the list returned, and assume any others are the same size
         #     (which they must be); leave validation of this to _instantiate_projections_to_state
         proj_spec = _parse_connection_specs(InputState, self, projections)[0]
-        
+
         if isinstance(proj_spec.projection, Projection):
             variable = proj_spec.projection.value
         elif isinstance(proj_spec.state, OutputState):
@@ -920,6 +918,7 @@ class InputState(State_Base):
         #      THIS WOULD ALLOW AN ADDITONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.components.projections.projection import Projection, _parse_connection_specs
+        from psyneulink.components.mechanisms.mechanism import Mechanism
 
         params_dict = {}
         state_spec = state_specific_spec
@@ -1101,6 +1100,8 @@ class InputState(State_Base):
 
             ex: specifiying an InputState with a Mechanism allows overriding
         '''
+        from psyneulink.components.mechanisms.mechanism import Mechanism
+
         if isinstance(spec, Mechanism):
             return True
         if isinstance(spec, collections.Iterable):

@@ -21,7 +21,6 @@ from psyneulink.globals.keywords import DEFAULT_PROCESSING_MECHANISM, FUNCTION, 
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
-
 # **************************************** DefaultProcessingMechanism ******************************************************
 
 __all__ = []

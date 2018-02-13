@@ -133,7 +133,6 @@ Class Reference
 """
 
 import warnings
-
 from collections import Iterable
 
 import numpy as np
@@ -145,9 +144,7 @@ from psyneulink.globals.keywords import \
     BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, INITIALIZING, LCA, MEAN, \
     MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'LCA', 'LCA_OUTPUT', 'LCAError', 'MAX_VS_AVG', 'MAX_VS_NEXT',

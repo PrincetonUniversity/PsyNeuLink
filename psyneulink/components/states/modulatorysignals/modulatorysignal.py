@@ -206,11 +206,10 @@ Class Reference
 """
 
 from psyneulink.components.component import component_keywords
-from psyneulink.components.shellclasses import Mechanism, State
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.states.state import StateError, State_Base
+from psyneulink.components.states.state import State_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL, PROJECTIONS
+from psyneulink.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -222,7 +221,6 @@ def _is_modulatory_spec(spec, include_matrix_spec=True):
     from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import _is_learning_spec
     from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
     from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
-    from psyneulink.components.projections.projection import ProjectionTuple
 
     if (_is_learning_spec(spec, include_matrix_spec=include_matrix_spec)
         or _is_control_spec(spec)

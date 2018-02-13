@@ -46,8 +46,8 @@ Execution
 """
 
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, SENDER, RECEIVER, CONTEXT
 from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import NAME, PATHWAY_PROJECTION, RECEIVER, SENDER
 
 __all__ = []
 

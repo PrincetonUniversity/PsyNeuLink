@@ -89,12 +89,12 @@ belongs is run. A ProcessingMechanism always executes before any `AdaptiveMechan
 
 """
 
-import typecheck as tc
 from collections import Iterable
+
+import typecheck as tc
 
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, PROCESSING_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel

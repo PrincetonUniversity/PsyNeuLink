@@ -853,8 +853,6 @@ Class Reference
 
 import inspect
 import logging
-import numbers
-
 from collections import Iterable, OrderedDict
 from inspect import isclass
 
@@ -868,17 +866,17 @@ from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import ADD_STATES, REMOVE_STATES, _parse_state_spec
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
-    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
+    CHANGED, COMMAND_LINE, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
     INPUT_LABELS_DICT, INPUT_STATES, \
-    INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
+    INPUT_STATE_PARAMS, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
     OUTPUT_LABELS_DICT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
     PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TARGET_LABELS_DICT, UNCHANGED, \
     VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
@@ -1305,7 +1303,6 @@ class Mechanism_Base(Mechanism):
         * registers Mechanism with MechanismRegistry
 
         """
-        from psyneulink.components.states.inputstate import InputState
 
         # Forbid direct call to base class constructor
         # this context stuff is confusing: when do I use super().__init__(context=self)
@@ -2834,8 +2831,8 @@ class Mechanism_Base(Mechanism):
             State specification(s) can be an InputState or OutputState object or the name of one.
 
         """
-        from psyneulink.components.states.inputstate import InputState, _instantiate_input_states, INPUT_STATE
-        from psyneulink.components.states.outputstate import OutputState, _instantiate_output_states, OUTPUT_STATE
+        from psyneulink.components.states.inputstate import INPUT_STATE
+        from psyneulink.components.states.outputstate import OutputState, OUTPUT_STATE
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):

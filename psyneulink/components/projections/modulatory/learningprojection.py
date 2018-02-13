@@ -166,22 +166,21 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import parameter_keywords
-from psyneulink.components.shellclasses import ShellClass
 from psyneulink.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import Projection_Base, _is_projection_spec, projection_keywords
+from psyneulink.components.projections.projection import Projection_Base, projection_keywords
+from psyneulink.components.shellclasses import ShellClass
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.globals.keywords import CONTEXT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
-    INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, NAME, \
-    PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import FUNCTION, FUNCTION_PARAMS, \
+    INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import iscompatible, parameter_spec
 
 __all__ = [

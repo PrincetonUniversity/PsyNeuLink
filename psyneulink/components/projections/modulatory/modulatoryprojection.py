@@ -81,11 +81,9 @@ Class Reference
 
 """
 
-import inspect
-
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import EXECUTING, INITIALIZING, MODULATORY_PROJECTION, NAME, kwAssign
-from psyneulink.globals.log import LogEntry, ContextFlags
+from psyneulink.globals.keywords import MODULATORY_PROJECTION, NAME
+from psyneulink.globals.log import ContextFlags
 
 
 __all__ = [
