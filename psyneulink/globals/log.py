@@ -1547,7 +1547,7 @@ class Log:
             time_step_increments.append(chain)
         for i in range(1, len(time_values)):
             update_tuple = list(time_values[i])
-            update_tuple[2] = update_tuple[2] + time_step_increments[i - 1]*0.1
+            update_tuple[2] = update_tuple[2] + time_step_increments[i - 1]*0.01
             mod_time_values[i] = tuple(update_tuple)
         return mod_time_values
 
