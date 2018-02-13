@@ -447,3 +447,36 @@ class TestLog:
             assert log_array_T2[2][i] == time_step_results[i]
             assert log_array_T2[3][i] == value_results[i]
             assert log_array_T2[4][i] == slope_results[i]
+
+    def test_log_dictionary_with_scheduler_many_time_step_increments(self):
+        T1 = pnl.TransferMechanism(name='log_test_T1',
+                                   integrator_mode=True,
+                                   smoothing_factor=0.05)
+        PS = pnl.Process(name='log_test_PS', pathway=[T1])
+        SYS = pnl.System(name='log_test_SYS', processes=[PS])
+
+        def pass_threshold(mech, thresh):
+            results = mech.output_states[0].value
+            for val in results:
+                if abs(val) >= thresh:
+                    return True
+            return False
+
+        terminate_trial = {
+            pnl.TimeScale.TRIAL: pnl.While(pass_threshold, T1, 0.95)
+        }
+
+        T1.set_log_conditions(pnl.VALUE)
+
+        SYS.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
+
+        log_dict_T1 = T1.log.nparray_dictionary(entries=['value'])
+
+        # Check order of keys (must match order of specification)
+        assert list(log_dict_T1.keys()) == ['Run', 'Trial', 'Time_step', 'value']
+
+        # # Check values T1
+        assert len(log_dict_T1["Run"]) == 59
+        assert np.allclose(log_dict_T1["Time_step"][30], 0.3)
+        assert abs(log_dict_T1["value"][58]) >= 0.95
+        assert abs(log_dict_T1["value"][57]) < 0.95
