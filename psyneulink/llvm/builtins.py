@@ -72,7 +72,7 @@ def setup_vxm(ctx):
         inner_cond_block = builder.append_basic_block("inner-cond")
         inner_body_block = builder.append_basic_block("inner-body")
         inner_out_block = builder.append_basic_block("inner-out")
-        
+
         # Loop condition
         builder.branch(inner_cond_block)
         with builder.goto_block(inner_cond_block):
@@ -103,7 +103,7 @@ def setup_vxm(ctx):
             next_index_j = builder.add(index_j, ctx.int32_ty(1))
             builder.store(next_index_j, index_j_var)
             builder.branch(inner_cond_block)
-    
+
 
         with builder.goto_block(inner_out_block):
             next_index_i = builder.add(index_i, ctx.int32_ty(1))
