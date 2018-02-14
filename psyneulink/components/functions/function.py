@@ -9088,13 +9088,13 @@ class Hebbian(LearningFunction):  # --------------------------------------------
             variable = np.squeeze(variable)
         # MODIFIED 9/21/17 END
 
-        # Generate the column array from the variable
-        # col = variable.reshape(len(variable),1)
-        col = np.array(np.matrix(variable).T)
-
         # If learning_rate is a 1d array, multiply it by variable
         if self.learning_rate_dim == 1:
             variable = variable * learning_rate
+
+        # Generate the column array from the variable
+        # col = variable.reshape(len(variable),1)
+        col = np.array(np.matrix(variable).T)
 
         # Calculate weight chhange matrix
         weight_change_matrix = variable * col
