@@ -64,7 +64,7 @@ class TestMatrixSpec:
 class TestRecurrentTransferMechanismInputs:
 
     def test_recurrent_mech_empty_spec(self):
-        R = RecurrentTransferMechanism()
+        R = RecurrentTransferMechanism(auto=1.0)
         assert R.value is None
         np.testing.assert_allclose(R.instance_defaults.variable, [[0]])
         np.testing.assert_allclose(R.matrix, [[1]])
@@ -72,7 +72,8 @@ class TestRecurrentTransferMechanismInputs:
     def test_recurrent_mech_check_attrs(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=3
+            size=3,
+            auto=1.0
         )
         assert R.value is None
         np.testing.assert_allclose(R.instance_defaults.variable, [[0., 0., 0.]])
@@ -217,8 +218,14 @@ class TestRecurrentTransferMechanismMatrix:
         val = R.execute([-1, -2, -3])
         np.testing.assert_allclose(val, [[-1, -2, -3]])
         assert isinstance(R.matrix, np.ndarray)
-        np.testing.assert_allclose(R.matrix, [[1, -1, -1], [-1, 1, -1], [-1, -1, 1]])
-        np.testing.assert_allclose(run_twice_in_system(R, [1, 2, 3], [10, 11, 12]), [8, 7, 6])
+        np.testing.assert_allclose(R.matrix, [[0, -1, -1], [-1, 0, -1], [-1, -1, 0]])
+        # Execution 1:
+        # Recurrent input = [5, 4, 3] | New input = [1, 2, 3] | Total input = [6, 6, 6]
+        # Output 1 = [6, 6, 6]
+        # Execution 2:
+        # Recurrent input =[-12, -12, -12] | New input =  [10, 11, 12] | Total input = [-2, -1, 0]
+        # Output 2 =  [-2, -1, 0]
+        np.testing.assert_allclose(run_twice_in_system(R, [1, 2, 3], [10, 11, 12]), [-2., -1.,  0.])
 
     def test_recurrent_mech_matrix_auto_hetero_spec_size_1(self):
         R = RecurrentTransferMechanism(
@@ -839,6 +846,7 @@ class TestRecurrentTransferMechanismReinitialize:
                  initial_value=0.5,
                  integrator_mode=True,
                  smoothing_factor=0.1,
+                 auto=1.0,
                  noise=0.0)
         P = Process(name="P",
                     pathway=[R])
