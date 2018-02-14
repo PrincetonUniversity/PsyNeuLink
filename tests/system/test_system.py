@@ -648,7 +648,8 @@ class TestInitialize:
     def test_initialize_mechanisms(self):
         A = TransferMechanism(name='A')
         B = TransferMechanism(name='B')
-        C = RecurrentTransferMechanism(name='C')
+        C = RecurrentTransferMechanism(name='C',
+                                       auto=1.0)
 
         abc_process = Process(pathway=[A, B, C])
 
