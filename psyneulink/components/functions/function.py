@@ -9076,7 +9076,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         self._check_args(variable=variable, params=params, context=context)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                       1) if no learning_rate is specified for the Mechanism, need to assign None
+        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
         #                          so that the process or system can see it is free to be assigned
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
