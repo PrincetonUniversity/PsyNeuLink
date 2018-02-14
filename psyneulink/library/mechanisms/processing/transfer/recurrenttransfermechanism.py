@@ -256,8 +256,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     hetero=None,                       \
     initial_value=None,                \
     noise=0.0,                         \
-    smoothing_factor=0.5,                 \
-    clip=(float:min, float:max),      \
+    smoothing_factor=0.5,              \
+    clip=(float:min, float:max),       \
     learning_rate=None,                \
     learning_function=Hebbian,         \
     integrator_mode=False,             \

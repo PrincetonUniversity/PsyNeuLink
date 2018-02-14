@@ -1946,7 +1946,6 @@ class State_Base(State):
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection) and not LEARNING in context:
-                # projection_value = projection.value
                 projection_value = projection.value * 0.0
             else:
                 projection_value = projection.execute(params=projection_params,
@@ -2013,6 +2012,7 @@ class State_Base(State):
         except (KeyError, TypeError):
             function_params = None
         self.value = self._execute(function_params=function_params, context=context)
+        assert True
 
     def execute(self, input=None, params=None, context=None):
         return self.function(variable=input, params=params, context=context)
