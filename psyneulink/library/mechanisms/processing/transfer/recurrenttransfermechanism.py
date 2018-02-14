@@ -256,8 +256,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     hetero=None,                       \
     initial_value=None,                \
     noise=0.0,                         \
-    smoothing_factor=0.5,                 \
-    clip=(float:min, float:max),      \
+    smoothing_factor=0.5,              \
+    clip=(float:min, float:max),       \
     learning_rate=None,                \
     learning_function=Hebbian,         \
     integrator_mode=False,             \
@@ -311,12 +311,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         to the size of the Mechanism, if a non-uniform diagonal is desired. Can be modified by control.
 
     hetero : number, 2D array, or None : default None
-        specifies matrix as a hollow matrix with all non-diagonal entries equal to **hetero**, if **hetero** is not None;
-        If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
-        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
-        1 and all non-diagonal entries -1. If the **matrix** argument is specified, it will be overwritten by
-        **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
-        equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
+        specifies `matrix <RecurrentTransferMechanism.matrix>` as a hollow matrix with all non-diagonal entries equal
+        to **hetero**, if **hetero** is not None; If **auto** and **hetero** are both specified, then `matrix
+        <RecurrentTransferMechanism.matrix>` is the sum of the two matrices from **auto** and **hetero**. For
+        example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of 1 and all
+        non-diagonal entries -1. If the **matrix** argument is specified, it will be overwritten by **auto** and/or
+        **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions equal to the
+        matrix dimensions, if non-uniform off-diagonal elements are desired.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if

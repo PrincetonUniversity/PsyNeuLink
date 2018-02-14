@@ -1287,7 +1287,7 @@ class Log:
 
         header = 1 if header is True else 0
 
-        time_values, modified_time_values = self._parse_entries_for_time_values(entries)
+        time_values = self._parse_entries_for_time_values(entries)
 
         npa = []
 
@@ -1390,16 +1390,15 @@ class Log:
         if not entries:
             return None
 
-        time_values, modified_time_values = self._parse_entries_for_time_values(entries)
+
+        time_values = self._parse_entries_for_time_values(entries)
 
         log_dict = OrderedDict()
 
         # If all time values are recorded - - - log_dict = {"Run": array, "Trial": array, "Time_step": array}
         if time_values:
             for i in range(NUM_TIME_SCALES):
-                # modified_time_values is used for reporting b/c this list contains
-                # incremented time_step values in place of any duplicates caused by scheduler
-                row = [[t[i]] for t in modified_time_values]
+                row = [[t[i]] for t in time_values]
                 time_header = TIME_SCALE_NAMES[i].capitalize()
                 log_dict[time_header] = row
 
@@ -1548,35 +1547,38 @@ class Log:
             time_step_increments.append(chain)
         for i in range(1, len(time_values)):
             update_tuple = list(time_values[i])
-            update_tuple[2] += time_step_increments[i - 1]
+            update_tuple[2] = update_tuple[2] + time_step_increments[i - 1]*0.01
             mod_time_values[i] = tuple(update_tuple)
         return mod_time_values
 
     def _parse_entries_for_time_values(self, entries):
         # Returns sorted list of SimpleTime tuples for all time points at which these entries logged values
-        # Also returns modified_time_values which removes duplicates (see _scan_for_duplicates)
 
         time_values = []
-        modified_time_values = []
         for entry in entries:
-            entry_time_values = []
             entry = self._dealias_owner_name(entry)
+
+            # collect all time values for this entry
+            entry_time_values = []
+            entry_time_values.extend([item.time for item in self.logged_entries[entry] if all(i is not None for i in item.time)])
+
+            # increment any time stamp duplicates (on the actual data item)
+            if len(set(entry_time_values)) != len(entry_time_values):
+                adjusted_time = self._scan_for_duplicates(entry_time_values)
+                for i in range(len(self.logged_entries[entry])):
+                    temp_list = list(self.logged_entries[entry][i])
+                    temp_list[0] = adjusted_time[i]
+                    self.logged_entries[entry][i] = LogEntry(temp_list[0], temp_list[1], temp_list[2])
+
             time_values.extend([item.time
                                 for item in self.logged_entries[entry]
                                 if all(i is not None for i in item.time)])
-            entry_time_values.extend([item.time
-                                      for item in self.logged_entries[entry]
-                                      if all(i is not None for i in item.time)])
-            if len(set(entry_time_values)) != len(entry_time_values):
-                modified_time_values.extend(self._scan_for_duplicates(entry_time_values))
-        modified_time_values.extend(time_values)
 
         # Insure that all time values are assigned, get rid of duplicates, and sort
         if all(all(i is not None for i in t) for t in time_values):
             time_values = sorted(list(set(time_values)))
-            modified_time_values = sorted(list(set(modified_time_values)))
 
-        return time_values, modified_time_values
+        return time_values
 
     def _assemble_entry_data(self, entry, time_values):
         # Assembles list of entry's (component's) value at each of the time points specified in time_values

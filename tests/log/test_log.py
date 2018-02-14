@@ -197,16 +197,10 @@ class TestLog:
         log_array_T1 = T1.log.nparray()
         log_array_T2 = T2.log.nparray()
 
-        print(log_array_T1)
-        print(log_array_T2)
-
         SYS.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
 
         log_array_T1_second_run = T1.log.nparray()
         log_array_T2_second_run = T2.log.nparray()
-
-        print(log_array_T1_second_run)
-        print(log_array_T2_second_run)
 
     def test_log_dictionary_with_time(self):
 
@@ -337,9 +331,7 @@ class TestLog:
         expected_values_T2_2 = [[[2.0, 4.0]], [[6.0, 8.0]], [[10.0, 12.0]]] + expected_values_T2
         expected_slopes_T2_2 = [[2.0], [2.0], [2.0]] + expected_slopes_T2
         expected_results_T2_2 = [[2.0, 4.0], [6.0, 8.0], [10.0, 12.0]] + expected_results_T2
-        print("RUNS: ", log_dict_T2_2['Run'])
-        print("TRIALS: ", log_dict_T2_2['Trial'])
-        print("TIME_STEPS: ", log_dict_T2_2['Time_step'])
+
         # assert np.allclose(expected_run_T2_2, log_dict_T2_2['Run'])
         # assert np.allclose(expected_trial_T2_2, log_dict_T2_2['Trial'])
         # assert np.allclose(expected_time_step_T2_2, log_dict_T2_2['Time_step'])
@@ -378,7 +370,113 @@ class TestLog:
         log_dict_T1 = T1.log.nparray_dictionary(entries=['RESULTS', 'slope', 'value'])
         log_dict_T2 = T2.log.nparray_dictionary(entries=['value', 'slope'])
 
+        # Check order of keys (must match order of specification)
         assert list(log_dict_T1.keys()) == ['Run', 'Trial', 'Time_step', 'RESULTS', 'slope', 'value']
         assert list(log_dict_T2.keys()) == ['Run', 'Trial', 'Time_step', 'value', 'slope']
 
+        # Check values T1
+        assert np.allclose(log_dict_T1["Run"], [[0], [0], [0]])
+        assert np.allclose(log_dict_T1["Trial"], [[0], [0], [0]])
+        assert np.allclose(log_dict_T1["Time_step"], [[0], [0.01], [0.02]])
+        assert np.allclose(log_dict_T1["RESULTS"], [[0.5], [0.75], [0.875]])
+        assert np.allclose(log_dict_T1["value"], [[[0.5]], [[0.75]], [[0.875]]])
+        assert np.allclose(log_dict_T1["slope"], [[1], [1], [1]])
 
+        # Check values T2
+        assert np.allclose(log_dict_T2["Run"], [[0], [0], [0]])
+        assert np.allclose(log_dict_T2["Trial"], [[0], [0], [0]])
+        assert np.allclose(log_dict_T2["Time_step"], [[1], [1.01], [1.02]])
+        assert np.allclose(log_dict_T2["value"], [[[3]], [[4.5]], [[5.25]]])
+        assert np.allclose(log_dict_T2["slope"], [[6], [6], [6]])
+
+    def test_log_array_with_scheduler(self):
+        T1 = pnl.TransferMechanism(name='log_test_T1',
+                                   integrator_mode=True,
+                                   smoothing_factor=0.5)
+        T2 = pnl.TransferMechanism(name='log_test_T2',
+                                   function=pnl.Linear(slope=6.0))
+        PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
+        SYS = pnl.System(name='log_test_SYS', processes=[PS])
+
+        def pass_threshold(mech, thresh):
+            results = mech.output_states[0].value
+            for val in results:
+                if abs(val) >= thresh:
+                    return True
+            return False
+
+        terminate_trial = {
+            pnl.TimeScale.TRIAL: pnl.While(pass_threshold, T2, 5.0)
+        }
+
+        T1.set_log_conditions(pnl.VALUE)
+        T1.set_log_conditions(pnl.SLOPE)
+        T1.set_log_conditions(pnl.RESULTS)
+        T2.set_log_conditions(pnl.VALUE)
+        T2.set_log_conditions(pnl.SLOPE)
+
+        SYS.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
+
+        log_array_T1 = T1.log.nparray(entries=['RESULTS', 'slope', 'value'])
+        log_array_T2 = T2.log.nparray(entries=['value', 'slope'])
+
+        # Check values
+        run_results = [["Run"], [0], [0], [0]]
+        trial_results = [["Trial"], [0], [0], [0]]
+        time_step_results = [["Time_step"], [0], [0.01], [0.02]]
+        results_results = ["RESULTS", [0.5], [0.75], [0.875]]
+        slope_results = ["slope", [1], [1], [1]]
+        value_results = ["value", [[0.5]], [[0.75]], [[0.875]]]
+        for i in range(4):
+            assert log_array_T1[0][i] == run_results[i]
+            assert log_array_T1[1][i] == trial_results[i]
+            assert log_array_T1[2][i] == time_step_results[i]
+            assert log_array_T1[3][i] == results_results[i]
+            assert log_array_T1[4][i] == slope_results[i]
+            assert log_array_T1[5][i] == value_results[i]
+
+        # Check values
+        run_results = [["Run"], [0], [0], [0]]
+        trial_results = [["Trial"], [0], [0], [0]]
+        time_step_results = [["Time_step"], [1], [1.01], [1.02]]
+        value_results = ["value", [[3]], [[4.5]], [[5.25]]]
+        slope_results = ["slope", [6], [6], [6]]
+        for i in range(4):
+            assert log_array_T2[0][i] == run_results[i]
+            assert log_array_T2[1][i] == trial_results[i]
+            assert log_array_T2[2][i] == time_step_results[i]
+            assert log_array_T2[3][i] == value_results[i]
+            assert log_array_T2[4][i] == slope_results[i]
+
+    def test_log_dictionary_with_scheduler_many_time_step_increments(self):
+        T1 = pnl.TransferMechanism(name='log_test_T1',
+                                   integrator_mode=True,
+                                   smoothing_factor=0.05)
+        PS = pnl.Process(name='log_test_PS', pathway=[T1])
+        SYS = pnl.System(name='log_test_SYS', processes=[PS])
+
+        def pass_threshold(mech, thresh):
+            results = mech.output_states[0].value
+            for val in results:
+                if abs(val) >= thresh:
+                    return True
+            return False
+
+        terminate_trial = {
+            pnl.TimeScale.TRIAL: pnl.While(pass_threshold, T1, 0.95)
+        }
+
+        T1.set_log_conditions(pnl.VALUE)
+
+        SYS.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
+
+        log_dict_T1 = T1.log.nparray_dictionary(entries=['value'])
+
+        # Check order of keys (must match order of specification)
+        assert list(log_dict_T1.keys()) == ['Run', 'Trial', 'Time_step', 'value']
+
+        # # Check values T1
+        assert len(log_dict_T1["Run"]) == 59
+        assert np.allclose(log_dict_T1["Time_step"][30], 0.3)
+        assert abs(log_dict_T1["value"][58]) >= 0.95
+        assert abs(log_dict_T1["value"][57]) < 0.95

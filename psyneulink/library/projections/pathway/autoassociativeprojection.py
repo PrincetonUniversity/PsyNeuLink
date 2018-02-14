@@ -355,7 +355,8 @@ class AutoAssociativeProjection(MappingProjection):
         #
         # return self.function(self.sender.value, params=params, context=context)
         # MODIFIED 9/23/17 NEW:
-        return super().execute(input=input, params=params, context=context)
+        value = super().execute(input=input, params=params, context=context)
+        return value
         # MODIFIED 9/23/17 END:
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
