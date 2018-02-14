@@ -502,12 +502,6 @@ class MappingProjection(PathwayProjection_Base):
                          prefs=prefs,
                          context=self)
 
-        try:
-            mapping_input_len = len(self.instance_defaults.variable)
-        except TypeError:
-            mapping_input_len = 1
-        self._variable_length = mapping_input_len
-
     def _instantiate_parameter_states(self, context=None):
 
         super()._instantiate_parameter_states(context=context)
@@ -544,8 +538,6 @@ class MappingProjection(PathwayProjection_Base):
             mapping_input_len = len(self.instance_defaults.variable)
         except TypeError:
             mapping_input_len = 1
-        self._variable_length = mapping_input_len
-
         try:
             receiver_len = len(self.receiver.instance_defaults.variable)
         except TypeError:
