@@ -9096,6 +9096,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         col = variable.reshape(len(variable),1)
 
         weight_change_matrix = variable * col
+        # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
         weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
 
         # If learning_rate is scalar or 2d, multiply it by the weight change matrix
