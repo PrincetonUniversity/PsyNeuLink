@@ -804,13 +804,13 @@ def _adjust_stimulus_dict(obj, stimuli):
 
     return adjusted_stimuli, num_input_sets
 
-def _adjust_target_dict(object, stimuli):
-    object_type = _get_object_type(object)
+def _adjust_target_dict(component, stimuli):
+    object_type = _get_object_type(component)
 
     # FIX: RE-WRITE USING NEXT AND StopIteration EXCEPTION ON FAIL TO FIND (THIS GIVES SPECIFICS)
     # FIX: TRY USING compare METHOD OF DICT OR LIST?
     # Check that every target in the process or system receives a projection from a mechanism named in the dict
-    for target in object.target_mechanisms:
+    for target in component.target_mechanisms:
         # If any projection to a target does not have a sender in the stimulus dict, raise an exception
         if not any(mech is projection.sender.owner for
                    projection in target.input_states[SAMPLE].path_afferents
@@ -818,7 +818,7 @@ def _adjust_target_dict(object, stimuli):
                 raise RunError("Entry for {} is missing from specification of targets for run of {}".
                                format(target.input_states[SAMPLE].
                                       afferents[0].sender.owner.name,
-                                      object.name))
+                                      component.name))
 
     # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
 
@@ -829,8 +829,8 @@ def _adjust_target_dict(object, stimuli):
         # If any mechanism in the stimulus dict does not have a projection to the target, raise an exception
         if not any(target is projection.receiver.owner for
                    projection in mech.output_state.efferents
-                   for target in object.target_mechanisms):
-            raise RunError("{} is not a target Mechanism in {}".format(mech.name, object.name))
+                   for target in component.target_mechanisms):
+            raise RunError("{} is not a target Mechanism in {}".format(mech.name, component.name))
         # Get target mech (comparator) for each entry in stimuli dict:
         terminal_to_target_mapping[mech] = mech.output_state.efferents[0]
 
@@ -838,7 +838,7 @@ def _adjust_target_dict(object, stimuli):
     #   targets in the system's target_mechanisms list, by reassigning targets to an OrderedDict:
     from collections import OrderedDict
     ordered_targets = OrderedDict()
-    for target_mech in object.target_mechanisms:
+    for target_mech in component.target_mechanisms:
         # Get the process to which the TARGET mechanism belongs:
         try:
             process = next(projection.sender.owner for
@@ -847,14 +847,14 @@ def _adjust_target_dict(object, stimuli):
         except StopIteration:
             raise RunError("PROGRAM ERROR: No process found for TARGET Mechanism ({}) "
                            "supposed to be in target_mechanisms for {}".
-                           format(target_mech.name, object.name))
+                           format(target_mech.name, component.name))
         # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
         terminal_mech = process.terminal_mechanisms[0]
         try:
             ordered_targets[terminal_mech] = stimuli[terminal_mech]
         except KeyError:
             raise RunError("{} (of {} process) not found target specification for run of {}".
-                           format(terminal_mech, object.name))
+                           format(terminal_mech, component.name))
     stimuli = ordered_targets
 
     # Convert all items to 2D arrays:
@@ -886,8 +886,6 @@ def _adjust_target_dict(object, stimuli):
         stim_list = np.array(stim_list)
 
     return np.array(stim_list)
-
-
 
 def _validate_targets(component, targets, num_input_sets, context=None):
     """
