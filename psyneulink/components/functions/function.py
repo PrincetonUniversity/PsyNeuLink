@@ -9040,7 +9040,9 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  variable=None,
                  params=None,
                  context=None):
-        """Calculate a matrix of weight changes from a 1d array of activity values
+        """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
+
+        Weight change matrix = *learning_rate* :math:`* w_{ij}x_ix_j`
 
         Arguments
         ---------
@@ -9057,8 +9059,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         -------
 
         weight change matrix : 2d np.array
-            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the
-            `learning_rate <HebbinaMechanism.learning_rate>`.
+            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the `learning_rate
+            <HebbinaMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
 
         """
 
@@ -9082,20 +9084,26 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         # MODIFIED 9/21/17 NEW:
         # FIX: SHOULDN'T BE NECESSARY TO DO THIS;  WHY IS IT GETTING A 2D ARRAY AT THIS POINT?
+        if not isinstance(variable, np.ndarray):
+            variable = np.array(variable)
         if variable.ndim > 1:
             variable = np.squeeze(variable)
         # MODIFIED 9/21/17 END
 
         # If learning_rate is a 1d array, multiply it by variable
         if self.learning_rate_dim == 1:
-            variable = variable * self.learning_rate
+            variable = variable * learning_rate
 
         # Generate the column array from the variable
-        col = variable.reshape(len(variable),1)
+        # col = variable.reshape(len(variable),1)
+        col = np.array(np.matrix(variable).T)
 
+        # Calculate weight chhange matrix
         weight_change_matrix = variable * col
+        # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
+        weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
 
-        # If learning_rate is scalar or 2d, muliply it by the weight change matrix
+        # If learning_rate is scalar or 2d, multiply it by the weight change matrix
         if self.learning_rate_dim in {0, 2}:
             weight_change_matrix = weight_change_matrix * learning_rate
 

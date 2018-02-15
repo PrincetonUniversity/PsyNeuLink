@@ -317,12 +317,13 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # # Flag for deferred initialization
         # self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
-        self._learning_rate = learning_rate
+        # self._learning_rate = learning_rate
 
         super().__init__(variable=variable,
                          size=size,
                          function=function,
                          modulation=modulation,
+                         learning_rate=learning_rate,
                          params=params,
                          name=name,
                          prefs=prefs,
