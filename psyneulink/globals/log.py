@@ -929,13 +929,13 @@ class Log:
         if system:
             # FIX: Add VALIDATE?
             if context_flags == LogCondition.EXECUTION:
-                time = system.scheduler_processing.clock.simple_time
+                time = system.scheduler_processing.clock.time
                 time = (time.run, time.trial, time.time_step)
             elif context_flags == LogCondition.CONTROL:
-                time = system.scheduler_processing.clock.simple_time
+                time = system.scheduler_processing.clock.time
                 time = (time.run, time.trial, time.time_step)
             elif context_flags == LogCondition.LEARNING:
-                time = system.scheduler_learning.clock.simple_time
+                time = system.scheduler_learning.clock.time
                 time = (time.run, time.trial, time.time_step)
             else:
                 time = None
@@ -946,8 +946,8 @@ class Log:
         #     # # and get its time
         #     # run_times = []
         #     # for s in systems:
-        #     #     run_times.append((s.scheduler_processing.date_last_run_end, s.scheduler_processing.clock.simple_time))
-        #     #     run_times.append((s.scheduler_learning.date_last_run_end, s.scheduler_learning.clock.simple_time))
+        #     #     run_times.append((s.scheduler_processing.date_last_run_end, s.scheduler_processing.clock.time))
+        #     #     run_times.append((s.scheduler_learning.date_last_run_end, s.scheduler_learning.clock.time))
         #     # gmt, time = max(run_times, key=lambda x : x[0])
         #     # time = (time.run, time.trial, time.time_step)
 
@@ -1556,19 +1556,21 @@ class Log:
 
         time_values = []
         for entry in entries:
-            entry = self._dealias_owner_name(entry)
 
-            # collect all time values for this entry
-            entry_time_values = []
-            entry_time_values.extend([item.time for item in self.logged_entries[entry] if all(i is not None for i in item.time)])
+            # OLD: finds duplicate time points within any one entry and modifies their values to be unique
+            # entry = self._dealias_owner_name(entry)
+            #
+            # # collect all time values for this entry
+            # entry_time_values = []
+            # entry_time_values.extend([item.time for item in self.logged_entries[entry] if all(i is not None for i in item.time)])
 
-            # increment any time stamp duplicates (on the actual data item)
-            if len(set(entry_time_values)) != len(entry_time_values):
-                adjusted_time = self._scan_for_duplicates(entry_time_values)
-                for i in range(len(self.logged_entries[entry])):
-                    temp_list = list(self.logged_entries[entry][i])
-                    temp_list[0] = adjusted_time[i]
-                    self.logged_entries[entry][i] = LogEntry(temp_list[0], temp_list[1], temp_list[2])
+            # # increment any time stamp duplicates (on the actual data item)
+            # if len(set(entry_time_values)) != len(entry_time_values):
+            #     adjusted_time = self._scan_for_duplicates(entry_time_values)
+            #     for i in range(len(self.logged_entries[entry])):
+            #         temp_list = list(self.logged_entries[entry][i])
+            #         temp_list[0] = adjusted_time[i]
+            #         self.logged_entries[entry][i] = LogEntry(temp_list[0], temp_list[1], temp_list[2])
 
             time_values.extend([item.time
                                 for item in self.logged_entries[entry]
@@ -1676,9 +1678,9 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
     for mech in composition.mechanisms:
         for component in mech.log.loggable_components:
             if component.logPref & curr_condition:
-                # value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
-                #                   composition.scheduler_processing.clock.simple_time.trial,
-                #                   composition.scheduler_processing.clock.simple_time.time_step),
+                # value = LogEntry((composition.scheduler_processing.clock.time.run,
+                #                   composition.scheduler_processing.clock.time.trial,
+                #                   composition.scheduler_processing.clock.time.time_step),
                 #                  # context,
                 #                  curr_condition,
                 #                  component.value)
@@ -1688,9 +1690,9 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
         for proj in mech.afferents:
             for component in proj.log.loggable_components:
                 if component.logPref & curr_condition:
-                    # value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
-                    #                   composition.scheduler_processing.clock.simple_time.trial,
-                    #                   composition.scheduler_processing.clock.simple_time.time_step),
+                    # value = LogEntry((composition.scheduler_processing.clock.time.run,
+                    #                   composition.scheduler_processing.clock.time.trial,
+                    #                   composition.scheduler_processing.clock.time.time_step),
                     #                  context,
                     #                  component.value)
                     # component.log._log_value(value, context)
@@ -1701,9 +1703,9 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
     # for proj in composition.projections:
     #     for component in proj.log.loggable_components:
     #         if component.logPref & curr_condition:
-    #             value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
-    #                               composition.scheduler_processing.clock.simple_time.trial,
-    #                               composition.scheduler_processing.clock.simple_time.time_step),
+    #             value = LogEntry((composition.scheduler_processing.clock.time.run,
+    #                               composition.scheduler_processing.clock.time.trial,
+    #                               composition.scheduler_processing.clock.time.time_step),
     #                              context,
     #                              component.value)
     #             component.log._log_value(value, context)
