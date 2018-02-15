@@ -1878,41 +1878,76 @@ class System(System_Base):
                 warnings.warn("Learning has been specified for {} but its \'targets\' argument was not specified;"
                               "default will be used ({})".format(self.name, self.targets))
             # MODIFIED 6/25/17 END
-
-        self.targets = np.atleast_2d(self.targets)
-
+        print("TARGETS = ", self.targets)
         # Create SystemInputState for each TARGET mechanism in target_mechanisms and
-        #    assign MappingProjection from the SystemInputState
-        #    to the TARGET mechanism's TARGET inputSate
-        #    (i.e., from the SystemInputState to the ComparatorMechanism)
-        for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
+        #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
 
-            # Create ProcessInputState for each target and assign to targetMechanism's target inputState
-            target_mech_TARGET_input_state = target_mech.input_states[TARGET]
+        if isinstance(self.targets, dict):
+            for target_mech in self.target_mechanisms:
 
-            # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
-            #    of the TARGET (ComparatorMechanism) target inputState's instance_defaults.variable attribute
-            if len(self.targets[i]) != len(target_mech_TARGET_input_state.instance_defaults.variable):
-                raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
-                                  "expected for its TARGET Mechanism {}".
-                                   format(len(self.targets[i]),
-                                          self.targets[i],
-                                          len(target_mech_TARGET_input_state.instance_defaults.variable),
-                                          target_mech.name))
+                # Skip if TARGET input state already has a projection from a SystemInputState in current system
+                if any(self is projection.sender.owner for projection in target_mech.input_states[TARGET].path_afferents):
+                    continue
 
-            system_target_input_state = SystemInputState(
-                                                   owner=self,
-                                                   variable=target_mech_TARGET_input_state.instance_defaults.variable,
-                                                   prefs=self.prefs,
-                                                   name="System Target {}".format(i),
-                                                   context=context)
-            self.target_input_states.append(system_target_input_state)
+                sample_mechanism = target_mech.input_states[SAMPLE].path_afferents[0].sender.owner
+                TARGET_input_state = target_mech.input_states[TARGET]
 
-            # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
-            from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-            MappingProjection(sender=system_target_input_state,
-                    receiver=target_mech_TARGET_input_state,
-                    name=self.name+' Input Projection to '+target_mech_TARGET_input_state.name)
+                if len(self.targets[sample_mechanism]) != len(TARGET_input_state.instance_defaults.variable):
+                            raise SystemError("Length {} of target ({}, {}) does not match the length ({}) of the target "
+                                              "expected for its TARGET Mechanism {}".
+                                               format(len(self.targets[sample_mechanism]),
+                                                      sample_mechanism.name,
+                                                      self.targets[sample_mechanism],
+                                                      len(TARGET_input_state.instance_defaults.variable),
+                                                      target_mech.name))
+
+                system_target_input_state = SystemInputState(owner=self,
+                                                        variable=TARGET_input_state.instance_defaults.variable,
+                                                        prefs=self.prefs,
+                                                        name="System Target for {}".format(target_mech.name),
+                                                        context=context)
+                self.target_input_states.append(system_target_input_state)
+
+                # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
+                from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+                MappingProjection(sender=system_target_input_state,
+                        receiver=TARGET_input_state,
+                        name=self.name+' Input Projection to '+TARGET_input_state.name)
+        elif isinstance(self.targets, list):
+            self.targets = np.atleast_2d(self.targets)
+
+            # Create SystemInputState for each TARGET mechanism in target_mechanisms and
+            #    assign MappingProjection from the SystemInputState
+            #    to the TARGET mechanism's TARGET inputSate
+            #    (i.e., from the SystemInputState to the ComparatorMechanism)
+            for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
+
+                # Create ProcessInputState for each target and assign to targetMechanism's target inputState
+                target_mech_TARGET_input_state = target_mech.input_states[TARGET]
+
+                # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
+                #    of the TARGET (ComparatorMechanism) target inputState's instance_defaults.variable attribute
+                if len(self.targets[i]) != len(target_mech_TARGET_input_state.instance_defaults.variable):
+                    raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
+                                      "expected for its TARGET Mechanism {}".
+                                      format(len(self.targets[i]),
+                                             self.targets[i],
+                                             len(target_mech_TARGET_input_state.instance_defaults.variable),
+                                             target_mech.name))
+
+                system_target_input_state = SystemInputState(
+                    owner=self,
+                    variable=target_mech_TARGET_input_state.instance_defaults.variable,
+                    prefs=self.prefs,
+                    name="System Target {}".format(i),
+                    context=context)
+                self.target_input_states.append(system_target_input_state)
+
+                # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
+                from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+                MappingProjection(sender=system_target_input_state,
+                                  receiver=target_mech_TARGET_input_state,
+                                  name=self.name + ' Input Projection to ' + target_mech_TARGET_input_state.name)
 
     def _assign_output_states(self):
         """Assign OutputStates for System (the values of which will comprise System.value)

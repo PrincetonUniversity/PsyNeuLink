@@ -1,0 +1,29 @@
+import numpy as np
+
+from psyneulink.components.functions.function import Linear, Logistic
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.process import Process
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.system import System
+from psyneulink.globals.keywords import FULL_CONNECTIVITY_MATRIX, LEARNING, LEARNING_PROJECTION, ENABLED
+from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.library.mechanisms.processing.objective.comparatormechanism import MSE
+
+class TestSimpleLearningPathway:
+
+    def test_dict_target_spec(self):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B")
+
+        LP = Process(name="learning-process",
+                     pathway=[A, B],
+                     # target=[3.0],
+                     learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[LP],
+                   # targets={B: [4.0]}
+                   )
+
+        S.run(inputs={A: 1.0},
+              targets={B: 2.0})
