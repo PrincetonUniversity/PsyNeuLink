@@ -4,9 +4,11 @@ import psyneulink.globals.keywords as kw
 import numpy as np
 import pytest
 
-SIZE=1000
+SIZE=500
 test_var = np.random.rand(SIZE)
 test_matrix = np.random.rand(SIZE, SIZE)
+test_matrix_s = np.random.rand(SIZE, SIZE // 4)
+test_matrix_l = np.random.rand(SIZE, 3 * SIZE)
 
 RAND1 = np.random.rand()
 RAND2 = np.random.rand()
@@ -25,6 +27,8 @@ test_data = [
     (Function.SoftMax, test_var, {'gain':RAND1, 'params':{kw.OUTPUT_TYPE:kw.MAX_INDICATOR}}, None, np.where(softmax_helper == np.max(softmax_helper), 1, 0)),
     ### Skip probabilistic since it has no-deterministic result ###
     (Function.LinearMatrix, test_var.tolist(), {'matrix':test_matrix.tolist()}, None, np.dot(test_var, test_matrix)),
+    (Function.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_l.tolist()}, None, np.dot(test_var, test_matrix_l)),
+    (Function.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_s.tolist()}, None, np.dot(test_var, test_matrix_s)),
 ]
 
 # use list, naming function produces ugly names
@@ -35,7 +39,9 @@ names = [
     "SOFT_MAX ALL",
     "SOFT_MAX MAX_VAL",
     "SOFT_MAX MAX_INDICATOR",
-    "LINEAR_MATRIX",
+    "LINEAR_MATRIX SQUARE",
+    "LINEAR_MATRIX WIDE",
+    "LINEAR_MATRIX TALL",
 ]
 
 @pytest.mark.function

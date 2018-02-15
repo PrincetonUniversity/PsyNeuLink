@@ -3851,6 +3851,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         self._matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
+    @property
+    def _result_length(self):
+        return self.matrix.shape[1]
+
     # def _validate_variable(self, variable, context=None):
     #     """Insure that variable passed to LinearMatrix is a max 2D np.array
     #
@@ -4132,6 +4136,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         else:
             return np.array(specification)
 
+    def get_output_struct_type(self):
+        # Override default with vxm result
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ir.ArrayType(ctx.float_ty, self._result_length)
+
     def get_param_struct_type(self):
         # TODO: move this to a nicer, shareable place
         def nested_len(x):
@@ -4145,8 +4154,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         return param_type
 
     def get_param_initializer(self):
-        # FIXME: This is ridiculous
-        return [tuple([tuple(np.array(self.matrix).flatten().tolist())])]
+        return tuple(np.array(self.matrix).flatten().tolist())
 
     def _gen_llvm_function(self):
         func_name = None
@@ -4192,11 +4200,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         bf = self._llvmBinFunction
 
-        ret = np.zeros(len(variable))
+        ret = np.zeros(self._result_length)
 
         par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
-        ct_param = np.array(self.matrix).ctypes.data_as(ctypes.POINTER(par_struct_ty))
+        ct_param = par_struct_ty(self.get_param_initializer())
         ct_state = state_struct_ty()
 
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
