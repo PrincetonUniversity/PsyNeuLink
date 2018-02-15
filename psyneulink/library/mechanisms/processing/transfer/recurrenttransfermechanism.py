@@ -817,9 +817,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         #     if self.decay is not None and self.decay != 1.0:
         #         self.previous_input = self.previous_input * float(self.decay)
 
-        return super()._execute(variable=variable,
+        value = super()._execute(variable=variable,
                                 runtime_params=runtime_params,
                                 context=context)
+        return value
 
     def _update_parameter_states(self, runtime_params=None, context=None):
         for state in self._parameter_states:
