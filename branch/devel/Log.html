@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.4.0+15.gba4191c documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.4.0+20.g1a77cd0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.0+15.gba4191c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.0+20.g1a77cd0 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.0+15
+                0.4.4.0+20
               </div>
             
           
@@ -192,7 +192,7 @@ values of a Component.  The key for each entry is a string that is the name of t
 of <code class="xref any docutils literal"><span class="pre">LogEntry</span></code> tuples recording its values.  Each <code class="xref any docutils literal"><span class="pre">LogEntry</span></code> tuple has three items:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>time</em> – the <a class="reference internal" href="#psyneulink.globals.log.LogCondition.RUN" title="psyneulink.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> and <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> in which the value of the item was recorded;</li>
+<li><em>time</em> – the <a class="reference internal" href="#psyneulink.globals.log.LogCondition.RUN" title="psyneulink.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.PASS" title="psyneulink.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>, and <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> in which the value of the item was recorded;</li>
 <li><em>context</em> – a string indicating the context in which the value was recorded;</li>
 <li><em>value</em> – the value of the item.</li>
 </ul>
@@ -307,8 +307,8 @@ requires that it be assigned in the <strong>prefs</strong> argument of the Compo
 </div>
 <div class="admonition hint">
 <p class="first admonition-title">Hint</p>
-<p class="last"><a class="reference internal" href="#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">LogCondition.TRIAL</span></code></a> logs the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Component at the end of a <a class="reference internal" href="#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  To log its
-<a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> at the start of a <a class="reference internal" href="#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, use its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log_values" title="psyneulink.components.component.Component.log_values"><code class="xref any py py-meth docutils literal"><span class="pre">log_values</span></code></a> method in the
+<p class="last"><a class="reference internal" href="#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">LogCondition.TRIAL</span></code></a> logs the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Component at the end of a <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  To log its
+<a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> at the start of a <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, use its <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log_values" title="psyneulink.components.component.Component.log_values"><code class="xref any py py-meth docutils literal"><span class="pre">log_values</span></code></a> method in the
 <strong>call_before_trial</strong> argument of the System’s <a class="reference internal" href="System.html#psyneulink.components.system.System.run" title="psyneulink.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
 </div>
 </div>
@@ -629,7 +629,7 @@ more space in each line of the display.</li>
 <p>Each row (axis 0) is a time series, with each item in each row the data for the corresponding time point.
 Rows are ordered in the same order as Components are specified in the <strong>entries</strong> argument.</p>
 <p>If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not <code class="xref any docutils literal"><span class="pre">None</span></code>),
-then the first three rows are time indices for the run, trial and time_step of each data item, respectively.
+then the first four rows are time indices for the run, trial, pass, and time_step of each data item, respectively.
 Each subsequent row is the times series of data for a given entry.  If there is no data for a given entry
 at a given time point, it is entered as <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
 <p>If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
@@ -669,10 +669,10 @@ otherwise, it is “&lt;entry name&gt;”.</li>
 <p><em>Keys:</em></p>
 <blockquote>
 <div><p>Keys of the OrderedDict are strings.</p>
-<p>Keys are the names of logged Components specified in the <strong>entries</strong> argument, plus either Run, Trial, and
-Time_step, or Index.</p>
+<p>Keys are the names of logged Components specified in the <strong>entries</strong> argument, plus either Run, Trial, Pass,
+and Time_step, or Index.</p>
 <p>If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not <code class="xref any docutils literal"><span class="pre">None</span></code>),
-then the first three keys are Run, Trial and Time_step, respectively.</p>
+then the first four keys are Run, Trial, Pass, and Time_step, respectively.</p>
 <p>If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
 System), then all of the entries must have the same number of data (LogEntry) items, and the first key is Index.</p>
 <p>Then, the logged components follow in the same order as they were specified.</p>
@@ -682,12 +682,13 @@ System), then all of the entries must have the same number of data (LogEntry) it
 <div><p>Values of the OrderedDict are numpy arrays.</p>
 <p>The numpy array value for a given component key consists of that logged Component’s data over many time points
 or executions.</p>
-<p>The numpy array values for Run, Trial, and Time_step are counters for each of those time scales. The ith
-elements of the Run, Trial, Time_step and component data arrays can be taken together to represent the value of
+<p>The numpy array values for Run, Trial, Pass, and Time_step are counters for each of those time scales. The ith
+elements of the Run, Trial, Pass, Time_step and component data arrays can be taken together to represent the value of
 that component during a particular time step of a particular trial of a particular run.</p>
 <p>For example, if log_dict is a log dictionary in which log_dict[‘slope’][5] = 2.0, log_dict[‘Time_step’][5] = 1,
-log_dict[‘Trial’][5] = 2, and log_dict[‘Run’][5] = 0, then the value of slope was 2.0 during the time step 1 of
-trial 2 of run 0. If there is no data for a given entry at a given time point, it is entered as <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
+log_dict[‘Pass’][5] = 0, log_dict[‘Trial’][5] = 2, and log_dict[‘Run’][5] = 0, then the value of slope was
+2.0 during time step 1 of pass 0 of trial 2 of run 0. If there is no data for a given entry at a given time
+point, it is entered as <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
 <p>The numpy array value for Index is a sequential index starting at zero.</p>
 </div></blockquote>
 <div class="admonition note">
@@ -716,8 +717,8 @@ If <strong>entries</strong> is <em>ALL</em> or is not specified, then all <a cla
 <dd><p>Returns a CSV-formatted string with headers and values for the specified entries.</p>
 <p>Each row (axis 0) is a time point, beginning with the time stamp and followed by the data for each
 Component at that time point, in the order they are specified in the <strong>entries</strong> argument. If all of the data
-for every Component have time values, then the first three items of each row are the time indices for the run,
-trial and time_step of that time point, respectively, followed by the data for each Component at that time
+for every Component have time values, then the first four items of each row are the time indices for the run,
+trial, pass, and time_step of that time point, respectively, followed by the data for each Component at that time
 point;  if a Component has no data for a time point, <code class="xref any docutils literal"><span class="pre">None</span></code> is entered.</p>
 <p>If any of the data for any Component does not have a time value (i.e., it has <code class="xref any docutils literal"><span class="pre">None</span></code> in the time field of
 its <code class="xref any docutils literal"><span class="pre">LogEntry</span></code>) then all of the entries must have the same number of data (LogEntry) items, and the first item
@@ -820,7 +821,7 @@ property of its class, and its own <a class="reference internal" href="Component
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.0+15.gba4191c',
+            VERSION:'0.4.4.0+20.g1a77cd0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
