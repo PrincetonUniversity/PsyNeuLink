@@ -8830,7 +8830,6 @@ class LearningFunction(Function_Base):
        the function of a LearningFunction with arguments that may not be implemented for all LearningFunctions
        (e.g., error_matrix for BackPropagation) -- these can't be included in the params argument, as those
        are validated against paramClassDefaults which will not recognize params specific to another Function.
-    COMMENT
 
     Attributes
     ----------
@@ -9048,11 +9047,14 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 context=None,
-                 **kwargs):
+                 context=None):
         """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
 
-        Weight change matrix = *learning_rate* :math:` * w_{ij} * x_i * x_j`
+        The weight change matrix is calculated as:
+
+           *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
+
+        where :math:`a_i` and :math:`a_j` are elements of `variable <Hebbian.variable>`.
 
         Arguments
         ---------
@@ -9069,8 +9071,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         -------
 
         weight change matrix : 2d np.array
-            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the
-            `learning_rate <HebbinaMechanism.learning_rate>`.
+            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the `learning_rate
+            <HebbinaMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
 
         """
 
@@ -9367,11 +9369,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        # # MODIFIED 2/2/18 OLD:
-        # return [weight_change_matrix, error_array]
-        # MODIFIED 2/2/18 NEW:
         return [error_array, error_array]
-        # MODIFIED 2/2/18 END
 
 
 # Argument names:
@@ -9646,6 +9644,7 @@ class BackPropagation(LearningFunction):
 
     def function(self,
                  variable=None,
+                 # error_matrix=None,
                  params=None,
                  context=None,
                  **kwargs):
@@ -9697,6 +9696,14 @@ class BackPropagation(LearningFunction):
                 params = kwargs
             else:
                 params.update(kwargs)
+
+        # if INITIALIZING in context and error_matrix is None:
+        #     error_matrix = {ERROR_MATRIX:np.zeros((len(variable[LEARNING_ACTIVATION_OUTPUT]),
+        #                                            len(variable[LEARNING_ERROR_OUTPUT])))}
+        # if params is None:
+        #     params = error_matrix
+        # else:
+        #     params.update(error_matrix)
 
         self._check_args(variable=variable, params=params, context=context)
 
