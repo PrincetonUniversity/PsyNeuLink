@@ -1,9 +1,21 @@
-import numpy as np
 import psyneulink as pnl
 
-class TestStroop:
+class TestRumelhartSemanticNetwork:
+    """
+    Tests construction and training of network with both convergent and divergent pathways
+    with the following structure:
 
-    def test_stroop_model(self):
+          E F G H
+          \_\/_/
+            D
+           / \
+          B  C
+         /
+        A
+    """
+
+    def test_rumelhart_semantic_network(self):
+
         rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
         rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
         rel_in = pnl.TransferMechanism(size=11, name='REL_IN')

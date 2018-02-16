@@ -2,7 +2,17 @@ import psyneulink as pnl
 import numpy as np
 import typecheck as tc
 
-# Semantic Network
+# Semantic Network:
+#
+#       REP PROP QUAL ACT
+#         \___\__/____/
+#             |
+#           HIDDEN
+#            / \
+#       HIDDEN REL_IN
+#          /
+#       REP_IN
+
 print ("SCRATCH PAD:  Semantic Network")
 
 rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
