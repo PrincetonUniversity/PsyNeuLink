@@ -42,6 +42,7 @@ class TestStroop:
                                     rel_prop_proc,
                                     rel_qual_proc,
                                     rel_act_proc])
+
         assert len(sys.mechanisms[3].input_states) == 7
         assert sys.mechanisms[3].input_states[3].path_afferents[0].sender.owner == sys.mechanisms[9]
         assert sys.mechanisms[3].input_states[4].path_afferents[0].sender.owner == sys.mechanisms[12]
