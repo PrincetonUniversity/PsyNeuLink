@@ -2710,17 +2710,10 @@ class System(System_Base):
 
         if isinstance(self.targets, function_type):
             self.current_targets = self.targets()
-
-        # MODIFIED CW 1/29/18: removed this because some learning (e.g. Hebbian) doesn't need targets
-        # if self.current_targets is None:
-            # if self.verbosePref:
-                # warnings.warn("No targets were specified in the call to execute {} with learning. This is okay if "
-                #               "your learning (e.g. Hebbian learning) does not need a target.".format(self.name))
-
-        for i in range(len(self.target_mechanisms)):
-        # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
-        #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
-            self.target_input_states[i].value = self.current_targets[i]
+            for i in range(len(self.target_mechanisms)):
+            # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
+            #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
+                self.target_input_states[i].value = self.current_targets[i]
 
         # NEXT, execute all components involved in learning
         if self.scheduler_learning is None:
