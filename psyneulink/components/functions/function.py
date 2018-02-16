@@ -9044,7 +9044,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         The weight change matrix is calculated as:
 
-           *learning_rate* * :math:`a_ia_j` if `i \\neq j`, else `0`
+           *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
 
         where :math:`a_i` and :math:`a_j` are elements of `variable <Hebbian.variable>`.
 
