@@ -9042,7 +9042,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  context=None):
         """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
 
-        Weight change matrix = *learning_rate* :math:`* w_{ij}x_ix_j`
+        The weight change matrix is calculated as:
+
+           *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
+
+        where :math:`a_i` and :math:`a_j` are elements of `variable <Hebbian.variable>`.
 
         Arguments
         ---------
