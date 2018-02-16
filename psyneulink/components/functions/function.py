@@ -9047,16 +9047,14 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 context=None,
-                 **kwargs):
-        """Return a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
+                 context=None):
+        """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
 
         The weight change matrix is calculated as:
 
-           *learning_rate* * :math:`a_ia_j` if `i \\neq j`, else `0`
+           *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
 
         where :math:`a_i` and :math:`a_j` are elements of `variable <Hebbian.variable>`.
-
 
         Arguments
         ---------
