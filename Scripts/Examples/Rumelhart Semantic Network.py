@@ -14,7 +14,7 @@ prop_out = pnl.TransferMechanism(size=12, function=pnl.Logistic, name='PROP_OUT'
 qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT')
 act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
 
-rep_hidden_proc = pnl.Process(pathway=[rep_in, rel_hidden],
+rep_hidden_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden],
                               learning=pnl.LEARNING,
                               name='REP_HIDDEN_PROC')
 
@@ -41,4 +41,4 @@ rel_act_proc = pnl.Process(pathway=[rel_hidden, act_out],
 sys = pnl.System(processes=[rep_hidden_proc, rel_hidden_proc, rel_rep_proc, rel_prop_proc, rel_qual_proc, rel_act_proc])
 assert True
 
-# sys.show_graph(show_learning=pnl.ALL, show_dimensions=True)
+sys.show_graph(show_learning=pnl.ALL, show_dimensions=True)

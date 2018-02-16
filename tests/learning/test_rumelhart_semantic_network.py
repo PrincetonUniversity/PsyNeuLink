@@ -5,6 +5,7 @@ class TestStroop:
 
     def test_stroop_model(self):
         rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
+        rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
         rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
         rel_hidden = pnl.TransferMechanism(size=5, function=pnl.Logistic, name='REL_HIDDEN')
         rep_out = pnl.TransferMechanism(size=10, function=pnl.Logistic, name='REP_OUT')
@@ -12,7 +13,7 @@ class TestStroop:
         qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT')
         act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
 
-        rep_hidden_proc = pnl.Process(pathway=[rep_in, rel_hidden],
+        rep_hidden_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden],
                                       learning=pnl.LEARNING,
                                       name='REP_HIDDEN_PROC')
 
@@ -43,14 +44,20 @@ class TestStroop:
                                     rel_qual_proc,
                                     rel_act_proc])
 
-        assert len(sys.mechanisms[3].input_states) == 7
-        assert sys.mechanisms[3].input_states[3].path_afferents[0].sender.owner == sys.mechanisms[9]
-        assert sys.mechanisms[3].input_states[4].path_afferents[0].sender.owner == sys.mechanisms[12]
-        assert sys.mechanisms[3].input_states[5].path_afferents[0].sender.owner == sys.mechanisms[15]
-        assert sys.mechanisms[3].input_states[6].path_afferents[0].sender.owner == sys.mechanisms[18]
-        assert len(sys.mechanisms[6].input_states) == 7
-        assert sys.mechanisms[6].input_states[3].path_afferents[0].sender.owner == sys.mechanisms[9]
-        assert sys.mechanisms[6].input_states[4].path_afferents[0].sender.owner == sys.mechanisms[12]
-        assert sys.mechanisms[6].input_states[5].path_afferents[0].sender.owner == sys.mechanisms[15]
-        assert sys.mechanisms[6].input_states[6].path_afferents[0].sender.owner == sys.mechanisms[18]
+        # Structural validation:
+        # Validate error_signal Projections for REP_IN to REP_HIDDEN
+        assert len(sys.mechanisms[5].input_states) == 3
+        assert sys.mechanisms[5].input_states[2].path_afferents[0].sender.owner == sys.mechanisms[4]
+        # Validate error_signal Projections to LearningMechanisms for REP_HIDDEN_to REL_HIDDEN Projections
+        assert len(sys.mechanisms[4].input_states) == 7
+        assert sys.mechanisms[4].input_states[3].path_afferents[0].sender.owner == sys.mechanisms[11]
+        assert sys.mechanisms[4].input_states[4].path_afferents[0].sender.owner == sys.mechanisms[14]
+        assert sys.mechanisms[4].input_states[5].path_afferents[0].sender.owner == sys.mechanisms[17]
+        assert sys.mechanisms[4].input_states[6].path_afferents[0].sender.owner == sys.mechanisms[20]
+        # Validate error_signal Projections to LearningMechanisms for REL_IN to REL_HIDDEN Projections
+        assert len(sys.mechanisms[8].input_states) == 7
+        assert sys.mechanisms[8].input_states[3].path_afferents[0].sender.owner == sys.mechanisms[11]
+        assert sys.mechanisms[8].input_states[4].path_afferents[0].sender.owner == sys.mechanisms[14]
+        assert sys.mechanisms[8].input_states[5].path_afferents[0].sender.owner == sys.mechanisms[17]
+        assert sys.mechanisms[8].input_states[6].path_afferents[0].sender.owner == sys.mechanisms[20]
 
