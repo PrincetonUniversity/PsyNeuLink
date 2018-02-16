@@ -25,7 +25,7 @@ qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT'
 act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
 
 
-# WORKING:
+# VERIFY: CONSTRUCTION WORKING, BUT LEARNING NEEDS TO BE VALIDATED
 # Version using sequential Processes  --------------------------------------------------------------------------
 rep_hidden_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden],
                               learning=pnl.LEARNING,
