@@ -39,5 +39,6 @@ rel_act_proc = pnl.Process(pathway=[rel_hidden, act_out],
                            name='REL_ACT_PROC')
 
 sys = pnl.System(processes=[rep_hidden_proc, rel_hidden_proc, rel_rep_proc, rel_prop_proc, rel_qual_proc, rel_act_proc])
+assert True
 
-sys.show_graph(show_learning=pnl.ALL, show_dimensions=True)
+# sys.show_graph(show_learning=pnl.ALL, show_dimensions=True)
