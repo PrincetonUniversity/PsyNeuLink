@@ -843,23 +843,23 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.0,        0.0,  0.0,         0.0]
             ]
         )
-        # np.testing.assert_allclose(R.output_state.value, [[ 1.2808938, 0.0, 1.2808938, 0.0]])
+        np.testing.assert_allclose(R.output_state.value, [1.18518086, 0.0, 1.18518086, 0.0])
 
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
         R.output_state.value = [0,0,0,0]
         inputs_dict = {R:[0,1,0,1]}
-        S.run(num_trials=5,
+        S.run(num_trials=4,
               inputs=inputs_dict)
         np.testing.assert_allclose(
             R.recurrent_projection.mod_matrix,
             [
-                [0.0,         0.0,        0.31903946, 0.0       ],
-                [0.0,         0.0,        0.0,        0.23700501],
-                [0.31903946,  0.0,        0.0,        0.0       ],
-                [0.0,         0.23700501, 0.0,        0.0       ]
+                [0.0,        0.0,        0.23700501, 0.0       ],
+                [0.0,        0.0,        0.0,        0.23700501],
+                [0.23700501, 0.0,        0.0,        0.        ],
+                [0.0,        0.23700501, 0.0,        0.        ]
             ]
         )
-        # np.testing.assert_allclose(R.output_state.value,[[0.0, 1.2808938, 0.0, 1.2808938]])
+        np.testing.assert_allclose(R.output_state.value,[0.0, 1.18518086, 0.0, 1.18518086])
 
 
 
