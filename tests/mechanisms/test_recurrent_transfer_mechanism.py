@@ -817,8 +817,6 @@ class TestRecurrentTransferMechanismInSystem:
             ]
         )
 
-
-
     def test_learning_of_orthognal_inputs(self):
         size=4
         R = RecurrentTransferMechanism(
@@ -860,9 +858,6 @@ class TestRecurrentTransferMechanismInSystem:
             ]
         )
         np.testing.assert_allclose(R.output_state.value,[0.0, 1.18518086, 0.0, 1.18518086])
-
-
-
 
 
 # this doesn't work consistently due to EVC's issue with the scheduler
