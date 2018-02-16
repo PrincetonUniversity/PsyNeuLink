@@ -42,7 +42,7 @@ arguments of the Mechanism's constructor, and is assigned to the mechanism's `re
 <RecurrentTransferMechanism.recurrent_projection>` attribute.
 
 If the **matrix** argument is used to create the recurrent projection, it must specify either a square matrix or an
-`AutoAssociativeProjection` that uses one (the default is `FULL_CONNECTIVITY_MATRIX`).::
+`AutoAssociativeProjection` that uses one (the default is `HOLLOW_MATRIX`).::
 
     recurrent_mech_1 = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                                                       matrix=[[1.0, 2.0, 2.0],
@@ -176,7 +176,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
-from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
+from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, HOLLOW_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
@@ -251,13 +251,13 @@ class RecurrentTransferMechanism(TransferMechanism):
     default_variable=None,             \
     size=None,                         \
     function=Linear,                   \
-    matrix=FULL_CONNECTIVITY_MATRIX,   \
+    matrix=HOLLOW_MATRIX,   \
     auto=None,                         \
     hetero=None,                       \
     initial_value=None,                \
     noise=0.0,                         \
-    smoothing_factor=0.5,                 \
-    clip=(float:min, float:max),      \
+    smoothing_factor=0.5,              \
+    clip=(float:min, float:max),       \
     learning_rate=None,                \
     learning_function=Hebbian,         \
     integrator_mode=False,             \
@@ -272,7 +272,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         -----------
             RecurrentTransferMechanism is a Subtype of the TransferMechanism Subtype of the ProcessingMechanisms Type
             of the Mechanism Category of the Component class.
-            It implements a TransferMechanism with a recurrent projection (default matrix: FULL_CONNECTIVITY_MATRIX).
+            It implements a TransferMechanism with a recurrent projection (default matrix: HOLLOW_MATRIX).
             In all other respects, it is identical to a TransferMechanism.
     COMMENT
 
@@ -297,26 +297,78 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
         or a custom function.
 
-    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
+    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default HOLLOW_MATRIX
         specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
-        or an AutoAssociativeProjection to use. If **auto** or **hetero** arguments are specified, the **matrix**
-        argument will be ignored in favor of those arguments.
+        or an AutoAssociativeProjection to use.
+
+        - If **auto** and **matrix** are both specified, the diagonal terms are determined by auto and the off-diagonal
+          terms are determined by matrix.
+
+        - If **hetero** and **matrix** are both specified, the diagonal terms are determined by matrix and the
+          off-diagonal terms are determined by hetero.
+
+        - If **auto**, **hetero**, and **matrix** are all specified, matrix is ignored in favor of auto and hetero.
 
     auto : number, 1D array, or None : default None
         specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
         If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
-        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
-        1 and all non-diagonal entries -1. If the **matrix** argument is specified, it will be overwritten by
-        **auto** and/or **hetero**, if either is specified. **auto** can be specified as a 1D array with length equal
-        to the size of the Mechanism, if a non-uniform diagonal is desired. Can be modified by control.
+        **hetero**.
+
+        In the following examples, assume that the default variable of the mechanism is length 4:
+
+        - setting **auto** to 1 and **hetero** to -1 sets matrix to have a diagonal of
+          1 and all non-diagonal entries -1:
+
+            .. math::
+
+                \\begin{bmatrix}
+                    1 & -1 & -1 & -1 \\\\
+                    -1 & 1 & -1 & -1 \\\\
+                    -1 & -1 & 1 & -1 \\\\
+                    -1 & -1 & -1 & 1 \\\\
+                \\end{bmatrix}
+
+        - setting **auto** to [1, 1, 2, 2] and **hetero** to -1 sets matrix to:
+
+            .. math::
+
+                \\begin{bmatrix}
+                    1 & -1 & -1 & -1 \\\\
+                    -1 & 1 & -1 & -1 \\\\
+                    -1 & -1 & 2 & -1 \\\\
+                    -1 & -1 & -1 & 2 \\\\
+                \\end{bmatrix}
+
+        - setting **auto** to [1, 1, 2, 2] and **hetero** to  [[3, 3, 3, 3], [3, 3, 3, 3], [4, 4, 4, 4], [4, 4, 4, 4]]
+          sets matrix to:
+
+            .. math::
+
+                \\begin{bmatrix}
+                    1 & 3 & 3 & 3 \\\\
+                    3 & 1 & 3 & 3 \\\\
+                    4 & 4 & 2 & 4 \\\\
+                    4 & 4 & 4 & 2 \\\\
+                \\end{bmatrix}
+
+        See **matrix** for details on how **auto** and **hetero** may overwrite matrix.
+
+        Can be modified by control.
 
     hetero : number, 2D array, or None : default None
         specifies matrix as a hollow matrix with all non-diagonal entries equal to **hetero**, if **hetero** is not None;
         If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
-        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
-        1 and all non-diagonal entries -1. If the **matrix** argument is specified, it will be overwritten by
-        **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
-        equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
+        **hetero**.
+
+        When diagonal entries of **hetero** are specified with non-zero values, these entries are set to zero before
+        hetero is used to produce a matrix.
+
+        See **hetero** (above) for details on how various **auto** and **hetero** specifications are summed to produce a
+        matrix.
+
+        See **matrix** (above) for details on how **auto** and **hetero** may overwrite matrix.
+
+        Can be modified by control.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
@@ -546,7 +598,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  default_variable=None,
                  size=None,
                  function=Linear,
-                 matrix=FULL_CONNECTIVITY_MATRIX,
+                 matrix=HOLLOW_MATRIX,
                  auto=None,
                  hetero=None,
                  initial_value=None,
@@ -942,8 +994,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism_Base,
                                           # this typecheck was failing, I didn't want to fix (7/19/17 CW)
-                                          # matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
-                                          matrix=FULL_CONNECTIVITY_MATRIX,
+                                          # matrix:is_matrix=HOLLOW_MATRIX,
+                                          matrix=HOLLOW_MATRIX,
                                           context=None):
         """Instantiate a AutoAssociativeProjection from Mechanism to itself
 
