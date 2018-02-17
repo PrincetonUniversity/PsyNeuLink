@@ -764,7 +764,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                     format(smoothing_factor, self.name))
 
         # Validate CLIP:
-        if CLIP in target_set:
+        if CLIP in target_set and target_set[CLIP] is not None:
             clip = target_set[CLIP]
             if clip:
                 if not (isinstance(clip, (list,tuple)) and len(clip)==2 and all(isinstance(i, numbers.Number)
