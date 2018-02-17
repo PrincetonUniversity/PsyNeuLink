@@ -817,6 +817,48 @@ class TestRecurrentTransferMechanismInSystem:
             ]
         )
 
+    def test_learning_of_orthognal_inputs(self):
+        size=4
+        R = RecurrentTransferMechanism(
+            size=size,
+            function=Linear,
+            enable_learning=True,
+            auto=0,
+            hetero=np.full((size,size),0.0)
+            )
+        P=Process(pathway=[R])
+        S=System(processes=[P])
+
+        inputs_dict = {R:[1,0,1,0]}
+        S.run(num_trials=4,
+              inputs=inputs_dict)
+        np.testing.assert_allclose(
+            R.recurrent_projection.mod_matrix,
+            [
+                [0.0,        0.0,  0.23700501,  0.0],
+                [0.0,        0.0,  0.0,         0.0],
+                [0.23700501, 0.0,  0.0,         0.0],
+                [0.0,        0.0,  0.0,         0.0]
+            ]
+        )
+        np.testing.assert_allclose(R.output_state.value, [1.18518086, 0.0, 1.18518086, 0.0])
+
+        # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
+        R.output_state.value = [0,0,0,0]
+        inputs_dict = {R:[0,1,0,1]}
+        S.run(num_trials=4,
+              inputs=inputs_dict)
+        np.testing.assert_allclose(
+            R.recurrent_projection.mod_matrix,
+            [
+                [0.0,        0.0,        0.23700501, 0.0       ],
+                [0.0,        0.0,        0.0,        0.23700501],
+                [0.23700501, 0.0,        0.0,        0.        ],
+                [0.0,        0.23700501, 0.0,        0.        ]
+            ]
+        )
+        np.testing.assert_allclose(R.output_state.value,[0.0, 1.18518086, 0.0, 1.18518086])
+
 
 # this doesn't work consistently due to EVC's issue with the scheduler
 
