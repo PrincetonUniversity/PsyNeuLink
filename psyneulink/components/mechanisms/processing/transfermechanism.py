@@ -708,6 +708,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         """Validate FUNCTION and Mechanism params
 
         """
+        from psyneulink.components.functions.function import DistributionFunction
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -755,7 +756,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: SHOULD THIS (AND SMOOTHING_FACTOR) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
         # Validate NOISE:
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise.function
             self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
+
         # Validate SMOOTHING_FACTOR:
         if SMOOTHING_FACTOR in target_set:
             smoothing_factor = target_set[SMOOTHING_FACTOR]
@@ -783,6 +790,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _validate_noise(self, noise, var):
         # Noise is a list or array
+        from psyneulink.components.functions.function import DistributionFunction
+
         if isinstance(noise, (np.ndarray, list)):
             if len(noise) == 1:
                 pass
