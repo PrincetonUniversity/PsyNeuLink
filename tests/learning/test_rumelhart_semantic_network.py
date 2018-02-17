@@ -47,7 +47,6 @@ def validate_learning_mechs(sys):
                           REL_HIDDEN_to_QUAL_OUT_LM, REL_HIDDEN_to_ACT_OUT_LM})
 
 
-# @pytest.mark.usefixtures('clear_registry')
 class TestRumelhartSemanticNetwork:
     """
     Tests construction and training of network with both convergent and divergent pathways
