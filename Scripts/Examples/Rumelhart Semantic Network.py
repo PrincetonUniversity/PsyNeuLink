@@ -27,21 +27,21 @@ act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
 
 # VERIFY: CONSTRUCTION WORKING, BUT LEARNING NEEDS TO BE VALIDATED
 # Version using sequential Processes  --------------------------------------------------------------------------
-rep_hidden_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden],
-                              learning=pnl.LEARNING,
-                              name='REP_HIDDEN_PROC')
-
-rel_hidden_proc = pnl.Process(pathway=[rel_in, rel_hidden],
-                              learning=pnl.LEARNING,
-                              name='REL_HIDDEN_PROC')
-
-rel_rep_proc = pnl.Process(pathway=[rel_hidden, rep_out],
-                           learning=pnl.LEARNING,
-                           name='REL_REP_PROC')
-
-rel_prop_proc = pnl.Process(pathway=[rel_hidden, prop_out],
-                            learning=pnl.LEARNING,
-                            name='REL_PROP_PROC')
+# rep_hidden_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden],
+#                               learning=pnl.LEARNING,
+#                               name='REP_HIDDEN_PROC')
+#
+# rel_hidden_proc = pnl.Process(pathway=[rel_in, rel_hidden],
+#                               learning=pnl.LEARNING,
+#                               name='REL_HIDDEN_PROC')
+#
+# rel_rep_proc = pnl.Process(pathway=[rel_hidden, rep_out],
+#                            learning=pnl.LEARNING,
+#                            name='REL_REP_PROC')
+#
+# rel_prop_proc = pnl.Process(pathway=[rel_hidden, prop_out],
+#                             learning=pnl.LEARNING,
+#                             name='REL_PROP_PROC')
 
 rel_qual_proc = pnl.Process(pathway=[rel_hidden, qual_out],
                             learning=pnl.LEARNING,
@@ -54,18 +54,8 @@ rel_act_proc = pnl.Process(pathway=[rel_hidden, act_out],
 # sys = pnl.System(processes=[rep_hidden_proc, rel_hidden_proc, rel_rep_proc, rel_prop_proc, rel_qual_proc, rel_act_proc])
 # sys.show_graph(show_learning=pnl.ALL, show_dimensions=True)
 
-# # FIX: LEARNING MECHANISMS FOR REL_IN AND REP_HIDDEN TO REL_HIDDEN ONLY GET 1/4 ERROR SIGNALS
-# # Alternate version using crossing Processes:  ----------------------------------------------------------------
-# rep_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden, rep_out],
-#                        learning=pnl.LEARNING,
-#                        name='REP_PROC')
-# rel_proc = pnl.Process(pathway=[rel_in, rel_hidden, prop_out],
-#                        learning=pnl.LEARNING,
-#                        name='REL_PROC')
-# sys_alt = pnl.System(processes=[rep_proc, rel_proc, rel_qual_proc, rel_act_proc])
-# sys_alt.show_graph(show_learning=pnl.ALL, show_dimensions=True)
-
-# # FIX: LEARNING MECHANISMS FOR REL_IN AND REP_HIDDEN TO REL_HIDDEN ONLY GET 3/4 ERROR SIGNALS
+# # ---------------------------------------------------------------------------------------------------------------
+# # VERIFY: CONSTRUCTION WORKING, BUT LEARNING NEEDS TO BE VALIDATED
 # # Alternate version using converging Processes:  ----------------------------------------------------------------
 # rep_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden, rep_out],
 #                        learning=pnl.LEARNING,
@@ -76,4 +66,14 @@ rel_act_proc = pnl.Process(pathway=[rel_hidden, act_out],
 # sys_alt = pnl.System(processes=[rep_proc, rel_proc, rel_qual_proc, rel_act_proc])
 # sys_alt.show_graph(show_learning=pnl.ALL, show_dimensions=True)
 
-#
+# ---------------------------------------------------------------------------------------------------------------
+# # VERIFY: CONSTRUCTION WORKING, BUT LEARNING NEEDS TO BE VALIDATED
+# Alternate version using crossing Processes:
+rep_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden, rep_out],
+                       learning=pnl.LEARNING,
+                       name='REP_PROC')
+rel_proc = pnl.Process(pathway=[rel_in, rel_hidden, prop_out],
+                       learning=pnl.LEARNING,
+                       name='REL_PROC')
+sys_alt = pnl.System(processes=[rep_proc, rel_proc, rel_qual_proc, rel_act_proc])
+sys_alt.show_graph(show_learning=pnl.ALL, show_dimensions=True)

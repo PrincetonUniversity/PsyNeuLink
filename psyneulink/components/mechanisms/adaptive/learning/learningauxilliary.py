@@ -656,7 +656,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
 @tc.typecheck
 def _get_learning_mechanisms(mech:Mechanism, composition=None):
-    """Return LearningMechanisms for all Projections to and from the specified Mechanism
+    """Return LearningMechanisms for all Projections to and from the specified Mechanism.
 
     If composition is specified, only LearningMechanisms for Projections to Mechanisms belonging to that composition
     (i.e., Process or System) are included in the list of LearningMechanisms returned
@@ -693,17 +693,31 @@ def _get_learning_mechanisms(mech:Mechanism, composition=None):
     return aff, eff
 
 
-def _replace_objective_mechanism_with_learning_mechanisms(objective_mechanism, processing_mechanism, system):
+def _assign_error_signal_projections(processing_mech, system, objective_mech=None):
+    """Assign appropriate error_signal Projections to LearningMechanisms for processing_mechanism's afferents.
 
-    # Get all LearningMechanisms for Projection to and from sample_mech
-    afferent_learning_mechs, efferent_learning_mechs = _get_learning_mechanisms(processing_mechanism, system)
+    Assign an error_signal Projection to the LearningMechanism for each afferent Projection of processing_mechanism
+    that is being learned, from the LearningMechanism of each of processing_mechanism's efferents that is being learned,
+    unless such a projection already exists [??and only for afferents and efferents that belong to the same System.]
+
+    """
+
+    # Get all LearningMechanisms for Projection to and from sample_mech (processing_mechanism)
+    afferent_learning_mechs, efferent_learning_mechs = _get_learning_mechanisms(processing_mech, system)
 
     # For the LearningMechanism of each Projection to sample_mech that is being learned
     for aff_lm in afferent_learning_mechs:
         # Check that aff_lm receives in its ACTIVATION_OUTPUT InputState the same Projection
         #    that the ObjectMechanism received
-        assert aff_lm.input_states['activation_output'].path_afferents[0].sender == \
-               objective_mechanism.input_states[SAMPLE].path_afferents[0].sender
+        if objective_mech and not (aff_lm.input_states['activation_output'].path_afferents[0].sender ==
+                                   objective_mech.input_states[SAMPLE].path_afferents[0].sender):
+            raise LearningAuxilliaryError("PROGRAM ERROR: The {} being assigned to replace {} ({}) receives its "
+                                          "ACTIVATION_OUTPUT Projection from a source ({}) that is different than "
+                                          "the source of the {}'s SAMPLE InputState ({})."
+                                          .format(LearningMechanism, objective_mech.name, aff_lm.name,
+                                                  aff_lm.input_states['activation_output'].path_afferents[0].sender,
+                                                  aff_lm.name,
+                                                  objective_mech.input_states[SAMPLE].path_afferents[0].sender.name))
         # For each Projection from sample_mech that is being learned,
         #    add a Projection from its LearningMechanism ERROR_SIGNAL OutputState
         #    to a newly created ERROR_SIGNAL InputState on afferent_lm

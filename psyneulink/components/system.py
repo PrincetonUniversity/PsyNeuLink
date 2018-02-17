@@ -445,7 +445,7 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import \
     DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary \
-    import _replace_objective_mechanism_with_learning_mechanisms, _get_learning_mechanisms
+    import _get_learning_mechanisms, _assign_error_signal_projections
 from psyneulink.components.process import Process, ProcessList, ProcessTuple
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
@@ -1664,7 +1664,7 @@ class System(System_Base):
                     #  - obj_mech should NOT be included in the learning_execution_graph and
                     #  - should be replaced with appropriate projections to sample_mechs's afferent LearningMechanisms
                     if not sample_mech.systems[self] is TERMINAL:
-                        _replace_objective_mechanism_with_learning_mechanisms(obj_mech, sample_mech, self)
+                        _assign_error_signal_projections(sample_mech, self, obj_mech)
                         # Don't process ObjectiveMechanism any further (since its been replaced)
                         return
 
@@ -1698,8 +1698,26 @@ class System(System_Base):
                                      for proc in projection.sender.owner.processes)
                                  for projection in obj_mech.input_states[SAMPLE].path_afferents):
 
-                        _replace_objective_mechanism_with_learning_mechanisms(obj_mech, sample_mech, self)
+                        _assign_error_signal_projections(sample_mech, self, obj_mech)
                         obj_mech_replaced = True
+
+            # FIX: TEST FOR CROSSING:
+            # FIX:  (LEARNINGMECHANISM FOR INTERNAL MECHANISM THAT HAS >1 PROJECTION TO MECHANISMS IN THE SAME SYSTEM
+            #
+            # - IDENTIFY ALL OF THE OUTGOING PROJECTIONS FROM THE MECHANISMS ABOVE THAT ARE:
+            #     - BEING LEARNED
+            #     - PROJECT TO A MECHANISM IN THE CURRENT SYSTEM
+            # - ASSIGN MAPPING PROJECTION TO NEW ERROR_SIGNAL INPUT_STATE FOR sender_mech
+
+            # sender_mech is a LearningMechanism:
+            else:
+                # For each of the ProcessingMechanisms that receive Projections being trained by sender_mech
+                for processing_mech in [proj.receiver.owner for proj in sender_mech.learned_projections]:
+                    # If it is an INTERNAL Mechanism for the System,
+                    #    make sure that the LearningMechanisms for all of its afferent Projections being learned
+                    #    receive error_signals from the LearningMechanisms of all it afferent Projections being learned.
+                    if processing_mech.systems[self] == INTERNAL:
+                        _assign_error_signal_projections(processing_mech, self)
 
             # If sender_mech has no Projections left, raise exception
             if not any(any(projection for projection in input_state.path_afferents)
