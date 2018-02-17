@@ -305,5 +305,10 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
                                        registry_entry.renamed_instance_counts,
                                        registry_entry.default)
 
+
 def clear_registry(registry):
-    registry.clear()
+    # registry.clear()
+    for category in registry:
+        instance_dict = registry[category].instanceDict.copy()
+        for name in instance_dict:
+            remove_instance_from_registry(registry, category, name)
