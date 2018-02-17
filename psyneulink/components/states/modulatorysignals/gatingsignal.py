@@ -262,7 +262,7 @@ class GatingSignal(ModulatorySignal):
     GatingSignal(                                   \
         owner,                                      \
         index=PRIMARY                               \
-        function=LinearCombination(operation=SUM),  \
+        function=Linear(),                          \
         modulation=ModulationParam.MULTIPLICATIVE,  \
         projections=None,                           \
         params=None,                                \
@@ -284,7 +284,7 @@ class GatingSignal(ModulatorySignal):
         Class attributes:
             + componentType (str) = GATING_SIGNAL
             + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination)
+                + FUNCTION (Linear)
                 + FUNCTION_PARAMS (Modulation.MULTIPLY)
 
         Class methods:
@@ -419,7 +419,7 @@ class GatingSignal(ModulatorySignal):
                  size=None,
                  index=None,
                  calculate=Linear,
-                 function=LinearCombination(operation=SUM),
+                 function=Linear(),
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
                  params=None,

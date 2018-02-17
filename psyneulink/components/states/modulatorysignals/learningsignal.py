@@ -199,7 +199,7 @@ class LearningSignal(ModulatorySignal):
     """
     LearningSignal(                                      \
         owner,                                           \
-        function=LinearCombination(operation=SUM),       \
+        function=Linear(),                               \
         modulation=ModulationParam.MULTIPLICATIVE        \
         learning_rate=None                               \
         params=None,                                     \
@@ -222,7 +222,7 @@ class LearningSignal(ModulatorySignal):
         Class attributes:
             + componentType (str) = LEARNING_SIGNAL
             + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination)
+                + FUNCTION (Linear)
                 + FUNCTION_PARAMS   (Operation.PRODUCT)
 
         Class methods:
@@ -361,7 +361,7 @@ class LearningSignal(ModulatorySignal):
                  size=None,
                  index=PRIMARY,
                  calculate=Linear,
-                 function=LinearCombination(operation=SUM),
+                 function=Linear(),
                  learning_rate: tc.optional(parameter_spec) = None,
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
