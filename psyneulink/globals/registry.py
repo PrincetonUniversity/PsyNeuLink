@@ -61,15 +61,24 @@ def register_category(entry,
                       name=None,
                       registry=None,
                       context='Registry'):
-# DOCUMENT:
-    """Maintains registry of subclasses for base_class, names instances incrementally (if duplicates), and sets default
+    """Create a category within the specified registry.
 
-    Arguments:
+    A Registry is used to maintain a list of categories (subclasses) for a given type of base_class of Component,
+    and to insure that the name of every Component created in each of those categories is uniquie.  If an item
+    is created (using the `register_instance` function below) with the same name as one already in the Registry,
+    its name is appended with a hyphenated index (e.g., name-n) that is incremented for each new item assigned
+    the same base name.
+
+    Arguments
+    ---------
+
+    COMMENT:
     - entry (object or class)
     - base_class (parent class for entry)
     - registry (dict)
 
-# DOCUMENTATION:
+
+    # DOCUMENTATION:
              - Naming procedure / conventions
              - Default procedure /conventions
 
@@ -87,7 +96,7 @@ def register_category(entry,
 
 
 
-# IMPLEMENTATION NOTE:
+    # IMPLEMENTATION NOTE:
         ADD DEFAULT MANAGEMENT (USEFUL AT LEAST FOR PROCESS... OTHERS ARE CONTEXT-SPECIFIC)
         # # MechanismRegistry ------------------------------------------------------------------------
         # #
@@ -101,10 +110,7 @@ def register_category(entry,
         #
         # # MechanismRegistry = {DefaultReceiver.name:(DefaultReceiverMechanism, 1)}
         #
-
-    :param entry:
-    :param default:
-    :return:
+    COMMENT
     """
 
     # IMPLEMENTATION NOTE:  Move to State when that is implemented as ABC
@@ -291,6 +297,12 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
     # Decrement count for instances in entry
     instance_count = registry_entry.instanceCount - 1
 
+    # IMPLEMENTATION NOTE:
+    #    Don't decrement renamed_instance_counts as:
+    #        - doing so would requure checking that the item being removed is the last in the sequence
+    #          (to avoid fouling subsequent indexing);
+    #        - it might be confusing for a subsequently added item to have the same name as one previously removed.
+
     # If instance's name was a duplicate with appended index, decrement the count for that item (and remove if it is 0)
     for base_name, count in registry_entry.renamed_instance_counts.items():
         if base_name in name:
@@ -307,8 +319,16 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
 
 
 def clear_registry(registry):
-    # registry.clear()
+    """Clear specified registry of all entries, but leave any categories created within it intact.
+
+    .. note::
+       This method should be used with caution.  It is used primarily in unit tests, to insure consistency of naming
+       within a given test.  Calling it outside of testing may allow new Components of the same type to be created with
+       exactly the same PsyNeuLink name as exsiting ones within the same Python namespace.
+
+    """
     for category in registry:
         instance_dict = registry[category].instanceDict.copy()
         for name in instance_dict:
             remove_instance_from_registry(registry, category, name)
+        registry[category].renamed_instance_counts.clear()
