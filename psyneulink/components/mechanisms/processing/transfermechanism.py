@@ -763,16 +763,18 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("smoothing_factor parameter ({}) for {} must be a float between 0 and 1".
                                     format(smoothing_factor, self.name))
 
-        # Validate RANGE:
-        if CLIP in target_set:
+        # Validate CLIP:
+        if CLIP in target_set and target_set[CLIP] is not None:
             clip = target_set[CLIP]
             if clip:
-                if not (isinstance(clip, tuple) and len(clip)==2 and all(isinstance(i, numbers.Number) for i in clip)):
+                if not (isinstance(clip, (list,tuple)) and len(clip)==2 and all(isinstance(i, numbers.Number)
+                                                                                for i in clip)):
                     raise TransferError("clip parameter ({}) for {} must be a tuple with two numbers".
                                         format(clip, self.name))
                 if not clip[0] < clip[1]:
                     raise TransferError("The first item of the clip parameter ({}) must be less than the second".
                                         format(clip, self.name))
+            target_set[CLIP] = list(clip)
 
         # self.integrator_function = Integrator(
         #     # default_variable=self.default_variable,

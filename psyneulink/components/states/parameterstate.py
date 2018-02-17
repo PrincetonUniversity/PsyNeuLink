@@ -907,7 +907,7 @@ def _instantiate_parameter_states(owner, context=None):
     #                       (since that will assign values to the properties of each param;
     #                       and that, in turn, will overwrite their current values with the defaults from paramsCurrent)
     for param_name, param_value in owner.user_params_for_instantiation.items():
-        # Skip any parameter that has been specifically excluded by
+        # Skip any parameter that has been specifically excluded
         if param_name in owner.ClassDefaults.exclude_from_parameter_states:
             continue
         _instantiate_parameter_state(owner, param_name, param_value, context=context)
