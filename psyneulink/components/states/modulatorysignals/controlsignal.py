@@ -419,7 +419,7 @@ class ControlSignal(ModulatorySignal):
     ControlSignal(                                       \
         owner,                                           \
         index=SEQUENTIAL,                                \
-        function=LinearCombination(operation=SUM),       \
+        function=Linear(),                               \
         costs_options=ControlSignalCosts.DEFAULTS,       \
         intensity_cost_function=Exponential,             \
         adjustment_cost_function=Linear,                 \
@@ -447,7 +447,7 @@ class ControlSignal(ModulatorySignal):
         Class attributes:
             + componentType (str) = CONTROL_SIGNAL
             + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination)
+                + FUNCTION (Linear)
                 + FUNCTION_PARAMS   (Operation.PRODUCT)
 
         Class methods:
@@ -655,7 +655,7 @@ class ControlSignal(ModulatorySignal):
                  size=None,
                  index=None,
                  calculate=Linear,
-                 function=LinearCombination(operation=SUM),
+                 function=Linear(),
                  cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.DEFAULTS,
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
