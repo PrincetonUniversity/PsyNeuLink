@@ -1,5 +1,20 @@
 import psyneulink as pnl
 
+
+def clear_registry():
+    from psyneulink.components.component import DeferredInitRegistry
+    from psyneulink.components.system import SystemRegistry
+    from psyneulink.components.process import ProcessRegistry
+    from psyneulink.components.mechanisms.mechanism import MechanismRegistry
+    from psyneulink.components.projections.projection import ProjectionRegistry
+    # Clear Registry to have a stable reference for indexed suffixes of default names
+    pnl.clear_registry(DeferredInitRegistry)
+    pnl.clear_registry(SystemRegistry)
+    pnl.clear_registry(ProcessRegistry)
+    pnl.clear_registry(MechanismRegistry)
+    pnl.clear_registry(ProjectionRegistry)
+
+
 class TestProjectionSpecificationFormats:
 
     def test_multiple_modulatory_projection_specs(self):
@@ -150,6 +165,8 @@ class TestProjectionSpecificationFormats:
 
     def test_formats_for_control_specification_for_mechanism_and_function_params(self):
 
+        clear_registry()
+
         control_spec_list = [
             pnl.CONTROL,
             pnl.CONTROL_SIGNAL,
@@ -192,6 +209,8 @@ class TestProjectionSpecificationFormats:
 
 
     def test_formats_for_gating_specification_of_input_and_output_states(self):
+
+        clear_registry()
 
         gating_spec_list = [
             pnl.GATING,

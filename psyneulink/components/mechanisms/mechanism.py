@@ -785,10 +785,10 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.state import ADD_STATES, _parse_state_spec
+from psyneulink.components.states.state import ADD_STATES, REMOVE_STATES, _parse_state_spec
 from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, UNCHANGED, VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.registry import register_category
+from psyneulink.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
@@ -2393,7 +2393,6 @@ class Mechanism_Base(Mechanism):
                     (inspect.isclass(state_type) and issubclass(state_type, OutputState))):
                 output_states.append(state)
 
-        # _instantiate_state_list(self, input_states, InputState)
         if input_states:
             # FIX: 11/9/17
             added_variable, added_input_state = self._parse_arg_input_states(input_states)
@@ -2414,6 +2413,65 @@ class Mechanism_Base(Mechanism):
 
         return {INPUT_STATES: instantiated_input_states,
                 OUTPUT_STATES: instantiated_output_states}
+
+    @tc.typecheck
+    def remove_states(self, states, context=REMOVE_STATES):
+        """
+        remove_states(states)
+
+        Remove one or more `States <State>` from the Mechanism.  Only `InputStates <InputState> and `OutputStates
+        <OutputState>` can be removed; `ParameterStates <ParameterState>` cannot be removed from a Mechanism.
+
+        Each Specified state must be owned by the Mechanism, otherwise the request is ignored.
+
+        .. note::
+            Removing InputStates from a Mechanism changes the size of its `variable <Mechanism_Base.variable>`
+            attribute, which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
+            `Mechanism InputStates <Mechanism_InputStates>` for more detailed information).
+
+        Arguments
+        ---------
+
+        states : State or List[State]
+            one more `InputStates <InputState>` or `OutputStates <OutputState>` to be removed from the Mechanism.
+            State specification(s) can be an InputState or OutputState object or the name of one.
+
+        """
+        from psyneulink.components.states.inputstate import InputState, _instantiate_input_states, INPUT_STATE
+        from psyneulink.components.states.outputstate import OutputState, _instantiate_output_states, OUTPUT_STATE
+
+        # Put in list to standardize treatment below
+        if not isinstance(states, list):
+            states = [states]
+
+        input_states = []
+        output_states = []
+
+        for state in states:
+
+            if state in self.input_states:
+                if isinstance(state, str):
+                    state = self.input_states[state]
+                index = self.input_states.index(state)
+                del self.input_states[index]
+                remove_instance_from_registry(registry=self._stateRegistry,
+                                              category=INPUT_STATE,
+                                              component=state)
+                old_variable = self.instance_defaults.variable
+                old_variable = np.delete(old_variable,index,0)
+                self.instance_defaults.variable = old_variable
+                self._update_variable(self.instance_defaults.variable)
+
+            elif state in self.output_states:
+                if isinstance(state, OutputState):
+                    index = self.output_states.index(state)
+                else:
+                    index = self.output_states.index(self.output_states[state])
+                del self.output_states[state]
+                del self.output_values[index]
+                remove_instance_from_registry(registry=self._stateRegistry,
+                                              category=OUTPUT_STATE,
+                                              component=state)
 
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent
