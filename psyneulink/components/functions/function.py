@@ -8823,15 +8823,23 @@ AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
 class LearningFunction(Function_Base):
     """Abstract class of `Function <Function>` used for learning.
 
+    COMMENT:
+    IMPLEMENTATION NOTE:
+       The function method of a LearningFunction *must* include a **kwargs argument, which accomodates
+       Function-specific parameters;  this is to accommodate the ability of LearningMechanisms to call
+       the function of a LearningFunction with arguments that may not be implemented for all LearningFunctions
+       (e.g., error_matrix for BackPropagation) -- these can't be included in the params argument, as those
+       are validated against paramClassDefaults which will not recognize params specific to another Function.
+
     Attributes
     ----------
 
     variable : list or np.array
         most LearningFunctions take a list or 2d array that must contain three items:
 
-        * the input to the parameter being modified (variable[0]);
-        * the output of the parameter being modified (variable[1]);
-        * the error associated with the output (variable[2]).
+        * the input to the parameter being modified (variable[LEARNING_ACTIVATION_INPUT]);
+        * the output of the parameter being modified (variable[LEARNING_ACTIVATION_OUTPUT]);
+        * the error associated with the output (variable[LEARNING_ERROR_OUTPUT]).
 
         However, the exact specification depends on the funtion's type.
 
@@ -9296,7 +9304,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
         """Calculate a matrix of weight changes from a single (scalar) error term
 
         COMMENT:
@@ -9360,11 +9369,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        # # MODIFIED 2/2/18 OLD:
-        # return [weight_change_matrix, error_array]
-        # MODIFIED 2/2/18 NEW:
         return [error_array, error_array]
-        # MODIFIED 2/2/18 END
 
 
 # Argument names:
@@ -9379,7 +9384,6 @@ class BackPropagation(LearningFunction):
         default_variable=ClassDefaults.variable,         \
         activation_derivative_fct=Logistic().derivative, \
         error_derivative_fct=Logistic().derivative,      \
-        error_matrix=None,                               \
         learning_rate=None,                              \
         params=None,                                     \
         name=None,                                       \
@@ -9415,11 +9419,14 @@ class BackPropagation(LearningFunction):
         specifies the derivative for the function of the Mechanism that is the receiver of the
         `error_matrix <BackPropagation.error_matrix>`.
 
+
+    COMMENT:
     error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
         matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
         If it is specified as a ParameterState it must be one for the `matrix <MappingProjection.matrix>`
         parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
         MATRIX parameterState.
+    COMMENT
 
     learning_rate : float : default default_learning_rate
         supersedes any specification for the `Process` and/or `System` to which the function's
@@ -9468,7 +9475,7 @@ class BackPropagation(LearningFunction):
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
         `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
         <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
-        which the `owner <BackPropagationowner>` belongs is used;  and, if that is `None`, then the learning_rate for
+        which the `owner <BackPropagation.owner>` belongs is used;  and, if that is `None`, then the learning_rate for
         the system to which it belongs is used. If all are `None`, then the
         `default_learning_rate <BackPropagation.default_learning_rate>` is used.
 
@@ -9503,13 +9510,15 @@ class BackPropagation(LearningFunction):
                  # default_variable:tc.any(list, np.ndarray),
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
-                 error_matrix=None,
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context='Component Init'):
+
+        error_matrix=np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
+                               len(default_variable[LEARNING_ERROR_OUTPUT])))
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(activation_derivative_fct=activation_derivative_fct,
@@ -9544,7 +9553,7 @@ class BackPropagation(LearningFunction):
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate error_matrix param
+        """Validate learning_rate and error_matrix params
 
         `error_matrix` argument must be one of the following
             - 2d list, np.ndarray or np.matrix
@@ -9635,8 +9644,10 @@ class BackPropagation(LearningFunction):
 
     def function(self,
                  variable=None,
+                 # error_matrix=None,
                  params=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
         """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms
 
         Arguments
@@ -9653,7 +9664,6 @@ class BackPropagation(LearningFunction):
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         -------
 
@@ -9666,13 +9676,42 @@ class BackPropagation(LearningFunction):
             the modifications to make to the matrix.
         """
 
+        if INITIALIZING in context:
+            error_matrix_param = {ERROR_MATRIX:np.zeros((len(variable[LEARNING_ACTIVATION_OUTPUT]),
+                                                         len(variable[LEARNING_ERROR_OUTPUT])))}
+
+            if params is None:
+                params = error_matrix_param
+            else:
+                params.update(error_matrix_param)
+
+        elif kwargs is None or not ERROR_MATRIX in kwargs:
+            owner_string = ""
+            if self.owner:
+                owner_string = " of " + self.owner.name
+            raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
+                                format(self.__class__.__name__, owner_string))
+        else:
+            if params is None:
+                params = kwargs
+            else:
+                params.update(kwargs)
+
+        # if INITIALIZING in context and error_matrix is None:
+        #     error_matrix = {ERROR_MATRIX:np.zeros((len(variable[LEARNING_ACTIVATION_OUTPUT]),
+        #                                            len(variable[LEARNING_ERROR_OUTPUT])))}
+        # if params is None:
+        #     params = error_matrix
+        # else:
+        #     params.update(error_matrix)
+
         self._check_args(variable=variable, params=params, context=context)
 
         from psyneulink.components.states.parameterstate import ParameterState
-        if isinstance(self.error_matrix, ParameterState):
-            error_matrix = self.error_matrix.value
+        if isinstance(params[ERROR_MATRIX], ParameterState):
+            error_matrix = params[ERROR_MATRIX].value
         else:
-            error_matrix = self.error_matrix
+            error_matrix = params[ERROR_MATRIX]
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -9774,7 +9813,7 @@ class TDLearning(Reinforcement):
 
         return variable
 
-    def function(self, variable=None, params=None, context=None):
+    def function(self, variable=None, params=None, context=None, **kwargs):
         return super().function(variable=variable, params=params, context=context)
 
 

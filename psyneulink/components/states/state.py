@@ -763,6 +763,7 @@ state_type_keywords = {STATE_TYPE}
 STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 STATE_SPEC = 'state_spec'
 ADD_STATES = 'ADD_STATES'
+REMOVE_STATES = 'REMOVE_STATES'
 
 def _is_state_class(spec):
     if inspect.isclass(spec) and issubclass(spec, State):
@@ -2289,7 +2290,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         reference_value = reference_value if reference_value is not None else state.reference_value
         if not iscompatible(state.value, reference_value):
             raise StateError("{}'s value attribute ({}) is incompatible with the {} ({}) of its owner ({})".
-                             format(state.name, state.value, REFERENCE_VALUE, state.reference_value, owner.name))
+                             format(state.name, state.value, REFERENCE_VALUE, reference_value, owner.name))
 
         # State has already been assigned to an owner
         if state.owner is not None and not state.owner is owner:
@@ -2496,7 +2497,14 @@ def _parse_state_spec(state_type=None,
         reference_value = convert_to_np_array(reference_value,1)
 
     # Validate that state_type is a State class
-    if not inspect.isclass(state_type) or not issubclass(state_type, State):
+    if isinstance(state_type, str):
+        try:
+            state_type = StateRegistry[state_type].subclass
+        except KeyError:
+            raise StateError("{} specified as a string (\'{}\') must be the name of a sublcass of {}".
+                             format(STATE_TYPE, state_type,State.__name__))
+        state_dict[STATE_TYPE] = state_type
+    elif not inspect.isclass(state_type) or not issubclass(state_type, State):
         raise StateError("\'state_type\' arg ({}) must be a sublcass of {}".format(state_type,
                                                                                    State.__name__))
     state_type_name = state_type.__name__
