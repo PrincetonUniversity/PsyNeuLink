@@ -102,7 +102,6 @@ class TestRumelhartSemanticNetwork:
                                   rel_qual_proc,
                                   rel_act_proc])
         # S.show_graph(show_learning=pnl.ALL, show_dimensions=True)
-        print("S LearningMechanisms: ", S.learning_mechanisms.names)
         validate_learning_mechs(S)
 
     # @pytest.mark.usefixtures('clear_registry')
@@ -124,28 +123,27 @@ class TestRumelhartSemanticNetwork:
         rel_proc = pnl.Process(pathway=[rel_in, rel_hidden],
                                learning=pnl.LEARNING,
                                name='REL_PROC')
-        rel_prop_proc_2 = pnl.Process(pathway=[rel_hidden, prop_out],
+        rel_prop_proc = pnl.Process(pathway=[rel_hidden, prop_out],
                                     learning=pnl.LEARNING,
                                     name='REL_PROP_PROC')
-        rel_qual_proc_2 = pnl.Process(pathway=[rel_hidden, qual_out],
+        rel_qual_proc = pnl.Process(pathway=[rel_hidden, qual_out],
                                     learning=pnl.LEARNING,
                                     name='REL_QUAL_PROC')
-        rel_act_proc_2 = pnl.Process(pathway=[rel_hidden, act_out],
+        rel_act_proc = pnl.Process(pathway=[rel_hidden, act_out],
                                    learning=pnl.LEARNING,
                                    name='REL_ACT_PROC')
-        S1 = pnl.System(processes=[rep_proc,
+        S = pnl.System(processes=[rep_proc,
                                   rel_proc,
-                                  rel_prop_proc_2,
-                                  rel_qual_proc_2,
-                                  rel_act_proc_2])
-        # S1.show_graph(show_learning=pnl.ALL, show_dimensions=True)
-        print("S1 LearningMechanisms: ", S1.learning_mechanisms.names)
-        validate_learning_mechs(S1)
+                                  rel_prop_proc,
+                                  rel_qual_proc,
+                                  rel_act_proc])
+        # S.show_graph(show_learning=pnl.ALL, show_dimensions=True)
+        validate_learning_mechs(S)
 
     # @pytest.mark.usefixtures('clear_registry')
     def test_rumelhart_semantic_network_crossing(self):
 
-        # clear_registry()
+        clear_registry()
         rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
         rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
         rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
@@ -161,17 +159,16 @@ class TestRumelhartSemanticNetwork:
         rel_proc = pnl.Process(pathway=[rel_in, rel_hidden, prop_out],
                                learning=pnl.LEARNING,
                                name='REL_PROC')
-        rel_qual_proc_3 = pnl.Process(pathway=[rel_hidden, qual_out],
+        rel_qual_proc = pnl.Process(pathway=[rel_hidden, qual_out],
                                     learning=pnl.LEARNING,
                                     name='REL_QUAL_PROC')
-        rel_act_proc_3 = pnl.Process(pathway=[rel_hidden, act_out],
+        rel_act_proc = pnl.Process(pathway=[rel_hidden, act_out],
                                    learning=pnl.LEARNING,
                                    name='REL_ACT_PROC')
-        S2 = pnl.System(processes=[rep_proc,
+        S = pnl.System(processes=[rep_proc,
                                   rel_proc,
-                                  rel_qual_proc_3,
-                                  rel_act_proc_3])
+                                  rel_qual_proc,
+                                  rel_act_proc])
 
-        print("S2 LearningMechanisms: ", S2.learning_mechanisms.names)
-        # S2.show_graph(show_learning=pnl.ALL, show_dimensions=True)
-        validate_learning_mechs(S2)
+        # S.show_graph(show_learning=pnl.ALL, show_dimensions=True)
+        validate_learning_mechs(S)
