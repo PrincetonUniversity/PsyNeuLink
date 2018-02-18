@@ -21,13 +21,13 @@ def validate_learning_mechs(sys):
     def get_learning_mech(name):
         return next(lm for lm in sys.learning_mechanisms if lm.name == name)
 
-    REP_IN_to_REP_HIDDEN_LM = get_learning_mech('MappingProjection from REP_IN to REP_HIDDEN LearningMechanism')
-    REP_HIDDEN_to_REL_HIDDEN_LM = get_learning_mech('MappingProjection from REP_HIDDEN to REL_HIDDEN LearningMechanism')
-    REL_IN_to_REL_HIDDEN_LM = get_learning_mech('MappingProjection from REL_IN to REL_HIDDEN LearningMechanism')
-    REL_HIDDEN_to_REP_OUT_LM = get_learning_mech('MappingProjection from REL_HIDDEN to REP_OUT LearningMechanism')
-    REL_HIDDEN_to_PROP_OUT_LM = get_learning_mech('MappingProjection from REL_HIDDEN to PROP_OUT LearningMechanism')
-    REL_HIDDEN_to_QUAL_OUT_LM = get_learning_mech('MappingProjection from REL_HIDDEN to QUAL_OUT LearningMechanism')
-    REL_HIDDEN_to_ACT_OUT_LM = get_learning_mech('MappingProjection from REL_HIDDEN to ACT_OUT LearningMechanism')
+    REP_IN_to_REP_HIDDEN_LM = get_learning_mech('LearningMechanism for MappingProjection from REP_IN to REP_HIDDEN')
+    REP_HIDDEN_to_REL_HIDDEN_LM = get_learning_mech('LearningMechanism for MappingProjection from REP_HIDDEN to REL_HIDDEN')
+    REL_IN_to_REL_HIDDEN_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_IN to REL_HIDDEN')
+    REL_HIDDEN_to_REP_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to REP_OUT')
+    REL_HIDDEN_to_PROP_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to PROP_OUT')
+    REL_HIDDEN_to_QUAL_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to QUAL_OUT')
+    REL_HIDDEN_to_ACT_OUT_LM = get_learning_mech('LearningMechanism for MappingProjection from REL_HIDDEN to ACT_OUT')
 
     # Validate error_signal Projections for REP_IN to REP_HIDDEN
     assert len(REP_IN_to_REP_HIDDEN_LM.input_states) == 3

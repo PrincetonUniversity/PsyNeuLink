@@ -146,12 +146,13 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function
+from psyneulink.components.states.state import ADD_STATES
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.keywords import \
     BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, \
-    IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
+    IDENTITY_MATRIX, INPUT_STATES, LEARNING, LEARNING_MECHANISM, \
     MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, \
     WEIGHT, PROJECTIONS, TDLEARNING_FUNCTION, PREDICTION_ERROR_MECHANISM, \
     FUNCTION, HOLLOW_MATRIX
@@ -543,19 +544,6 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                   WEIGHT: -1},
                                                           target={NAME: TARGET,
                                                                   VARIABLE: target_input},
-                                                          # input_states=[sample_input, target_input],
-                                                          # FOR TESTING: ALTERNATIVE specifications of input_states arg:
-                                                          # input_states=[(sample_input, FULL_CONNECTIVITY_MATRIX),
-                                                          # input_states=[(sample_input, RANDOM_CONNECTIVITY_MATRIX),
-                                                          #               target_input],
-                                                          # input_states=[{NAME:SAMPLE,
-                                                          #                VARIABLE:sample_input,
-                                                          #                WEIGHT:-1
-                                                          #                },
-                                                          #               {NAME:TARGET,
-                                                          #                VARIABLE:target_input,
-                                                          #                # WEIGHT:1
-                                                          #                }],
                                                           name="{} {}".format(lc.activation_mech.name,
                                                                               COMPARATOR_MECHANISM),
                                                           context=context)
@@ -623,7 +611,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                            function=learning_function,
                                            # learning_signals=[lc.activation_mech_projection],
                                            learning_signals=[learning_projection],
-                                           name=lc.activation_mech_projection.name + " " + LEARNING_MECHANISM,
+                                           name=LEARNING_MECHANISM + " for " + lc.activation_mech_projection.name,
                                            context=context)
 
     # IMPLEMENTATION NOTE:
@@ -645,13 +633,48 @@ def _instantiate_learning_components(learning_projection, context=None):
                       name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT,
                       context=context)
 
-    # IMPLEMENTATION NOTE: [6/4/17] THIS IS NOW DONE IN LearningMechanism._instantiate_learning_signal
-    # # Assign learning_mechanism as sender of learning_projection and return
-    # # Note: learning_projection still has to be assigned to the learning_mechanism's outputState;
-    # #       however, this requires that it's variable be assigned (which occurs in the rest of its
-    # #       _instantiate_sender method, from which this was called) and that its value be assigned
-    # #       (which occurs in its _instantiate_function method).
-    # learning_projection.sender = learning_mechanism.output_state
+
+def _instantiate_error_signal_projection(sender, receiver):
+    """Instantiate a MappingProjection to carry an error_signal to a LearningMechanism
+
+    Can take as the sender an `ObjectiveMechanism` or a `LearningMechanism`.
+    If the sender is an ObjectiveMechanism, uses its `primary OutputState <OutputState_Primary>`.
+    If the sender is a LearningMechanism, uses its `ERROR_SIGNAL <LearningMechanism.output_states>` OutputState.
+    The receiver must be a LearningMechanism; its `ERROR_SIGNAL <LearningMechanism.input_states>` InputState is used.
+    Uses and IDENTITY_MATRIX for the MappingProjection, so requires that the sender be the same length as the receiver.
+
+    """
+    from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+
+    if isinstance(sender, ObjectiveMechanism):
+        sender = sender.output_states[OUTCOME]
+    elif isinstance(sender, LearningMechanism):
+        sender = sender.output_states[ERROR_SIGNAL]
+    else:
+        raise LearningAuxilliaryError("Sender of the error signal Projection {} "
+                                     "must be either an ObjectiveMechanism or "
+                                     "a LearningMechanism".format(sender))
+
+    if isinstance(receiver, LearningMechanism):
+        receiver = receiver.input_states[ERROR_SIGNAL]
+    else:
+        raise LearningAuxilliaryError("Receiver of the error signal Projection "
+                                     "{} must be a LearningMechanism".format(receiver))
+
+    if len(sender.value) != len(receiver.value):
+        raise LearningAuxilliaryError("The length of the OutputState ({}) for "
+                                     "the sender ({}) of the error signal "
+                                     "Projection does not match the length of "
+                                     "the InputState ({}) for the receiver "
+                                     "({})".format(len(sender.value),
+                                                   sender.owner.name,
+                                                   len(receiver.value),
+                                                   receiver.owner.name))
+
+    return MappingProjection(sender=sender,
+                             receiver=receiver,
+                             matrix=IDENTITY_MATRIX,
+                             name=sender.owner.name + ' to ' + ERROR_SIGNAL)
 
 
 @tc.typecheck
@@ -723,11 +746,13 @@ def _assign_error_signal_projections(processing_mech, system, objective_mech=Non
         #    to a newly created ERROR_SIGNAL InputState on afferent_lm
         for eff_lm in efferent_learning_mechs:
             # Make sure Projection doesn't already exist
-            if not any(proj.sender.owner == eff_lm for proj in aff_lm.afferents
-                       if ERROR_SIGNAL in proj.receiver.name):
-                aff_lm.add_states(InputState(variable=eff_lm.output_states[ERROR_SIGNAL].value,
-                                             projections=eff_lm.output_states[ERROR_SIGNAL],
+            if not any(proj.sender.owner == eff_lm for proj in aff_lm.afferents if ERROR_SIGNAL in proj.receiver.name):
+                # aff_lm.add_states(InputState(variable=eff_lm.output_states[ERROR_SIGNAL].value,
+                #                              projections=eff_lm.output_states[ERROR_SIGNAL],
+                #                              name=ERROR_SIGNAL))
+                aff_lm.add_states(InputState(projections=eff_lm.output_states[ERROR_SIGNAL],
                                              name=ERROR_SIGNAL))
+
         if not aff_lm.systems:
             aff_lm.systems[system] = LEARNING
 
