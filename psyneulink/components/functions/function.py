@@ -9397,7 +9397,7 @@ class BackPropagation(LearningFunction):
 
         where:
 
-           :math:`\\frac{\delta E}{\delta W}` = :math:`\\frac{\delta E}{\delta W} * \\frac{\delta E}{\delta W}`
+           :math:`\\frac{\delta E}{\delta W}` = :math:`\\frac{\delta E}{\delta A} * \\frac{\delta A}{\delta W}`
 
              is the derivative of the `error_signal <BackPropagation.error_signal>` with respect to the weights;
 
