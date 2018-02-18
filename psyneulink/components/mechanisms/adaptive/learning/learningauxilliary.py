@@ -146,6 +146,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function
+from psyneulink.components.states.state import ADD_STATES
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
@@ -746,8 +747,10 @@ def _assign_error_signal_projections(processing_mech, system, objective_mech=Non
         for eff_lm in efferent_learning_mechs:
             # Make sure Projection doesn't already exist
             if not any(proj.sender.owner == eff_lm for proj in aff_lm.afferents if ERROR_SIGNAL in proj.receiver.name):
-                aff_lm.add_states(InputState(variable=eff_lm.output_states[ERROR_SIGNAL].value,
-                                             projections=eff_lm.output_states[ERROR_SIGNAL],
+                # aff_lm.add_states(InputState(variable=eff_lm.output_states[ERROR_SIGNAL].value,
+                #                              projections=eff_lm.output_states[ERROR_SIGNAL],
+                #                              name=ERROR_SIGNAL))
+                aff_lm.add_states(InputState(projections=eff_lm.output_states[ERROR_SIGNAL],
                                              name=ERROR_SIGNAL))
 
         if not aff_lm.systems:

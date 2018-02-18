@@ -709,6 +709,11 @@ class InputState(State_Base):
         else:
             context = self
 
+        # # FIX: 2/17/18:
+        # CREATE:
+        if variable is None and size is None and projections is not None:
+            variable = self._assign_variable_from_projection(variable, size, projections)
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   weight=weight,
@@ -746,6 +751,28 @@ class InputState(State_Base):
         if self.name is self.componentName or self.componentName + '-' in self.name:
             self._assign_default_state_name(context=context)
 
+    def _assign_variable_from_projection(self, variable, size, projections):
+        """
+        DOCUMENT THIS;  CONSISTENT WITH HOW A STATE IS SPECIFIED IN MECHANISM'S CONSTRUCTOR)
+        """
+        from psyneulink.components.projections.projection import \
+            Projection, _parse_connection_specs, ProjectionTuple
+
+        if not isinstance(projections, list):
+            projections = [projections]
+
+        # Use only first specification in the list returned, and assume any others are the same size 
+        #     (which they must be); leave validation of this to _instantiate_projections_to_state
+        proj_spec = _parse_connection_specs(InputState, self, projections)[0]
+        
+        if isinstance(proj_spec.projection, Projection):
+            variable = proj_spec.projection.value
+        elif isinstance(proj_spec.state, OutputState):
+            variable = proj_spec.state.value
+        else:
+            raise InputStateError("Unrecognized specification for \'{}\' arg of {}".format(PROJECTIONS, self.name))
+
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate weights and exponents
