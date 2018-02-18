@@ -722,7 +722,6 @@ def _assign_error_signal_projections(processing_mech, system, objective_mech=Non
     Assign an error_signal Projection to the LearningMechanism for each afferent Projection of processing_mechanism
     that is being learned, from the LearningMechanism of each of processing_mechanism's efferents that is being learned,
     unless such a projection already exists [??and only for afferents and efferents that belong to the same System.]
-
     """
 
     # Get all LearningMechanisms for Projection to and from sample_mech (processing_mechanism)
