@@ -244,7 +244,7 @@ A System cannot itself be specified for learning.  However, if learning has been
 <System_Execution_Learning>` as part of the System.  Note, however, that for the learning Components of a Process to
 be implemented by a System, learning must be `specified for the entire Process <Process_Learning_Specification>`. The
 learning Components of a System can be displayed using the System's `System.show_graph` method with its
-**show_learning** argument assigned as `True`.
+**show_learning** argument assigned as `True` or *ALL*.
 
 
 .. _System_Execution:
@@ -312,13 +312,14 @@ is executed for any Components (individual Projections or Processes) for which i
 <Process_Learning_Sequence>` after the  `processing <System_Execution_Processing>` of each `TRIAL` has completed, but
 before the `controller <System.controller> is executed <System_Execution_Control>`.  The learning Components of a
 System can be displayed using the System's `show_graph <System.show_graph>` method with its **show_learning**
-argument assigned `True`. The stimuli used for learning (both inputs and targets) can be specified in either of two
-formats, Sequence or Mechanism, that are described in the `Run` module; see `Run_Inputs` and `Run_Targets`).  Both
-formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `origin_mechanisms
-<System.origin_mechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
-or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for each `TARGET` Mechanism (listed
-in its `target_mechanisms <System.target_mechanisms>` attribute).  Targets can also be specified in a `function
-format <Run_Targets_Function_Format>`, which generates a target for each execution of a  `TARGET` Mechanism.
+argument assigned `True` or *ALL*. The stimuli used for learning (both inputs and targets) can be specified in either
+of two formats, Sequence or Mechanism, that are described in the `Run` module; see `Run_Inputs` and `Run_Targets`).
+Both formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its
+`origin_mechanisms <System.origin_mechanisms>` attribute).  If the targets are specified in `Sequence
+<Run_Targets_Sequence_Format>` or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for
+each `TARGET` Mechanism (listed in its `target_mechanisms <System.target_mechanisms>` attribute).  Targets can also
+be specified in a `function format <Run_Targets_Function_Format>`, which generates a target for each execution of a
+`TARGET` Mechanism.
 
 .. note::
    A `TARGET` Mechanism of a Process is not necessarily one of the `TARGET` Mechanisms of the System to which it belongs
@@ -3174,6 +3175,7 @@ class System(System_Base):
                    origin_and_terminal_color = 'brown',
                    learning_color = 'orange',
                    control_color='blue',
+                   system_color = 'purple',
                    output_fmt='pdf',
                    ):
         """Generate a display of the graph structure of mechanisms and projections in the system.
@@ -3253,6 +3255,9 @@ class System(System_Base):
             the prediction Mechanisms determine the input to the `ORIGIN` Mechanisms when the EVCControlMechanism
             `simulates execution <EVCControlMechanism_Execution>` of the System.
 
+        system_color : keyword : default `purple`
+            specifies the color in which the node representing input from the System is displayed.
+
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
             'jupyter': return the object (ideal for working in jupyter/ipython notebooks).
@@ -3314,6 +3319,9 @@ class System(System_Base):
                         return "{}\n{}".format(item.name, dim_string)
                 else:
                     return item.name
+
+            elif isinstance(item, System):
+                return "System\n{}".format(item.name)
 
             else:
                 raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
@@ -3451,12 +3459,17 @@ class System(System_Base):
                                     and show_learning is ALL):
                                 for input_state in sndr.input_states:
                                     for proj in input_state.path_afferents:
-                                        # Skip any Projections from ProcesInputStates or SystemInputStates
-                                        if isinstance(proj.sender.owner, (Process, System)):
-                                            continue
                                         output_mech = proj.sender.owner
-                                        G.edge(_get_label(output_mech), _get_label(sndr), color=learning_color,
+                                        # Skip any Projections from ProcesInputStates or SystemInputStates
+                                        if isinstance(output_mech, Process):
+                                            continue
+                                        elif isinstance(output_mech, System):
+                                            G.node(_get_label(output_mech), color=system_color, penwidth='3')
+                                        G.edge(_get_label(output_mech),
+                                               _get_label(sndr),
+                                               color=learning_color,
                                                label=proj.name)
+                                        assert True
 
 
         # add control graph if show_control
