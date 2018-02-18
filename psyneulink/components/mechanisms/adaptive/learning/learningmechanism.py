@@ -453,7 +453,7 @@ the sequence, then *no* Projection is created or assigned to its LearningMechani
        :scale: 50%
 
        ComparatorMechanism and LearningMechanisms and associated Projections created for a sequence of two
-       MappingProjections specified for learning.  Each Mechanism is labeled by its type (uppler line, in bold) and
+       MappingProjections specified for learning.  Each Mechanism is labeled by its type (upper line, in bold) and
        its designated status in the Process and/or System to which it belongs (lower line, capitalized).  Italicized
        label beside a component indicates the attribute of the LearningMechanism with which it is associated.
 
