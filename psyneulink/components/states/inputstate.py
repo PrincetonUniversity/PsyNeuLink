@@ -32,15 +32,26 @@ for additional details about the role of InputStates in Mechanisms, and their as
 Creating an InputState
 ----------------------
 
-An InputState can be created by calling its constructor, but in general this is not necessary as a Mechanism can
+An InputState can be created by calling its constructor, but in general this is not necessary as a `Mechanism` can
 usually automatically create the InputState(s) it needs when it is created.  For example, if the Mechanism is
-being created within the `pathway <Process.pathway` of a `Process`, its InputState is created and  assigned as the
-`receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism <Mechanism>` in
-the `pathway <Process.pathway>`.  If it is created using its constructor, and a Mechanism is specified in the
-**owner** argument, it is automatically assigned to that Mechanism.  Note that its `value <InputState.value>` must
+being created within the `pathway <Process.pathway>` of a `Process`, its InputState is created and  assigned as the
+`receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding Mechanism in the `pathway
+<Process.pathway>`.  InputStates can also be specified in the **input_states** argument of a Mechanism's
+constructor (see `below <InputState_Specification>`).
+
+The `variable <variable.InputState>` of an InputState can be specified using the **variable** or **size** arguments of
+its constructor.  It can also be specified using the **projections** argument, if neither **variable** nor **size** is
+specified.  The **projections** argument is used to `specify Projections <State_Projections>` to the InputState. If
+neither the **variable** nor **size** arguments is specified, then the value of the `Projections(s) <Projection>` or
+their `sender <Projection_Base.sender>`\\s (all of which must be the same length) is used to determine the `variable
+<InputState.variable>` of the InputState.
+
+If an Inputsate is created using its constructor, and a Mechanism is specified in the **owner** argument,
+it is automatically assigned to that Mechanism.  Note that its `value <InputState.value>` (generally determined
+by the size of its `variable <InputState.variable>` -- see `below <InputState_Variable_and_Value>`) must
 be compatible (in number and type of elements) with the item of its owner's `variable <Mechanism_Base.variable>` to
 which it is assigned (see `below <InputState_Variable_and_Value>` and `Mechanism <Mechanism_Variable_and_InputStates>`).
-If the **owner* is not specified, `initialization is deferred.
+If the *owner* is not specified, `initialization <State_Deferred_Initialization>` is deferred.
 
 .. _InputState_Deferred_Initialization:
 
@@ -96,8 +107,8 @@ former (that is, if an *INPUT_STATES* entry is included in the parameter diction
 
 .. _InputState_Variable_and_Value:
 
-*InputState's* `variable <InputState.variable>`, `value <InputState.value>` *and Mechanism's* `variable
-<Mechanism_Base.variable>`
+*InputState's* `variable <InputState.variable>`, `value <InputState.value>` *and Mechanism's* `variable <Mechanism_Base.variable>`
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Each InputState specified in the **input_states** argument of a Mechanism's constructor must correspond to an item of
 the Mechanism's `variable <Mechanism_Base.variable>` attribute (see `Mechanism <Mechanism_Variable_and_InputStates>`),
@@ -556,6 +567,10 @@ class InputState(State_Base):
     variable : number, list or np.ndarray
         specifies the template for the InputState's `variable <InputState.variable>` attribute.
 
+    size : int, list or np.ndarray of ints
+        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+        if **variable** is specified, it takes precedence over the specification of **size**.
+
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to aggregate the `values <Projection_Base.value>` of the `Projections <Projection>`
         received by the InputState, under the possible influence of `GatingProjections <GatingProjection>` received
@@ -566,7 +581,10 @@ class InputState(State_Base):
         specifies the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
         received by the InputState, and that are listed in its `path_afferents <InputState.path_afferents>` and
         `mod_afferents <InputState.mod_afferents>` attributes, respectively (see
-        `InputState_Compatability_and_Constraints` for additional details).
+        `InputState_Compatability_and_Constraints` for additional details).  If **projections** but neither
+        **variable** nor **size** are specified, then the `value <Projection.value>` of the Projection(s) or their
+        `senders <Projection.sender>` specified in **projections** argument are used to determine the InputState's
+        `variable <InputState.variable>`.
 
     weight : number : default 1
         specifies the value of the `weight <InputState.weight>` attribute of the InputState.
@@ -605,14 +623,9 @@ class InputState(State_Base):
     variable : value, list or np.ndarray
         the template for the `value <Projection_Base.value>` of each Projection that the InputState receives,
         each of which must match the format (number and types of elements) of the InputState's
-        `variable <InputState.variable>`.
-
-    size : int, list or np.ndarray of ints
-        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
-        if **variable** is specified, it takes precedence over the specification of **size**.
-        As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+        `variable <InputState.variable>`.  If neither the **variable** or **size** argument is specified, and
+        **projections** is specified, then `variable <InputState.variable>` is assigned the `value
+        <Projection.value>` of the Projection(s) or its `sender <Projection.sender>`.
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
         performs an element-wise (Hadamard) aggregation of the `value <Projection_Base.value>` of each Projection
@@ -752,8 +765,7 @@ class InputState(State_Base):
             self._assign_default_state_name(context=context)
 
     def _assign_variable_from_projection(self, variable, size, projections):
-        """
-        DOCUMENT THIS;  CONSISTENT WITH HOW A STATE IS SPECIFIED IN MECHANISM'S CONSTRUCTOR)
+        """Assign variable to value of Projection in projections
         """
         from psyneulink.components.projections.projection import \
             Projection, _parse_connection_specs, ProjectionTuple
