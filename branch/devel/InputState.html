@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputState &mdash; PsyNeuLink 0.4.4.0+27.g1588fb0 documentation</title>
+  <title>InputState &mdash; PsyNeuLink 0.4.4.0+28.g59d9980 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.0+27.g1588fb0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.0+28.g59d9980 documentation" href="index.html"/>
         <link rel="up" title="States" href="State.html"/>
         <link rel="next" title="ParameterState" href="ParameterState.html"/>
         <link rel="prev" title="States" href="State.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.0+27
+                0.4.4.0+28
               </div>
             
           
@@ -200,24 +200,30 @@ for additional details about the role of InputStates in Mechanisms, and their as
 </div>
 <div class="section" id="creating-an-inputstate">
 <span id="inputstate-creation"></span><h2>Creating an InputState<a class="headerlink" href="#creating-an-inputstate" title="Permalink to this headline">¶</a></h2>
-<p>An InputState can be created by calling its constructor, but in general this is not necessary as a Mechanism can
+<p>An InputState can be created by calling its constructor, but in general this is not necessary as a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> can
 usually automatically create the InputState(s) it needs when it is created.  For example, if the Mechanism is
-being created within the <code class="xref any docutils literal"><span class="pre">pathway</span> <span class="pre">&lt;Process.pathway</span></code> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, its InputState is created and  assigned as the
-<a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the  preceding <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in
-the <a class="reference internal" href="Process.html#psyneulink.components.process.Process.pathway" title="psyneulink.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>.  If it is created using its constructor, and a Mechanism is specified in the
-<strong>owner</strong> argument, it is automatically assigned to that Mechanism.  Note that its <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> must
+being created within the <a class="reference internal" href="Process.html#psyneulink.components.process.Process.pathway" title="psyneulink.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, its InputState is created and  assigned as the
+<a class="reference internal" href="MappingProjection.html#psyneulink.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the  preceding Mechanism in the <a class="reference internal" href="Process.html#psyneulink.components.process.Process.pathway" title="psyneulink.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>.  InputStates can also be specified in the <strong>input_states</strong> argument of a Mechanism’s
+constructor (see <a class="reference internal" href="#inputstate-specification"><span class="std std-ref">below</span></a>).</p>
+<p>The <code class="xref any docutils literal"><span class="pre">variable</span></code> of an InputState can be specified using the <strong>variable</strong> or <strong>size</strong> arguments of
+its constructor.  It can also be specified using the <strong>projections</strong> argument, if neither <strong>variable</strong> nor <strong>size</strong> is
+specified.  The <strong>projections</strong> argument is used to <a class="reference internal" href="State.html#state-projections"><span class="std std-ref">specify Projections</span></a> to the InputState. If
+neither the <strong>variable</strong> nor <strong>size</strong> arguments is specified, then the value of the <a class="reference internal" href="Projection.html"><span class="doc">Projections(s)</span></a> or
+their <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.sender" title="psyneulink.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>s (all of which must be the same length) is used to determine the <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of the InputState.</p>
+<p>If an InputState is created using its constructor, and a Mechanism is specified in the <strong>owner</strong> argument,
+it is automatically assigned to that Mechanism.  Note that its <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (generally determined
+by the size of its <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> – see <a class="reference internal" href="#inputstate-variable-and-value"><span class="std std-ref">below</span></a>) must
 be compatible (in number and type of elements) with the item of its owner’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to
 which it is assigned (see <a class="reference internal" href="#inputstate-variable-and-value"><span class="std std-ref">below</span></a> and <a class="reference internal" href="Mechanism.html#mechanism-variable-and-inputstates"><span class="std std-ref">Mechanism</span></a>).
-If the <a href="#id1"><span class="problematic" id="id2">**</span></a>owner* is not specified, <a href="#id3"><span class="problematic" id="id4">`</span></a>initialization is deferred.</p>
+If the <strong>owner</strong> argument is not specified, <a class="reference internal" href="State.html#state-deferred-initialization"><span class="std std-ref">initialization</span></a> is deferred.</p>
 <div class="section" id="owner-assignment-and-deferred-initialization">
 <span id="inputstate-deferred-initialization"></span><h3>Owner Assignment and Deferred Initialization<a class="headerlink" href="#owner-assignment-and-deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>An InputState must be owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  When InputState is specified in the constructor for a
 Mechanism (see <a class="reference internal" href="#inputstate-specification"><span class="std std-ref">below</span></a>), it is automatically assigned to that Mechanism as its owner. If
-the InputState is created directly, its <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.owner" title="psyneulink.components.states.inputstate.InputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> can specified in the <strong>owner</strong>  argument of its
-constructor, in which case it is assigned to that Mechanism. Otherwise, its initialization is <a class="reference internal" href="State.html#state-deferred-initialization"><span class="std std-ref">deferred</span></a> until
+the InputState is created on its own, its <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.owner" title="psyneulink.components.states.inputstate.InputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> can specified in the <strong>owner</strong>  argument of its
+constructor, in which case it is assigned to that Mechanism. If its <strong>owner</strong> argument is not specified, its
+initialization is <a class="reference internal" href="State.html#state-deferred-initialization"><span class="std std-ref">deferred</span></a> until
 the InputState is assigned to a Mechanism using the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.add_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.</p>
-<blockquote>
-<div>If its <a href="#id5"><span class="problematic" id="id6">**</span></a>owner* is not specified, <a href="#id7"><span class="problematic" id="id8">`</span></a>initialization is deferred.</div></blockquote>
 </div>
 <div class="section" id="primary-inputstate">
 <span id="inputstate-primary"></span><h3>Primary InputState<a class="headerlink" href="#primary-inputstate" title="Permalink to this headline">¶</a></h3>
@@ -228,7 +234,7 @@ entry of the Mechanism’s <a class="reference internal" href="Mechanism.html#ps
 <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_values" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_values"><code class="xref any py py-attr docutils literal"><span class="pre">input_values</span></code></a> attributes.</p>
 </div>
 <div class="section" id="inputstate-specification">
-<span id="id9"></span><h3>InputState Specification<a class="headerlink" href="#inputstate-specification" title="Permalink to this headline">¶</a></h3>
+<span id="id1"></span><h3>InputState Specification<a class="headerlink" href="#inputstate-specification" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="specifying-inputstates-when-a-mechanism-is-created">
 <h4>Specifying InputStates when a Mechanism is created<a class="headerlink" href="#specifying-inputstates-when-a-mechanism-is-created" title="Permalink to this headline">¶</a></h4>
 <p>InputStates can be specified for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> when it is created, in the <strong>input_states</strong> argument of the
@@ -246,7 +252,8 @@ parameter dictionary in the <strong>params</strong> argument.  The number of Inp
 the number of items in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute.</p>
 </div>
 </div></blockquote>
-<p id="inputstate-variable-and-value"><em>InputState’s</em> <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> <em>and Mechanism’s</em> <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></p>
+<div class="section" id="inputstate-s-variable-value-and-mechanism-s-variable">
+<span id="inputstate-variable-and-value"></span><h5><em>InputState’s</em> <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> <em>and Mechanism’s</em> <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a><a class="headerlink" href="#inputstate-s-variable-value-and-mechanism-s-variable" title="Permalink to this headline">¶</a></h5>
 <p>Each InputState specified in the <strong>input_states</strong> argument of a Mechanism’s constructor must correspond to an item of
 the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute (see <a class="reference internal" href="Mechanism.html#mechanism-variable-and-inputstates"><span class="std std-ref">Mechanism</span></a>),
 and the <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputState must be compatible with that item (that is, have the same number
@@ -260,6 +267,7 @@ match the item of its owner’s <a class="reference internal" href="Mechanism.ht
 straightforward is in the <strong>variable</strong> argument of its constructor.  More commonly, however, it is determined by
 the context in which it is being created, such as the specification for its owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> or for the InputState in the Mechanism’s <strong>input_states</strong> argument (see <a class="reference internal" href="#inputstate-forms-of-specification"><span class="std std-ref">below</span></a> and <a class="reference internal" href="Mechanism.html#mechanism-inputstate-specification"><span class="std std-ref">Mechanism InputState specification</span></a>
 for details).</p>
+</div>
 </div>
 <div class="section" id="adding-inputstates-to-a-mechanism-after-it-is-created">
 <h4>Adding InputStates to a Mechanism after it is created<a class="headerlink" href="#adding-inputstates-to-a-mechanism-after-it-is-created" title="Permalink to this headline">¶</a></h4>
@@ -600,6 +608,8 @@ the InputState is created.</li>
 <li><strong>reference_value</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – the value of the item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute to which
 the InputState is assigned; used as the template for the InputState’s <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.</li>
 <li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the template for the InputState’s <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute.</li>
+<li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – specifies variable as array(s) of zeros if <strong>variable</strong> is not passed as an argument;
+if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</li>
 <li><strong>function</strong> (<em>Function</em><em> or </em><em>method : default LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to aggregate the <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.value" title="psyneulink.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of the <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>
 received by the InputState, under the possible influence of <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received
 by the InputState.  It must produce a result that has the same format (number and type of elements) as the
@@ -607,7 +617,10 @@ item of its owner Mechanism’s <a class="reference internal" href="Mechanism.ht
 <li><strong>projections</strong> (<em>list of Projection specifications</em>) – specifies the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> and/or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> to be
 received by the InputState, and that are listed in its <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.path_afferents" title="psyneulink.components.states.inputstate.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> and
 <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.mod_afferents" title="psyneulink.components.states.inputstate.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attributes, respectively (see
-<a class="reference internal" href="#inputstate-compatability-and-constraints"><span class="std std-ref">InputState variable: Compatibility and Constraints</span></a> for additional details).</li>
+<a class="reference internal" href="#inputstate-compatability-and-constraints"><span class="std std-ref">InputState variable: Compatibility and Constraints</span></a> for additional details).  If <strong>projections</strong> but neither
+<strong>variable</strong> nor <strong>size</strong> are specified, then the <code class="xref any docutils literal"><span class="pre">value</span></code> of the Projection(s) or their
+<code class="xref any docutils literal"><span class="pre">senders</span></code> specified in <strong>projections</strong> argument are used to determine the InputState’s
+<a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>weight</strong> (<em>number : default 1</em>) – specifies the value of the <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.weight" title="psyneulink.components.states.inputstate.InputState.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> attribute of the InputState.</li>
 <li><strong>exponent</strong> (<em>number : default 1</em>) – specifies the value of the <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.exponent" title="psyneulink.components.states.inputstate.InputState.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> attribute of the InputState.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
@@ -650,19 +663,8 @@ the dictionary override any assigned to those parameters in arguments of the con
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.components.states.inputstate.InputState.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>value, list or np.ndarray</em> – the template for the <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.value" title="psyneulink.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each Projection that the InputState receives,
 each of which must match the format (number and types of elements) of the InputState’s
-<a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.states.inputstate.InputState.size">
-<code class="descname">size</code><a class="headerlink" href="#psyneulink.components.states.inputstate.InputState.size" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int, list or np.ndarray of ints</em> – specifies variable as array(s) of zeros if <strong>variable</strong> is not passed as an argument;
-if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.
-As an example, the following mechanisms are equivalent:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">T1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
-<span class="n">T2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
-</pre></div>
-</div>
+<a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  If neither the <strong>variable</strong> or <strong>size</strong> argument is specified, and
+<strong>projections</strong> is specified, then <a class="reference internal" href="#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is assigned the <code class="xref any docutils literal"><span class="pre">value</span></code> of the Projection(s) or its <code class="xref any docutils literal"><span class="pre">sender</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -769,7 +771,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.0+27.g1588fb0',
+            VERSION:'0.4.4.0+28.g59d9980',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
