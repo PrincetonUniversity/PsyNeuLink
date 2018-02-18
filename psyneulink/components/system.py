@@ -3175,6 +3175,7 @@ class System(System_Base):
                    origin_and_terminal_color = 'brown',
                    learning_color = 'orange',
                    control_color='blue',
+                   prediction_mechanism_color='pink',
                    system_color = 'purple',
                    output_fmt='pdf',
                    ):
@@ -3254,6 +3255,10 @@ class System(System_Base):
             `ORIGIN` Mechanisms of the System, to indicate that although no projection are created for these,
             the prediction Mechanisms determine the input to the `ORIGIN` Mechanisms when the EVCControlMechanism
             `simulates execution <EVCControlMechanism_Execution>` of the System.
+
+        prediction_mechanism_color : keyword : default `pink`
+            specifies the color in which the `prediction_mechanisms
+            <EVCControlMechanism.prediction_mechanisms>` are displayed for a System using an `EVCControlMechanism`
 
         system_color : keyword : default `purple`
             specifies the color in which the node representing input from the System is displayed.
@@ -3511,9 +3516,13 @@ class System(System_Base):
             for object_item in self.execution_list:
                 mech = object_item
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-                    G.node(_get_label(mech), color='pink')
+                    G.node(_get_label(mech),
+                           color=prediction_mechanism_color)
                     recvr = mech.origin_mech
-                    G.edge(_get_label(mech), _get_label(recvr), label=' prediction assignment', color='pink')
+                    G.edge(_get_label(mech),
+                           _get_label(recvr),
+                           label=' prediction assignment',
+                           color=prediction_mechanism_color)
                     pass
 
         # return
