@@ -708,6 +708,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         """Validate FUNCTION and Mechanism params
 
         """
+        from psyneulink.components.functions.function import DistributionFunction
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -755,7 +756,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: SHOULD THIS (AND SMOOTHING_FACTOR) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
         # Validate NOISE:
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise.function
             self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
+
         # Validate SMOOTHING_FACTOR:
         if SMOOTHING_FACTOR in target_set:
             smoothing_factor = target_set[SMOOTHING_FACTOR]
@@ -763,16 +770,18 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("smoothing_factor parameter ({}) for {} must be a float between 0 and 1".
                                     format(smoothing_factor, self.name))
 
-        # Validate RANGE:
-        if CLIP in target_set:
+        # Validate CLIP:
+        if CLIP in target_set and target_set[CLIP] is not None:
             clip = target_set[CLIP]
             if clip:
-                if not (isinstance(clip, tuple) and len(clip)==2 and all(isinstance(i, numbers.Number) for i in clip)):
+                if not (isinstance(clip, (list,tuple)) and len(clip)==2 and all(isinstance(i, numbers.Number)
+                                                                                for i in clip)):
                     raise TransferError("clip parameter ({}) for {} must be a tuple with two numbers".
                                         format(clip, self.name))
                 if not clip[0] < clip[1]:
                     raise TransferError("The first item of the clip parameter ({}) must be less than the second".
                                         format(clip, self.name))
+            target_set[CLIP] = list(clip)
 
         # self.integrator_function = Integrator(
         #     # default_variable=self.default_variable,
@@ -783,6 +792,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _validate_noise(self, noise, var):
         # Noise is a list or array
+        from psyneulink.components.functions.function import DistributionFunction
+
         if isinstance(noise, (np.ndarray, list)):
             if len(noise) == 1:
                 pass
