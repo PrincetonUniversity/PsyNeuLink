@@ -60,15 +60,13 @@ Owner Assignment and Deferred Initialization
 
 An InputState must be owned by a `Mechanism <Mechanism>`.  When InputState is specified in the constructor for a
 Mechanism (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If
-the InputState is created directly, its `owner <InputState.owner>` can specified in the **owner**  argument of its
-constructor, in which case it is assigned to that Mechanism. Otherwise, its initialization is `deferred
-<State_Deferred_Initialization>` until
+the InputState is created on its own, its `owner <InputState.owner>` can specified in the **owner**  argument of its
+constructor, in which case it is assigned to that Mechanism. If its **owner** argument is not specified, its
+initialization is `deferred <State_Deferred_Initialization>` until
 COMMENT:
 TBI: its `owner <State_Base.owner>` attribute is assigned or
 COMMENT
 the InputState is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
-
- If its **owner* is not specified, `initialization is deferred.
 
 .. _InputState_Primary:
 
