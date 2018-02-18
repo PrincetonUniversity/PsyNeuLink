@@ -46,12 +46,12 @@ neither the **variable** nor **size** arguments is specified, then the value of 
 their `sender <Projection_Base.sender>`\\s (all of which must be the same length) is used to determine the `variable
 <InputState.variable>` of the InputState.
 
-If an Inputsate is created using its constructor, and a Mechanism is specified in the **owner** argument,
+If an InputState is created using its constructor, and a Mechanism is specified in the **owner** argument,
 it is automatically assigned to that Mechanism.  Note that its `value <InputState.value>` (generally determined
 by the size of its `variable <InputState.variable>` -- see `below <InputState_Variable_and_Value>`) must
 be compatible (in number and type of elements) with the item of its owner's `variable <Mechanism_Base.variable>` to
 which it is assigned (see `below <InputState_Variable_and_Value>` and `Mechanism <Mechanism_Variable_and_InputStates>`).
-If the *owner* is not specified, `initialization <State_Deferred_Initialization>` is deferred.
+If the **owner** argument is not specified, `initialization <State_Deferred_Initialization>` is deferred.
 
 .. _InputState_Deferred_Initialization:
 
