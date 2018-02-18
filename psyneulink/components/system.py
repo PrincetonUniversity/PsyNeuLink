@@ -3321,7 +3321,10 @@ class System(System_Base):
                     return item.name
 
             elif isinstance(item, System):
-                return "System\n{}".format(item.name)
+                if "SYSTEM" in item.name.upper():
+                    return item.name
+                else:
+                    return "{}\nSystem".format(item.name)
 
             else:
                 raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
@@ -3508,9 +3511,9 @@ class System(System_Base):
             for object_item in self.execution_list:
                 mech = object_item
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-                    G.node(_get_label(mech), color='purple')
+                    G.node(_get_label(mech), color='pink')
                     recvr = mech.origin_mech
-                    G.edge(_get_label(mech), _get_label(recvr), label=' prediction assignment', color='purple')
+                    G.edge(_get_label(mech), _get_label(recvr), label=' prediction assignment', color='pink')
                     pass
 
         # return
