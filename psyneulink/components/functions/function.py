@@ -9392,26 +9392,25 @@ class BackPropagation(LearningFunction):
     backpropagation (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_)
     learning algorithm.  The weight change matrix is computed as:
 
-    .. math::
+        *weight_change_matrix* = `learning_rate <BackPropagation.learning_rate> * `activation\_input
+        <BackPropagation.activation_input>` * :math:`\\frac{\delta E}{\delta W}`
 
-       \\weight_change_matrix = `learning_rate <BackPropagation.learning_rate> * `activation_input
-       <BackPropagation.activation_input>` * dE_dW
+        where:
 
-       where:
+           :math:`\\frac{\delta E}{\delta W}` = :math:`\\frac{\delta E}{\delta W} * \\frac{\delta E}{\delta W}`
 
-           dE_dW = dE_dA * dA_dW
+             is the derivative of the `error_signal <BackPropagation.error_signal>` with respect to the weights;
 
-             is the derivative of the error (`error_signal <BackPropagation.error_signal>`) with respect to the weights;
-
-           dE_dA = `error_matrix <BackPropagation.error_matrix>` \dot `error_signal <BackPropagation.error_signal>`)
+           :math:`\\frac{\delta E}{\delta A}` = `error_matrix <BackPropagation.error_matrix>` :math:`\\cdot`
+           `error_signal <BackPropagation.error_signal>`
 
              is the derivative of the error with respect to output activity in `activation_output
              <BackPropagation.activation_output>` (i.e., the contribution of each output unit to the `error_signal
              <BackPropagation.error_signal>`); and
 
-           dA_dW = `activation_derivative_fct <BackPropagation.activation_derivative_fct>`\\(input=
-           `activation_input <BackPropagation.activation_input>`,
-           `activation_output <BackPropagation.activation_output>`)
+           :math:`\\frac{\delta A}{\delta W}` = `activation_derivative <BackPropagation.activation_derivative>`
+           (*input =* `activation_input <BackPropagation.activation_input>`,
+           *output =* `activation_output <BackPropagation.activation_output>`\\)
 
              is the derivative of `activation_output <BackPropagation.activation_output>`.
 
@@ -9692,6 +9691,8 @@ class BackPropagation(LearningFunction):
                  context=None,
                  **kwargs):
         """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms
+        Note that although variable and error_matrix appear to have defaults, they just be specified for the
+        function to execute.
 
         Arguments
         ---------
