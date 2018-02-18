@@ -151,7 +151,7 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.keywords import \
     BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, \
-    IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
+    IDENTITY_MATRIX, INPUT_STATES, LEARNING, LEARNING_MECHANISM, \
     MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, \
     WEIGHT, PROJECTIONS, TDLEARNING_FUNCTION, PREDICTION_ERROR_MECHANISM, \
     FUNCTION, HOLLOW_MATRIX
@@ -745,11 +745,11 @@ def _assign_error_signal_projections(processing_mech, system, objective_mech=Non
         #    to a newly created ERROR_SIGNAL InputState on afferent_lm
         for eff_lm in efferent_learning_mechs:
             # Make sure Projection doesn't already exist
-            if not any(proj.sender.owner == eff_lm for proj in aff_lm.afferents
-                       if ERROR_SIGNAL in proj.receiver.name):
+            if not any(proj.sender.owner == eff_lm for proj in aff_lm.afferents if ERROR_SIGNAL in proj.receiver.name):
                 aff_lm.add_states(InputState(variable=eff_lm.output_states[ERROR_SIGNAL].value,
                                              projections=eff_lm.output_states[ERROR_SIGNAL],
                                              name=ERROR_SIGNAL))
+
         if not aff_lm.systems:
             aff_lm.systems[system] = LEARNING
 

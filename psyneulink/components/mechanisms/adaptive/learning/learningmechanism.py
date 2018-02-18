@@ -1090,6 +1090,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                         list=[state for state in self.output_states if
                                                                   isinstance(state, LearningSignal)])
 
+        # Initialize _error_signals;  this is assigned for efficiency (rather than just using the property)
+        #    since it is used by the execute method
+        self._error_signal_input_states = self.error_signal_input_states
+
     def add_states(self, states, context=ADD_STATES):
         """Add error_source and error_matrix for each InputState added"""
 
@@ -1098,6 +1102,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
             error_source = input_state.path_afferents[0].sender.owner
             self.error_sources.append(error_source)
             self.error_matrices.append(error_source.primary_learned_projection.parameter_states[MATRIX])
+            if ERROR_SIGNAL in input_state.name:
+                self._error_signal_input_states.append(input_state)
 
     def _execute(self,
                 variable=None,
@@ -1192,9 +1198,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
     @property
     def error_signal_input_states(self):
         try:
-            return [s for s in self.input_states if ERROR_SIGNAL in s.name]
-        except:
-            return [s for s in self.input_states if ERROR_SIGNAL in s]
+            # This is maintained for efficiency (since it is called by execute method)
+            return self._error_signal_input_states
+        except AttributeError:
+            try:
+                return [s for s in self.input_states if ERROR_SIGNAL in s.name]
+            except:
+                return [s for s in self.input_states if ERROR_SIGNAL in s]
 
     @property
     def primary_learned_projection(self):
