@@ -9409,8 +9409,9 @@ class BackPropagation(LearningFunction):
                `error_signal <BackPropagation.error_signal>`
 
                  is the derivative of the error with respect to `activation_output
-                 <BackPropagation.activation_output>` (i.e., the weighted contribution of each output unit to the
-                 `error_signal <BackPropagation.error_signal>`); and
+                 <BackPropagation.activation_output>` (i.e., the weighted contribution to the `error_signal
+                 <BackPropagation.error_signal>` of each unit that receives activity from the weight matrix being
+                 learned); and
 
                :math:`\\frac{\delta A}{\delta W}` =
                `activation_derivative_fct <BackPropagation.activation_derivative_fct>`
@@ -9503,8 +9504,9 @@ class BackPropagation(LearningFunction):
         same as 3rd item of `variable <BackPropagation.variable>`.
 
     error_matrix : 2d np.array or ParameterState
-        matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`;
-        if it is a `ParameterState`, it refers to the MATRIX parameterState of the `MappingProjection` being learned.
+        matrix, the input of which is `activation_output <BackPropagation.activation_output>` and the output of which
+        is used to calculate the `error_signal <BackPropagation.error_signal>`; if it is a `ParameterState`,
+        it refers to the MATRIX parameterState of the `MappingProjection` being learned.
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
