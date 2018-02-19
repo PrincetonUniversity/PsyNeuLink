@@ -1357,9 +1357,9 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         # Calculate using relevant aggregation operation and return
         if operation is SUM:
-            result = np.sum(variable) * scale + offset
+            result = np.sum(np.atleast_2d(variable), axis=1) * scale + offset
         elif operation is PRODUCT:
-            result = np.product(variable) * scale + offset
+            result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
                                 format(self.get_current_function_param(OPERATION)))
@@ -8823,15 +8823,23 @@ AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
 class LearningFunction(Function_Base):
     """Abstract class of `Function <Function>` used for learning.
 
+    COMMENT:
+    IMPLEMENTATION NOTE:
+       The function method of a LearningFunction *must* include a **kwargs argument, which accomodates
+       Function-specific parameters;  this is to accommodate the ability of LearningMechanisms to call
+       the function of a LearningFunction with arguments that may not be implemented for all LearningFunctions
+       (e.g., error_matrix for BackPropagation) -- these can't be included in the params argument, as those
+       are validated against paramClassDefaults which will not recognize params specific to another Function.
+
     Attributes
     ----------
 
     variable : list or np.array
         most LearningFunctions take a list or 2d array that must contain three items:
 
-        * the input to the parameter being modified (variable[0]);
-        * the output of the parameter being modified (variable[1]);
-        * the error associated with the output (variable[2]).
+        * the input to the parameter being modified (variable[LEARNING_ACTIVATION_INPUT]);
+        * the output of the parameter being modified (variable[LEARNING_ACTIVATION_OUTPUT]);
+        * the error associated with the output (variable[LEARNING_ERROR_OUTPUT]).
 
         However, the exact specification depends on the funtion's type.
 
@@ -9040,7 +9048,13 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  variable=None,
                  params=None,
                  context=None):
-        """Calculate a matrix of weight changes from a 1d array of activity values
+        """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
+
+        The weight change matrix is calculated as:
+
+           *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
+
+        where :math:`a_i` and :math:`a_j` are elements of `variable <Hebbian.variable>`.
 
         Arguments
         ---------
@@ -9057,8 +9071,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         -------
 
         weight change matrix : 2d np.array
-            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the
-            `learning_rate <HebbinaMechanism.learning_rate>`.
+            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the `learning_rate
+            <HebbinaMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
 
         """
 
@@ -9082,20 +9096,26 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         # MODIFIED 9/21/17 NEW:
         # FIX: SHOULDN'T BE NECESSARY TO DO THIS;  WHY IS IT GETTING A 2D ARRAY AT THIS POINT?
+        if not isinstance(variable, np.ndarray):
+            variable = np.array(variable)
         if variable.ndim > 1:
             variable = np.squeeze(variable)
         # MODIFIED 9/21/17 END
 
         # If learning_rate is a 1d array, multiply it by variable
         if self.learning_rate_dim == 1:
-            variable = variable * self.learning_rate
+            variable = variable * learning_rate
 
         # Generate the column array from the variable
-        col = variable.reshape(len(variable),1)
+        # col = variable.reshape(len(variable),1)
+        col = np.array(np.matrix(variable).T)
 
+        # Calculate weight chhange matrix
         weight_change_matrix = variable * col
+        # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
+        weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
 
-        # If learning_rate is scalar or 2d, muliply it by the weight change matrix
+        # If learning_rate is scalar or 2d, multiply it by the weight change matrix
         if self.learning_rate_dim in {0, 2}:
             weight_change_matrix = weight_change_matrix * learning_rate
 
@@ -9284,7 +9304,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
         """Calculate a matrix of weight changes from a single (scalar) error term
 
         COMMENT:
@@ -9348,11 +9369,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        # # MODIFIED 2/2/18 OLD:
-        # return [weight_change_matrix, error_array]
-        # MODIFIED 2/2/18 NEW:
         return [error_array, error_array]
-        # MODIFIED 2/2/18 END
 
 
 # Argument names:
@@ -9366,24 +9383,49 @@ class BackPropagation(LearningFunction):
     BackPropagation(                                     \
         default_variable=ClassDefaults.variable,         \
         activation_derivative_fct=Logistic().derivative, \
-        error_derivative_fct=Logistic().derivative,      \
-        error_matrix=None,                               \
         learning_rate=None,                              \
         params=None,                                     \
         name=None,                                       \
         prefs=None)
 
-    Implements a function that calculate a matrix of weight changes using the backpropagation
-    (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_) learning algorithm.
+    Implements a `function <BackPropagation.function>` that calculate a matrix of weight changes using the
+    backpropagation (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_)
+    learning algorithm.  The weight change matrix is computed as:
 
-    COMMENT:
-        Description:
-            Backpropagation learning algorithm (Generalized Delta Rule):
-              [matrix]         [scalar]     [row array]              [row array/ col array]                [col array]
-            delta_weight =  learning rate *   input      *            d(output)/d(input)                 *     error
-              return     =  LEARNING_RATE * variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
+        *weight_change_matrix* = `learning_rate <BackPropagation.learning_rate>` * `activation_input
+        <BackPropagation.activation_input>` * :math:`\\frac{\delta E}{\delta W}`
 
-    COMMENT
+            where:
+
+               :math:`\\frac{\delta E}{\delta W}` = :math:`\\frac{\delta E}{\delta A} * \\frac{\delta A}{\delta W}`
+
+                 is the derivative of the `error_signal <BackPropagation.error_signal>` with respect to the weights;
+
+               :math:`\\frac{\delta E}{\delta A}` = `error_matrix <BackPropagation.error_matrix>` :math:`\\cdot`
+               `error_signal <BackPropagation.error_signal>`
+
+                 is the derivative of the error with respect to `activation_output
+                 <BackPropagation.activation_output>` (i.e., the weighted contribution of each output unit to the
+                 `error_signal <BackPropagation.error_signal>`); and
+
+               :math:`\\frac{\delta A}{\delta W}` =
+               `activation_derivative_fct <BackPropagation.activation_derivative_fct>`
+               (*input =* `activation_input <BackPropagation.activation_input>`,
+               *output =* `activation_output <BackPropagation.activation_output>`\\)
+
+                 is the derivative of the activation function responsible for generating `activation_output
+                 <BackPropagation.activation_output>` at the point that generates each of its entries.
+
+    The values of `activation_input <BackPropagation.activation_input>`, `activation_output
+    <BackPropagation.activation_output>` and  `error_signal <BackPropagation.error_signal>` are specified as
+    items of the `variable <BackPropgation.variable>` both in the constructor for the BackPropagation Function,
+    and in calls to its `function <BackPropagation.function>`.  Although `error_matrix <BackPropagation.error_matrix>`
+    is not specified in the constructor, it is required as an argument of the `function <BackPropagation.function>`;
+    it is assumed that it's value is determined in context at the time of execution (e.g., by a LearningMechanism that
+    uses the BackPropagation LearningFunction).
+
+    The BackPropagation `function <BackPropagation.function>` returns the *weight_change_matrix* as well as
+    :math:`\\frac{\delta E}{\delta W}`.
 
     Arguments
     ---------
@@ -9395,19 +9437,23 @@ class BackPropagation(LearningFunction):
        `activation_output <BackPropagation.activation_output>` (1d np.array),
        `error_signal <BackPropagation.error_signal>` (1d np.array).
 
-    activation_derivative : Function or function
+    activation_derivative_fct : Function or function
         specifies the derivative for the function of the Mechanism that generates
         `activation_output <BackPropagation.activation_output>`.
 
+    COMMENT:
     error_derivative : Function or function
         specifies the derivative for the function of the Mechanism that is the receiver of the
         `error_matrix <BackPropagation.error_matrix>`.
+    COMMENT
 
+    COMMENT:
     error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
         matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
         If it is specified as a ParameterState it must be one for the `matrix <MappingProjection.matrix>`
         parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
         MATRIX parameterState.
+    COMMENT
 
     learning_rate : float : default default_learning_rate
         supersedes any specification for the `Process` and/or `System` to which the function's
@@ -9443,6 +9489,10 @@ class BackPropagation(LearningFunction):
         the output of the function for which the matrix being modified provides the input;
         same as 2nd item of `variable <BackPropagation.variable>`.
 
+    activation_derivative_fct : Function or function
+        the derivative for the function of the Mechanism that generates
+        `activation_output <BackPropagation.activation_output>`.
+
     error_signal : 1d np.array
         the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
         target (training signal) and the output of the last Mechanism in the sequence;
@@ -9456,7 +9506,7 @@ class BackPropagation(LearningFunction):
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
         `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
         <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
-        which the `owner <BackPropagationowner>` belongs is used;  and, if that is `None`, then the learning_rate for
+        which the `owner <BackPropagation.owner>` belongs is used;  and, if that is `None`, then the learning_rate for
         the system to which it belongs is used. If all are `None`, then the
         `default_learning_rate <BackPropagation.default_learning_rate>` is used.
 
@@ -9490,8 +9540,6 @@ class BackPropagation(LearningFunction):
                  default_variable=ClassDefaults.variable,
                  # default_variable:tc.any(list, np.ndarray),
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
-                 error_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
-                 error_matrix=None,
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
@@ -9499,9 +9547,11 @@ class BackPropagation(LearningFunction):
                  prefs: is_pref_set = None,
                  context='Component Init'):
 
+        error_matrix=np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
+                               len(default_variable[LEARNING_ERROR_OUTPUT])))
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(activation_derivative_fct=activation_derivative_fct,
-                                                  error_derivative_fct=error_derivative_fct,
                                                   error_matrix=error_matrix,
                                                   learning_rate=learning_rate,
                                                   params=params)
@@ -9532,7 +9582,7 @@ class BackPropagation(LearningFunction):
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate error_matrix param
+        """Validate learning_rate and error_matrix params
 
         `error_matrix` argument must be one of the following
             - 2d list, np.ndarray or np.matrix
@@ -9623,45 +9673,72 @@ class BackPropagation(LearningFunction):
 
     def function(self,
                  variable=None,
+                 error_matrix=None,
                  params=None,
-                 context=None):
-        """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms
+                 context=None,
+                 **kwargs):
+        """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms.
+
+        Note that both variable and error_matrix must be specified for the function to execute.
 
         Arguments
         ---------
 
-        variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
+        variable : List or 2d np.array [length 3 in axis 0]
            must have three items that are the values for (in order):
            `activation_input <BackPropagation.activation_input>` (1d np.array),
            `activation_output <BackPropagation.activation_output>` (1d np.array),
            `error_signal <BackPropagation.error_signal>` (1d np.array).
+
+        error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
+            matrix of weights that were used to generate the `error_signal <BackPropagation.error_signal>` (3rd item
+            of `variable <BackPropagation.variable>` from `activation_output <BackPropagation.activation_output>`;
+            its dimensions must be the length of `activation_output <BackPropagation.activation_output>` (rows) x
+            length of `error_signal <BackPropagation.error_signal>` (cols).
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         -------
+
+        weight change matrix : 2d np.array
+            the modifications to make to the matrix.
 
         weighted error signal : 1d np.array
             `error_signal <BackPropagation.error_signal>`, weighted by the contribution made by each element of
             `activation_output <BackPropagation.activation_output>` as a function of
             `error_matrix <BackPropagation.error_matrix>`.
 
-        weight change matrix : 2d np.array
-            the modifications to make to the matrix.
         """
+
+        # Manage error_matrix param
+        # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
+        #     so need "placemarker" error_matrix for validation
+        if INITIALIZING in context and error_matrix is None:
+            self.error_matrix = np.zeros((len(variable[LEARNING_ACTIVATION_OUTPUT]),
+                                          len(variable[LEARNING_ERROR_OUTPUT])))
+        # If error_matrix is specified, assign to self.error_matrix attribute for validation
+        elif error_matrix is not None:
+            from psyneulink.components.states.parameterstate import ParameterState
+            # If it is specified as a ParameterState, get actual matrix (for execution below)
+            if isinstance(error_matrix, ParameterState):
+                self.error_matrix = params[ERROR_MATRIX].value
+            else:
+                self.error_matrix = error_matrix
+        # Raise exception if error_matrix is not specified
+        else:
+            owner_string = ""
+            if self.owner:
+                owner_string = " of " + self.owner.name
+            raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
+                                format(self.__class__.__name__, owner_string))
 
         self._check_args(variable=variable, params=params, context=context)
 
-        from psyneulink.components.states.parameterstate import ParameterState
-        if isinstance(self.error_matrix, ParameterState):
-            error_matrix = self.error_matrix.value
-        else:
-            error_matrix = self.error_matrix
-
+        # Manage learning_rate
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
         #                          so that the process or system can see it is free to be assigned
@@ -9677,7 +9754,7 @@ class BackPropagation(LearningFunction):
         activation_input = np.array(self.activation_input).reshape(len(self.activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
-        dE_dA = np.dot(error_matrix, self.error_signal)
+        dE_dA = np.dot(self.error_matrix, self.error_signal)
 
         # Derivative of the output activity
         dA_dW = self.activation_derivative_fct(input=self.activation_input, output=self.activation_output)
@@ -9687,20 +9764,6 @@ class BackPropagation(LearningFunction):
 
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = learning_rate * activation_input * dE_dW
-
-        # # TEST PRINT:
-        # if context and not 'INIT' in context:
-        #     print("\nBACKPROP for {}:\n    "
-        #           "-input: {}\n    "
-        #           "-error_signal (dE_DA): {}\n    "
-        #           "-derivative (dA_dW): {}\n    "
-        #           "-error_derivative (dE_dW): {}\n".
-        #           format(self.owner_name, self.activation_input, dE_dA, dA_dW ,dE_dW))
-
-        # self.return_val.error_signal = dE_dW
-        # self.return_val.learning_signal = weight_change_matrix
-        #
-        # return list(self.return_val)
 
         return [weight_change_matrix, dE_dW]
 
@@ -9762,7 +9825,7 @@ class TDLearning(Reinforcement):
 
         return variable
 
-    def function(self, variable=None, params=None, context=None):
+    def function(self, variable=None, params=None, context=None, **kwargs):
         return super().function(variable=variable, params=params, context=context)
 
 
