@@ -478,7 +478,6 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                               # error_output,
                                                               error_signal],
                                             activation_derivative_fct=activation_derivative,
-                                            error_derivative_fct=activation_derivative,
                                             learning_rate=learning_rate,
                                             context=context)
 
