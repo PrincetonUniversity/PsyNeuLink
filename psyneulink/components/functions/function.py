@@ -8915,7 +8915,6 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     """
     Hebbian(                                             \
         default_variable=ClassDefaults.variable,         \
-        activation_function=Linear,                      \
         learning_rate=None,                              \
         params=None,                                     \
         name=None,                                       \
@@ -8929,9 +8928,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     variable : List[number] or 1d np.array : default ClassDefaults.variable
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
+    COMMENT:
     activation_function : Function or function : SoftMax
         specifies the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations
         in `variable <Hebbian.variable>`.
+    COMMENT
 
     learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
         specifies the learning rate used by the `function <Hebbian.function>`; supersedes any specification  for the
@@ -8958,9 +8959,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         activation values, the pair-wise products of which are used to generate the weight change matrix returned by
         the `function <Hebbian.function>`.
 
+    COMMENT:
     activation_function : Function or function : SoftMax
         the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations in
         `variable <Hebbian.variable>`.
+    COMMENT
 
     learning_rate : float, 1d or 2d np.array
         used by the `function <Hebbian.function>` to scale the weight change matrix returned by the `function
@@ -8999,7 +9002,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
+                 # activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
@@ -9008,9 +9011,10 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  context='Component Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(activation_function=activation_function,
-                                                  learning_rate=learning_rate,
-                                                  params=params)
+        params = self._assign_args_to_param_dicts(
+                # activation_function=activation_function,
+                learning_rate=learning_rate,
+                params=params)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -9126,34 +9130,30 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     """
     Reinforcement(                                       \
         default_variable=ClassDefaults.variable,         \
-        activation_function=SoftMax,                     \
         learning_rate=None,                              \
         params=None,                                     \
         name=None,                                       \
         prefs=None)
 
-    Implements a function that calculates a diagonal matrix of weight changes using the reinforcement (delta)
-    learning rule.
+    Implements a function that returns an error term for a single item in an input array, scaled by the learning_rate.
 
-    COMMENT:
-        Reinforcement learning rule
-          [matrix]         [scalar]        [col array]
-        delta_weight =  learning rate   *     error
-          return     =  LEARNING_RATE  *  variable
+    Reinforcement takes an array with a single non-zero value (`activation_output <Reinforcement.activation_output>`),
+    and returns an array of the same length with the single non-zero value replaced by the `error_signal
+    <Reinforcement.error_signal>` scaled by the `learning_rate <Reinforcement.learning_rate>`.
+    The non-zero item in `activation_output <Reinforcement.activation_output>` can be thought of as the predicted
+    likelihood of a stimulus or value of an action, and the `error_signal <Reinforcement.error_signal>` as the error in
+    the prediction for that value.
 
-        Reinforcement.function:
-            variable must be a 2D np.array with three items (standard for learning functions)
-                note: only the LEARNING_ACTIVATION_OUTPUT and LEARNING_ERROR_OUTPUT items are used by RL
-            assumes matrix to which errors are applied is the identity matrix
-                (i.e., set of "parallel" weights from input to output)
-            LEARNING_RATE param must be a float
-            returns matrix of weight changes
+    .. note::
+       To preserve compatibility with other LearningFunctions:
 
-        Initialization arguments:
-         - variable (list or np.array): must a single 1D np.array
-         - params (dict): specifies
-             + LEARNING_RATE: (float) - learning rate (default: 1.0)
-    COMMENT
+       * the **variable** argument of both the constructor and calls to the Reinforcement `function
+         <Reinforcement.function>` must have three items, although only the 2nd and 3rd items are used
+         (for the `activation_output <Reinforcement.activation_output>` and `error_signal
+         <Reinforcement.error_signal>` attributes, respectively);
+       ..
+       * the Reinforcement `function <Reinforcement.function>` returns two copies of the error array
+         (the first is a "place-marker", where a matrix of weights changes is often returned).
 
     Arguments
     ---------
@@ -9161,12 +9161,17 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
        template for the three items provided as the variable in the call to the `function <Reinforcement.function>`
        (in order):
-       `activation_input <Reinforcement.activation_input>` (1d np.array),
-       `activation_output <Reinforcement.activation_output>` (1d np.array),
-       `error_signal <Reinforcement.error_signal>` (1d np.array).
 
+           * `activation_input <Reinforcement.activation_input>` (1d np.array);
+
+           * `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value);
+
+           * `error_signal <Reinforcement.error_signal>`  (1d np.array with a single value).
+
+    COMMENT:
     activation_function : Function or function : SoftMax
         specifies the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`.
+    COMMENT
 
     learning_rate : float : default default_learning_rate
         supersedes any specification for the `Process` and/or `System` to which the function's
@@ -9191,26 +9196,30 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     variable: 2d np.array
         specifies three values used as input to the `function <Reinforcement.function>`:
-       `activation_input <Reinforcement.activation_input>`,
-       `activation_output <Reinforcement.activation_output>`, and
-       `error_signal <Reinforcement.error_signal>`.
+
+            * `activation_input <Reinforcement.activation_input>`,
+
+            * `activation_output <Reinforcement.activation_output>`, and
+
+            * `error_signal <Reinforcement.error_signal>`.
 
     activation_input : 1d np.array
-        first item of `variable <Reinforcement.variable>`;  this is not used (it is implemented for consistency
+        first item of `variable <Reinforcement.variable>`;  this is not used (it is implemented for compatibility
         with other `LearningFunctions <LearningFunction>`).
 
     activation_output : 1d np.array
-        the output of the function for which the matrix being modified provides the input; must have a single non-zero
-        value (corresponding to the selected "action").
+        an array containing a single "prediction" or "action" value as one of its elements, the remainder of which
+        are zero.
 
     error_signal : 1d np.array
-        the error signal associated with the `activation_output <Reinforcement.activation_output>`; must be the same
-        length as `activation_output <Reinforcement.activation_output>` and must have a single non-zero value in the
-        same position as the one in `activation_output <Reinforcement.activation_output>`.
+        contains a single item, specifying the error associated with the non-zero item in `activation_output
+        <Reinforcement.activation_output>`.
 
+    COMMENT:
     activation_function : Function or function : SoftMax
         the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`; must
         return an array with a single non-zero value.
+    COMMENT
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
@@ -9244,7 +9253,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
+                 # activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
@@ -9253,11 +9262,9 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                  context='Component Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(activation_function=activation_function,
+        params = self._assign_args_to_param_dicts(# activation_function=activation_function,
                                                   learning_rate=learning_rate,
                                                   params=params)
-
-        # self.return_val = ReturnVal(None, None)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -9284,7 +9291,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                                  "single element for {}".
                                  format(self.name, self.error_signal))
 
-        # Allow initializion with zero but not during a run (i.e., when called from check_args())
+        # Allow initialization with zero but not during a run (i.e., when called from check_args())
         if not INITIALIZING in context:
             if np.count_nonzero(self.activation_output) != 1:
                 raise ComponentError("Second item ({}) of variable for {} must be an array with a single non-zero value "
@@ -9306,46 +9313,42 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                  params=None,
                  context=None,
                  **kwargs):
-        """Calculate a matrix of weight changes from a single (scalar) error term
+        """Return an error array for the specified item of activation_output scaled by the learning_rate.
 
-        COMMENT:
-            Assume output array has a single non-zero value chosen by the softmax function of the error_source
-            Assume error is a single scalar value
-            Assume weight matrix (for MappingProjection to error_source) is a diagonal matrix
-                (one weight for corresponding pairs of elements in the input and output arrays)
-            Adjust the weight corresponding to  chosen element of the output array, using error value and learning rate
+        Returns a 1d error array with a single non-zero value in the same position as the non-zero item
+        in `activation_output <Reinforcement.activation_output>` (2nd item of the **variable** argument),
+        that is the `error_signal <Reinforcement.error_signal>` (3rd item of
+        **variable** argument) scaled by the `learning_rate <Reinforement.learning_rate>`.
 
-            Note: assume variable is a 2D np.array with three items (input, output, error)
-                  for compatibility with other learning functions (and calls from LearningProjection)
+        .. note::
+           In order to preserve compatibilty with other `LearningFunctions <LearningFunction>`:
 
-        COMMENT
+           * **variable** must have three items, although only the 2nd and 3rd are used;
+           ..
+           * `function <Reinforcement.function>` returns two copies of the error array.
 
         Arguments
         ---------
 
         variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
            must have three items that are the values for (in order):
-           `activation_input <Reinforcement.activation_input>` (not used),
-           `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
-           `error_signal <Reinforcement.error_signal>` (1d np.array).
+
+               * `activation_input <Reinforcement.activation_input>` (not used),
+
+               * `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
+
+               * `error_signal <Reinforcement.error_signal>` (1d np.array with a single item).
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
+           a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+           function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+           arguments of the constructor.
 
         Returns
         -------
-        diagonal weight change matrix : 2d np.array
-            has a single non-zero entry in the same row and column as the one in
-            `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`.
 
-        error signal : 1d np.array
-            COMMENT:
-            same as value received in `error_signal <Reinforcement.error_signal>` argument.
-            COMMENT
-            1d array of error terms (the diagonal elements of the weight change matrix)
+        error array : List[1d np.array, 1d np.array]
+            Two copies of a 1d array with a single non-zero error term.
 
         """
 
@@ -9389,7 +9392,8 @@ class BackPropagation(LearningFunction):
         prefs=None)
 
     Implements a `function <BackPropagation.function>` that calculate a matrix of weight changes using the
-    backpropagation (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_)
+    `backpropagation <https://en.wikipedia.org/wiki/Backpropagation>`_
+     (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_)
     learning algorithm.  The weight change matrix is computed as:
 
         *weight_change_matrix* = `learning_rate <BackPropagation.learning_rate>` * `activation_input
@@ -9405,8 +9409,9 @@ class BackPropagation(LearningFunction):
                `error_signal <BackPropagation.error_signal>`
 
                  is the derivative of the error with respect to `activation_output
-                 <BackPropagation.activation_output>` (i.e., the weighted contribution of each output unit to the
-                 `error_signal <BackPropagation.error_signal>`); and
+                 <BackPropagation.activation_output>` (i.e., the weighted contribution to the `error_signal
+                 <BackPropagation.error_signal>` of each unit that receives activity from the weight matrix being
+                 learned); and
 
                :math:`\\frac{\delta A}{\delta W}` =
                `activation_derivative_fct <BackPropagation.activation_derivative_fct>`
@@ -9499,8 +9504,9 @@ class BackPropagation(LearningFunction):
         same as 3rd item of `variable <BackPropagation.variable>`.
 
     error_matrix : 2d np.array or ParameterState
-        matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`;
-        if it is a `ParameterState`, it refers to the MATRIX parameterState of the `MappingProjection` being learned.
+        matrix, the input of which is `activation_output <BackPropagation.activation_output>` and the output of which
+        is used to calculate the `error_signal <BackPropagation.error_signal>`; if it is a `ParameterState`,
+        it refers to the MATRIX parameterState of the `MappingProjection` being learned.
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
@@ -9780,7 +9786,7 @@ class TDLearning(Reinforcement):
 
     def __init__(self,
                  default_variable=Reinforcement.ClassDefaults.variable,
-                 activation_function: tc.any(SoftMax, tc.enum(SoftMax))=SoftMax,
+                 # activation_function: tc.any(SoftMax, tc.enum(SoftMax))=SoftMax,
                  learning_rate=Reinforcement.default_learning_rate,
                  params=None,
                  owner=None,
@@ -9801,7 +9807,7 @@ class TDLearning(Reinforcement):
         # params = self._assign_args_to_param_dicts(learning_rate=learning_rate,
                                                   # params=params)
         super().__init__(default_variable=default_variable,
-                         activation_function=activation_function,
+                         # activation_function=activation_function,
                          learning_rate=learning_rate,
                          params=params,
                          context=context,
