@@ -27,3 +27,21 @@ class TestSimpleLearningPathway:
 
         S.run(inputs={A: 1.0},
               targets={B: 2.0})
+
+class TestMultilayerLearning:
+
+    def test_dict_target_spec(self):
+        A = TransferMechanism(name="multilayer-mech-A")
+        B = TransferMechanism(name="multilayer-mech-B")
+        C = TransferMechanism(name="multilayer-mech-C")
+        P = Process(name="multilayer-process",
+                     pathway=[A, B, C],
+                     # target=[3.0],
+                     learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[P]
+                   )
+
+        S.run(inputs={A: 1.0},
+              targets={C: 2.0})
