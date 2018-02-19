@@ -1878,7 +1878,6 @@ class System(System_Base):
                 warnings.warn("Learning has been specified for {} but its \'targets\' argument was not specified;"
                               "default will be used ({})".format(self.name, self.targets))
             # MODIFIED 6/25/17 END
-        print("TARGETS = ", self.targets)
         # Create SystemInputState for each TARGET mechanism in target_mechanisms and
         #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
 
@@ -1913,6 +1912,7 @@ class System(System_Base):
                 MappingProjection(sender=system_target_input_state,
                         receiver=TARGET_input_state,
                         name=self.name+' Input Projection to '+TARGET_input_state.name)
+
         elif isinstance(self.targets, list):
             self.targets = np.atleast_2d(self.targets)
 
@@ -2711,10 +2711,14 @@ class System(System_Base):
         if isinstance(self.targets, function_type):
             self.current_targets = self.targets()
             for i in range(len(self.target_mechanisms)):
-            # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
-            #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
                 self.target_input_states[i].value = self.current_targets[i]
-
+        elif isinstance(self.targets, dict):
+            for i in range(len(self.target_mechanisms)):
+                terminal_mechanism = self.target_mechanisms[i].input_states[SAMPLE].path_afferents[0].sender.owner
+                self.target_input_states[i].value = self.current_targets[terminal_mechanism]
+        elif isinstance(self.targets, (list, np.ndarray)):
+            for i in range(len(self.target_mechanisms)):
+                self.target_input_states[i].value = self.current_targets[i]
         # NEXT, execute all components involved in learning
         if self.scheduler_learning is None:
             raise SystemError('System.py:_execute_learning - {0}\'s scheduler is None, '

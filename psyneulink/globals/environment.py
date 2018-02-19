@@ -666,7 +666,8 @@ def run(object,
                         execution_targets[mech] = targets[mech][input_num]
                     if object_type is SYSTEM:
                         object.target = execution_targets
-                        object.current_target = execution_targets
+                        object.current_targets = execution_targets
+
 
             # MODIFIED 3/16/17 END
             if RUN in context and not EVC_SIMULATION in context:
@@ -856,9 +857,7 @@ def _adjust_target_dict(component, target_dict):
 
         # first check if only one target was provided:
         if _target_matches_input_state_variable(target_list, input_state_variable):
-            print("before = ", target_list)
             adjusted_targets[mech] = [np.atleast_1d(target_list)]
-            print("after = ", target_list)
             if num_targets == -1:
                 num_targets = 1
             elif num_targets != 1:
@@ -920,116 +919,8 @@ def _validate_target_function(component, targets, num_input_sets, context=None):
                                format(target_len, plural, append_type_to_name(component),
                                       np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
 
+    return target_len
 
-    if object_type is PROCESS:
-
-        # If learning is enabled, validate target
-        if component._learning_enabled:
-            target_array = np.atleast_2d(targets)
-            target_len = np.size(target_array[0])
-            num_target_sets = np.size(target_array, 0)
-
-            if target_len != np.size(component.target_mechanisms[0].input_states[TARGET].instance_defaults.variable):
-                if num_target_sets > 1:
-                    plural = 's'
-                else:
-                    plural = ''
-                raise RunError("Length ({}) of target{} specified for run of {}"
-                                   " does not match expected target length of {}".
-                               format(target_len, plural, append_type_to_name(component),
-                                      np.size(component.target_mechanisms[0].target)))
-
-            if any(np.size(target) != target_len for target in target_array):
-                raise RunError("Not all of the targets specified for {} are of the same length".
-                               format(append_type_to_name(component)))
-
-            if num_target_sets != num_input_sets:
-                raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
-                               format(num_target_sets, num_input_sets, append_type_to_name(component)))
-
-    elif object_type is SYSTEM:
-
-        # FIX: VALIDATE THE LEARNING IS ENABLED
-        # FIX: CONSOLIDATE WITH TESTS FOR PROCESS ABOVE?
-
-        # If the system has any process with learning enabled
-        if any(process._learning_enabled for process in component.processes):
-
-            HOMOGENOUS_TARGETS = 1
-            HETEROGENOUS_TARGETS = 0
-
-            if targets.dtype in {np.dtype('int'), np.dtype('float')}:
-                process_structure = HOMOGENOUS_TARGETS
-            elif targets.dtype is np.dtype('O'):
-                process_structure = HETEROGENOUS_TARGETS
-            else:
-                raise RunError("Unknown data type for inputs in {}".format(component.name))
-
-            # Processed targets for a system should be 1 dim less than inputs (since don't include phase)
-            # If inputs to processes of system are heterogenous, inputs.ndim should be 2:
-            # If inputs to processes of system are homogeneous, inputs.ndim should be 3:
-            expected_dim = 2 + process_structure
-            if targets.ndim != expected_dim:
-                raise RunError("targets arg in call to {}.run() must be a {}D "
-                               "np.array or comparable list (currently {}D)".
-                               format(component.name, expected_dim, targets.ndim))
-
-            # FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
-            # # MODIFIED 2/16/17 OLD:
-            # num_target_sets = np.size(targets,PROCESSES_DIM-1)
-            # MODIFIED 2/16/17 NEW:
-            num_target_sets = targets.shape[0]
-            num_targets_per_set = np.size(targets,PROCESSES_DIM-1)
-            # MODIFIED 2/16/17 END
-            # Check that number of target values in each execution equals the number of target mechanisms in the system
-            if num_targets_per_set != len(component.target_mechanisms):
-                raise RunError("The number of target values for each execution ({}) in the call to {}.run() "
-                                  "does not match the number of Processes in the System ({})".
-                                  format(
-                                         # np.size(targets,PROCESSES_DIM),
-                                         num_targets_per_set,
-                                         component.name,
-                                         len(component.origin_mechanisms)))
-
-            # MODIFIED 12/23/16 NEW:
-            # Validate that each target is compatible with its corresponding targetMechanism
-            # FIX: CONSOLIDATE WITH TESTS FOR PROCESS AND FOR function_type ABOVE
-            # FIX: MAKE SURE THAT ITEMS IN targets ARE ALIGNED WITH CORRESPONDING component.target_mechanisms
-            target_array = np.atleast_2d(targets)
-
-            # FIX CW 1/31/18: this loop is not interpreting targets correctly, I think. Needs to be tested for systems
-            # with multiple target mechanisms.
-            for target, targetMechanism in zip(targets, component.target_mechanisms):
-                target_len = np.size(target)
-                if target_len != np.size(targetMechanism.input_states[TARGET].instance_defaults.variable):
-                    if num_targets_per_set > 1:
-                        plural = 's'
-                    else:
-                        plural = ''
-                    raise RunError("Length ({}) of target{} specified for run "
-                                   "of {} does not match expected target "
-                                   "length of {} for target mechanism {}".
-                                   format(target_len,
-                                          plural,
-                                          append_type_to_name(component),
-                                          np.size(targetMechanism.input_states[
-                                                      TARGET].instance_defaults.variable),
-                                          targetMechanism.name))
-
-                if any(np.size(target) != target_len for target in target_array):
-                    raise RunError("Not all of the targets specified for {} are of the same length".
-                                   format(append_type_to_name(component)))
-
-                if num_target_sets != num_input_sets:
-                    raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
-                                   format(num_target_sets, num_input_sets, append_type_to_name(component)))
-            # MODIFIED 12/23/16 END
-
-    else:
-        raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_target_function in Run module for ".
-                       format(component.__class__.__name__))
-
-    return num_target_sets
 
 def _get_object_type(object):
     if isinstance(object, Mechanism):
