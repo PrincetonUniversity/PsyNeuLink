@@ -1282,7 +1282,7 @@ class State_Base(State):
                 isinstance(self.instance_defaults.variable, np.matrix)
                 or (
                     isinstance(self.instance_defaults.variable, np.ndarray)
-                    and self.instance_defaults.variable.ndim >= 2
+                    and len(self.instance_defaults.variable) < 2
                 )
             )
         ):
