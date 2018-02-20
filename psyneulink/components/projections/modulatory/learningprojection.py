@@ -395,9 +395,6 @@ class LearningProjection(ModulatoryProjection_Base):
         sender=[LEARNING_SIGNAL]
         receiver=[PARAMETER_STATE]
 
-    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
-        variable = None
-
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
                                PARAMETER_STATES: NotImplemented, # This suppresses parameterStates
@@ -503,27 +500,33 @@ class LearningProjection(ModulatoryProjection_Base):
                                               "or the MATRIX parameterState of one."
                                               .format(PROJECTION_SENDER, sender, self.name, ))
 
-    def _instantiate_sender(self, context=None):
+    def _instantiate_sender(self, sender, context=None):
         """Instantiate LearningMechanism
         """
 
         # LearningMechanism was specified by class or was not specified,
         #    so call composition for "automatic" instantiation of a LearningMechanism
         # Note: this also instantiates an ObjectiveMechanism if necessary and assigns it the necessary projections
+
+        # assignment to attribute necessary because of uses in _instantiate_learning_components
+        self.sender = sender
+
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
             from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary \
                 import _instantiate_learning_components
-            _instantiate_learning_components(learning_projection=self,
-                                             context=context + " " + self.name)
+            _instantiate_learning_components(
+                learning_projection=self,
+                context="{0} {1}".format(context, self.name)
+            )
 
         if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
                                           format(self.name, self.sender.owner.name))
 
-        # This assigns self as an outgoing projection from the sender (LearningMechanism) outputState
+        # This assigns self as an outgoing projection from the self.sender (LearningMechanism) outputState
         #    and formats self.instance_defaults.variable to be compatible with that outputState's value
         #    (i.e., its learning_signal)
-        super()._instantiate_sender(context=context)
+        super()._instantiate_sender(self.sender, context=context)
 
         if self.sender.learning_rate is not None:
             self.learning_rate = self.sender.learning_rate
@@ -593,20 +596,19 @@ class LearningProjection(ModulatoryProjection_Base):
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = True
 
-
-    def execute(self, input=None, params=None, context=None):
+    def _execute(self, variable, runtime_params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
 
-        params = params or {}
+        runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
         if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
             return self.init_status
 
         # if self.learning_rate:
-        #     params.update({SLOPE:self.learning_rate})
+        #     runtime_params.update({SLOPE:self.learning_rate})
 
         learning_signal = self.sender.value
         matrix = self.receiver.value
@@ -635,9 +637,11 @@ class LearningProjection(ModulatoryProjection_Base):
                                               format(self.sender.owner.name, learning_signal,
                                                      self.receiver.owner.name, matrix))
 
-        self.weight_change_matrix = self.function(variable=learning_signal,
-                                                  params=params,
-                                                  context=context)
+        self.weight_change_matrix = self.function(
+            variable=learning_signal,
+            params=runtime_params,
+            context=context
+        )
 
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate

@@ -763,6 +763,7 @@ state_type_keywords = {STATE_TYPE}
 STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 STATE_SPEC = 'state_spec'
 ADD_STATES = 'ADD_STATES'
+REMOVE_STATES = 'REMOVE_STATES'
 
 def _is_state_class(spec):
     if inspect.isclass(spec) and issubclass(spec, State):
@@ -985,9 +986,6 @@ class State_Base(State):
     paramsType = None
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
-
-    class ClassDefaults(State.ClassDefaults):
-        variable = [0]
 
     registry = StateRegistry
 
@@ -1750,56 +1748,54 @@ class State_Base(State):
 
             # VALIDATE (if initialized or being initialized (UNSET))
 
-            if projection.init_status in {InitStatus.INITIALIZED, InitStatus.UNSET}:
+            if projection.init_status in {InitStatus.INITIALIZED, InitStatus.INITIALIZING, InitStatus.UNSET}:
 
                 # If still being initialized, then assign sender and receiver as necessary
-                if projection.init_status is InitStatus.UNSET:
+                if projection.init_status in {InitStatus.INITIALIZING, InitStatus.UNSET}:
                     if not isinstance(projection.sender, State):
                         projection.sender = self
-                        projection.instance_defaults.variable = self.value
 
                     if not isinstance(projection.receiver, State):
                         projection.receiver = receiver_state
 
-                    # FIX: 10/3/17 -- ??IS THE FOLLOWING LEGIT? (IT IS DONE TO PASS TESTS BELOW)
-                    # FIX:            [HASN'T BEEN ASSIGNED IN __init__ YET BECAUSE CALL CAN BE FROM
-                    # FIX:            LearningProjection._instantiate_sender() WHICH IS ITSELF CALLED
-                    # FIX:            FROM _instantiate_attributes_before_function
-                    projection.value = receiver.variable
+                try:
+                    # Validate variable
+                    #    - check that input to Projection is compatible with self.value
+                    if not iscompatible(self.value, projection.instance_defaults.variable):
+                        raise StateError("Input to {} ({}) is not compatible with the value ({}) of "
+                                         "the State from which it is supposed to project ({})".
+                                         format(projection.name, projection.variable, self.value, self.name))
 
-                # Validate variable
-                #    - check that input to Projection is compatible with self.value
-                if not iscompatible(self.value, projection.instance_defaults.variable):
-                    raise StateError("Input to {} ({}) is not compatible with the value ({}) of "
-                                     "the State from which it is supposed to project ({})".
-                                     format(projection.name, projection.variable, self.value, self.name))
+                    # Validate value:
+                    #    - check that output of projection's function (projection_spec.value) is compatible with
+                    #        variable of the State to which it projects;  if it is not, raise exception:
+                    #        the buck stops here; can't modify projection's function to accommodate the State,
+                    #        or there would be an unmanageable regress of reassigning projections,
+                    #        requiring reassignment or modification of sender OutputStates, etc.
 
-                # Validate value:
-                #    - check that output of projection's function (projection_spec.value) is compatible with
-                #        variable of the State to which it projects;  if it is not, raise exception:
-                #        the buck stops here; can't modify projection's function to accommodate the State,
-                #        or there would be an unmanageable regress of reassigning projections,
-                #        requiring reassignment or modification of sender OutputStates, etc.
+                    # PathwayProjection:
+                    #    - check that projection's value is compatible with the receiver's variable
+                    if isinstance(projection, PathwayProjection_Base):
+                        if not iscompatible(projection.value, receiver.instance_defaults.variable):
+                            raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
+                                             "the State to which it is supposed to project ({}).".
+                                             format(projection.name, projection.value,
+                                                    receiver.instance_defaults.variable, receiver.name, ))
 
-                # PathwayProjection:
-                #    - check that projection's value is compatible with the receiver's variable
-                if isinstance(projection, PathwayProjection_Base):
-                    if not iscompatible(projection.value, receiver.instance_defaults.variable):
-                        raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
-                                         "the State to which it is supposed to project ({}).".
-                                         format(projection.name, projection.value,
-                                                receiver.instance_defaults.variable, receiver.name, ))
-
-                # ModualatoryProjection:
-                #    - check that projection's value is compatible with value of the function param being modulated
-                elif isinstance(projection, ModulatoryProjection_Base):
-                    function_param_value = _get_modulated_param(receiver, projection).function_param_val
-                    # Match the projection's value with the value of the function parameter
-                    mod_proj_spec_value = type_match(projection.value, type(function_param_value))
-                    if (function_param_value is not None
-                        and not iscompatible(function_param_value, mod_proj_spec_value)):
-                        raise StateError("Output of {} ({}) is not compatible with the value of {} ({}).".
-                                         format(projection.name,mod_proj_spec_value,receiver.name,function_param_value))
+                    # ModualatoryProjection:
+                    #    - check that projection's value is compatible with value of the function param being modulated
+                    elif isinstance(projection, ModulatoryProjection_Base):
+                        function_param_value = _get_modulated_param(receiver, projection).function_param_val
+                        # Match the projection's value with the value of the function parameter
+                        mod_proj_spec_value = type_match(projection.value, type(function_param_value))
+                        if (function_param_value is not None
+                            and not iscompatible(function_param_value, mod_proj_spec_value)):
+                            raise StateError("Output of {} ({}) is not compatible with the value of {} ({}).".
+                                             format(projection.name,mod_proj_spec_value,receiver.name,function_param_value))
+                except AttributeError:
+                    # sometimes the above attributes like variable and value don't even exist when this is called
+                    # and additionally are set later to the values they're being validated against here
+                    pass
 
                 projection._assign_default_projection_name(state=self,
                                                            sender_name=self.name,
@@ -1945,10 +1941,9 @@ class State_Base(State):
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection) and not LEARNING in context:
-                # projection_value = projection.value
                 projection_value = projection.value * 0.0
             else:
-                projection_value = projection.execute(params=projection_params,
+                projection_value = projection.execute(runtime_params=projection_params,
                                                       context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
@@ -2011,10 +2006,7 @@ class State_Base(State):
             function_params = self.stateParams[FUNCTION_PARAMS]
         except (KeyError, TypeError):
             function_params = None
-        self.value = self._execute(function_params=function_params, context=context)
-
-    def execute(self, input=None, params=None, context=None):
-        return self.function(variable=input, params=params, context=context)
+        self.value = self._execute(runtime_params=function_params, context=context)
 
     @property
     def owner(self):
@@ -2289,7 +2281,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         reference_value = reference_value if reference_value is not None else state.reference_value
         if not iscompatible(state.value, reference_value):
             raise StateError("{}'s value attribute ({}) is incompatible with the {} ({}) of its owner ({})".
-                             format(state.name, state.value, REFERENCE_VALUE, state.reference_value, owner.name))
+                             format(state.name, state.value, REFERENCE_VALUE, reference_value, owner.name))
 
         # State has already been assigned to an owner
         if state.owner is not None and not state.owner is owner:
@@ -2496,7 +2488,14 @@ def _parse_state_spec(state_type=None,
         reference_value = convert_to_np_array(reference_value,1)
 
     # Validate that state_type is a State class
-    if not inspect.isclass(state_type) or not issubclass(state_type, State):
+    if isinstance(state_type, str):
+        try:
+            state_type = StateRegistry[state_type].subclass
+        except KeyError:
+            raise StateError("{} specified as a string (\'{}\') must be the name of a sublcass of {}".
+                             format(STATE_TYPE, state_type,State.__name__))
+        state_dict[STATE_TYPE] = state_type
+    elif not inspect.isclass(state_type) or not issubclass(state_type, State):
         raise StateError("\'state_type\' arg ({}) must be a sublcass of {}".format(state_type,
                                                                                    State.__name__))
     state_type_name = state_type.__name__
@@ -2816,7 +2815,7 @@ def _parse_state_spec(state_type=None,
             state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
     elif state_dict[REFERENCE_VALUE] is not None:
         if not iscompatible(state_dict[VARIABLE], state_dict[REFERENCE_VALUE]):
-            if context is not None and context in '_parse_arg_input_states':
+            if context is not None and context in '_handle_arg_input_states':
                 from psyneulink.components.mechanisms.mechanism import MechanismError
                 raise MechanismError('default variable determined from the specified input_states spec ({0}) '
                                      'is not compatible with the specified default variable ({1})'.

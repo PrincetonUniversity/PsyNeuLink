@@ -539,10 +539,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        variable = [0]
-
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -583,7 +579,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                                self.standard_output_states,
                                                                indices=PRIMARY)
 
-        super().__init__(variable=default_variable,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          output_states=output_states,

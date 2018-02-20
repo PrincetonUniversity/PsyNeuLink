@@ -291,15 +291,15 @@ from collections import Iterable
 
 from psyneulink.components.component import method_type
 from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
-from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.utilities import is_numeric
+from psyneulink.globals.utilities import is_numeric, object_has_single_value
 
 __all__ = [
     'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError', 'DECISION_VARIABLE', 'PROBABILITY_LOWER_THRESHOLD',
@@ -307,8 +307,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_VARIABLE = 0.0
 
 DECISION_VARIABLE='DECISION_VARIABLE'
 RESPONSE_TIME = 'RESPONSE_TIME'
@@ -465,7 +463,6 @@ class DDM(ProcessingMechanism_Base):
             + componentType (str): DDM
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + ClassDefaults.variable (value):  STARTING_POINT
             + paramClassDefaults (dict): {
                                           kwDDM_AnalyticSolution: kwBogaczEtAl,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>
@@ -608,10 +605,6 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        # Assigned in __init__ to match default staring_point
-        variable = None
-
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OUTPUT_STATES: None})
@@ -657,14 +650,16 @@ class DDM(ProcessingMechanism_Base):
             try:
                 default_variable = params[FUNCTION_PARAMS][STARTING_POINT]
                 if not is_numeric(default_variable):
-                    default_variable = DEFAULT_VARIABLE
-            except:
-                default_variable = DEFAULT_VARIABLE
+                    # set normally by default
+                    default_variable = None
+            except KeyError:
+                # set normally by default
+                pass
 
         # # Conflict with above
         # self.size = size
 
-        super(DDM, self).__init__(variable=default_variable,
+        super(DDM, self).__init__(default_variable=default_variable,
                                   output_states=output_states,
                                   params=params,
                                   name=name,
@@ -744,14 +739,11 @@ class DDM(ProcessingMechanism_Base):
         Remove when MULTIPROCESS DDM is implemented.
         """
         # this test may become obsolete when size is moved to Component.py
-        if len(variable) > 1:
+        if not object_has_single_value(variable) and not object_has_single_value(np.array(variable)):
             raise DDMError("Length of input to DDM ({}) is greater than 1, implying there are multiple "
                            "input states, which is currently not supported in DDM, but may be supported"
                            " in the future under a multi-process DDM. Please use a single numeric "
                            "item as the default_variable, or use size = 1.".format(variable))
-        # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
-        if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
-            raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
         return super()._validate_variable(variable=variable, context=context)
 
     # MODIFIED 11/21/16 END

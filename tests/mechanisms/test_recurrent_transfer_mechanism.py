@@ -799,23 +799,65 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(
             R.recurrent_projection.mod_matrix,
             [
-                [0.18192000000000003, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
-                [0.18192000000000003, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
-                [0.11792000000000001, 0.11792000000000001, 0.10392000000000001, 0.10392000000000001],
-                [0.11792000000000001, 0.11792000000000001, 0.10392000000000001, 0.10392000000000001]
+                [0.1, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
+                [0.18192000000000003, 0.1, 0.11792000000000001, 0.11792000000000001],
+                [0.11792000000000001, 0.11792000000000001, 0.1, 0.10392000000000001],
+                [0.11792000000000001, 0.11792000000000001, 0.10392000000000001, 0.1]
             ]
         )
         p.execute([1, 1, 0, 0])
-        np.testing.assert_allclose(R.value, [[1.5317504, 1.5317504, 0.3600704, 0.3600704]])
+        np.testing.assert_allclose(R.value, [[1.4268928, 1.4268928, 0.3589728, 0.3589728]])
         np.testing.assert_allclose(
             R.recurrent_projection.mod_matrix,
             [
-                [0.299232964395008, 0.299232964395008, 0.14549689896140802, 0.14549689896140802],
-                [0.299232964395008, 0.299232964395008, 0.14549689896140802, 0.14549689896140802],
-                [0.14549689896140802, 0.14549689896140802, 0.11040253464780801, 0.11040253464780801],
-                [0.14549689896140802, 0.14549689896140802, 0.11040253464780801, 0.11040253464780801]
+                [0.1, 0.28372115, 0.14353079, 0.14353079],
+                [0.28372115, 0.1, 0.14353079, 0.14353079],
+                [0.14353079, 0.14353079, 0.1, 0.11036307],
+                [0.14353079, 0.14353079, 0.11036307, 0.1]
             ]
         )
+
+    def test_learning_of_orthognal_inputs(self):
+        size=4
+        R = RecurrentTransferMechanism(
+            size=size,
+            function=Linear,
+            enable_learning=True,
+            auto=0,
+            hetero=np.full((size,size),0.0)
+            )
+        P=Process(pathway=[R])
+        S=System(processes=[P])
+
+        inputs_dict = {R:[1,0,1,0]}
+        S.run(num_trials=4,
+              inputs=inputs_dict)
+        np.testing.assert_allclose(
+            R.recurrent_projection.mod_matrix,
+            [
+                [0.0,        0.0,  0.23700501,  0.0],
+                [0.0,        0.0,  0.0,         0.0],
+                [0.23700501, 0.0,  0.0,         0.0],
+                [0.0,        0.0,  0.0,         0.0]
+            ]
+        )
+        np.testing.assert_allclose(R.output_state.value, [1.18518086, 0.0, 1.18518086, 0.0])
+
+        # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
+        R.output_state.value = [0,0,0,0]
+        inputs_dict = {R:[0,1,0,1]}
+        S.run(num_trials=4,
+              inputs=inputs_dict)
+        np.testing.assert_allclose(
+            R.recurrent_projection.mod_matrix,
+            [
+                [0.0,        0.0,        0.23700501, 0.0       ],
+                [0.0,        0.0,        0.0,        0.23700501],
+                [0.23700501, 0.0,        0.0,        0.        ],
+                [0.0,        0.23700501, 0.0,        0.        ]
+            ]
+        )
+        np.testing.assert_allclose(R.output_state.value,[0.0, 1.18518086, 0.0, 1.18518086])
 
 
 # this doesn't work consistently due to EVC's issue with the scheduler

@@ -93,8 +93,8 @@ __all__ = [
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
-    'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d', 'optional_parameter_spec', 'parameter_spec',
-    'random_matrix', 'ReadOnlyOrderedDict', 'TEST_CONDTION', 'type_match', 'underscore_to_camelCase', 'UtilitiesError',
+    'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'parameter_spec',
+    'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'TEST_CONDTION', 'type_match', 'underscore_to_camelCase', 'UtilitiesError',
 ]
 
 
@@ -273,6 +273,19 @@ def is_distance_metric(s):
         return True
     else:
         return False
+
+
+def is_iterable(x):
+    '''
+    Returns
+    -------
+        True - if **x** can be iterated on
+        False - otherwise
+    '''
+    if isinstance(x, np.ndarray) and x.ndim == 0:
+        return False
+    else:
+        return isinstance(x, collections.Iterable)
 
 
 kwCompatibilityType = "type"
@@ -639,6 +652,26 @@ def convert_to_np_array(value, dimension):
         raise UtilitiesError("{0} has non-numeric entries".format(value))
     return value
 
+
+def object_has_single_value(obj):
+    '''
+        Returns
+        -------
+            True : if **obj** contains only one value, in any dimension
+            False : otherwise
+
+            **obj** will be cast to a numpy array if it is not already one
+    '''
+    if not isinstance(obj, np.ndarray):
+        obj = np.asarray(obj)
+
+    for s in obj.shape:
+        if s > 1:
+            return False
+
+    return True
+
+
 def type_match(value, value_type):
     if isinstance(value, value_type):
         return value
@@ -985,7 +1018,7 @@ class ContentAddressableList(UserList):
 
 
 def is_value_spec(spec):
-    if isinstance(spec, (int, float, np.ndarray)):
+    if isinstance(spec, (numbers.Number, np.ndarray)):
         return True
     elif isinstance(spec, list) and is_numeric(spec):
         return True
@@ -1052,26 +1085,45 @@ def get_class_attributes(cls):
             if item[0] not in boring]
 
 
-def convert_all_elements_to_np_array(arr):
+def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
     '''
-        Recursively converts all items in **arr** to numpy arrays
+        Recursively converts all items in **arr** to numpy arrays, optionally casting
+        items of type/dtype **cast_from** to type/dtype **cast_to**
+
+        Arguments
+        ---------
+            cast_from - type, numpy.dtype - type when encountered to cast to **cast_to**
+            cast_to - type, numpy.dtype - type to cast **cast_from** to
+
+        Returns
+        -------
+        a numpy array containing the converted **arr**
     '''
     if isinstance(arr, np.ndarray) and arr.ndim == 0:
-        return arr
-
-    if not isinstance(arr, collections.Iterable) or isinstance(arr, str):
-        return np.asarray(arr)
-
-    if isinstance(arr, np.matrix):
-        if arr.dtype == object:
-            return np.matrix([convert_all_elements_to_np_array(arr.item(i)) for i in range(arr.size)])
+        if cast_from is not None and isinstance(arr.item(0), cast_from):
+            return np.asarray(arr, dtype=cast_to)
         else:
             return arr
 
-    subarr = [convert_all_elements_to_np_array(x) for x in arr]
-    try:
-        return np.array(subarr)
-    except ValueError:
+    if cast_from is not None and isinstance(arr, cast_from):
+        return np.asarray(arr, dtype=cast_to)
+
+    if not isinstance(arr, collections.Iterable) or isinstance(arr, str):
+        return np.array(arr)
+
+    if isinstance(arr, np.matrix):
+        if arr.dtype == object:
+            return np.matrix([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
+        else:
+            return arr
+
+    subarr = [convert_all_elements_to_np_array(x, cast_from, cast_to) for x in arr]
+
+    if all([subarr[i].shape == subarr[0].shape for i in range(1, len(subarr))]):
+        # the elements are all uniform in shape, so we can use numpy's standard behavior
+        return np.asarray(subarr)
+    else:
+        # the elements are nonuniform, so create an array that just wraps them individually
         # numpy cannot easily create arrays with subarrays of certain dimensions, workaround here
         # https://stackoverflow.com/q/26885508/3131666
         len_subarr = len(subarr)
@@ -1085,3 +1137,15 @@ def convert_all_elements_to_np_array(arr):
 def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
     return list1[:position] + list2 + list1[position:]
+
+
+def safe_len(arr, fallback=1):
+    '''
+    Returns
+    -------
+        len(**arr**) if possible, otherwise **fallback**
+    '''
+    try:
+        return len(arr)
+    except TypeError:
+        return fallback

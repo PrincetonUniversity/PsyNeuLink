@@ -89,7 +89,7 @@ mySystem = pnl.System(processes=[color_naming_process, word_reading_process],
                       prefs=system_prefs)
 
 mySystem.show_graph(
-    # show_learning=True
+    show_learning=pnl.ALL
 )
 
 

@@ -649,9 +649,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     standard_output_states = standard_output_states.copy()
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        variable = [[0]]
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -677,6 +674,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         if output_states is None or output_states is RESULTS:
             output_states = [RESULTS]
 
+        initial_value = self._parse_arg_initial_value(initial_value)
+
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
                                                   input_states=input_states,
@@ -695,7 +694,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                indices=PRIMARY)
 
         super(TransferMechanism, self).__init__(
-            variable=default_variable,
+            default_variable=default_variable,
             size=size,
             params=params,
             name=name,
@@ -704,10 +703,14 @@ class TransferMechanism(ProcessingMechanism_Base):
             input_states=input_states,
         )
 
+    def _parse_arg_initial_value(self, initial_value):
+        return self._parse_arg_variable(initial_value)
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and Mechanism params
 
         """
+        from psyneulink.components.functions.function import DistributionFunction
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -755,7 +758,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: SHOULD THIS (AND SMOOTHING_FACTOR) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
         # Validate NOISE:
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise.function
             self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
+
         # Validate SMOOTHING_FACTOR:
         if SMOOTHING_FACTOR in target_set:
             smoothing_factor = target_set[SMOOTHING_FACTOR]
@@ -763,16 +772,18 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("smoothing_factor parameter ({}) for {} must be a float between 0 and 1".
                                     format(smoothing_factor, self.name))
 
-        # Validate RANGE:
-        if CLIP in target_set:
+        # Validate CLIP:
+        if CLIP in target_set and target_set[CLIP] is not None:
             clip = target_set[CLIP]
             if clip:
-                if not (isinstance(clip, tuple) and len(clip)==2 and all(isinstance(i, numbers.Number) for i in clip)):
+                if not (isinstance(clip, (list,tuple)) and len(clip)==2 and all(isinstance(i, numbers.Number)
+                                                                                for i in clip)):
                     raise TransferError("clip parameter ({}) for {} must be a tuple with two numbers".
                                         format(clip, self.name))
                 if not clip[0] < clip[1]:
                     raise TransferError("The first item of the clip parameter ({}) must be less than the second".
                                         format(clip, self.name))
+            target_set[CLIP] = list(clip)
 
         # self.integrator_function = Integrator(
         #     # default_variable=self.default_variable,
@@ -783,6 +794,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _validate_noise(self, noise, var):
         # Noise is a list or array
+        from psyneulink.components.functions.function import DistributionFunction
+
         if isinstance(noise, (np.ndarray, list)):
             if len(noise) == 1:
                 pass
@@ -853,9 +866,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
         # then assign one OutputState (with the default name, indexed by the number of them) per item of variable
-        if len(self.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
+        if len(self.instance_defaults.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
             self.output_states = []
-            for i, item in enumerate(self.variable):
+            for i, item in enumerate(self.instance_defaults.variable):
                 self.output_states.append({NAME: RESULT, INDEX: i})
         super()._instantiate_output_states(context=context)
 
@@ -931,14 +944,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                                             rate=smoothing_factor,
                                             owner=self)
 
-            current_input = self.integrator_function.execute(variable,
-                                                        # Should we handle runtime params?
-                                                              params={INITIALIZER: self.initial_value,
-                                                                      NOISE: self.noise,
-                                                                      RATE: self.smoothing_factor},
-                                                              context=context
-
-                                                             )
+            current_input = self.integrator_function.execute(
+                variable,
+                # Should we handle runtime params?
+                runtime_params={
+                    INITIALIZER: self.initial_value,
+                    NOISE: self.noise,
+                    RATE: self.smoothing_factor
+                },
+                context=context
+            )
         else:
             noise = self._try_execute_param(self.noise, variable)
             # formerly: current_input = self.input_state.value + noise
