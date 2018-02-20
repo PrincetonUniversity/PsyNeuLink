@@ -463,16 +463,12 @@ import typecheck as tc
 from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.states.state import \
-    StateError, State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import \
-    INPUT_STATES, EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
-    MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
-    OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER, COMMAND_LINE
+from psyneulink.components.states.state import ADD_STATES, StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.globals.keywords import COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import append_type_to_name, iscompatible, is_numeric
+from psyneulink.globals.utilities import append_type_to_name, is_numeric, iscompatible
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords',
@@ -866,21 +862,22 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    def _execute(self, function_params, context):
+    def _execute(self, variable=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
         If there were no Transmissive Projections, ignore and return None
         """
 
+        if variable is not None:
+            return self.function(variable, runtime_params, context)
         # If there were any Transmissive Projections:
-        if self._path_proj_values:
+        elif self._path_proj_values:
             # Combine Projection values
             # TODO: stateful - this seems dangerous with statefulness, maybe safe when self.value is only passed or stateful
-            combined_values = self.function(variable=self._path_proj_values,
-                                            params=function_params,
+            combined_values = self.function(variable=np.asarray(self._path_proj_values),
+                                            params=runtime_params,
                                             context=context)
             return combined_values
-
         # There were no Projections
         else:
             # mark combined_values as none, so that (after being assigned to self.value)
@@ -1179,11 +1176,8 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     if not variable_item_is_OK:
         old_variable = owner.instance_defaults.variable
-        new_variable = []
-        for state in owner.input_states:
-            new_variable.append(state.value)
-        owner.instance_defaults.variable = np.array(new_variable)
-        owner._update_variable(new_variable)
+        owner.instance_defaults.variable = owner._handle_default_variable(default_variable=[state.value for state in owner.input_states])
+
         if owner.verbosePref:
             warnings.warn(
                 "Variable for {} ({}) has been adjusted to match number and format of its input_states: ({})".format(
