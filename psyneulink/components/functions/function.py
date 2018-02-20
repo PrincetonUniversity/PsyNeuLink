@@ -1301,7 +1301,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
                  # weights: tc.optional(parameter_spec)=None,
                  # exponents: tc.optional(parameter_spec)=None,
                  weights=None,
