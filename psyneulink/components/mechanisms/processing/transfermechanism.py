@@ -649,9 +649,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     standard_output_states = standard_output_states.copy()
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        variable = [[0]]
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -677,6 +674,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         if output_states is None or output_states is RESULTS:
             output_states = [RESULTS]
 
+        initial_value = self._parse_arg_initial_value(initial_value)
+
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
                                                   input_states=input_states,
@@ -695,7 +694,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                indices=PRIMARY)
 
         super(TransferMechanism, self).__init__(
-            variable=default_variable,
+            default_variable=default_variable,
             size=size,
             params=params,
             name=name,
@@ -703,6 +702,9 @@ class TransferMechanism(ProcessingMechanism_Base):
             context=self,
             input_states=input_states,
         )
+
+    def _parse_arg_initial_value(self, initial_value):
+        return self._parse_arg_variable(initial_value)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and Mechanism params
@@ -864,9 +866,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
         # then assign one OutputState (with the default name, indexed by the number of them) per item of variable
-        if len(self.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
+        if len(self.instance_defaults.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
             self.output_states = []
-            for i, item in enumerate(self.variable):
+            for i, item in enumerate(self.instance_defaults.variable):
                 self.output_states.append({NAME: RESULT, INDEX: i})
         super()._instantiate_output_states(context=context)
 
@@ -942,14 +944,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                                             rate=smoothing_factor,
                                             owner=self)
 
-            current_input = self.integrator_function.execute(variable,
-                                                        # Should we handle runtime params?
-                                                              params={INITIALIZER: self.initial_value,
-                                                                      NOISE: self.noise,
-                                                                      RATE: self.smoothing_factor},
-                                                              context=context
-
-                                                             )
+            current_input = self.integrator_function.execute(
+                variable,
+                # Should we handle runtime params?
+                runtime_params={
+                    INITIALIZER: self.initial_value,
+                    NOISE: self.noise,
+                    RATE: self.smoothing_factor
+                },
+                context=context
+            )
         else:
             noise = self._try_execute_param(self.noise, variable)
             # formerly: current_input = self.input_state.value + noise

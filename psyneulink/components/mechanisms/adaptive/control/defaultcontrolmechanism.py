@@ -91,10 +91,6 @@ class DefaultControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(ControlMechanism.ClassDefaults):
-        # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = defaultControlAllocation
-
     from psyneulink.components.functions.function import Linear
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:Linear,
@@ -122,13 +118,6 @@ class DefaultControlMechanism(ControlMechanism):
                                                     name=name,
                                                     prefs=prefs,
                                                     context=self)
-
-    def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    context=None):
-
-        return self.input_values or [defaultControlAllocation]
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_value attribute

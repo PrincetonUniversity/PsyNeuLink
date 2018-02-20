@@ -107,7 +107,7 @@ from psyneulink.components.projections.modulatory.modulatoryprojection import Mo
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Process_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from psyneulink.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -166,7 +166,6 @@ class ControlProjection(ModulatoryProjection_Base):
                 FUNCTION:Linear,
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
                 PROJECTION_SENDER: ControlMechanism
-                PROJECTION_SENDER_VALUE: [defaultControlAllocation],
                 CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCosts.DEFAULTS,
                 ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
     COMMENT
@@ -275,13 +274,10 @@ class ControlProjection(ModulatoryProjection_Base):
         sender=[CONTROL_SIGNAL]
         receiver=[PARAMETER_STATE]
 
-    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
-        variable = 0.0
-
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_SENDER: ControlMechanism,
-        PROJECTION_SENDER_VALUE: defaultControlAllocation})
+    })
 
     @tc.typecheck
     def __init__(self,
@@ -319,8 +315,7 @@ class ControlProjection(ModulatoryProjection_Base):
                                                 prefs=prefs,
                                                 context=self)
 
-
-    def _instantiate_sender(self, params=None, context=None):
+    def _instantiate_sender(self, sender, params=None, context=None):
 
         """Check if DefaultController is being assigned and if so configure it for the requested ControlProjection
 
@@ -341,20 +336,25 @@ class ControlProjection(ModulatoryProjection_Base):
         """
 
         # A Process can't be the sender of a ControlMechanism
-        if isinstance(self.sender, Process_Base):
-            raise ProjectionError("PROGRAM ERROR: attempt to add a ControlProjection from a Process {0} "
-                                  "to a Mechanism {0} in pathway list".format(self.name, self.sender.name))
+        if isinstance(sender, Process_Base):
+            raise ProjectionError(
+                "PROGRAM ERROR: attempt to add a ControlProjection from a Process {0} "
+                "to a Mechanism {0} in pathway list".format(self.name, sender.name)
+            )
 
         # If sender is specified as a Mechanism, validate that it is a ControlMechanism
-        if isinstance(self.sender, Mechanism):
+        if isinstance(sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its ControlSignal projection
-            if not isinstance(self.sender, ControlMechanism):
-                raise ControlProjectionError("Mechanism specified as sender for {} ({}) must be a "
-                                                  "ControlMechanism (but it is a {})".
-                                    format(self.name, self.sender.name, self.sender.__class__.__name__))
+            if not isinstance(sender, ControlMechanism):
+                raise ControlProjectionError(
+                    "Mechanism specified as sender for {} ({}) must be a "
+                    "ControlMechanism (but it is a {})".format(
+                        self.name, sender.name, sender.__class__.__name__
+                    )
+                )
 
         # Call super to instantiate sender
-        super()._instantiate_sender(context=context)
+        super()._instantiate_sender(sender, context=context)
 
 
     def _instantiate_receiver(self, context=None):
@@ -383,10 +383,6 @@ class ControlProjection(ModulatoryProjection_Base):
                                          format(self.name, self.sender.owner, self.receiver.name))
         # else:
         super(ControlProjection, self)._instantiate_receiver(context=context)
-
-    def execute(self, params=None, context=None):
-        self.value = self.function(variable=self.sender.value, params=params, context=context)
-        return self.value
 
     @property
     def control_signal(self):

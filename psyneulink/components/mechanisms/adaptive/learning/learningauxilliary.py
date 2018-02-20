@@ -604,7 +604,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     error_source = lc.error_signal_mech
 
-    learning_mechanism = LearningMechanism(variable=[activation_input,
+    learning_mechanism = LearningMechanism(default_variable=[activation_input,
                                                      activation_output,
                                                      error_signal],
                                            error_sources=error_source,
