@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Functions &mdash; PsyNeuLink 0.4.4.0+31.g6145580 documentation</title>
+  <title>Functions &mdash; PsyNeuLink 0.4.4.0+66.g0e99524 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.0+31.g6145580 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.0+66.g0e99524 documentation" href="index.html"/>
         <link rel="up" title="Components" href="Component.html"/>
         <link rel="next" title="Compositions" href="Composition.html"/>
         <link rel="prev" title="GatingSignal" href="GatingSignal.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.0+31
+                0.4.4.0+66
               </div>
             
           
@@ -566,7 +566,7 @@ in your custom function to verify the variable’s format.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>custom_function</strong> (<a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><em>function</em></a>) – specifies the function to “wrap.” It can be any function, but like any PsyNeuLink function it must take three
+<li><strong>custom_function</strong> (<a class="reference internal" href="#psyneulink.components.functions.function.OrnsteinUhlenbeckIntegrator.function" title="psyneulink.components.functions.function.OrnsteinUhlenbeckIntegrator.function"><em>function</em></a>) – specifies the function to “wrap.” It can be any function, but like any PsyNeuLink function it must take three
 named arguments: <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code> (the input to the function), <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code>, and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>. The
 <a class="reference internal" href="#psyneulink.components.functions.function.UserDefinedFunction.custom_function" title="psyneulink.components.functions.function.UserDefinedFunction.custom_function"><code class="xref any py py-attr docutils literal"><span class="pre">custom_function</span></code></a> can return any value(s), so long as they fit with the context. For example, if the dimensions
 of your custom function’s output change, then it is not appropriate to pass your function’s output to a
@@ -620,7 +620,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.Reduce">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Reduce</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>operation=SUM</em>, <em>scale=1.0</em>, <em>offset=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Reduce" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Reduce</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>operation=SUM</em>, <em>scale=1.0</em>, <em>offset=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Reduce" title="Permalink to this definition">¶</a></dt>
 <dd><p id="reduce">Combine values in each of one or more arrays into a single value for each array.
 Use optional SCALE and OFFSET parameters to linearly transform the resulting value for each array.
 Returns a scalar value for each array of the input.</p>
@@ -1003,7 +1003,7 @@ value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, 
 <em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">TransferFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>owner</em>, <em>prefs</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.TransferFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that transforms variable but maintains its shape</p>
 <p>All TransferFunctions must have the following attributes:</p>
-<p><a class="reference internal" href="#psyneulink.components.functions.function.Logistic.bounds" title="psyneulink.components.functions.function.Logistic.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+<p><a class="reference internal" href="#psyneulink.components.functions.function.Exponential.bounds" title="psyneulink.components.functions.function.Exponential.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
 <code class="xref any docutils literal"><span class="pre">None</span></code>;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
 respectively, with <code class="xref any docutils literal"><span class="pre">None</span></code> as the entry for no bound.</p>
 <p><code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal"><span class="pre">additive_param</span></code> – each of these is assigned the name of one of the function’s
@@ -1368,7 +1368,7 @@ arguments of the constructor.</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>variable</strong> (<em>list</em><em> or </em><em>1d np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#psyneulink.components.functions.function.LinearMatrix.matrix" title="psyneulink.components.functions.function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
-<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – <p>specifies matrix used to transform <a class="reference internal" href="#psyneulink.components.functions.function.LinearMatrix.variable" title="psyneulink.components.functions.function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="#psyneulink.components.functions.function.OrnsteinUhlenbeckIntegrator.function" title="psyneulink.components.functions.function.OrnsteinUhlenbeckIntegrator.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – <p>specifies matrix used to transform <a class="reference internal" href="#psyneulink.components.functions.function.LinearMatrix.variable" title="psyneulink.components.functions.function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#psyneulink.components.functions.function.LinearMatrix.matrix" title="psyneulink.components.functions.function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> for specification details).</p>
 <p>When LinearMatrix is the <code class="xref any docutils literal"><span class="pre">function</span></code> of a projection:</p>
 <blockquote>
@@ -1498,7 +1498,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.Integrator">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None, rate: &lt;function parameter_spec at 0x104d26048&gt; = 1.0, noise=0.0, initializer=[[0]], params: &lt;typecheck.framework.optional object at 0x1053b8f28&gt; = None, owner=None, prefs: &lt;function is_pref_set at 0x104d3b7b8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate: &lt;function parameter_spec at 0x104d670d0&gt; = 1.0</em>, <em>noise=0.0</em>, <em>initializer=None</em>, <em>params: &lt;typecheck.framework.optional object at 0x1053be048&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x104d7a9d8&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Integrator(                         default_variable=None,          rate=1.0,</dt>
 <dd>noise=0.0,                      time_step_size=1.0,             initializer,             params=None,                    owner=None,                     prefs=None,                     )</dd>
@@ -3272,7 +3272,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.BogaczEtAl">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
 <dd><p id="bogaczetal">Return terminal value of decision variable, mean accuracy, and mean response time computed analytically for the
 drift diffusion process as described in <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/17014301">Bogacz et al (2006)</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -3437,7 +3437,7 @@ and drift_rate (<strong>input</strong> arg).  Reward rate (<span class="math">\(
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.NavarroAndFuss">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
 <dd><p id="navarroandfuss">Return terminal value of decision variable, mean accuracy, mean response time (RT), correct RT mean, correct RT
 variance and correct RT skew computed analytically for the drift diffusion process (Wiener diffusion model)
 as described in <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0022249609000200">Navarro and Fuss (2009)</a>.</p>
@@ -3942,9 +3942,9 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.Stability">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>default_variable=[0], matrix='HollowMatrix', metric: &lt;typecheck.tc_predicates.any object at 0x104a609b0&gt; = 'energy', transfer_fct: &lt;typecheck.framework.optional object at 0x104a60ac8&gt; = None, normalize: bool = False, params=None, owner=None, prefs: &lt;function is_pref_set at 0x104d3b7b8&gt; = None, context='Stability Function INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Stability" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>matrix='HollowMatrix'</em>, <em>metric: &lt;typecheck.tc_predicates.any object at 0x1043cf780&gt; = 'energy'</em>, <em>transfer_fct: &lt;typecheck.framework.optional object at 0x1043cf860&gt; = None</em>, <em>normalize: bool = False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x104d7a9d8&gt; = None</em>, <em>context='Stability Function INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Stability" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
-<div><p>Stability(                                          default_variable=ClassDefaults.variable,          matrix=HOLLOW_MATRIX,                           metric=ENERGY                                   transfer_fct=None                               normalize=False,                                params=None,                                    owner=None,                                     prefs=None                                      )</p>
+<div><p>Stability(                                          default_variable=None,                          matrix=HOLLOW_MATRIX,                           metric=ENERGY                                   transfer_fct=None                               normalize=False,                                params=None,                                    owner=None,                                     prefs=None                                      )</p>
 <p id="stability">Return the stability of <code class="xref any docutils literal"><span class="pre">variable</span></code> based on a state transformation matrix.</p>
 <p>The value of <code class="xref any docutils literal"><span class="pre">variable</span></code> is passed through the <code class="xref any docutils literal"><span class="pre">matrix</span></code>,
 transformed using the <code class="xref any docutils literal"><span class="pre">transfer_fct</span></code> (if specified), and then compared with its initial
@@ -4021,7 +4021,7 @@ by the length of <code class="xref any docutils literal"><span class="pre">varia
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.Distance">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Distance</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>metric=EUCLIDEAN                                 normalize=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Distance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Distance</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>metric=EUCLIDEAN                                 normalize=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Distance" title="Permalink to this definition">¶</a></dt>
 <dd><p id="distance">Return the distance between the vectors in the two items of <a class="reference internal" href="#psyneulink.components.functions.function.Distance.variable" title="psyneulink.components.functions.function.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> using the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.DistanceMetrics" title="psyneulink.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal"><span class="pre">distance</span>
 <span class="pre">metric</span></code></a> specified in the <code class="xref any docutils literal"><span class="pre">metric</span></code> attribute.  If <a class="reference internal" href="#psyneulink.components.functions.function.Distance.normalize" title="psyneulink.components.functions.function.Distance.normalize"><code class="xref any py py-attr docutils literal"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, the result is normalized by the length of (number of elements in) <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -4109,7 +4109,7 @@ If <a class="reference internal" href="#psyneulink.components.functions.function
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.Hebbian">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Hebbian</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>activation_function=Linear</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Hebbian" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Hebbian</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>activation_function=Linear</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Hebbian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a function that calculates a matrix of weight changes using the Hebbian (correlational) learning rule.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -4217,7 +4217,7 @@ of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.Reinforcement">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Reinforcement</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>activation_function=SoftMax</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Reinforcement" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Reinforcement</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>activation_function=SoftMax</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Reinforcement" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a function that calculates a diagonal matrix of weight changes using the reinforcement (delta)
 learning rule.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -4353,7 +4353,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.BackPropagation">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">BackPropagation</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>activation_derivative_fct=Logistic().derivative</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.BackPropagation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">BackPropagation</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>activation_derivative_fct=Logistic().derivative</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.BackPropagation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a <a class="reference internal" href="#psyneulink.components.functions.function.BackPropagation.function" title="psyneulink.components.functions.function.BackPropagation.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> that calculate a matrix of weight changes using the
 backpropagation (<a class="reference external" href="http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html">Generalized Delta Rule</a>)
 learning algorithm.  The weight change matrix is computed as:</p>
@@ -4397,7 +4397,7 @@ uses the BackPropagation LearningFunction).</p>
 <a class="reference internal" href="#psyneulink.components.functions.function.BackPropagation.activation_input" title="psyneulink.components.functions.function.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d np.array),
 <a class="reference internal" href="#psyneulink.components.functions.function.BackPropagation.activation_output" title="psyneulink.components.functions.function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array),
 <a class="reference internal" href="#psyneulink.components.functions.function.BackPropagation.error_signal" title="psyneulink.components.functions.function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d np.array).</li>
-<li><strong>activation_derivative_fct</strong> (<em>Function</em><em> or </em><a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
+<li><strong>activation_derivative_fct</strong> (<em>Function</em><em> or </em><a class="reference internal" href="#psyneulink.components.functions.function.OrnsteinUhlenbeckIntegrator.function" title="psyneulink.components.functions.function.OrnsteinUhlenbeckIntegrator.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
 <a class="reference internal" href="#psyneulink.components.functions.function.BackPropagation.activation_output" title="psyneulink.components.functions.function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>.</li>
 <li><strong>learning_rate</strong> (<em>float : default default_learning_rate</em>) – supersedes any specification for the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the function’s
 <code class="xref any docutils literal"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.components.functions.function.BackPropagation.learning_rate" title="psyneulink.components.functions.function.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
@@ -4534,7 +4534,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.TDLearning">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">TDLearning</code><span class="sig-paren">(</span><em>default_variable=[[0], [0], [0]], activation_function: &lt;typecheck.tc_predicates.any object at 0x104d4e240&gt; = &lt;class 'psyneulink.components.functions.function.SoftMax'&gt;, learning_rate=0.05, params=None, owner=None, prefs=None, context='TDLearning Function Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.TDLearning" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">TDLearning</code><span class="sig-paren">(</span><em>default_variable=array([[0],        [0],        [0]]), activation_function: &lt;typecheck.tc_predicates.any object at 0x104d3aef0&gt; = &lt;class 'psyneulink.components.functions.function.SoftMax'&gt;, learning_rate=0.05, params=None, owner=None, prefs=None, context='TDLearning Function Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.TDLearning" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class is used to implement temporal difference learning via the
 <a class="reference internal" href="#psyneulink.components.functions.function.Reinforcement" title="psyneulink.components.functions.function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span></code></a> function. See <a class="reference internal" href="#psyneulink.components.functions.function.Reinforcement" title="psyneulink.components.functions.function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span></code></a> for class details.</p>
 </dd></dl>
@@ -4586,7 +4586,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.0+31.g6145580',
+            VERSION:'0.4.4.0+66.g0e99524',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
