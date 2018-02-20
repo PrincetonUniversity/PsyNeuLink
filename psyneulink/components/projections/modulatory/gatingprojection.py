@@ -96,7 +96,7 @@ from psyneulink.components.projections.modulatory.modulatoryprojection import Mo
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Process_Base
 from psyneulink.globals.defaults import defaultGatingPolicy
-from psyneulink.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INITIALIZING, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from psyneulink.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INITIALIZING, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -155,7 +155,6 @@ class GatingProjection(ModulatoryProjection_Base):
                 FUNCTION:Linear,
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
                 PROJECTION_SENDER: DefaultGatingMechanism, # GatingProjection (assigned to class ref in __init__ module)
-                PROJECTION_SENDER_VALUE: [defaultGatingSignal]
     COMMENT
 
 
@@ -263,13 +262,10 @@ class GatingProjection(ModulatoryProjection_Base):
         sender=[GATING_SIGNAL]
         receiver=[INPUT_STATE, OUTPUT_STATE]
 
-    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
-        variable = 0.0
-
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_SENDER: GatingMechanism,
-        PROJECTION_SENDER_VALUE: defaultGatingPolicy})
+    })
 
     @tc.typecheck
     def __init__(self,
@@ -305,24 +301,30 @@ class GatingProjection(ModulatoryProjection_Base):
                          prefs=prefs,
                          context=self)
 
-    def _instantiate_sender(self, params=None, context=None):
+    def _instantiate_sender(self, sender, params=None, context=None):
         """Check that sender is not a process and that, if specified as a Mechanism, it is a GatingMechanism
         """
 
         # A Process can't be the sender of a GatingProjection
-        if isinstance(self.sender, Process_Base):
-            raise ProjectionError("PROGRAM ERROR: attempt to add a {} from a Process {0} "
-                                  "to a Mechanism {0} in pathway list".
-                                  format(GATING_PROJECTION, self.name, self.sender.name))
+        if isinstance(sender, Process_Base):
+            raise ProjectionError(
+                "PROGRAM ERROR: attempt to add a {} from a Process {0} "
+                "to a Mechanism {0} in pathway list".format(
+                    GATING_PROJECTION, self.name, sender.name
+                )
+            )
 
         # If sender is specified as a Mechanism, validate that it is a GatingMechanism
-        if isinstance(self.sender, Mechanism):
-            if not isinstance(self.sender, GatingMechanism):
-                raise GatingProjectionError("Mechanism specified as sender for {} ({}) must be a {} (but it is a {})".
-                                    format(GATING_MECHANISM,self.name, self.sender.name,self.sender.__class__.__name__))
+        if isinstance(sender, Mechanism):
+            if not isinstance(sender, GatingMechanism):
+                raise GatingProjectionError(
+                    "Mechanism specified as sender for {} ({}) must be a {} (but it is a {})".format(
+                        GATING_MECHANISM, self.name, sender.name, sender.__class__.__name__
+                    )
+                )
 
         # Call super to instantiate sender
-        super()._instantiate_sender(context=context)
+        super()._instantiate_sender(sender, context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -354,10 +356,6 @@ class GatingProjection(ModulatoryProjection_Base):
         # # ASSIGN FUNCTION TYPE TO FUNCTION HERE
 
         super()._instantiate_receiver(context=context)
-
-    def execute(self, params=None, context=None):
-        self.value = self.function(variable=self.sender.value, params=params, context=context)
-        return self.value
 
     @property
     def gating_signal(self):

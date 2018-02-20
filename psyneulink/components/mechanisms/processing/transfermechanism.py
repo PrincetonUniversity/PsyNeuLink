@@ -191,12 +191,38 @@ After each execution of the Mechanism the result of `function <TransferMechanism
 <OutputState.value>` of each of its `OutputStates <OutputState>`, and to the 1st item of the Mechanism's
 `output_values <TransferMechanism.output_values>` attribute.
 
-In some cases, it may be useful to reset the integration of the mechanism back to the original starting point, or a new
-one. This can be done using the `reinitialize <AdaptiveIntegrator.reinitialize>` property on the mechanism's
-`integrator_function <TransferMechanism.integrator_function>`. The `reinitialize <AdaptiveIntegrator.reinitialize>`
-property sets the `integrator_function's <TransferMechanism.integrator_function>`
-`initializer <AdaptiveIntegrator.initializer>`, `previous_value <AdaptiveIntegrator.previous_value>`, and
-`value <AdaptiveIntegrator.value>` attributes to a specified value.
+
+.. _Transfer_Reinitialization:
+
+Reinitialization
+~~~~~~~~~~~~
+
+In some cases, it may be useful to reset the accumulation of a mechanism back to its original starting point, or a new
+starting point. This is done using the `reinitialize <AdaptiveIntegrator.reinitialize>` method on the mechanism's
+`integrator_function <TransferMechanism.integrator_function>`, or the mechanisms's own `reinitialize
+<TransferMechanism.reinitialize>` method.
+
+The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_function
+<TransferMechanism.integrator_function>` sets:
+
+    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
+    - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
+    - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
+
+    to the specified value.
+
+The `reinitialize <TransferMechanism.reinitialize>` method of the `TransferMechanism` first sets:
+
+    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
+    - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
+    - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
+    - the TransferMechanism's `initial_value <TransferMechanism.initial_value>` attribute
+
+    to the specified value. Then:
+
+    - the specified value is passed into the mechanism's `function <TransferMechanism.function>` and the function is executed
+    - the TransferMechanism's `value <TransferMechanism.value>` attribute is set to the output of the function
+    - the TransferMechanism updates is `output_states <TransferMechanism.output_states>`
 
 A use case for `reinitialize <AdaptiveIntegrator.reinitialize>` is demonstrated in the following example:
 
@@ -227,11 +253,13 @@ where it left off:
     ...               num_trials=5)                                                 #doctest: +SKIP
     >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.72105725)  #doctest: +SKIP
 
-The integrator_function's `reinitialize <AdaptiveIntegrator.reinitialize>` property is useful in cases when the
-integrator should instead start over at its original initial value or a new one. Use `reinitialize
-<AdaptiveIntegrator.reinitialize>` to re-start the integrator_function's accumulation at 0.2:
+The integrator_function's `reinitialize <AdaptiveIntegrator.reinitialize>` method and the TransferMechanism's
+`reinitialize <TransferMechanism.reinitialize>` method are useful in cases when the integration should instead start
+over at the original initial value, or a new one.
 
-    >>> my_time_averaged_transfer_mechanism.integrator_function.reinitialize = np.array([[0.2]])  #doctest: +SKIP
+Use `reinitialize <AdaptiveIntegrator.reinitialize>` to re-start the integrator_function's accumulation at 0.2:
+
+    >>> my_time_averaged_transfer_mechanism.integrator_function.reinitialize(np.array([[0.2]]))  #doctest: +SKIP
 
 Run the system again to observe that my_time_averaged_transfer_mechanism's integrator_function will begin accumulating
 at 0.2, following the exact same trajectory as in RUN 1:
@@ -244,6 +272,14 @@ at 0.2, following the exact same trajectory as in RUN 1:
 Because `reinitialize <AdaptiveIntegrator.reinitialize>` was set to 0.2 (its original initial_value),
 my_time_averaged_transfer_mechanism's integrator_function effectively started RUN 3 in the same state as it began RUN 1.
 As a result, it arrived at the exact same value after 5 trials (with identical inputs).
+
+In the examples above, `reinitialize <AdaptiveIntegrator.reinitialize>` was applied directly to the integrator function.
+The key difference between the `integrator_function's reinitialize <AdaptiveIntegrator.reinitialize>` and the
+`TransferMechanism's reinitialize <TransferMechanism.reinitialize>` is that the latter will also execute the mechanism's
+function and update its output states. This is useful if the mechanism's value or any of its output state values will
+be used or checked *before* the mechanism's next execution. (This may be true if, for example, the mechanism is
+`recurrent <RecurrentTransferMechanism>`, the mechanism is responsible for `modulating <ModulatorySignal_Modulation`
+other components, or if a `Scheduler` condition depends on the mechanism's activity.)
 
 COMMENT:
 .. _Transfer_Examples:
@@ -613,9 +649,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     standard_output_states = standard_output_states.copy()
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        variable = [[0]]
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -641,6 +674,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         if output_states is None or output_states is RESULTS:
             output_states = [RESULTS]
 
+        initial_value = self._parse_arg_initial_value(initial_value)
+
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
                                                   input_states=input_states,
@@ -659,7 +694,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                indices=PRIMARY)
 
         super(TransferMechanism, self).__init__(
-            variable=default_variable,
+            default_variable=default_variable,
             size=size,
             params=params,
             name=name,
@@ -668,10 +703,14 @@ class TransferMechanism(ProcessingMechanism_Base):
             input_states=input_states,
         )
 
+    def _parse_arg_initial_value(self, initial_value):
+        return self._parse_arg_variable(initial_value)
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and Mechanism params
 
         """
+        from psyneulink.components.functions.function import DistributionFunction
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -719,7 +758,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: SHOULD THIS (AND SMOOTHING_FACTOR) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
         # Validate NOISE:
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise.function
             self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
+
         # Validate SMOOTHING_FACTOR:
         if SMOOTHING_FACTOR in target_set:
             smoothing_factor = target_set[SMOOTHING_FACTOR]
@@ -727,16 +772,18 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("smoothing_factor parameter ({}) for {} must be a float between 0 and 1".
                                     format(smoothing_factor, self.name))
 
-        # Validate RANGE:
-        if CLIP in target_set:
+        # Validate CLIP:
+        if CLIP in target_set and target_set[CLIP] is not None:
             clip = target_set[CLIP]
             if clip:
-                if not (isinstance(clip, tuple) and len(clip)==2 and all(isinstance(i, numbers.Number) for i in clip)):
+                if not (isinstance(clip, (list,tuple)) and len(clip)==2 and all(isinstance(i, numbers.Number)
+                                                                                for i in clip)):
                     raise TransferError("clip parameter ({}) for {} must be a tuple with two numbers".
                                         format(clip, self.name))
                 if not clip[0] < clip[1]:
                     raise TransferError("The first item of the clip parameter ({}) must be less than the second".
                                         format(clip, self.name))
+            target_set[CLIP] = list(clip)
 
         # self.integrator_function = Integrator(
         #     # default_variable=self.default_variable,
@@ -747,6 +794,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _validate_noise(self, noise, var):
         # Noise is a list or array
+        from psyneulink.components.functions.function import DistributionFunction
+
         if isinstance(noise, (np.ndarray, list)):
             if len(noise) == 1:
                 pass
@@ -817,9 +866,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_output_states(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputStates
         # then assign one OutputState (with the default name, indexed by the number of them) per item of variable
-        if len(self.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
+        if len(self.instance_defaults.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
             self.output_states = []
-            for i, item in enumerate(self.variable):
+            for i, item in enumerate(self.instance_defaults.variable):
                 self.output_states.append({NAME: RESULT, INDEX: i})
         super()._instantiate_output_states(context=context)
 
@@ -895,14 +944,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                                             rate=smoothing_factor,
                                             owner=self)
 
-            current_input = self.integrator_function.execute(variable,
-                                                        # Should we handle runtime params?
-                                                              params={INITIALIZER: self.initial_value,
-                                                                      NOISE: self.noise,
-                                                                      RATE: self.smoothing_factor},
-                                                              context=context
-
-                                                             )
+            current_input = self.integrator_function.execute(
+                variable,
+                # Should we handle runtime params?
+                runtime_params={
+                    INITIALIZER: self.initial_value,
+                    NOISE: self.noise,
+                    RATE: self.smoothing_factor
+                },
+                context=context
+            )
         else:
             noise = self._try_execute_param(self.noise, variable)
             # formerly: current_input = self.input_state.value + noise

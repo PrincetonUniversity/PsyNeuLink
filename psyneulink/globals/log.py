@@ -26,7 +26,7 @@ items to be logged, respectively. Entries can also be made by the user programma
 <Log.log_values>` method. Logging can be useful not only for observing the behavior of a Component in a model, but also
 in debugging the model during construction. The entries of a Log can be displayed in a "human readable" table using
 its `print_entries <Log.print_entries>` method, and returned in CSV and numpy array formats using its and `nparray
-<Log.nparray>` and `csv <Log.csv>`  methods.
+<Log.nparray>`, `nparray_dictionary <Log.nparray_dictionary>` and `csv <Log.csv>`  methods.
 
 .. _Log_Creation:
 
@@ -45,7 +45,7 @@ Structure
 A Log is composed of `entries <Log.entries>`, each of which is a dictionary that maintains a record of the logged
 values of a Component.  The key for each entry is a string that is the name of the Component, and its value is a list
 of `LogEntry` tuples recording its values.  Each `LogEntry` tuple has three items:
-    * *time* -- the `RUN`, `TRIAL` and `TIME_STEP` in which the value of the item was recorded;
+    * *time* -- the `RUN`, `TRIAL`, `PASS`, and `TIME_STEP` in which the value of the item was recorded;
     * *context* -- a string indicating the context in which the value was recorded;
     * *value* -- the value of the item.
 The time is recorded only if the Component is executed within a `System`;  otherwise, the time field is `None`.
@@ -70,6 +70,8 @@ to access its `entries <Log.entries>`:
     * `print_entries <Log.print_entries>` -- this prints a formatted list of the `entries <Log.entries>` in the Log.
     ..
     * `nparray <Log.csv>` -- returns a 2d np.array with the `entries <Log.entries>` in the Log.
+    ..
+    * `nparray_dictionary <Log.nparray_dictionary>` -- returns a dictionary of np.arrays with the `entries <Log.entries>` in the Log.
     ..
     * `csv <Log.csv>` -- returns a CSV-formatted string with the `entries <Log.entries>` in the Log.
 
@@ -383,7 +385,7 @@ Class Reference
 import warnings
 import inspect
 import typecheck as tc
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 # from enum import IntEnum, unique, auto
 from enum import IntEnum, unique
 
@@ -488,6 +490,7 @@ def _get_log_context(context):
 class LogTimeScaleIndices(AutoNumber):
     RUN = ()
     TRIAL = ()
+    PASS = ()
     TIME_STEP = ()
 NUM_TIME_SCALES = len(LogTimeScaleIndices.__members__)
 TIME_SCALE_NAMES = list(LogTimeScaleIndices.__members__)
@@ -927,14 +930,14 @@ class Log:
         if system:
             # FIX: Add VALIDATE?
             if context_flags == LogCondition.EXECUTION:
-                time = system.scheduler_processing.clock.simple_time
-                time = (time.run, time.trial, time.time_step)
+                time = system.scheduler_processing.clock.time
+                time = (time.run, time.trial, time.pass_, time.time_step)
             elif context_flags == LogCondition.CONTROL:
-                time = system.scheduler_processing.clock.simple_time
-                time = (time.run, time.trial, time.time_step)
+                time = system.scheduler_processing.clock.time
+                time = (time.run, time.trial, time.pass_, time.time_step)
             elif context_flags == LogCondition.LEARNING:
-                time = system.scheduler_learning.clock.simple_time
-                time = (time.run, time.trial, time.time_step)
+                time = system.scheduler_learning.clock.time
+                time = (time.run, time.trial, time.pass_, time.time_step)
             else:
                 time = None
 
@@ -944,8 +947,8 @@ class Log:
         #     # # and get its time
         #     # run_times = []
         #     # for s in systems:
-        #     #     run_times.append((s.scheduler_processing.date_last_run_end, s.scheduler_processing.clock.simple_time))
-        #     #     run_times.append((s.scheduler_learning.date_last_run_end, s.scheduler_learning.clock.simple_time))
+        #     #     run_times.append((s.scheduler_processing.date_last_run_end, s.scheduler_processing.clock.time))
+        #     #     run_times.append((s.scheduler_learning.date_last_run_end, s.scheduler_learning.clock.time))
         #     # gmt, time = max(run_times, key=lambda x : x[0])
         #     # time = (time.run, time.trial, time.time_step)
 
@@ -1227,7 +1230,7 @@ class Log:
         Rows are ordered in the same order as Components are specified in the **entries** argument.
 
         If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not `None`),
-        then the first three rows are time indices for the run, trial and time_step of each data item, respectively.
+        then the first four rows are time indices for the run, trial, pass, and time_step of each data item, respectively.
         Each subsequent row is the times series of data for a given entry.  If there is no data for a given entry
         at a given time point, it is entered as `None`.
 
@@ -1285,15 +1288,8 @@ class Log:
 
         header = 1 if header is True else 0
 
-        # Get time values for all entries and sort them
-        time_values = []
-        for entry in entries:
-            time_values.extend([item.time
-                                for item in self.logged_entries[entry]
-                                if all(i is not None for i in item.time)])
-        # Insure that all time values are assigned, get rid of duplicates, and sort
-        if all(all(i is not None for i in t) for t in time_values):
-            time_values = sorted(list(set(time_values)))
+        time_values = self._parse_entries_for_time_values(entries)
+
         npa = []
 
         # Create time rows (one for each time scale)
@@ -1307,10 +1303,11 @@ class Log:
         # If any time values are empty, revert to indexing the entries;
         #    this requires that all entries have the same length
         else:
-            max_len = max([len(self.logged_entries[e]) for e in entries])
+            max_len = max([len(self.logged_entries[self._dealias_owner_name(e)]) for e in entries])
 
             # If there are no time values, only support entries of the same length
-            if not all(len(self.logged_entries[e])==len(self.logged_entries[entries[0]])for e in entries):
+            # Must dealias both e and zeroth entry because either/both of these could be 'value'
+            if not all(len(self.logged_entries[self._dealias_owner_name(e)])==len(self.logged_entries[self._dealias_owner_name(entries[0])])for e in entries):
                 raise LogError("nparray output requires that all entries have time values or are of equal length")
 
             npa = np.arange(max_len).reshape(max_len,1).tolist()
@@ -1319,36 +1316,8 @@ class Log:
             else:
                 npa = [npa]
 
-        # For each entry, iterate through its LogEntry tuples:
-        #    for each LogEntry tuple, check whether its time matches that of the next column:
-        #        if so, enter it in the entry's list
-        #        if not, enter `None` and check for a match in the next time column
         for entry in entries:
-            row = []
-            time_col = iter(time_values)
-            for datum in self.logged_entries[entry]:
-                if time_values:
-                    # time_col = iter(time_values)
-                # # MODIFIED 12/14/17 OLD:
-                #     while datum.time != next(time_col,None):
-                #         row.append(None)
-                # value = None if datum.value is None else np.array(datum.value).tolist()
-                # row.append(value)
-                # MODIFIED 12/14/17 NEW:
-                    for i in range(len(time_values)):
-                        time = next(time_col,None)
-                        if time is None:
-                            break
-                        if datum.time != time:
-                            row.append(None)
-                            continue
-                        value = None if datum.value is None else np.array(datum.value).tolist()
-                        row.append(value)
-                        break
-                else:
-                    value = None if datum.value is None else datum.value.tolist()
-                    row.append(value)
-                # MODIFIED 12/14/17 END
+            row = self._assemble_entry_data(entry, time_values)
 
             if header:
                 entry_header = "{}{}{}{}".format(owner_name_str, lb, self._alias_owner_name(entry), rb)
@@ -1356,7 +1325,100 @@ class Log:
             npa.append(row)
 
         npa = np.array(npa, dtype=object)
-        return(npa)
+
+        return npa
+
+    def nparray_dictionary(self,
+                           entries=None):
+        """
+        nparray_dictionary(                 \
+            entries=None,        \
+            )
+
+        Returns an `OrderedDict <https://docs.python.org/3.5/library/collections.html#collections.OrderedDict>`_
+
+        *Keys:*
+
+            Keys of the OrderedDict are strings.
+
+            Keys are the names of logged Components specified in the **entries** argument, plus either Run, Trial, Pass,
+            and Time_step, or Index.
+
+            If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not `None`),
+            then the first four keys are Run, Trial, Pass, and Time_step, respectively.
+
+            If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
+            System), then all of the entries must have the same number of data (LogEntry) items, and the first key is Index.
+
+            Then, the logged components follow in the same order as they were specified.
+
+        *Values:*
+
+            Values of the OrderedDict are numpy arrays.
+
+            The numpy array value for a given component key consists of that logged Component's data over many time points
+            or executions.
+
+            The numpy array values for Run, Trial, Pass, and Time_step are counters for each of those time scales. The ith
+            elements of the Run, Trial, Pass, Time_step and component data arrays can be taken together to represent the value of
+            that component during a particular time step of a particular trial of a particular run.
+
+            For example, if log_dict is a log dictionary in which log_dict['slope'][5] = 2.0, log_dict['Time_step'][5] = 1,
+            log_dict['Pass'][5] = 0, log_dict['Trial'][5] = 2, and log_dict['Run'][5] = 0, then the value of slope was
+            2.0 during time step 1 of pass 0 of trial 2 of run 0. If there is no data for a given entry at a given time
+            point, it is entered as `None`.
+
+            The numpy array value for Index is a sequential index starting at zero.
+
+        .. note::
+           For data without time stamps, the nth item in each dictionary key (i.e., data in the same "column")
+           is not guaranteed to have been logged at the same time point across all keys (Components).
+
+
+        Arguments
+        ---------
+
+        entries : string, Component or list containing either : default ALL
+            specifies the entries of the Log to be included in the output;  they must be `loggable_items
+            <Log.loggable_items>` of the Log that have been logged (i.e., are also `logged_items <Log.logged_items>`).
+            If **entries** is *ALL* or is not specified, then all `logged_items <Log.logged_items>` are included.
+
+        Returns:
+            2d np.array
+        """
+
+        entries = self._validate_entries_arg(entries, logged=True)
+
+        if not entries:
+            return None
+
+
+        time_values = self._parse_entries_for_time_values(entries)
+
+        log_dict = OrderedDict()
+
+        # If all time values are recorded - - - log_dict = {"Run": array, "Trial": array, "Time_step": array}
+        if time_values:
+            for i in range(NUM_TIME_SCALES):
+                row = [[t[i]] for t in time_values]
+                time_header = TIME_SCALE_NAMES[i].capitalize()
+                log_dict[time_header] = row
+
+        # If ANY time values are empty (components were run outside of a System) - - - log_dict = {"Index": array}
+        else:
+            # find number of values logged by zeroth component
+            num_indicies = len(self.logged_entries[self._dealias_owner_name(entries[0])])
+
+            # If there are no time values, only support entries of the same length
+            if not all(len(self.logged_entries[self._dealias_owner_name(e)]) == num_indicies for e in entries):
+                raise LogError("nparray output requires that all entries have time values or are of equal length")
+
+            log_dict["Index"] = np.arange(num_indicies).reshape(num_indicies, 1).tolist()
+
+        for entry in entries:
+            log_dict[self._alias_owner_name(entry)] = np.array(self._assemble_entry_data(entry, time_values))
+
+        return log_dict
 
     @tc.typecheck
     def csv(self, entries=None, owner_name:bool=False, quotes:tc.optional(tc.any(bool, str))="\'"):
@@ -1371,8 +1433,8 @@ class Log:
 
         Each row (axis 0) is a time point, beginning with the time stamp and followed by the data for each
         Component at that time point, in the order they are specified in the **entries** argument. If all of the data
-        for every Component have time values, then the first three items of each row are the time indices for the run,
-        trial and time_step of that time point, respectively, followed by the data for each Component at that time
+        for every Component have time values, then the first four items of each row are the time indices for the run,
+        trial, pass, and time_step of that time point, respectively, followed by the data for each Component at that time
         point;  if a Component has no data for a time point, `None` is entered.
 
         If any of the data for any Component does not have a time value (i.e., it has `None` in the time field of
@@ -1452,7 +1514,7 @@ class Log:
                 if self._alias_owner_name(entry) not in self.loggable_items:
                     raise LogError("{0} is not a loggable attribute of {1}".format(repr(entry), self.owner.name))
             if logged:
-                if entry not in self.logged_entries:
+                if entry not in self.logged_entries and entry != 'value':
                     # raise LogError("{} is not currently being logged by {} (try using set_log_conditions)".
                     #                format(repr(entry), self.owner.name))
                     print("\n{} is not currently being logged by {} or has not data (try using set_log_conditions)".
@@ -1465,11 +1527,90 @@ class Log:
         """
         return VALUE if name is self.owner.name else name
 
-
     def _dealias_owner_name(self, name):
         """De-alias VALUE to name of owner
         """
         return self.owner.name if name is VALUE else name
+
+    def _scan_for_duplicates(self, time_values):
+        # TEMPORARY FIX: this is slow and may not cover all possible cases properly!
+        # TBI: fix permanently in Time/SimpleTime
+        # In the case where scheduling leads to duplicate SimpleTime tuples (since Pass is ignored)
+        # _scan_for_duplicates() will increment the Time_step (index 2) value of the tuple
+
+        mod_time_values = sorted(list(time_values))
+        time_step_increments = []
+        chain = 0
+        for t in range(1, len(time_values)):
+            if time_values[t] == time_values[t - 1]:
+                chain += 1
+            else:
+                chain = 0
+            time_step_increments.append(chain)
+        for i in range(1, len(time_values)):
+            update_tuple = list(time_values[i])
+            update_tuple[2] = update_tuple[2] + time_step_increments[i - 1]*0.01
+            mod_time_values[i] = tuple(update_tuple)
+        return mod_time_values
+
+    def _parse_entries_for_time_values(self, entries):
+        # Returns sorted list of SimpleTime tuples for all time points at which these entries logged values
+
+        time_values = []
+        for entry in entries:
+            entry = self._dealias_owner_name(entry)
+            # OLD: finds duplicate time points within any one entry and modifies their values to be unique
+            #
+            # # collect all time values for this entry
+            # entry_time_values = []
+            # entry_time_values.extend([item.time for item in self.logged_entries[entry] if all(i is not None for i in item.time)])
+
+            # # increment any time stamp duplicates (on the actual data item)
+            # if len(set(entry_time_values)) != len(entry_time_values):
+            #     adjusted_time = self._scan_for_duplicates(entry_time_values)
+            #     for i in range(len(self.logged_entries[entry])):
+            #         temp_list = list(self.logged_entries[entry][i])
+            #         temp_list[0] = adjusted_time[i]
+            #         self.logged_entries[entry][i] = LogEntry(temp_list[0], temp_list[1], temp_list[2])
+
+            time_values.extend([item.time
+                                for item in self.logged_entries[entry]
+                                if all(i is not None for i in item.time)])
+
+        # Insure that all time values are assigned, get rid of duplicates, and sort
+        if all(all(i is not None for i in t) for t in time_values):
+            time_values = sorted(list(set(time_values)))
+
+        return time_values
+
+    def _assemble_entry_data(self, entry, time_values):
+        # Assembles list of entry's (component's) value at each of the time points specified in time_values
+        # If data was not recorded for this entry (component) for a given time point, it will be stored as None
+
+        entry = self._dealias_owner_name(entry)
+        row = []
+        time_col = iter(time_values)
+        for datum in self.logged_entries[entry]:
+            # iterate through log entry tuples:
+            # check whether tuple's time value matches the time for which data is currently being recorded
+            # if so, enter tuple's Component value in the entry's list
+            # if not, enter `None` in the entry's list
+
+            if time_values:
+                for i in range(len(time_values)):
+                    time = next(time_col, None)
+                    if time is None:
+                        break
+                    if datum.time != time:
+                        row.append(None)
+                        continue
+                    value = None if datum.value is None else np.array(datum.value).tolist()
+                    row.append(value)
+                    break
+            else:
+                value = None if datum.value is None else datum.value.tolist()
+                row.append(value)
+        return row
 
     @property
     def loggable_items(self):
@@ -1538,9 +1679,9 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
     for mech in composition.mechanisms:
         for component in mech.log.loggable_components:
             if component.logPref & curr_condition:
-                # value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
-                #                   composition.scheduler_processing.clock.simple_time.trial,
-                #                   composition.scheduler_processing.clock.simple_time.time_step),
+                # value = LogEntry((composition.scheduler_processing.clock.time.run,
+                #                   composition.scheduler_processing.clock.time.trial,
+                #                   composition.scheduler_processing.clock.time.time_step),
                 #                  # context,
                 #                  curr_condition,
                 #                  component.value)
@@ -1550,9 +1691,9 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
         for proj in mech.afferents:
             for component in proj.log.loggable_components:
                 if component.logPref & curr_condition:
-                    # value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
-                    #                   composition.scheduler_processing.clock.simple_time.trial,
-                    #                   composition.scheduler_processing.clock.simple_time.time_step),
+                    # value = LogEntry((composition.scheduler_processing.clock.time.run,
+                    #                   composition.scheduler_processing.clock.time.trial,
+                    #                   composition.scheduler_processing.clock.time.time_step),
                     #                  context,
                     #                  component.value)
                     # component.log._log_value(value, context)
@@ -1563,9 +1704,9 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
     # for proj in composition.projections:
     #     for component in proj.log.loggable_components:
     #         if component.logPref & curr_condition:
-    #             value = LogEntry((composition.scheduler_processing.clock.simple_time.run,
-    #                               composition.scheduler_processing.clock.simple_time.trial,
-    #                               composition.scheduler_processing.clock.simple_time.time_step),
+    #             value = LogEntry((composition.scheduler_processing.clock.time.run,
+    #                               composition.scheduler_processing.clock.time.trial,
+    #                               composition.scheduler_processing.clock.time.time_step),
     #                              context,
     #                              component.value)
     #             component.log._log_value(value, context)

@@ -313,9 +313,7 @@ from psyneulink.components.shellclasses import System_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import INDEX, SEQUENTIAL
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROLLER, CONTROL_PROJECTION, \
-    CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, \
-    OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT, COMMAND_LINE
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTROL, CONTROLLER, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -536,15 +534,32 @@ class ControlMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults):
+    class _DefaultsAliases(AdaptiveMechanism_Base._DefaultsAliases):
+        # alias allocation_policy to value for user convenience
+        # NOTE: should not be used internally for consistency
+        @property
+        def allocation_policy(self):
+            return self.value
+
+        @allocation_policy.setter
+        def allocation_policy(self, value):
+            self.value = value
+
+    class _DefaultsMeta(AdaptiveMechanism_Base._DefaultsMeta, _DefaultsAliases):
+        pass
+
+    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults, metaclass=_DefaultsMeta):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = defaultControlAllocation
+        variable = np.array(defaultControlAllocation)
+        value = np.array(defaultControlAllocation)
+
+    class InstanceDefaults(AdaptiveMechanism_Base.InstanceDefaults, _DefaultsAliases):
+        pass
 
     from psyneulink.components.functions.function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OBJECTIVE_MECHANISM: None,
-        ALLOCATION_POLICY: None,
         CONTROL_PROJECTIONS: None})
 
     @tc.typecheck
@@ -569,7 +584,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                   modulation=modulation,
                                                   params=params)
 
-        super(ControlMechanism, self).__init__(variable=default_variable,
+        super(ControlMechanism, self).__init__(default_variable=default_variable,
                                                     size=size,
                                                     modulation=modulation,
                                                     params=params,
@@ -802,6 +817,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         if self.control_signals:
             self._output_states = []
+            self.instance_defaults.value = None
 
             # for i, control_signal in enumerate(self.control_signals):
             #     self._instantiate_control_signal(control_signal, index=i, context=context)
@@ -816,61 +832,31 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                        list=[state for state in self.output_states
                                                              if isinstance(state, ControlSignal)])
 
-        if self.allocation_policy is None:
-            self.allocation_policy = self.instance_defaults.value
+        if self.value is None:
+            self.value = self.instance_defaults.value
 
         # If the ControlMechanism's allocation_policy has more than one item,
         #    warn if the number of items does not equal the number of its ControlSignals
         #    (note:  there must be fewer ControlSignals than items in allocation_policy,
         #            as the reverse is an error that is checked for in _instantiate_control_signal)
-        if len(self.allocation_policy)>1 and len(self.control_signals) != len(self.allocation_policy):
+        if len(self.value) > 1 and len(self.control_signals) != len(self.value):
             if self.verbosePref:
                 warnings.warning("The number of {}s for {} ({}) does not equal the number of items in its {} ({})".
                                  format(ControlSignal.__name__, self.name, len(self.control_signals),
-                                        ALLOCATION_POLICY, len(self.allocation_policy)))
+                                        ALLOCATION_POLICY, len(self.value)))
 
 
     # def _instantiate_control_signal(self, control_signal, index=0, context=None):
     def _instantiate_control_signal(self, control_signal, context=None):
-
-        # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
-        #        also used to determine constraint on ControlSignal value
-        if self.allocation_policy is None:
-            self.allocation_policy = np.atleast_2d(defaultControlAllocation)
-        else:
-            self.allocation_policy = np.append(self.allocation_policy, [defaultControlAllocation], axis=0)
-
-        # Update self.value to reflect change in allocation_policy (and the new number of  control_signals).
-        #    This is necessary, since function is not fully executed during init (in _instantiate_function);
-        #    it returns the default_allocation policy which has only a single item,
-        #    however validation of indices for OutputStates requires proper number of items be in self.value
-        self.value = self.allocation_policy
-        self.instance_defaults.value = self.value
-
         from psyneulink.components.states.state import _instantiate_state
         # Parses control_signal specifications (in call to State._parse_state_spec)
         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
-                                            reference_value=defaultControlAllocation,
+                                            reference_value=ControlSignal.ClassDefaults.allocation,
                                             modulation=self.modulation,
                                             state_spec=control_signal)
         control_signal.owner = self
-
-        if control_signal.index is SEQUENTIAL:
-            control_signal.index = len(self.allocation_policy)-1
-        elif not isinstance(control_signal.index, int):
-            raise ControlMechanismError("PROGRAM ERROR: {} attribute of {} for {} is not {} or an int".
-                                        format(INDEX, ControlSignal.__name__, SEQUENTIAL, self.name))
-
-        # Validate index
-        try:
-            self.allocation_policy[control_signal.index]
-        except IndexError:
-            raise ControlMechanismError("Index specified for {} of {} ({}) "
-                                       "exceeds the number of items of its {} ({})".
-                                       format(ControlSignal.__name__, self.name, control_signal.index,
-                                              ALLOCATION_POLICY, len(self.allocation_policy)))
 
         # Update control_signal_costs to accommodate instantiated Projection
         try:
@@ -887,6 +873,29 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Add ControlSignal to output_states list
         self._output_states.append(control_signal)
+
+        # since output_states is exactly control_signals is exactly the shape of value, we can just construct it here
+        self.instance_defaults.value = np.array([[ControlSignal.ClassDefaults.allocation] for i in range(len(self._output_states))])
+        self.value = self.instance_defaults.value
+
+        if control_signal.index is SEQUENTIAL:
+            control_signal.index = len(self.instance_defaults.value) - 1
+        elif not isinstance(control_signal.index, int):
+            raise ControlMechanismError(
+                "PROGRAM ERROR: {} attribute of {} for {} is not {} or an int".format(
+                    INDEX, ControlSignal.__name__, SEQUENTIAL, self.name
+                )
+            )
+
+        # Validate index
+        try:
+            self.value[control_signal.index]
+        except IndexError:
+            raise ControlMechanismError(
+                "Index specified for {} of {} ({}) exceeds the number of items of its {} ({})".format(
+                    ControlSignal.__name__, self.name, control_signal.index, ALLOCATION_POLICY, len(self.value)
+                )
+            )
 
         return control_signal
 
@@ -1100,5 +1109,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def control_projections(self):
         return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
 
-
-
+    @property
+    def allocation_policy(self):
+        return self.value

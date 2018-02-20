@@ -335,7 +335,6 @@ from psyneulink.components.mechanisms.processing import integratormechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function, System_Base
-from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import COMMAND_LINE, CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, FUNCTION, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, \
     PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
@@ -682,10 +681,6 @@ class EVCControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(ControlMechanism.ClassDefaults):
-        # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = defaultControlAllocation
-
     from psyneulink.components.functions.function import LinearCombination
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
@@ -978,7 +973,7 @@ class EVCControlMechanism(ControlMechanism):
 
         if self.value is None:
             # Initialize value if it is None
-            self.value = self.allocation_policy
+            self.value = np.empty(len(self.control_signals))
 
         # Implement the current allocation_policy over ControlSignals (outputStates),
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states

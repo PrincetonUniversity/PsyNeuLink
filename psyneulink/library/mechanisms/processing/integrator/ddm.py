@@ -302,7 +302,7 @@ from psyneulink.globals.keywords import ALLOCATION_SAMPLES, CALCULATE, FUNCTION,
     INDEX, INITIALIZING, NAME, OUTPUT_STATES, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.utilities import is_numeric
+from psyneulink.globals.utilities import is_numeric, object_has_single_value
 
 __all__ = [
     'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError',
@@ -495,7 +495,6 @@ class DDM(ProcessingMechanism_Base):
             + componentType (str): DDM
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + ClassDefaults.variable (value):  STARTING_POINT
             + paramClassDefaults (dict): {
                                           kwDDM_AnalyticSolution: kwBogaczEtAl,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>
@@ -638,13 +637,8 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        # Assigned in __init__ to match default staring_point
-        variable = None
-
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # INPUT_STATES: None,
         OUTPUT_STATES: None})
 
     @tc.typecheck
@@ -704,14 +698,16 @@ class DDM(ProcessingMechanism_Base):
             try:
                 default_variable = params[FUNCTION_PARAMS][STARTING_POINT]
                 if not is_numeric(default_variable):
-                    default_variable = DEFAULT_VARIABLE
-            except:
-                default_variable = DEFAULT_VARIABLE
+                    # set normally by default
+                    default_variable = None
+            except KeyError:
+                # set normally by default
+                pass
 
         # # Conflict with above
         # self.size = size
 
-        super(DDM, self).__init__(variable=default_variable,
+        super(DDM, self).__init__(default_variable=default_variable,
                                   input_states=input_states,
                                   output_states=output_states,
                                   params=params,
@@ -793,15 +789,16 @@ class DDM(ProcessingMechanism_Base):
         """
 
         # this test may become obsolete when size is moved to Component.py
-        if len(variable) > 1 and not self.input_format in {ARRAY, VECTOR}:
+        # if len(variable) > 1 and not self.input_format in {ARRAY, VECTOR}:
+        if not object_has_single_value(variable) and not object_has_single_value(np.array(variable)):
             raise DDMError("Length of input to DDM ({}) is greater than 1, implying there are multiple "
                            "input states, which is currently not supported in DDM, but may be supported"
                            " in the future under a multi-process DDM. Please use a single numeric "
                            "item as the default_variable, or use size = 1.".format(variable))
-        # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
-        # if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
-        if not is_numeric(variable) and len(variable[0]) > 1:
-            raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
+        # # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
+        # # if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
+        # if not is_numeric(variable) and len(variable[0]) > 1:
+        #     raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
         return super()._validate_variable(variable=variable, context=context)
 
     # MODIFIED 11/21/16 END
@@ -998,6 +995,15 @@ class DDM(ProcessingMechanism_Base):
             #     """
             #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
 
+    def reinitialize(self, *args):
+        from psyneulink.components.functions.function import Integrator
+
+        # (1) reinitialize function, (2) update mechanism value, (3) update output states
+        if isinstance(self.function_object, Integrator):
+            new_values = self.function_object.reinitialize(*args)
+            self.value = np.array(new_values)
+            self._update_output_states(context="REINITIALIZING")
+
     @property
     def is_finished(self):
         # find the single numeric entry in previous_value
@@ -1019,3 +1025,4 @@ class DDM(ProcessingMechanism_Base):
                                                                        THRESHOLD)))
             return True
         return self._is_finished
+

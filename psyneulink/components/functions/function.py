@@ -193,7 +193,7 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIV
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, is_distance_metric, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
+from psyneulink.globals.utilities import AutoNumber, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
@@ -588,6 +588,9 @@ class Function_Base(Function):
 
     variableClassDefault_locked = False
 
+    class ClassDefaults(Function.ClassDefaults):
+        variable = np.array([0])
+
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1
 
@@ -634,6 +637,12 @@ class Function_Base(Function):
                          prefs=prefs,
                          context=context)
 
+    def _parse_arg_generic(self, arg_val):
+        if isinstance(arg_val, list):
+            return np.asarray(arg_val)
+        else:
+            return arg_val
+
     def _validate_parameter_spec(self, param, param_name, numeric_only=True):
         """Validates function param
         Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()'s"""
@@ -641,9 +650,6 @@ class Function_Base(Function):
             owner_name = 'of ' + self.owner_name if self.owner else ""
             raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
                                 format(param, param_name, self.__class__.__name__, owner_name))
-
-    def execute(self, variable=None, params=None, context=None):
-        return self.function(variable=variable, params=params, context=context)
 
     def get_current_function_param(self, param_name):
         try:
@@ -782,9 +788,6 @@ class ArgumentTherapy(Function_Base):
     componentName = ARGUMENT_THERAPY_FUNCTION
     componentType = EXAMPLE_FUNCTION_TYPE
 
-    class ClassDefaults(Function_Base.ClassDefaults):
-        variable = 0
-
     classPreferences = {
         kwPreferenceSetName: 'ExampleClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
@@ -812,7 +815,7 @@ class ArgumentTherapy(Function_Base):
                                })
 
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  propensity=10.0,
                  pertincacity=Manner.CONTRARIAN,
                  params=None,
@@ -1094,9 +1097,6 @@ class UserDefinedFunction(Function_Base):
     componentName = USER_DEFINED_FUNCTION
     componentType = USER_DEFINED_FUNCTION_TYPE
 
-    class ClassDefaults(Function_Base.ClassDefaults):
-        variable = [0]
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION_OUTPUT_TYPE_CONVERSION: False,
@@ -1145,6 +1145,9 @@ class CombinationFunction(Function_Base):
 
     """
     componentType = COMBINATION_FUNCTION_TYPE
+
+    class ClassDefaults(Function_Base.ClassDefaults):
+        variable = np.array([0, 0])
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
@@ -1294,10 +1297,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     multiplicative_param = SCALE
     additive_param = OFFSET
 
-    class ClassDefaults(CombinationFunction.ClassDefaults):
-        variable = [0, 0]
-    # variableClassDefault_locked = True
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
@@ -1307,6 +1306,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  # exponents: tc.optional(parameter_spec)=None,
                  weights=None,
                  exponents=None,
+                 default_variable=None,
                  operation: tc.enum(SUM, PRODUCT) = SUM,
                  scale: parameter_spec = 1.0,
                  offset: parameter_spec = 0.0,
@@ -1445,9 +1445,9 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         # Calculate using relevant aggregation operation and return
         if operation is SUM:
-            result = np.sum(variable) * scale + offset
+            result = np.sum(np.atleast_2d(variable), axis=1) * scale + offset
         elif operation is PRODUCT:
-            result = np.product(variable) * scale + offset
+            result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
                                 format(self.get_current_function_param(OPERATION)))
@@ -1638,15 +1638,11 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     multiplicative_param = SCALE
     additive_param = OFFSET
 
-    class ClassDefaults(CombinationFunction.ClassDefaults):
-        variable = [2, 2]
-    # variableClassDefault_locked = True
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  # weights: tc.optional(parameter_spec)=None,
                  # exponents: tc.optional(parameter_spec)=None,
                  weights=None,
@@ -2111,15 +2107,11 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     multiplicative_param = SCALE
     additive_param = OFFSET
 
-    class ClassDefaults(CombinationFunction.ClassDefaults):
-        variable = [2, 2]
-    # variableClassDefault_locked = True
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  # weights:tc.optional(parameter_spec)=None,
                  # exponents:tc.optional(parameter_spec)=None,
                  weights=None,
@@ -2360,7 +2352,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
     }
 
     class ClassDefaults(CombinationFunction.ClassDefaults):
-        variable = [[1], [1]]
+        variable = np.array([[1], [1]])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     multiplicative_param = None
@@ -2368,7 +2360,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  gamma: tc.optional(float) = 1.0,
                  params=None,
                  owner=None,
@@ -2640,7 +2632,7 @@ class SoftMax(NormalizingFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  gain: parameter_spec = 1.0,
                  output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
                  params: tc.optional(dict) = None,
@@ -2932,9 +2924,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
         kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
-    class ClassDefaults(TransferFunction.ClassDefaults):
-        variable = [0]
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION_OUTPUT_TYPE_CONVERSION: True,
@@ -2943,7 +2932,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  slope: parameter_spec = 1.0,
                  intercept: parameter_spec = 0.0,
                  params=None,
@@ -3148,15 +3137,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
     multiplicative_param = RATE
     additive_param = SCALE
 
-
-    class ClassDefaults(TransferFunction.ClassDefaults):
-        variable = 0
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  rate: parameter_spec = 1.0,
                  scale: parameter_spec = 1.0,
                  params=None,
@@ -3307,14 +3292,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
     multiplicative_param = GAIN
     additive_param = BIAS
 
-    class ClassDefaults(TransferFunction.ClassDefaults):
-        variable = 0
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  gain: parameter_spec = 1.0,
                  bias: parameter_spec = 0.0,
                  offset: parameter_spec = 0.0,
@@ -3507,9 +3489,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     additive_param = None
 
     DEFAULT_FILLER_VALUE = 0
-
-    class ClassDefaults(TransferFunction.ClassDefaults):
-        variable = [0]  # Sender vector
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -4072,15 +4051,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <Integrator.variable>` is integrated.
 
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <Integrator.previous_value>`
-        - `initializer <Integrator.initial_value>`
-        - `value <Integrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
-
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -4095,8 +4065,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     """
 
     componentName = INTEGRATOR_FUNCTION
-    class ClassDefaults(IntegratorFunction.ClassDefaults):
-        variable = [[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -4110,11 +4078,20 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                  default_variable=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context="Integrator Init"):
+
+        if initializer is None:
+            if params is not None and INITIALIZER in params and params[INITIALIZER] is not None:
+                # This is only needed as long as a new copy of a function is created
+                # whenever assigning the function to a mechanism.
+                # The old values are compiled and passed in through params argument.
+                initializer = params[INITIALIZER]
+            else:
+                initializer = self.ClassDefaults.variable
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -4124,7 +4101,9 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = self.paramClassDefaults[INITIALIZER]
+        self.previous_value = initializer
+        # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
+        params[INITIALIZER] = initializer
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -4132,8 +4111,10 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=context)
 
+        self.initializer = initializer
+
         # Reassign to kWInitializer in case default value was overridden
-        # self.previous_value = self.initializer
+        self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -4277,19 +4258,32 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         return value
 
+    def reinitialize(self, new_previous_value=None, **kwargs):
+        """
+            Effectively begins accumulation over again at the specified value.
+
+            Sets
+
+            - `previous_value <Integrator.previous_value>`
+            - `initializer <Integrator.initial_value>`
+            - `value <Integrator.value>`
+
+            to the quantity specified.
+
+            For specific types of Integrator functions, additional values, such as initial time, must be specified, and
+            additional attributes are reset.
+
+            If no arguments are specified, then the instance default for `initializer <Integrator.initializer>` is used.
+        """
+        if new_previous_value is None:
+            new_previous_value = self.instance_defaults.initializer
+        self._initializer = new_previous_value
+        self.value = new_previous_value
+        self.previous_value = new_previous_value
+        return self.value
+
     def function(self, *args, **kwargs):
         raise FunctionError("Integrator is not meant to be called explicitly")
-
-    @property
-    def reinitialize(self):
-        return self.previous_value
-
-    @reinitialize.setter
-    def reinitialize(self, val):
-        self._initializer = val
-        self.value = val
-        self.previous_value = val
-
 
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
@@ -4382,15 +4376,6 @@ class SimpleIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
 
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <SimpleIntegrator.previous_value>`
-        - `initializer <SimpleIntegrator.initializer>`
-        - `value <SimpleIntegrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
-
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -4405,9 +4390,6 @@ class SimpleIntegrator(
     """
 
     componentName = SIMPLE_INTEGRATOR_FUNCTION
-
-    class ClassDefaults(Integrator.ClassDefaults):
-        variable = [[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -4425,7 +4407,7 @@ class SimpleIntegrator(
                  rate: parameter_spec=1.0,
                  noise=0.0,
                  offset=None,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  params: tc.optional(dict)=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -4438,13 +4420,15 @@ class SimpleIntegrator(
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
-        self.previous_value = self.initializer
         self.auto_dependent = True
 
     def function(self,
@@ -4598,15 +4582,6 @@ class LCAIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <LCAIntegrator.variable>` is integrated.
 
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <LCAIntegrator.previous_value>`
-        - `initializer <LCAIntegrator.initializer>`
-        - `value <LCAIntegrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
-
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -4621,9 +4596,6 @@ class LCAIntegrator(
     """
 
     componentName = SIMPLE_INTEGRATOR_FUNCTION
-
-    class ClassDefaults(Integrator.ClassDefaults):
-        variable = [[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -4641,7 +4613,7 @@ class LCAIntegrator(
                  rate: parameter_spec=1.0,
                  noise=0.0,
                  offset=None,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  time_step_size=0.1,
                  params: tc.optional(dict)=None,
                  owner=None,
@@ -4656,13 +4628,15 @@ class LCAIntegrator(
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
-        self.previous_value = self.initializer
         self.auto_dependent = True
 
     def function(self,
@@ -4721,18 +4695,6 @@ class LCAIntegrator(
             self.previous_value = adjusted_value
 
         return adjusted_value
-
-    @property
-    def reinitialize(self):
-        return self.previous_value
-
-    @reinitialize.setter
-    def reinitialize(self, val):
-        self._initializer = val
-        self.value = val
-        self.previous_value = val
-        self.previous_time = 0.0
-
 
 class ConstantIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -4826,15 +4788,6 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
 
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <ConstantIntegrator.previous_value>`
-        - `initializer <ConstantIntegrator.initializer>`
-        - `value <ConstantIntegrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
-
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
         added.
@@ -4853,9 +4806,6 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
     """
 
     componentName = CONSTANT_INTEGRATOR_FUNCTION
-
-    class ClassDefaults(Integrator.ClassDefaults):
-        variable = [[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -4877,7 +4827,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
                  noise=0.0,
                  offset=0.0,
                  scale = 1.0,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -4892,16 +4842,18 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = self.paramClassDefaults[INITIALIZER]
+        self.previous_value = initializer
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
         # Reassign to initializer in case default value was overridden
-        self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -5046,15 +4998,6 @@ class AdaptiveIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
 
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <AdaptiveIntegrator.previous_value>`
-        - `initializer <AdaptiveIntegrator.initializer>`
-        - `value <AdaptiveIntegrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
-
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -5069,9 +5012,6 @@ class AdaptiveIntegrator(
     """
 
     componentName = ADAPTIVE_INTEGRATOR_FUNCTION
-
-    class ClassDefaults(Integrator.ClassDefaults):
-        variable = [[0]]
 
     multiplicative_param = RATE
     additive_param = OFFSET
@@ -5090,7 +5030,7 @@ class AdaptiveIntegrator(
                  noise=0.0,
                  offset= 0.0,
                  time_step_size=0.02,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -5104,13 +5044,15 @@ class AdaptiveIntegrator(
                                                   time_step_size=time_step_size,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
-        self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -5341,21 +5283,6 @@ class DriftDiffusionIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
-    reinitialize : float or np.array
-        Takes 2 items (i.e my_integrator.reinitialize = 1.0, 2.0), each of which is a float or array
-
-        Sets
-
-        - `previous_value <DriftDiffusionIntegrator.previous_value>`
-        - `initializer <DriftDiffusionIntegrator.initializer>`
-        - `value <DriftDiffusionIntegrator.value>`
-
-        to the quantity specified in reinitialize[0].
-
-        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in reinitialize[1].
-
-        Effectively begins accumulation over again at the original starting point and time, or new ones
-
     threshold : float : default 0.0
         when used properly determines the threshold (boundaries) of the drift diffusion process (i.e., at which the
         integration process is assumed to terminate).
@@ -5385,9 +5312,6 @@ class DriftDiffusionIntegrator(
 
     componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
 
-    class ClassDefaults(Integrator.ClassDefaults):
-        variable = [[0]]
-
     multiplicative_param = RATE
     additive_param = OFFSET
 
@@ -5406,7 +5330,7 @@ class DriftDiffusionIntegrator(
                  offset: parameter_spec = 0.0,
                  time_step_size=1.0,
                  t0=0.0,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  threshold=100.0,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -5424,15 +5348,16 @@ class DriftDiffusionIntegrator(
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = self.paramClassDefaults[INITIALIZER]
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        self.previous_value = initializer
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
-        # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
         self.previous_time = self.t0
         self.auto_dependent = True
 
@@ -5500,26 +5425,32 @@ class DriftDiffusionIntegrator(
         # Current output format is [[[decision_variable]], time]
         return adjusted_value
 
-    @property
-    def reinitialize(self):
-        return self.previous_value, self.previous_time
+    def reinitialize(self, new_previous_value=None, new_previous_time=None):
+        """
+        In effect, begins accumulation over again at the original starting point and time, or new ones.
 
-    @reinitialize.setter
-    def reinitialize(self, value):
-        try:
-            val, time = value
-            self._initializer = val
-            self.value = val
-            self.previous_value = val
-            self.previous_time = time
-        except (ValueError, TypeError):
-            num_items = len(np.atleast_1d(value))
-            if num_items == 1:
-                raise FunctionError("DriftDiffusionIntegrator requires exactly two items (position, time) in order to "
-                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value, self.name))
+        Sets
 
-            raise FunctionError("DriftDiffusionIntegrator requires exactly two items (position, time) in order to "
-                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value, self.name))
+        - `previous_value <DriftDiffusionIntegrator.previous_value>`
+        - `initializer <DriftDiffusionIntegrator.initializer>`
+        - `value <DriftDiffusionIntegrator.value>`
+
+        to the value specified in the first argument.
+
+        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the value specified in the second argument.
+
+        If no arguments are specified, then the instance defaults for `initializer
+        <DriftDiffusionIntegrator.initializer>` and `t0 <DriftDiffusionIntegrator.t0>` are used.
+        """
+        if new_previous_value is None:
+            new_previous_value = self.instance_defaults.initializer
+        if new_previous_time is None:
+            new_previous_time = self.instance_defaults.t0
+        self._initializer = new_previous_value
+        self.value = new_previous_value
+        self.previous_value = new_previous_value
+        self.previous_time = new_previous_time
+        return np.atleast_1d(new_previous_value), np.atleast_1d(new_previous_time)
 
 class OrnsteinUhlenbeckIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
@@ -5618,20 +5549,6 @@ class OrnsteinUhlenbeckIntegrator(
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <OrnsteinUhlenbeckIntegrator.variable>` is integrated.
 
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`
-        - `initializer <OrnsteinUhlenbeckIntegrator.initializer>`
-        - `value <OrnsteinUhlenbeckIntegrator.value>`
-
-        to the quantity specified in reinitialize[0]
-
-        Sets `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>` to the quantity specified in reinitialize[1].
-
-        Effectively begins accumulation over again at the specified value and time
-
-
     previous_time : float
         stores previous time at which the function was executed and accumulates with each execution according to
         `time_step_size <OrnsteinUhlenbeckIntegrator.default_time_step_size>`.
@@ -5651,9 +5568,6 @@ class OrnsteinUhlenbeckIntegrator(
 
     componentName = ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION
 
-    class ClassDefaults(Integrator.ClassDefaults):
-        variable = [[0]]
-
     multiplicative_param = RATE
     additive_param = OFFSET
 
@@ -5672,8 +5586,8 @@ class OrnsteinUhlenbeckIntegrator(
                  offset: parameter_spec = 0.0,
                  time_step_size=1.0,
                  t0=0.0,
-                 decay = 1.0,
-                 initializer=ClassDefaults.variable,
+                 decay=1.0,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -5690,18 +5604,18 @@ class OrnsteinUhlenbeckIntegrator(
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = self.paramClassDefaults[INITIALIZER]
+        self.previous_value = initializer
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
-        # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
         self.previous_time = self.t0
-
         self.auto_dependent = True
 
     def _validate_noise(self, noise, var):
@@ -5765,26 +5679,32 @@ class OrnsteinUhlenbeckIntegrator(
 
         return adjusted_value
 
-    @property
-    def reinitialize(self):
-        return self.previous_value, self.previous_time
+    def reinitialize(self, new_previous_value=None, new_previous_time=None):
+        """
+        In effect, begins accumulation over again at the original starting point and time, or new ones.
 
-    @reinitialize.setter
-    def reinitialize(self, value):
-        try:
-            val, time = value
-            self._initializer = val
-            self.value = val
-            self.previous_value = val
-            self.previous_time = time
-        except (ValueError, TypeError):
-            num_items = len(np.atleast_1d(value))
-            if num_items == 1:
-                raise FunctionError("OrnsteinUhlenbeckIntegrator requires exactly two items (position, time) in order to "
-                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value, self.name))
+        Sets
 
-            raise FunctionError("OrnsteinUhlenbeckIntegrator requires exactly two items (position, time) in order to "
-                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value, self.name))
+        - `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`
+        - `initializer <OrnsteinUhlenbeckIntegrator.initializer>`
+        - `value <OrnsteinUhlenbeckIntegrator.value>`
+
+        to the value specified in the first argument.
+
+        Sets `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>` to the value specified in the second argument.
+
+        If no arguments are specified, then the instance defaults for `initializer
+        <OrnsteinUhlenbeckIntegrator.initializer>` and `t0 <OrnsteinUhlenbeckIntegrator.t0>` are used.
+        """
+        if new_previous_value is None:
+            new_previous_value = self.instance_defaults.initializer
+        if new_previous_time is None:
+            new_previous_time = self.instance_defaults.t0
+        self._initializer = new_previous_value
+        self.value = new_previous_value
+        self.previous_value = new_previous_value
+        self.previous_time = new_previous_time
+        return self.value
 
 class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -6153,27 +6073,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     time_constant_w : float : default 12.5
         scaling factor on the dv/dt equation
 
-    reinitialize : float or np.array
-        Takes 3 items (i.e my_integrator.reinitialize = 1.0, 2.0, 3.0), each of which is a float or array 
-
-        Sets
-
-        - `previous_v <DriftDiffusionIntegrator.previous_v>`
-        - `initial_v <DriftDiffusionIntegrator.initial_v>`
-
-        to the quantity specified in reinitialize[0].
-
-        Sets
-
-        - `previous_w <DriftDiffusionIntegrator.previous_w>`
-        - `initial_w <DriftDiffusionIntegrator.initial_w>`
-
-        to the quantity specified in reinitialize[1].
-
-        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in reinitialize[2].
-
-        Effectively begins accumulation over again at the specified v, w, and time.
-
     prefs : PreferenceSet or specification dict : default Function.classPreferences
         the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
@@ -6183,7 +6082,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
     componentName = FHN_INTEGRATOR_FUNCTION
 
     class ClassDefaults(Integrator.ClassDefaults):
-        variable = [[0]]
+        variable = np.array([1.0])
+        initializer = np.array([1.0])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -6199,7 +6099,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=1.0,
+                 default_variable=None,
                  offset=0.0,
                  scale=1.0,
                  initial_w=0.0,
@@ -6249,7 +6149,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                                   uncorrelated_activity=uncorrelated_activity,
                                                   integration_method=integration_method,
                                                   time_constant_w=time_constant_w,
-                                                  params=params)
+                                                  params=params,
+                                                  )
 
         self.previous_v = self.initial_v
         self.previous_w = self.initial_w
@@ -6550,29 +6451,42 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         return self.previous_v, self.previous_w, self.previous_time
 
-    @property
-    def reinitialize(self):
-        return self.previous_v, self.previous_w, self.previous_time
+    def reinitialize(self, new_previous_v=None, new_previous_w=None, new_previous_time=None):
+        """
+        Effectively begins accumulation over again at the specified v, w, and time.
 
-    @reinitialize.setter
-    def reinitialize(self, value):
-        try:
-            v, w, time = value
-            self._initial_v = v
-            self.previous_v = v
-            self._initial_w = w
-            self.previous_w = w
-            self.previous_time = time
-            self.value = v, w, time
+        Sets
 
-        except (ValueError, TypeError):
-            num_items = len(np.atleast_1d(value))
-            if num_items == 1:
-                raise FunctionError("FHNIntegrator requires exactly three items (v, w, time) in order to "
-                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value, self.name))
+        - `previous_v <DriftDiffusionIntegrator.previous_v>`
+        - `initial_v <DriftDiffusionIntegrator.initial_v>`
 
-            raise FunctionError("FHNIntegrator requires exactly three items (v, w, time) in order to "
-                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value, self.name))
+        to the quantity specified in the first argument.
+
+        Sets
+
+        - `previous_w <DriftDiffusionIntegrator.previous_w>`
+        - `initial_w <DriftDiffusionIntegrator.initial_w>`
+
+        to the quantity specified in the second argument.
+
+        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in the third argument.
+
+        If no arguments are specified, then the instance defaults for `initial_v <FHNIntegrator.initial_v>`, `initial_w
+        <FHNIntegrator.initial_w>` and `t_0 <FHNIntegrator.t_0>` are used.
+        """
+        if new_previous_v is None:
+            new_previous_v = self.instance_defaults.initial_v
+        if new_previous_w is None:
+            new_previous_w = self.instance_defaults.initial_w
+        if new_previous_time is None:
+            new_previous_time = self.instance_defaults.t_0
+        self._initial_v = new_previous_v
+        self.previous_v = new_previous_v
+        self._initial_w = new_previous_w
+        self.previous_w = new_previous_w
+        self.previous_time = new_previous_time
+        self.value = new_previous_v, new_previous_w, new_previous_time
+        return [new_previous_v], [new_previous_w], [new_previous_time]
 
 class AccumulatorIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -6683,15 +6597,6 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
         will be added.
 
-    reinitialize : float or np.array
-        Sets
-
-        - `previous_value <AccumulatorIntegrator.previous_value>`
-        - `initializer <AccumulatorIntegrator.initializer>`
-        - `value <AccumulatorIntegrator.value>`
-
-        to the quantity specified, which effectively begins accumulation over again at the specified value
-
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -6706,9 +6611,6 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
     """
 
     componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
-
-    class ClassDefaults(Integrator.ClassDefaults):
-        variable = [[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -6729,7 +6631,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
                  rate=None,
                  noise=0.0,
                  increment=None,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -6747,10 +6649,10 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=context)
+            context=context,
+            initializer=initializer,
+        )
 
-        self.previous_value = self.initializer
-        self.instance_defaults.variable = self.initializer
 
         self.auto_dependent = True
 
@@ -7018,27 +6920,6 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         stores previous value with which `variable <AGTUtilityIntegrator.variable>` is integrated using the EWMA filter and
         long term parameters
 
-    reinitialize : float or np.array
-        Takes 2 items (i.e my_integrator.reinitialize = 1.0, 2.0), each of which is a float or array
-
-        Sets
-
-        - `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>`
-        - `initial_short_term_utility <AGTUtilityIntegrator.initial_short_term_utility>`
-
-        to the quantity specified in reinitialize[0].
-
-        Sets
-
-        - `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`
-        - `initial_long_term_utility <AGTUtilityIntegrator.initial_long_term_utility>`
-
-        to the quantity specified in reinitialize[1].
-
-        sets `value <AGTUtilityIntegrator.value>` to the to the quantity specified in reinitialize[2].
-
-        This effectively begins accumulation over again at the specified utilities.
-
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -7053,9 +6934,6 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
     """
 
     componentName = UTILITY_INTEGRATOR_FUNCTION
-
-    class ClassDefaults(Integrator.ClassDefaults):
-        variable = [[0]]
 
     multiplicative_param = RATE
     additive_param = OFFSET
@@ -7073,7 +6951,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset=0.0,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  initial_short_term_utility=0.0,
                  initial_long_term_utility=0.0,
                  short_term_gain=1.0,
@@ -7107,11 +6985,14 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         self.previous_long_term_utility = self.initial_long_term_utility
         self.previous_short_term_utility = self.initial_short_term_utility
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
         self.auto_dependent = True
 
@@ -7222,38 +7103,46 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
         """
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
         rate = np.array(self.get_current_function_param(RATE)).astype(float)
-        offset = self.get_current_function_param(OFFSET)
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
-        long_term_rate = self.get_current_function_param("long_term_rate")
-        long_term_gain = self.get_current_function_param("long_term_gain")
-        long_term_bias = self.get_current_function_param("long_term_bias")
         short_term_rate = self.get_current_function_param("short_term_rate")
+        long_term_rate = self.get_current_function_param("long_term_rate")
+
+        # Integrate Short Term Utility:
+        short_term_utility = self._EWMA_filter(self.previous_short_term_utility,
+                                               short_term_rate,
+                                               variable)
+        # Integrate Long Term Utility:
+        long_term_utility = self._EWMA_filter(self.previous_long_term_utility,
+                                              long_term_rate,
+                                              variable)
+
+        value = self.combine_utilities(short_term_utility, long_term_utility)
+
+        if not context or not INITIALIZING in context:
+            self.previous_short_term_utility = short_term_utility
+            self.previous_long_term_utility = long_term_utility
+
+        return value
+
+    def combine_utilities(self, short_term_utility, long_term_utility):
         short_term_gain = self.get_current_function_param("short_term_gain")
         short_term_bias = self.get_current_function_param("short_term_bias")
+        long_term_gain = self.get_current_function_param("long_term_gain")
+        long_term_bias = self.get_current_function_param("long_term_bias")
         operation = self.get_current_function_param(OPERATION)
+        offset = self.get_current_function_param(OFFSET)
 
-        # long term params applied to variable
-        long_term_utility = self._EWMA_filter(self.previous_long_term_utility,
-                                            long_term_rate,
-                                            variable)
+        short_term_utility_logistic = self._logistic(variable=short_term_utility,
+                                                     gain=short_term_gain,
+                                                     bias=short_term_bias)
+        self.short_term_utility_logistic = short_term_utility_logistic
+
         long_term_utility_logistic = self._logistic(variable=long_term_utility,
                                                     gain=long_term_gain,
-                                                    bias=long_term_bias
-                                                    )
+                                                    bias=long_term_bias)
         self.long_term_utility_logistic = long_term_utility_logistic
-
-        # short term params applied to variable
-        short_term_utility=self._EWMA_filter(self.previous_short_term_utility,
-                                            short_term_rate,
-                                            variable)
-        short_term_utility_logistic=self._logistic(variable=short_term_utility,
-                                                    gain=short_term_gain,
-                                                    bias=short_term_bias
-                                                    )
-        self.short_term_utility_logistic = short_term_utility_logistic
 
         if operation == "s*l":
             # Engagement in current task = [1—logistic(short term utility)]*[logistic{long - term utility}]
@@ -7268,41 +7157,47 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
             # Engagement in current task = [logistic{long - term utility}] - [1—logistic(short term utility)]
             value = long_term_utility_logistic - (1-short_term_utility_logistic)
 
-        adjusted_value = value + offset
-        # If this NOT an initialization run, update the old utility values
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
+        return value + offset
 
-        if not context or not INITIALIZING in context:
-            self.previous_long_term_utility = long_term_utility
-            self.previous_short_term_utility = short_term_utility
+    def reinitialize(self, short=None, long=None):
 
-        return adjusted_value
+        """
+        Effectively begins accumulation over again at the specified utilities.
 
-    @property
-    def reinitialize(self):
-        return self.previous_short_term_utility, self.previous_long_term_utility
+        Sets
 
-    @reinitialize.setter
-    def reinitialize(self, value):
-        try:
-            short, long = value
-            self._initial_short_term_utility = short
-            self.previous_short_term_utility = short
-            self._initial_long_term_utility = long
-            self.previous_long_term_utility = long
+        - `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>`
+        - `initial_short_term_utility <AGTUtilityIntegrator.initial_short_term_utility>`
 
-        except (ValueError, TypeError):
-            num_items = len(np.atleast_1d(value))
-            if num_items == 1:
-                raise FunctionError("AGTUtilityIntegrator requires exactly two items (short term utility, long term utility) in order to "
-                                    "reinitialize. Only one item ({}) was provided to reinitialize {}.".format(value,
-                                                                                                               self.name))
-            raise FunctionError("AGTUtilityIntegrator requires exactly two items (short term utility, long term utility) in order to "
-                                "reinitialize. {} items ({}) were provided to reinitialize {}.".format(num_items, value,
-                                                                                                       self.name))
+        to the quantity specified in the first argument.
 
+        Sets
 
+        - `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`
+        - `initial_long_term_utility <AGTUtilityIntegrator.initial_long_term_utility>`
+
+        to the quantity specified in the second argument.
+
+        sets `value <AGTUtilityIntegrator.value>` by computing it based on the newly updated values for
+        `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>` and
+        `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`.
+
+        If no arguments are specified, then the instance defaults for `initial_short_term_utility
+        <AGTUtilityIntegrator.initial_short_term_utility>` and `initial_long_term_utility
+        <AGTUtilityIntegrator.initial_long_term_utility>` are used.
+        """
+
+        if short is None:
+            short = self.instance_defaults.initial_short_term_utility
+        if long is None:
+            long = self.instance_defaults.initial_long_term_utility
+        self._initial_short_term_utility = short
+        self.previous_short_term_utility = short
+        self._initial_long_term_utility = long
+        self.previous_long_term_utility = long
+        self.value = self.combine_utilities(short, long)
+        return self.value
+#
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
@@ -7323,7 +7218,7 @@ class BogaczEtAl(
     IntegratorFunction):  # --------------------------------------------------------------------------------
     """
     BogaczEtAl(                                 \
-        default_variable=ClassDefaults.variable,  \
+        default_variable=None,  \
         drift_rate=1.0,                         \
         threshold=1.0,                          \
         starting_point=0.0,                     \
@@ -7426,14 +7321,11 @@ class BogaczEtAl(
 
     componentName = kwBogaczEtAl
 
-    class ClassDefaults(IntegratorFunction.ClassDefaults):
-        variable = [[0]]
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  drift_rate:parameter_spec = 1.0,
                  starting_point: parameter_spec = 0.0,
                  threshold: parameter_spec = 1.0,
@@ -7622,7 +7514,7 @@ class NF_Results(IntEnum):
 class NavarroAndFuss(IntegratorFunction):
     """
     NavarroAndFuss(                             \
-        default_variable=ClassDefaults.variable,  \
+        default_variable=None,                  \
         drift_rate=1.0,                         \
         threshold=1.0,                          \
         starting_point=0.0,                     \
@@ -7729,14 +7621,11 @@ class NavarroAndFuss(IntegratorFunction):
 
     componentName = kwNavarrosAndFuss
 
-    class ClassDefaults(IntegratorFunction.ClassDefaults):
-        variable = [[0]]
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  drift_rate: parameter_spec = 1.0,
                  starting_point: parameter_spec = 0.0,
                  threshold: parameter_spec = 1.0,
@@ -7897,14 +7786,11 @@ class NormalDist(DistributionFunction):
 
     componentName = NORMAL_DIST_FUNCTION
 
-    class ClassDefaults(DistributionFunction.ClassDefaults):
-        variable = [0]
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  mean=0.0,
                  standard_dev=1.0,
                  params=None,
@@ -8032,7 +7918,7 @@ class UniformToNormalDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  mean=0.0,
                  standard_dev=1.0,
                  params=None,
@@ -8127,14 +8013,11 @@ class ExponentialDist(DistributionFunction):
     """
     componentName = EXPONENTIAL_DIST_FUNCTION
 
-    class ClassDefaults(DistributionFunction.ClassDefaults):
-        variable = [0]
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  beta=1.0,
                  params=None,
                  owner=None,
@@ -8228,14 +8111,11 @@ class UniformDist(DistributionFunction):
     """
     componentName = UNIFORM_DIST_FUNCTION
 
-    class ClassDefaults(DistributionFunction.ClassDefaults):
-        variable = [0]
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  low=0.0,
                  high=1.0,
                  params=None,
@@ -8333,14 +8213,11 @@ class GammaDist(DistributionFunction):
 
     componentName = GAMMA_DIST_FUNCTION
 
-    class ClassDefaults(DistributionFunction.ClassDefaults):
-        variable = [0]
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  scale=1.0,
                  dist_shape=1.0,
                  params=None,
@@ -8437,14 +8314,11 @@ class WaldDist(DistributionFunction):
 
     componentName = WALD_DIST_FUNCTION
 
-    class ClassDefaults(DistributionFunction.ClassDefaults):
-        variable = [0]
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  scale=1.0,
                  mean=1.0,
                  params=None,
@@ -8493,7 +8367,7 @@ class ObjectiveFunction(Function_Base):
 class Stability(ObjectiveFunction):
     """
     Stability(                                  \
-        default_variable=ClassDefaults.variable,  \
+        default_variable=None,                  \
         matrix=HOLLOW_MATRIX,                   \
         metric=ENERGY                           \
         transfer_fct=None                       \
@@ -8609,14 +8483,11 @@ COMMENT
 
     componentName = STABILITY_FUNCTION
 
-    class ClassDefaults(ObjectiveFunction.ClassDefaults):
-        variable = [0]
-
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  matrix=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
                  metric:tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)=ENERGY,
@@ -8805,7 +8676,7 @@ COMMENT
 class Distance(ObjectiveFunction):
     """
     Distance(                                    \
-       default_variable=ClassDefaults.variable,  \
+       default_variable=None,                    \
        metric=EUCLIDEAN                          \
        normalize=False,                          \
        params=None,                              \
@@ -8874,13 +8745,13 @@ class Distance(ObjectiveFunction):
     componentName = DISTANCE_FUNCTION
 
     class ClassDefaults(ObjectiveFunction.ClassDefaults):
-        variable = [[0],[0]]
+        variable = np.array([[0], [0]])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  metric:DistanceMetrics._is_metric=DIFFERENCE,
                  normalize:bool=False,
                  params=None,
@@ -8906,12 +8777,32 @@ class Distance(ObjectiveFunction):
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if len(variable) != 2:
-            raise FunctionError("variable for {} ({}) must have two items".format(self.name, variable))
+        err_two_items = FunctionError("variable for {} ({}) must have two items".format(self.name, variable))
 
-        if len(variable[0]) != len(variable[1]):
-            raise FunctionError("The lengths of the items in the variable for {} ({},{}) must be equal".
-                format(self.name, len(variable[0]), len(variable[1])))
+        try:
+            if len(variable) != 2:
+                raise err_two_items
+        except TypeError:
+            raise err_two_items
+
+        try:
+            if len(variable[0]) != len(variable[1]):
+                raise FunctionError(
+                    "The lengths of the items in the variable for {0} ({1},{2}) must be equal".format(
+                        self.name,
+                        variable[0],
+                        variable[1]
+                    )
+                )
+        except TypeError:
+            if is_iterable(variable[0]) ^ is_iterable(variable[1]):
+                raise FunctionError(
+                    "The lengths of the items in the variable for {0} ({1},{2}) must be equal".format(
+                        self.name,
+                        variable[0],
+                        variable[1]
+                    )
+                )
 
     def function(self,
                  variable=None,
@@ -8996,15 +8887,23 @@ AUTOASSOCIATIVE = 'AUTOASSOCIATIVE'
 class LearningFunction(Function_Base):
     """Abstract class of `Function <Function>` used for learning.
 
+    COMMENT:
+    IMPLEMENTATION NOTE:
+       The function method of a LearningFunction *must* include a **kwargs argument, which accomodates
+       Function-specific parameters;  this is to accommodate the ability of LearningMechanisms to call
+       the function of a LearningFunction with arguments that may not be implemented for all LearningFunctions
+       (e.g., error_matrix for BackPropagation) -- these can't be included in the params argument, as those
+       are validated against paramClassDefaults which will not recognize params specific to another Function.
+
     Attributes
     ----------
 
     variable : list or np.array
         most LearningFunctions take a list or 2d array that must contain three items:
 
-        * the input to the parameter being modified (variable[0]);
-        * the output of the parameter being modified (variable[1]);
-        * the error associated with the output (variable[2]).
+        * the input to the parameter being modified (variable[LEARNING_ACTIVATION_INPUT]);
+        * the output of the parameter being modified (variable[LEARNING_ACTIVATION_OUTPUT]);
+        * the error associated with the output (variable[LEARNING_ERROR_OUTPUT]).
 
         However, the exact specification depends on the funtion's type.
 
@@ -9032,6 +8931,9 @@ class LearningFunction(Function_Base):
     """
 
     componentType = LEARNING_FUNCTION_TYPE
+
+    class ClassDefaults(Function_Base.ClassDefaults):
+        variable = np.array([0, 0, 0])
 
     # def __init__(self, default_variable, params, owner, prefs, context):
     #     super().__init__(default_variable=default_variable,
@@ -9079,7 +8981,7 @@ class LearningFunction(Function_Base):
 class Hebbian(LearningFunction):  # -------------------------------------------------------------------------------
     """
     Hebbian(                                             \
-        default_variable=ClassDefaults.variable,         \
+        default_variable=None,                           \
         activation_function=Linear,                      \
         learning_rate=None,                              \
         params=None,                                     \
@@ -9156,14 +9058,14 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     componentName = HEBBIAN_FUNCTION
 
     class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = [0,0]
+        variable = np.array([0, 0])
 
     default_learning_rate = 0.05
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
@@ -9213,7 +9115,13 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  variable=None,
                  params=None,
                  context=None):
-        """Calculate a matrix of weight changes from a 1d array of activity values
+        """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
+
+        The weight change matrix is calculated as:
+
+           *learning_rate* * :math:`a_ia_j` if :math:`i \\neq j`, else :math:`0`
+
+        where :math:`a_i` and :math:`a_j` are elements of `variable <Hebbian.variable>`.
 
         Arguments
         ---------
@@ -9230,8 +9138,8 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         -------
 
         weight change matrix : 2d np.array
-            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the
-            `learning_rate <HebbinaMechanism.learning_rate>`.
+            matrix of pairwise products of elements of `variable <Hebbian.variable>` scaled by the `learning_rate
+            <HebbinaMechanism.learning_rate>`, with all diagonal elements = 0 (i.e., hollow matix).
 
         """
 
@@ -9255,20 +9163,26 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         # MODIFIED 9/21/17 NEW:
         # FIX: SHOULDN'T BE NECESSARY TO DO THIS;  WHY IS IT GETTING A 2D ARRAY AT THIS POINT?
+        if not isinstance(variable, np.ndarray):
+            variable = np.array(variable)
         if variable.ndim > 1:
             variable = np.squeeze(variable)
         # MODIFIED 9/21/17 END
 
         # If learning_rate is a 1d array, multiply it by variable
         if self.learning_rate_dim == 1:
-            variable = variable * self.learning_rate
+            variable = variable * learning_rate
 
         # Generate the column array from the variable
-        col = variable.reshape(len(variable),1)
+        # col = variable.reshape(len(variable),1)
+        col = np.array(np.matrix(variable).T)
 
+        # Calculate weight chhange matrix
         weight_change_matrix = variable * col
+        # Zero diagonals (i.e., don't allow correlation of a unit with itself to be included)
+        weight_change_matrix = weight_change_matrix * (1-np.identity(len(variable)))
 
-        # If learning_rate is scalar or 2d, muliply it by the weight change matrix
+        # If learning_rate is scalar or 2d, multiply it by the weight change matrix
         if self.learning_rate_dim in {0, 2}:
             weight_change_matrix = weight_change_matrix * learning_rate
 
@@ -9278,7 +9192,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 class Reinforcement(LearningFunction):  # -------------------------------------------------------------------------------
     """
     Reinforcement(                                       \
-        default_variable=ClassDefaults.variable,         \
+        default_variable=None,                           \
         activation_function=SoftMax,                     \
         learning_rate=None,                              \
         params=None,                                     \
@@ -9389,14 +9303,14 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     componentName = RL_FUNCTION
 
     class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = [[0], [0], [0]]
+        variable = np.array([[0], [0], [0]])
 
     default_learning_rate = 0.05
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
@@ -9457,7 +9371,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     def function(self,
                  variable=None,
                  params=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
         """Calculate a matrix of weight changes from a single (scalar) error term
 
         COMMENT:
@@ -9521,11 +9436,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
 
-        # # MODIFIED 2/2/18 OLD:
-        # return [weight_change_matrix, error_array]
-        # MODIFIED 2/2/18 NEW:
         return [error_array, error_array]
-        # MODIFIED 2/2/18 END
 
 
 # Argument names:
@@ -9537,26 +9448,51 @@ WT_MATRIX_RECEIVERS_DIM = 1
 class BackPropagation(LearningFunction):
     """
     BackPropagation(                                     \
-        default_variable=ClassDefaults.variable,         \
+        default_variable=None,                           \
         activation_derivative_fct=Logistic().derivative, \
-        error_derivative_fct=Logistic().derivative,      \
-        error_matrix=None,                               \
         learning_rate=None,                              \
         params=None,                                     \
         name=None,                                       \
         prefs=None)
 
-    Implements a function that calculate a matrix of weight changes using the backpropagation
-    (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_) learning algorithm.
+    Implements a `function <BackPropagation.function>` that calculate a matrix of weight changes using the
+    backpropagation (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_)
+    learning algorithm.  The weight change matrix is computed as:
 
-    COMMENT:
-        Description:
-            Backpropagation learning algorithm (Generalized Delta Rule):
-              [matrix]         [scalar]     [row array]              [row array/ col array]                [col array]
-            delta_weight =  learning rate *   input      *            d(output)/d(input)                 *     error
-              return     =  LEARNING_RATE * variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
+        *weight_change_matrix* = `learning_rate <BackPropagation.learning_rate>` * `activation_input
+        <BackPropagation.activation_input>` * :math:`\\frac{\delta E}{\delta W}`
 
-    COMMENT
+            where:
+
+               :math:`\\frac{\delta E}{\delta W}` = :math:`\\frac{\delta E}{\delta A} * \\frac{\delta A}{\delta W}`
+
+                 is the derivative of the `error_signal <BackPropagation.error_signal>` with respect to the weights;
+
+               :math:`\\frac{\delta E}{\delta A}` = `error_matrix <BackPropagation.error_matrix>` :math:`\\cdot`
+               `error_signal <BackPropagation.error_signal>`
+
+                 is the derivative of the error with respect to `activation_output
+                 <BackPropagation.activation_output>` (i.e., the weighted contribution of each output unit to the
+                 `error_signal <BackPropagation.error_signal>`); and
+
+               :math:`\\frac{\delta A}{\delta W}` =
+               `activation_derivative_fct <BackPropagation.activation_derivative_fct>`
+               (*input =* `activation_input <BackPropagation.activation_input>`,
+               *output =* `activation_output <BackPropagation.activation_output>`\\)
+
+                 is the derivative of the activation function responsible for generating `activation_output
+                 <BackPropagation.activation_output>` at the point that generates each of its entries.
+
+    The values of `activation_input <BackPropagation.activation_input>`, `activation_output
+    <BackPropagation.activation_output>` and  `error_signal <BackPropagation.error_signal>` are specified as
+    items of the `variable <BackPropgation.variable>` both in the constructor for the BackPropagation Function,
+    and in calls to its `function <BackPropagation.function>`.  Although `error_matrix <BackPropagation.error_matrix>`
+    is not specified in the constructor, it is required as an argument of the `function <BackPropagation.function>`;
+    it is assumed that it's value is determined in context at the time of execution (e.g., by a LearningMechanism that
+    uses the BackPropagation LearningFunction).
+
+    The BackPropagation `function <BackPropagation.function>` returns the *weight_change_matrix* as well as
+    :math:`\\frac{\delta E}{\delta W}`.
 
     Arguments
     ---------
@@ -9568,19 +9504,23 @@ class BackPropagation(LearningFunction):
        `activation_output <BackPropagation.activation_output>` (1d np.array),
        `error_signal <BackPropagation.error_signal>` (1d np.array).
 
-    activation_derivative : Function or function
+    activation_derivative_fct : Function or function
         specifies the derivative for the function of the Mechanism that generates
         `activation_output <BackPropagation.activation_output>`.
 
+    COMMENT:
     error_derivative : Function or function
         specifies the derivative for the function of the Mechanism that is the receiver of the
         `error_matrix <BackPropagation.error_matrix>`.
+    COMMENT
 
+    COMMENT:
     error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
         matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`.
         If it is specified as a ParameterState it must be one for the `matrix <MappingProjection.matrix>`
         parameter of a `MappingProjection`;  if it is a MappingProjection, it must be one with a
         MATRIX parameterState.
+    COMMENT
 
     learning_rate : float : default default_learning_rate
         supersedes any specification for the `Process` and/or `System` to which the function's
@@ -9616,6 +9556,10 @@ class BackPropagation(LearningFunction):
         the output of the function for which the matrix being modified provides the input;
         same as 2nd item of `variable <BackPropagation.variable>`.
 
+    activation_derivative_fct : Function or function
+        the derivative for the function of the Mechanism that generates
+        `activation_output <BackPropagation.activation_output>`.
+
     error_signal : 1d np.array
         the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
         target (training signal) and the output of the last Mechanism in the sequence;
@@ -9629,7 +9573,7 @@ class BackPropagation(LearningFunction):
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
         `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
         <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
-        which the `owner <BackPropagationowner>` belongs is used;  and, if that is `None`, then the learning_rate for
+        which the `owner <BackPropagation.owner>` belongs is used;  and, if that is `None`, then the learning_rate for
         the system to which it belongs is used. If all are `None`, then the
         `default_learning_rate <BackPropagation.default_learning_rate>` is used.
 
@@ -9652,7 +9596,7 @@ class BackPropagation(LearningFunction):
     componentName = BACKPROPAGATION_FUNCTION
 
     class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = [[0], [0], [0]]
+        variable = np.array([[0], [0], [0]])
 
     default_learning_rate = 1.0
 
@@ -9660,11 +9604,9 @@ class BackPropagation(LearningFunction):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=ClassDefaults.variable,
+                 default_variable=None,
                  # default_variable:tc.any(list, np.ndarray),
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
-                 error_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
-                 error_matrix=None,
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
@@ -9672,9 +9614,11 @@ class BackPropagation(LearningFunction):
                  prefs: is_pref_set = None,
                  context='Component Init'):
 
+        error_matrix=np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
+                               len(default_variable[LEARNING_ERROR_OUTPUT])))
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(activation_derivative_fct=activation_derivative_fct,
-                                                  error_derivative_fct=error_derivative_fct,
                                                   error_matrix=error_matrix,
                                                   learning_rate=learning_rate,
                                                   params=params)
@@ -9705,7 +9649,7 @@ class BackPropagation(LearningFunction):
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate error_matrix param
+        """Validate learning_rate and error_matrix params
 
         `error_matrix` argument must be one of the following
             - 2d list, np.ndarray or np.matrix
@@ -9796,45 +9740,72 @@ class BackPropagation(LearningFunction):
 
     def function(self,
                  variable=None,
+                 error_matrix=None,
                  params=None,
-                 context=None):
-        """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms
+                 context=None,
+                 **kwargs):
+        """Calculate and return a matrix of weight changes from arrays of inputs, outputs and error terms.
+
+        Note that both variable and error_matrix must be specified for the function to execute.
 
         Arguments
         ---------
 
-        variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
+        variable : List or 2d np.array [length 3 in axis 0]
            must have three items that are the values for (in order):
            `activation_input <BackPropagation.activation_input>` (1d np.array),
            `activation_output <BackPropagation.activation_output>` (1d np.array),
            `error_signal <BackPropagation.error_signal>` (1d np.array).
+
+        error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
+            matrix of weights that were used to generate the `error_signal <BackPropagation.error_signal>` (3rd item
+            of `variable <BackPropagation.variable>` from `activation_output <BackPropagation.activation_output>`;
+            its dimensions must be the length of `activation_output <BackPropagation.activation_output>` (rows) x
+            length of `error_signal <BackPropagation.error_signal>` (cols).
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-
         Returns
         -------
+
+        weight change matrix : 2d np.array
+            the modifications to make to the matrix.
 
         weighted error signal : 1d np.array
             `error_signal <BackPropagation.error_signal>`, weighted by the contribution made by each element of
             `activation_output <BackPropagation.activation_output>` as a function of
             `error_matrix <BackPropagation.error_matrix>`.
 
-        weight change matrix : 2d np.array
-            the modifications to make to the matrix.
         """
+
+        # Manage error_matrix param
+        # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
+        #     so need "placemarker" error_matrix for validation
+        if INITIALIZING in context and error_matrix is None:
+            self.error_matrix = np.zeros((len(variable[LEARNING_ACTIVATION_OUTPUT]),
+                                          len(variable[LEARNING_ERROR_OUTPUT])))
+        # If error_matrix is specified, assign to self.error_matrix attribute for validation
+        elif error_matrix is not None:
+            from psyneulink.components.states.parameterstate import ParameterState
+            # If it is specified as a ParameterState, get actual matrix (for execution below)
+            if isinstance(error_matrix, ParameterState):
+                self.error_matrix = params[ERROR_MATRIX].value
+            else:
+                self.error_matrix = error_matrix
+        # Raise exception if error_matrix is not specified
+        else:
+            owner_string = ""
+            if self.owner:
+                owner_string = " of " + self.owner.name
+            raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
+                                format(self.__class__.__name__, owner_string))
 
         self._check_args(variable=variable, params=params, context=context)
 
-        from psyneulink.components.states.parameterstate import ParameterState
-        if isinstance(self.error_matrix, ParameterState):
-            error_matrix = self.error_matrix.value
-        else:
-            error_matrix = self.error_matrix
-
+        # Manage learning_rate
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
         #                          so that the process or system can see it is free to be assigned
@@ -9850,7 +9821,7 @@ class BackPropagation(LearningFunction):
         activation_input = np.array(self.activation_input).reshape(len(self.activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
-        dE_dA = np.dot(error_matrix, self.error_signal)
+        dE_dA = np.dot(self.error_matrix, self.error_signal)
 
         # Derivative of the output activity
         dA_dW = self.activation_derivative_fct(input=self.activation_input, output=self.activation_output)
@@ -9860,20 +9831,6 @@ class BackPropagation(LearningFunction):
 
         # Weight changes = delta rule (learning rate * activity * error)
         weight_change_matrix = learning_rate * activation_input * dE_dW
-
-        # # TEST PRINT:
-        # if context and not 'INIT' in context:
-        #     print("\nBACKPROP for {}:\n    "
-        #           "-input: {}\n    "
-        #           "-error_signal (dE_DA): {}\n    "
-        #           "-derivative (dA_dW): {}\n    "
-        #           "-error_derivative (dE_dW): {}\n".
-        #           format(self.owner_name, self.activation_input, dE_dA, dA_dW ,dE_dW))
-
-        # self.return_val.error_signal = dE_dW
-        # self.return_val.learning_signal = weight_change_matrix
-        #
-        # return list(self.return_val)
 
         return [weight_change_matrix, dE_dW]
 
@@ -9935,7 +9892,7 @@ class TDLearning(Reinforcement):
 
         return variable
 
-    def function(self, variable=None, params=None, context=None):
+    def function(self, variable=None, params=None, context=None, **kwargs):
         return super().function(variable=variable, params=params, context=context)
 
 

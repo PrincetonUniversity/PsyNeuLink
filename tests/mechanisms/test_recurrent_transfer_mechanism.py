@@ -64,7 +64,7 @@ class TestMatrixSpec:
 class TestRecurrentTransferMechanismInputs:
 
     def test_recurrent_mech_empty_spec(self):
-        R = RecurrentTransferMechanism()
+        R = RecurrentTransferMechanism(auto=1.0)
         assert R.value is None
         np.testing.assert_allclose(R.instance_defaults.variable, [[0]])
         np.testing.assert_allclose(R.matrix, [[1]])
@@ -72,7 +72,8 @@ class TestRecurrentTransferMechanismInputs:
     def test_recurrent_mech_check_attrs(self):
         R = RecurrentTransferMechanism(
             name='R',
-            size=3
+            size=3,
+            auto=1.0
         )
         assert R.value is None
         np.testing.assert_allclose(R.instance_defaults.variable, [[0., 0., 0.]])
@@ -217,8 +218,14 @@ class TestRecurrentTransferMechanismMatrix:
         val = R.execute([-1, -2, -3])
         np.testing.assert_allclose(val, [[-1, -2, -3]])
         assert isinstance(R.matrix, np.ndarray)
-        np.testing.assert_allclose(R.matrix, [[1, -1, -1], [-1, 1, -1], [-1, -1, 1]])
-        np.testing.assert_allclose(run_twice_in_system(R, [1, 2, 3], [10, 11, 12]), [8, 7, 6])
+        np.testing.assert_allclose(R.matrix, [[0, -1, -1], [-1, 0, -1], [-1, -1, 0]])
+        # Execution 1:
+        # Recurrent input = [5, 4, 3] | New input = [1, 2, 3] | Total input = [6, 6, 6]
+        # Output 1 = [6, 6, 6]
+        # Execution 2:
+        # Recurrent input =[-12, -12, -12] | New input =  [10, 11, 12] | Total input = [-2, -1, 0]
+        # Output 2 =  [-2, -1, 0]
+        np.testing.assert_allclose(run_twice_in_system(R, [1, 2, 3], [10, 11, 12]), [-2., -1.,  0.])
 
     def test_recurrent_mech_matrix_auto_hetero_spec_size_1(self):
         R = RecurrentTransferMechanism(
@@ -792,23 +799,65 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(
             R.recurrent_projection.mod_matrix,
             [
-                [0.18192000000000003, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
-                [0.18192000000000003, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
-                [0.11792000000000001, 0.11792000000000001, 0.10392000000000001, 0.10392000000000001],
-                [0.11792000000000001, 0.11792000000000001, 0.10392000000000001, 0.10392000000000001]
+                [0.1, 0.18192000000000003, 0.11792000000000001, 0.11792000000000001],
+                [0.18192000000000003, 0.1, 0.11792000000000001, 0.11792000000000001],
+                [0.11792000000000001, 0.11792000000000001, 0.1, 0.10392000000000001],
+                [0.11792000000000001, 0.11792000000000001, 0.10392000000000001, 0.1]
             ]
         )
         p.execute([1, 1, 0, 0])
-        np.testing.assert_allclose(R.value, [[1.5317504, 1.5317504, 0.3600704, 0.3600704]])
+        np.testing.assert_allclose(R.value, [[1.4268928, 1.4268928, 0.3589728, 0.3589728]])
         np.testing.assert_allclose(
             R.recurrent_projection.mod_matrix,
             [
-                [0.299232964395008, 0.299232964395008, 0.14549689896140802, 0.14549689896140802],
-                [0.299232964395008, 0.299232964395008, 0.14549689896140802, 0.14549689896140802],
-                [0.14549689896140802, 0.14549689896140802, 0.11040253464780801, 0.11040253464780801],
-                [0.14549689896140802, 0.14549689896140802, 0.11040253464780801, 0.11040253464780801]
+                [0.1, 0.28372115, 0.14353079, 0.14353079],
+                [0.28372115, 0.1, 0.14353079, 0.14353079],
+                [0.14353079, 0.14353079, 0.1, 0.11036307],
+                [0.14353079, 0.14353079, 0.11036307, 0.1]
             ]
         )
+
+    def test_learning_of_orthognal_inputs(self):
+        size=4
+        R = RecurrentTransferMechanism(
+            size=size,
+            function=Linear,
+            enable_learning=True,
+            auto=0,
+            hetero=np.full((size,size),0.0)
+            )
+        P=Process(pathway=[R])
+        S=System(processes=[P])
+
+        inputs_dict = {R:[1,0,1,0]}
+        S.run(num_trials=4,
+              inputs=inputs_dict)
+        np.testing.assert_allclose(
+            R.recurrent_projection.mod_matrix,
+            [
+                [0.0,        0.0,  0.23700501,  0.0],
+                [0.0,        0.0,  0.0,         0.0],
+                [0.23700501, 0.0,  0.0,         0.0],
+                [0.0,        0.0,  0.0,         0.0]
+            ]
+        )
+        np.testing.assert_allclose(R.output_state.value, [1.18518086, 0.0, 1.18518086, 0.0])
+
+        # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
+        R.output_state.value = [0,0,0,0]
+        inputs_dict = {R:[0,1,0,1]}
+        S.run(num_trials=4,
+              inputs=inputs_dict)
+        np.testing.assert_allclose(
+            R.recurrent_projection.mod_matrix,
+            [
+                [0.0,        0.0,        0.23700501, 0.0       ],
+                [0.0,        0.0,        0.0,        0.23700501],
+                [0.23700501, 0.0,        0.0,        0.        ],
+                [0.0,        0.23700501, 0.0,        0.        ]
+            ]
+        )
+        np.testing.assert_allclose(R.output_state.value,[0.0, 1.18518086, 0.0, 1.18518086])
 
 
 # this doesn't work consistently due to EVC's issue with the scheduler
@@ -830,3 +879,62 @@ class TestRecurrentTransferMechanismInSystem:
 #         print('T.value: ', T.value)
 #         np.testing.assert_allclose(T.value, [[-.09645391388158941, -.09645391388158941, -.09645391388158941]])
 #         s.run(inputs = {})
+
+class TestRecurrentTransferMechanismReinitialize:
+
+    def test_reinitialize_run(self):
+
+        R = RecurrentTransferMechanism(name="R",
+                 initial_value=0.5,
+                 integrator_mode=True,
+                 smoothing_factor=0.1,
+                 auto=1.0,
+                 noise=0.0)
+        P = Process(name="P",
+                    pathway=[R])
+        S = System(name="S",
+                   processes=[P])
+
+        assert np.allclose(R.previous_value, 0.5)
+        assert np.allclose(R.initial_value, 0.5)
+        assert np.allclose(R.integrator_function.initializer, 0.5)
+
+        S.run(inputs={R: 1.0},
+              num_trials=2,
+              initialize=True,
+              initial_values={R: 0.0})
+
+        # Trial 1    |   variable = 1.0 + 0.0
+        # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
+        # linear fn: 0.55*1.0 = 0.55
+        # Trial 2    |   variable = 1.0 + 0.55
+        # integration: 0.9*0.55 + 0.1*1.55 + 0.0 = 0.65  --->  previous value = 0.65
+        # linear fn: 0.65*1.0 = 0.65
+        assert np.allclose(R.previous_value, 0.65)
+        assert np.allclose(R.initial_value, 0.5)
+        assert np.allclose(R.integrator_function.initializer, 0.5)
+
+        R.integrator_function.reinitialize(0.9)
+
+        assert np.allclose(R.previous_value, 0.9)
+        assert np.allclose(R.initial_value, 0.5)
+        assert np.allclose(R.integrator_function.initializer, 0.9)
+        assert np.allclose(R.value, 0.65)
+
+        R.reinitialize(0.5)
+
+        assert np.allclose(R.previous_value, 0.5)
+        assert np.allclose(R.initial_value, 0.5)
+        assert np.allclose(R.integrator_function.initializer, 0.5)
+        assert np.allclose(R.value, 0.5)
+
+        S.run(inputs={R: 1.0}, num_trials=2)
+        # Trial 3
+        # integration: 0.9*0.5 + 0.1*1.5 + 0.0 = 0.6  --->  previous value = 0.6
+        # linear fn: 0.6*1.0 = 0.6
+        # Trial 4
+        # integration: 0.9*0.6 + 0.1*1.6 + 0.0 = 0.7 --->  previous value = 0.7
+        # linear fn: 0.7*1.0 = 0.7
+        assert np.allclose(R.previous_value, 0.7)
+        assert np.allclose(R.initial_value, 0.5)
+        assert np.allclose(R.integrator_function.initializer, 0.5)

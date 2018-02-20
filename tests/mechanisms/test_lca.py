@@ -117,3 +117,68 @@ class TestLCA:
         # f(new_transfer_input_2) = 0.9965 * 2.0 = 1.463
 
         assert np.allclose(results, [[0.2, 0.4], [0.45, 1.02], [0.7385, 1.993]])
+
+class TestLCAReinitialize:
+
+    def test_reinitialize_run(self):
+
+        L = LCA(name="L",
+                function=Linear,
+                initial_value=0.5,
+                integrator_mode=True,
+                leak=0.1,
+                competition=0,
+                self_excitation=1.0,
+                time_step_size=1.0,
+                noise=0.0)
+        P = Process(name="P",
+                    pathway=[L])
+        S = System(name="S",
+                   processes=[P])
+
+        assert np.allclose(L.previous_value, 0.5)
+        assert np.allclose(L.initial_value, 0.5)
+        assert np.allclose(L.integrator_function.initializer, 0.5)
+
+        S.run(inputs={L: 1.0},
+              num_trials=2,
+              initialize=True,
+              initial_values={L: 0.0})
+
+        # Integrator fn: previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
+
+        # Trial 1    |   variable = 1.0 + 0.0
+        # integration: 0.5 + (0.1*0.5 + 1.0)*1.0 + 0.0 = 1.55
+        # linear fn: 1.55*1.0 = 1.55
+        # Trial 2    |   variable = 1.0 + 1.55
+        # integration: 1.55 + (0.1*1.55 + 2.55)*1.0 + 0.0 = 4.255
+        #  linear fn: 4.255*1.0 = 4.255
+        assert np.allclose(L.previous_value, 4.255)
+        assert np.allclose(L.initial_value, 0.5)
+        assert np.allclose(L.integrator_function.initializer, 0.5)
+
+        L.integrator_function.reinitialize(0.9)
+
+        assert np.allclose(L.previous_value, 0.9)
+        assert np.allclose(L.initial_value, 0.5)
+        assert np.allclose(L.integrator_function.initializer, 0.9)
+        assert np.allclose(L.value, 4.255)
+
+        L.reinitialize(0.5)
+
+        assert np.allclose(L.previous_value, 0.5)
+        assert np.allclose(L.initial_value, 0.5)
+        assert np.allclose(L.integrator_function.initializer, 0.5)
+        assert np.allclose(L.value, 0.5)
+
+        S.run(inputs={L: 1.0},
+              num_trials=2)
+        # Trial 3    |   variable = 1.0 + 0.5
+        # integration: 0.5 + (0.1*0.5 + 1.5)*1.0 + 0.0 = 2.05
+        # linear fn: 2.05*1.0 = 2.05
+        # Trial 4    |   variable = 1.0 + 2.05
+        # integration: 2.05 + (0.1*2.05 + 3.05)*1.0 + 0.0 = 5.305
+        #  linear fn: 5.305*1.0 = 5.305
+        assert np.allclose(L.previous_value, 5.305)
+        assert np.allclose(L.initial_value, 0.5)
+        assert np.allclose(L.integrator_function.initializer, 0.5)

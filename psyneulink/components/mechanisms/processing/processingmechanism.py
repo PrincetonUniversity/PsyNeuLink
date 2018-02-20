@@ -89,13 +89,14 @@ belongs is run. A ProcessingMechanism always executes before any `AdaptiveMechan
 
 """
 
+import typecheck as tc
+
+from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.globals.defaults import defaultControlAllocation
-import typecheck as tc
-from psyneulink.globals.keywords import PROCESSING_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
+from psyneulink.globals.keywords import OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, PROCESSING_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.components.functions.function import Linear
 
 __all__ = [
     'ProcessingMechanismError',
@@ -132,12 +133,8 @@ class ProcessingMechanism_Base(Mechanism_Base):
     #     kwPreferenceSetName: 'ProcessingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(Mechanism_Base.ClassDefaults):
-        # This must be a list, as there may be more than one (e.g., one per control_signal)
-        variable = defaultControlAllocation
-
     def __init__(self,
-                 variable=None,
+                 default_variable=None,
                  size=None,
                  input_states=None,
                  output_states=None,
@@ -157,7 +154,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
 
         self.system = None
 
-        super().__init__(variable=variable,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          output_states=output_states,
@@ -253,10 +250,6 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ProcessingMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        # Sets template for variable (input)
-        variable = [[0]]
-
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
@@ -274,14 +267,11 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if default_variable is None and size is None:
-            default_variable = self.ClassDefaults.variable
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 
-        super(ProcessingMechanism, self).__init__(variable=default_variable,
+        super(ProcessingMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   input_states=input_states,
                                                   params=params,
