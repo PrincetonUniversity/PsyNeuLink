@@ -1117,13 +1117,14 @@ class InputState(State_Base):
 
     @staticmethod
     def _get_state_function_value(function, variable):
-        """Execute the function of a State and return its value
+        """Overrided State method
 
-        This is a stub, that allows a State to override it and treat execution of its function in a State-specific manner;
-        For example, the variable of an InputState must be "wrapped" in a list (see InputState._get_state_function_value()).
-        so that LinearCombination (its default
-        function) properly treats an ndarray variable;  this is normally done in its update method, but that
-        can't be called by _parse_state_spec since the State may not yet have been instantiated.
+        InputState variable must be embedded in a list (see InputState._get_state_function_value()).
+        so that LinearCombination (its default function) returns a variable that is >=2d intact
+        (rather than as arrays to be combined);
+        this is normally done in State.update() (and in State._instantiate-function), but that
+        can't be called by _parse_state_spec since the InputState itself may not yet have been instantiated.
+
         """
         return function.execute([variable])
 
