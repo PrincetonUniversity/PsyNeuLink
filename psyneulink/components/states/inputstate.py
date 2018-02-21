@@ -1126,7 +1126,22 @@ class InputState(State_Base):
         can't be called by _parse_state_spec since the InputState itself may not yet have been instantiated.
 
         """
-        return function.execute([variable])
+        import inspect
+        if (
+                (
+                        (inspect.isclass(function) and issubclass(function, LinearCombination))
+                        or isinstance(function, LinearCombination)
+                )
+                and (
+                isinstance(variable, np.matrix)
+                or (
+                        isinstance(np.array(variable))
+                        and variable.ndim >=2
+                )
+        )
+        ):
+            variable = [variable]
+        return function.execute(variable)
 
 
 def _instantiate_input_states(owner, input_states=None, reference_value=None, context=None):
