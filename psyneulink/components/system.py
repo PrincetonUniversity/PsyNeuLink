@@ -310,16 +310,13 @@ A System executes learning if it is specified for one or more `Processes <Proces
 The System's `learning <System.learning>` attribute indicates whether learning is enabled for the System. Learning
 is executed for any Components (individual Projections or Processes) for which it is `specified
 <Process_Learning_Sequence>` after the  `processing <System_Execution_Processing>` of each `TRIAL` has completed, but
-before the `controller <System.controller> is executed <System_Execution_Control>`.  The learning Components of a
-System can be displayed using the System's `show_graph <System.show_graph>` method with its **show_learning**
-argument assigned `True` or *ALL*. The stimuli used for learning (both inputs and targets) can be specified in either
-of two formats, Sequence or Mechanism, that are described in the `Run` module; see `Run_Inputs` and `Run_Targets`).
-Both formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its
-`origin_mechanisms <System.origin_mechanisms>` attribute).  If the targets are specified in `Sequence
-<Run_Targets_Sequence_Format>` or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for
-each `TARGET` Mechanism (listed in its `target_mechanisms <System.target_mechanisms>` attribute).  Targets can also
-be specified in a `function format <Run_Targets_Function_Format>`, which generates a target for each execution of a
-`TARGET` Mechanism.
+before the `controller <System.controller> is executed <System_Execution_Control>`.
+
+The learning Components of a System can be displayed using the System's `show_graph <System.show_graph>` method with its
+**show_learning** argument assigned `True` or *ALL*. The target values used for learning can be specified in either of
+two formats: dictionary or function, which are described in the `Run` module (see `Run_Targets`). Both formats require
+that a target value be provided for each `TARGET` Mechanism of the System (listed in its `target_mechanisms
+<System.target_mechanisms>` attribute).
 
 .. note::
    A `TARGET` Mechanism of a Process is not necessarily one of the `TARGET` Mechanisms of the System to which it belongs

@@ -342,64 +342,41 @@ Targets
 
 If learning is specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`, then
 target values for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
-are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method, which can be in
-any of three formats.  The two formats used for **inputs** (`Sequence <Run_Inputs_Sequence_Format>` and
-`Mechanism <Run_Inputs_Mechanism_Format>` format) can also be used for targets.  However, the format of the lists or
-ndarrays is simpler, since each `TARGET` Mechanism is assigned only a single target value, so there is never the need
-for the extra level of nesting (or dimension of ndarray) used for InputStates in the specification of **inputs**.
-Details concerning the use of the `Sequence <Run_Targets_Sequence_Format>`  and
-`Mechanism <Run_Targets_Mechanism_Format>` formats for targets is described below. Targets can also be specified
-as a `function <Run_Targets_Function_Format>` (for example, to allow the target to depend on the outcome of processing).
+are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method.
 
-If either the Sequence or Mechanism format is used, then the number of targets specified for each Mechanism must equal
+Recall that the `TARGET`, or `ComparatorMechanism`, of a learning sequence receives a TARGET, provided by the user at
+run time, and a SAMPLE, which it receives from a projection sent by the last mechanism of the learning sequence. The
+TARGET and SAMPLE values for a particular `TARGET` Mechanism must have the same shape. See `learning sequence
+<Process_Learning_Sequence>` for more details on how these components relate to each other.
+
+The standard format for specifying targets is a Python dictionary where the keys are the last mechanism of each learning
+sequence, and the values are lists in which the i-th element represents the target value to the mechanism on trial i.
+There must be the same number of keys in the target specification dictionary as there are `TARGET` Mechanisms in the
+system. Each target value must be compatible with the shape of the `TARGET` mechanism's TARGET `input state
+<ComparatorMechanism.input_states>`. This means that for a given key (which is always the last mechanism of a
+learning sequence) in the target specification dictionary, the value is usually a list of 1d lists/arrays, though `some
+shorthand notations are allowed <Target_Specification_Examples>`.
+
+COMMENT:
+Furthermore, if a range is specified for the output of
+the last mechanism in the learning sequence (which is the `sample <ComparatorMechanism.ComparatorMechanism.sample>`
+value against which the target is compared), then the target must be within that range. For example, if the `TERMINAL`
+Mechanism is a `TransferMechanism` that uses a `Logistic` function, its `range
+<TransferMechanism.TransferMechanism.range>` is [0,1], so the target must be within that range).
+COMMENT
+
+Alternatively, targets may be specified by a function, in which case the function must return an array with a number of
+items equal to the number of `TARGET` Mechanisms for the Process or System being run, each of which must match
+(in number and type of elements) the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the
+`TARGET` Mechanism for which it is intended. This format allows targets to be constructed programmatically, in response
+to computations made during the run.
+
+If the dictionary format of target specification is used, the number of targets specified for each Mechanism must equal
 the number specified for the **inputs** argument;  as with **inputs**, if the number of `TRIAL` \\s specified is greater
 than the number of inputs (and targets), then the list will be cycled until the number of `TRIAL` \\s specified is
-completed.  If a function is used for the **targets**, then it will be used to generate a target for each `TRIAL`.
+completed.
 
-The number of targets specified in the Sequence or Mechanism formats for each `TRIAL`, or generated using
-the function format, must equal the number of `TARGET` Mechanisms for the Process or System being run (see Process
-`target_mechanisms <Process.Process.target_mechanisms>` or
-System `targetMechanism <System.target_mechanisms>` respectively), and the value of each target must
-match (in number and type of elements) that  of the `target <ComparatorMechanism.ComparatorMechanism.target>`
-attribute of the `TARGET` Mechanism for which it is intended.  Furthermore, if a range is specified for the output of
-the `TERMINAL` Mechanism with which the target is compared (that is, the Mechanism that provides the
-`ComparatorMechanism's <ComparatorMechanism>` `sample <ComparatorMechanism.ComparatorMechanism.sample>`
-value, then the target must be within that range (for example, if the `TERMINAL` Mechanism is a
-`TransferMechanism` that uses a `Logistic` function, its `range <TransferMechanism.TransferMechanism.range>` is
-[0,1], so the target must be within that range).
-
-.. _Run_Targets_Sequence_Format:
-
-Sequence Format
-^^^^^^^^^^^^^^^
-
-*(List[values] or ndarray):* -- there are at most three levels of nesting (or dimensions) required for
-targets:  one for `TRIAL` \\s, one for Mechanisms, and one for the elements of each input.  For a System
-with more than one `TARGET` Mechanism, the targets must be specified in the same order as they appear in the System's
-`target_mechanisms <System.target_mechanisms>` attribute.  This should be the same order in which
-they are declared, and can be displayed using the System's `show <System.show>` method). All
-other requirements are the same as the `Sequence format <Run_Inputs_Sequence_Format>` for **inputs**.
-
-.. _Run_Targets_Mechanism_Format:
-
-Mechanism Format
-^^^^^^^^^^^^^^^^
-*(Dict[Mechanism, List[values] or ndarray]):* -- there must be one entry in the dictionary for each of the `TARGET`
-Mechanisms in the Process or System being run, though the entries can be specified in any order (making this format
-easier to use. The value of each entry is a list or ndarray of the target values for that Mechanism, one for each
-`TRIAL`.  There are at most two levels of nesting (or dimensions) required for each entry: one for the `TRIAL`,
-and the other for the elements of each input.  In all other respects, the format is the same as the
-`Mechanism format <Run_Inputs_Mechanism_Format>` for **inputs**.
-
-.. _Run_Targets_Function_Format:
-
-Function Format
-^^^^^^^^^^^^^^^
-
-*[Function]:* -- the function must return an array with a number of items equal to the number of `TARGET` Mechanisms
-for the Process or System being run, each of which must match (in number and type of elements) the
-`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the `TARGET` Mechanism for which it is intended.
-This format allows targets to be constructed programmatically, in response to computations made during the run.
+If a function is used for the **targets**, then it will be used to generate a target for each `TRIAL`.
 
 COMMENT:
     ADD EXAMPLE HERE
