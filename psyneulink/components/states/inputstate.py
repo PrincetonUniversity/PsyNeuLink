@@ -870,7 +870,7 @@ class InputState(State_Base):
 
         if variable is not None:
             return self.function(variable, runtime_params, context)
-        # If there were any Transmissive Projections:
+        # If there were any Pathway Projections:
         elif self._path_proj_values:
             # Combine Projection values
             # TODO: stateful - this seems dangerous with statefulness, maybe safe when self.value is only passed or stateful
