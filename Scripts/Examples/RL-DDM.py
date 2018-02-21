@@ -29,7 +29,7 @@ action_selection = pnl.DDM(
                 noise=pnl.CONTROL,
         ),
         output_states=[pnl.DECISION_VARIABLE_ARRAY],
-    name='DDM'
+        name='DDM'
 )
 
 # Construct Process
@@ -40,7 +40,8 @@ action_selection = pnl.DDM(
 #    The learning argument specifies Reinforcement as the learning function for the Projection
 p = pnl.Process(
     default_variable=[0, 0],
-    pathway=[input_layer, np.array([[1],[-1]]), action_selection],
+    # pathway=[input_layer, np.array([[1],[-1]]), action_selection],
+    pathway=[input_layer, action_selection],
     learning=pnl.LearningProjection(learning_function=pnl.Reinforcement(learning_rate=0.05)),
     target=0
 )

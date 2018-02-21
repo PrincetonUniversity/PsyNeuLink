@@ -661,14 +661,17 @@ class DDM(ProcessingMechanism_Base):
                  context=componentType + INITIALIZING
     ):
 
-        # If input_format is specified to be ARRAY or VECTOR, instantiate 2-item array as InputState
+        # If input_format is specified to be ARRAY or VECTOR, instantiate InputState with:
+        #    2-item array as its variable
+        #    Reduce as its function, which will generate an array of len 1
+        #    and therefore specify size of Mechanism's variable as 1
         if input_format in {ARRAY, VECTOR}:
-            size=1
+            size=1 # size of variable for DDM Mechanism
             input_states=[{NAME:'ARRAY',
                            VARIABLE:[0,0],
                            FUNCTION: Reduce(weights=[1,-1])}
                           ]
-            output_states = [{NAME: DECISION_VARIABLE_ARRAY, # 1d, len 2, # DECISION_VARIABLE as element 0 or 1
+            output_states = [{NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
                               INDEX:0,
                               CALCULATE: lambda x: [x,0] if x >= 0 else [0,-x]}
                              ]
@@ -687,8 +690,8 @@ class DDM(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  input_format=input_format,
-                                                  # input_states=input_states,
+                                                  # input_format=input_format,
+                                                  input_states=input_states,
                                                   output_states=output_states,
                                                   params=params)
 
