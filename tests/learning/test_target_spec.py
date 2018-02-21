@@ -28,6 +28,73 @@ class TestSimpleLearningPathway:
         S.run(inputs={A: 1.0},
               targets={B: 2.0})
 
+        S.run(inputs={A: 1.0},
+              targets={B: [2.0]})
+
+        S.run(inputs={A: 1.0},
+              targets={B: [[2.0]]})
+
+    def test_dict_target_spec_length2(self):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B",
+                              default_variable=[[0.0, 0.0]])
+
+        LP = Process(name="learning-process",
+                     pathway=[A, B],
+                     # target=[3.0],
+                     learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[LP],
+                   # targets={B: [4.0]}
+                   )
+
+        S.run(inputs={A: 1.0},
+              targets={B: [2.0, 3.0]})
+
+        S.run(inputs={A: 1.0},
+              targets={B: [[2.0, 3.0]]})
+
+    def test_list_target_spec(self):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B")
+
+        LP = Process(name="learning-process",
+                     pathway=[A, B],
+                     learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[LP])
+
+        S.run(inputs={A: 1.0},
+              targets=2.0)
+
+        S.run(inputs={A: 1.0},
+              targets=[2.0])
+
+        S.run(inputs={A: 1.0},
+              targets=[[2.0]])
+
+    def test_list_target_spec_length2(self):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B",
+                              default_variable=[[0.0, 0.0]])
+
+        LP = Process(name="learning-process",
+                     pathway=[A, B],
+                     # target=[3.0],
+                     learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[LP],
+                   # targets={B: [4.0]}
+                   )
+
+        S.run(inputs={A: 1.0},
+              targets=[2.0, 3.0])
+
+        S.run(inputs={A: 1.0},
+              targets=[[2.0, 3.0]])
 class TestMultilayerLearning:
 
     def test_dict_target_spec(self):
@@ -45,3 +112,29 @@ class TestMultilayerLearning:
 
         S.run(inputs={A: 1.0},
               targets={C: 2.0})
+
+        S.run(inputs={A: 1.0},
+              targets={C: [2.0]})
+
+        S.run(inputs={A: 1.0},
+              targets={C: [[2.0]]})
+
+    def test_dict_target_spec_length2(self):
+        A = TransferMechanism(name="multilayer-mech-A")
+        B = TransferMechanism(name="multilayer-mech-B")
+        C = TransferMechanism(name="multilayer-mech-C",
+                              default_variable=[[0.0, 0.0]])
+        P = Process(name="multilayer-process",
+                     pathway=[A, B, C],
+                     # target=[3.0],
+                     learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[P]
+                   )
+
+        S.run(inputs={A: 1.0},
+              targets={C: [2.0, 3.0]})
+
+        S.run(inputs={A: 1.0},
+              targets={C: [[2.0, 3.0]]})
