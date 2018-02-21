@@ -216,6 +216,9 @@ class AutoAssociativeProjection(MappingProjection):
     className = componentType
     suffix = " " + className
 
+    class ClassDefaults(MappingProjection.ClassDefaults):
+        variable = np.array([[0]])    # function is always LinearMatrix that requires 1D input
+
     classPreferenceLevel = PreferenceLevel.TYPE
 
     # necessary?
@@ -250,7 +253,7 @@ class AutoAssociativeProjection(MappingProjection):
                          prefs=prefs,
                          context=context)
 
-    def execute(self, input=None, params=None, context=None):
+    def _execute(self, variable, runtime_params=None, context=None):
         """
         Based heavily on the execute() method for MappingProjection.
 
@@ -294,7 +297,7 @@ class AutoAssociativeProjection(MappingProjection):
         #     # update the param states for auto/hetero: otherwise, if they've changed since self's last execution,
         #     # we won't know because the mechanism may not have updated its param state yet
         #     # (if we execute before the mechanism)
-        #     self._update_auto_and_hetero(owner_mech, params, time_scale, context)
+        #     self._update_auto_and_hetero(owner_mech, runtime_params, time_scale, context)
         #
         #     # read auto and hetero from their ParameterStates, and put them into `auto_matrix` and `hetero_matrix`
         #     # (where auto_matrix is a diagonal matrix and hetero_matrix is a hollow matrix)
@@ -327,7 +330,7 @@ class AutoAssociativeProjection(MappingProjection):
         # # because setting self.matrix only changes the previous_value/variable of the 'matrix' parameter state (which
         # # holds the matrix parameter) and the matrix parameter state must be UPDATED AFTERWARDS to put the new value
         # # from the previous_value into the value of the parameterState
-        # self._update_parameter_states(runtime_params=params, context=context)
+        # self._update_parameter_states(runtime_params=runtime_params, context=context)
         #
         # # Check whether error_signal has changed
         # if (self.learning_mechanism
@@ -353,9 +356,9 @@ class AutoAssociativeProjection(MappingProjection):
         #     # # IMPLEMENTATION NOTE: END
         #     # # MODIFIED 9/23/17 END
         #
-        # return self.function(self.sender.value, params=params, context=context)
+        # return self.function(self.sender.value, params=runtime_params, context=context)
         # MODIFIED 9/23/17 NEW:
-        return super().execute(input=input, params=params, context=context)
+        return super()._execute(variable, runtime_params=runtime_params, context=context)
         # MODIFIED 9/23/17 END:
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech

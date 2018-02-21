@@ -2,6 +2,7 @@ import numpy as np
 
 from psyneulink.components.functions.function import BogaczEtAl, Linear, Logistic
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.system import System
@@ -642,3 +643,32 @@ class TestGraphAndInput:
         assert d.systems[s] == TERMINAL
         assert e.systems[s] == ORIGIN
         assert f.systems[s] == INITIALIZE_CYCLE
+class TestInitialize:
+
+    def test_initialize_mechanisms(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = RecurrentTransferMechanism(name='C',
+                                       auto=1.0)
+
+        abc_process = Process(pathway=[A, B, C])
+
+        abc_system = System(processes=[abc_process])
+
+        C.log.set_log_conditions('value')
+
+        abc_system.run(inputs={A: [1.0, 2.0, 3.0]},
+                       initial_values={A: 1.0,
+                                       B: 1.5,
+                                       C: 2.0},
+                       initialize=True)
+
+        abc_system.run(inputs={A: [1.0, 2.0, 3.0]},
+                       initial_values={A: 1.0,
+                                       B: 1.5,
+                                       C: 2.0},
+                       initialize=False)
+
+        # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
+        # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
+        assert np.allclose(C.log.nparray_dictionary('value')['value'], [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]])
