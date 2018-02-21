@@ -2022,7 +2022,7 @@ class State_Base(State):
         """Execute the function of a State and return its value
 
         This is a stub, that a State subclass can override to treat execution of its function in a State-specific manner
-        (e.g., the variable of an InputState must be "wrapped" in a list -- see InputState._get_state_function_value).
+        (e.g., InputState must sometimes embed its variable in a list-- see InputState._get_state_function_value).
         """
         return function.execute(variable)
 
@@ -2836,7 +2836,8 @@ def _parse_state_spec(state_type=None,
             spec_function_value = state_type._get_state_function_value(spec_function, state_dict[VARIABLE])
             # MODIFIED 2/21/18 END
         else:
-            raise StateError('state_spec value for function ({0}) must be a Function class or instance'.format(spec_function))
+            raise StateError('state_spec value for FUNCTION ({0}) must be a Function class or instance'.
+                             format(spec_function))
     except (KeyError, TypeError):
         spec_function_value = state_dict[VARIABLE]
 
