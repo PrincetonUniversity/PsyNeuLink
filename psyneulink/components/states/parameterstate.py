@@ -419,7 +419,7 @@ class ParameterState(State_Base):
         Class methods
         -------------
             _instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
-            update_state: updates self.value from Projections, base_value and runtime in PARAMETER_STATE_PARAMS
+            update: updates self.value from Projections, base_value and runtime in PARAMETER_STATE_PARAMS
 
         StateRegistry
         -------------

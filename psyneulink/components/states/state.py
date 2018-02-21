@@ -880,7 +880,7 @@ class State_Base(State):
             - set_value(value) -
                 validates and assigns value, and updates observers
                 returns None
-            - update_state(context) -
+            - update(context) -
                 updates self.value by combining all projections and using them to compute new value
                 return None
 
@@ -1470,7 +1470,7 @@ class State_Base(State):
 
                 # Validate value:
                 #    - check that output of projection's function (projection_spec.value) is compatible with
-                #        self.variable;  if it is not, raise exception:
+                #        self.able;  if it is not, raise exception:
                 #        the buck stops here; can't modify projection's function to accommodate the State,
                 #        or there would be an unmanageable regress of reassigning projections,
                 #        requiring reassignment or modification of sender OutputStates, etc.
@@ -1933,7 +1933,7 @@ class State_Base(State):
                 continue
 
             if isinstance(projection, PathwayProjection_Base):
-                # Add projection_value to list of TransmissiveProjection values (for aggregation below)
+                # Add projection_value to list of PathwayProjection values (for aggregation below)
                 self._path_proj_values.append(projection_value)
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
@@ -2012,6 +2012,15 @@ class State_Base(State):
 
     def _assign_default_state_name(self, context=None):
         return False
+
+    @staticmethod
+    def _get_state_function_value(function, variable):
+        """Execute the function of a State and return its value
+
+        This is a stub, that a State subclass can override to treat execution of its function in a State-specific manner
+        (e.g., the variable of an InputState must be "wrapped" in a list -- see InputState._get_state_function_value).
+        """
+        return function.execute(variable)
 
 
 def _instantiate_state_list(owner,
@@ -2801,16 +2810,27 @@ def _parse_state_spec(state_type=None,
     # get the value spec value from the spec function if it exists,
     # otherwise we can assume there is a default function that does not
     # affect the shape, so it matches variable
+    # FIX: JDC 2/21/18 PROBLEM IS THAT, IF IT IS AN InputState, THEN EITHER update MUST BE CALLED
+    # FIX:    OR VARIABLE MUST BE WRAPPED IN A LIST, ELSE LINEAR COMB MAY TREAT A 2D ARRAY
+    # FIX:    AS TWO ITEMS TO BE COMBINED RATHER THAN AS A 2D ARRAY
     try:
         spec_function = state_dict[PARAMS][FUNCTION]
         if isinstance(spec_function, Function):
-            spec_function_value = spec_function.execute(state_dict[VARIABLE])
+            # # MODIFIED 2/21/18 OLD [KM]:
+            # spec_function_value = spec_function.execute(state_dict[VARIABLE])
+            # MODIFIED 2/21/18 NEW [JDC]:
+            spec_function_value = state_type._get_state_function_value(spec_function, state_dict[VARIABLE])
+            # MODIFIED 2/21/18 END
         elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
             try:
                 spec_function = spec_function(**state_dict[PARAMS][FUNCTION_PARAMS])
             except (KeyError, TypeError):
                 spec_function = spec_function()
-            spec_function_value = spec_function.execute(state_dict[VARIABLE])
+            # # MODIFIED 2/21/18 OLD [KM]:
+            # spec_function_value = spec_function.execute(state_dict[VARIABLE])
+            # MODIFIED 2/21/18 NEW [JDC]:
+            spec_function_value = state_type._get_state_function_value(spec_function, state_dict[VARIABLE])
+            # MODIFIED 2/21/18 END
         else:
             raise StateError('state_spec value for function ({0}) must be a Function class or instance'.format(spec_function))
     except (KeyError, TypeError):

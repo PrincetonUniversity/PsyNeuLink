@@ -537,7 +537,7 @@ class InputState(State_Base):
         Class methods
         -------------
             _instantiate_function: insures that function is ARITHMETIC)
-            update_state: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
+            update: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
 
         StateRegistry
         -------------
@@ -865,12 +865,12 @@ class InputState(State_Base):
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
-        If there were no Transmissive Projections, ignore and return None
+        If there were no PathwayProjections, ignore and return None
         """
 
         if variable is not None:
             return self.function(variable, runtime_params, context)
-        # If there were any Pathway Projections:
+        # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
             # TODO: stateful - this seems dangerous with statefulness, maybe safe when self.value is only passed or stateful
@@ -1114,6 +1114,18 @@ class InputState(State_Base):
     @pathway_projections.setter
     def pathway_projections(self, assignment):
         self.path_afferents = assignment
+
+    @staticmethod
+    def _get_state_function_value(function, variable):
+        """Execute the function of a State and return its value
+
+        This is a stub, that allows a State to override it and treat execution of its function in a State-specific manner;
+        For example, the variable of an InputState must be "wrapped" in a list (see InputState._get_state_function_value()).
+        so that LinearCombination (its default
+        function) properly treats an ndarray variable;  this is normally done in its update method, but that
+        can't be called by _parse_state_spec since the State may not yet have been instantiated.
+        """
+        return function.execute([variable])
 
 
 def _instantiate_input_states(owner, input_states=None, reference_value=None, context=None):
