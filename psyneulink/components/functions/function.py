@@ -1414,9 +1414,9 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         """
 
         # Validate variable and assign to variable, and validate params
-        variable = np.squeeze(self._update_variable(self._check_args(variable=variable,
+        variable = self._update_variable(self._check_args(variable=variable,
                                                                      params=params,
-                                                                     context=context)))
+                                                                     context=context))
 
         weights = self.get_current_function_param(WEIGHTS)
         exponents = self.get_current_function_param(EXPONENTS)
