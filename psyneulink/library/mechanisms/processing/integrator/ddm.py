@@ -673,7 +673,7 @@ class DDM(ProcessingMechanism_Base):
                           ]
             output_states = [{NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
                               INDEX:0,
-                              CALCULATE: lambda x: [x,0] if x >= 0 else [0,-x]}
+                              CALCULATE: lambda x: [float(x),0] if x >= 0 else [0,float(-x)]}
                              ]
         else:
             input_states = None

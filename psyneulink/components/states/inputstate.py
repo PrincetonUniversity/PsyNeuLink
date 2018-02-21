@@ -716,8 +716,6 @@ class InputState(State_Base):
         else:
             context = self
 
-        # # FIX: 2/17/18:
-        # CREATE:
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
 
