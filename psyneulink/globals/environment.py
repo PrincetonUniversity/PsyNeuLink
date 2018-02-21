@@ -579,7 +579,7 @@ def run(object,
         elif isinstance(targets, (list, np.ndarray)):
             # small version of former 'sequence' format -- only allowed if there is a single Target mechanism
             if len(object.target_mechanisms) == 1:
-                targets = {object.target_mechanisms[0]: targets}
+                targets = {object.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
                 targets, num_targets = _adjust_target_dict(object, targets)
             else:
                 raise RunError(

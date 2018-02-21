@@ -25,8 +25,8 @@ class TestSimpleLearningPathway:
                    # targets={B: [4.0]}
                    )
 
-        S.run(inputs={A: 1.0},
-              targets={B: 2.0})
+        # S.run(inputs={A: 1.0},
+        #       targets={B: 2.0})
 
         S.run(inputs={A: 1.0},
               targets={B: [2.0]})
@@ -45,9 +45,7 @@ class TestSimpleLearningPathway:
                      learning=ENABLED)
 
         S = System(name="learning-system",
-                   processes=[LP],
-                   # targets={B: [4.0]}
-                   )
+                   processes=[LP])
 
         S.run(inputs={A: 1.0},
               targets={B: [2.0, 3.0]})
@@ -66,8 +64,8 @@ class TestSimpleLearningPathway:
         S = System(name="learning-system",
                    processes=[LP])
 
-        S.run(inputs={A: 1.0},
-              targets=2.0)
+        # S.run(inputs={A: 1.0},
+        #       targets=2.0)
 
         S.run(inputs={A: 1.0},
               targets=[2.0])
@@ -137,4 +135,183 @@ class TestMultilayerLearning:
               targets={C: [2.0, 3.0]})
 
         S.run(inputs={A: 1.0},
+              targets={C: [[2.0, 3.0]]})
+
+class TestDivergingLearningPathways:
+
+    def test_dict_target_spec(self):
+        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+        C = TransferMechanism(name="diverging-learning-pathways-mech-C")
+        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+        E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+
+        P1 = Process(name="learning-pathway-1",
+                     pathway=[A, B, C],
+                     learning=ENABLED)
+        P2 = Process(name="learning-pathway-2",
+                    pathway=[A, D, E],
+                    learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[P1, P2]
+                   )
+
+        S.run(inputs={A: 1.0},
+              targets={C: 2.0,
+                       E: 4.0})
+
+        S.run(inputs={A: 1.0},
+              targets={C: [2.0],
+                       E: [4.0]})
+
+        S.run(inputs={A: 1.0},
+              targets={C: [[2.0]],
+                       E: [[4.0]]})
+
+    def test_dict_target_spec_length2(self):
+        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+        C = TransferMechanism(name="diverging-learning-pathways-mech-C",
+                              default_variable=[[0.0, 0.0]])
+        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+        E = TransferMechanism(name="diverging-learning-pathways-mech-E",
+                              default_variable=[[0.0, 0.0]])
+
+        P1 = Process(name="learning-pathway-1",
+                     pathway=[A, B, C],
+                     learning=ENABLED)
+        P2 = Process(name="learning-pathway-2",
+                    pathway=[A, D, E],
+                    learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[P1, P2]
+                   )
+
+        S.run(inputs={A: 1.0},
+              targets={C: [2.0, 3.0],
+                       E: [4.0, 5.0]})
+
+        S.run(inputs={A: 1.0},
+              targets={C: [[2.0, 3.0]],
+                       E: [[4.0, 5.0]]})
+
+class TestDivergingLearningPathways:
+
+    def test_dict_target_spec(self):
+        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+        C = TransferMechanism(name="diverging-learning-pathways-mech-C")
+        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+        E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+
+        P1 = Process(name="learning-pathway-1",
+                     pathway=[A, B, C],
+                     learning=ENABLED)
+        P2 = Process(name="learning-pathway-2",
+                    pathway=[A, D, E],
+                    learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[P1, P2]
+                   )
+
+        S.run(inputs={A: 1.0},
+              targets={C: 2.0,
+                       E: 4.0})
+
+        S.run(inputs={A: 1.0},
+              targets={C: [2.0],
+                       E: [4.0]})
+
+        S.run(inputs={A: 1.0},
+              targets={C: [[2.0]],
+                       E: [[4.0]]})
+
+    def test_dict_target_spec_length2(self):
+        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+        C = TransferMechanism(name="diverging-learning-pathways-mech-C",
+                              default_variable=[[0.0, 0.0]])
+        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+        E = TransferMechanism(name="diverging-learning-pathways-mech-E",
+                              default_variable=[[0.0, 0.0]])
+
+        P1 = Process(name="learning-pathway-1",
+                     pathway=[A, B, C],
+                     learning=ENABLED)
+        P2 = Process(name="learning-pathway-2",
+                    pathway=[A, D, E],
+                    learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[P1, P2]
+                   )
+
+        S.run(inputs={A: 1.0},
+              targets={C: [2.0, 3.0],
+                       E: [4.0, 5.0]})
+
+        S.run(inputs={A: 1.0},
+              targets={C: [[2.0, 3.0]],
+                       E: [[4.0, 5.0]]})
+
+class TestConvergingLearningPathways:
+
+    def test_dict_target_spec(self):
+        A = TransferMechanism(name="converging-learning-pathways-mech-A")
+        B = TransferMechanism(name="converging-learning-pathways-mech-B")
+        C = TransferMechanism(name="converging-learning-pathways-mech-C")
+        D = TransferMechanism(name="converging-learning-pathways-mech-D")
+        E = TransferMechanism(name="converging-learning-pathways-mech-E")
+
+        P1 = Process(name="learning-pathway-1",
+                     pathway=[A, B, C],
+                     learning=ENABLED)
+        P2 = Process(name="learning-pathway-2",
+                    pathway=[D, E, C],
+                    learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[P1, P2]
+                   )
+
+        S.run(inputs={A: 1.0,
+                      D: 1.0},
+              targets={C: 2.0})
+
+        S.run(inputs={A: 1.0,
+                      D: 1.0},
+              targets={C: [2.0]})
+
+        S.run(inputs={A: 1.0,
+                      D: 1.0},
+              targets={C: [[2.0]]})
+
+    def test_dict_target_spec_length2(self):
+        A = TransferMechanism(name="converging-learning-pathways-mech-A")
+        B = TransferMechanism(name="converging-learning-pathways-mech-B")
+        C = TransferMechanism(name="converging-learning-pathways-mech-C",
+                              default_variable=[[0.0, 0.0]])
+        D = TransferMechanism(name="converging-learning-pathways-mech-D")
+        E = TransferMechanism(name="converging-learning-pathways-mech-E")
+
+        P1 = Process(name="learning-pathway-1",
+                     pathway=[A, B, C],
+                     learning=ENABLED)
+        P2 = Process(name="learning-pathway-2",
+                    pathway=[D, E, C],
+                    learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[P1, P2]
+                   )
+
+        S.run(inputs={A: 1.0,
+                      D: 1.0},
+              targets={C: [2.0, 3.0]})
+
+        S.run(inputs={A: 1.0,
+                      D: 1.0},
               targets={C: [[2.0, 3.0]]})
