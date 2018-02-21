@@ -1444,7 +1444,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         # Calculate using relevant aggregation operation and return
         if operation is SUM:
-            result = np.sum(np.atleast_2d(variable), axis=1) * scale + offset
+            result = np.sum(np.atleast_2d(variable), axis=0) * scale + offset
         elif operation is PRODUCT:
             result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
         else:
