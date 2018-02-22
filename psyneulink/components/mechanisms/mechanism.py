@@ -878,8 +878,6 @@ class Mechanism_Base(Mechanism):
         -------------
             - _validate_variable(variable, context)
             - _validate_params(request_set, target_set, context)
-            - update_states_and_execute(params, context):
-                updates input, param values, executes <subclass>.function, returns outputState.value
             - terminate_execute(self, context=None): terminates execution of Mechanism (for TimeScale = time_step)
             - adjust(params, context)
                 modifies specified Mechanism params (by calling Function._instantiate_defaults)
@@ -1399,24 +1397,43 @@ class Mechanism_Base(Mechanism):
                 state_spec=s,
                 context='_handle_arg_input_states'
             )
+            variable = None
 
             if isinstance(parsed_spec, dict):
                 try:
-                    variable = parsed_spec[VARIABLE]
+                    # MODIFIED 2/21/18 OLD:
+                    variable = parsed_spec[VALUE]
+                    # # MODIFIED 2/21/18 NEW [JDC - as per devel]:
+                    # variable = parsed_spec[VARIABLE]
+                    # # MODIFIED 2/21/18 END
                 except KeyError:
                     pass
             elif isinstance(parsed_spec, (Projection, Mechanism, State)):
                 if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
                     args = parsed_spec.init_args
+                    # MODIFIED 2/21/18 OLD:
                     if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
                         variable = args[REFERENCE_VALUE]
                     elif VALUE in args and args[VALUE] is not None:
                         variable = args[VALUE]
                     elif VARIABLE in args and args[VARIABLE] is not None:
                         variable = args[VARIABLE]
+                    # # MODIFIED 2/21/18 NEW [JDC]:
+                    # if VARIABLE in args and args[VARIABLE] is not None:
+                    #     variable = args[VARIABLE]
+                    # elif VALUE in args and args[VALUE] is not None:
+                    #     variable = args[VALUE]
+                    # elif REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
+                    #     variable = args[REFERENCE_VALUE]
+                    # # MODIFIED 2/21/18 END
                 else:
+                    # MODIFIED 2/21/18 OLD:
                     try:
                         variable = parsed_spec.value
+                    # # MODIFIED 2/21/18 NEW [JDC]:
+                    # try:
+                    #     variable = parsed_spec.variable
+                    # MODIFIED 2/21/18 END
                     except AttributeError:
                         variable = parsed_spec.instance_defaults.variable
             else:

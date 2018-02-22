@@ -1192,20 +1192,23 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
     """
-    Reduce(                                     \
-         default_variable=None,                 \
-         operation=SUM,                         \
-         scale=1.0,                             \
-         offset=0.0,                            \
-         params=None,                           \
-         owner=None,                            \
-         prefs=None,                            \
+    Reduce(                                       \
+         default_variable=ClassDefaults.variable, \
+         weights=None,                            \
+         exponents=None,                          \
+         operation=SUM,                           \
+         scale=1.0,                               \
+         offset=0.0,                              \
+         params=None,                             \
+         owner=None,                              \
+         prefs=None,                              \
     )
 
     .. _Reduce:
 
-    Combine values in each of one or more arrays into a single value for each array.
-    Use optional SCALE and OFFSET parameters to linearly transform the resulting value for each array.
+    Combine values in each of one or more arrays into a single value for each array, with optional weighting and/or
+    exponentiation of each item within an array prior to combining, and scaling and/or offset of result.
+
     Returns a scalar value for each array of the input.
 
     COMMENT:
@@ -1217,6 +1220,20 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     default_variable : list or np.array : default ClassDefaults.variable
         specifies a template for the value to be transformed and its default value;  all entries must be numeric.
+
+    weights : 1d or 2d np.array : default None
+        specifies values used to multiply the elements of each array in `variable  <LinearCombination.variable>`.
+        If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
+        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        and there must be the same number of items as there are in `variable <LinearCombination.variable>`
+        (see `weights <LinearCombination.weights>` for details)
+
+    exponents : 1d or 2d np.array : default None
+        specifies values used to exponentiate the elements of each array in `variable  <LinearCombination.variable>`.
+        If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
+        if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
+        and there must be the same number of items as there are in `variable <LinearCombination.variable>`
+        (see `exponents <LinearCombination.exponents>` for details)
 
     operation : SUM or PRODUCT : default SUM
         specifies whether to sum or multiply the elements in `variable <Reduce.function.variable>` of
@@ -1284,6 +1301,10 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     @tc.typecheck
     def __init__(self,
+                 # weights: tc.optional(parameter_spec)=None,
+                 # exponents: tc.optional(parameter_spec)=None,
+                 weights=None,
+                 exponents=None,
                  default_variable=None,
                  operation: tc.enum(SUM, PRODUCT) = SUM,
                  scale: parameter_spec = 1.0,
@@ -1294,7 +1315,9 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  context=componentName + INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(operation=operation,
+        params = self._assign_args_to_param_dicts(weights=weights,
+                                                  exponents=exponents,
+                                                  operation=operation,
                                                   scale=scale,
                                                   offset=offset,
                                                   params=params)
@@ -1317,6 +1340,49 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             raise FunctionError("All elements of {} must be scalar values".
                                 format(self.__class__.__name__))
         return variable
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate weghts, exponents, scale and offset parameters
+
+        Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable.
+        Check that SCALE and OFFSET are scalars.
+
+        Note: the checks of compatibility with variable are only performed for validation calls during execution
+              (i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
+              a parameter may be re-assigned before variable assigned during is known
+        """
+
+        # FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
+            self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
+            target_set[WEIGHTS] = np.atleast_1d(target_set[WEIGHTS])
+            if any(c in context for c in {EXECUTING, LEARNING}):
+                if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
+                    raise FunctionError("Number of weights ({0}) is not equal to number of elements in variable ({1})".
+                                        format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
+
+        if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
+            self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
+            target_set[EXPONENTS] = np.atleast_1d(target_set[EXPONENTS])
+            if any(c in context for c in {EXECUTING, LEARNING}):
+                if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
+                    raise FunctionError("Number of exponents ({0}) does not equal number of elements in variable ({1})".
+                                        format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
+
+        if SCALE in target_set and target_set[SCALE] is not None:
+            scale = target_set[SCALE]
+            if not isinstance(scale, numbers.Number):
+                raise FunctionError("{} param of {} ({}) must be a scalar".format(SCALE, self.name, scale))
+
+        if OFFSET in target_set and target_set[OFFSET] is not None:
+            offset = target_set[OFFSET]
+            if not isinstance(offset, numbers.Number):
+                raise FunctionError("{} param of {} ({}) must be a scalar".format(OFFSET, self.name, offset))
 
     def function(self,
                  variable=None,
@@ -1348,14 +1414,39 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         """
 
         # Validate variable and assign to variable, and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._update_variable(self._check_args(variable=variable,
+                                                                     params=params,
+                                                                     context=context))
 
+        weights = self.get_current_function_param(WEIGHTS)
+        exponents = self.get_current_function_param(EXPONENTS)
         operation = self.get_current_function_param(OPERATION)
         scale = self.get_current_function_param(SCALE)
         offset = self.get_current_function_param(OFFSET)
 
+
+        # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
+        # Apply exponents if they were specified
+        if exponents is not None:
+            # Avoid divide by zero warning:
+            #    make sure there are no zeros for an element that is assigned a negative exponent
+            # Allow during initialization because 0s are common in default_variable argument
+            if context is not None and INITIALIZING in context:
+                try:
+                    variable = self._update_variable(variable ** exponents)
+                except ZeroDivisionError:
+                    variable = self._update_variable(np.ones_like(variable))
+            else:
+                # if this fails with ZeroDivisionError it should not be caught outside of initialization
+                variable = self._update_variable(variable ** exponents)
+
+        # Apply weights if they were specified
+        if weights is not None:
+            variable = self._update_variable(variable * weights)
+
         # Calculate using relevant aggregation operation and return
         if operation is SUM:
+            # result = np.sum(np.atleast_2d(variable), axis=0) * scale + offset
             result = np.sum(np.atleast_2d(variable), axis=1) * scale + offset
         elif operation is PRODUCT:
             result = np.product(np.atleast_2d(variable), axis=1) * scale + offset

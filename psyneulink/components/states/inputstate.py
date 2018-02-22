@@ -461,7 +461,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus
-from psyneulink.components.functions.function import Linear, LinearCombination
+from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import ADD_STATES, StateError, State_Base, _instantiate_state_list, state_type_keywords
@@ -537,7 +537,7 @@ class InputState(State_Base):
         Class methods
         -------------
             _instantiate_function: insures that function is ARITHMETIC)
-            update_state: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
+            update: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
 
         StateRegistry
         -------------
@@ -716,8 +716,6 @@ class InputState(State_Base):
         else:
             context = self
 
-        # # FIX: 2/17/18:
-        # CREATE:
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
 
@@ -831,7 +829,7 @@ class InputState(State_Base):
         super()._instantiate_function(context=context)
 
         # Insure that function is Function.LinearCombination
-        if not isinstance(self.function.__self__, (LinearCombination, Linear)):
+        if not isinstance(self.function.__self__, (LinearCombination, Linear, Reduce)):
             raise StateError(
                 "{0} of {1} for {2} is {3}; it must be of LinearCombination "
                 "or Linear type".
@@ -865,12 +863,12 @@ class InputState(State_Base):
     def _execute(self, variable=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
-        If there were no Transmissive Projections, ignore and return None
+        If there were no PathwayProjections, ignore and return None
         """
 
         if variable is not None:
             return self.function(variable, runtime_params, context)
-        # If there were any Transmissive Projections:
+        # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
             # TODO: stateful - this seems dangerous with statefulness, maybe safe when self.value is only passed or stateful
@@ -1114,6 +1112,34 @@ class InputState(State_Base):
     @pathway_projections.setter
     def pathway_projections(self, assignment):
         self.path_afferents = assignment
+
+    @staticmethod
+    def _get_state_function_value(function, variable):
+        """Overrided State method
+
+        InputState variable must be embedded in a list (see InputState._get_state_function_value()).
+        so that LinearCombination (its default function) returns a variable that is >=2d intact
+        (rather than as arrays to be combined);
+        this is normally done in State.update() (and in State._instantiate-function), but that
+        can't be called by _parse_state_spec since the InputState itself may not yet have been instantiated.
+
+        """
+        import inspect
+        if (
+                (
+                        (inspect.isclass(function) and issubclass(function, LinearCombination))
+                        or isinstance(function, LinearCombination)
+                )
+                and (
+                isinstance(variable, np.matrix)
+                or (
+                        isinstance(np.array(variable))
+                        and variable.ndim >=2
+                )
+        )
+        ):
+            variable = [variable]
+        return function.execute(variable)
 
 
 def _instantiate_input_states(owner, input_states=None, reference_value=None, context=None):
