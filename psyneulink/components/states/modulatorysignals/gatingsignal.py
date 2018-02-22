@@ -416,7 +416,7 @@ class GatingSignal(ModulatorySignal):
                  variable=None,
                  size=None,
                  index=None,
-                 calculate=Linear,
+                 assign=Linear,
                  function=Linear(),
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
@@ -430,7 +430,7 @@ class GatingSignal(ModulatorySignal):
         else:
             context = self
 
-        # Note: calculate is not currently used by GatingSignal;
+        # Note: assign is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.
         if index is None and owner is not None:
             if len(owner.gating_policy)==1:
@@ -454,7 +454,7 @@ class GatingSignal(ModulatorySignal):
                          size=size,
                          modulation=modulation,
                          index=index,
-                         calculate=calculate,
+                         assign=assign,
                          projections=projections,
                          params=params,
                          name=name,

@@ -974,7 +974,7 @@ class Mechanism_Base(Mechanism):
 
         .. note:: The `output_values <Mechanism_Base.output_values>` of a Mechanism is not necessarily the same as its
                   `value <Mechanism_Base.value>` attribute, since an OutputState's
-                  `function <OutputState.OutputState.function>` and/or its `calculate <Mechanism_Base.calculate>`
+                  `function <OutputState.OutputState.function>` and/or its `assign <Mechanism_Base.assign>`
                   attribute may use the Mechanism's `value <Mechanism_Base.value>` to generate a derived quantity for
                   the `value <OutputState.OutputState.value>` of that OutputState (and its corresponding item in the
                   the Mechanism's `output_values <Mechanism_Base.output_values>` attribute).

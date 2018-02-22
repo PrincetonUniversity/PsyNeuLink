@@ -120,8 +120,8 @@ referenced are specified by its `index <OutputState.index>` attribute.  The Outp
 `value <Mechanism_Base.value>` referenced by its `index <OutputState.index>`;  by default this is '0', referring to
 the first item of the Mechanism's `value <Mechanism_Base.value>`.  The OutputState's `variable
 <OutputState.variable>` is used as the input to its `function <OutputState.function>`, which may modify the value
-under the influence of a `GatingSignal`; the result may be further modified by the OutputState's `calculate
-<OutputState.calculate>` function (e.g., to combine, compare, or otherwise evaluate the index items of the Mechanism's
+under the influence of a `GatingSignal`; the result may be further modified by the OutputState's `assign
+<OutputState.assign>` function (e.g., to combine, compare, or otherwise evaluate the index items of the Mechanism's
 `value <Mechanism_Base.value>`), before being assigned to its `value <OutputState.value>` (see
 `OutputState_Customization` for additional details).  The OutputState's `value <OutputState.value>` must, in turn,
 be compatible with any Projections that are assigned to it, or `used to specify it
@@ -191,8 +191,8 @@ which it should project. Each of these is described below:
         the first item of the owner Mechanism's `value <Mechanism_Base.value>` is assigned as the the OutputState's
         `variable <OutputState.variable>` (see `description below <OutputState_Index>` for additional details).
       |
-      * *CALCULATE*:<function> - specifies the function assigned as the OutputState's `calculate
-        <OutputState.calculate>` attribute;  if this is not included, an identity function is used to assign the
+      * *ASSIGN*:<function> - specifies the function assigned as the OutputState's `assign
+        <OutputState.assign>` attribute;  if this is not included, an identity function is used to assign the
         OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>` (see `description below
         <OutputState_Calculate>` for additional details).
 
@@ -297,7 +297,7 @@ are handled are described below, starting with constraints that are given the hi
   * **OutputState specified in a Mechanism's constructor** -- the item of the Mechanism's `value <Mechanism_Base.value>`
     `indexed by the OutputState <OutputState_Index>`)>` is used to determine the OutputState's
     `variable <OutputState.variable>`.  This, together with the OutputState's `function <OutputState.function>` and
-    possibly its `calculate <OutputState.calculate>` attribute, determine the OutputState's `value <OutputState.value>`
+    possibly its `assign <OutputState.assign>` attribute, determine the OutputState's `value <OutputState.value>`
     (see `above <OutputState_Variable_and_Value>`).  Therefore, any specifications of the OutputState relevant to its
     `value <OutputState.value>` must be compatible with these factors (for example, `specifying it by value
     <OutputState_Specification_by_Value>` or by a `MappingProjection` or an `InputState` to which it should project
@@ -375,13 +375,13 @@ OutputState Customization
 
 The default OutputState uses the first (and usually only) item of the owner Mechanism's `value <Mechanism_Base.value>`
 as its value.  However, this can be modified in two ways, using the OutputState's `index <OutputState.index>` and
-`calculate <OutputState.calculate>` attributes (see `OutputState_Structure` below). If the Mechanism's `function
+`assign <OutputState.assign>` attributes (see `OutputState_Structure` below). If the Mechanism's `function
 <Mechanism_Base.function>` returns a value with more than one item (i.e., a list of lists, or a 2d np.array), then an
 OutputState can be assigned to any of those items by specifying its `index <OutputState.index>` attribute. An
-OutputState can also be configured to transform the value of the item, by specifying a function for its `calculate
-<OutputState.calculate>` attribute; the result will then be assigned as the OutputState's `value <OutputState.value>`.
-An OutputState's `index <OutputState.index>` and `calculate <OutputState.calculate>` attributes can be assigned when
-the OutputState is assigned to a Mechanism, by including *INDEX* and *CALCULATE* entries in a `specification dictionary
+OutputState can also be configured to transform the value of the item, by specifying a function for its `assign
+<OutputState.assign>` attribute; the result will then be assigned as the OutputState's `value <OutputState.value>`.
+An OutputState's `index <OutputState.index>` and `assign <OutputState.assign>` attributes can be assigned when
+the OutputState is assigned to a Mechanism, by including *INDEX* and *ASSIGN* entries in a `specification dictionary
 <OutputState_Specification>` for the OutputState, as in the following example::
 
 
@@ -390,7 +390,7 @@ the OutputState is assigned to a Mechanism, by including *INDEX* and *CALCULATE*
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
     ...                                   pnl.INDEX: 2,
-    ...                                   pnl.CALCULATE: pnl.Stability(metric=pnl.ENTROPY).function }])
+    ...                                   pnl.ASSIGN: pnl.Stability(metric=pnl.ENTROPY).function }])
 
 COMMENT:
    ADD VERSION IN WHICH INDEX IS SPECIFIED USING DDM_standard_output_states
@@ -399,7 +399,7 @@ COMMENT
 In this example, ``my_mech`` is configured with three OutputStates.  The first two are `Standard OutputStates
 <OutputState_Standard>` that represent the decision variable of the DDM and the probability of it crossing of the
 upper (vs. lower) threshold. The third is a custom OutputState, that computes the entropy of the probability of
-crossing the upper threshold. It uses the `Entropy` Function for its `calculate <OutputState.calculate>` attribute,
+crossing the upper threshold. It uses the `Entropy` Function for its `assign <OutputState.assign>` attribute,
 and *INDEX* is assigned ``2`` to reference the third item of the DDM's `value <DDM.value>` attribute (items are
 indexed starting with 0), which contains the probability of crossing the upper threshold.  The three OutputStates
 will be assigned to the `output_states <Mechanism_Base.output_states>` attribute of ``my_mech``, and their values
@@ -411,7 +411,7 @@ the ``DECISION ENTROPY`` OutputState could be created as follows::
 
     >>> decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
     ...                                                 index=2,
-    ...                                                 calculate=pnl.Stability(metric=pnl.ENTROPY).function)
+    ...                                                 assign=pnl.Stability(metric=pnl.ENTROPY).function)
 
 and then assigned either as::
 
@@ -424,7 +424,7 @@ or::
 
     >>> another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
     ...                                                index=2,
-    ...                                                calculate=pnl.Stability(metric=pnl.ENTROPY).function)
+    ...                                                assign=pnl.Stability(metric=pnl.ENTROPY).function)
     >>> my_mech2 = pnl.DDM(function=pnl.BogaczEtAl(),
     ...                    output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
@@ -465,9 +465,9 @@ the following attributes, that includes ones specific to, and that can be used t
 
 .. _OutputState_Calculate:
 
-* `calculate <OutputState.calculate>`:  this specifies a function used to convert the item of the owner Mechanism's
+* `assign <OutputState.assign>`:  this specifies a function used to convert the item of the owner Mechanism's
   `value <Mechanism_Base.value>` (designated by the OutputState's `index <OutputState.index>` attribute), before
-  providing it to the OutputState's `function <OutputState.function>`.  The `calculate <OutputState.calculate>`
+  providing it to the OutputState's `function <OutputState.function>`.  The `assign <OutputState.assign>`
   attribute can be assigned any function that accept the OutputState's `variable <OutputState.variable>` as its input,
   and that generates a result that can be used the input for the OutputState's `function <OutputState.function>`.
   The default is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply assigns the
@@ -501,7 +501,7 @@ the following attributes, that includes ones specific to, and that can be used t
   their values are combined before they are used to modify the `value <OutputState.value>` of the OutputState.
 ..
 * `value <OutputState.value>`:  assigned the result of the function specified by the
-  `calculate <OutputState.calculate>` attribute, possibly modified by the result of the OutputState`s
+  `assign <OutputState.assign>` attribute, possibly modified by the result of the OutputState`s
   `function <OutputState.function>` and any `GatingProjections <GatingProjection>` received by the OutputState.
   It is used as the input to any projections that the OutputStatue sends.
 
@@ -515,7 +515,7 @@ An OutputState cannot be executed directly.  It is executed when the Mechanism t
 When the Mechanism is executed, it places the results of its execution in its `value <Mechanism_Base.value>`
 attribute. The OutputState's `index <OutputState.index>` attribute designates the item of the Mechanism's
 `value <Mechanism_Base.value>` for use by the OutputState.  The OutputState is updated by calling the function
-specified by its `calculate <OutputState_Calculate>` attribute with the designated item of the Mechanism's
+specified by its `assign <OutputState_Calculate>` attribute with the designated item of the Mechanism's
 `value <Mechanism_Base.value>` as its input.  This is used by the Mechanism's
 `function <Mechanism_Base.function>`, modified by any `GatingProjections <GatingProjection>` it receives (listed in
 its `mod_afferents <OutputState.mod_afferents>` attribute), to generate the `value <OutputState.value>` of the
@@ -540,7 +540,7 @@ from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.functions.function import Linear, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import ALL, CALCULATE, COMMAND_LINE, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MEAN, MECHANISM_VALUE, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VARIANCE
+from psyneulink.globals.keywords import ALL, ASSIGN, COMMAND_LINE, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MEAN, MECHANISM_VALUE, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match
@@ -574,13 +574,13 @@ class OUTPUTS():
 
 standard_output_states = [{NAME: RESULT},
                           {NAME:MEAN,
-                           CALCULATE:lambda x: np.mean(x)},
+                           ASSIGN:lambda x: np.mean(x)},
                           {NAME:MEDIAN,
-                           CALCULATE:lambda x: np.median(x)},
+                           ASSIGN:lambda x: np.median(x)},
                           {NAME:STANDARD_DEVIATION,
-                           CALCULATE:lambda x: np.std(x)},
+                           ASSIGN:lambda x: np.std(x)},
                           {NAME:VARIANCE,
-                           CALCULATE:lambda x: np.var(x)},
+                           ASSIGN:lambda x: np.var(x)},
                           {NAME: MECHANISM_VALUE,
                            INDEX: ALL}
                           ]
@@ -602,7 +602,7 @@ class OutputState(State_Base):
     size=None,            \
     function=Linear(),    \
     index=PRIMARY,        \
-    calculate=Linear,     \
+    assign=Linear,     \
     projections=None,     \
     params=None,          \
     name=None,            \
@@ -668,10 +668,10 @@ class OutputState(State_Base):
 
     index : int : default PRIMARY
         specifies the item of the owner Mechanism's `value <Mechanism_Base.value>` used as input for the
-        function specified by the OutputState's `calculate <OutputState.calculate>` attribute, to determine the
+        function specified by the OutputState's `assign <OutputState.assign>` attribute, to determine the
         OutputState's `value <OutputState.value>`.
 
-    calculate : Function, function, or method : default Linear
+    assign : Function, function, or method : default Linear
         specifies the function used to convert the designated item of the owner Mechanism's
         `value <Mechanism_Base.value>` (specified by the OutputState's :keyword:`index` attribute),
         before it is assigned as the OutputState's `value <OutputState.value>`.  The function must accept a value that
@@ -711,18 +711,18 @@ class OutputState(State_Base):
 
     index : int
         the item of the owner Mechanism's `value <Mechanism_Base.value>` used as input for the function specified by
-        its `calculate <OutputState.calculate>` attribute (see `index <OutputState_Index>` for additional details).
+        its `assign <OutputState.assign>` attribute (see `index <OutputState_Index>` for additional details).
 
-    calculate : function or method : default Linear(slope=1, intercept=0))
+    assign : function or method : default Linear(slope=1, intercept=0))
         function used to convert the item of the owner Mechanism's `value <Mechanism_Base.value>` specified by
         the OutputState's `index <OutputState.index>` attribute.  The result is combined with the result of the
         OutputState's `function <OutputState.function>` to determine both the `value <OutputState.value>` of the
         OutputState, as well as the value of the corresponding item of the owner Mechanism's `output_values
-        <Mechanism_Base.output_values>`. The default (`Linear`) transfers the value unmodified  (see `calculate
+        <Mechanism_Base.output_values>`. The default (`Linear`) transfers the value unmodified  (see `assign
         <OutputState_Calculate>` for additional details)
 
     function : TransferFunction : default Linear(slope=1, intercept=0))
-        function used to assign the result of the OutputState's `calculate <OutputState.calculate>` function,
+        function used to assign the result of the OutputState's `assign <OutputState.assign>` function,
         under the possible influence of `GatingProjections <GatingProjection>` received by the OutputState,
         to its `value <OutputState.value>`, as well as to the corresponding item of the owner's `output_values
         <Mechanism_Base.output_values>` attribute.
@@ -765,7 +765,7 @@ class OutputState(State_Base):
     componentType = OUTPUT_STATE
     paramsType = OUTPUT_STATE_PARAMS
 
-    stateAttributes = State_Base.stateAttributes | {INDEX, CALCULATE}
+    stateAttributes = State_Base.stateAttributes | {INDEX, ASSIGN}
 
     connectsWith = [INPUT_STATE, GATING_SIGNAL]
     connectsWithAttribute = [INPUT_STATES]
@@ -791,7 +791,7 @@ class OutputState(State_Base):
                  size=None,
                  function=Linear(),
                  index=PRIMARY,
-                 calculate:is_function_type=Linear,
+                 assign:is_function_type=Linear,
                  projections=None,
                  params=None,
                  name=None,
@@ -805,7 +805,7 @@ class OutputState(State_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(index=index,
-                                                  calculate=calculate,
+                                                  assign=assign,
                                                   function=function,
                                                   params=params)
 
@@ -876,10 +876,10 @@ class OutputState(State_Base):
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate index and calculate parameters
+        """Validate index and assign parameters
 
         Validate that index is within the range of the number of items in the owner Mechanism's ``value``,
-        and that the corresponding item is a valid input to the calculate function
+        and that the corresponding item is a valid input to the assign function
 
 
         """
@@ -890,7 +890,7 @@ class OutputState(State_Base):
 
             # If INDEX specification is SEQUENTIAL:
             #    - can't yet determine relationship to default_value
-            #    - can't yet evaluate calculate function (below)
+            #    - can't yet evaluate assign function (below)
             # so just return
             if target_set[INDEX] in {ALL, SEQUENTIAL}:
                 return
@@ -905,13 +905,13 @@ class OutputState(State_Base):
 
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
-        if CALCULATE in target_set:
+        if ASSIGN in target_set:
 
             try:
-                if isinstance(target_set[CALCULATE], type):
-                    function = target_set[CALCULATE]().function
+                if isinstance(target_set[ASSIGN], type):
+                    function = target_set[ASSIGN]().function
                 else:
-                    function = target_set[CALCULATE]
+                    function = target_set[ASSIGN]
                 try:
                     index = target_set[INDEX]
                 except KeyError:
@@ -930,9 +930,9 @@ class OutputState(State_Base):
                              format(index,
                                     self.owner.name,
                                     default_value_item_str,
-                                    CALCULATE,
+                                    ASSIGN,
                                     self.name,
-                                    target_set[CALCULATE]))
+                                    target_set[ASSIGN]))
                 try:
                     function(self.owner.instance_defaults.value[index], context=context)
                 except TypeError:
@@ -960,12 +960,12 @@ class OutputState(State_Base):
                                    format(name, self.componentName, self.owner.name, self.instance_defaults.variable, reference_value))
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Instantiate calculate function
+        """Instantiate assign function
         """
         super()._instantiate_attributes_after_function(context=context)
 
-        if isinstance(self.calculate, type):
-            self.calculate = self.calculate().function
+        if isinstance(self.assign, type):
+            self.assign = self.assign().function
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -1039,7 +1039,7 @@ class OutputState(State_Base):
                                     params=runtime_params,
                                     context=context)
 
-            return type_match(self.calculate(owner_val), type(value))
+            return type_match(self.assign(owner_val), type(value))
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
@@ -1263,12 +1263,12 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                     if INDEX in output_state[PARAMS]:
                         index = output_state[PARAMS][INDEX]
 
-                    # If OutputState's calculate function is specified, use it to determine OutputState's vaue
-                    if CALCULATE in output_state[PARAMS]:
+                    # If OutputState's assign function is specified, use it to determine OutputState's vaue
+                    if ASSIGN in output_state[PARAMS]:
                         # MODIFIED 2/2/18 OLD:
-                        # output_state_value = output_state[PARAMS][CALCULATE](owner_value[index], context=context)
+                        # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index], context=context)
                         # MODIFIED 2/2/18 NEW:
-                        output_state_value = output_state[PARAMS][CALCULATE](owner_value[index])
+                        output_state_value = output_state[PARAMS][ASSIGN](owner_value[index])
                         # MODIFIED 2/2/18 END
                     else:
                         output_state_value = owner_value[index]
