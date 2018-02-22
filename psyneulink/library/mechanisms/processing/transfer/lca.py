@@ -141,7 +141,7 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.globals.keywords import BETA, CALCULATE, ENERGY, ENTROPY, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
+from psyneulink.globals.keywords import BETA, ASSIGN, ENERGY, ENTROPY, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
@@ -503,9 +503,9 @@ class LCA(RecurrentTransferMechanism):
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
     standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:MAX_VS_NEXT,
-                                    CALCULATE:max_vs_next},
+                                    ASSIGN:max_vs_next},
                                    {NAME:MAX_VS_AVG,
-                                    CALCULATE:max_vs_avg}])
+                                    ASSIGN:max_vs_avg}])
 
     @tc.typecheck
     def __init__(self,
