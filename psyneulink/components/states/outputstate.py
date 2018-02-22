@@ -602,7 +602,7 @@ class OutputState(State_Base):
     size=None,            \
     function=Linear(),    \
     index=PRIMARY,        \
-    assign=Linear,     \
+    assign=Linear,        \
     projections=None,     \
     params=None,          \
     name=None,            \

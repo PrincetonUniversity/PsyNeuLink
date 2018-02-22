@@ -733,6 +733,7 @@ OUTPUT_STATE_PARAMS = 'output_states_params'
 STANDARD_OUTPUT_STATES = 'standard_output_states'
 INDEX = 'index'
 ASSIGN = 'assign'
+CALCULATE = 'assign'  # For backward compatibility (2/22/18)
 
 #endregion
 
