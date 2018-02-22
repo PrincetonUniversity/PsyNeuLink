@@ -357,6 +357,39 @@ system. Each target value must be compatible with the shape of the `TARGET` mech
 learning sequence) in the target specification dictionary, the value is usually a list of 1d lists/arrays, though `some
 shorthand notations are allowed <Target_Specification_Examples>`.
 
+::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name="a")
+        >>> b = pnl.TransferMechanism(name="b",
+        ...                           default_variable=np.array([[0.0, 0.0]]))
+        >>> c = pnl.TransferMechanism(name="c")
+
+        >>> learning_sequence_1 = pnl.Process(name="learning-sequence-1",
+        ...                                   pathway=[a, b],
+        ...                                   learning=pnl.ENABLED)
+        >>> learning_sequence_2 = pnl.Process(name="learning-sequence-2",
+        ...                                   pathway=[a, c],
+        ...                                   learning=pnl.ENABLED)
+
+
+        >>> s = pnl.System(name="learning-system",
+        ...                processes=[learning_sequence_1, learning_sequence_2])
+
+        >>> input_dictionary = {a: [[[0.1]], [[0.2]]]}
+
+        >>> target_dictionary = {b: [[1.0, 1.0], [2.0, 2.0]],
+        ...                      c: [[1.0], [2.0]]}
+
+        >>> s.run(inputs=input_dictionary,
+        ...       targets=target_dictionary)
+
+.. _Run_Targets_Fig:
+
+.. figure:: _static/target_spec_dictionary.svg
+   :alt: Example of dictionary format of target specification
+
 COMMENT:
 Furthermore, if a range is specified for the output of
 the last mechanism in the learning sequence (which is the `sample <ComparatorMechanism.ComparatorMechanism.sample>`
@@ -559,14 +592,18 @@ def run(object,
                 targets = {object.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
                 targets, num_targets = _adjust_target_dict(object, targets)
             else:
-                raise RunError(
-                    "Targets for {} must be specified either in a dictionary or as a function."
-                    .format(object.name))
+                raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
 
         elif isinstance(targets, function_type):
-            num_targets = _validate_target_function(object, targets, num_inputs_sets, context=context)
+            if len(object.target_mechanisms) == 1:
+                targets = {object.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
+                print("targets = ", targets)
+
+                targets, num_targets = _adjust_target_dict(object, targets)
+            else:
+                raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
         else:
-            raise RunError("Targets for {} must be a dictionary or function.".format(object.name))
+            raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
 
     object_type = _get_object_type(object)
 
@@ -828,76 +865,56 @@ def _adjust_target_dict(component, target_dict):
     adjusted_targets = {}
     num_targets = -1
     for mech, target_list in target_dict.items():
+        if isinstance(target_list, (float, list, np.ndarray)):
+            input_state_variable = mech.output_state.efferents[0].receiver.owner.input_states[TARGET].instance_defaults.variable
+            num_targets = -1
 
-        input_state_variable = mech.output_state.efferents[0].receiver.owner.input_states[TARGET].instance_defaults.variable
-        num_targets = -1
+            # first check if only one target was provided:
+            if _target_matches_input_state_variable(target_list, input_state_variable):
+                adjusted_targets[mech] = [np.atleast_1d(target_list)]
+                if num_targets == -1:
+                    num_targets = 1
+                elif num_targets != 1:
+                    raise RunError("Target specification for {} is not valid. The number of targets (1) provided for {}"
+                                   "conflicts with at least one other mechanism's target specification."
+                                   .format(component.name, mech.name))
 
-        # first check if only one target was provided:
-        if _target_matches_input_state_variable(target_list, input_state_variable):
-            adjusted_targets[mech] = [np.atleast_1d(target_list)]
-            if num_targets == -1:
-                num_targets = 1
-            elif num_targets != 1:
-                raise RunError("Target specification for {} is not valid. The number of targets (1) provided for {}"
-                               "conflicts with at least one other mechanism's target specification."
-                               .format(component.name, mech.name))
+            # iterate over list and check that each candidate target is compatible with corresponding TARGET input state
+            elif isinstance(target_list, (list, np.ndarray)):
+                adjusted_targets[mech] = []
+                for target_value in target_list:
+                    if _target_matches_input_state_variable(target_value, input_state_variable):
+                        adjusted_targets[mech].append(np.atleast_1d(target_value))
+                    else:
+                        raise RunError("Target specification ({}) for {} is not valid. The shape of {} is not compatible "
+                                       "with the TARGET input state of the corresponding ComparatorMechanism ({})"
+                                       .format(target_list, mech.name, target_value,
+                                               mech.output_state.efferents[0].receiver.owner.name))
+                current_num_targets = len(adjusted_targets[mech])
+                # verify that all mechanisms have provided the same number of inputs
+                if num_targets == -1:
+                    num_targets = current_num_targets
+                elif num_targets != current_num_targets:
+                    raise RunError("Target specification for {} is not valid. The number of targets ({}) provided for {}"
+                                   "conflicts with at least one other mechanism's target specification."
+                                   .format(component.name, current_num_targets, mech.name))
 
-        # iterate over list and check that each candidate target is compatible with corresponding TARGET input state
-        elif isinstance(target_list, (list, np.ndarray)):
-            adjusted_targets[mech] = []
-            for target_value in target_list:
-                if _target_matches_input_state_variable(target_value, input_state_variable):
-                    adjusted_targets[mech].append(np.atleast_1d(target_value))
-                else:
-                    raise RunError("Target specification ({}) for {} is not valid. The shape of {} is not compatible "
-                                   "with the TARGET input state of the corresponding ComparatorMechanism ({})"
-                                   .format(target_list, mech.name, target_value,
-                                           mech.output_state.efferents[0].receiver.owner.name))
-            current_num_targets = len(adjusted_targets[mech])
-            # verify that all mechanisms have provided the same number of inputs
-            if num_targets == -1:
-                num_targets = current_num_targets
-            elif num_targets != current_num_targets:
-                raise RunError("Target specification for {} is not valid. The number of targets ({}) provided for {}"
-                               "conflicts with at least one other mechanism's target specification."
-                               .format(component.name, current_num_targets, mech.name))
-
+        elif callable(target_list):
+            _validate_target_function(target_list, mech.output_state.efferents[0].receiver.owner, mech)
     return adjusted_targets, num_targets
 
-def _validate_target_function(component, targets, num_input_sets, context=None):
+def _validate_target_function(target_function, target_mechanism, sample_mechanism):
     """
     num_targets = number of target stimuli per execution
     num_targets_sets = number sets of targets (one for each execution) in targets;  must match num_input_sets
     """
+    generated_targets = target_function()
+    expected_shape = target_mechanism.input_states[TARGET].instance_defaults.variable
 
-    object_type = _get_object_type(component)
-    num_target_sets = None
-
-    # if isinstance(targets, function_type):
-    # Check that function returns a number of items equal to the number of target mechanisms
-    generated_targets = targets()
-    num_targets = len(generated_targets)
-    num_target_mechs = len(component.target_mechanisms)
-    if num_targets != num_target_mechs:
-        raise RunError("function for target argument of run returns {} items "
-                       "but {} has {} targets".
-                       format(num_targets, component.name, num_target_mechs))
-
-    # Check that each target generated is compatible with the targetMechanism for which it is intended
-    for target, targetMechanism in zip(generated_targets, component.target_mechanisms):
-        target_len = np.size(target)
-        if target_len != np.size(targetMechanism.input_states[TARGET].instance_defaults.variable):
-            if num_target_sets > 1:
-                plural = 's'
-            else:
-                plural = ''
-            raise RunError("Length ({}) of target{} specified for run of {}"
-                               " does not match expected target length of {}".
-                               format(target_len, plural, append_type_to_name(component),
-                                      np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
-
-    return target_len
-
+    if np.shape(generated_targets) != np.shape(expected_shape):
+            raise RunError("Target values generated by target function ({}) are not compatible with TARGET input state "
+                           "of {} ({}). See {} entry in target specification dictionary. "
+                           .format(generated_targets, target_mechanism.name, expected_shape, sample_mechanism.name))
 
 def _get_object_type(object):
     if isinstance(object, Mechanism):

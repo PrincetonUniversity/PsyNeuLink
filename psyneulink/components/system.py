@@ -2688,14 +2688,21 @@ class System(System_Base):
         #        (e.g., for rewards in reinforcement learning)
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
-        if isinstance(self.targets, function_type):
-            self.current_targets = self.targets()
+        # if isinstance(self.targets, function_type):
+        #     self.current_targets = self.targets()
+        #     for i in range(len(self.target_mechanisms)):
+        #         self.target_input_states[i].value = self.current_targets[i]
+        if isinstance(self.targets, dict):
             for i in range(len(self.target_mechanisms)):
-                self.target_input_states[i].value = self.current_targets[i]
-        elif isinstance(self.targets, dict):
-            for i in range(len(self.target_mechanisms)):
+
                 terminal_mechanism = self.target_mechanisms[i].input_states[SAMPLE].path_afferents[0].sender.owner
-                self.target_input_states[i].value = self.current_targets[terminal_mechanism]
+                target_value = self.current_targets[terminal_mechanism]
+
+                if callable(target_value):
+                    self.target_input_states[i].value = target_value()
+                else:
+                    self.target_input_states[i].value = target_value
+
         elif isinstance(self.targets, (list, np.ndarray)):
             for i in range(len(self.target_mechanisms)):
                 self.target_input_states[i].value = self.current_targets[i]
