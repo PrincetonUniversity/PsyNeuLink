@@ -598,7 +598,7 @@ SELF_VARIABLE = 'SELF_VARIABLE'
 SELF_VALUE = 'SELF_VALUE'
 OWNER_VARIABLE = 'OWNER_VARIABLE'
 OWNER_VALUE = 'OWNER_VALUE'
-INPUT_STATE_VARIABLES = 'OWNER_VALUE'
+INPUT_STATE_VARIABLES = 'INPUT_STATE_VARIABLES'
 
 
 class OutputStateError(Exception):
@@ -929,6 +929,17 @@ class OutputState(State_Base):
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
         if ASSIGN in target_set and target_set[ASSIGN] is not None:
 
+# FROM _instantiate_attributes_before_function AS REFERENCE:
+#         if isinstance(self.assign, Function):
+#             f = self.assign.function
+#         elif isinstance(self.assign, type):
+#             if issubclass(self.assign, Function):
+#                 f = self.assign().function
+#             elif isinstance(self.assign, function_type):
+#                 f = self.assign
+#         else:
+#             return
+#
             try:
                 if isinstance(target_set[ASSIGN], type):
                     function = target_set[ASSIGN]().function
@@ -966,7 +977,7 @@ class OutputState(State_Base):
                     function(self._assign_params_dict, context=context)
                 except TypeError:
                     try:
-                        function(self._assign_params_dict)
+                        function({VALUE:self.owner.instance_defaults.value[index]})
                 # MODIFIED 2/22/18 END
                     except:
                         raise OutputStateError(error_msg)
@@ -994,8 +1005,8 @@ class OutputState(State_Base):
         """
         super()._instantiate_attributes_after_function(context=context)
 
-        # If assign is specified as a Function or other callable object,
-        #    instantiate it as a lambda function that is called with OutputState's value as its argument.
+        # If ASSIGN is specified as a Function or other callable object, assume it takes only a single argument,
+        #    and instantiate it as a lambda function that is called with OutputState's value as its argument
 
         if isinstance(self.assign, Function):
             f = self.assign.function
@@ -1008,7 +1019,6 @@ class OutputState(State_Base):
             return
 
         self.assign = lambda x : f(x[VALUE])
-
 
 
     def _instantiate_projections(self, projections, context=None):
@@ -1083,17 +1093,17 @@ class OutputState(State_Base):
 
             # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
             #                      so there is no need to use their value (as do InputStates)
-            value = self.function(variable=owner_val,
-                                    params=runtime_params,
-                                    context=context)
+            self.function_value = self.function(variable=owner_val,
+                                                params=runtime_params,
+                                                context=context)
 
             if self.assign is None:
-                return value
+                return self.function_value
             else:
                 # # MODIFIED 2/22/18 OLD:
                 # return type_match(self.assign(owner_val), type(value))
                 # MODIFIED 2/22/18 NEW:
-                return type_match(self.assign(self._assign_params_dict), type(value))
+                return type_match(self.assign(self._assign_params_dict), type(self.function_value))
                 # MODIFIED 2/22/18 END
 
     def _get_primary_state(self, mechanism):
@@ -1215,7 +1225,7 @@ class OutputState(State_Base):
     @property
     def _assign_params_dict(self):
         try:
-            value = self.value
+            value = self.function_value
         except AttributeError:
             value = self.variable
         params_dict = {
@@ -1347,20 +1357,24 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                         index = output_state[PARAMS][INDEX]
                         output_state_value = owner_value[index]
 
-                    # FIX:   FOLLOWING IS INCORRECDT, AS ASSIGN MUST USE THE VALUE OF THE OutputState's FUNCTION,
-                    # FIX:   WHICH HASN'T BEEN ASSIGNED YET.
+                    # FIX:   FOLLOWING IS INCORRECT, AS ASSIGN MUST USE THE VALUE OF THE OutputState's FUNCTION,
+                    # FIX:   WHICH HASN'T BEEN ASSIGNED YET. - SO JUST RETURN THE INDEXED VALUE OF Owner.value
                     # # MODIFIED 2/22/18 OLD:
-                    # # If OutputState's assign function is specified, use it to determine OutputState's value
-                    # if ASSIGN in output_state[PARAMS]:
-                    #     # MODIFIED 2/2/18 OLD:
-                    #     # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index], context=context)
-                    #     # MODIFIED 2/2/18 NEW:
-                    #     # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index])
-                    #     # MODIFIED 2/2/18 NEWER:
-                    #     output_state_value = output_state[PARAMS][ASSIGN](owner._assign_params_dict)
-                    #     # MODIFIED 2/2/18 END
-                    # else:
-                    #     output_state_value = owner_value[index]
+                    # If OutputState's assign function is specified, use it to determine OutputState's value
+                    if ASSIGN in output_state[PARAMS]:
+                        # # MODIFIED 2/2/18 OLD:
+                        # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index], context=context)
+                        # MODIFIED 2/2/18 NEW:
+                        # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index])
+                        # # MODIFIED 2/22/18 NEWER:
+                        # output_state_value = output_state[PARAMS][ASSIGN](owner._assign_params_dict)
+                        # # MODIFIED 2/23/18 NEWEST:
+                        # Since OutputState doesn't exist yet, can't call its _assign_params_dict,
+                        #    so create dummy with VALUE (which is what is used by default) to owner's value)
+                        output_state_value = output_state[PARAMS][ASSIGN]({VALUE:owner_value[index]})
+                        # MODIFIED 2/2/18 END
+                    else:
+                        output_state_value = owner_value[index]
                     # MODIFIED 2/22/18 END
 
             else:
