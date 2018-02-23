@@ -192,9 +192,9 @@ which it should project. Each of these is described below:
         `variable <OutputState.variable>` (see `description below <OutputState_Index>` for additional details).
       |
       * *ASSIGN*:<function> - specifies the function assigned as the OutputState's `assign
-        <OutputState.assign>` attribute;  if this is not included, an identity function is used to assign the
-        OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>` (see `description below
-        <OutputState_Calculate>` for additional details).
+        <OutputState.assign>` attribute;  if this is not included, the OutputState's `variable
+        <OutputState.variable>` is assigned as its `value <OutputState.value>` (see `description below
+        <OutputState_Assign>` for additional details).
 
     .. _OutputState_Projection_Destination_Specification:
 
@@ -431,6 +431,11 @@ or::
 
     >>> my_mech2.add_states(another_decision_entropy_output_state) # doctest: +SKIP
 
+.. note::
+   The **assign** argument, *ASSIGN* keyword, and `assign <OutputState.assign>` attribute of an OutputState replace
+   former use of 'calculate' and `CALCULATE`.  For backward compatibility, the latter can still be used, but
+   will be retired at some point in the future.
+
 COMMENT:
 The line after the last command is the `add_state <Mecanism_Base.add_states>` method returning the list of States
 added to the Mechanism. Note, also, that another new OutputState had to be used for the second example, as trying to
@@ -463,7 +468,7 @@ the following attributes, that includes ones specific to, and that can be used t
   <OutputState.variable>` of the OutputState must also match (in the number and type of its elements) the item of the
   Mechanism's `value <Mechanism_Base.value>` designated by the `index <OutputState.index>`.
 
-.. _OutputState_Calculate:
+.. _OutputState_Assign:
 
 * `assign <OutputState.assign>`:  this specifies a function used to convert the item of the owner Mechanism's
   `value <Mechanism_Base.value>` (designated by the OutputState's `index <OutputState.index>` attribute), before
@@ -515,7 +520,7 @@ An OutputState cannot be executed directly.  It is executed when the Mechanism t
 When the Mechanism is executed, it places the results of its execution in its `value <Mechanism_Base.value>`
 attribute. The OutputState's `index <OutputState.index>` attribute designates the item of the Mechanism's
 `value <Mechanism_Base.value>` for use by the OutputState.  The OutputState is updated by calling the function
-specified by its `assign <OutputState_Calculate>` attribute with the designated item of the Mechanism's
+specified by its `assign <OutputState_Assign>` attribute with the designated item of the Mechanism's
 `value <Mechanism_Base.value>` as its input.  This is used by the Mechanism's
 `function <Mechanism_Base.function>`, modified by any `GatingProjections <GatingProjection>` it receives (listed in
 its `mod_afferents <OutputState.mod_afferents>` attribute), to generate the `value <OutputState.value>` of the
@@ -540,7 +545,10 @@ from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.functions.function import Linear, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import ALL, ASSIGN, COMMAND_LINE, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MEAN, MECHANISM_VALUE, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VARIANCE
+from psyneulink.globals.keywords import ALL, ASSIGN, COMMAND_LINE, GATING_SIGNAL, \
+    INDEX, INITIALIZING, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MEAN, MECHANISM_VALUE, MEDIAN, NAME, \
+    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, \
+    REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match
@@ -719,7 +727,7 @@ class OutputState(State_Base):
         OutputState's `function <OutputState.function>` to determine both the `value <OutputState.value>` of the
         OutputState, as well as the value of the corresponding item of the owner Mechanism's `output_values
         <Mechanism_Base.output_values>`. The default (`Linear`) transfers the value unmodified  (see `assign
-        <OutputState_Calculate>` for additional details)
+        <OutputState_Assign>` for additional details)
 
     function : TransferFunction : default Linear(slope=1, intercept=0))
         function used to assign the result of the OutputState's `assign <OutputState.assign>` function,
@@ -796,12 +804,17 @@ class OutputState(State_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 context=None,
+                 **kwargs):
 
         if context is None:
             context = COMMAND_LINE
         else:
             context = self
+
+        # For backward compatibility
+        if 'calculate' in kwargs:
+            assign = kwargs['calculate']
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(index=index,
@@ -816,6 +829,7 @@ class OutputState(State_Base):
             self._assign_deferred_init_name(name, context)
             # Store args for deferred initialization
             self.init_args = locals().copy()
+            del self.init_args['kwargs']
             self.init_args['context'] = context
             self.init_args['name'] = name
             self.init_args['projections'] = projections
@@ -964,6 +978,7 @@ class OutputState(State_Base):
         """
         super()._instantiate_attributes_after_function(context=context)
 
+        # FIX: 2/22/18 - THIS WILL NOT BE COMPATIBLE WITH NEW VERSION OF assign THAT TAKES PARAMS DICT AS ITS ARGUMENT
         if isinstance(self.assign, type):
             self.assign = self.assign().function
 
@@ -1019,8 +1034,12 @@ class OutputState(State_Base):
         """Call self.function with owner's value as variable
         """
 
+        # variable is passed to OutputState by _instantiate_function for OutputState
         if variable is not None:
+            assert INITIALIZING in context
             return self.function(variable, runtime_params, context)
+
+        # otherwise, OutputState used specified item(s) of owner's value
         else:
             # Most common case is OutputState has index, so assume that for efficiency
             try:
@@ -1039,7 +1058,18 @@ class OutputState(State_Base):
                                     params=runtime_params,
                                     context=context)
 
-            return type_match(self.assign(owner_val), type(value))
+            if self.assign is None:
+                return value
+            else:
+                # MODIFIED 2/22/18 OLD:
+                return type_match(self.assign(owner_val), type(value))
+                # # MODIFIED 2/22/18 NEW:
+                # params = {VARIABLE: self.owner.variable,
+                #           VALUE: self.owner.value,
+                #           OUTPUT:value}
+                # params.update(self.user_params)
+                # return type_match(self.assign(params), type(value))
+                # MODIFIED 2/22/18 END
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
@@ -1157,6 +1187,11 @@ class OutputState(State_Base):
     def pathway_projections(self, assignment):
         self.efferents = assignment
 
+    # For backward compatibility
+    @property
+    def calculate(self):
+        return self.assign
+
 
 def _instantiate_output_states(owner, output_states=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputState(s)
@@ -1175,7 +1210,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
          get indexed value from output.value
          append the indexed value to reference_value
              so that it matches specification of OutputStates (by # and function return values)
-         instantiate Calculate function if specified
+         instantiate assign function if specified
 
     When completed:
         - self.output_states contains a ContentAddressableList of one or more OutputStates;

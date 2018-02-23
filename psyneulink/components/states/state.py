@@ -324,7 +324,7 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
       receives;  for a `ParameterState`, this represents the value of the parameter that will be used by the State's
       owner or its `function <Component.function>`; for an `OutputState`, it is the item of the  owner Mechanism's
       `value <Mechanisms.value>` to which the OutputState is assigned, possibly modified by its `assign
-      <OutputState_Calculate>` attribute and/or a `GatingSignal`, and used as the `value <Projection_Base.value>` of
+      <OutputState_Assign>` attribute and/or a `GatingSignal`, and used as the `value <Projection_Base.value>` of
       the Projections listed in its `efferents <OutputState.path_efferents>` attribute.
 
 .. _State_Modulation:
