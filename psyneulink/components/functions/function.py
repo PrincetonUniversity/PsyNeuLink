@@ -9783,6 +9783,8 @@ class BackPropagation(LearningFunction):
 
         """
 
+        self._check_args(variable=variable, params=params, context=context)
+
         # Manage error_matrix param
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
@@ -9804,8 +9806,6 @@ class BackPropagation(LearningFunction):
                 owner_string = " of " + self.owner.name
             raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
                                 format(self.__class__.__name__, owner_string))
-
-        self._check_args(variable=variable, params=params, context=context)
 
         # Manage learning_rate
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:

@@ -128,7 +128,7 @@ def test_multilayer():
         num_trials=10,
         inputs=stim_list,
         targets=target_list,
-        # call_after_trial=show_target,
+        call_after_trial=show_target,
     )
 
     objective_output_layer = s.mechanisms[4]
