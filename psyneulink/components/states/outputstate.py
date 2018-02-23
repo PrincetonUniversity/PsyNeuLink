@@ -948,18 +948,26 @@ class OutputState(State_Base):
 
                 default_value_item_str = self.owner.instance_defaults.value[index] if isinstance(index, int) else index
                 error_msg = ("Item {} of value for {} ({}) is not compatible with "
-                             "the function specified for the {} parameter of {} ({})".
+                             "the function specified for the \'{}\' parameter of {} ({})".
                              format(index,
                                     self.owner.name,
                                     default_value_item_str,
                                     ASSIGN,
                                     self.name,
                                     target_set[ASSIGN]))
+                # MODIFIED 2/22/18 OLD:
+                # try:
+                #     function(self.owner.instance_defaults.value[index], context=context)
+                # except TypeError:
+                #     try:
+                #         function(self.owner.instance_defaults.value[index])
+                # MODIFIED 2/22/18 NEW:
                 try:
-                    function(self.owner.instance_defaults.value[index], context=context)
+                    function(self._assign_params_dict, context=context)
                 except TypeError:
                     try:
-                        function(self.owner.instance_defaults.value[index])
+                        function(self._assign_params_dict)
+                # MODIFIED 2/22/18 END
                     except:
                         raise OutputStateError(error_msg)
                 # except IndexError:
@@ -1206,11 +1214,15 @@ class OutputState(State_Base):
 
     @property
     def _assign_params_dict(self):
+        try:
+            value = self.value
+        except AttributeError:
+            value = self.variable
         params_dict = {
             # SELF:self,
             # OWNER:self.owner,
-            SELF_VARIABLE:self.variable,
-            SELF_VALUE: self.value,
+            VARIABLE:self.variable,
+            VALUE: value,
             OWNER_VARIABLE: self.owner.variable,
             OWNER_VALUE: self.owner.value,
             INPUT_STATE_VARIABLES: [input_state.variable for input_state in self.owner.input_states]
@@ -1333,7 +1345,10 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                     # If OutputState's index is specified, use it
                     if INDEX in output_state[PARAMS]:
                         index = output_state[PARAMS][INDEX]
+                        output_state_value = owner_value[index]
 
+                    # FIX:   FOLLOWING IS INCORRECDT, AS ASSIGN MUST USE THE VALUE OF THE OutputState's FUNCTION,
+                    # FIX:   WHICH HASN'T BEEN ASSIGNED YET.
                     # # MODIFIED 2/22/18 OLD:
                     # # If OutputState's assign function is specified, use it to determine OutputState's value
                     # if ASSIGN in output_state[PARAMS]:
@@ -1342,17 +1357,10 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                     #     # MODIFIED 2/2/18 NEW:
                     #     # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index])
                     #     # MODIFIED 2/2/18 NEWER:
-                    #     # FIX: 2/22/18 THE ABOVE WAS ERRONEOUS:
-                    #     # FIX:   IT USES THE OWNER'S VALUE AS THE INPUT TO THE ASSIGN FUNCTION,
-                    #     # FIX:   RATHER THAN THE RESULT OF THE OUTPUT STATE'S FUNCTION CALLED ON THAT VALUE
-                    #     # FIX:   SHOULD DEFER THIS TO AFTER STATE IS INSTANTIATED, USING INDEX OF OWNER VARIABLE FOR NOW
-                    #     # FIX:   THEN ASSIGN OUTPUT_VALUES AND DO ANY OTHER VAIDATION ON THE OUTPUT_STATE'S VALUE LATER
                     #     output_state_value = output_state[PARAMS][ASSIGN](owner._assign_params_dict)
                     #     # MODIFIED 2/2/18 END
                     # else:
                     #     output_state_value = owner_value[index]
-                    # MODIFIED 2/22/18 NEW:
-                    output_state_value = owner_value[index]
                     # MODIFIED 2/22/18 END
 
             else:
