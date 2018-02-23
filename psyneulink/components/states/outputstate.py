@@ -542,13 +542,13 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
-from psyneulink.components.functions.function import Linear, is_function_type
+from psyneulink.components.functions.function import Function, Linear, function_type, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import ALL, ASSIGN, COMMAND_LINE, GATING_SIGNAL, \
+from psyneulink.globals.keywords import ALL, ASSIGN, COMMAND_LINE, FUNCTION, FUNCTION_PARAMS, GATING_SIGNAL, \
     INDEX, INITIALIZING, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MEAN, MECHANISM_VALUE, MEDIAN, NAME, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, \
-    REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VARIANCE
+    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER, PARAMS, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
+    RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match
@@ -582,16 +582,24 @@ class OUTPUTS():
 
 standard_output_states = [{NAME: RESULT},
                           {NAME:MEAN,
-                           ASSIGN:lambda x: np.mean(x)},
+                           ASSIGN:lambda x: np.mean(x[VALUE])},
                           {NAME:MEDIAN,
-                           ASSIGN:lambda x: np.median(x)},
+                           ASSIGN:lambda x: np.median(x[VALUE])},
                           {NAME:STANDARD_DEVIATION,
-                           ASSIGN:lambda x: np.std(x)},
+                           ASSIGN:lambda x: np.std(x[VALUE])},
                           {NAME:VARIANCE,
-                           ASSIGN:lambda x: np.var(x)},
+                           ASSIGN:lambda x: np.var(x[VALUE])},
                           {NAME: MECHANISM_VALUE,
                            INDEX: ALL}
                           ]
+
+# Keywords for ASSIGN params dict:
+SELF_VARIABLE = 'SELF_VARIABLE'
+SELF_VALUE = 'SELF_VALUE'
+OWNER_VARIABLE = 'OWNER_VARIABLE'
+OWNER_VALUE = 'OWNER_VALUE'
+INPUT_STATE_VARIABLES = 'OWNER_VALUE'
+
 
 class OutputStateError(Exception):
     def __init__(self, error_value):
@@ -610,7 +618,7 @@ class OutputState(State_Base):
     size=None,            \
     function=Linear(),    \
     index=PRIMARY,        \
-    assign=Linear,        \
+    assign=None,          \
     projections=None,     \
     params=None,          \
     name=None,            \
@@ -799,7 +807,7 @@ class OutputState(State_Base):
                  size=None,
                  function=Linear(),
                  index=PRIMARY,
-                 assign:is_function_type=Linear,
+                 assign:tc.optional(is_function_type)=None,
                  projections=None,
                  params=None,
                  name=None,
@@ -917,9 +925,9 @@ class OutputState(State_Base):
                                            format(INDEX, self.name, target_set[INDEX], len(self.owner.instance_defaults.value),
                                                   self.owner.name))
 
-        # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
+        # IMPLEMENT: VALIDATE THAT ASSIGN FUNCTION ACCEPTS VALUE CONSISTENT WITH
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
-        if ASSIGN in target_set:
+        if ASSIGN in target_set and target_set[ASSIGN] is not None:
 
             try:
                 if isinstance(target_set[ASSIGN], type):
@@ -978,9 +986,22 @@ class OutputState(State_Base):
         """
         super()._instantiate_attributes_after_function(context=context)
 
-        # FIX: 2/22/18 - THIS WILL NOT BE COMPATIBLE WITH NEW VERSION OF assign THAT TAKES PARAMS DICT AS ITS ARGUMENT
-        if isinstance(self.assign, type):
-            self.assign = self.assign().function
+        # If assign is specified as a Function or other callable object,
+        #    instantiate it as a lambda function that is called with OutputState's value as its argument.
+
+        if isinstance(self.assign, Function):
+            f = self.assign.function
+        elif isinstance(self.assign, type):
+            if issubclass(self.assign, Function):
+                f = self.assign().function
+            elif isinstance(self.assign, function_type):
+                f = self.assign
+        else:
+            return
+
+        self.assign = lambda x : f(x[VALUE])
+
+
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -1061,14 +1082,10 @@ class OutputState(State_Base):
             if self.assign is None:
                 return value
             else:
-                # MODIFIED 2/22/18 OLD:
-                return type_match(self.assign(owner_val), type(value))
-                # # MODIFIED 2/22/18 NEW:
-                # params = {VARIABLE: self.owner.variable,
-                #           VALUE: self.owner.value,
-                #           OUTPUT:value}
-                # params.update(self.user_params)
-                # return type_match(self.assign(params), type(value))
+                # # MODIFIED 2/22/18 OLD:
+                # return type_match(self.assign(owner_val), type(value))
+                # MODIFIED 2/22/18 NEW:
+                return type_match(self.assign(self._assign_params_dict), type(value))
                 # MODIFIED 2/22/18 END
 
     def _get_primary_state(self, mechanism):
@@ -1187,6 +1204,25 @@ class OutputState(State_Base):
     def pathway_projections(self, assignment):
         self.efferents = assignment
 
+    @property
+    def _assign_params_dict(self):
+        params_dict = {
+            # SELF:self,
+            # OWNER:self.owner,
+            SELF_VARIABLE:self.variable,
+            SELF_VALUE: self.value,
+            OWNER_VARIABLE: self.owner.variable,
+            OWNER_VALUE: self.owner.value,
+            INPUT_STATE_VARIABLES: [input_state.variable for input_state in self.owner.input_states]
+        }
+        params_dict.update(self.owner.user_params)
+        del params_dict[FUNCTION]
+        del params_dict[FUNCTION_PARAMS]
+        del params_dict[INPUT_STATES]
+        del params_dict[OUTPUT_STATES]
+        params_dict.update(self.owner.function_params)
+        return params_dict
+
     # For backward compatibility
     @property
     def calculate(self):
@@ -1298,15 +1334,26 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                     if INDEX in output_state[PARAMS]:
                         index = output_state[PARAMS][INDEX]
 
-                    # If OutputState's assign function is specified, use it to determine OutputState's vaue
-                    if ASSIGN in output_state[PARAMS]:
-                        # MODIFIED 2/2/18 OLD:
-                        # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index], context=context)
-                        # MODIFIED 2/2/18 NEW:
-                        output_state_value = output_state[PARAMS][ASSIGN](owner_value[index])
-                        # MODIFIED 2/2/18 END
-                    else:
-                        output_state_value = owner_value[index]
+                    # # MODIFIED 2/22/18 OLD:
+                    # # If OutputState's assign function is specified, use it to determine OutputState's value
+                    # if ASSIGN in output_state[PARAMS]:
+                    #     # MODIFIED 2/2/18 OLD:
+                    #     # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index], context=context)
+                    #     # MODIFIED 2/2/18 NEW:
+                    #     # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index])
+                    #     # MODIFIED 2/2/18 NEWER:
+                    #     # FIX: 2/22/18 THE ABOVE WAS ERRONEOUS:
+                    #     # FIX:   IT USES THE OWNER'S VALUE AS THE INPUT TO THE ASSIGN FUNCTION,
+                    #     # FIX:   RATHER THAN THE RESULT OF THE OUTPUT STATE'S FUNCTION CALLED ON THAT VALUE
+                    #     # FIX:   SHOULD DEFER THIS TO AFTER STATE IS INSTANTIATED, USING INDEX OF OWNER VARIABLE FOR NOW
+                    #     # FIX:   THEN ASSIGN OUTPUT_VALUES AND DO ANY OTHER VAIDATION ON THE OUTPUT_STATE'S VALUE LATER
+                    #     output_state_value = output_state[PARAMS][ASSIGN](owner._assign_params_dict)
+                    #     # MODIFIED 2/2/18 END
+                    # else:
+                    #     output_state_value = owner_value[index]
+                    # MODIFIED 2/22/18 NEW:
+                    output_state_value = owner_value[index]
+                    # MODIFIED 2/22/18 END
 
             else:
                 if not isinstance(output_state, str):
