@@ -1061,15 +1061,7 @@ class OutputState(State_Base):
             if self.assign is None:
                 return value
             else:
-                # MODIFIED 2/22/18 OLD:
                 return type_match(self.assign(owner_val), type(value))
-                # # MODIFIED 2/22/18 NEW:
-                # params = {VARIABLE: self.owner.variable,
-                #           VALUE: self.owner.value,
-                #           OUTPUT:value}
-                # params.update(self.user_params)
-                # return type_match(self.assign(params), type(value))
-                # MODIFIED 2/22/18 END
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
