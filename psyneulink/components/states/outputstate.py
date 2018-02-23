@@ -902,8 +902,6 @@ class OutputState(State_Base):
 
         Validate that index is within the range of the number of items in the owner Mechanism's ``value``,
         and that the corresponding item is a valid input to the assign function
-
-
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -930,58 +928,46 @@ class OutputState(State_Base):
         if ASSIGN in target_set and target_set[ASSIGN] is not None:
 
             try:
-                # # MODIFIED 2/23/18 OLD:
-                # if isinstance(target_set[ASSIGN], type):
-                #     function = target_set[ASSIGN]().function
-                # else:
-                #     function = target_set[ASSIGN]
-                # MODIFIED 2/23/18 NEW:
-                function = _get_assign_function(target_set[ASSIGN])
-                # MODIFIED 2/23/18 END
+                # Get the ASSIGN function
+                assign_function = _get_assign_function(target_set[ASSIGN])
+            except:
+                raise OutputStateError("Unable to parse specification of \'{}\' function for {} of {}".
+                                       format(ASSIGN, self.name, self.owner.name))
 
-                try:
-                    index = target_set[INDEX]
-                except KeyError:
-                    # Assign default value for index if it was not specified
-                    index = self.index
-                # Default index is an index keyword (e.g., SEQUENTIAL) so can't evaluate at present
-                if isinstance(index, str):
-                    if not index in StandardOutputStates.keywords:
-                        raise OutputStateError("Illegal keyword ({}) found in specification of index for {} of {}".
-                                               format(index, self.name, self.owner.name))
-                    return
-
-                default_value_item_str = self.owner.instance_defaults.value[index] if isinstance(index, int) else index
-                error_msg = ("Item {} of value for {} ({}) is not compatible with "
-                             "the function specified for the \'{}\' parameter of {} ({})".
-                             format(index,
-                                    self.owner.name,
-                                    default_value_item_str,
-                                    ASSIGN,
-                                    self.name,
-                                    target_set[ASSIGN]))
-                # MODIFIED 2/22/18 OLD:
-                # try:
-                #     function(self.owner.instance_defaults.value[index], context=context)
-                # except TypeError:
-                #     try:
-                #         function(self.owner.instance_defaults.value[index])
-                # MODIFIED 2/22/18 NEW:
-                try:
-                    function(self._assign_params_dict, context=context)
-                except TypeError:
-                    try:
-                        function({VALUE:self.owner.instance_defaults.value[index]})
-                # MODIFIED 2/22/18 END
-                    except:
-                        raise OutputStateError(error_msg)
-                # except IndexError:
-                #     # This handles cases in which index has not yet been assigned
-                #     pass
-                except:
-                    raise OutputStateError(error_msg)
+            # Get INDEX
+            try:
+                index = target_set[INDEX]
             except KeyError:
-                pass
+                # Assign default value for index if it was not specified
+                index = self.index
+            # Default index is an index keyword (e.g., SEQUENTIAL) so can't evaluate at present
+            if isinstance(index, str):
+                if not index in StandardOutputStates.keywords:
+                    raise OutputStateError("Illegal keyword ({}) found in specification of index for {} of {}".
+                                           format(index, self.name, self.owner.name))
+                return
+
+            # Get indexed item of owner.value
+            owner_value_item = self.owner.instance_defaults.value[index]
+
+            # Try ASSIGN function
+            try:
+                # Try with assign_param_dict as arg
+                assign_function(self._assign_params_dict, context=context)
+            except TypeError:
+                # assign_param_dict as arg for ASSIGN didn't work
+                try:
+                    # Try with dummy dict using owner's value as default
+                    assign_function({VALUE:owner_value_item})
+                except:
+                    raise OutputStateError("Item {} of value for {} ({}) is not compatible with "
+                                           "the function specified for the \'{}\' parameter of {} ({})".
+                                           format(index, self.owner.name, owner_value_item,
+                                                  ASSIGN, self.name, target_set[ASSIGN]))
+            # ASSIGN didn't work for some other reason
+            except:
+                raise OutputStateError("Call to \'{}\' function specified for {} of {} is failing".
+                                       format(ASSIGN, self.name, self.owner.name))
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that State.variable is compatible with the reference_value
