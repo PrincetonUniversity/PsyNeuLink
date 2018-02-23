@@ -929,17 +929,6 @@ class OutputState(State_Base):
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
         if ASSIGN in target_set and target_set[ASSIGN] is not None:
 
-# FROM _instantiate_attributes_before_function AS REFERENCE:
-#         if isinstance(self.assign, Function):
-#             f = self.assign.function
-#         elif isinstance(self.assign, type):
-#             if issubclass(self.assign, Function):
-#                 f = self.assign().function
-#             elif isinstance(self.assign, function_type):
-#                 f = self.assign
-#         else:
-#             return
-#
             try:
                 # # MODIFIED 2/23/18 OLD:
                 # if isinstance(target_set[ASSIGN], type):
@@ -1365,9 +1354,12 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                         # # MODIFIED 2/22/18 NEWER:
                         # output_state_value = output_state[PARAMS][ASSIGN](owner._assign_params_dict)
                         # # MODIFIED 2/23/18 NEWEST:
-                        # Since OutputState doesn't exist yet, can't call its _assign_params_dict,
-                        #    so create dummy with VALUE (which is what is used by default) to owner's value)
-                        output_state_value = output_state[PARAMS][ASSIGN]({VALUE:owner_value[index]})
+                        # Since OutputState doesn't exist yet,
+                        #    - need to get assign function
+                        #    - can't call its _assign_params_dict,
+                        #          so create dummy with VALUE (which is what is used by default) to owner's value)
+                        function = _get_assign_function(output_state[PARAMS][ASSIGN])
+                        output_state_value = function({VALUE:owner_value[index]})
                         # MODIFIED 2/2/18 END
                     else:
                         output_state_value = owner_value[index]
