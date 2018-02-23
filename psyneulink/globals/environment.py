@@ -344,18 +344,31 @@ If learning is specified for a `Process <Process_Learning_Sequence>` or `System 
 target values for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
 are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method.
 
-Recall that the `TARGET`, or `ComparatorMechanism`, of a learning sequence receives a TARGET, provided by the user at
-run time, and a SAMPLE, which it receives from a projection sent by the last mechanism of the learning sequence. The
-TARGET and SAMPLE values for a particular `TARGET` Mechanism must have the same shape. See `learning sequence
+Recall that the `TARGET`, or `ComparatorMechanism`, of a learning sequence receives a TARGET, which is provided by the
+user at run time, and a SAMPLE, which is received from a projection sent by the last mechanism of the learning sequence.
+The TARGET and SAMPLE values for a particular `TARGET` Mechanism must have the same shape. See `learning sequence
 <Process_Learning_Sequence>` for more details on how these components relate to each other.
 
 The standard format for specifying targets is a Python dictionary where the keys are the last mechanism of each learning
-sequence, and the values are lists in which the i-th element represents the target value to the mechanism on trial i.
-There must be the same number of keys in the target specification dictionary as there are `TARGET` Mechanisms in the
-system. Each target value must be compatible with the shape of the `TARGET` mechanism's TARGET `input state
-<ComparatorMechanism.input_states>`. This means that for a given key (which is always the last mechanism of a
-learning sequence) in the target specification dictionary, the value is usually a list of 1d lists/arrays, though `some
-shorthand notations are allowed <Target_Specification_Examples>`.
+sequence, and the values are lists in which the i-th element represents the target value for that learning sequence on
+trial i. There must be the same number of keys in the target specification dictionary as there are `TARGET` Mechanisms
+in the system. Each target value must be compatible with the shape of the `TARGET` mechanism's TARGET `input state
+<ComparatorMechanism.input_states>`. This means that for a given key (which is always the last mechanism of the
+learning sequence) in the target specification dictionary, the value is usually a list of 1d lists/arrays.
+
+The number of targets specified for each Mechanism must equal the number specified for the **inputs** argument;  as
+with **inputs**, if the number of `TRIAL` \\s specified is greater than the number of inputs (and targets), then the
+list will be cycled until the number of `TRIAL` \\s specified is completed.
+
++------------------------------------------+--------------+--------------+
+| Trial #                                  |1             |   2          |
++------------------------------------------+--------------+--------------+
+| Target value for the learning sequence   | [1.0, 1.0]   |   [2.0, 2.0] |
+| containing **Mechanism b**               |              |              |
++------------------------------------------+--------------+--------------+
+| Target value for the learning sequence   |  [1.0]       |   [2.0]      |
+| containing **Mechanism c**               |              |              |
++------------------------------------------+--------------+--------------+
 
 ::
 
@@ -390,30 +403,76 @@ shorthand notations are allowed <Target_Specification_Examples>`.
 .. figure:: _static/target_spec_dictionary.svg
    :alt: Example of dictionary format of target specification
 
-COMMENT:
-Furthermore, if a range is specified for the output of
-the last mechanism in the learning sequence (which is the `sample <ComparatorMechanism.ComparatorMechanism.sample>`
-value against which the target is compared), then the target must be within that range. For example, if the `TERMINAL`
-Mechanism is a `TransferMechanism` that uses a `Logistic` function, its `range
-<TransferMechanism.TransferMechanism.range>` is [0,1], so the target must be within that range).
-COMMENT
-
-Alternatively, targets may be specified by a function, in which case the function must return an array with a number of
-items equal to the number of `TARGET` Mechanisms for the Process or System being run, each of which must match
-(in number and type of elements) the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the
-`TARGET` Mechanism for which it is intended. This format allows targets to be constructed programmatically, in response
+Alternatively, the value for a given key (last mechanism in the learning sequence) in the target specification
+dictionary may be a function. The output of that function must be compatible with the shape of the `TARGET` mechanism's
+TARGET `input state <ComparatorMechanism.input_states>`. The function will be executed at the start of the learning
+portion of each trial. This format allows targets to be constructed programmatically, in response
 to computations made during the run.
 
-If the dictionary format of target specification is used, the number of targets specified for each Mechanism must equal
-the number specified for the **inputs** argument;  as with **inputs**, if the number of `TRIAL` \\s specified is greater
-than the number of inputs (and targets), then the list will be cycled until the number of `TRIAL` \\s specified is
-completed.
+::
 
-If a function is used for the **targets**, then it will be used to generate a target for each `TRIAL`.
+        >>> a = TransferMechanism(name="a")
+        >>> b = TransferMechanism(name="b",
+        ...                       default_variable=np.array([[0.0, 0.0]]))
 
-COMMENT:
-    ADD EXAMPLE HERE
-COMMENT
+        >>> learning_sequence = Process(name="learning-sequence",
+        ...                             pathway=[A, B],
+        ...                             learning=ENABLED)
+
+        >>> s = System(name="learning-system",
+        ...            processes=[LP])
+
+        >>> def target_function():
+        ...     val_1 = NormalDist(mean=3.0).function()
+        ...     val_2 = NormalDist(mean=3.0).function()
+        ...     target_value = np.array([val_1, val_2])
+        ...     return target_value
+
+        >>> s.run(inputs={A: [[[1.0]], [[2.0]], [[3.0]]]},
+        ...       targets={B: target_function})
+
+.. note::
+
+    Target specification dictionaries that provide values for multiple learning sequences may contain functions for some
+    learning sequences and lists of values for others.
+
+Finally, for convenience, if there is only one learning sequence in a system, the targets may be specified in a list,
+rather than a dictionary.
+
++------------------------------------------+-------+------+------+------+------+
+| Trial #                                  |1      |2     |3     |4     |5     |
++------------------------------------------+-------+------+------+------+------+
+| Target corresponding to  **Mechanism b** |1.0    |2.0   |3.0   |4.0   |5.0   |
++------------------------------------------+-------+------+------+------+------+
+
+Complete input specification:
+
+::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> p1 = pnl.Process(pathway=[a, b])
+
+        >>> s = pnl.System(processes=[p1])
+
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+        >>> target_dictionary = {b: [[1.0], [2.0], [3.0], [4.0], [5.0]]}
+
+        >>> s.run(inputs=input_dictionary,
+        ...       targets=target_dictionary)
+
+Shorthand - specify the targets in a list because there is only one learning sequence:
+
+::
+
+        >>> target_list = [[1.0], [2.0], [3.0], [4.0], [5.0]]
+
+        >>> s.run(inputs=input_dictionary,
+        ...       targets=target_list)
+
 
 .. _Run_Class_Reference:
 
@@ -520,9 +579,8 @@ def run(object,
     initial_values : Dict[Mechanism:List[input]], List[input] or np.ndarray(input) : default None
         the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
-    targets : List[input] or np.ndarray(input) : default None
-        the target values assigned to the `ComparatorMechanism` for each `TRIAL` (used for learning).
-        The length must be equal to **inputs**.
+    targets : dict : default None
+        the target values assigned to the `ComparatorMechanism` of each learning sequence on each `TRIAL`.
 
     learning : bool :  default None
         enables or disables learning during execution for a `Process <Process_Execution_Learning>` or
@@ -597,13 +655,17 @@ def run(object,
         elif isinstance(targets, function_type):
             if len(object.target_mechanisms) == 1:
                 targets = {object.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
-                print("targets = ", targets)
-
                 targets, num_targets = _adjust_target_dict(object, targets)
             else:
                 raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
         else:
             raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
+
+        # if num_targets = -1, all targets were specified as functions
+        if num_targets != num_inputs_sets and num_targets != -1:
+            raise RunError("Number of target values specified ({}) for each learning sequence in {} must equal the "
+                           "number of input values specified ({}) for each origin mechanism in {}."
+                           .format(num_targets, object.name, num_inputs_sets, object.name))
 
     object_type = _get_object_type(object)
 
@@ -677,7 +739,10 @@ def run(object,
                     object.target = targets
                 else:
                     for mech in targets:
-                        execution_targets[mech] = targets[mech][input_num]
+                        if callable(targets[mech]):
+                            execution_targets[mech] = targets[mech]
+                        else:
+                            execution_targets[mech] = targets[mech][input_num]
                     if object_type is SYSTEM:
                         object.target = execution_targets
                         object.current_targets = execution_targets
@@ -870,7 +935,7 @@ def _adjust_target_dict(component, target_dict):
             num_targets = -1
 
             # first check if only one target was provided:
-            if _target_matches_input_state_variable(target_list, input_state_variable):
+            if np.shape(np.atleast_1d(target_list)) == np.shape(input_state_variable):
                 adjusted_targets[mech] = [np.atleast_1d(target_list)]
                 if num_targets == -1:
                     num_targets = 1
@@ -883,7 +948,7 @@ def _adjust_target_dict(component, target_dict):
             elif isinstance(target_list, (list, np.ndarray)):
                 adjusted_targets[mech] = []
                 for target_value in target_list:
-                    if _target_matches_input_state_variable(target_value, input_state_variable):
+                    if np.shape(np.atleast_1d(target_value)) == np.shape(input_state_variable):
                         adjusted_targets[mech].append(np.atleast_1d(target_value))
                     else:
                         raise RunError("Target specification ({}) for {} is not valid. The shape of {} is not compatible "
@@ -901,16 +966,13 @@ def _adjust_target_dict(component, target_dict):
 
         elif callable(target_list):
             _validate_target_function(target_list, mech.output_state.efferents[0].receiver.owner, mech)
+            adjusted_targets[mech] = target_list
     return adjusted_targets, num_targets
 
 def _validate_target_function(target_function, target_mechanism, sample_mechanism):
-    """
-    num_targets = number of target stimuli per execution
-    num_targets_sets = number sets of targets (one for each execution) in targets;  must match num_input_sets
-    """
-    generated_targets = target_function()
-    expected_shape = target_mechanism.input_states[TARGET].instance_defaults.variable
 
+    generated_targets = np.atleast_1d(target_function())
+    expected_shape = target_mechanism.input_states[TARGET].instance_defaults.variable
     if np.shape(generated_targets) != np.shape(expected_shape):
             raise RunError("Target values generated by target function ({}) are not compatible with TARGET input state "
                            "of {} ({}). See {} entry in target specification dictionary. "
