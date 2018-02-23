@@ -542,7 +542,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
-from psyneulink.components.functions.function import Function, Linear, function_type, is_function_type
+from psyneulink.components.functions.function import Function, Linear, function_type, method_type, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.keywords import ALL, ASSIGN, COMMAND_LINE, FUNCTION, FUNCTION_PARAMS, GATING_SIGNAL, \
@@ -941,10 +941,15 @@ class OutputState(State_Base):
 #             return
 #
             try:
-                if isinstance(target_set[ASSIGN], type):
-                    function = target_set[ASSIGN]().function
-                else:
-                    function = target_set[ASSIGN]
+                # # MODIFIED 2/23/18 OLD:
+                # if isinstance(target_set[ASSIGN], type):
+                #     function = target_set[ASSIGN]().function
+                # else:
+                #     function = target_set[ASSIGN]
+                # MODIFIED 2/23/18 NEW:
+                function = _get_assign_function(target_set[ASSIGN])
+                # MODIFIED 2/23/18 END
+
                 try:
                     index = target_set[INDEX]
                 except KeyError:
@@ -1007,19 +1012,7 @@ class OutputState(State_Base):
 
         # If ASSIGN is specified as a Function or other callable object, assume it takes only a single argument,
         #    and instantiate it as a lambda function that is called with OutputState's value as its argument
-
-        if isinstance(self.assign, Function):
-            f = self.assign.function
-        elif isinstance(self.assign, type):
-            if issubclass(self.assign, Function):
-                f = self.assign().function
-            elif isinstance(self.assign, function_type):
-                f = self.assign
-        else:
-            return
-
-        self.assign = lambda x : f(x[VALUE])
-
+        self.assign = _get_assign_function(self.assign)
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -1033,6 +1026,9 @@ class OutputState(State_Base):
         Assume all remaining specifications in projections are for outgoing MappingProjections;
             these should be either Mechanisms, States or MappingProjections to one of those
         Call _instantiate_projections_from_state to assign MappingProjections to .efferents
+
+        Store result of function as self.function_value
+        function_value is converted to returned value by assign function
 
         """
         from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -1559,6 +1555,37 @@ class StandardOutputStates():
     @property
     def indices(self):
         return [item[INDEX] for item in self.data]
+
+
+def _get_assign_function(assign):
+
+        # # OLD:
+        # if isinstance(self.assign, Function):
+        #     f = self.assign.function
+        # elif isinstance(self.assign, type):
+        #     if issubclass(self.assign, Function):
+        #         f = self.assign().function
+        #     elif isinstance(self.assign, function_type):
+        #         f = self.assign
+        # else:
+        #     return
+        #
+        # self.assign = lambda x : f(x[VALUE])
+        # # END OLD
+
+        if isinstance(assign, Function):
+            f = assign.function
+        elif isinstance(assign, type):
+            if issubclass(assign, Function):
+                f = assign().function
+        # elif isinstance(assign, function_type):
+        #     f = assign
+        elif isinstance(assign, method_type):
+            f = assign
+        else:
+            return assign
+
+        return lambda x : f(x[VALUE])
 
 
 def make_readonly_property(val):
