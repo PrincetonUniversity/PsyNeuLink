@@ -2772,7 +2772,7 @@ class SoftMax(NormalizingFunction):
                 derivative[i] = sm[i] * (d - max_val)
 
         else:
-            raise FunctionError("Can't calculate derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
+            raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
                                 "(and therefore the relevant element is ambiguous)".format(self.owner_name))
 
         return derivative

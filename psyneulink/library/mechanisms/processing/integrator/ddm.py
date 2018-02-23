@@ -298,7 +298,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, CALCULATE, FUNCTION, FUNCTION_PARAMS, \
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, ASSIGN, FUNCTION, FUNCTION_PARAMS, \
     INDEX, INITIALIZING, NAME, OUTPUT_STATES, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -673,7 +673,7 @@ class DDM(ProcessingMechanism_Base):
                           ]
             output_states = [{NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
                               INDEX:0,
-                              CALCULATE: lambda x: [float(x),0] if x >= 0 else [0,float(-x)]}
+                              ASSIGN: lambda x: [float(x),0] if x >= 0 else [0,float(-x)]}
                              ]
         else:
             input_states = None

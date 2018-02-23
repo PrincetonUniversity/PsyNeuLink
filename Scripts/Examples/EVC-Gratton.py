@@ -75,7 +75,7 @@ Decision = pnl.DDM(
         {
             pnl.NAME: 'OFFSET RT',
             pnl.INDEX: 2,
-            pnl.CALCULATE: pnl.Linear(0, slope=0.3, intercept=1).function
+            pnl.ASSIGN: pnl.Linear(0, slope=0.3, intercept=1).function
         }
     ],
 )

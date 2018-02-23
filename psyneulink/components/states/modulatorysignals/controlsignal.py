@@ -177,7 +177,7 @@ the enabled cost components are summed, however this can be modified by specifyi
     disabled for a ControlSignal, it cannot be re-enabled using `toggle_cost_function`.
     COMMENT
 
-.. note:: The `index <OutputState.OutputState.index>` and `calculate <OutputState.OutputState.calculate>`
+.. note:: The `index <OutputState.OutputState.index>` and `assign <OutputState.OutputState.assign>`
         attributes of a ControlSignal are automatically assigned and should not be modified.
 
 .. _ControlSignal_Execution:
@@ -668,7 +668,7 @@ class ControlSignal(ModulatorySignal):
                  variable=None,
                  size=None,
                  index=None,
-                 calculate=Linear,
+                 assign=Linear,
                  function=Linear(),
                  cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.DEFAULTS,
                  intensity_cost_function:(is_function_type)=Exponential,
@@ -688,11 +688,11 @@ class ControlSignal(ModulatorySignal):
         else:
             context = self
 
-        # Note index and calculate are not used by ControlSignal, but included here for consistency with OutputState
+        # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
             allocation_samples =  params[ALLOCATION_SAMPLES]
 
-        # Note: calculate is not currently used by GatingSignal;
+        # Note: assign is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.
 
         # If index has not been specified, but the owner has, allocation_policy has been determined, so use that
@@ -719,7 +719,7 @@ class ControlSignal(ModulatorySignal):
                          size=size,
                          modulation=modulation,
                          index=index,
-                         calculate=calculate,
+                         assign=assign,
                          projections=projections,
                          params=params,
                          name=name,
