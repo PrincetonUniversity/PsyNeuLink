@@ -1173,13 +1173,13 @@ class ControlSignal(ModulatorySignal):
         """
         return [self.intensity_cost, self.adjustment_cost, self.duration_cost]
 
-    @property
-    def variable(self):
-        return self.allocation
-
-    @variable.setter
-    def variable(self, assignment):
-        self.allocation = assignment
+    # @property
+    # def variable(self):
+    #     return self.allocation
+    #
+    # @variable.setter
+    # def variable(self, assignment):
+    #     self.allocation = assignment
 
     @property
     def value(self):
