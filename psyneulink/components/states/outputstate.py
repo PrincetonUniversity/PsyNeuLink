@@ -969,11 +969,11 @@ class OutputState(State_Base):
                                    "with its expected format ({})".
                                    format(name, self.componentName, self.owner.name, self.instance_defaults.variable, reference_value))
 
-    def _instantiate_function(self, context=None):
-        """Parse variable specification and instantiate lambda function that passes it to specified function
-        """
-        super()._instantiate_function(context=context)
-
+    # def _instantiate_function(self, context=None):
+    #     """Parse variable specification and instantiate lambda function that passes it to specified function
+    #     """
+    #     super()._instantiate_function(context=context)
+    #
     # def _instantiate_attributes_after_function(self, context=None):
     #     """Instantiate assign function
     #     """

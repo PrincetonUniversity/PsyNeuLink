@@ -77,7 +77,7 @@ Decision = pnl.DDM(
             # pnl.INDEX: 2,
             # pnl.ASSIGN: pnl.Linear(0, slope=0.3, intercept=1)
             pnl.VARIABLE:[(pnl.OWNER_VALUE,2)],
-            pnl.FUNCTION: pnl.Linear(0, slope=0.3, intercept=1)
+            # pnl.FUNCTION: pnl.Linear(0, slope=0.3, intercept=1)
         }
     ],
 )
