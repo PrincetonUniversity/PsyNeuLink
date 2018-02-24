@@ -864,29 +864,29 @@ class OutputState(State_Base):
                          prefs=prefs,
                          context=context)
 
-    def _validate_variable(self, variable, context=None):
-        """Insure variable is compatible with output component of owner.function relevant to this State
-
-        Validate variable against component of owner's value (output of owner's function)
-             that corresponds to this OutputState (since that is what is used as the input to OutputState);
-             this should have been provided as reference_value in the call to OutputState__init__()
-
-        Note:
-        * This method is called only if the parameterValidationPref is True
-        """
-        variable = self._update_variable(super(OutputState, self)._validate_variable(variable, context))
-
-        # Insure that variable is compatible with (relevant item of) output value of owner's function
-        # if not iscompatible(variable, self.reference_value):
-        if (variable is not None
-            and self.reference_value is not None
-            and not iscompatible(variable, self.reference_value)):
-            raise OutputStateError("Variable ({}) of OutputState for {} is not compatible with "
-                                           "the output ({}) of its function".
-                                           format(variable,
-                                                  self.owner.name,
-                                                  self.reference_value))
-        return variable
+    # def _validate_variable(self, variable, context=None):
+    #     """Insure variable is compatible with output component of owner.function relevant to this State
+    #
+    #     Validate variable against component of owner's value (output of owner's function)
+    #          that corresponds to this OutputState (since that is what is used as the input to OutputState);
+    #          this should have been provided as reference_value in the call to OutputState__init__()
+    #
+    #     Note:
+    #     * This method is called only if the parameterValidationPref is True
+    #     """
+    #     variable = self._update_variable(super(OutputState, self)._validate_variable(variable, context))
+    #
+    #     # Insure that variable is compatible with (relevant item of) output value of owner's function
+    #     # if not iscompatible(variable, self.reference_value):
+    #     if (variable is not None
+    #         and self.reference_value is not None
+    #         and not iscompatible(variable, self.reference_value)):
+    #         raise OutputStateError("Variable ({}) of OutputState for {} is not compatible with "
+    #                                        "the output ({}) of its function".
+    #                                        format(variable,
+    #                                               self.owner.name,
+    #                                               self.reference_value))
+    #     return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate index and assign parameters
@@ -974,14 +974,14 @@ class OutputState(State_Base):
         """
         super()._instantiate_function(context=context)
 
-    def _instantiate_attributes_after_function(self, context=None):
-        """Instantiate assign function
-        """
-        super()._instantiate_attributes_after_function(context=context)
-
-        # If ASSIGN is specified as a Function or other callable object, assume it takes only a single argument,
-        #    and instantiate it as a lambda function that is called with OutputState's value as its argument
-        self.assign = _parse_output_state_function(self.assign)
+    # def _instantiate_attributes_after_function(self, context=None):
+    #     """Instantiate assign function
+    #     """
+    #     super()._instantiate_attributes_after_function(context=context)
+    #
+    #     # If ASSIGN is specified as a Function or other callable object, assume it takes only a single argument,
+    #     #    and instantiate it as a lambda function that is called with OutputState's value as its argument
+    #     self.assign = _parse_output_state_function(self.assign)
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -1102,12 +1102,18 @@ class OutputState(State_Base):
         state_spec = state_specific_spec
 
         if isinstance(state_specific_spec, dict):
-            # MODIFIED 2/23/18 OLD:
-            return None, state_specific_spec
-            # MODIFIED 2/23/18 NEW:
+            # # MODIFIED 2/24/18 OLD:
+            # return None, state_specific_spec
+            # MODIFIED 2/24/18 NEW:
             # # CHECK IF FUNCTION IS IN state_specific_spec
             # # CHECK IF VARIABLE IS IN state_dict (ERROR IF IT IS A DICT AND THERE IS NO FCT IN state_specific_spec)
-            # MODIFIED 2/23/18 END
+            state_dict[VARIABLE] = _parse_output_state_variable(owner, state_dict[VARIABLE])
+            # state_specific_spec[FUNCTION] = _parse_output_state_function(owner,
+            #                                                              state_dict[NAME],
+            #                                                              state_specific_spec[FUNCTION],
+            #                                                              state_dict[VARIABLE]==PARAMS_DICT)
+            return None, state_specific_spec
+            # MODIFIED 2/24/18 END
 
         elif isinstance(state_specific_spec, ProjectionTuple):
             # MODIFIED 11/25/17 NEW:
@@ -1200,29 +1206,6 @@ class OutputState(State_Base):
     def pathway_projections(self, assignment):
         self.efferents = assignment
 
-    # @property
-    # def _assign_params_dict(self):
-    #     try:
-    #         value = self.function_value
-    #     except AttributeError:
-    #         value = self.variable
-    #     params_dict = {
-    #         # SELF:self,
-    #         # OWNER:self.owner,
-    #         VARIABLE:self.variable,
-    #         VALUE: value,
-    #         OWNER_VARIABLE: self.owner.variable,
-    #         OWNER_VALUE: self.owner.value,
-    #         INPUT_STATE_VARIABLES: [input_state.variable for input_state in self.owner.input_states]
-    #     }
-    #     params_dict.update(self.owner.user_params)
-    #     del params_dict[FUNCTION]
-    #     del params_dict[FUNCTION_PARAMS]
-    #     del params_dict[INPUT_STATES]
-    #     del params_dict[OUTPUT_STATES]
-    #     params_dict.update(self.owner.function_params)
-    #     return params_dict
-
     # For backward compatibility
     @property
     def calculate(self):
@@ -1303,7 +1286,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     if output_states:
         for i, output_state in enumerate(output_states):
 
-              # parse output_state
+            # parse output_state
             from psyneulink.components.states.state import _parse_state_spec
             output_state = _parse_state_spec(state_type=OutputState, owner=owner, state_spec=output_state)
 
@@ -1543,27 +1526,31 @@ class StandardOutputStates():
 
 
 def  _parse_output_state_variable(owner, variable):
-        if variable == PARAMS_DICT:
-            func_variable = owner._params_dict
+    from psyneulink.components.mechanisms.mechanism import Mechanism_Base
+    # if isinstance(variable, (type(None), Mechanism_Base.MechParamsDict)):
+    if isinstance(variable, (type(None), dict)):
+        return variable
+    elif variable == PARAMS_DICT:
+        return owner._params_dict
+    else:
+        fct_variable = []
+        if isinstance(variable, list):
+            for var_spec in variable:
+                if isinstance(var_spec, tuple):
+                    attrib, index = var_spec
+                    attrib_val = owner._params_dict[attrib][index]
+                else:
+                    attrib = var_spec
+                    attrib_val = owner._params_dict[attrib]
+                fct_variable.append(attrib_val)
+        elif is_numeric(variable):
+            fct_variable = variable
         else:
-            func_variable = []
-            if isinstance(variable, list):
-                for var_spec in variable:
-                    if isinstance(var_spec, tuple):
-                        attrib, index = var_spec
-                        attrib_val = owner._params_dict[attrib][index]
-                    else:
-                        attrib = var_spec
-                        attrib_val = owner._params_dict[attrib]
-                    func_variable.append(attrib_val)
-            elif is_numeric(variable):
-                func_variable = variable
-            else:
-                raise OutputStateError("\'{}\' entry for {} specification dictionary of {} ({}) must be "
-                                       "numeric or a list of {} attribute names".
-                                       format(VARIABLE.upper(), OutputState.__name__, owner.name, variable,
-                                              owner.__class__.__name__))
-        return func_variable
+            raise OutputStateError("\'{}\' entry for {} specification dictionary of {} ({}) must be "
+                                   "numeric or a list of {} attribute names".
+                                   format(VARIABLE.upper(), OutputState.__name__, owner.name, variable,
+                                          owner.__class__.__name__))
+        return fct_variable
 
 
 def _parse_output_state_function(owner, output_state_name, function, params_dict_as_variable=False):
@@ -1593,6 +1580,7 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     # MODIFIED 2/24/18 NEW:
     if isinstance(function, (function_type, method_type)):
         return function
+
     if isinstance(function, type) and issubclass(function, Function):
         function = function()
     if isinstance(function, Function):
@@ -1602,16 +1590,15 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
                                "or a callable object (Python function or method)".
                                format(FUNCTION.upper(), output_state_name, owner.name, Function.__name__))
     if params_dict_as_variable:
-        try:
-            if function.params_dict_as_variable is True:
-                return lambda x : fct(x[OWNER_VALUE][0])
-        except AttributeError:
+        if hasattr(function, 'params_dict_as_variable'):
+            return fct
+        else:
             if owner.verbosePref is True:
                 warnings.warn("{} specified as {} is incompatible with {} specified as {} for {} of {}; "
                               "1st item of {}'s {} attribute will be used instead".
                               format(PARAMS_DICT.upper(), VARIABLE.upper(), function.name, FUNCTION.upper(),
                                      OutputState.name, owner.name, owner.name, VALUE))
-
+            return lambda x : fct(x[OWNER_VALUE][0])
     return fct
     # MODIFIED 2/24/18 END
 

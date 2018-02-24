@@ -8514,6 +8514,13 @@ COMMENT
 
         self.functionOutputType = None
 
+    def _validate_variable(self, variable, context=None):
+        """Validates that variable is 1d array
+        """
+        if len(np.atleast_2d(variable)) != 1:
+            raise FunctionError("Variable for {} must be a 1d np.array or list of numbers".format(self.name))
+        return variable
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate matrix param
 
@@ -8529,7 +8536,7 @@ COMMENT
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        # Validate error_matrix specification
+        # Validate matrix specification
         if MATRIX in target_set:
 
             from psyneulink.components.projections.pathway.mappingprojection import MappingProjection

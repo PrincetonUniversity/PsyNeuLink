@@ -2616,8 +2616,13 @@ class Mechanism_Base(Mechanism):
                                       list=[p.sender.owner for p in self.mod_afferents
                                             if isinstance(p.sender.owner, Mechanism_Base)])
 
+    from collections import UserDict
+    class MechParamsDict(UserDict):
+        pass
+
     @property
     def _params_dict(self):
+        # MODIFIED 2/24/18 OLD:
         params_dict = {
             # SELF:self,
             # OWNER:self.owner,
@@ -2625,6 +2630,13 @@ class Mechanism_Base(Mechanism):
             OWNER_VALUE: self.value,
             INPUT_STATE_VARIABLES: [input_state.variable for input_state in self.input_states]
         }
+        # # MODIFIED 2/24/18 NEW:
+        # params_dict = self.MechParamsDict(
+        #     OWNER_VARIABLE = self.variable,
+        #     OWNER_VALUE = self.value,
+        #     INPUT_STATE_VARIABLES = [input_state.variable for input_state in self.input_states]
+        # )
+        # MODIFIED 2/24/18 END
         params_dict.update(self.user_params)
         del params_dict[FUNCTION]
         del params_dict[FUNCTION_PARAMS]
