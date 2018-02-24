@@ -897,7 +897,20 @@ class OutputState(State_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
+        # FIX: 2/24/18 - IF INDEX AND/OR ASSIGN ARE SPECIFIED, MOVE TO VARIABLE AND FUNCTION
+
+        variable = None
+
+        if VARIABLE in target_set:
+            variable = _parse_output_state_variable(self.owner, target_set[VARIABLE], self.name)
+
         if INDEX in target_set:
+
+            if variable:
+                raise OutputStateError("{} and {} specified for {} of {}. {} has been deprecated; "
+                                       "use \'({}, int)\' to specify {}".
+                                       format(VARIABLE.upper(), INDEX.upper(), self.name, self.owner.name,
+                                       INDEX.upper(), OWNER_VALUE.upper(), VARIABLE.upper()))
 
             # If INDEX specification is SEQUENTIAL:
             #    - can't yet determine relationship to default_value
@@ -911,52 +924,73 @@ class OutputState(State_Base):
                 except IndexError:
                     raise OutputStateError("Value of \'{}\' argument for {} ({}) is greater than the number "
                                            "of items in the output_values ({}) for its owner Mechanism ({})".
-                                           format(INDEX, self.name, target_set[INDEX], len(self.owner.instance_defaults.value),
+                                           format(INDEX, self.name, target_set[INDEX],
+                                                  len(self.owner.instance_defaults.value),
                                                   self.owner.name))
+                target_set[VARIABLE] = [(OWNER_VALUE, target_set[INDEX])]
 
         if ASSIGN in target_set and target_set[ASSIGN] is not None:
 
-            try:
-                # Get the ASSIGN function
-                assign_function = _parse_output_state_function(self.owner, self.name, target_set[ASSIGN])
-            except:
-                raise OutputStateError("Unable to parse specification of \'{}\' function for {} of {}".
-                                       format(ASSIGN, self.name, self.owner.name))
+            # # MODIFIED 2/24/18 OLD:
+            # try:
+            #     # Get the ASSIGN function
+            #     assign_function = _parse_output_state_function(self.owner, self.name, target_set[ASSIGN])
+            # except:
+            #     raise OutputStateError("Unable to parse specification of \'{}\' function for {} of {}".
+            #                            format(ASSIGN, self.name, self.owner.name))
+            #
+            # # Get INDEX
+            # try:
+            #     index = target_set[INDEX]
+            # except KeyError:
+            #     # Assign default value for index if it was not specified
+            #     index = self.index
+            # # Default index is an index keyword (e.g., SEQUENTIAL) so can't evaluate at present
+            # if isinstance(index, str):
+            #     if not index in StandardOutputStates.keywords:
+            #         raise OutputStateError("Illegal keyword ({}) found in specification of index for {} of {}".
+            #                                format(index, self.name, self.owner.name))
+            #     return
+            #
+            # # Get indexed item of owner.value
+            # owner_value_item = self.owner.instance_defaults.value[index]
+            #
+            # # Try ASSIGN function
+            # try:
+            #     # Try with assign_param_dict as arg
+            #     assign_function(self._assign_params_dict, context=context)
+            # except TypeError:
+            #     # assign_param_dict as arg for ASSIGN didn't work
+            #     try:
+            #         # Try with dummy dict using owner's value as default
+            #         assign_function({VALUE:owner_value_item})
+            #     except:
+            #         raise OutputStateError("Item {} of value for {} ({}) is not compatible with "
+            #                                "the function specified for the \'{}\' parameter of {} ({})".
+            #                                format(index, self.owner.name, owner_value_item,
+            #                                       ASSIGN, self.name, target_set[ASSIGN]))
+            # # ASSIGN didn't work for some other reason
+            # except:
+            #     raise OutputStateError("Call to \'{}\' function specified for {} of {} is failing".
+            #                            format(ASSIGN, self.name, self.owner.name))
 
-            # Get INDEX
-            try:
-                index = target_set[INDEX]
-            except KeyError:
-                # Assign default value for index if it was not specified
-                index = self.index
-            # Default index is an index keyword (e.g., SEQUENTIAL) so can't evaluate at present
-            if isinstance(index, str):
-                if not index in StandardOutputStates.keywords:
-                    raise OutputStateError("Illegal keyword ({}) found in specification of index for {} of {}".
-                                           format(index, self.name, self.owner.name))
-                return
-
-            # Get indexed item of owner.value
-            owner_value_item = self.owner.instance_defaults.value[index]
-
-            # Try ASSIGN function
-            try:
-                # Try with assign_param_dict as arg
-                assign_function(self._assign_params_dict, context=context)
-            except TypeError:
-                # assign_param_dict as arg for ASSIGN didn't work
-                try:
-                    # Try with dummy dict using owner's value as default
-                    assign_function({VALUE:owner_value_item})
-                except:
-                    raise OutputStateError("Item {} of value for {} ({}) is not compatible with "
-                                           "the function specified for the \'{}\' parameter of {} ({})".
-                                           format(index, self.owner.name, owner_value_item,
-                                                  ASSIGN, self.name, target_set[ASSIGN]))
-            # ASSIGN didn't work for some other reason
-            except:
-                raise OutputStateError("Call to \'{}\' function specified for {} of {} is failing".
-                                       format(ASSIGN, self.name, self.owner.name))
+            # MODIFIED 2/24/18 NEW:
+            # If function is default for class, reassign ASSIGN to FUNCTION
+            if not FUNCTION in target_set or target_set[FUNCTION] == self.paramClassDefaults[FUNCTION]:
+                target_set[FUNCTION] = target_set[ASSIGN]
+                del target_set[ASSIGN]
+                if self.verbosePref or self.owner.verbosePref:
+                    warnings.warn("\'{}\' argument has been deprecated. The specified function will be assigned "
+                                  "as the function of {} for {};  however, you should use \'{} to specify the {} of an {}".
+                                  format(ASSIGN.upper(), target_set[ASSIGN], self.name, self.owner.name, FUNCTION.upper(),
+                                         FUNCTION, OutputState.__name__))
+            else:
+                raise OutputStateError("{} specified in {} argument for {} of {} conflicts with its {} argument. Note "
+                                       "that \'{}\' argument has been deprecated; use \'{} to specify the {} of an {}.".
+                                       format(Function.__name__, ASSIGN.upper(), self.name, self.owner.name,
+                                              FUNCTION.upper(), ASSIGN.upper(), FUNCTION.upper(), FUNCTION,
+                                              OutputState.__name__))
+            # MODIFIED 2/24/18 END
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that State.variable is compatible with the reference_value
@@ -1045,7 +1079,7 @@ class OutputState(State_Base):
 
         # otherwise, OutputState uses specified item(s) of owner's value
         else:
-            fct_var = _parse_output_state_variable(self.owner, self.variable)
+            fct_var = self.variable
 
             # If variable is not specified, check if OutputState has index attribute (for backward compatibility)
             if fct_var is None:
@@ -1070,6 +1104,9 @@ class OutputState(State_Base):
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
+
+    def _parse_arg_variable(self, default_variable):
+        return _parse_output_state_variable(self.owner, default_variable)
 
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
@@ -1194,6 +1231,14 @@ class OutputState(State_Base):
         fct_variable = _parse_output_state_variable(owner, variable)
         fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable==PARAMS_DICT)
         return fct(fct_variable)
+
+    @property
+    def variable(self):
+        return _parse_output_state_variable(self.owner, self._variable)
+
+    @variable.setter
+    def variable(self, variable):
+        self._variable = variable
 
     @property
     def pathway_projections(self):
@@ -1393,8 +1438,9 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                         #    - need to get assign function
                         #    - can't call its _assign_params_dict,
                         #          so create dummy with VALUE (which is what is used by default) to owner's value)
-                        function = _parse_output_state_function(output_state[PARAMS][ASSIGN])
-                        output_state_value = function({VALUE:owner_value[index]})
+                        function = _parse_output_state_function(owner, output_state[NAME], output_state[PARAMS][ASSIGN])
+                        # output_state_value = function(_parse_output_state_variable({VALUE:owner_value[index]}))
+                        output_state_value = function(output_state[VARIABLE])
                         # MODIFIED 2/2/18 END
                     else:
                         output_state_value = owner_value[index]
@@ -1586,12 +1632,12 @@ class StandardOutputStates():
         return [item[INDEX] for item in self.data]
 
 
-def  _parse_output_state_variable(owner, variable):
+def  _parse_output_state_variable(owner, variable, output_state_name=None):
     from psyneulink.components.mechanisms.mechanism import Mechanism_Base
     # if isinstance(variable, (type(None), Mechanism_Base.MechParamsDict)):
     if isinstance(variable, (type(None), dict)):
         return variable
-    elif variable == PARAMS_DICT:
+    elif isinstance(variable, str) and variable == PARAMS_DICT:
         return owner._params_dict
     else:
         fct_variable = []
@@ -1609,7 +1655,9 @@ def  _parse_output_state_variable(owner, variable):
         else:
             raise OutputStateError("\'{}\' entry for {} specification dictionary of {} ({}) must be "
                                    "numeric or a list of {} attribute names".
-                                   format(VARIABLE.upper(), OutputState.__name__, owner.name, variable,
+                                   format(VARIABLE.upper(),
+                                          output_state_name or OutputState.__name__,
+                                          owner.name, variable,
                                           owner.__class__.__name__))
         return fct_variable
 
