@@ -8518,7 +8518,7 @@ COMMENT
         """Validates that variable is 1d array
         """
         if len(np.atleast_2d(variable)) != 1:
-            raise FunctionError("Variable for {} must be a 1d np.array or list of numbers".format(self.name))
+            raise FunctionError("Variable for {} must contain a single array or list of numbers".format(self.name))
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
