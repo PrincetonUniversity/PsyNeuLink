@@ -1041,35 +1041,32 @@ class OutputState(State_Base):
         # variable is passed to OutputState by _instantiate_function for OutputState
         if variable is not None:
             assert INITIALIZING in context
-            return self.function(variable, runtime_params, context)
+            fct_var = variable
 
-        # otherwise, OutputState used specified item(s) of owner's value
+        # otherwise, OutputState uses specified item(s) of owner's value
         else:
-            # Most common case is OutputState has index, so assume that for efficiency
-            try:
-                # Get indexed item of owner's value
-                owner_val = self.owner.value[self.index]
-            except IndexError:
-                # Index is ALL, so use owner's entire value
-                if self.index is ALL:
-                    owner_val = self.owner.value
-                else:
-                    raise IndexError
+            fct_var = _parse_output_state_variable(self.owner, self.variable)
 
-            # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
-            #                      so there is no need to use their value (as do InputStates)
-            self.function_value = self.function(variable=owner_val,
-                                                params=runtime_params,
-                                                context=context)
+            # If variable is not specified, check if OutputState has index attribute (for backward compatibility)
+            if fct_var is None:
+                try:
+                    # Get indexed item of owner's value
+                    fct_var = self.owner.value[self.index]
+                except IndexError:
+                    # Index is ALL, so use owner's entire value
+                    if self.index is ALL:
+                        fct_var = self.owner.value
+                    else:
+                        raise IndexError
+                except AttributeError:
+                    raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
+                                           format(self.name, self.owner.name))
 
-            if self.assign is None:
-                return self.function_value
-            else:
-                # # MODIFIED 2/22/18 OLD:
-                # return type_match(self.assign(owner_val), type(value))
-                # MODIFIED 2/22/18 NEW:
-                return type_match(self.assign(self._assign_params_dict), type(self.function_value))
-                # MODIFIED 2/22/18 END
+        # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
+        #                      so there is no need to use their value (as do InputStates)
+        return self.function(variable=fct_var,
+                             params=runtime_params,
+                             context=context)
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
@@ -1291,13 +1288,76 @@ def _instantiate_output_states(owner, output_states=None, context=None):
             output_state = _parse_state_spec(state_type=OutputState, owner=owner, state_spec=output_state)
 
             # Default is PRIMARY
-            index = PRIMARY
-            output_state_value = owner_value[index]
+            index = None
+            output_state_value = owner_value[PRIMARY]
 
-            # OutputState object, so get its index attribute
+            # # MODIFIED 2/24/18 OLD:
+            # # OutputState object, so get its index attribute
+            # if isinstance(output_state, OutputState):
+            #     index = output_state.index
+            #     output_state_value = owner_value[index]
+            #
+            # # OutputState specification dictionary, so get attributes
+            # elif isinstance(output_state, dict):
+            #
+            #     # If OutputState's name matches the name entry of a dict in standard_output_states,
+            #     #    use the named Standard OutputState
+            #     if output_state[NAME] and hasattr(owner, STANDARD_OUTPUT_STATES):
+            #         std_output_state = owner.standard_output_states.get_state_dict(output_state[NAME])
+            #         if std_output_state is not None:
+            #             # If any params were specified for the OutputState, add them to std_output_state
+            #             if PARAMS in output_state and output_state[PARAMS] is not None:
+            #                 std_output_state.update(output_state[PARAMS])
+            #             output_states[i] = std_output_state
+            #
+            #     if output_state[PARAMS]:
+            #         # If OutputState's index is specified, use it
+            #         if INDEX in output_state[PARAMS]:
+            #             index = output_state[PARAMS][INDEX]
+            #             output_state_value = owner_value[index]
+            #
+            #         # FIX:   FOLLOWING IS INCORRECT, AS ASSIGN MUST USE THE VALUE OF THE OutputState's FUNCTION,
+            #         # FIX:   WHICH HASN'T BEEN ASSIGNED YET. - SO JUST RETURN THE INDEXED VALUE OF Owner.value
+            #         # # MODIFIED 2/22/18 OLD:
+            #         # If OutputState's assign function is specified, use it to determine OutputState's value
+            #         if ASSIGN in output_state[PARAMS]:
+            #             # # MODIFIED 2/2/18 OLD:
+            #             # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index], context=context)
+            #             # MODIFIED 2/2/18 NEW:
+            #             # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index])
+            #             # # MODIFIED 2/22/18 NEWER:
+            #             # output_state_value = output_state[PARAMS][ASSIGN](owner._assign_params_dict)
+            #             # # MODIFIED 2/23/18 NEWEST:
+            #             # Since OutputState doesn't exist yet,
+            #             #    - need to get assign function
+            #             #    - can't call its _assign_params_dict,
+            #             #          so create dummy with VALUE (which is what is used by default) to owner's value)
+            #             function = _parse_output_state_function(output_state[PARAMS][ASSIGN])
+            #             output_state_value = function({VALUE:owner_value[index]})
+            #             # MODIFIED 2/2/18 END
+            #         else:
+            #             output_state_value = owner_value[index]
+            #         # MODIFIED 2/22/18 END
+            #
+            # else:
+            #     if not isinstance(output_state, str):
+            #         raise OutputStateError("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}"
+            #                                .format(output_state, owner.name))
+            # MODIFIED 2/24/18 NEW:
+            # OutputState object
             if isinstance(output_state, OutputState):
-                index = output_state.index
-                output_state_value = owner_value[index]
+                # If it has an index attribute, use that
+                if hasattr(output_state, INDEX):
+                    index = output_state.index
+                    output_state_value = owner_value[index]
+
+                # Otherwise, use its value
+                # FIX: EXECUTE OUTPUT_STATE FUNCTION TO GET ITS VALUE HERE, OR JUST TRUST THAT HAS BEEN DONE?
+                else:
+                    if output_state.value is None:
+                        output_state_value = output_state.function()
+                    else:
+                        output_state_value = output_state.value
 
             # OutputState specification dictionary, so get attributes
             elif isinstance(output_state, dict):
@@ -1313,10 +1373,9 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                         output_states[i] = std_output_state
 
                 if output_state[PARAMS]:
-                    # If OutputState's index is specified, use it
+                    # If OutputState's index is specified, get it
                     if INDEX in output_state[PARAMS]:
                         index = output_state[PARAMS][INDEX]
-                        output_state_value = owner_value[index]
 
                     # FIX:   FOLLOWING IS INCORRECT, AS ASSIGN MUST USE THE VALUE OF THE OutputState's FUNCTION,
                     # FIX:   WHICH HASN'T BEEN ASSIGNED YET. - SO JUST RETURN THE INDEXED VALUE OF Owner.value
@@ -1345,6 +1404,8 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                 if not isinstance(output_state, str):
                     raise OutputStateError("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}"
                                            .format(output_state, owner.name))
+            # MODIFIED 2/24/18 END
+
 
             reference_value.append(output_state_value)
 
