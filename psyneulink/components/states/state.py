@@ -2018,7 +2018,7 @@ class State_Base(State):
         return False
 
     @staticmethod
-    def _get_state_function_value(function, variable):
+    def _get_state_function_value(owner, function, variable):
         """Execute the function of a State and return its value
 
         This is a stub, that a State subclass can override to treat execution of its function in a State-specific manner
@@ -2811,7 +2811,7 @@ def _parse_state_spec(state_type=None,
         else:
             state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
 
-    # get the value spec value from the spec function if it exists,
+    # get the State's value from the spec function if it exists,
     # otherwise we can assume there is a default function that does not
     # affect the shape, so it matches variable
     # FIX: JDC 2/21/18 PROBLEM IS THAT, IF IT IS AN InputState, THEN EITHER update MUST BE CALLED
@@ -2823,7 +2823,7 @@ def _parse_state_spec(state_type=None,
             # # MODIFIED 2/21/18 OLD [KM]:
             # spec_function_value = spec_function.execute(state_dict[VARIABLE])
             # MODIFIED 2/21/18 NEW [JDC]:
-            spec_function_value = state_type._get_state_function_value(spec_function, state_dict[VARIABLE])
+            spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
             # MODIFIED 2/21/18 END
         elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
             try:
@@ -2833,10 +2833,10 @@ def _parse_state_spec(state_type=None,
             # # MODIFIED 2/21/18 OLD [KM]:
             # spec_function_value = spec_function.execute(state_dict[VARIABLE])
             # MODIFIED 2/21/18 NEW [JDC]:
-            spec_function_value = state_type._get_state_function_value(spec_function, state_dict[VARIABLE])
+            spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
             # MODIFIED 2/21/18 END
         else:
-            raise StateError('state_spec value for FUNCTION ({0}) must be a Function class or instance'.
+            raise StateError('state_spec value for FUNCTION ({0}) must be a Function class or instance of one'.
                              format(spec_function))
     except (KeyError, TypeError):
         spec_function_value = state_dict[VARIABLE]
@@ -2844,6 +2844,7 @@ def _parse_state_spec(state_type=None,
     # Assign value based on variable if not specified
     if state_dict[VALUE] is None:
         state_dict[VALUE] = spec_function_value
+    # Otherwise, make sure value returned by spec function is same as one specified for State's value
     else:
         if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
             raise StateError(

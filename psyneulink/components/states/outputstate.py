@@ -537,6 +537,7 @@ Class Reference
 """
 
 import numbers
+import warnings
 
 import numpy as np
 import typecheck as tc
@@ -547,8 +548,9 @@ from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.keywords import ALL, ASSIGN, COMMAND_LINE, FUNCTION, FUNCTION_PARAMS, GATING_SIGNAL, \
     INDEX, INITIALIZING, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MEAN, MECHANISM_VALUE, MEDIAN, NAME, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER, PARAMS, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
-    RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, VARIANCE
+    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, \
+    PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, \
+    VALUE, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match
@@ -592,13 +594,6 @@ standard_output_states = [{NAME: RESULT},
                           {NAME: MECHANISM_VALUE,
                            INDEX: ALL}
                           ]
-
-# Keywords for ASSIGN params dict:
-SELF_VARIABLE = 'SELF_VARIABLE'
-SELF_VALUE = 'SELF_VALUE'
-OWNER_VARIABLE = 'OWNER_VARIABLE'
-OWNER_VALUE = 'OWNER_VALUE'
-INPUT_STATE_VARIABLES = 'INPUT_STATE_VARIABLES'
 
 
 class OutputStateError(Exception):
@@ -878,10 +873,6 @@ class OutputState(State_Base):
 
         Note:
         * This method is called only if the parameterValidationPref is True
-
-        :param variable: (anything but a dict) - variable to be validated:
-        :param context: (str)
-        :return none:
         """
         variable = self._update_variable(super(OutputState, self)._validate_variable(variable, context))
 
@@ -923,13 +914,11 @@ class OutputState(State_Base):
                                            format(INDEX, self.name, target_set[INDEX], len(self.owner.instance_defaults.value),
                                                   self.owner.name))
 
-        # IMPLEMENT: VALIDATE THAT ASSIGN FUNCTION ACCEPTS VALUE CONSISTENT WITH
-        #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
         if ASSIGN in target_set and target_set[ASSIGN] is not None:
 
             try:
                 # Get the ASSIGN function
-                assign_function = _get_assign_function(target_set[ASSIGN])
+                assign_function = _parse_output_state_function(self.owner, self.name, target_set[ASSIGN])
             except:
                 raise OutputStateError("Unable to parse specification of \'{}\' function for {} of {}".
                                        format(ASSIGN, self.name, self.owner.name))
@@ -980,6 +969,11 @@ class OutputState(State_Base):
                                    "with its expected format ({})".
                                    format(name, self.componentName, self.owner.name, self.instance_defaults.variable, reference_value))
 
+    def _instantiate_function(self, context=None):
+        """Parse variable specification and instantiate lambda function that passes it to specified function
+        """
+        super()._instantiate_function(context=context)
+
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate assign function
         """
@@ -987,7 +981,7 @@ class OutputState(State_Base):
 
         # If ASSIGN is specified as a Function or other callable object, assume it takes only a single argument,
         #    and instantiate it as a lambda function that is called with OutputState's value as its argument
-        self.assign = _get_assign_function(self.assign)
+        self.assign = _parse_output_state_function(self.assign)
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -1108,7 +1102,12 @@ class OutputState(State_Base):
         state_spec = state_specific_spec
 
         if isinstance(state_specific_spec, dict):
+            # MODIFIED 2/23/18 OLD:
             return None, state_specific_spec
+            # MODIFIED 2/23/18 NEW:
+            # # CHECK IF FUNCTION IS IN state_specific_spec
+            # # CHECK IF VARIABLE IS IN state_dict (ERROR IF IT IS A DICT AND THERE IS NO FCT IN state_specific_spec)
+            # MODIFIED 2/23/18 END
 
         elif isinstance(state_specific_spec, ProjectionTuple):
             # MODIFIED 11/25/17 NEW:
@@ -1185,6 +1184,14 @@ class OutputState(State_Base):
 
         return state_spec, params_dict
 
+    @staticmethod
+    def _get_state_function_value(owner, function, variable):
+        # -- CALL TO GET DEFAULT VALUE AND RETURN THAT (CAN'T USE VARIABLE SINCE DON'T KNOW MECH YET)
+        #      THOUGH COULD PASS IN OWNER TO DETERMINE IT
+        fct_variable = _parse_output_state_variable(owner, variable)
+        fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable==PARAMS_DICT)
+        return fct(fct_variable)
+
     @property
     def pathway_projections(self):
         return self.efferents
@@ -1193,28 +1200,28 @@ class OutputState(State_Base):
     def pathway_projections(self, assignment):
         self.efferents = assignment
 
-    @property
-    def _assign_params_dict(self):
-        try:
-            value = self.function_value
-        except AttributeError:
-            value = self.variable
-        params_dict = {
-            # SELF:self,
-            # OWNER:self.owner,
-            VARIABLE:self.variable,
-            VALUE: value,
-            OWNER_VARIABLE: self.owner.variable,
-            OWNER_VALUE: self.owner.value,
-            INPUT_STATE_VARIABLES: [input_state.variable for input_state in self.owner.input_states]
-        }
-        params_dict.update(self.owner.user_params)
-        del params_dict[FUNCTION]
-        del params_dict[FUNCTION_PARAMS]
-        del params_dict[INPUT_STATES]
-        del params_dict[OUTPUT_STATES]
-        params_dict.update(self.owner.function_params)
-        return params_dict
+    # @property
+    # def _assign_params_dict(self):
+    #     try:
+    #         value = self.function_value
+    #     except AttributeError:
+    #         value = self.variable
+    #     params_dict = {
+    #         # SELF:self,
+    #         # OWNER:self.owner,
+    #         VARIABLE:self.variable,
+    #         VALUE: value,
+    #         OWNER_VARIABLE: self.owner.variable,
+    #         OWNER_VALUE: self.owner.value,
+    #         INPUT_STATE_VARIABLES: [input_state.variable for input_state in self.owner.input_states]
+    #     }
+    #     params_dict.update(self.owner.user_params)
+    #     del params_dict[FUNCTION]
+    #     del params_dict[FUNCTION_PARAMS]
+    #     del params_dict[INPUT_STATES]
+    #     del params_dict[OUTPUT_STATES]
+    #     params_dict.update(self.owner.function_params)
+    #     return params_dict
 
     # For backward compatibility
     @property
@@ -1344,7 +1351,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                         #    - need to get assign function
                         #    - can't call its _assign_params_dict,
                         #          so create dummy with VALUE (which is what is used by default) to owner's value)
-                        function = _get_assign_function(output_state[PARAMS][ASSIGN])
+                        function = _parse_output_state_function(output_state[PARAMS][ASSIGN])
                         output_state_value = function({VALUE:owner_value[index]})
                         # MODIFIED 2/2/18 END
                     else:
@@ -1535,35 +1542,78 @@ class StandardOutputStates():
         return [item[INDEX] for item in self.data]
 
 
-def _get_assign_function(assign):
-
-        # # OLD:
-        # if isinstance(self.assign, Function):
-        #     f = self.assign.function
-        # elif isinstance(self.assign, type):
-        #     if issubclass(self.assign, Function):
-        #         f = self.assign().function
-        #     elif isinstance(self.assign, function_type):
-        #         f = self.assign
-        # else:
-        #     return
-        #
-        # self.assign = lambda x : f(x[VALUE])
-        # # END OLD
-
-        if isinstance(assign, Function):
-            f = assign.function
-        elif isinstance(assign, type):
-            if issubclass(assign, Function):
-                f = assign().function
-        # elif isinstance(assign, function_type):
-        #     f = assign
-        elif isinstance(assign, method_type):
-            f = assign
+def  _parse_output_state_variable(owner, variable):
+        if variable == PARAMS_DICT:
+            func_variable = owner._params_dict
         else:
-            return assign
+            func_variable = []
+            if isinstance(variable, list):
+                for var_spec in variable:
+                    if isinstance(var_spec, tuple):
+                        attrib, index = var_spec
+                        attrib_val = owner._params_dict[attrib][index]
+                    else:
+                        attrib = var_spec
+                        attrib_val = owner._params_dict[attrib]
+                    func_variable.append(attrib_val)
+            elif is_numeric(variable):
+                func_variable = variable
+            else:
+                raise OutputStateError("\'{}\' entry for {} specification dictionary of {} ({}) must be "
+                                       "numeric or a list of {} attribute names".
+                                       format(VARIABLE.upper(), OutputState.__name__, owner.name, variable,
+                                              owner.__class__.__name__))
+        return func_variable
 
-        return lambda x : f(x[VALUE])
+
+def _parse_output_state_function(owner, output_state_name, function, params_dict_as_variable=False):
+    """ Parse specification of function as Function, Function class, Function.function, function_type or method_type.
+
+    If params_dict_as_variable is True, and function is a Function, check whether it allows params_dict as variable;
+    if it is and does, leave as is, other
+    wrap in lambda function that provides first item of OutputState's
+    value
+    as the functions argument.
+    """
+
+    # # MODIFIED 2/24/18 OLD:
+    # if isinstance(function, function_type):
+    #     return function
+    # elif isinstance(function, Function):
+    #     fct = function.function
+    # elif isinstance(function, type):
+    #     if issubclass(function, Function):
+    #         func = function().function
+    # elif isinstance(function, method_type):
+    #     fct = function
+    # elif not callable(function):
+    #     raise OutputStateError("Specification of \'{}\' for {} of {} must be a {}, the class or function of one "
+    #                            "or a callable object (Python function or method)".
+    #                            format(FUNCTION.upper(), output_state.name, owner.name, Function.__name__))
+    # MODIFIED 2/24/18 NEW:
+    if isinstance(function, (function_type, method_type)):
+        return function
+    if isinstance(function, type) and issubclass(function, Function):
+        function = function()
+    if isinstance(function, Function):
+        fct = function.function
+    else:
+        raise OutputStateError("Specification of \'{}\' for {} of {} must be a {}, the class or function of one "
+                               "or a callable object (Python function or method)".
+                               format(FUNCTION.upper(), output_state_name, owner.name, Function.__name__))
+    if params_dict_as_variable:
+        try:
+            if function.params_dict_as_variable is True:
+                return lambda x : fct(x[OWNER_VALUE][0])
+        except AttributeError:
+            if owner.verbosePref is True:
+                warnings.warn("{} specified as {} is incompatible with {} specified as {} for {} of {}; "
+                              "1st item of {}'s {} attribute will be used instead".
+                              format(PARAMS_DICT.upper(), VARIABLE.upper(), function.name, FUNCTION.upper(),
+                                     OutputState.name, owner.name, owner.name, VALUE))
+
+    return fct
+    # MODIFIED 2/24/18 END
 
 
 def make_readonly_property(val):

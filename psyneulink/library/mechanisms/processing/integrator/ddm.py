@@ -297,9 +297,9 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates, OWNER_VALUE
+from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, ASSIGN, FUNCTION, FUNCTION_PARAMS, \
-    INDEX, INITIALIZING, NAME, OUTPUT_STATES, VARIABLE, VALUE, kwPreferenceSetName
+    INDEX, INITIALIZING, NAME, OUTPUT_STATES,  VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, object_has_single_value

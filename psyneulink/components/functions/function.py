@@ -1001,7 +1001,7 @@ class UserDefinedFunction(Function_Base):
 
     .. note::
         Be sure to match the **default_variable** argument of the `UserDefinedFunction` with the **default_variable**
-        of the mechanism. (In this example, for `myMech`, `size = 3` is equivalent to `default_variable = [[0, 0, 0]]`.)
+        of the Mechanism. (In this example, for `myMech`, `size = 3` is equivalent to `default_variable = [[0, 0, 0]]`.)
 
     Custom functions can be as elaborate as desired, and can even include PsyNeuLink functions indirectly, such as::
 
