@@ -1255,15 +1255,9 @@ class State_Base(State):
                                        self.owner.name))
 
     def _instantiate_function(self, context=None):
-        """Insure that output of function (self.value) is compatible with its input (self.instance_defaults.variable)
-
-        This constraint reflects the role of State functions:
-            they simply update the value of the State;
-            accordingly, their variable and value must be compatible
-        """
 
         var_is_matrix = False
-        # If variable is a matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
+        # If variable is a 2d array or matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
         #     it needs to be embedded in a list so that it is properly handled by LinearCombination
         #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
         # Notes:

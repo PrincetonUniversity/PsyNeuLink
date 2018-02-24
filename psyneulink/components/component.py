@@ -2685,7 +2685,15 @@ class Component(object):
         #    assign function_object, function_params dict, and function's parameters from any ParameterStates
         from psyneulink.components.functions.function import Function
         if not isinstance(self, Function):
-            self.function_object = self.function.__self__
+            # # MODIFIED 2/24/18 OLD:
+            # self.function_object = self.function.__self__
+            # MODIFIED 2/24/18 NEW:
+            if isinstance(self.function, Function):
+                self.function_object = self.function
+                self.function = self.function_object.function
+            else:
+                self.function_object = self.function.__self__
+            # MODIFIED 2/24/18 END
             if not self.function_object.owner:
                 self.function_object.owner = self
             elif self.function_object.owner != self:
