@@ -1102,9 +1102,13 @@ class OutputState(State_Base):
 
         # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
         #                      so there is no need to use their value (as do InputStates)
-        return self.function(variable=fct_var,
+        value = self.function(variable=fct_var,
                              params=runtime_params,
                              context=context)
+        return value
+        # return self.function(variable=fct_var,
+        #                      params=runtime_params,
+        #                      context=context)
 
 
     def _get_primary_state(self, mechanism):
@@ -1358,11 +1362,6 @@ def _instantiate_output_states(owner, output_states=None, context=None):
             from psyneulink.components.states.state import _parse_state_spec
             output_state = _parse_state_spec(state_type=OutputState, owner=owner, state_spec=output_state)
 
-            # Default is PRIMARY
-            index = None
-            output_state_value = owner_value[PRIMARY]
-
-           # MODIFIED 2/24/18 NEW:
             # OutputState object
             if isinstance(output_state, OutputState):
                 if output_state.value is None:
@@ -1382,25 +1381,21 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                     std_output_state = owner.standard_output_states.get_state_dict(output_state[NAME])
                     if std_output_state is not None:
                         _convert_assign_and_index(std_output_state)
-                        # output_states[i] = std_output_state
                         recursive_update(output_state, std_output_state, non_destructive=True)
 
                 if FUNCTION in output_state and output_state[FUNCTION] is not None:
-                    # function = _parse_output_state_function(owner, output_state[NAME], output_state[FUNCTION])
-                    # output_state_value = function(output_state[VARIABLE])
                     output_state_value = OutputState._get_state_function_value(owner,
                                                                                output_state[FUNCTION],
                                                                                output_state[VARIABLE])
                 else:
-                    # output_state_value = owner_value[index]
                     output_state_value = _parse_output_state_variable(owner, output_state[VARIABLE])
 
             else:
-                assert False, 'OutputState spec remained a string in _instantiate_output_states'
                 if not isinstance(output_state, str):
                     raise OutputStateError("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}"
                                            .format(output_state, owner.name))
-            # MODIFIED 2/24/18 END
+                else:
+                    assert False, 'OutputState spec remained a string in _instantiate_output_states'
 
             reference_value.append(output_state_value)
 

@@ -520,7 +520,7 @@ def recursive_update(d, u, non_destructive=False):
             r = recursive_update(d.get(k, {}), v)
             d[k] = r
         else:
-            if destructive or d[k] is None:
+            if destructive or k in d and d[k] is None:
                 d[k] = u[k]
     return d
 
