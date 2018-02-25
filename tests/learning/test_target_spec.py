@@ -1,8 +1,10 @@
 import numpy as np
+import pytest
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 from psyneulink.globals.keywords import ENABLED
+from psyneulink.globals.environment import RunError
 from psyneulink.components.functions.function import NormalDist
 
 class TestSimpleLearningPathway:
@@ -13,12 +15,10 @@ class TestSimpleLearningPathway:
 
         LP = Process(name="learning-process",
                      pathway=[A, B],
-                     # target=[3.0],
                      learning=ENABLED)
 
         S = System(name="learning-system",
                    processes=[LP],
-                   # targets={B: [4.0]}
                    )
 
         # S.run(inputs={A: 1.0},
@@ -37,7 +37,6 @@ class TestSimpleLearningPathway:
 
         LP = Process(name="learning-process",
                      pathway=[A, B],
-                     # target=[3.0],
                      learning=ENABLED)
 
         S = System(name="learning-system",
@@ -87,12 +86,10 @@ class TestSimpleLearningPathway:
 
         LP = Process(name="learning-process",
                      pathway=[A, B],
-                     # target=[3.0],
                      learning=ENABLED)
 
         S = System(name="learning-system",
                    processes=[LP],
-                   # targets={B: [4.0]}
                    )
 
         S.run(inputs={A: 1.0},
@@ -130,7 +127,6 @@ class TestMultilayerLearning:
         C = TransferMechanism(name="multilayer-mech-C")
         P = Process(name="multilayer-process",
                      pathway=[A, B, C],
-                     # target=[3.0],
                      learning=ENABLED)
 
         S = System(name="learning-system",
@@ -276,7 +272,6 @@ class TestDivergingLearningPathways:
               targets={C: [[2.0]],
                        E: target_function})
 
-
 class TestConvergingLearningPathways:
 
     def test_dict_target_spec(self):
@@ -335,3 +330,117 @@ class TestConvergingLearningPathways:
         S.run(inputs={A: 1.0,
                       D: 1.0},
               targets={C: [[2.0, 3.0]]})
+
+class TestInvalidTargetSpecs:
+
+    def test_3_targets_4_inputs(self):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B")
+
+        LP = Process(name="learning-process",
+                     pathway=[A, B],
+                     learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[LP],
+                   )
+        with pytest.raises(RunError) as error_text:
+            S.run(inputs={A: [[[1.0]], [[2.0]], [[3.0]], [[4.0]]]},
+                  targets={B: [[1.0], [2.0], [3.0]]})
+
+        assert 'Number of target values specified (3) for each learning sequence' in str(error_text.value) and \
+               'must equal the number of input values specified (4)' in str(error_text.value)
+
+    def test_2_target_mechanisms_1_dict_entry(self):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B")
+        C = TransferMechanism(name="learning-process-mech-C")
+
+        LP = Process(name="learning-process",
+                     pathway=[A, B],
+                     learning=ENABLED)
+        LP2 = Process(name="learning-process2",
+                     pathway=[A, C],
+                     learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[LP, LP2],
+                   )
+        with pytest.raises(RunError) as error_text:
+
+            S.run(inputs={A: [[[1.0]]]},
+                  targets={B: [[1.0]]})
+
+        assert 'missing from specification of targets for run' in str(error_text.value)
+
+    def test_1_target_mechanisms_2_dict_entries(self):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B")
+        C = TransferMechanism(name="learning-process-mech-C")
+
+        LP = Process(name="learning-process",
+                     pathway=[A, B, C],
+                     learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[LP],
+                   )
+
+        with pytest.raises(RunError) as error_text:
+            S.run(inputs={A: [[[1.0]]]},
+                  targets={B: [[1.0]],
+                           C: [[1.0]]})
+
+        assert 'does not project to a target Mechanism in' in str(error_text.value)
+
+    def test_2_target_mechanisms_list_spec(self):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B")
+        C = TransferMechanism(name="learning-process-mech-C")
+
+        LP = Process(name="learning-process",
+                     pathway=[A, B],
+                     learning=ENABLED)
+        LP2 = Process(name="learning-process2",
+                     pathway=[A, C],
+                     learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[LP, LP2],
+                   )
+        with pytest.raises(RunError) as error_text:
+
+            S.run(inputs={A: [[[1.0]]]},
+                  targets=[[1.0]])
+
+        assert 'Target values for' in str(error_text.value) and \
+               'must be specified in a dictionary' in str(error_text.value)
+
+    def test_2_target_mechanisms_fn_spec(self):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B")
+        C = TransferMechanism(name="learning-process-mech-C")
+
+        LP = Process(name="learning-process",
+                     pathway=[A, B],
+                     learning=ENABLED)
+        LP2 = Process(name="learning-process2",
+                     pathway=[A, C],
+                     learning=ENABLED)
+
+        S = System(name="learning-system",
+                   processes=[LP, LP2],
+                   )
+
+        def target_function():
+            val_1 = NormalDist(mean=3.0).function()
+            val_2 = NormalDist(mean=3.0).function()
+            return [val_1, val_2]
+
+        with pytest.raises(RunError) as error_text:
+
+            S.run(inputs={A: [[[1.0]]]},
+                  targets=target_function)
+
+        assert 'Target values for' in str(error_text.value) and \
+               'must be specified in a dictionary' in str(error_text.value)
