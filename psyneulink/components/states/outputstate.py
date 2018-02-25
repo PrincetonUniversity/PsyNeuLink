@@ -1102,9 +1102,10 @@ class OutputState(State_Base):
 
         # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
         #                      so there is no need to use their value (as do InputStates)
-        return self.function(variable=fct_var,
+        return type_match(self.function(variable=fct_var,
                              params=runtime_params,
-                             context=context)
+                             context=context), type(value))
+
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
