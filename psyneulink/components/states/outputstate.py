@@ -584,13 +584,13 @@ class OUTPUTS():
 
 standard_output_states = [{NAME: RESULT},
                           {NAME:MEAN,
-                           ASSIGN:lambda x: np.mean(x[VALUE])},
+                           ASSIGN:lambda x: np.mean(x)},
                           {NAME:MEDIAN,
-                           ASSIGN:lambda x: np.median(x[VALUE])},
+                           ASSIGN:lambda x: np.median(x)},
                           {NAME:STANDARD_DEVIATION,
-                           ASSIGN:lambda x: np.std(x[VALUE])},
+                           ASSIGN:lambda x: np.std(x)},
                           {NAME:VARIANCE,
-                           ASSIGN:lambda x: np.var(x[VALUE])},
+                           ASSIGN:lambda x: np.var(x)},
                           {NAME: MECHANISM_VALUE,
                            INDEX: ALL}
                           ]
@@ -916,8 +916,11 @@ class OutputState(State_Base):
             #    - can't yet determine relationship to default_value
             #    - can't yet evaluate assign function (below)
             # so just return
-            if target_set[INDEX] in {ALL, SEQUENTIAL}:
+            if target_set[INDEX] is SEQUENTIAL:
                 return
+            elif target_set[INDEX] is ALL:
+                target_set[VARIABLE] = [OWNER_VALUE]
+                del target_set[INDEX]
             else:
                 try:
                     self.owner.instance_defaults.value[target_set[INDEX]]
@@ -928,6 +931,7 @@ class OutputState(State_Base):
                                                   len(self.owner.instance_defaults.value),
                                                   self.owner.name))
                 target_set[VARIABLE] = [(OWNER_VALUE, target_set[INDEX])]
+                del target_set[INDEX]
 
         if ASSIGN in target_set and target_set[ASSIGN] is not None:
 
@@ -1241,6 +1245,27 @@ class OutputState(State_Base):
         self._variable = variable
 
     @property
+    def owner_value_index(self):
+        """Return index or indices of items of owner.value for any to which OutputState's variable has been assigned
+        If the OutputState has been assigned to:
+        - the entire owner value (i.e., OWNER_VALUE on its own, not in a tuple)
+            return owner.value
+        - a single item of owner.value (i.e.,  owner.value==[(OWNER,index)])
+            return the index of the item
+        - more than one, return a list of indices
+        - to no items of owner.value (but possibly other params), return None
+        """
+        if OWNER_VALUE in self._variable:
+            return self.owner.value
+        indices = [item[1] for item in self._variable if isinstance(item, tuple) and OWNER_VALUE in item]
+        if len(indices)==1:
+            return indices[0]
+        elif indices:
+            return indices
+        else:
+            return None
+
+    @property
     def pathway_projections(self):
         return self.efferents
 
@@ -1336,73 +1361,13 @@ def _instantiate_output_states(owner, output_states=None, context=None):
             index = None
             output_state_value = owner_value[PRIMARY]
 
-            # # MODIFIED 2/24/18 OLD:
-            # # OutputState object, so get its index attribute
-            # if isinstance(output_state, OutputState):
-            #     index = output_state.index
-            #     output_state_value = owner_value[index]
-            #
-            # # OutputState specification dictionary, so get attributes
-            # elif isinstance(output_state, dict):
-            #
-            #     # If OutputState's name matches the name entry of a dict in standard_output_states,
-            #     #    use the named Standard OutputState
-            #     if output_state[NAME] and hasattr(owner, STANDARD_OUTPUT_STATES):
-            #         std_output_state = owner.standard_output_states.get_state_dict(output_state[NAME])
-            #         if std_output_state is not None:
-            #             # If any params were specified for the OutputState, add them to std_output_state
-            #             if PARAMS in output_state and output_state[PARAMS] is not None:
-            #                 std_output_state.update(output_state[PARAMS])
-            #             output_states[i] = std_output_state
-            #
-            #     if output_state[PARAMS]:
-            #         # If OutputState's index is specified, use it
-            #         if INDEX in output_state[PARAMS]:
-            #             index = output_state[PARAMS][INDEX]
-            #             output_state_value = owner_value[index]
-            #
-            #         # FIX:   FOLLOWING IS INCORRECT, AS ASSIGN MUST USE THE VALUE OF THE OutputState's FUNCTION,
-            #         # FIX:   WHICH HASN'T BEEN ASSIGNED YET. - SO JUST RETURN THE INDEXED VALUE OF Owner.value
-            #         # # MODIFIED 2/22/18 OLD:
-            #         # If OutputState's assign function is specified, use it to determine OutputState's value
-            #         if ASSIGN in output_state[PARAMS]:
-            #             # # MODIFIED 2/2/18 OLD:
-            #             # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index], context=context)
-            #             # MODIFIED 2/2/18 NEW:
-            #             # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index])
-            #             # # MODIFIED 2/22/18 NEWER:
-            #             # output_state_value = output_state[PARAMS][ASSIGN](owner._assign_params_dict)
-            #             # # MODIFIED 2/23/18 NEWEST:
-            #             # Since OutputState doesn't exist yet,
-            #             #    - need to get assign function
-            #             #    - can't call its _assign_params_dict,
-            #             #          so create dummy with VALUE (which is what is used by default) to owner's value)
-            #             function = _parse_output_state_function(output_state[PARAMS][ASSIGN])
-            #             output_state_value = function({VALUE:owner_value[index]})
-            #             # MODIFIED 2/2/18 END
-            #         else:
-            #             output_state_value = owner_value[index]
-            #         # MODIFIED 2/22/18 END
-            #
-            # else:
-            #     if not isinstance(output_state, str):
-            #         raise OutputStateError("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}"
-            #                                .format(output_state, owner.name))
-            # MODIFIED 2/24/18 NEW:
+           # MODIFIED 2/24/18 NEW:
             # OutputState object
             if isinstance(output_state, OutputState):
-                # If it has an index attribute, use that
-                if hasattr(output_state, INDEX):
-                    index = output_state.index
-                    output_state_value = owner_value[index]
-
-                # Otherwise, use its value
-                # FIX: EXECUTE OUTPUT_STATE FUNCTION TO GET ITS VALUE HERE, OR JUST TRUST THAT HAS BEEN DONE?
+                if output_state.value is None:
+                    output_state_value = output_state.function()
                 else:
-                    if output_state.value is None:
-                        output_state_value = output_state.function()
-                    else:
-                        output_state_value = output_state.value
+                    output_state_value = output_state.value
 
             # OutputState specification dictionary, so get attributes
             elif isinstance(output_state, dict):
@@ -1424,27 +1389,16 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
                     # FIX:   FOLLOWING IS INCORRECT, AS ASSIGN MUST USE THE VALUE OF THE OutputState's FUNCTION,
                     # FIX:   WHICH HASN'T BEEN ASSIGNED YET. - SO JUST RETURN THE INDEXED VALUE OF Owner.value
-                    # # MODIFIED 2/22/18 OLD:
                     # If OutputState's assign function is specified, use it to determine OutputState's value
                     if ASSIGN in output_state[PARAMS]:
-                        # # MODIFIED 2/2/18 OLD:
-                        # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index], context=context)
-                        # MODIFIED 2/2/18 NEW:
-                        # output_state_value = output_state[PARAMS][ASSIGN](owner_value[index])
-                        # # MODIFIED 2/22/18 NEWER:
-                        # output_state_value = output_state[PARAMS][ASSIGN](owner._assign_params_dict)
-                        # # MODIFIED 2/23/18 NEWEST:
                         # Since OutputState doesn't exist yet,
                         #    - need to get assign function
                         #    - can't call its _assign_params_dict,
                         #          so create dummy with VALUE (which is what is used by default) to owner's value)
                         function = _parse_output_state_function(owner, output_state[NAME], output_state[PARAMS][ASSIGN])
-                        # output_state_value = function(_parse_output_state_variable({VALUE:owner_value[index]}))
                         output_state_value = function(output_state[VARIABLE])
-                        # MODIFIED 2/2/18 END
                     else:
                         output_state_value = owner_value[index]
-                    # MODIFIED 2/22/18 END
 
             else:
                 if not isinstance(output_state, str):
@@ -1579,36 +1533,52 @@ class StandardOutputStates():
                                                        owner.name))
 
             for index, state_dict in zip(indices, self.data):
-                state_dict[INDEX] = index
+                state_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
         # Assign indices sequentially based on order of items in output_state_dicts arg
         elif indices is SEQUENTIAL:
             for index, state_dict in enumerate(self.data):
-                state_dict[INDEX] = index
+                state_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
         # Assign PRIMARY as INDEX for all OutputStates in output_state_dicts that don't already have an index specified
         elif indices is PRIMARY:
             for state_dict in self.data:
                 if INDEX in state_dict:
                     continue
-                state_dict[INDEX] = PRIMARY
-
-        # No indices specification, so assign None to INDEX for all OutputStates in output_state_dicts
-        #  that don't already have an index specified
-        else:
-            for state_dict in self.data:
-                if INDEX in state_dict:
-                    continue
-                state_dict[INDEX] = None
+                state_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
 
 
+
+        # # No indices specification, so assign None to INDEX for all OutputStates in output_state_dicts
+        # #  that don't already have an index specified
+        # else:
+        #     for state_dict in self.data:
+        #         if INDEX in state_dict:
+        #             continue
+        #         state_dict[INDEX] = None
+
+        # Validate all INDEX specification, parse any assigned as ALL, and
         # Add names of each OutputState as property of the owner's class that returns its name string
         for state in self.data:
+            if INDEX in state:
+                if state[INDEX] in ALL:
+                    state.update({VARIABLE:OWNER_VALUE})
+                elif state[INDEX] in PRIMARY:
+                    state_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
+                elif state[INDEX] in SEQUENTIAL:
+                    raise OutputStateError("\'{}\' incorrectly assigned to individual {} in {} of {}.".
+                                           format(SEQUENTIAL.upper(), OutputState.__name__, OUTPUT_STATE.upper(),
+                                                  self.name))
+                del state[INDEX]
             setattr(owner.__class__, state[NAME], make_readonly_property(state[NAME]))
 
         # Add <NAME_INDEX> of each OutputState as property of the owner's class, that returns its index
         for state in self.data:
-            setattr(owner.__class__, state[NAME]+'_INDEX', make_readonly_property(state[INDEX]))
+            if isinstance(state[VARIABLE], tuple):
+                index = state[VARIABLE][1]
+            else:
+                index = state[VARIABLE]
+            setattr(owner.__class__, state[NAME]+'_INDEX', make_readonly_property(index))
 
     @tc.typecheck
     def get_state_dict(self, name:str):
@@ -1634,32 +1604,39 @@ class StandardOutputStates():
 
 def  _parse_output_state_variable(owner, variable, output_state_name=None):
     from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-    # if isinstance(variable, (type(None), Mechanism_Base.MechParamsDict)):
-    if isinstance(variable, (type(None), dict)):
+    if variable is None or is_numeric(variable):
         return variable
-    elif isinstance(variable, str) and variable == PARAMS_DICT:
-        return owner._params_dict
-    else:
-        fct_variable = []
-        if isinstance(variable, list):
-            for var_spec in variable:
-                if isinstance(var_spec, tuple):
-                    attrib, index = var_spec
-                    attrib_val = owner._params_dict[attrib][index]
-                else:
-                    attrib = var_spec
-                    attrib_val = owner._params_dict[attrib]
-                fct_variable.append(attrib_val)
-        elif is_numeric(variable):
-            fct_variable = variable
+
+    if not isinstance(variable, list):
+        variable = [variable]
+
+    fct_variable = []
+    for var_spec in variable:
+        # Specifies a dictionary to be passed as variable
+        if isinstance(var_spec, dict):
+        # if isinstance(var_spec, MechParamsDict):
+            return var_spec
+        # Specifies passing owner's params_dict as variable
+        if isinstance(var_spec, str) and var_spec == PARAMS_DICT:
+            return owner._params_dict
+        if isinstance(var_spec, tuple):
+            # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))
+            attrib, index = var_spec
+            attrib_val = owner._params_dict[attrib][index]
         else:
-            raise OutputStateError("\'{}\' entry for {} specification dictionary of {} ({}) must be "
-                                   "numeric or a list of {} attribute names".
-                                   format(VARIABLE.upper(),
-                                          output_state_name or OutputState.__name__,
-                                          owner.name, variable,
-                                          owner.__class__.__name__))
-        return fct_variable
+            # Owner attribute other than its value
+            attrib = var_spec
+            attrib_val = owner._params_dict[attrib]
+        fct_variable.append(attrib_val)
+
+    if not fct_variable:
+        raise OutputStateError("\'{}\' entry for {} specification dictionary of {} ({}) must be "
+                               "numeric or a list of {} attribute names".
+                               format(VARIABLE.upper(),
+                                      output_state_name or OutputState.__name__,
+                                      owner.name, variable,
+                                      owner.__class__.__name__))
+    return fct_variable
 
 
 def _parse_output_state_function(owner, output_state_name, function, params_dict_as_variable=False):

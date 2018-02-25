@@ -1126,9 +1126,13 @@ class UserDefinedFunction(Function_Base):
 
         # IMPLEMENT: PARSE ARGUMENTS FOR custom_function AND ASSIGN TO user_params
 
-    def function(self,
-                 **kwargs):
-        return self.custom_function(**kwargs)
+    def function(self, **kwargs):
+        try:
+            return self.custom_function(**kwargs)
+        except TypeError:
+            return self.custom_function(kwargs[VARIABLE])
+
+
 
 
 # region **********************************  COMBINATION FUNCTIONS  ****************************************************

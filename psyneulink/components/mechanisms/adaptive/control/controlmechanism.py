@@ -313,7 +313,9 @@ from psyneulink.components.shellclasses import System_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import INDEX, SEQUENTIAL
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTROL, CONTROLLER, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, OBJECTIVE_MECHANISM, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTROL, CONTROLLER, CONTROL_PROJECTION, \
+    CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, \
+    OBJECTIVE_MECHANISM, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -879,8 +881,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.value = self.instance_defaults.value
 
         if control_signal.index is SEQUENTIAL:
-            control_signal.index = len(self.instance_defaults.value) - 1
-        elif not isinstance(control_signal.index, int):
+            control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
+        elif not isinstance(control_signal.owner_value_index, int):
             raise ControlMechanismError(
                 "PROGRAM ERROR: {} attribute of {} for {} is not {} or an int".format(
                     INDEX, ControlSignal.__name__, SEQUENTIAL, self.name
@@ -889,11 +891,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Validate index
         try:
-            self.value[control_signal.index]
+
+            self.value[control_signal.owner_value_index]
         except IndexError:
             raise ControlMechanismError(
-                "Index specified for {} of {} ({}) exceeds the number of items of its {} ({})".format(
-                    ControlSignal.__name__, self.name, control_signal.index, ALLOCATION_POLICY, len(self.value)
+                "Index specified for {} of {} ({}) exceeds the number of items of its {} ({})".
+                    format(ControlSignal.__name__, self.name, control_signal.owner_value_index,
+                           ALLOCATION_POLICY, len(self.value)
                 )
             )
 

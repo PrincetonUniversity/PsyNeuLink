@@ -490,11 +490,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # Validate index
         try:
-            self.gating_policy[gating_signal.index]
+            self.gating_policy[gating_signal.owner_value_index]
         except IndexError:
             raise GatingMechanismError("Index specified for {} of {} ({}) "
                                        "exceeds the number of items of its {} ({})".
-                                       format(GatingSignal.__name__, self.name, gating_signal.index,
+                                       format(GatingSignal.__name__, self.name, gating_signal.owner_value_index,
                                               GATING_POLICY, len(self.gating_policy)))
 
         # Add GatingSignal TO output_states LIST
