@@ -553,7 +553,7 @@ from psyneulink.globals.keywords import ALL, ASSIGN, COMMAND_LINE, FUNCTION, FUN
     VALUE, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match
+from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match, recursive_update
 
 __all__ = [
     'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
@@ -898,7 +898,7 @@ class OutputState(State_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # FIX: 2/24/18 - IF INDEX AND/OR ASSIGN ARE SPECIFIED, MOVE TO VARIABLE AND FUNCTION
-
+        #               REMOVE ONCE MOVED TO _instantiate_output_states
         variable = None
 
         if VARIABLE in target_set:
@@ -1373,40 +1373,34 @@ def _instantiate_output_states(owner, output_states=None, context=None):
             # OutputState specification dictionary, so get attributes
             elif isinstance(output_state, dict):
 
-                # If OutputState's name matches the name entry of a dict in standard_output_states,
-                #    use the named Standard OutputState
+                _convert_assign_and_index(output_state)
+
+                # If OutputState's name matches the name entry of a dict in standard_output_states:
+                #    - use the named Standard OutputState
+                #    - merge initial specifications into std_output_state (giving precedence to user's specs)
                 if output_state[NAME] and hasattr(owner, STANDARD_OUTPUT_STATES):
                     std_output_state = owner.standard_output_states.get_state_dict(output_state[NAME])
                     if std_output_state is not None:
-                        # If any params were specified for the OutputState, add them to std_output_state
-                        if PARAMS in output_state and output_state[PARAMS] is not None:
-                            std_output_state.update(output_state[PARAMS])
-                        output_states[i] = std_output_state
+                        _convert_assign_and_index(std_output_state)
+                        # output_states[i] = std_output_state
+                        recursive_update(output_state, std_output_state, non_destructive=True)
 
-                if output_state[PARAMS]:
-                    # If OutputState's index is specified, get it
-                    if INDEX in output_state[PARAMS]:
-                        index = output_state[PARAMS][INDEX]
-
-                    # FIX:   FOLLOWING IS INCORRECT, AS ASSIGN MUST USE THE VALUE OF THE OutputState's FUNCTION,
-                    # FIX:   WHICH HASN'T BEEN ASSIGNED YET. - SO JUST RETURN THE INDEXED VALUE OF Owner.value
-                    # If OutputState's assign function is specified, use it to determine OutputState's value
-                    if ASSIGN in output_state[PARAMS]:
-                        # Since OutputState doesn't exist yet,
-                        #    - need to get assign function
-                        #    - can't call its _assign_params_dict,
-                        #          so create dummy with VALUE (which is what is used by default) to owner's value)
-                        function = _parse_output_state_function(owner, output_state[NAME], output_state[PARAMS][ASSIGN])
-                        output_state_value = function(output_state[VARIABLE])
-                    else:
-                        output_state_value = owner_value[index]
+                if FUNCTION in output_state and output_state[FUNCTION] is not None:
+                    # function = _parse_output_state_function(owner, output_state[NAME], output_state[FUNCTION])
+                    # output_state_value = function(output_state[VARIABLE])
+                    output_state_value = OutputState._get_state_function_value(owner,
+                                                                               output_state[FUNCTION],
+                                                                               output_state[VARIABLE])
+                else:
+                    # output_state_value = owner_value[index]
+                    output_state_value = _parse_output_state_variable(owner, output_state[VARIABLE])
 
             else:
+                assert False, 'OutputState spec remained a string in _instantiate_output_states'
                 if not isinstance(output_state, str):
                     raise OutputStateError("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}"
                                            .format(output_state, owner.name))
             # MODIFIED 2/24/18 END
-
 
             reference_value.append(output_state_value)
 
@@ -1583,6 +1577,8 @@ class StandardOutputStates():
 
     @tc.typecheck
     def get_state_dict(self, name:str):
+        """Return a copy of the named OutputState dict
+        """
         if next((item for item in self.names if name is item), None):
             # assign dict to owner's output_state list
             return self.data[self.names.index(name)].copy()
@@ -1664,6 +1660,7 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     #     raise OutputStateError("Specification of \'{}\' for {} of {} must be a {}, the class or function of one "
     #                            "or a callable object (Python function or method)".
     #                            format(FUNCTION.upper(), output_state.name, owner.name, Function.__name__))
+
     # MODIFIED 2/24/18 NEW:
     if isinstance(function, (function_type, method_type)):
         return function
@@ -1677,8 +1674,10 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
                                "or a callable object (Python function or method)".
                                format(FUNCTION.upper(), output_state_name, owner.name, Function.__name__))
     if params_dict_as_variable:
+        # Function can accept params_dict as its variable
         if hasattr(function, 'params_dict_as_variable'):
             return fct
+        # Allow params_dict to be passed to any function, that will use the first item of the owner's value by default
         else:
             if owner.verbosePref is True:
                 warnings.warn("{} specified as {} is incompatible with {} specified as {} for {} of {}; "
@@ -1703,3 +1702,19 @@ def make_readonly_property(val):
     # Create the property
     prop = property(getter).setter(setter)
     return prop
+
+
+@tc.typecheck
+def _convert_assign_and_index(d:dict):
+
+    if INDEX in d:
+        # if output_state[INDEX] is SEQUENTIAL:
+        #     return
+        if d[INDEX] is ALL:
+            d[VARIABLE] = OWNER_VALUE
+        else:
+            d[VARIABLE] = (OWNER_VALUE, d[INDEX])
+        del d[INDEX]
+    if ASSIGN in d:
+        d[FUNCTION] = d[ASSIGN]
+        del d[ASSIGN]
