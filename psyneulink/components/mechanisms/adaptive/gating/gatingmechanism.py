@@ -168,7 +168,9 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.components.states.state import State_Base, _parse_state_spec
 from psyneulink.globals.defaults import defaultGatingPolicy
-from psyneulink.globals.keywords import GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, PROJECTION_TYPE
+from psyneulink.globals.keywords import \
+    GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, \
+    INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, OWNER_VALUE, PROJECTION_TYPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -483,10 +485,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
         # Parse gating_signal specifications (in call to State._parse_state_spec)
         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
         gating_signal = _instantiate_state(state_type=GatingSignal,
-                                            owner=self,
-                                            reference_value=defaultGatingPolicy,
-                                            modulation=self.modulation,
-                                            state_spec=gating_signal)
+                                           variable=(OWNER_VALUE,0),
+                                           owner=self,
+                                           reference_value=defaultGatingPolicy,
+                                           modulation=self.modulation,
+                                           state_spec=gating_signal)
 
         # Validate index
         try:
