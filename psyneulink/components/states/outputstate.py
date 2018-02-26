@@ -817,7 +817,7 @@ class OutputState(State_Base):
         else:
             context = self
 
-        # For backward compatibility
+        # For backward compatibility with CALCULATE
         if 'calculate' in kwargs:
             assign = kwargs['calculate']
 
@@ -1094,7 +1094,8 @@ class OutputState(State_Base):
         else:
             fct_var = self.variable
 
-            # If variable is not specified, check if OutputState has index attribute (for backward compatibility)
+            # If variable is not specified, check if OutputState has index attribute
+            #    (for backward compatibility with INDEX and ASSIGN)
             if fct_var is None:
                 try:
                     # Get indexed item of owner's value
@@ -1301,7 +1302,7 @@ class OutputState(State_Base):
     def pathway_projections(self, assignment):
         self.efferents = assignment
 
-    # For backward compatibility
+    # For backward compatibility with INDEX and ASSIGN
     @property
     def calculate(self):
         return self.assign
@@ -1387,15 +1388,18 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
             # OutputState object
             if isinstance(output_state, OutputState):
-                if output_state.value is None:
-                    output_state_value = output_state.function()
-                elif output_state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                if output_state.init_status is InitStatus.DEFERRED_INITIALIZATION:
                     try:
                         output_state_value = OutputState._get_state_function_value(owner,
                                                                                    output_state.function,
                                                                                    output_state.init_args[VARIABLE])
+                    # For backward compatibility with INDEX and ASSIGN
                     except AttributeError:
-                        output_state_value = owner_value
+                        index = output_state.index
+                        output_state_value = owner_value[index]
+                elif output_state.value is None:
+                    output_state_value = output_state.function()
+
                 else:
                     output_state_value = output_state.value
 
@@ -1663,7 +1667,7 @@ def  _parse_output_state_variable(owner, variable, output_state_name=None):
 
     fct_variable = []
     for spec in variable:
-        fct_variable.append(_parse_output_state_variable(spec))
+        fct_variable.append(parse_variable_spec(spec))
     return fct_variable
 
 

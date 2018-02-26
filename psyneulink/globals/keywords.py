@@ -737,9 +737,9 @@ PARAMETER_STATE_PARAMS = 'parameter_state_params'
 OUTPUT_STATES = 'output_states'
 OUTPUT_STATE_PARAMS = 'output_states_params'
 STANDARD_OUTPUT_STATES = 'standard_output_states'
-INDEX = 'index'
-ASSIGN = 'assign'
-CALCULATE = 'assign'  # For backward compatibility (2/22/18)
+INDEX = 'index'       # For backward compatibility with INDEX and ASSIGN
+ASSIGN = 'assign'     # For backward compatibility with INDEX and ASSIGN
+CALCULATE = 'assign'  # For backward compatibility with CALCULATE
 
 #endregion
 
