@@ -582,17 +582,30 @@ class OUTPUTS():
     STANDARD_DEVIATION=STANDARD_DEVIATION
     VARIANCE=VARIANCE
 
+# standard_output_states = [{NAME: RESULT},
+#                           {NAME:MEAN,
+#                            ASSIGN:lambda x: np.mean(x)},
+#                           {NAME:MEDIAN,
+#                            ASSIGN:lambda x: np.median(x)},
+#                           {NAME:STANDARD_DEVIATION,
+#                            ASSIGN:lambda x: np.std(x)},
+#                           {NAME:VARIANCE,
+#                            ASSIGN:lambda x: np.var(x)},
+#                           {NAME: MECHANISM_VALUE,
+#                            INDEX: ALL}
+#                           ]
+
 standard_output_states = [{NAME: RESULT},
                           {NAME:MEAN,
-                           ASSIGN:lambda x: np.mean(x)},
+                           FUNCTION:lambda x: np.mean(x)},
                           {NAME:MEDIAN,
-                           ASSIGN:lambda x: np.median(x)},
+                           FUNCTION:lambda x: np.median(x)},
                           {NAME:STANDARD_DEVIATION,
-                           ASSIGN:lambda x: np.std(x)},
+                           FUNCTION:lambda x: np.std(x)},
                           {NAME:VARIANCE,
-                           ASSIGN:lambda x: np.var(x)},
+                           FUNCTION:lambda x: np.var(x)},
                           {NAME: MECHANISM_VALUE,
-                           INDEX: ALL}
+                           VARIABLE: OWNER_VALUE}
                           ]
 
 
@@ -1395,10 +1408,6 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     if output_states:
         for i, output_state in enumerate(output_states):
 
-            # parse output_state
-            from psyneulink.components.states.state import _parse_state_spec
-            output_state = _parse_state_spec(state_type=OutputState, owner=owner, state_spec=output_state)
-
             # OutputState object
             if isinstance(output_state, OutputState):
                 if output_state.init_status is InitStatus.DEFERRED_INITIALIZATION:
@@ -1416,8 +1425,10 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                 else:
                     output_state_value = output_state.value
 
-            # OutputState specification dictionary, so get attributes
-            elif isinstance(output_state, dict):
+            else:
+                # parse output_state
+                from psyneulink.components.states.state import _parse_state_spec
+                output_state = _parse_state_spec(state_type=OutputState, owner=owner, state_spec=output_state)
 
                 _convert_assign_and_index(output_state)
 
@@ -1436,13 +1447,6 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                                                                output_state[VARIABLE])
                 else:
                     output_state_value = _parse_output_state_variable(owner, output_state[VARIABLE])
-
-            else:
-                if not isinstance(output_state, str):
-                    raise OutputStateError("PROGRAM ERROR: unrecognized item ({}) in output_states specification for {}"
-                                           .format(output_state, owner.name))
-                else:
-                    assert False, 'OutputState spec remained a string in _instantiate_output_states'
 
             output_states[i] = output_state
             reference_value.append(output_state_value)
@@ -1581,7 +1585,7 @@ class StandardOutputStates():
         # Assign PRIMARY as INDEX for all OutputStates in output_state_dicts that don't already have an index specified
         elif indices is PRIMARY:
             for state_dict in self.data:
-                if INDEX in state_dict:
+                if INDEX in state_dict or VARIABLE in state_dict:
                     continue
                 state_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
 
