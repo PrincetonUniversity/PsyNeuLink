@@ -47,7 +47,7 @@ An AutoAssociativeLearningMechanism is identical to a LearningMechanism in all r
     attribute that identifies the source of the activity vector used by the Mechanism's `function
     <AutoAssociativeLearningProjection.function>`.
 
-  * it's `function <AutoAssociativeLearningMechanism.function>` takes as its `variable <Function_Base.variable>`
+  * its `function <AutoAssociativeLearningMechanism.function>` takes as its `variable <Function_Base.variable>`
     a list or 1d np.array of numeric entries, corresponding in length to the AutoAssociativeLearningMechanism's
     *ACTIVATION_INPUT* InputState; and it returns a `learning_signal <LearningMechanism.learning_signal>`
     (a weight change matrix assigned to the Mechanism's *LEARNING_SIGNAL* OutputState), but not necessarily an

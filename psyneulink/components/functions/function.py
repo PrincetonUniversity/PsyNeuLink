@@ -9881,8 +9881,9 @@ class TDLearning(Reinforcement):
         variable = self._update_variable(super(Reinforcement, self)._validate_variable(variable, context))
 
         if len(variable) != 3:
-            raise ComponentError("Variable for {} ({}) must have three items (input"
-                                ", output, and error arrays".format(self.name, variable))
+            raise ComponentError("Variable for {} ({}) must have three items "
+                                 "(input, output, and error arrays)".format(self.name,
+                                                                            variable))
 
         self.activation_input = variable[LEARNING_ACTIVATION_INPUT]
         self.activation_output = variable[LEARNING_ACTIVATION_OUTPUT]
