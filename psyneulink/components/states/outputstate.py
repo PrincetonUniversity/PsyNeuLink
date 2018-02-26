@@ -791,7 +791,9 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
+                               ASSIGN: None,
+                               INDEX: PRIMARY})
     #endregion
 
     @tc.typecheck
@@ -801,8 +803,8 @@ class OutputState(State_Base):
                  variable=None,
                  size=None,
                  function=Linear(),
-                 index=PRIMARY,
-                 assign:tc.optional(is_function_type)=None,
+                 # index=PRIMARY,
+                 # assign:tc.optional(is_function_type)=None,
                  projections=None,
                  params=None,
                  name=None,
@@ -820,10 +822,11 @@ class OutputState(State_Base):
             assign = kwargs['calculate']
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(index=index,
-                                                  assign=assign,
-                                                  function=function,
-                                                  params=params)
+        params = self._assign_args_to_param_dicts(
+                # index=index,
+                # assign=assign,
+                function=function,
+                params=params)
 
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
         # if owner is None or reference_value is None:
@@ -843,11 +846,16 @@ class OutputState(State_Base):
 
         self.reference_value = reference_value
 
+        # FIX: PUT THIS IN DEDICATED OVERRIDED OF COMPONENT VARIABLE-SETTING METHOD??
         if variable is None:
             if reference_value is None:
-                variable = owner.instance_defaults.value[0]
+                # variable = owner.instance_defaults.value[0]
+                variable = (OWNER_VALUE, 0) # Default is 1st item of owner.value
             else:
                 variable = reference_value
+        if not is_numeric(variable):
+            self._variable = variable
+
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
@@ -1249,24 +1257,35 @@ class OutputState(State_Base):
     def variable(self, variable):
         self._variable = variable
 
+    def _update_variable(self, value):
+        '''
+            Used to mirror assignments to local variable in an attribute
+            Knowingly not threadsafe
+        '''
+        return self.variable
+
     @property
     def owner_value_index(self):
         """Return index or indices of items of owner.value for any to which OutputState's variable has been assigned
         If the OutputState has been assigned to:
         - the entire owner value (i.e., OWNER_VALUE on its own, not in a tuple)
             return owner.value
-        - a single item of owner.value (i.e.,  owner.value==[(OWNER,index)])
+        - a single item of owner.value (i.e.,  owner.value==(OWNER,index))
             return the index of the item
         - more than one, return a list of indices
         - to no items of owner.value (but possibly other params), return None
         """
-        if OWNER_VALUE in self._variable:
+        # Entire owner.value
+        if OWNER_VALUE == self._variable:
             return self.owner.value
-        indices = [item[1] for item in self._variable if isinstance(item, tuple) and OWNER_VALUE in item]
-        if len(indices)==1:
-            return indices[0]
-        elif indices:
-            return indices
+        elif isinstance(self._variable, tuple):
+            return self._variable[1]
+        elif isinstance(self._variable, list):
+            indices = [item[1] for item in self._variable if isinstance(item, tuple) and OWNER_VALUE in item]
+            if len(indices)==1:
+                return indices[0]
+            elif indices:
+                return indices
         else:
             return None
 
@@ -1397,6 +1416,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                 else:
                     assert False, 'OutputState spec remained a string in _instantiate_output_states'
 
+            output_states[i] = output_state
             reference_value.append(output_state_value)
 
     else:
@@ -1595,39 +1615,44 @@ class StandardOutputStates():
 
 
 def  _parse_output_state_variable(owner, variable, output_state_name=None):
-    from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-    if variable is None or is_numeric(variable):
-        return variable
+    """Return variable for OutputState based on VARIABLE entry of owner's params dict
 
+    The format of the VARIABLE entry determines the format returned:
+    - if it is a single item, or a single item in a list, a single item is returned;
+    - if it is a list with more than one item, a list is returned.
+    :return:
+    """
+
+    def parse_variable_spec(spec):
+        # from psyneulink.components.mechanisms.mechanism import MechParamsDict
+        # if spec is None or is_numeric(spec) or isinstance(spec, MechParamsDict):
+        if spec is None or is_numeric(spec) or isinstance(spec, dict):
+            return spec
+        elif isinstance(spec, tuple):
+            # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))
+            return owner._params_dict[spec[0]][spec[1]]
+        elif isinstance(spec, str) and spec == PARAMS_DICT:
+            # Specifies passing owner's params_dict as variable
+            return owner._params_dict
+        elif isinstance(spec, str):
+            # Owner's full value or attribute other than its value
+            return owner._params_dict[spec]
+        else:
+            raise OutputStateError("\'{}\' entry for {} specification dictionary of {} ({}) must be "
+                                   "numeric or a list of {} attribute names".
+                                   format(VARIABLE.upper(),
+                                          output_state_name or OutputState.__name__,
+                                          owner.name, spec,
+                                          owner.__class__.__name__))
     if not isinstance(variable, list):
         variable = [variable]
 
-    fct_variable = []
-    for var_spec in variable:
-        # Specifies a dictionary to be passed as variable
-        if isinstance(var_spec, dict):
-        # if isinstance(var_spec, MechParamsDict):
-            return var_spec
-        # Specifies passing owner's params_dict as variable
-        if isinstance(var_spec, str) and var_spec == PARAMS_DICT:
-            return owner._params_dict
-        if isinstance(var_spec, tuple):
-            # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))
-            attrib, index = var_spec
-            attrib_val = owner._params_dict[attrib][index]
-        else:
-            # Owner attribute other than its value
-            attrib = var_spec
-            attrib_val = owner._params_dict[attrib]
-        fct_variable.append(attrib_val)
+    if len(variable)== 1:
+        return parse_variable_spec(variable[0])
 
-    if not fct_variable:
-        raise OutputStateError("\'{}\' entry for {} specification dictionary of {} ({}) must be "
-                               "numeric or a list of {} attribute names".
-                               format(VARIABLE.upper(),
-                                      output_state_name or OutputState.__name__,
-                                      owner.name, variable,
-                                      owner.__class__.__name__))
+    fct_variable = []
+    for spec in variable:
+        fct_variable.append(_parse_output_state_variable(spec))
     return fct_variable
 
 

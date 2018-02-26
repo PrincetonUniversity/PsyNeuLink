@@ -2285,9 +2285,14 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     state_spec_dict.pop(VALUE, None)
 
-    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
+    # FIX: 2/25/18  GET REFERENCE_VALUE FROM REFERENCE_DICT?
+    # Get reference_value
     if state_spec_dict[REFERENCE_VALUE] is None:
-        state_spec_dict[REFERENCE_VALUE] = state_spec_dict[VARIABLE]
+        state_spec_dict[REFERENCE_VALUE] = reference_value
+        if reference_value is None:
+            state_spec_dict[REFERENCE_VALUE] = state_spec_dict[VARIABLE]
+
+    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(state_spec_dict[REFERENCE_VALUE],1)
 
     # INSTANTIATE STATE:

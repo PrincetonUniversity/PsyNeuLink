@@ -855,6 +855,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
+                                            variable=(OWNER_VALUE, len(self._output_states)),
                                             reference_value=ControlSignal.ClassDefaults.allocation,
                                             modulation=self.modulation,
                                             state_spec=control_signal)
@@ -880,9 +881,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.instance_defaults.value = np.array([[ControlSignal.ClassDefaults.allocation] for i in range(len(self._output_states))])
         self.value = self.instance_defaults.value
 
-        if control_signal.index is SEQUENTIAL:
-            control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
-        elif not isinstance(control_signal.owner_value_index, int):
+        # # if control_signal.index is SEQUENTIAL:
+        # if control_signal.owner_value_index is None:
+        #     control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
+        if not isinstance(control_signal.owner_value_index, int):
             raise ControlMechanismError(
                 "PROGRAM ERROR: {} attribute of {} for {} is not {} or an int".format(
                     INDEX, ControlSignal.__name__, SEQUENTIAL, self.name
