@@ -317,9 +317,9 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME: SSE,
-                                    ASSIGN: lambda x: np.sum(x[VALUE] * x[VALUE])},
+                                    ASSIGN: lambda x: np.sum(x * x)},
                                    {NAME: MSE,
-                                    ASSIGN: lambda x: np.sum(x[VALUE] * x[VALUE]) / len(x[VALUE])}])
+                                    ASSIGN: lambda x: np.sum(x * x) / len(x)}])
 
     # MODIFIED 10/10/17 OLD:
     @tc.typecheck

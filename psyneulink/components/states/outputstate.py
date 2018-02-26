@@ -1010,11 +1010,24 @@ class OutputState(State_Base):
 
         reference_value is the value of the Mechanism to which the OutputState is assigned
         """
-        if reference_value is not None and not iscompatible(reference_value, self.instance_defaults.variable):
-            name = self.name or ""
-            raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
-                                   "with its expected format ({})".
-                                   format(name, self.componentName, self.owner.name, self.instance_defaults.variable, reference_value))
+        return
+        # if reference_value is not None and not iscompatible(reference_value, self.instance_defaults.variable):
+        # if (reference_value is not None and
+        #         not iscompatible(reference_value, self._get_state_function_value(self.owner,
+        #                                                                          self.function,
+        #                                                                          self.variable))):
+        #     name = self.name or ""
+        #     raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
+        #                            "with its expected format ({})".
+        #                            format(name, self.componentName, self.owner.name, self.instance_defaults.variable, reference_value))
+        if reference_value is not None:
+            fct_val = self.function(self.variable)
+            if not iscompatible(reference_value, fct_val):
+                name = self.name or ""
+                raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
+                                       "with its expected format ({})".
+                                       format(name, self.componentName, self.owner.name,
+                                              self.instance_defaults.variable, reference_value))
 
     # def _instantiate_function(self, context=None):
     #     """Parse variable specification and instantiate lambda function that passes it to specified function
