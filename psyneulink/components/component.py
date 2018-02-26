@@ -1360,7 +1360,11 @@ class Component(object):
                                                                 function.user_params_for_instantiation[param_name])
 
                     # It is a generic function
-                    elif inspect.isfunction(function):
+                    # # MODIFIED 2/26/18 OLD:
+                    # elif inspect.isfunction(function):
+                    # MODIFIED 2/26/18 NEW:
+                    elif (inspect.isfunction(function) or inspect.ismethod(function)):
+                    # MODIFIED 2/26/18 END
                         # Assign as is (i.e., don't convert to class), since class is generic
                         # (_instantiate_function also tests for this and leaves it as is)
                         params[FUNCTION] = function

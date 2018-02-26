@@ -1389,6 +1389,13 @@ def _instantiate_output_states(owner, output_states=None, context=None):
             if isinstance(output_state, OutputState):
                 if output_state.value is None:
                     output_state_value = output_state.function()
+                elif output_state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                    try:
+                        output_state_value = OutputState._get_state_function_value(owner,
+                                                                                   output_state.function,
+                                                                                   output_state.init_args[VARIABLE])
+                    except AttributeError:
+                        output_state_value = owner_value
                 else:
                     output_state_value = output_state.value
 
