@@ -461,18 +461,14 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus
-from psyneulink.components.functions.function import Linear, LinearCombination
+from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.states.state import \
-    StateError, State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import \
-    INPUT_STATES, EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
-    MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
-    OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER, COMMAND_LINE
+from psyneulink.components.states.state import ADD_STATES, StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.globals.keywords import COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import append_type_to_name, iscompatible, is_numeric
+from psyneulink.globals.utilities import append_type_to_name, is_numeric, iscompatible
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords',
@@ -541,7 +537,7 @@ class InputState(State_Base):
         Class methods
         -------------
             _instantiate_function: insures that function is ARITHMETIC)
-            update_state: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
+            update: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
 
         StateRegistry
         -------------
@@ -720,8 +716,6 @@ class InputState(State_Base):
         else:
             context = self
 
-        # # FIX: 2/17/18:
-        # CREATE:
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
 
@@ -835,7 +829,7 @@ class InputState(State_Base):
         super()._instantiate_function(context=context)
 
         # Insure that function is Function.LinearCombination
-        if not isinstance(self.function.__self__, (LinearCombination, Linear)):
+        if not isinstance(self.function.__self__, (LinearCombination, Linear, Reduce)):
             raise StateError(
                 "{0} of {1} for {2} is {3}; it must be of LinearCombination "
                 "or Linear type".
@@ -866,21 +860,22 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    def _execute(self, function_params, context):
+    def _execute(self, variable=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
-        If there were no Transmissive Projections, ignore and return None
+        If there were no PathwayProjections, ignore and return None
         """
 
-        # If there were any Transmissive Projections:
-        if self._path_proj_values:
+        if variable is not None:
+            return self.function(variable, runtime_params, context)
+        # If there were any PathwayProjections:
+        elif self._path_proj_values:
             # Combine Projection values
             # TODO: stateful - this seems dangerous with statefulness, maybe safe when self.value is only passed or stateful
-            combined_values = self.function(variable=self._path_proj_values,
-                                            params=function_params,
+            combined_values = self.function(variable=np.asarray(self._path_proj_values),
+                                            params=runtime_params,
                                             context=context)
             return combined_values
-
         # There were no Projections
         else:
             # mark combined_values as none, so that (after being assigned to self.value)
@@ -1118,6 +1113,34 @@ class InputState(State_Base):
     def pathway_projections(self, assignment):
         self.path_afferents = assignment
 
+    @staticmethod
+    def _get_state_function_value(function, variable):
+        """Overrided State method
+
+        InputState variable must be embedded in a list (see InputState._get_state_function_value()).
+        so that LinearCombination (its default function) returns a variable that is >=2d intact
+        (rather than as arrays to be combined);
+        this is normally done in State.update() (and in State._instantiate-function), but that
+        can't be called by _parse_state_spec since the InputState itself may not yet have been instantiated.
+
+        """
+        import inspect
+        if (
+                (
+                        (inspect.isclass(function) and issubclass(function, LinearCombination))
+                        or isinstance(function, LinearCombination)
+                )
+                and (
+                isinstance(variable, np.matrix)
+                or (
+                        isinstance(np.array(variable))
+                        and variable.ndim >=2
+                )
+        )
+        ):
+            variable = [variable]
+        return function.execute(variable)
+
 
 def _instantiate_input_states(owner, input_states=None, reference_value=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of InputState(s)
@@ -1179,11 +1202,8 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     if not variable_item_is_OK:
         old_variable = owner.instance_defaults.variable
-        new_variable = []
-        for state in owner.input_states:
-            new_variable.append(state.value)
-        owner.instance_defaults.variable = np.array(new_variable)
-        owner._update_variable(new_variable)
+        owner.instance_defaults.variable = owner._handle_default_variable(default_variable=[state.value for state in owner.input_states])
+
         if owner.verbosePref:
             warnings.warn(
                 "Variable for {} ({}) has been adjusted to match number and format of its input_states: ({})".format(

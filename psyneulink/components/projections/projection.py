@@ -580,9 +580,6 @@ class Projection_Base(Projection):
     className = componentCategory
     suffix = " " + className
 
-    class ClassDefaults(Projection.ClassDefaults):
-        variable = [0]
-
     registry = ProjectionRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
@@ -675,7 +672,6 @@ class Projection_Base(Projection):
             # of deferred init
             pass
 
-        self.sender = sender
         self.receiver = receiver
 
          # Register with ProjectionRegistry or create one
@@ -693,18 +689,18 @@ class Projection_Base(Projection):
                           registry=self._stateRegistry,
                           context=context)
 
+        self._instantiate_sender(sender, context=context)
+
         # FIX: ADD _validate_variable, THAT CHECKS FOR SENDER?
         # FIX: NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
-            variable = self._update_variable(sender.value)
-        except:
-            try:
-                if self.receiver.prefs.verbosePref:
-                    warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
-                                  format(sender, self.name, self.ClassDefaults.variable))
-                variable = self._update_variable(None)
-            except AttributeError:
-                raise ProjectionError("{} has no receiver assigned".format(self.name))
+            # this should become _default_value when that is fully implemented
+            variable = self.sender.value
+        except AttributeError:
+            if receiver.prefs.verbosePref:
+                warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
+                              format(self.sender, self.name, self.ClassDefaults.variable))
+            variable = None
 
         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState
         # MODIFIED 11/1/17 CW: Added " hasattr(self, "prefs") and" in order to avoid errors. Otherwise, this was being
@@ -769,7 +765,6 @@ class Projection_Base(Projection):
                                          Mechanism.__name__, State.__name__))
 
     def _instantiate_attributes_before_function(self, context=None):
-        self._instantiate_sender(context=context)
         self._instantiate_parameter_states(context=context)
 
     def _instantiate_parameter_states(self, context=None):
@@ -777,7 +772,7 @@ class Projection_Base(Projection):
         from psyneulink.components.states.parameterstate import _instantiate_parameter_states
         _instantiate_parameter_states(owner=self, context=context)
 
-    def _instantiate_sender(self, context=None):
+    def _instantiate_sender(self, sender, context=None):
         """Assign self.sender to OutputState of sender and insure compatibility with self.instance_defaults.variable
 
         Assume self.sender has been assigned in _validate_params, from either sender arg or PROJECTION_SENDER
@@ -790,26 +785,19 @@ class Projection_Base(Projection):
         """
         from psyneulink.components.states.outputstate import OutputState
 
-        # ASSIGN sender specification
-
-        # If PROJECTION_SENDER is not None or paramClassDefault, it was specified and was validated in _validate_params,
-        #    so assign it as sender
-        if not self.params[PROJECTION_SENDER] in {None, self.paramClassDefaults[PROJECTION_SENDER]}:
-            self.sender = self.params[PROJECTION_SENDER]
-        # PROJECTION_SENDER was not specified, so use paramClassDefaults
-        elif self.sender is None:
-            self.sender = self.paramClassDefaults[PROJECTION_SENDER]
-        # Final validation (against a PROGRAM ERROR)
-        elif not (isinstance(self.sender, (Mechanism, State, Process_Base)) or
-                           (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State)))):
+        if not (
+            isinstance(sender, (Mechanism, State, Process_Base))
+            or (inspect.isclass(sender) and issubclass(sender, (Mechanism, State)))
+        ):
             raise ProjectionError("PROGRAM ERROR: Invalid specification for {} ({1}) of {} "
                                   "(including paramClassDefaults: {}".
-                                  format(SENDER, self.sender, self.name, self.paramClassDefaults[PROJECTION_SENDER]))
+                                  format(SENDER, sender, self.name, self.paramClassDefaults[PROJECTION_SENDER]))
 
-        # If sender is specified as a Mechanism (rather than a State),
+        self.sender = sender
+        # If self.sender is specified as a Mechanism (rather than a State),
         #     get relevant OutputState and assign it to self.sender
-        # IMPLEMENTATION NOTE: Assume that sender should be the primary OutputState; if that is not the case,
-        #                      sender should either be explicitly assigned, or handled in an override of the
+        # IMPLEMENTATION NOTE: Assume that self.sender should be the primary OutputState; if that is not the case,
+        #                      self.sender should either be explicitly assigned, or handled in an override of the
         #                      method by the relevant subclass prior to calling super
         if isinstance(self.sender, Mechanism):
             self.sender = self.sender.output_state
@@ -819,32 +807,9 @@ class Projection_Base(Projection):
             raise ProjectionError("Sender specified for {} ({}) must be a Mechanism or an OutputState".
                                   format(self.name, self.sender))
 
-        # Assign projection to sender's efferents list attribute
-        if not self in self.sender.efferents:
+        # Assign projection to self.sender's efferents list attribute
+        if self not in self.sender.efferents:
             self.sender.efferents.append(self)
-
-        # Validate projection's variable (self.instance_defaults.variable) against sender.output_state.value
-        if iscompatible(self.instance_defaults.variable, self.sender.value):
-            # Is compatible, so assign sender.output_state.value to self.instance_defaults.variable
-            self.instance_defaults.variable = self.sender.value
-
-        else:
-            # Not compatible, so:
-            # - issue warning
-            if self.prefs.verbosePref:
-                warnings.warn(
-                    "The variable ({0}) of {1} projection to {2} is not compatible with output ({3})"
-                    " of function {4} for sender ({5}); it has been reassigned".format(
-                        self.instance_defaults.variable,
-                        self.name,
-                        self.receiver.owner.name,
-                        self.sender.value,
-                        self.sender.function.__class__.__name__,
-                        self.sender.owner.name
-                    )
-                )
-            # - reassign self.instance_defaults.variable to sender.value
-            self._instantiate_defaults(variable=self.sender.value, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         self._instantiate_receiver(context=context)
@@ -919,6 +884,10 @@ class Projection_Base(Projection):
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
+
+    def _execute(self, variable, runtime_params=None, context=None):
+        self.value = self.function(variable=self.sender.value, params=runtime_params, context=context)
+        return self.value
 
     # FIX: 10/3/17 - replace with @property on Projection for receiver and sender
     @property

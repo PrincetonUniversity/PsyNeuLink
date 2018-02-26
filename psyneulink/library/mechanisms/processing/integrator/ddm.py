@@ -290,39 +290,59 @@ import typecheck as tc
 from collections import Iterable
 
 from psyneulink.components.component import method_type
-from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
+from psyneulink.components.functions.function import \
+    BogaczEtAl, DriftDiffusionIntegrator, Integrator, LinearCombination, Reduce, \
+    NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
-from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, kwPreferenceSetName
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, ASSIGN, FUNCTION, FUNCTION_PARAMS, \
+    INDEX, INITIALIZING, NAME, OUTPUT_STATES, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.utilities import is_numeric
+from psyneulink.globals.utilities import is_numeric, object_has_single_value
 
 __all__ = [
-    'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError', 'DECISION_VARIABLE', 'PROBABILITY_LOWER_THRESHOLD',
-    'PROBABILITY_UPPER_THRESHOLD', 'RESPONSE_TIME', 'RT_CORRECT_MEAN', 'RT_CORRECT_VARIANCE',
+    'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError',
+    'DECISION_VARIABLE', 'DECISION_VARIABLE_ARRAY', 'PROBABILITY_LOWER_THRESHOLD', 'PROBABILITY_UPPER_THRESHOLD',
+    'RESPONSE_TIME', 'RT_CORRECT_MEAN', 'RT_CORRECT_VARIANCE',
+    'SCALAR', 'ARRAY', 'VECTOR'
 ]
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_VARIABLE = 0.0
 
-DECISION_VARIABLE='DECISION_VARIABLE'
+DECISION_VARIABLE = 'DECISION_VARIABLE'
+DECISION_VARIABLE_ARRAY = 'DECISION_VARIABLE_ARRAY'
 RESPONSE_TIME = 'RESPONSE_TIME'
 PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'
 PROBABILITY_LOWER_THRESHOLD = 'PROBABILITY_LOWER_THRESHOLD'
 RT_CORRECT_MEAN = 'RT_CORRECT_MEAN'  # NavarroAnd Fuss only
 RT_CORRECT_VARIANCE = 'RT_CORRECT_VARIANCE'  # NavarroAnd Fuss only
 
+# input_format Keywords:
+SCALAR='SCALAR'
+ARRAY='ARRAY'
+VECTOR='VECTOR'
+
+def decision_variable_to_array(x):
+    """Generate "one-hot" 1d array designating selected action from DDM's scalar decision variable
+    (used to generate value of OutputState for action_selection Mechanism"""
+    if x >= 0:
+        return [x,0]
+    else:
+        return [0,x]
+
 DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or lower threshold in TRIAL mode
                               {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL in TIME_STEP mode
                               {NAME: PROBABILITY_UPPER_THRESHOLD},  # Accuracy (TRIAL mode only)
                               {NAME: PROBABILITY_LOWER_THRESHOLD},  # Error rate (TRIAL mode only)
                               {NAME: RT_CORRECT_MEAN},              # (NavarroAndFuss only)
-                              {NAME: RT_CORRECT_VARIANCE}]          # (NavarroAndFuss only)
+                              {NAME: RT_CORRECT_VARIANCE},          # (NavarroAndFuss only)
+                              ]
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class DDM_OUTPUT():
@@ -340,6 +360,15 @@ class DDM_OUTPUT():
       • `integration mode <DDM_Integration_Mode>`: the value of the decision variable at the current TIME_STEP of
         execution. \n
       Corresponds to the 1st item of the DDM's `value <DDM.value>`.
+
+    .. _DDM_DECISION_VARIABLE_ARRAY:
+
+    *DECISION_VARIABLE_ARRAY* : 1d nparray
+      • `analytic mode <DDM_Analytic_Mode>`: two element array, with the *DECISION_VARIABLE* as the first element
+         if it is closer to the upper threshold or in the second element if it is closer to the lower threshold;
+         the other element is 0. \n
+      • `integration mode <DDM_Integration_Mode>`: the value of the decision variable at the current TIME_STEP of
+        execution in the element as described above for *analytic mode*. \n
 
     .. _DDM_RESPONSE_TIME:
 
@@ -414,6 +443,7 @@ class DDM_OUTPUT():
     """
     DECISION_VARIABLE=DECISION_VARIABLE
     RESPONSE_TIME=RESPONSE_TIME
+    DECISION_VARIABLE_ARRAY=DECISION_VARIABLE_ARRAY
     PROBABILITY_UPPER_THRESHOLD=PROBABILITY_UPPER_THRESHOLD
     PROBABILITY_LOWER_THRESHOLD=PROBABILITY_LOWER_THRESHOLD
     RT_CORRECT_MEAN=RT_CORRECT_MEAN
@@ -465,7 +495,6 @@ class DDM(ProcessingMechanism_Base):
             + componentType (str): DDM
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + ClassDefaults.variable (value):  STARTING_POINT
             + paramClassDefaults (dict): {
                                           kwDDM_AnalyticSolution: kwBogaczEtAl,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>
@@ -608,10 +637,6 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        # Assigned in __init__ to match default staring_point
-        variable = None
-
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OUTPUT_STATES: None})
@@ -622,6 +647,7 @@ class DDM(ProcessingMechanism_Base):
                  size=None,
                  # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
                  # input_states:tc.optional(tc.any(list, dict))=None,
+                 input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=SCALAR,
                  function=BogaczEtAl(drift_rate=1.0,
                                      starting_point=0.0,
                                      threshold=1.0,
@@ -635,6 +661,23 @@ class DDM(ProcessingMechanism_Base):
                  context=componentType + INITIALIZING
     ):
 
+        # If input_format is specified to be ARRAY or VECTOR, instantiate InputState with:
+        #    2-item array as its variable
+        #    Reduce as its function, which will generate an array of len 1
+        #    and therefore specify size of Mechanism's variable as 1
+        if input_format in {ARRAY, VECTOR}:
+            size=1 # size of variable for DDM Mechanism
+            input_states=[{NAME:'ARRAY',
+                           VARIABLE:[0,0],
+                           FUNCTION: Reduce(weights=[1,-1])}
+                          ]
+            output_states = [{NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
+                              INDEX:0,
+                              ASSIGN: lambda x: [float(x),0] if x >= 0 else [0,float(-x)]}
+                             ]
+        else:
+            input_states = None
+
         self.standard_output_states = StandardOutputStates(self,
                                                            DDM_standard_output_states,
                                                            indices=SEQUENTIAL)
@@ -647,7 +690,8 @@ class DDM(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                  # input_states=input_states,
+                                                  # input_format=input_format,
+                                                  input_states=input_states,
                                                   output_states=output_states,
                                                   params=params)
 
@@ -657,14 +701,17 @@ class DDM(ProcessingMechanism_Base):
             try:
                 default_variable = params[FUNCTION_PARAMS][STARTING_POINT]
                 if not is_numeric(default_variable):
-                    default_variable = DEFAULT_VARIABLE
-            except:
-                default_variable = DEFAULT_VARIABLE
+                    # set normally by default
+                    default_variable = None
+            except KeyError:
+                # set normally by default
+                pass
 
         # # Conflict with above
         # self.size = size
 
-        super(DDM, self).__init__(variable=default_variable,
+        super(DDM, self).__init__(default_variable=default_variable,
+                                  input_states=input_states,
                                   output_states=output_states,
                                   params=params,
                                   name=name,
@@ -743,15 +790,18 @@ class DDM(ProcessingMechanism_Base):
         """Ensures that input to DDM is a single value.
         Remove when MULTIPROCESS DDM is implemented.
         """
+
         # this test may become obsolete when size is moved to Component.py
-        if len(variable) > 1:
+        # if len(variable) > 1 and not self.input_format in {ARRAY, VECTOR}:
+        if not object_has_single_value(variable) and not object_has_single_value(np.array(variable)):
             raise DDMError("Length of input to DDM ({}) is greater than 1, implying there are multiple "
                            "input states, which is currently not supported in DDM, but may be supported"
                            " in the future under a multi-process DDM. Please use a single numeric "
                            "item as the default_variable, or use size = 1.".format(variable))
-        # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
-        if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
-            raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
+        # # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
+        # # if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
+        # if not is_numeric(variable) and len(variable[0]) > 1:
+        #     raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
         return super()._validate_variable(variable=variable, context=context)
 
     # MODIFIED 11/21/16 END
@@ -862,6 +912,9 @@ class DDM(ProcessingMechanism_Base):
 
         # PLACEHOLDER for a time_step_size parameter when time_step_mode/Scheduling is implemented:
         time_step_size = 1.0
+
+
+        # FIX: 2/5/18: PUT CODE HERE FOR input_format = ARRAY/VECTOR, TO SUBTRACT variable[1] from variable[0]
 
         if variable is None or np.isnan(variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS

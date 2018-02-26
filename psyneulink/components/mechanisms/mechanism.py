@@ -878,8 +878,6 @@ class Mechanism_Base(Mechanism):
         -------------
             - _validate_variable(variable, context)
             - _validate_params(request_set, target_set, context)
-            - update_states_and_execute(params, context):
-                updates input, param values, executes <subclass>.function, returns outputState.value
             - terminate_execute(self, context=None): terminates execution of Mechanism (for TimeScale = time_step)
             - adjust(params, context)
                 modifies specified Mechanism params (by calling Function._instantiate_defaults)
@@ -976,7 +974,7 @@ class Mechanism_Base(Mechanism):
 
         .. note:: The `output_values <Mechanism_Base.output_values>` of a Mechanism is not necessarily the same as its
                   `value <Mechanism_Base.value>` attribute, since an OutputState's
-                  `function <OutputState.OutputState.function>` and/or its `calculate <Mechanism_Base.calculate>`
+                  `function <OutputState.OutputState.function>` and/or its `assign <Mechanism_Base.assign>`
                   attribute may use the Mechanism's `value <Mechanism_Base.value>` to generate a derived quantity for
                   the `value <OutputState.OutputState.value>` of that OutputState (and its corresponding item in the
                   the Mechanism's `output_values <Mechanism_Base.output_values>` attribute).
@@ -1092,7 +1090,7 @@ class Mechanism_Base(Mechanism):
     suffix = " " + className
 
     class ClassDefaults(Mechanism.ClassDefaults):
-        variable = [0.0]
+        variable = np.array([[0]])
 
     registry = MechanismRegistry
 
@@ -1154,7 +1152,7 @@ class Mechanism_Base(Mechanism):
 
     @tc.typecheck
     def __init__(self,
-                 variable=None,
+                 default_variable=None,
                  size=None,
                  input_states=None,
                  output_states=None,
@@ -1245,7 +1243,7 @@ class Mechanism_Base(Mechanism):
                           registry=self._stateRegistry,
                           context=context)
 
-        variable = self._handle_default_variable(variable, size, input_states, params)
+        default_variable = self._handle_default_variable(default_variable, size, input_states, params)
         if isinstance(output_states, tuple):
             output_states = list(output_states)
 
@@ -1255,7 +1253,7 @@ class Mechanism_Base(Mechanism):
         else:
             context = context + SEPARATOR_BAR + INITIALIZING + self.name
 
-        super(Mechanism_Base, self).__init__(default_variable=variable,
+        super(Mechanism_Base, self).__init__(default_variable=default_variable,
                                              size=size,
                                              param_defaults=params,
                                              prefs=prefs,
@@ -1294,92 +1292,22 @@ class Mechanism_Base(Mechanism):
         self.processes = {}
         self.systems = {}
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # Parsing methods
+    # ------------------------------------------------------------------------------------------------------------------
+    # ---------------------------------------------------------
+    # Argument parsers
+    # ---------------------------------------------------------
+
     def _parse_arg_variable(self, variable):
-        '''
-        Takes user-inputted argument **variable** and returns an instance_defaults.variable-like
-        object that it represents
+        if variable is None:
+            return None
 
-        Currently supports types:
-            numbers.Number
-            list
-            numpy.ndarray
+        return super()._parse_arg_variable(convert_to_np_array(variable, dimension=2))
 
-        Returns
-        -------
-            an at-least-two-dimensional form of **variable**
-        '''
-        if isinstance(variable, numbers.Number):
-            variable = [[variable]]
-        elif isinstance(variable, list):
-            if all([not isinstance(x, Iterable) for x in variable]):
-                variable = [variable]
-        elif isinstance(variable, np.ndarray):
-            variable = np.atleast_2d(variable)
-
-        return variable
-
-    def _parse_arg_input_states(self, input_states):
-        '''
-        Takes user-inputted argument **input_states** and returns an instance_defaults.variable-like
-        object that it represents
-
-        Returns
-        -------
-            A, B where
-            A is an instance_defaults.variable-like object
-            B is True if **input_states** contained an explicit variable specification, False otherwise
-        '''
-
-        if input_states is None:
-            return None, False
-
-        default_variable_from_input_states = []
-        variable_was_specified = False
-
-        if not isinstance(input_states, Iterable):
-            input_states = [input_states]
-
-        for i, s in enumerate(input_states):
-            parsed_spec = _parse_state_spec(
-                owner=self,
-                state_type=InputState,
-                state_spec=s,
-                context='_parse_arg_input_states'
-            )
-
-            if isinstance(parsed_spec, dict):
-                try:
-                    variable = parsed_spec[VARIABLE]
-                except KeyError:
-                    pass
-            elif isinstance(parsed_spec, (Projection, Mechanism, State)):
-                if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                    args = parsed_spec.init_args
-                    if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
-                        variable = args[REFERENCE_VALUE]
-                    elif VALUE in args and args[VALUE] is not None:
-                        variable = args[VALUE]
-                    elif VARIABLE in args and args[VARIABLE] is not None:
-                        variable = args[VARIABLE]
-                else:
-                    try:
-                        variable = parsed_spec.value
-                    except AttributeError:
-                        variable = parsed_spec.instance_defaults.variable
-            else:
-                variable = parsed_spec.instance_defaults.variable
-
-            try:
-                if variable is None:
-                    variable = InputState.ClassDefaults.variable
-                elif not InputState._state_spec_allows_override_variable(s):
-                    variable_was_specified = True
-            except UnboundLocalError:
-                variable = InputState.ClassDefaults.variable
-
-            default_variable_from_input_states.append(variable)
-
-        return default_variable_from_input_states, variable_was_specified
+    # ------------------------------------------------------------------------------------------------------------------
+    # Handlers
+    # ------------------------------------------------------------------------------------------------------------------
 
     def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
         '''
@@ -1395,13 +1323,13 @@ class Mechanism_Base(Mechanism):
 
         # handle specifying through params dictionary
         try:
-            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(params[INPUT_STATES])
+            default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(params[INPUT_STATES])
         except (TypeError, KeyError):
             pass
 
         if default_variable_from_input_states is None:
             # fallback to standard arg specification
-            default_variable_from_input_states, input_states_variable_was_specified = self._parse_arg_input_states(input_states)
+            default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(input_states)
 
         if default_variable_from_input_states is not None:
             if default_variable is None:
@@ -1436,10 +1364,96 @@ class Mechanism_Base(Mechanism):
                     # do not pass input_states variable as default_variable, fall back to default_variable specification
                     pass
 
-        return default_variable
+        return super()._handle_default_variable(default_variable=default_variable, size=size)
+
+    def _handle_arg_input_states(self, input_states):
+        '''
+        Takes user-inputted argument **input_states** and returns an instance_defaults.variable-like
+        object that it represents
+
+        Returns
+        -------
+            A, B where
+            A is an instance_defaults.variable-like object
+            B is True if **input_states** contained an explicit variable specification, False otherwise
+        '''
+
+        if input_states is None:
+            return None, False
+
+        default_variable_from_input_states = []
+        variable_was_specified = False
+
+        if not isinstance(input_states, Iterable):
+            input_states = [input_states]
+
+        for i, s in enumerate(input_states):
+            # default if not determined later
+            variable = InputState.ClassDefaults.variable
+
+            parsed_spec = _parse_state_spec(
+                owner=self,
+                state_type=InputState,
+                state_spec=s,
+                context='_handle_arg_input_states'
+            )
+            variable = None
+
+            if isinstance(parsed_spec, dict):
+                try:
+                    # MODIFIED 2/21/18 OLD:
+                    variable = parsed_spec[VALUE]
+                    # # MODIFIED 2/21/18 NEW [JDC - as per devel]:
+                    # variable = parsed_spec[VARIABLE]
+                    # # MODIFIED 2/21/18 END
+                except KeyError:
+                    pass
+            elif isinstance(parsed_spec, (Projection, Mechanism, State)):
+                if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                    args = parsed_spec.init_args
+                    # MODIFIED 2/21/18 OLD:
+                    if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
+                        variable = args[REFERENCE_VALUE]
+                    elif VALUE in args and args[VALUE] is not None:
+                        variable = args[VALUE]
+                    elif VARIABLE in args and args[VARIABLE] is not None:
+                        variable = args[VARIABLE]
+                    # # MODIFIED 2/21/18 NEW [JDC]:
+                    # if VARIABLE in args and args[VARIABLE] is not None:
+                    #     variable = args[VARIABLE]
+                    # elif VALUE in args and args[VALUE] is not None:
+                    #     variable = args[VALUE]
+                    # elif REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
+                    #     variable = args[REFERENCE_VALUE]
+                    # # MODIFIED 2/21/18 END
+                else:
+                    # MODIFIED 2/21/18 OLD:
+                    try:
+                        variable = parsed_spec.value
+                    # # MODIFIED 2/21/18 NEW [JDC]:
+                    # try:
+                    #     variable = parsed_spec.variable
+                    # MODIFIED 2/21/18 END
+                    except AttributeError:
+                        variable = parsed_spec.instance_defaults.variable
+            else:
+                variable = parsed_spec.instance_defaults.variable
+
+            if variable is None:
+                variable = InputState.ClassDefaults.variable
+            elif not InputState._state_spec_allows_override_variable(s):
+                variable_was_specified = True
+
+            default_variable_from_input_states.append(variable)
+
+        return default_variable_from_input_states, variable_was_specified
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Validation methods
+    # ------------------------------------------------------------------------------------------------------------------
 
     def _validate_variable(self, variable, context=None):
-        """Convert ClassDefaults.variable and variable to 2D np.array: one 1D value for each InputState
+        """Convert variable to 2D np.array: one 1D value for each InputState
 
         # VARIABLE SPECIFICATION:                                        ENCODING:
         # Simple value variable:                                         0 -> [array([0])]
@@ -1454,10 +1468,6 @@ class Mechanism_Base(Mechanism):
         variable = self._update_variable(super(Mechanism_Base, self)._validate_variable(variable, context))
 
         # Force Mechanism variable specification to be a 2D array (to accomodate multiple InputStates - see above):
-        # Note: _instantiate_input_states (below) will parse into 1D arrays, one for each InputState
-        # TODO: stateful - should this be here?? seems not
-        self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
-        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
         variable = self._update_variable(convert_to_np_array(variable, 2))
 
         return variable
@@ -2224,12 +2234,6 @@ class Mechanism_Base(Mechanism):
         self.value = np.atleast_1d(value)
         self._update_output_states(context="INITIAL_VALUE")
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
-        return self.function(variable=variable, params=runtime_params, context=context)
-
     def _report_mechanism_execution(self, input_val=None, params=None, output=None):
 
         if input_val is None:
@@ -2395,7 +2399,7 @@ class Mechanism_Base(Mechanism):
 
         if input_states:
             # FIX: 11/9/17
-            added_variable, added_input_state = self._parse_arg_input_states(input_states)
+            added_variable, added_input_state = self._handle_arg_input_states(input_states)
             if added_input_state:
                 old_variable = self.instance_defaults.variable.tolist()
                 old_variable.extend(added_variable)

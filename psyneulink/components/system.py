@@ -310,16 +310,13 @@ A System executes learning if it is specified for one or more `Processes <Proces
 The System's `learning <System.learning>` attribute indicates whether learning is enabled for the System. Learning
 is executed for any Components (individual Projections or Processes) for which it is `specified
 <Process_Learning_Sequence>` after the  `processing <System_Execution_Processing>` of each `TRIAL` has completed, but
-before the `controller <System.controller> is executed <System_Execution_Control>`.  The learning Components of a
-System can be displayed using the System's `show_graph <System.show_graph>` method with its **show_learning**
-argument assigned `True` or *ALL*. The stimuli used for learning (both inputs and targets) can be specified in either
-of two formats, Sequence or Mechanism, that are described in the `Run` module; see `Run_Inputs` and `Run_Targets`).
-Both formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its
-`origin_mechanisms <System.origin_mechanisms>` attribute).  If the targets are specified in `Sequence
-<Run_Targets_Sequence_Format>` or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for
-each `TARGET` Mechanism (listed in its `target_mechanisms <System.target_mechanisms>` attribute).  Targets can also
-be specified in a `function format <Run_Targets_Function_Format>`, which generates a target for each execution of a
-`TARGET` Mechanism.
+before the `controller <System.controller> is executed <System_Execution_Control>`.
+
+The learning Components of a System can be displayed using the System's `show_graph <System.show_graph>` method with its
+**show_learning** argument assigned `True` or *ALL*. The target values used for learning can be specified in either of
+two formats: dictionary or function, which are described in the `Run` module (see `Run_Targets`). Both formats require
+that a target value be provided for each `TARGET` Mechanism of the System (listed in its `target_mechanisms
+<System.target_mechanisms>` attribute).
 
 .. note::
    A `TARGET` Mechanism of a Process is not necessarily one of the `TARGET` Mechanisms of the System to which it belongs
@@ -441,27 +438,20 @@ import typecheck as tc
 from toposort import toposort, toposort_flatten
 
 from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type
-from psyneulink.components.mechanisms.mechanism import MechanismList
-from psyneulink.components.mechanisms.processing.objectivemechanism import \
-    DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
-from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary \
-    import _get_learning_mechanisms, _assign_error_signal_projections
+from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary import _assign_error_signal_projections, _get_learning_mechanisms
+from psyneulink.components.mechanisms.mechanism import MechanismList
+from psyneulink.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
 from psyneulink.components.process import Process, ProcessList, ProcessTuple
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import \
-    ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, EXPONENT, \
-    FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, \
-    LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, \
-    SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, WEIGHT, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, WEIGHT, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import \
-    AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, insert_list
+from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, insert_list, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -880,7 +870,7 @@ class System(System_Base):
         #           format(self.name, self.names.__str__().strip("[]")))
 
     def _validate_variable(self, variable, context=None):
-        """Convert self.ClassDefaults.variable, self.instance_defaults.variable, and variable to 2D np.array: \
+        """Convert variable to 2D np.array: \
         one 1D value for each input state
         """
         super(System, self)._validate_variable(variable, context)
@@ -888,10 +878,8 @@ class System(System_Base):
         # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
         if variable is None:
             return
-        self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
-        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
 
-        return convert_to_np_array(variable, 2)
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate controller, processes and initial_values
@@ -1854,42 +1842,92 @@ class System(System_Base):
                 warnings.warn("Learning has been specified for {} but its \'targets\' argument was not specified;"
                               "default will be used ({})".format(self.name, self.targets))
             # MODIFIED 6/25/17 END
-
-        else:
-            self.targets = np.atleast_2d(self.targets)
-
         # Create SystemInputState for each TARGET mechanism in target_mechanisms and
-        #    assign MappingProjection from the SystemInputState
-        #    to the TARGET mechanism's TARGET inputSate
-        #    (i.e., from the SystemInputState to the ComparatorMechanism)
-        for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
+        #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
 
-            # Create ProcessInputState for each target and assign to targetMechanism's target inputState
-            target_mech_TARGET_input_state = target_mech.input_states[TARGET]
 
-            # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
-            #    of the TARGET (ComparatorMechanism) target inputState's instance_defaults.variable attribute
-            if len(self.targets[i]) != len(target_mech_TARGET_input_state.instance_defaults.variable):
-                raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
-                                  "expected for its TARGET Mechanism {}".
-                                   format(len(self.targets[i]),
-                                          self.targets[i],
-                                          len(target_mech_TARGET_input_state.instance_defaults.variable),
-                                          target_mech.name))
+        if isinstance(self.targets, dict):
+            for target_mech in self.target_mechanisms:
 
-            system_target_input_state = SystemInputState(
-                                                   owner=self,
-                                                   variable=target_mech_TARGET_input_state.instance_defaults.variable,
-                                                   prefs=self.prefs,
-                                                   name="System Target {}".format(i),
-                                                   context=context)
-            self.target_input_states.append(system_target_input_state)
+                # Skip if TARGET input state already has a projection from a SystemInputState in current system
+                if any(self is projection.sender.owner for projection in target_mech.input_states[TARGET].path_afferents):
+                    continue
 
-            # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
-            from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-            MappingProjection(sender=system_target_input_state,
-                    receiver=target_mech_TARGET_input_state,
-                    name=self.name+' Input Projection to '+target_mech_TARGET_input_state.name)
+                sample_mechanism = target_mech.input_states[SAMPLE].path_afferents[0].sender.owner
+                TARGET_input_state = target_mech.input_states[TARGET]
+
+                if len(self.targets[sample_mechanism]) != len(TARGET_input_state.instance_defaults.variable):
+                            raise SystemError("Length {} of target ({}, {}) does not match the length ({}) of the target "
+                                              "expected for its TARGET Mechanism {}".
+                                               format(len(self.targets[sample_mechanism]),
+                                                      sample_mechanism.name,
+                                                      self.targets[sample_mechanism],
+                                                      len(TARGET_input_state.instance_defaults.variable),
+                                                      target_mech.name))
+
+                system_target_input_state = SystemInputState(owner=self,
+                                                        variable=TARGET_input_state.instance_defaults.variable,
+                                                        prefs=self.prefs,
+                                                        name="System Target for {}".format(target_mech.name),
+                                                        context=context)
+                self.target_input_states.append(system_target_input_state)
+
+                # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
+                from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+                MappingProjection(sender=system_target_input_state,
+                        receiver=TARGET_input_state,
+                        name=self.name+' Input Projection to '+TARGET_input_state.name)
+
+        elif isinstance(self.targets, list):
+
+            # more than one target
+            if len(self.target_mechanisms) > 1:
+                if len(self.targets) != len(self.target_mechanisms):
+                    raise SystemError("Number of target specifications provided ({}) does not match number of target "
+                                      "mechanisms ({}) in {}".format(len(self.targets),
+                                                                     len(self.target_mechanisms),
+                                                                     self.name))
+
+            # only one target, verify that it is wrapped in an outer list
+            elif len(self.target_mechanisms) == 1:
+                if len(np.shape(self.targets)) < 2:
+                    self.targets = [self.targets]
+
+
+
+
+            # Create SystemInputState for each TARGET mechanism in target_mechanisms and
+            #    assign MappingProjection from the SystemInputState
+            #    to the TARGET mechanism's TARGET inputSate
+            #    (i.e., from the SystemInputState to the ComparatorMechanism)
+            for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
+
+                # Create ProcessInputState for each target and assign to targetMechanism's target inputState
+                target_mech_TARGET_input_state = target_mech.input_states[TARGET]
+
+                # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
+                #    of the TARGET (ComparatorMechanism) target inputState's instance_defaults.variable attribute
+                if len(self.targets[i]) != len(target_mech_TARGET_input_state.instance_defaults.variable):
+                    raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
+                                      "expected for its TARGET Mechanism {}".
+                                      format(len(self.targets[i]),
+                                             self.targets[i],
+                                             len(target_mech_TARGET_input_state.instance_defaults.variable),
+                                             target_mech.name))
+
+                system_target_input_state = SystemInputState(
+                    owner=self,
+                    variable=target_mech_TARGET_input_state.instance_defaults.variable,
+                    prefs=self.prefs,
+                    name="System Target {}".format(i),
+                    context=context)
+                self.target_input_states.append(system_target_input_state)
+
+                # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
+                from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+                MappingProjection(sender=system_target_input_state,
+                                  receiver=target_mech_TARGET_input_state,
+                                  name=self.name + ' Input Projection to ' + target_mech_TARGET_input_state.name)
 
     def _assign_output_states(self):
         """Assign OutputStates for System (the values of which will comprise System.value)
@@ -2650,20 +2688,24 @@ class System(System_Base):
         #        (e.g., for rewards in reinforcement learning)
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
-        if isinstance(self.targets, function_type):
-            self.current_targets = self.targets()
+        # if isinstance(self.targets, function_type):
+        #     self.current_targets = self.targets()
+        #     for i in range(len(self.target_mechanisms)):
+        #         self.target_input_states[i].value = self.current_targets[i]
+        if isinstance(self.targets, dict):
+            for i in range(len(self.target_mechanisms)):
 
-        # MODIFIED CW 1/29/18: removed this because some learning (e.g. Hebbian) doesn't need targets
-        # if self.current_targets is None:
-            # if self.verbosePref:
-                # warnings.warn("No targets were specified in the call to execute {} with learning. This is okay if "
-                #               "your learning (e.g. Hebbian learning) does not need a target.".format(self.name))
+                terminal_mechanism = self.target_mechanisms[i].input_states[SAMPLE].path_afferents[0].sender.owner
+                target_value = self.current_targets[terminal_mechanism]
 
-        for i in range(len(self.target_mechanisms)):
-        # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
-        #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
-            self.target_input_states[i].value = self.current_targets[i]
+                if callable(target_value):
+                    self.target_input_states[i].value = target_value()
+                else:
+                    self.target_input_states[i].value = target_value
 
+        elif isinstance(self.targets, (list, np.ndarray)):
+            for i in range(len(self.target_mechanisms)):
+                self.target_input_states[i].value = self.current_targets[i]
         # NEXT, execute all components involved in learning
         if self.scheduler_learning is None:
             raise SystemError('System.py:_execute_learning - {0}\'s scheduler is None, '

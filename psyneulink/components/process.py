@@ -859,6 +859,10 @@ class Process(Process_Base):
             # context = self.__class__.__name__
             context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
 
+        # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
+        if default_variable is None and len(pathway) > 0:
+            default_variable = pathway[0].instance_defaults.variable
+
         super(Process, self).__init__(default_variable=default_variable,
                                       size=size,
                                       param_defaults=params,
@@ -866,26 +870,11 @@ class Process(Process_Base):
                                       prefs=prefs,
                                       context=context)
 
+    def _parse_arg_variable(self, variable):
+        if variable is None:
+            return None
 
-    def _validate_variable(self, variable, context=None):
-        """Convert ClassDefaults.variable, instance_defaults.variable, and variable to 2D np.array: one 1D value for each input state
-
-        :param variable:
-        :param context:
-        :return:
-        """
-
-        variable = self._update_variable(super(Process, self)._validate_variable(variable, context))
-
-        # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
-        if self.ClassDefaults.variable is not None:
-            self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
-        if self.instance_defaults.variable is not None:
-            self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
-        if variable is not None:
-            variable = self._update_variable(convert_to_np_array(variable, 2))
-
-        return variable
+        return super()._parse_arg_variable(convert_to_np_array(variable, dimension=2))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate initial_values args
@@ -1655,20 +1644,7 @@ class Process(Process_Base):
 
         # FIX: LENGTH OF EACH PROCESS INPUT STATE SHOUD BE MATCHED TO LENGTH OF INPUT STATE FOR CORRESPONDING ORIGIN MECHANISM
 
-        # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
-        if self.instance_defaults.variable is None:
-            self.instance_defaults.variable = []
-            seen = set()
-            # mech_list = list(object_item for object_item in self._mechs)
-            for mech in self._mechs:
-                # Skip repeat mechansims (don't add another element to self.instance_defaults.variable)
-                if mech in seen:
-                    continue
-                else:
-                    seen.add(mech)
-                if mech.processes[self] in {ORIGIN, SINGLETON}:
-                    self.instance_defaults.variable.extend(mech.instance_defaults.variable)
-        process_input = convert_to_np_array(self.instance_defaults.variable, 2)
+        process_input = self.instance_defaults.variable
 
         # Get number of Process inputs
         num_process_inputs = len(process_input)
@@ -2554,7 +2530,7 @@ class ProcessInputState(OutputState):
         # MODIFIED 2/17/17 END
         # self.path_afferents = []
         # self.index = PRIMARY
-        # self.calculate = Linear
+        # self.assign = Linear
 
     @property
     def value(self):

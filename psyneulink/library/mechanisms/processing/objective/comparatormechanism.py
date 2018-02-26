@@ -138,7 +138,7 @@ from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, VARIABLE, kwPreferenceSetName
+from psyneulink.globals.keywords import ASSIGN, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
@@ -308,18 +308,18 @@ class ComparatorMechanism(ObjectiveMechanism):
         kwPreferenceSetName: 'ComparatorCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # ClassDefaults.variable = [[0],[0]]  # By default, ComparatorMechanism compares two 1D np.array input_states
     class ClassDefaults(ObjectiveMechanism.ClassDefaults):
-        variable = None
+        # By default, ComparatorMechanism compares two 1D np.array input_states
+        variable = np.array([[0], [0]])
 
     # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME: SSE,
-                                    CALCULATE: lambda x: np.sum(x*x)},
+                                    ASSIGN: lambda x: np.sum(x*x)},
                                    {NAME: MSE,
-                                    CALCULATE: lambda x: np.sum(x*x)/len(x)}])
+                                    ASSIGN: lambda x: np.sum(x*x)/len(x)}])
 
     # MODIFIED 10/10/17 OLD:
     @tc.typecheck

@@ -557,7 +557,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                          function=LinearCombination(weights=[[-1], [1]]),
             #                                          output_states=[ERROR_SIGNAL,
             #                                                         {NAME:MSE,
-            #                                                          CALCULATE:lambda x: np.sum(x*x)/len(x)}],
+            #                                                          ASSIGN:lambda x: np.sum(x*x)/len(x)}],
             #                                          name="\'{}\' {}".format(lc.activation_mech.name,
             #                                                                  COMPARATOR_MECHANISM),
             #                                          context=context)
@@ -603,7 +603,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     error_source = lc.error_signal_mech
 
-    learning_mechanism = LearningMechanism(variable=[activation_input,
+    learning_mechanism = LearningMechanism(default_variable=[activation_input,
                                                      activation_output,
                                                      error_signal],
                                            error_sources=error_source,

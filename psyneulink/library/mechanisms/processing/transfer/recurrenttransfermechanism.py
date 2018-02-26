@@ -105,7 +105,7 @@ Structure
 
 The distinguishing feature of a RecurrentTransferMechanism is a self-projecting `AutoAssociativeProjection` -- that
 is, one that projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
-InputState <InputState_Primary>`.  This can be parametrized using its `matrix <RecurrentTransferMechanism.matrix>`,
+InputState <InputState_Primary>`.  This can be parameterized using its `matrix <RecurrentTransferMechanism.matrix>`,
 `auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is
 stored in its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` attribute.
 
@@ -586,6 +586,9 @@ class RecurrentTransferMechanism(TransferMechanism):
     """
     componentType = RECURRENT_TRANSFER_MECHANISM
 
+    class ClassDefaults(TransferMechanism.ClassDefaults):
+        variable = np.array([[0]])
+
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
 
     standard_output_states = TransferMechanism.standard_output_states.copy()
@@ -856,22 +859,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 del self.output_states[ENTROPY]
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
-        """Implement decay
-        """
-        # KAM commented out 8/29/17 because self.previous_input is not a valid attrib of this mechanism
-
-        # if context is None or (INITIALIZING not in context):
-        #     if self.decay is not None and self.decay != 1.0:
-        #         self.previous_input = self.previous_input * float(self.decay)
-
-        return super()._execute(variable=variable,
-                                runtime_params=runtime_params,
-                                context=context)
-
     def _update_parameter_states(self, runtime_params=None, context=None):
         for state in self._parameter_states:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
@@ -1020,7 +1007,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                         matrix,
                                         context=None):
 
-        learning_mechanism = AutoAssociativeLearningMechanism(variable=[activity_vector.value],
+        learning_mechanism = AutoAssociativeLearningMechanism(default_variable=[activity_vector.value],
                                                               # learning_signals=[self.recurrent_projection],
                                                               function=learning_function,
                                                               learning_rate=learning_rate,
