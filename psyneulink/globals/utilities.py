@@ -514,14 +514,14 @@ def recursive_update(d, u, non_destructive=False):
     """Recursively update entries of dictionary d with dictionary u
     From: https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
     """
-    destructive = not non_destructive
     for k, v in u.items():
         if isinstance(v, Mapping):
             r = recursive_update(d.get(k, {}), v)
             d[k] = r
         else:
-            if destructive or k in d and d[k] is None:
-                d[k] = u[k]
+            if non_destructive and k in d and d[k] is not None:
+                continue
+            d[k] = u[k]
     return d
 
 

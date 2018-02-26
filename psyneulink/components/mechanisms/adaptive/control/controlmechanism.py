@@ -853,9 +853,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         from psyneulink.components.states.state import _instantiate_state
         # Parses control_signal specifications (in call to State._parse_state_spec)
         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+        # Temporarily assign variable to full owner.value;
+        #    when item of owner.value is added for ControlSignal (below), then reassign ControlSignal.variable to it
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
-                                            variable=(OWNER_VALUE, len(self._output_states)),
+                                            variable=OWNER_VALUE,
                                             reference_value=ControlSignal.ClassDefaults.allocation,
                                             modulation=self.modulation,
                                             state_spec=control_signal)
@@ -880,6 +882,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # since output_states is exactly control_signals is exactly the shape of value, we can just construct it here
         self.instance_defaults.value = np.array([[ControlSignal.ClassDefaults.allocation] for i in range(len(self._output_states))])
         self.value = self.instance_defaults.value
+
+        # Assign ControlSignal's variable to appended item of owner's value
+        control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
 
         # # if control_signal.index is SEQUENTIAL:
         # if control_signal.owner_value_index is None:

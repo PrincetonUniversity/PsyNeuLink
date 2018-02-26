@@ -729,7 +729,8 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
+from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, \
+    function_type, method_type
 from psyneulink.components.functions.function import Function, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXECUTING, EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
@@ -2818,7 +2819,8 @@ def _parse_state_spec(state_type=None,
     # FIX:    AS TWO ITEMS TO BE COMBINED RATHER THAN AS A 2D ARRAY
     try:
         spec_function = state_dict[PARAMS][FUNCTION]
-        if isinstance(spec_function, Function):
+        # if isinstance(spec_function, Function):
+        if isinstance(spec_function, (Function, function_type, method_type)):
             # # MODIFIED 2/21/18 OLD [KM]:
             # spec_function_value = spec_function.execute(state_dict[VARIABLE])
             # MODIFIED 2/21/18 NEW [JDC]:
@@ -2835,7 +2837,8 @@ def _parse_state_spec(state_type=None,
             spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
             # MODIFIED 2/21/18 END
         else:
-            raise StateError('state_spec value for FUNCTION ({0}) must be a Function class or instance of one'.
+            raise StateError('state_spec value for FUNCTION ({0}) must be a function, method, '
+                             'Function class or instance of one'.
                              format(spec_function))
     except (KeyError, TypeError):
         spec_function_value = state_dict[VARIABLE]
