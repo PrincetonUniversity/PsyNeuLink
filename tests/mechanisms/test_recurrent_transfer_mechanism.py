@@ -11,6 +11,8 @@ from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism
 from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+
+
 class TestMatrixSpec:
     def test_recurrent_mech_matrix(self):
 
