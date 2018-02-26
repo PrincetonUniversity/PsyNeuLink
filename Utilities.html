@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.4.4.1 documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.4.4.3 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.1 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.4.3 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.4.1
+                0.4.4.3
               </div>
             
           
@@ -461,6 +461,24 @@ it, an exception is raised when a missing attribute is encountered.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="psyneulink.globals.utilities.object_has_single_value">
+<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">object_has_single_value</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.object_has_single_value" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><strong>True</strong> (<em>if **obj*</em> contains only one value, in any dimension*)</li>
+<li><strong>False</strong> (<em>otherwise</em>)</li>
+<li><em>**obj*</em> will be cast to a numpy array if it is not already one*</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="psyneulink.globals.utilities.get_value_from_array">
 <code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">get_value_from_array</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.get_value_from_array" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extract numeric value from array, preserving numeric type
@@ -684,14 +702,48 @@ Return True only if both are instances or classes of a PsyNeuLink Function;  oth
 
 <dl class="function">
 <dt id="psyneulink.globals.utilities.convert_all_elements_to_np_array">
-<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">convert_all_elements_to_np_array</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.convert_all_elements_to_np_array" title="Permalink to this definition">¶</a></dt>
-<dd><p>Recursively converts all items in <strong>arr</strong> to numpy arrays</p>
+<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">convert_all_elements_to_np_array</code><span class="sig-paren">(</span><em>arr</em>, <em>cast_from=None</em>, <em>cast_to=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.convert_all_elements_to_np_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively converts all items in <strong>arr</strong> to numpy arrays, optionally casting
+items of type/dtype <strong>cast_from</strong> to type/dtype <strong>cast_to</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>- type</strong><strong>, </strong><strong>numpy.dtype - type when encountered to cast to cast_to</strong> (<em>cast_from</em>) – </li>
+<li><strong>- type</strong><strong>, </strong><strong>numpy.dtype - type to cast cast_from to</strong> (<em>cast_to</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">a numpy array containing the converted <strong>arr</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="psyneulink.globals.utilities.insert_list">
 <code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">insert_list</code><span class="sig-paren">(</span><em>list1</em>, <em>position</em>, <em>list2</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.insert_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Insert list2 into list1 at position</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="psyneulink.globals.utilities.safe_len">
+<code class="descclassname">psyneulink.globals.utilities.</code><code class="descname">safe_len</code><span class="sig-paren">(</span><em>arr</em>, <em>fallback=1</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.utilities.safe_len" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">len(<strong>arr</strong>) if possible, otherwise <strong>fallback</strong></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -733,7 +785,7 @@ Return True only if both are instances or classes of a PsyNeuLink Function;  oth
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.1',
+            VERSION:'0.4.4.3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
