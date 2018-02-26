@@ -17,9 +17,9 @@ A GatingMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modulates t
 OutputState(s) of one or more `Mechanisms <Mechanism>`.   Its `function <GatingMechanism.function>` takes the
 GatingMechanism's `variable <GatingMechanism.variable>` and uses that generate a `gating_policy`:  a list of values,
 one for each of its `GatingSignals <GatingSignal>`.  Each of those, in turn, generates a `gating_signal
-<GatingSignal.gating_signal>` used by its `GatingProjections <GatingProjection>` to modulate the value of the State(
-s) to which they project.   A GatingMechanism can regulate only the parameters of Mechanisms in the `System` to which
-it belongs.  The InputStates and/or OutputStates gated by a GatingMechanism can be list using its `show
+<GatingSignal.gating_signal>` used by its `GatingProjections <GatingProjection>` to modulate the value of the
+State(s) to which they project.   A GatingMechanism can regulate only the parameters of Mechanisms in the `System`
+to which it belongs.  The InputStates and/or OutputStates gated by a GatingMechanism can be list using its `show
 <GatingMehanism.show>` method.
 
 COMMENT: TBI
@@ -63,7 +63,11 @@ GatingSignals
 A `GatingSignal` is created for each item listed in the **gating_signals** argument of the constructor, and all of the
 GatingSignals for a GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.
 Each GatingSignal is assigned one or more `GatingProjections <GatingProjection>` to the InputState(s) and/or
-OutputState(s) it gates.
+OutputState(s) it gates. By default, the `function <GatingMechanism.function>` of GatingMechanism generates a
+a `value <GatingMechanism.value>` -- its `gating_policy <GatingSignal.gating_policy>` -- with a single item, that is
+used by all of the GatingMechanism's GatingSignals.  However,  if a custom `function <GatingMechanism.function>` is
+specified that generates a `gating_policy <GatingSignal.gating_policy>` with more than one item, different
+GatingSignals can be assigned to the different items (see `GatingMechanism_Function` below).
 
 .. _GatingMechanism_Modulation:
 
@@ -101,7 +105,7 @@ the `value <InputState.value>` of its `primary InputState <InputState_Primary>` 
 of its `gating_policy <GatingMechanism.gating_policy>`.  This can be replaced by a `Function` that generates
 a `gating_policy <GatingMechanism.gating_policy>` with multiple values, which may be useful if the GatingMechanism
 is assigned more than one `GatingSignal`.
-\
+
 .. _GatingMechanism_Output:
 
 Output
