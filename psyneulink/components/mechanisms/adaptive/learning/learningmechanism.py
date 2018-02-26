@@ -551,7 +551,8 @@ from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, TARGET
+    MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, \
+    PROJECTIONS, SAMPLE, STATE_TYPE, TARGET
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
@@ -1088,6 +1089,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
                 learning_signal = _instantiate_state(state_type=LearningSignal,
                                                      owner=self,
+                                                     variable=(OWNER_VALUE,0),
                                                      params=params,
                                                      reference_value=self.learning_signal,
                                                      modulation=self.modulation,
