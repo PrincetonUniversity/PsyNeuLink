@@ -1245,7 +1245,7 @@ class OutputState(State_Base):
         # -- CALL TO GET DEFAULT VALUE AND RETURN THAT (CAN'T USE VARIABLE SINCE DON'T KNOW MECH YET)
         #      THOUGH COULD PASS IN OWNER TO DETERMINE IT
         fct_variable = _parse_output_state_variable(owner, variable)
-        fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable==PARAMS_DICT)
+        fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable is PARAMS_DICT)
         return fct(fct_variable)
 
     @property
