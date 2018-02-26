@@ -1220,7 +1220,7 @@ class Component(object):
 
         def _convert_function_to_class(function, source):
             from psyneulink.components.functions.function import Function
-            from inspect import isfunction
+            from inspect import isfunction, ismethod
             fct_cls = None
             fct_params = None
             # It is a PsyNeuLink Function class
@@ -1233,7 +1233,11 @@ class Component(object):
                 fct_cls = function.__class__
                 fct_params = function.user_params.copy()
             # It is a generic function
-            elif isfunction(function):
+            # # MODIFIED 2/26/18 OLD:
+            # elif isfunction(function):
+            # MODIFIED 2/26/18 NEW:
+            elif (isfunction(function) or ismethod(function)):
+            # MODIFIED 2/26/18 END
                 # Assign to paramClassDefaults as is (i.e., don't convert to class), since class is generic
                 # (_instantiate_function also tests for this and leaves it as is)
                 fct_cls = function

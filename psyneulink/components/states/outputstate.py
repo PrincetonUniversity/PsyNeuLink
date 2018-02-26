@@ -546,7 +546,7 @@ from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.functions.function import Function, Linear, function_type, method_type, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import ALL, ASSIGN, COMMAND_LINE, FUNCTION, FUNCTION_PARAMS, GATING_SIGNAL, \
+from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, FUNCTION_PARAMS, GATING_SIGNAL,\
     INDEX, INITIALIZING, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MEAN, MECHANISM_VALUE, MEDIAN, NAME, \
     OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, \
     PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, \
@@ -1755,14 +1755,28 @@ def make_readonly_property(val):
 @tc.typecheck
 def _convert_assign_and_index(d:dict):
 
-    if INDEX in d:
-        # if output_state[INDEX] is SEQUENTIAL:
-        #     return
-        if d[INDEX] is ALL:
-            d[VARIABLE] = OWNER_VALUE
-        else:
-            d[VARIABLE] = (OWNER_VALUE, d[INDEX])
-        del d[INDEX]
-    if ASSIGN in d:
-        d[FUNCTION] = d[ASSIGN]
-        del d[ASSIGN]
+    def replace_entries(x):
+        if INDEX in x:
+            # if output_state[INDEX] is SEQUENTIAL:
+            #     return
+            if x[INDEX] is ALL:
+                x[VARIABLE] = OWNER_VALUE
+            else:
+                x[VARIABLE] = (OWNER_VALUE, x[INDEX])
+            del x[INDEX]
+        if ASSIGN in x:
+            x[FUNCTION] = x[ASSIGN]
+            del x[ASSIGN]
+        if CALCULATE in x:
+            x[FUNCTION] = x[CALCULATE]
+            del x[CALCULATE]
+        return x
+
+    d = replace_entries(d)
+
+    if PARAMS in d and isinstance(d[PARAMS], dict):
+        p = replace_entries(d[PARAMS])
+        recursive_update(d, p, non_destructive=True)
+        for i in {VARIABLE, FUNCTION}:
+            if i in d[PARAMS]:
+                del d[PARAMS][i]
