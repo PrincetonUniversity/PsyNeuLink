@@ -830,9 +830,11 @@ class OutputState(State_Base):
         else:
             context = self
 
-        # For backward compatibility with CALCULATE
         if 'calculate' in kwargs:
             assign = kwargs['calculate']
+        # For backward compatibility with INDEX, CALCULATE and ASSIGN
+        if params:
+            _convert_assign_and_index(params)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
