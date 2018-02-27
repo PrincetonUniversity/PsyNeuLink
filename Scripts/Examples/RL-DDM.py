@@ -105,7 +105,7 @@ s.show_graph(show_learning=pnl.ALL, show_dimensions=True)
 # Run System.
 # Note: *targets* is specified as the reward() function (see above).
 s.run(
-    num_trials=10,
+    num_trials=30,
     inputs=input_list,
     targets=reward,
     call_before_trial=functools.partial(print_header, s),
