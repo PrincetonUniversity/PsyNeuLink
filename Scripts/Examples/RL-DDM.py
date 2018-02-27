@@ -81,15 +81,15 @@ def show_weights():
         )
     )
 
-# Used by System to generate a reward on each trial based on the outcome of the action_selection (DDM) Mechanism
-def reward():
-    return [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
-
-# Specify reward values for the (one-hot coded) actions returned by action_selection.output_state.value
-# Note:  the first (uncommented) reward array favors the left action,
-#        and the second (commented) one favors the right action.
+# Specify reward values associated with each action (corresponding to elements of esaction_selection.output_state.value)
 reward_values = [10, 0]
 # reward_values = [0, 10]
+
+# Used by System to generate a reward on each trial based on the outcome of the action_selection (DDM) Mechanism
+def reward():
+    """Return the reward associated with the selected action"""
+    return [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
+
 
 # Input stimuli for run of the System.
 # Notes:

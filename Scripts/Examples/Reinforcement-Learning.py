@@ -36,6 +36,7 @@ action_selection.output_state.value = [0, 0, 1]
 
 
 def reward():
+    """Return the reward associated with the selected action"""
     return [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
 
 
