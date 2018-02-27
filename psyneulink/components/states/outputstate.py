@@ -830,9 +830,9 @@ class OutputState(State_Base):
         else:
             context = self
 
+        # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:
             assign = kwargs['calculate']
-        # For backward compatibility with INDEX, CALCULATE and ASSIGN
         if params:
             _convert_assign_and_index(params)
 
