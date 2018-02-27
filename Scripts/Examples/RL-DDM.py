@@ -100,7 +100,7 @@ reward_values = [10, 0]
 input_list = {input_layer: [[1, 1],[1, 1]]}
 
 # # Shows graph of system (learning components are in orange)
-# s.show_graph(show_learning=pnl.ALL, show_dimensions=True)
+s.show_graph(show_learning=pnl.ALL, show_dimensions=True)
 
 # Run System.
 # Note: *targets* is specified as the reward() function (see above).
