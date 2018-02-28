@@ -246,7 +246,7 @@ class LCA(RecurrentTransferMechanism):
         noise=0.0,                         \
         integrator_mode = True             \
         time_step_size = 0.1               \
-        clip=(float:min, float:max),       \
+        clip=[float:min, float:max],       \
         params=None,                       \
         name=None,                         \
         prefs=None)
@@ -668,10 +668,10 @@ class LCA(RecurrentTransferMechanism):
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
             # when the input is given as a string.
             if (np.array(noise) != 0).any():
-                current_input = variable[0] + noise
+                current_input = variable + noise
             else:
 
-                current_input = variable[0]
+                current_input = variable
 
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)
