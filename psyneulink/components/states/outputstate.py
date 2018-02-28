@@ -97,31 +97,31 @@ former (that is, if an *OUTPUT_STATES* entry is included in the parameter dictio
 Adding OutputStates to a Mechanism after it is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-OutputStates can also be added* to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_methods>` method.
+OutputStates can also be added to a Mechanism, using the Mechanism's `add_states <Mechanism_Base.add_methods>` method.
 Unlike specification in the constructor, this **does not** replace any OutputStates already assigned to the Mechanism.
 Doing so appends them to the list of OutputStates in the Mechanism's `output_states <Mechanism_Base.output_states>`
 attribute, and their values are appended to its `output_values <Mechanism_Base.output_values>` attribute.  If the name
-of an OutputState added to a Mechanism is the same as one that already exists, its name is suffixed with a numerical
-index (incremented for each OutputState with that name; see `Naming`), and the OutputState is added to the list (that
-is, it does *not* replace ones that were already created).
+of an OutputState added to a Mechanism is the same as one that is already exists on the Mechanism, its name is suffixed
+with a numerical index (incremented for each OutputState with that name; see `Naming`), and the OutputState is added
+to the list (that is, it does *not* replace the one that was already there).
 
 
 .. _OutputState_Variable_and_Value:
 
-*OutputState's* `variable <OutputState.variable>`, `value <OutputState.value>`, *and Mechanism's* `value
-<Mechanism_Base.value>`
+*OutputStates* `variable <OutputState.variable>` *and* `value <OutputState.value>`
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Each OutputState created with or assigned to a Mechanism must reference one or more items of the Mechanism's attributes,
 that serve as the OutputState's `variable <OutputState.variable>`, and are used by its `function <OutputState.function>`
 to generate the OutputState's `value <OutputState.value>`.  By default, it uses the first item of its `owner
 <OutputState.owner>` Mechanism's `value <Mechanism_Base.value>`.  However, other attributes (or combinations of them)
 can be specified in the **variable** argument of the OutputState's constructor, or the *VARIABLE* entry in an
-`_OutputState_Specification_Dictionary`.  The specification must be compatible (in the number and type of items it
-generates) with the input expected by the OutputState's `function <OutputState.function>`. The OutputState's
-`variable <OutputState.variable>` is used as the input to its `function <OutputState.function>` to generate the
-OutputState's `value <OutputState.value>`, possibly modulated by a `GatingSignal`.  The OutputState's `value
-<OutputState.value>` must, in turn, be compatible with any Projections that are assigned to it, or `used to specify it
-<OutputState_Projection_Destination_Specification>`.
+`_OutputState_Specification_Dictionary` (see `OutputState_Customization`).  The specification must be compatible (in the
+number and type of items it generates) with the input expected by the OutputState's `function <OutputState.function>`.
+The OutputState's `variable <OutputState.variable>` is used as the input to its `function <OutputState.function>` to
+generate the OutputState's `value <OutputState.value>`, possibly modulated by a `GatingSignal` (see `below
+<OutputState_Modulatory_Projections>`).  The OutputState's `value <OutputState.value>` must, in turn, be compatible with
+any Projections that are assigned to it, or `used to specify it <OutputState_Projection_Destination_Specification>`.
 
 The `value <OutputState.value>` of each OutputState of a Mechanism is assigned to a corresponding item of the
 Mechanism's `output_values <Mechanism_Base.output_values>` attribute, in the order in which they are assigned in
@@ -131,9 +131,11 @@ attribute.
     .. note::
        The `output_values <Mechanism_Base.output_values>` attribute of a Mechanism is **not the same** as its `value
        <Mechanism_Base.value>` attribute:
-           * Mechanism.value contains the full and unmodified results of the Mechanism's `function
-             <Mechanism_Base.function>`.
-           * Mechanism.output_values contains a list of the `value <OutputState.value>` of each of its OutputStates;
+           * a Mechanism's `value <Mechanism.value>` attribute contains the full and unmodified results of its
+             `function <Mechanism_Base.function>`;
+           * a Mechanism's `output_values <Mechanism.output_values>` attribute contains a list of the `value
+           <OutputState.value>`
+             of each of its OutputStates.
 
 .. _OutputState_Forms_of_Specification:
 
@@ -159,13 +161,12 @@ which it should project. Each of these is described below:
       a default name is assigned to the State; if a string is specified, it is used as the `name <OutputState.name>` of
       the OutputState  (see `Naming`).
 
-    .. _OutputState_Specification_by_Value:
+    .. _OutputState_Specification_by_Variable:
 
-    * **value** -- creates a default OutputState using the specified value as the OutputState's `variable
-      <OutputState.variable>`.  This must be compatible with (have the same number and type of elements as)
-      the item of the owner Mechanism's `value <Mechanism_Base.value>` to which the OutputState is assigned
-      (the first item by default, or the one designated by its `index <OutputState.index>` attribute).  A default
-      name is assigned based on the name of the Mechanism (see `Naming`).
+    * **variable** -- creates a default OutputState using the specification as the OutputState's `variable
+      <OutputState.variable>` (see `OutputState_Customization`).  This must be compatible with (have the same number
+      and type of elements as) the OutputState's `function <OutputState.function>`.  A default name is assigned based
+      on the name of the Mechanism (see `Naming`).
     ..
     .. _OutputState_Specification_Dictionary:
 
@@ -173,20 +174,24 @@ which it should project. Each of these is described below:
 
     * **OutputState specification dictionary** -- this can be used to specify the attributes of an OutputState,
       using any of the entries that can be included in a `State specification dictionary <State_Specification>`
-      (see `examples <State_Specification_Dictionary_Examples>` in State).  If the dictionary includes a *VARIABLE*
-      entry, its value must be compatible with the item of the owner Mechanism's `value <Mechanism_Base.value>`
-      specified for its `index <OutputState.index>` attribute ('0' by default; see
-      `above <OutputState_Variable_and_Value>`)
+      (see `examples <State_Specification_Dictionary_Examples>` in State).
+
+      The *VARIABLE* entry can be used to specify attributes of its `owner <OutputState.owner>` Mechanism to use
+      as the input to the OutputState's `function <OutputState.function>` (see `OutputState_Customization`).
 
       The *PROJECTIONS* or *MECHANISMS* entry can be used to specify one or more efferent `MappingProjections
       <MappingProjection>` from the OutputState, and/or `ModulatoryProjections <ModulatoryProjection>` for it to
       receive; however, this may be constrained by or have consequences for the OutState's `variable
       <InputState.variable>` and/or its `value <OutputState.value>` `OutputState_Compatability_and_Constraints`).
 
+      .. note::
+         The *INDEX* and *ASSIGN* attributes described below have been deprecated in version 0.4.XXX, and should be
+         replaced by use of the *VARIABLE* and *FUNCTION* entries, respectively.  Although use of *INDEX* and *ASSIGN*
+         is curently being supported for backward compatiability, this may be eliminated in a future version.
+
       In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
       can also include either or both of the following entries specific to OutputStates:
 
-      COMMENT:
       * *INDEX*:<int> - specifies the OutputState's `index <OutputState.index>` attribute; if this is not included,
         the first item of the owner Mechanism's `value <Mechanism_Base.value>` is assigned as the the OutputState's
         `variable <OutputState.variable>` (see `description below <OutputState_Index>` for additional details).
@@ -195,7 +200,6 @@ which it should project. Each of these is described below:
         <OutputState.assign>` attribute;  if this is not included, the OutputState's `variable
         <OutputState.variable>` is assigned as its `value <OutputState.value>` (see `description below
         <OutputState_Assign>` for additional details).
-      COMMENT
 
     .. _OutputState_Projection_Destination_Specification:
 
@@ -289,28 +293,26 @@ which it should project. Each of these is described below:
 OutputState `value <OutputState.value>`: Compatibility and Constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The `variable <OutputState.variable>` of an OutputState must be compatible with the item of its owner Mechanism's
-`value <Mechanism_Base.value>` referenced by its `index <Mechanism_Base.index>` attribute.  This may have consequences that must be taken into account when `specifying an OutputState by
-Components to which it projects <_OutputState_Projection_Destination_Specification>`.  These depend on the context in
-which the specification is made, and possibly the value of other specifications.  These considerations and how they
-are handled are described below, starting with constraints that are given the highest precedence:
+The format of an OutputStates' `variable <OutputState.variable>` may have consequences that must be taken into
+account when `specifying an OutputState by Components to which it projects
+<OutputState_Projection_Destination_Specification>`.  These depend on the context in which the specification is
+made, and possibly the value of other specifications.  These considerations and how they are handled are described
+below, starting with constraints that are given the highest precedence:
 
-  * **OutputState specified in a Mechanism's constructor** -- the item of the Mechanism's `value <Mechanism_Base.value>`
-    `indexed by the OutputState <OutputState_Index>`)>` is used to determine the OutputState's
-    `variable <OutputState.variable>`.  This, together with the OutputState's `function <OutputState.function>` and
-    possibly its `assign <OutputState.assign>` attribute, determine the OutputState's `value <OutputState.value>`
-    (see `above <OutputState_Variable_and_Value>`).  Therefore, any specifications of the OutputState relevant to its
-    `value <OutputState.value>` must be compatible with these factors (for example, `specifying it by value
-    <OutputState_Specification_by_Value>` or by a `MappingProjection` or an `InputState` to which it should project
-    (see `above <OutputState_Projection_Destination_Specification>`).
+  * **OutputState specified in a Mechanism's constructor** -- the specification of the OutputState's `variable
+    <OutputState.variable`, together with its `function <OutputState.function>` determine the OutputState's `value
+    <OutputState.value>` (see `above <OutputState_Variable_and_Value>`).  Therefore, any specifications of the
+    OutputState relevant to its `value <OutputState.value>` must also be compatible with these factors (for example,
+    `specifying it by variable <OutputState_Specification_by_Variable>` or by a `MappingProjection` or an
+    `InputState` to which it should project (see `above <OutputState_Projection_Destination_Specification>`).
 
     COMMENT:
     ***XXX EXAMPLE HERE
     COMMENT
   ..
   * **OutputState specified on its own** -- any direct specification of the OutputState's `variable
-    <OutputState.variable>` is used to determine its format (e.g., `specifying it by value
-    <OutputState_Specification_by_Value>`, or a *VARIABLE* entry in an `OutputState specification dictionary
+    <OutputState.variable>` is used to determine its format (e.g., `specifying it by variable
+    <OutputState_Specification_by_Variable>`, or a *VARIABLE* entry in an `OutputState specification dictionary
     <OutputState_Specification_Dictionary>`.  In this case, the value of any `Components used to specify the
     OutputState <OutputState_Projection_Destination_Specification>` must be compatible with the specification of its
     `variable <OutputState.variable>` and the consequences this has for its `value <OutputState.value>` (see below).
@@ -320,9 +322,10 @@ are handled are described below, starting with constraints that are given the hi
     COMMENT
   ..
   * **OutputState's** `value <OutputState.value>` **not constrained by any of the conditions above** -- then its
-    `variable <OutputState.variable>` is determined by the default for an OutputState (1d array of length 1).
-    If it is `specified to project to any other Components <OutputState_Projection_Destination_Specification>`,
-    then if the Component is a:
+    `variable <OutputState.variable>` is determined by the default for an OutputState (the format of the first
+    item of its `owner <OutputState.owner>` Mechanism's `value <Mechanism_Base.value>` ). If the OutputState is
+    `specified to project to any other Components <OutputState_Projection_Destination_Specification>`, then if the
+    Component is a:
 
     |
     * **InputState or Mechanism** (for which its `primary InputState <InputState_Primary>` is used) -- if its
@@ -375,8 +378,13 @@ OutputState Customization
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The default OutputState uses the first (and usually only) item of the owner Mechanism's `value <Mechanism_Base.value>`
-as its value.  However, this can be modified in two ways, using the OutputState's `index <OutputState.index>` and
-`assign <OutputState.assign>` attributes (see `OutputState_Structure` below). If the Mechanism's `function
+as its value.  However, this can be modified by specifying the OutputState's `variable <OutputState.variable>`
+and/or `function <OutputState.function>`, using either the arguments for these in a constructor for the OutputState,
+or corresponding entries in an `OutputState_Specification_Dictionary`
+
+XXX CONTINUE HERE
+(also see `OutputState_Structure` below). If the
+Mechanism's `function
 <Mechanism_Base.function>` returns a value with more than one item (i.e., a list of lists, or a 2d np.array), then an
 OutputState can be assigned to any of those items by specifying its `index <OutputState.index>` attribute. An
 OutputState can also be configured to transform the value of the item, by specifying a function for its `assign
@@ -495,10 +503,12 @@ the following attributes, that includes ones specific to, and that can be used t
 
 * `projections <OutputState.projections>` -- all of the `Projections <Projection>` sent and received by the OutputState;
 
-.. _OutputState_Effent_and_Modulatory_Projections:
+.. _OutputState_Efferent_Projections:
 
 * `efferents <OutputState.path_afferents>` -- `MappingProjections <MappingProjection>` that project from the
   OutputState.
+
+.. _OutputState_Modulatory_Projections:
 
 * `mod_afferents <OutputState.mod_afferents>` -- `GatingProjections <GatingProjection>` that project to the OutputState,
   the `value <GatingProjection.value>` of which can modify the OutputState's `value <InputState.value>` (see the
@@ -887,139 +897,6 @@ class OutputState(State_Base):
                          name=name,
                          prefs=prefs,
                          context=context)
-        assert True
-
-    # def _validate_variable(self, variable, context=None):
-    #     """Insure variable is compatible with output component of owner.function relevant to this State
-    #
-    #     Validate variable against component of owner's value (output of owner's function)
-    #          that corresponds to this OutputState (since that is what is used as the input to OutputState);
-    #          this should have been provided as reference_value in the call to OutputState__init__()
-    #
-    #     Note:
-    #     * This method is called only if the parameterValidationPref is True
-    #     """
-    #     variable = self._update_variable(super(OutputState, self)._validate_variable(variable, context))
-    #
-    #     # Insure that variable is compatible with (relevant item of) output value of owner's function
-    #     # if not iscompatible(variable, self.reference_value):
-    #     if (variable is not None
-    #         and self.reference_value is not None
-    #         and not iscompatible(variable, self.reference_value)):
-    #         raise OutputStateError("Variable ({}) of OutputState for {} is not compatible with "
-    #                                        "the output ({}) of its function".
-    #                                        format(variable,
-    #                                               self.owner.name,
-    #                                               self.reference_value))
-    #     return variable
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate index and assign parameters
-
-        Validate that index is within the range of the number of items in the owner Mechanism's ``value``,
-        and that the corresponding item is a valid input to the assign function
-        """
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-        # FIX: 2/24/18 - IF INDEX AND/OR ASSIGN ARE SPECIFIED, MOVE TO VARIABLE AND FUNCTION
-        #               REMOVE ONCE MOVED TO _instantiate_output_states
-        # variable = None
-        #
-        # if VARIABLE in target_set:
-        #     variable = _parse_output_state_variable(self.owner, target_set[VARIABLE], self.name)
-        #
-        # if INDEX in target_set:
-        #
-        #     if variable:
-        #         raise OutputStateError("{} and {} specified for {} of {}. {} has been deprecated; "
-        #                                "use \'({}, int)\' to specify {}".
-        #                                format(VARIABLE.upper(), INDEX.upper(), self.name, self.owner.name,
-        #                                INDEX.upper(), OWNER_VALUE.upper(), VARIABLE.upper()))
-        #
-        #     # If INDEX specification is SEQUENTIAL:
-        #     #    - can't yet determine relationship to default_value
-        #     #    - can't yet evaluate assign function (below)
-        #     # so just return
-        #     if target_set[INDEX] is SEQUENTIAL:
-        #         return
-        #     elif target_set[INDEX] is ALL:
-        #         target_set[VARIABLE] = [OWNER_VALUE]
-        #         del target_set[INDEX]
-        #     else:
-        #         try:
-        #             self.owner.instance_defaults.value[target_set[INDEX]]
-        #         except IndexError:
-        #             raise OutputStateError("Value of \'{}\' argument for {} ({}) is greater than the number "
-        #                                    "of items in the output_values ({}) for its owner Mechanism ({})".
-        #                                    format(INDEX, self.name, target_set[INDEX],
-        #                                           len(self.owner.instance_defaults.value),
-        #                                           self.owner.name))
-        #         target_set[VARIABLE] = [(OWNER_VALUE, target_set[INDEX])]
-        #         del target_set[INDEX]
-        #
-        # if ASSIGN in target_set and target_set[ASSIGN] is not None:
-        #
-        #     # # MODIFIED 2/24/18 OLD:
-        #     # try:
-        #     #     # Get the ASSIGN function
-        #     #     assign_function = _parse_output_state_function(self.owner, self.name, target_set[ASSIGN])
-        #     # except:
-        #     #     raise OutputStateError("Unable to parse specification of \'{}\' function for {} of {}".
-        #     #                            format(ASSIGN, self.name, self.owner.name))
-        #     #
-        #     # # Get INDEX
-        #     # try:
-        #     #     index = target_set[INDEX]
-        #     # except KeyError:
-        #     #     # Assign default value for index if it was not specified
-        #     #     index = self.index
-        #     # # Default index is an index keyword (e.g., SEQUENTIAL) so can't evaluate at present
-        #     # if isinstance(index, str):
-        #     #     if not index in StandardOutputStates.keywords:
-        #     #         raise OutputStateError("Illegal keyword ({}) found in specification of index for {} of {}".
-        #     #                                format(index, self.name, self.owner.name))
-        #     #     return
-        #     #
-        #     # # Get indexed item of owner.value
-        #     # owner_value_item = self.owner.instance_defaults.value[index]
-        #     #
-        #     # # Try ASSIGN function
-        #     # try:
-        #     #     # Try with assign_param_dict as arg
-        #     #     assign_function(self._assign_params_dict, context=context)
-        #     # except TypeError:
-        #     #     # assign_param_dict as arg for ASSIGN didn't work
-        #     #     try:
-        #     #         # Try with dummy dict using owner's value as default
-        #     #         assign_function({VALUE:owner_value_item})
-        #     #     except:
-        #     #         raise OutputStateError("Item {} of value for {} ({}) is not compatible with "
-        #     #                                "the function specified for the \'{}\' parameter of {} ({})".
-        #     #                                format(index, self.owner.name, owner_value_item,
-        #     #                                       ASSIGN, self.name, target_set[ASSIGN]))
-        #     # # ASSIGN didn't work for some other reason
-        #     # except:
-        #     #     raise OutputStateError("Call to \'{}\' function specified for {} of {} is failing".
-        #     #                            format(ASSIGN, self.name, self.owner.name))
-        #
-        #     # MODIFIED 2/24/18 NEW:
-        #     # If function is default for class, reassign ASSIGN to FUNCTION
-        #     if not FUNCTION in target_set or target_set[FUNCTION] == self.paramClassDefaults[FUNCTION]:
-        #         target_set[FUNCTION] = target_set[ASSIGN]
-        #         del target_set[ASSIGN]
-        #         if self.verbosePref or self.owner.verbosePref:
-        #             warnings.warn("\'{}\' argument has been deprecated. The specified function will be assigned "
-        #                           "as the function of {} for {};  however, you should use \'{} to specify the {} of an {}".
-        #                           format(ASSIGN.upper(), target_set[ASSIGN], self.name, self.owner.name, FUNCTION.upper(),
-        #                                  FUNCTION, OutputState.__name__))
-        #     else:
-        #         raise OutputStateError("{} specified in {} argument for {} of {} conflicts with its {} argument. Note "
-        #                                "that \'{}\' argument has been deprecated; use \'{} to specify the {} of an {}.".
-        #                                format(Function.__name__, ASSIGN.upper(), self.name, self.owner.name,
-        #                                       FUNCTION.upper(), ASSIGN.upper(), FUNCTION.upper(), FUNCTION,
-        #                                       OutputState.__name__))
-        #     # MODIFIED 2/24/18 END
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that State.variable is compatible with the reference_value
@@ -1027,6 +904,7 @@ class OutputState(State_Base):
         reference_value is the value of the Mechanism to which the OutputState is assigned
         """
         return
+
         # if reference_value is not None and not iscompatible(reference_value, self.instance_defaults.variable):
         # if (reference_value is not None and
         #         not iscompatible(reference_value, self._get_state_function_value(self.owner,
@@ -1036,14 +914,15 @@ class OutputState(State_Base):
         #     raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
         #                            "with its expected format ({})".
         #                            format(name, self.componentName, self.owner.name, self.instance_defaults.variable, reference_value))
-        if reference_value is not None:
-            fct_val = self.function(self.variable)
-            if not iscompatible(reference_value, fct_val):
-                name = self.name or ""
-                raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
-                                       "with its expected format ({})".
-                                       format(name, self.componentName, self.owner.name,
-                                              self.instance_defaults.variable, reference_value))
+
+        # if reference_value is not None:
+        #     fct_val = self.function(self.variable)
+        #     if not iscompatible(reference_value, fct_val):
+        #         name = self.name or ""
+        #         raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
+        #                                "with its expected format ({})".
+        #                                format(name, self.componentName, self.owner.name,
+        #                                       self.instance_defaults.variable, reference_value))
 
     # def _instantiate_function(self, context=None):
     #     """Parse variable specification and instantiate lambda function that passes it to specified function
