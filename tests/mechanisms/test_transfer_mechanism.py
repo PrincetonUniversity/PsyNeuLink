@@ -1048,4 +1048,16 @@ class TestClip:
     def test_clip_float(self):
         T = TransferMechanism(clip=[-2.0, 2.0])
         assert np.allclose(T.execute(3.0), 2.0)
-        assert np.allclose(T.execute(-2.0), -2.0)
+        assert np.allclose(T.execute(-3.0), -2.0)
+
+    def test_clip_array(self):
+        T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                              clip=[-2.0, 2.0])
+        assert np.allclose(T.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
+
+    def test_clip_2d_array(self):
+        T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+                              clip=[-2.0, 2.0])
+        assert np.allclose(T.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
+                           [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
+

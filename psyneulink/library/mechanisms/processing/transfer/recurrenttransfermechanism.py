@@ -257,7 +257,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     initial_value=None,                \
     noise=0.0,                         \
     smoothing_factor=0.5,              \
-    clip=(float:min, float:max),       \
+    clip=[float:min, float:max],       \
     learning_rate=None,                \
     learning_function=Hebbian,         \
     integrator_mode=False,             \

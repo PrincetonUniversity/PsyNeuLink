@@ -413,7 +413,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     noise=0.0,                   \
     smoothing_factor=0.5,           \
     integrator_mode=False,       \
-    clip=(float:min, float:max), \
+    clip=[float:min, float:max], \
     output_states=RESULTS        \
     params=None,                 \
     name=None,                   \

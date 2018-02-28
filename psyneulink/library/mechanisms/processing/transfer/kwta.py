@@ -649,9 +649,7 @@ class KWTA(RecurrentTransferMechanism):
                     variable, self, self.__class__.__name__
                 )
             )
-
         variable = self._update_variable(self._kwta_scale(variable, context=context))
-
         return super()._execute(variable=variable,
                        runtime_params=runtime_params,
                        context=context)
