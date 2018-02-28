@@ -39,9 +39,7 @@ of a `MappingProjection` to the next Mechanism in the pathway, or to the Process
 if the Mechanism is a `TERMINAL` Mechanism for that Process. Other configurations can also easily be specified using
 a Mechanism's **output_states** argument (see `OutputState_Specification` below).  If it is created using its
 constructor, and a Mechanism is specified in the **owner** argument, it is automatically assigned to that Mechanism.
-Note that its `variable <OutputState.variable>` must be compatible (in number and type of elements) with the item of
-its owner's `value <Mechanism_Base.value>` specified by the OutputState's `index <OutputState.index>` attribute. If
-its **owner* is not specified, `initialization is deferred.
+If its **owner* is not specified, `initialization is deferred.
 
 .. _OutputState_Deferred_Initialization:
 
@@ -113,28 +111,29 @@ is, it does *not* replace ones that were already created).
 *OutputState's* `variable <OutputState.variable>`, `value <OutputState.value>`, *and Mechanism's* `value
 <Mechanism_Base.value>`
 
-Each OutputState created with or assigned to a Mechanism must reference one or more items of the Mechanism's
-`value <Mechanism_Base.value>` attribute, that it uses to generate its own `value <OutputState.value>`.  The item(s)
-referenced are specified by its `index <OutputState.index>` attribute.  The OutputState's `variable
-<OutputState.variable>` must be compatible (in number and type of elements) with the item(s) of the Mechanism's
-`value <Mechanism_Base.value>` referenced by its `index <OutputState.index>`;  by default this is '0', referring to
-the first item of the Mechanism's `value <Mechanism_Base.value>`.  The OutputState's `variable
-<OutputState.variable>` is used as the input to its `function <OutputState.function>`, which may modify the value
-under the influence of a `GatingSignal`; the result may be further modified by the OutputState's `assign
-<OutputState.assign>` function (e.g., to combine, compare, or otherwise evaluate the index items of the Mechanism's
-`value <Mechanism_Base.value>`), before being assigned to its `value <OutputState.value>` (see
-`OutputState_Customization` for additional details).  The OutputState's `value <OutputState.value>` must, in turn,
-be compatible with any Projections that are assigned to it, or `used to specify it
+Each OutputState created with or assigned to a Mechanism must reference one or more items of the Mechanism's attributes,
+that serve as the OutputState's `variable <OutputState.variable>`, and are used by its `function <OutputState.function>`
+to generate the OutputState's `value <OutputState.value>`.  By default, it uses the first item of its `owner
+<OutputState.owner>` Mechanism's `value <Mechanism_Base.value>`.  However, other attributes (or combinations of them)
+can be specified in the **variable** argument of the OutputState's constructor, or the *VARIABLE* entry in an
+`_OutputState_Specification_Dictionary`.  The specification must be compatible (in the number and type of items it
+generates) with the input expected by the OutputState's `function <OutputState.function>`. The OutputState's
+`variable <OutputState.variable>` is used as the input to its `function <OutputState.function>` to generate the
+OutputState's `value <OutputState.value>`, possibly modulated by a `GatingSignal`.  The OutputState's `value
+<OutputState.value>` must, in turn, be compatible with any Projections that are assigned to it, or `used to specify it
 <OutputState_Projection_Destination_Specification>`.
 
 The `value <OutputState.value>` of each OutputState of a Mechanism is assigned to a corresponding item of the
-Mechanism's `output_values <Mechanism_Base.output_values>` attribute, in the order in which they are assigned in the
-**output_states** argument of its constructor, and listed in its `output_states <Mechanism_Base.output_states>`
-attribute.  Note that the `output_values <Mechanism_Base.output_values>` attribute of a Mechanism is **not the same**
-as its `value <Mechanism_Base.value>` attribute, which contains the full and unmodified results of the Mechanism's
-`function <Mechanism_Base.function>` (since, as noted above, OutputStates  may modify the item of the Mechanism`s
-`value <Mechanism_Base.value>` to which they refer).
+Mechanism's `output_values <Mechanism_Base.output_values>` attribute, in the order in which they are assigned in
+the **output_states** argument of its constructor, and listed in its `output_states <Mechanism_Base.output_states>`
+attribute.
 
+    .. note::
+       The `output_values <Mechanism_Base.output_values>` attribute of a Mechanism is **not the same** as its `value
+       <Mechanism_Base.value>` attribute:
+           * Mechanism.value contains the full and unmodified results of the Mechanism's `function
+             <Mechanism_Base.function>`.
+           * Mechanism.output_values contains a list of the `value <OutputState.value>` of each of its OutputStates;
 
 .. _OutputState_Forms_of_Specification:
 
