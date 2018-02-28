@@ -1877,6 +1877,10 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError("Reinitializing {} is not allowed because its integrator_function is not an "
                                      "Integrator type function, therefore the Mechanism does not have an accumulator to"
                                      " reinitialize.".format(self.name))
+        else:
+            raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
+                                 "(It does not have an accumulator to reinitialize).".format(self.name))
+
     def get_current_mechanism_param(self, param_name):
         try:
             return self._parameter_states[param_name].value
