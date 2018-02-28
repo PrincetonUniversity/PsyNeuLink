@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from psyneulink.components.functions.function import AGTUtilityIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
-from psyneulink.components.functions.function import AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, NormalDist, SimpleIntegrator
+from psyneulink.components.functions.function import Linear, AccumulatorIntegrator, ConstantIntegrator, FHNIntegrator, NormalDist, SimpleIntegrator
 from psyneulink.components.functions.function import LCAIntegrator, FunctionError
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
@@ -344,6 +344,15 @@ class TestReinitialize:
         assert np.allclose(I.function_object.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_states[0].value, 0.0)
+
+    def test_reinitialize_not_integrator(self):
+
+        with pytest.raises(MechanismError) as err_txt:
+            I_not_integrator = IntegratorMechanism(function=Linear)
+            I_not_integrator.execute(1.0)
+            I_not_integrator.reinitialize(0.0)
+        assert "not allowed because this Mechanism is not stateful." in str(err_txt) \
+               and "(It does not have an accumulator to reinitialize)" in str(err_txt)
 
 
 class TestIntegratorFunctions:

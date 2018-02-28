@@ -182,3 +182,27 @@ class TestLCAReinitialize:
         assert np.allclose(L.previous_value, 5.305)
         assert np.allclose(L.initial_value, 0.5)
         assert np.allclose(L.integrator_function.initializer, 0.5)
+
+class TestClip:
+
+    def test_clip_float(self):
+        L = LCA(clip=[-2.0, 2.0],
+                function=Linear,
+                integrator_mode=False)
+        assert np.allclose(L.execute(3.0), 2.0)
+        assert np.allclose(L.execute(-3.0), -2.0)
+
+    def test_clip_array(self):
+        L = LCA(default_variable=[[0.0, 0.0, 0.0]],
+                clip=[-2.0, 2.0],
+                function=Linear,
+                integrator_mode=False)
+        assert np.allclose(L.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
+
+    def test_clip_2d_array(self):
+        L = LCA(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+                clip=[-2.0, 2.0],
+                function=Linear,
+                integrator_mode=False)
+        assert np.allclose(L.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
+                           [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
