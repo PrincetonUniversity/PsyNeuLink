@@ -116,12 +116,13 @@ that serve as the OutputState's `variable <OutputState.variable>`, and are used 
 to generate the OutputState's `value <OutputState.value>`.  By default, it uses the first item of its `owner
 <OutputState.owner>` Mechanism's `value <Mechanism_Base.value>`.  However, other attributes (or combinations of them)
 can be specified in the **variable** argument of the OutputState's constructor, or the *VARIABLE* entry in an
-`_OutputState_Specification_Dictionary` (see `OutputState_Customization`).  The specification must be compatible (in the
-number and type of items it generates) with the input expected by the OutputState's `function <OutputState.function>`.
-The OutputState's `variable <OutputState.variable>` is used as the input to its `function <OutputState.function>` to
-generate the OutputState's `value <OutputState.value>`, possibly modulated by a `GatingSignal` (see `below
-<OutputState_Modulatory_Projections>`).  The OutputState's `value <OutputState.value>` must, in turn, be compatible with
-any Projections that are assigned to it, or `used to specify it <OutputState_Projection_Destination_Specification>`.
+`OutputState Specification Dictionary <OutputState_Specification_Dictionary>` (see `OutputState_Customization`).
+The specification must be compatible (in the number and type of items it generates) with the input expected by the
+OutputState's `function <OutputState.function>`. The OutputState's `variable <OutputState.variable>` is used as the
+input to its `function <OutputState.function>` to generate the OutputState's `value <OutputState.value>`, possibly
+modulated by a `GatingSignal` (see `below <OutputState_Modulatory_Projections>`).  The OutputState's `value
+<OutputState.value>` must, in turn, be compatible with any Projections that are assigned to it, or `used to specify
+it <OutputState_Projection_Destination_Specification>`.
 
 The `value <OutputState.value>` of each OutputState of a Mechanism is assigned to a corresponding item of the
 Mechanism's `output_values <Mechanism_Base.output_values>` attribute, in the order in which they are assigned in
@@ -134,8 +135,7 @@ attribute.
            * a Mechanism's `value <Mechanism.value>` attribute contains the full and unmodified results of its
              `function <Mechanism_Base.function>`;
            * a Mechanism's `output_values <Mechanism.output_values>` attribute contains a list of the `value
-           <OutputState.value>`
-             of each of its OutputStates.
+             <OutputState.value>` of each of its OutputStates.
 
 .. _OutputState_Forms_of_Specification:
 
@@ -151,20 +151,19 @@ which it should project. Each of these is described below:
     **Direct Specification of an OutputState**
 
     * existing **OutputState object** or the name of one -- it cannot belong to another Mechanism, and the format of
-      its `variable <OutputState.variable>` must be compatible with the `indexed item <OutputState_Variable_and_Value>`
-      of the owner Mechanism's `value <Mechanism_Base.value>`.
+      its `variable <OutputState.variable>` must be compatible with the aributes of the `owner <OutputState.owner>`
+      Mechanism specified for the OutputState's `variable <OutputState.variable>` (see `OutputState_Customization`).
     ..
-    * **OutputState class**, **keyword** *OUTPUT_STATE*, or a **string** -- creates a default OutputState that is
-      assigned an `index <OutputState.index>` of '0', uses the first item of the owner Mechanism's `value
-      <Mechanism_Base.value>` to format the OutputState's `variable <OutputState.variable>`, and assigns it as the
-      `primary OutputState <OutputState_Primary>` for the Mechanism. If the class name or *INPUT_STATE* keyword is used,
-      a default name is assigned to the State; if a string is specified, it is used as the `name <OutputState.name>` of
-      the OutputState  (see `Naming`).
+    * **OutputState class**, **keyword** *OUTPUT_STATE*, or a **string** -- creates a default OutputState that uses
+      the first item of the `owner <OutputState.owner>` Mechanism's `value <Mechanism_Base.value>` as its `variable
+      <OutputState.variable>`, and assigns it as the `owner <OutputState.owner>` Mechanism's `primary OutputState
+      <OutputState_Primary>`. If the class name or *OUTPUT_STATE* keyword is used, a default name is assigned to the
+      State; if a string is specified, it is used as the `name <OutputState.name>` of the OutputState  (see `Naming`).
 
     .. _OutputState_Specification_by_Variable:
 
-    * **variable** -- creates a default OutputState using the specification as the OutputState's `variable
-      <OutputState.variable>` (see `OutputState_Customization`).  This must be compatible with (have the same number
+    * **variable** -- creates an OutputState using the specification as the OutputState's `variable
+    <OutputState.variable>` (see `OutputState_Customization`).  This must be compatible with (have the same number
       and type of elements as) the OutputState's `function <OutputState.function>`.  A default name is assigned based
       on the name of the Mechanism (see `Naming`).
     ..
@@ -174,32 +173,36 @@ which it should project. Each of these is described below:
 
     * **OutputState specification dictionary** -- this can be used to specify the attributes of an OutputState,
       using any of the entries that can be included in a `State specification dictionary <State_Specification>`
-      (see `examples <State_Specification_Dictionary_Examples>` in State).
+      (see `examples <State_Specification_Dictionary_Examples>` in State), including:
 
-      The *VARIABLE* entry can be used to specify attributes of its `owner <OutputState.owner>` Mechanism to use
-      as the input to the OutputState's `function <OutputState.function>` (see `OutputState_Customization`).
-
-      The *PROJECTIONS* or *MECHANISMS* entry can be used to specify one or more efferent `MappingProjections
-      <MappingProjection>` from the OutputState, and/or `ModulatoryProjections <ModulatoryProjection>` for it to
-      receive; however, this may be constrained by or have consequences for the OutState's `variable
-      <InputState.variable>` and/or its `value <OutputState.value>` `OutputState_Compatability_and_Constraints`).
-
-      .. note::
-         The *INDEX* and *ASSIGN* attributes described below have been deprecated in version 0.4.XXX, and should be
-         replaced by use of the *VARIABLE* and *FUNCTION* entries, respectively.  Although use of *INDEX* and *ASSIGN*
-         is curently being supported for backward compatiability, this may be eliminated in a future version.
-
-      In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
-      can also include either or both of the following entries specific to OutputStates:
-
-      * *INDEX*:<int> - specifies the OutputState's `index <OutputState.index>` attribute; if this is not included,
-        the first item of the owner Mechanism's `value <Mechanism_Base.value>` is assigned as the the OutputState's
-        `variable <OutputState.variable>` (see `description below <OutputState_Index>` for additional details).
+      * *VARIABLE*:<keyword or list> - specifies the attribute(s) of its `owner <OutputState.owner>` Mechanism to use
+        as the input to the OutputState's `function <OutputState.function>` (see `OutputState_Customization`); this
+        must be compatible with (in the number and format of the items it specifies) with the OutputState's
+        `function <OutputState.function>`.
       |
-      * *ASSIGN*:<function> - specifies the function assigned as the OutputState's `assign
-        <OutputState.assign>` attribute;  if this is not included, the OutputState's `variable
-        <OutputState.variable>` is assigned as its `value <OutputState.value>` (see `description below
-        <OutputState_Assign>` for additional details).
+      * *FUNCTION*:<`Function <Function>`, function or method> - specifies the function used to transform and/or
+        combine the item(s) specified for the OutputState's `variable <OutputState.variable>` into its
+        `value <OutputState.value>`;  its input must be compatible (in the number and format of elements) with the
+        specification of the OutputState's `variable <OutputState.variable>` (see `OutputState_Customization`).
+      |
+      * *PROJECTIONS* or *MECHANISMS*:<list of `Projections <Projection> and/or `Mechanisms <Mechanism>`> - specifies
+        one or more efferent `MappingProjections <MappingProjection>` from the OutputState, Mechanims that should
+        receive them, and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive;  this may be constrained
+        by or have consequences for the OutputState's `variable <InputState.variable>` and/or its `value
+        <OutputState.value>` (see `OutputState_Compatibility_and_Constraints`).
+
+        .. note::
+           The *INDEX* and *ASSIGN* attributes described below have been deprecated in version 0.4.5, and should be
+           replaced by use of the *VARIABLE* and *FUNCTION* entries, respectively.  Although use of *INDEX* and *ASSIGN*
+           is currently being supported for backward compatibility, this may be eliminated in a future version.
+
+      * *INDEX*:<int> *[DEPRECATED in version 0.4.5]* - specifies the item of the `owner <OutputState.owner>`
+        Mechanism's `value <Mechanism_Base.value>` to be used for the OutputState's `variable <OutputState.variable>`;
+        equivalent to specifying (OWNER_VALUE, <int>) for *VARIABLE* (see `OutputState_Customization`), which should be
+        used for compatibility with future versions.
+      |
+      * *ASSIGN*:<function> *[DEPRECATED in version 0.4.5]* - specifies the OutputState's `function`
+        <OutputState.assign>` attribute;  *FUNCTION* should be used for compatibility with future versions.
 
     .. _OutputState_Projection_Destination_Specification:
 
@@ -288,10 +291,10 @@ which it should project. Each of these is described below:
               Specification <Projection_Specification>` cannot be an instantiated Projection (since a
               Projection cannot be assigned more than one `receiver <Projection_Base.receiver>`).
 
-.. _OutputState_Compatability_and_Constraints:
+.. _OutputState_Compatibility_and_Constraints:
 
-OutputState `value <OutputState.value>`: Compatibility and Constraints
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OutputState `variable <OutputState.variable>` and `value <OutputState.value>`: Compatibility and Constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The format of an OutputStates' `variable <OutputState.variable>` may have consequences that must be taken into
 account when `specifying an OutputState by Components to which it projects
@@ -300,7 +303,7 @@ made, and possibly the value of other specifications.  These considerations and 
 below, starting with constraints that are given the highest precedence:
 
   * **OutputState specified in a Mechanism's constructor** -- the specification of the OutputState's `variable
-    <OutputState.variable`, together with its `function <OutputState.function>` determine the OutputState's `value
+    <OutputState.variable>`, together with its `function <OutputState.function>` determine the OutputState's `value
     <OutputState.value>` (see `above <OutputState_Variable_and_Value>`).  Therefore, any specifications of the
     OutputState relevant to its `value <OutputState.value>` must also be compatible with these factors (for example,
     `specifying it by variable <OutputState_Specification_by_Variable>` or by a `MappingProjection` or an
@@ -377,12 +380,56 @@ result.
 OutputState Customization
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The default OutputState uses the first (and usually only) item of the owner Mechanism's `value <Mechanism_Base.value>`
-as its value.  However, this can be modified by specifying the OutputState's `variable <OutputState.variable>`
-and/or `function <OutputState.function>`, using either the arguments for these in a constructor for the OutputState,
-or corresponding entries in an `OutputState_Specification_Dictionary`
+An OutputState's `value <OutputState.value>` can be customized by specifying its `variable <OutputState.variable>`
+and/or `function <OutputState.function>` in the **variable** and **function** arguments of the OutputState's
+constructor, respectively, or the corresponding entries (*VARIABLE* and *FUNCTION*) of an
+`OutputState_Specification_Dictionary`.
 
-XXX CONTINUE HERE
+*OutputState* `variable <OutputState.variable>`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, an OutputState uses the first (and usually only) item of the owner Mechanism's `value
+<Mechanism_Base.value>` as its `variable <OutputState.variable>`.  However, this can be customized by assigning it
+any other item of its `owner <OutputState.owner>`\\s `value <Mechanism_Base.value>`, the full
+`value <Mechanism_Base.value>` itself, other attributes of the `owner <OutputState.owner>`, or any combination of these
+uing the following keywords:
+
+    *OWNER_VALUE* -- the entire `value <Mechanism_Base.value>` of the OutputState's `owner <OutputState.owner>`.
+
+    *(OWNER_VALUE, <int>)* -- tuple specifying an item of the `owner <OutputState.owner>`\\'s `value
+    <Mechanism_Base.value>` indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).
+
+    *<attribute name>* -- the name of an attribute of the OutputState's `owner <OutputState.owner>` (must be one
+    in the `owner <OutputState.owner>`\\'s `params_dict <Mechanism._params_dict>` dictionary); returns the value
+    of the named attribute for use in the OutputState's `variable <OutputState.variable>`.
+
+    *PARAMS_DICT* -- the `owner <OutputState.owner>` Mechanism's entire `params_dict <Mechanism._params_dict>`
+    dictionary, that contains entries for all of it accessible attributes.  The OutputState's `function
+    <OutputState.function>` must be able to parse the dictionary.
+    COMMENT
+    ??WHERE CAN THE USER GET THE LIST OF ALLOWABLE ATTRIBUTES?  USER_PARAMS?? _PARAMS_DICT?? USER ACCESSIBLE PARAMS??
+    COMMENT
+
+    *List[<any of the above items>]* -- this assigns the value of each item in the list to the corresponding item of
+    the OutputState's `variable <OutputState.variable>`.  This must be compatible (in number and type of elements) with
+    the input expected by the OutputState's `function <OutputState.function>`.
+
+*OutputState* `function <OutputState.function>`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, the `function <OutputState.function>` of an OutputState is `Linear`, which simply assigns the
+OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>`.  However, a different function
+can be assigned, to transform and/or combine the item(s) of the OutputState's `variable <OutputState.variable>`
+for use as its `value <OutputState.value>`. The function can be a PsyNeuLink `Function <Function>` or any Python
+function or method, so long as the input it expects is compatible (in number and format of elements) with the
+OutputState's `variable <OutputState.variable>`.
+
+Examples
+--------
+
+In the following example, a `DDM` Mechanism named ``my_mech`` is configured with three OutputStates:
+
+COMMENT:
 (also see `OutputState_Structure` below). If the
 Mechanism's `function
 <Mechanism_Base.function>` returns a value with more than one item (i.e., a list of lists, or a 2d np.array), then an
@@ -392,25 +439,25 @@ OutputState can also be configured to transform the value of the item, by specif
 An OutputState's `index <OutputState.index>` and `assign <OutputState.assign>` attributes can be assigned when
 the OutputState is assigned to a Mechanism, by including *INDEX* and *ASSIGN* entries in a `specification dictionary
 <OutputState_Specification>` for the OutputState, as in the following example::
-
+COMMENT
 
     >>> my_mech = pnl.DDM(function=pnl.BogaczEtAl(),
     ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
-    ...                                   pnl.INDEX: 2,
-    ...                                   pnl.ASSIGN: pnl.Stability(metric=pnl.ENTROPY).function }])
+    ...                                   pnl.VARIABLE: (OWNER_VALUE, 2),
+    ...                                   pnl.FUNCTION: pnl.Stability(metric=pnl.ENTROPY).function }])
 
 COMMENT:
    ADD VERSION IN WHICH INDEX IS SPECIFIED USING DDM_standard_output_states
 COMMENT
 
-In this example, ``my_mech`` is configured with three OutputStates.  The first two are `Standard OutputStates
-<OutputState_Standard>` that represent the decision variable of the DDM and the probability of it crossing of the
-upper (vs. lower) threshold. The third is a custom OutputState, that computes the entropy of the probability of
-crossing the upper threshold. It uses the `Entropy` Function for its `assign <OutputState.assign>` attribute,
-and *INDEX* is assigned ``2`` to reference the third item of the DDM's `value <DDM.value>` attribute (items are
-indexed starting with 0), which contains the probability of crossing the upper threshold.  The three OutputStates
+The first two are `Standard OutputStates <OutputState_Standard>` that represent the decision variable of the DDM and
+the probability of it crossing of the upper (vs. lower) threshold. The third is a custom OutputState, that computes
+the entropy of the probability of crossing the upper threshold.  It uses the 3rd item of the DDM's `value <DDM.value>`
+(items are indexed starting with 0), which contains the `probability of crossing the upper threshold
+<DDM_PROBABILITY_UPPER_THRESHOLD>`, and uses this as the input to the `Stability` Function assigned as the
+OutputState's `function <OutputState.function>`, that computes the entropy of the probability. The three OutputStates
 will be assigned to the `output_states <Mechanism_Base.output_states>` attribute of ``my_mech``, and their values
 will be assigned as items in its `output_values <Mechanism_Base.output_values>` attribute, in the order in which they
 are listed in the **output_states** argument of the constructor for ``my_mech``.
@@ -419,8 +466,8 @@ Custom OutputStates can also be created on their own, and separately assigned or
 the ``DECISION ENTROPY`` OutputState could be created as follows::
 
     >>> decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
-    ...                                                 index=2,
-    ...                                                 assign=pnl.Stability(metric=pnl.ENTROPY).function)
+    ...                                                 variable=(OWNER_VALUE, 2),
+    ...                                                 function=pnl.Stability(metric=pnl.ENTROPY).function)
 
 and then assigned either as::
 
@@ -432,30 +479,17 @@ and then assigned either as::
 or::
 
     >>> another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
-    ...                                                index=2,
-    ...                                                assign=pnl.Stability(metric=pnl.ENTROPY).function)
+    ...                                                variable=(OWNER_VALUE, 2),
+    ...                                                function=pnl.Stability(metric=pnl.ENTROPY).function)
     >>> my_mech2 = pnl.DDM(function=pnl.BogaczEtAl(),
     ...                    output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
 
     >>> my_mech2.add_states(another_decision_entropy_output_state) # doctest: +SKIP
 
-.. note::
-   The **assign** argument, *ASSIGN* keyword, and `assign <OutputState.assign>` attribute of an OutputState replace
-   former use of 'calculate' and `CALCULATE`.  For backward compatibility, the latter can still be used, but
-   will be retired at some point in the future.
-
-COMMENT:
-The line after the last command is the `add_state <Mecanism_Base.add_states>` method returning the list of States
-added to the Mechanism. Note, also, that another new OutputState had to be used for the second example, as trying to
-add the first one created for ``my_mech`` to ``my_mech2`` would have produce an error (since a State already
-belonging to one Mechanism can't be added to another.
-COMMENT
-
 Note that another new OutputState had to be used for the second example, as trying to
-add the first one created for ``my_mech`` to ``my_mech2`` would have produce an error (since a State already
+add the first one created for ``my_mech`` to ``my_mech2`` would have produced an error (since a State already
 belonging to one Mechanism can't be added to another.
-
 
 .. _OutputState_Structure:
 
@@ -465,9 +499,10 @@ Structure
 Every OutputState is owned by a `Mechanism <Mechanism>`. It can send one or more `MappingProjections
 <MappingProjection>` to other Mechanisms.  If its owner is a `TERMINAL` Mechanism of a Process and/or System, then the
 OutputState will also be treated as the output of that `Process <Process_Input_And_Output>` and/or of a System.  It has
-the following attributes, that includes ones specific to, and that can be used to `customize, the OutputState
-<OutputState_Customization>`:
+the following attributes, some of which can be specified in ways that are specific to, and that can be used to
+`customize, the OutputState <OutputState_Customization>`:
 
+COMMENT:
 .. _OutputState_Index:
 
 * `index <OutputState.index>`: this determines the item of its owner Mechanism's `value <Mechanism_Base.value>` to
@@ -487,19 +522,22 @@ the following attributes, that includes ones specific to, and that can be used t
   The default is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply assigns the
   specified item of the Mechanism's `value <Mechanism_Base.value>` unmodified as the input for OutputState's
   `function <OutputState.function>`.
+COMMENT
 ..
-* `variable <OutputState.variable>` --  the value provided as the input to the OutputState's `function
-  <OutputState.function>`; it must match the value of the item of its owner Mechanism's `value  <Mechanism_Base.value>`
-  to which it is assigned (designated by its `index <OutputState.index>` attribute), both in the number and types of
-  its elements)
+* `variable <OutputState.variable>` -- references attributes of the OutputState's `owner <OutputState.owner>` that
+  are used as the input to the OutputState's `function <OutputState.function>`, to determine its `value
+  <OutputState.value>`.  The specification must match (in both the number and types of elements it generates)
+  the input to the OutputState's `function <OutputState.function>`.  By default, the first item of the `owner
+  <OutputState.owner>` Mechanisms' `value <Mechanism_Base.value>` is used.  However, this can be customized as
+  described under `OutputState_Customization`.
 
 * `function <OutputState.function>` -- takes the OutputState's `variable <OutputState.variable>` as its input, and
-  generates the OutpuState's `value <OutputState.value>` as its result.  The default function is `Linear` that simply
+  generates the OutputState's `value <OutputState.value>` as its result.  The default function is `Linear` that simply
   assigns the OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>`.  However, the
   parameters of the `function <OutputState.function>` -- and thus the `value <OutputState.value>` of the OutputState --
-  can be modified by any `GatingProjections <GatingProjection>` received by the OutputState (listed in its
+  can be modified by `GatingProjections <GatingProjection>` received by the OutputState (listed in its
   `mod_afferents <OutputState.mod_afferents>` attribute.  A custom function can also be specified, so long as it can
-  take as its input a value that is compatiable with the OutputState's `variable <OutputState.variable>`.
+  take as its input a value that is compatible with the OutputState's `variable <OutputState.variable>`.
 
 * `projections <OutputState.projections>` -- all of the `Projections <Projection>` sent and received by the OutputState;
 
@@ -516,10 +554,9 @@ the following attributes, that includes ones specific to, and that can be used t
   <GatingSignal_Modulation>` for additional details).  If the OutputState receives more than one GatingProjection,
   their values are combined before they are used to modify the `value <OutputState.value>` of the OutputState.
 ..
-* `value <OutputState.value>`:  assigned the result of the function specified by the
-  `assign <OutputState.assign>` attribute, possibly modified by the result of the OutputState`s
-  `function <OutputState.function>` and any `GatingProjections <GatingProjection>` received by the OutputState.
-  It is used as the input to any projections that the OutputStatue sends.
+* `value <OutputState.value>`:  assigned the result of the OutputState's `function <OutputState.function>`, possibly
+  modified by any `GatingProjections <GatingProjection>` received by the OutputState. It is used as the input to any
+  projections that the OutputStatue sends.
 
 
 .. _OutputState_Execution:
@@ -687,20 +724,24 @@ class OutputState(State_Base):
         input for the OutputState with its `variable <OutputState.variable>`.
 
     variable : number, list or np.ndarray
-        specifies the template for the OutputState's `variable <OutputState.variable>`.
+        specifies the attributes of the  OutputState's `owner <OutputState.owner>` Mechanism to be used by the
+        OutputState's `function <OutputState.function>`  in generating its `value <OutputState.value>`.
 
+    COMMENT:
     size : int, list or ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
         if **variable** is specified, it takes precedence over the specification of **size**.
         As an example, the following mechanisms are equivalent::
             T1 = TransferMechanism(size = [3, 2])
             T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+    COMMENT
 
     function : Function, function, or method : default Linear
-        specifies the function used to transform the item of the owner Mechanism's `value <Mechanism_Base.value>`
-        designated by the OutputState's `index <OutputState.index>` attribute, under the possible influence of
+        specifies the function used to transform and/or combine the items designated by the OutputState's `variable
+        <OutputState.variable>` into its `value <OutputState.value>`, under the possible influence of
         `GatingProjections <GatingProjection>` received by the OutputState.
 
+    COMMENT:
     index : int : default PRIMARY
         specifies the item of the owner Mechanism's `value <Mechanism_Base.value>` used as input for the
         function specified by the OutputState's `assign <OutputState.assign>` attribute, to determine the
@@ -712,6 +753,7 @@ class OutputState(State_Base):
         before it is assigned as the OutputState's `value <OutputState.value>`.  The function must accept a value that
         has the same format (number and type of elements) as the item of the Mechanism's
         `value <Mechanism_Base.value>`.
+    COMMENT
 
     projections : list of Projection specifications
         species the `MappingProjection(s) <MappingProjection>` to be sent by the OutputState, and/or
@@ -741,26 +783,28 @@ class OutputState(State_Base):
         `GatingProjections <GatingProjection>` received by the OutputState.
 
     variable : value, list or np.ndarray
-        assigned the item of the owner Mechanism's `value <Mechanism_Base.value>` specified by the
-        OutputState's `index <OutputState.index>` attribute.
+        the value(s) of the item(s) of the `owner <OutputState.owner>` Mechanism's attributes specified in the
+        **variable** argument of the constructor or *VARIABLE* entry of the `OutputState_Specification_Dictionary`
+        used to construct the OutputState.
 
+    COMMENT:
     index : int
         the item of the owner Mechanism's `value <Mechanism_Base.value>` used as input for the function specified by
         its `assign <OutputState.assign>` attribute (see `index <OutputState_Index>` for additional details).
 
-    assign : function or method : default Linear(slope=1, intercept=0))
+    assign : function or method
         function used to convert the item of the owner Mechanism's `value <Mechanism_Base.value>` specified by
         the OutputState's `index <OutputState.index>` attribute.  The result is combined with the result of the
         OutputState's `function <OutputState.function>` to determine both the `value <OutputState.value>` of the
         OutputState, as well as the value of the corresponding item of the owner Mechanism's `output_values
         <Mechanism_Base.output_values>`. The default (`Linear`) transfers the value unmodified  (see `assign
         <OutputState_Assign>` for additional details)
+    COMMENT
 
-    function : TransferFunction : default Linear(slope=1, intercept=0))
-        function used to assign the result of the OutputState's `assign <OutputState.assign>` function,
-        under the possible influence of `GatingProjections <GatingProjection>` received by the OutputState,
-        to its `value <OutputState.value>`, as well as to the corresponding item of the owner's `output_values
-        <Mechanism_Base.output_values>` attribute.
+    function : Function, function, or method
+        function used to transform and/or combine the value of the items of the OutputState's `variable
+        <OutputState.variable>` into its `value <OutputState.value>`, under the possible influence of
+        `GatingProjections <GatingProjection>` received by the OutputState.
 
     value : number, list or np.ndarray
         assigned the result of `function <OutputState.function>`;  the same value is assigned to the corresponding item
