@@ -1859,7 +1859,7 @@ class Mechanism_Base(Mechanism):
             if isinstance(self.integrator_function, Integrator):
                 new_input = self.integrator_function.reinitialize(*args)
                 if hasattr(self, "initial_value"):
-                    self.initial_value = np.atleast_1d(*args)[0]
+                    self.initial_value = np.atleast_2d(*args)
                 self.value = self.function(new_input, context="REINITIALIZING")
                 self._update_output_states(context="REINITIALIZING")
 
