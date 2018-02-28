@@ -187,6 +187,7 @@ which it should project. Each of these is described below:
       In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
       can also include either or both of the following entries specific to OutputStates:
 
+      COMMENT:
       * *INDEX*:<int> - specifies the OutputState's `index <OutputState.index>` attribute; if this is not included,
         the first item of the owner Mechanism's `value <Mechanism_Base.value>` is assigned as the the OutputState's
         `variable <OutputState.variable>` (see `description below <OutputState_Index>` for additional details).
@@ -195,6 +196,7 @@ which it should project. Each of these is described below:
         <OutputState.assign>` attribute;  if this is not included, the OutputState's `variable
         <OutputState.variable>` is assigned as its `value <OutputState.value>` (see `description below
         <OutputState_Assign>` for additional details).
+      COMMENT
 
     .. _OutputState_Projection_Destination_Specification:
 
