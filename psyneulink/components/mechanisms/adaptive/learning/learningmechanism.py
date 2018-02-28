@@ -1077,68 +1077,68 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #          in the OUTPUT_STATES entry of paramClassDefaults;
         #       the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
 
-        # MODIFIED 2/27/18 OLD:
-        if self.learning_signals:
-
-            # Delete default LEARNING_SIGNAL item in output_states
-            del self._output_states[1]
-            for learning_signal in self.learning_signals:
-                # Instantiate LearningSignal
-
-                params = {LEARNED_PARAM: MATRIX}
-
-                # Parses learning_signal specifications (in call to State._parse_state_spec)
-                #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-                learning_signal = _instantiate_state(state_type=LearningSignal,
-                                                     owner=self,
-                                                     params=params,
-                                                     reference_value=self.learning_signal,
-                                                     modulation=self.modulation,
-                                                     # state_spec=self.learning_signal)
-                                                     state_spec=learning_signal)
-                # Add LearningSignal to output_states list
-                self._output_states.append(learning_signal)
-
-            # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
-            first_learning_signal = next(state for state in self.output_states if isinstance(state, LearningSignal))
-            first_learning_signal.name = LEARNING_SIGNAL
+        # # MODIFIED 2/27/18 OLD:
+        # if self.learning_signals:
+        #
+        #     # Delete default LEARNING_SIGNAL item in output_states
+        #     del self._output_states[1]
+        #     for learning_signal in self.learning_signals:
+        #         # Instantiate LearningSignal
+        #
+        #         params = {LEARNED_PARAM: MATRIX}
+        #
+        #         # Parses learning_signal specifications (in call to State._parse_state_spec)
+        #         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+        #         learning_signal = _instantiate_state(state_type=LearningSignal,
+        #                                              owner=self,
+        #                                              params=params,
+        #                                              reference_value=self.learning_signal,
+        #                                              modulation=self.modulation,
+        #                                              # state_spec=self.learning_signal)
+        #                                              state_spec=learning_signal)
+        #         # Add LearningSignal to output_states list
+        #         self._output_states.append(learning_signal)
+        #
+        #     # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
+        #     first_learning_signal = next(state for state in self.output_states if isinstance(state, LearningSignal))
+        #     first_learning_signal.name = LEARNING_SIGNAL
         # # MODIFIED 2/27/18 NEW:
-        # # Get default LearningSignal
-        # default_learning_signal = next((item for item in self._output_states
-        #                                 if NAME in item and item[NAME] is LEARNING_SIGNAL),None)
-        # if default_learning_signal is None:
-        #     raise LearningMechanismError("PROGRAM ERROR: Can't find default {} for {}".
-        #                                  format(LearningSignal.__name__, self.name))
-        #
-        # # Assign default if user didn't specify any
-        # if self.learning_signals is None:
-        #     self.learning_signals = [default_learning_signal]
-        #
-        # # Either way, delete default LearningSignal
-        # del self._output_states[self._output_states.index(self.learning_signals[0])]
-        #
-        # # Instantiate LearningSignals and assign to self._output_states
-        # for learning_signal in self.learning_signals:
-        #     # Instantiate LearningSignal
-        #
-        #     params = {LEARNED_PARAM: MATRIX}
-        #
-        #     # Parses learning_signal specifications (in call to State._parse_state_spec)
-        #     #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-        #     learning_signal = _instantiate_state(state_type=LearningSignal,
-        #                                          owner=self,
-        #                                          variable=(OWNER_VALUE,0),
-        #                                          params=params,
-        #                                          reference_value=self.learning_signal,
-        #                                          modulation=self.modulation,
-        #                                          # state_spec=self.learning_signal)
-        #                                          state_spec=learning_signal)
-        #     # Add LearningSignal to output_states list
-        #     self._output_states.append(learning_signal)
-        #
-        # # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
-        # first_learning_signal = next(state for state in self.output_states if isinstance(state, LearningSignal))
-        # first_learning_signal.name = LEARNING_SIGNAL
+        # Get default LearningSignal
+        default_learning_signal = next((item for item in self._output_states
+                                        if NAME in item and item[NAME] is LEARNING_SIGNAL),None)
+        if default_learning_signal is None:
+            raise LearningMechanismError("PROGRAM ERROR: Can't find default {} for {}".
+                                         format(LearningSignal.__name__, self.name))
+
+        # Assign default if user didn't specify any
+        if self.learning_signals is None:
+            self.learning_signals = [default_learning_signal]
+
+        # Either way, delete default LearningSignal
+        del self._output_states[self._output_states.index(default_learning_signal)]
+
+        # Instantiate LearningSignals and assign to self._output_states
+        for learning_signal in self.learning_signals:
+            # Instantiate LearningSignal
+
+            params = {LEARNED_PARAM: MATRIX}
+
+            # Parses learning_signal specifications (in call to State._parse_state_spec)
+            #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+            learning_signal = _instantiate_state(state_type=LearningSignal,
+                                                 owner=self,
+                                                 variable=(OWNER_VALUE,0),
+                                                 params=params,
+                                                 reference_value=self.learning_signal,
+                                                 modulation=self.modulation,
+                                                 # state_spec=self.learning_signal)
+                                                 state_spec=learning_signal)
+            # Add LearningSignal to output_states list
+            self._output_states.append(learning_signal)
+
+        # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
+        first_learning_signal = next(state for state in self.output_states if isinstance(state, LearningSignal))
+        first_learning_signal.name = LEARNING_SIGNAL
         # MODIFIED 2/27/18 END
 
         super()._instantiate_output_states(context=context)
