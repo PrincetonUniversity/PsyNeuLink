@@ -457,37 +457,6 @@ class TestTransferMechanismTimeConstant:
             and "must be a float between 0 and 1" in str(error_text.value)
         )
 
-    def test_transfer_mech_smoothing_factor_1(self):
-        with pytest.raises(TransferError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0],
-                function=Linear(),
-                smoothing_factor=1,
-                integrator_mode=True
-            )
-            T.execute([1, 1, 1, 1])
-        assert (
-            "smoothing_factor parameter" in str(error_text.value)
-            and "must be a float between 0 and 1" in str(error_text.value)
-        )
-
-    def test_transfer_mech_smoothing_factor_0(self):
-        with pytest.raises(TransferError) as error_text:
-            T = TransferMechanism(
-                name='T',
-                default_variable=[0, 0, 0, 0],
-                function=Linear(),
-                smoothing_factor=0,
-                integrator_mode=True
-            )
-            T.execute([1, 1, 1, 1])
-        assert (
-            "smoothing_factor parameter" in str(error_text.value)
-            and "must be a float between 0 and 1" in str(error_text.value)
-        )
-
-
 class TestTransferMechanismSize:
 
     def test_transfer_mech_size_int_check_var(self):
@@ -794,8 +763,6 @@ class TestTransferMechanismMultipleInputStates:
         expected_val = [[[1],[4]],[2],[3]]
         assert len(T.output_states)==1
         assert len(T.output_states[MECHANISM_VALUE].value)==3
-        print("VALUES ----- \n\n", val)
-        print("EXPECTED VALUES ----- \n\n", expected_val)
         assert all(all(a==b for a,b in zip(x,y)) for x,y in zip(val, expected_val))
 
 class TestIntegratorMode:
@@ -1076,3 +1043,9 @@ class TestIntegratorMode:
             T_not_integrator.reinitialize(0.0)
         assert "not allowed because this Mechanism is not stateful." in str(err_txt) \
                and "try setting the integrator_mode argument to True." in str(err_txt)
+
+class TestClip:
+    def test_clip_float(self):
+        T = TransferMechanism(clip=[-2.0, 2.0])
+        assert np.allclose(T.execute(3.0), 2.0)
+        assert np.allclose(T.execute(-2.0), -2.0)

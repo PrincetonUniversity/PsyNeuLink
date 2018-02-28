@@ -287,11 +287,12 @@ class KWTA(RecurrentTransferMechanism):
         is allowed, including positive offsets;  if set to `True`, a positive offset will be re-assigned the value of 0
         (see `inhibition_only <KWTA_inhibition_only>` for additional information).
 
-    clip : Optional[Tuple[float, float]]
-        specifies the allowable range for the result of `function <KWTA.function>`:
-        the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
-        any element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `clip <KWTA.clip>` that it exceeds.
+    clip : list [float, float] : default None (Optional)
+        specifies the allowable range for the result of `function <KWTA.function>`
+
+        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
+        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
+         the value of `clip <KWTA.clip>` that it exceeds.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -378,11 +379,12 @@ class KWTA(RecurrentTransferMechanism):
         "clipped" at (that is, any positive value is replaced by) 0.  Otherwise, any offset is allowed (see
         `inhibition_only <KWTA_inhibition_only>` for additional information).
 
-    clip : Tuple[float, float]
-        determines the allowable range of the result: the first value specifies the minimum allowable value
-        and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `clip <KWTA.clip>` it exceeds.  If `function <KWTA.function>`
-        is `Logistic`, `clip <KWTA.clip>` is set by default to (0,1).
+    clip : list [float, float] : default None (Optional)
+        specifies the allowable range for the result of `function <KWTA.function>`
+
+        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
+        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
+         the value of `clip <KWTA.clip>` that it exceeds.
 
     integrator_function:
         When *integrator_mode* is set to True, the KWTA executes its `integrator_function <KWTA.integrator_function>`,
