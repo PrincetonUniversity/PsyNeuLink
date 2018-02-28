@@ -760,7 +760,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate SMOOTHING_FACTOR:
         if SMOOTHING_FACTOR in target_set:
             smoothing_factor = target_set[SMOOTHING_FACTOR]
-            if (not (isinstance(smoothing_factor, float) and 0 <= smoothing_factor <= 1)) and (smoothing_factor != None):
+            if (not (isinstance(smoothing_factor, (int, float)) and 0 <= smoothing_factor <= 1)) and (smoothing_factor != None):
                 raise TransferError("smoothing_factor parameter ({}) for {} must be a float between 0 and 1".
                                     format(smoothing_factor, self.name))
 
