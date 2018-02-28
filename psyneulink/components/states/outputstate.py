@@ -1707,22 +1707,6 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     as the functions argument.
     """
 
-    # # MODIFIED 2/24/18 OLD:
-    # if isinstance(function, function_type):
-    #     return function
-    # elif isinstance(function, Function):
-    #     fct = function.function
-    # elif isinstance(function, type):
-    #     if issubclass(function, Function):
-    #         func = function().function
-    # elif isinstance(function, method_type):
-    #     fct = function
-    # elif not callable(function):
-    #     raise OutputStateError("Specification of \'{}\' for {} of {} must be a {}, the class or function of one "
-    #                            "or a callable object (Python function or method)".
-    #                            format(FUNCTION.upper(), output_state.name, owner.name, Function.__name__))
-
-    # MODIFIED 2/24/18 NEW:
     if isinstance(function, (function_type, method_type)):
         return function
 
@@ -1747,7 +1731,6 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
                                      OutputState.name, owner.name, owner.name, VALUE))
             return lambda x : fct(x[OWNER_VALUE][0])
     return fct
-    # MODIFIED 2/24/18 END
 
 
 def make_readonly_property(val):
