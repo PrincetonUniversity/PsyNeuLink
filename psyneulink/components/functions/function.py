@@ -1128,8 +1128,10 @@ class UserDefinedFunction(Function_Base):
 
     def function(self,
                  **kwargs):
-        return self.custom_function(**kwargs)
-
+        try:
+            return self.custom_function(**kwargs)
+        except TypeError:
+            return self.custom_function(kwargs[VARIABLE])
 
 # region **********************************  COMBINATION FUNCTIONS  ****************************************************
 # endregion
