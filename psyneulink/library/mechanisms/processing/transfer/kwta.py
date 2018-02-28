@@ -288,11 +288,10 @@ class KWTA(RecurrentTransferMechanism):
         (see `inhibition_only <KWTA_inhibition_only>` for additional information).
 
     clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <KWTA.function>`
-
-        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
-        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
-         the value of `clip <KWTA.clip>` that it exceeds.
+        specifies the allowable range for the result of `function <KWTA.function>` the item in index 0 specifies the
+        minimum allowable value of the result, and the item in index 1 specifies the maximum allowable value; any
+        element of the result that exceeds the specified minimum or maximum value is set to the value of
+        `clip <KWTA.clip>` that it exceeds.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for

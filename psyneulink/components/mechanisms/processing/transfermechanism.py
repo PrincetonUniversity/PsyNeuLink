@@ -492,11 +492,10 @@ class TransferMechanism(ProcessingMechanism_Base):
          result = (smoothing_factor * current input) + ((1-smoothing_factor) * result on previous time_step)
 
     clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <TransferMechanism.function>`
-
-        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
-        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
-         the value of `clip <TransferMechanism.clip>` that it exceeds.
+        specifies the allowable range for the result of `function <TransferMechanism.function>`. The item in index 0
+        specifies the minimum allowable value of the result, and the item in index 1 specifies the maximum allowable
+        value; any element of the result that exceeds the specified minimum or maximum value is set to the value of
+        `clip <TransferMechanism.clip>` that it exceeds.
 
     output_states : str, list or np.ndarray : default RESULTS
         specifies the OutputStates for the TransferMechanism; by default, one is created for each InputState
@@ -600,7 +599,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
         maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
-         the value of `clip <TransferMechanism.clip>` that it exceeds.
+        the value of `clip <TransferMechanism.clip>` that it exceeds.
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`.

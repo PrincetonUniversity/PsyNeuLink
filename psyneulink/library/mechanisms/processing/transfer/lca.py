@@ -330,11 +330,10 @@ class LCA(RecurrentTransferMechanism):
         `integrator_mode <LCA.integrator_mode>` for more details.
 
     clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <LCA.function>`
-
-        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
-        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
-         the value of `clip <LCA.clip>` that it exceeds.
+        specifies the allowable range for the result of `function <LCA.function>` the item in index 0 specifies the
+        minimum allowable value of the result, and the item in index 1 specifies the maximum allowable value; any
+        element of the result that exceeds the specified minimum or maximum value is set to the value of
+        `clip <LCA.clip>` that it exceeds.
 
 
     params : Dict[param keyword: param value] : default None

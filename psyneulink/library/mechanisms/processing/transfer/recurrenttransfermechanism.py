@@ -391,11 +391,10 @@ class RecurrentTransferMechanism(TransferMechanism):
          (1-smoothing_factor * input to mechanism's function on the previous time step)
 
     clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`
-
-        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
-        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
-         the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
+        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>` the item in
+        index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the maximum
+        allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
+        value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
 
     enable_learning : boolean : default False
