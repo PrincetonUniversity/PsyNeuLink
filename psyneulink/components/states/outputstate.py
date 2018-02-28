@@ -187,6 +187,7 @@ which it should project. Each of these is described below:
       In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
       can also include either or both of the following entries specific to OutputStates:
 
+      COMMENT:
       * *INDEX*:<int> - specifies the OutputState's `index <OutputState.index>` attribute; if this is not included,
         the first item of the owner Mechanism's `value <Mechanism_Base.value>` is assigned as the the OutputState's
         `variable <OutputState.variable>` (see `description below <OutputState_Index>` for additional details).
@@ -195,6 +196,7 @@ which it should project. Each of these is described below:
         <OutputState.assign>` attribute;  if this is not included, the OutputState's `variable
         <OutputState.variable>` is assigned as its `value <OutputState.value>` (see `description below
         <OutputState_Assign>` for additional details).
+      COMMENT
 
     .. _OutputState_Projection_Destination_Specification:
 
@@ -830,9 +832,11 @@ class OutputState(State_Base):
         else:
             context = self
 
-        # For backward compatibility with CALCULATE
+        # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:
             assign = kwargs['calculate']
+        if params:
+            _convert_assign_and_index(params)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
@@ -859,7 +863,7 @@ class OutputState(State_Base):
 
         self.reference_value = reference_value
 
-        # FIX: PUT THIS IN DEDICATED OVERRIDED OF COMPONENT VARIABLE-SETTING METHOD??
+        # FIX: PUT THIS IN DEDICATED OVERRIDE OF COMPONENT VARIABLE-SETTING METHOD??
         if variable is None:
             if reference_value is None:
                 # variable = owner.instance_defaults.value[0]
@@ -1662,7 +1666,14 @@ def  _parse_output_state_variable(owner, variable, output_state_name=None):
             return spec
         elif isinstance(spec, tuple):
             # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))
-            return owner._params_dict[spec[0]][spec[1]]
+            try:
+                return owner._params_dict[spec[0]][spec[1]]
+            except TypeError:
+                if owner._params_dict[spec[0]] is None:
+                    return None
+                else:
+                    raise OutputStateError("Can't parse variable ({}) for {} of {}".
+                                           format(spec, output_state_name or OutputState.__name__, owner.name))
         elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
             return owner._params_dict
@@ -1698,22 +1709,6 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     as the functions argument.
     """
 
-    # # MODIFIED 2/24/18 OLD:
-    # if isinstance(function, function_type):
-    #     return function
-    # elif isinstance(function, Function):
-    #     fct = function.function
-    # elif isinstance(function, type):
-    #     if issubclass(function, Function):
-    #         func = function().function
-    # elif isinstance(function, method_type):
-    #     fct = function
-    # elif not callable(function):
-    #     raise OutputStateError("Specification of \'{}\' for {} of {} must be a {}, the class or function of one "
-    #                            "or a callable object (Python function or method)".
-    #                            format(FUNCTION.upper(), output_state.name, owner.name, Function.__name__))
-
-    # MODIFIED 2/24/18 NEW:
     if isinstance(function, (function_type, method_type)):
         return function
 
@@ -1738,7 +1733,6 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
                                      OutputState.name, owner.name, owner.name, VALUE))
             return lambda x : fct(x[OWNER_VALUE][0])
     return fct
-    # MODIFIED 2/24/18 END
 
 
 def make_readonly_property(val):

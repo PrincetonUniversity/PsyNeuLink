@@ -1073,10 +1073,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
                           context=context)
 
         # Instantiate LearningSignals if they are specified, and assign to self._output_states
-        # Note: if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputState
-        #          in the OUTPUT_STATES entry of paramClassDefaults;
-        #       the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
-
+        # Notes:
+        #    - if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputState
+        #        in the OUTPUT_STATES entry of paramClassDefaults;
+        #    - the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
 
         # Get default LearningSignal
         default_learning_signal = next((item for item in self._output_states
@@ -1090,7 +1090,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             self.learning_signals = [default_learning_signal]
 
         # Either way, delete default LearningSignal
-        del self._output_states[self._output_states.index(self.learning_signals[0])]
+        del self._output_states[self._output_states.index(default_learning_signal)]
 
         # Instantiate LearningSignals and assign to self._output_states
         for learning_signal in self.learning_signals:
