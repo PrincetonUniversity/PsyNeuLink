@@ -739,19 +739,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             initial_value = target_set[INITIAL_VALUE]
             if initial_value is not None:
                 if not iscompatible(initial_value, self.instance_defaults.variable):
-                    raise Exception(
-                        "initial_value is {}, type {}\nself.instance_defaults.variable is {}, type {}".format(
-                            initial_value,
-                            type(initial_value).__name__,
-                            self.instance_defaults.variable,
-                            type(self.instance_defaults.variable).__name__,
-                        )
-                    )
                     raise TransferError(
-                        "The format of the initial_value parameter for {} ({}) must match its input ({})".format(
+                        "The format of the initial_value parameter for {} ({}) must match its variable ({})".format(
                             append_type_to_name(self),
                             initial_value,
-                            self.instance_defaults.variable[0],
+                            self.instance_defaults.variable,
                         )
                     )
 
