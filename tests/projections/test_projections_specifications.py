@@ -110,8 +110,8 @@ class TestProjectionSpecificationFormats:
         assert T2.output_states[0].efferents[0].matrix.shape == (1,2)
         assert T2.output_states[0].efferents[1].receiver.name == 'InputState-1'
         assert T2.output_states[0].efferents[1].matrix.shape == (1,3)
-        assert T2.output_states[1].index == 2
-        assert T2.output_states[2].index == 1
+        assert T2.output_states[1].owner_value_index == 2
+        assert T2.output_states[2].owner_value_index == 1
 
     def test_2_item_tuple_from_control_signal_to_parameter_state(self):
 

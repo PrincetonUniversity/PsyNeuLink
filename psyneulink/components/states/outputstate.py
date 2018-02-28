@@ -1664,7 +1664,14 @@ def  _parse_output_state_variable(owner, variable, output_state_name=None):
             return spec
         elif isinstance(spec, tuple):
             # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))
-            return owner._params_dict[spec[0]][spec[1]]
+            try:
+                return owner._params_dict[spec[0]][spec[1]]
+            except TypeError:
+                if owner._params_dict[spec[0]] is None:
+                    return None
+                else:
+                    raise OutputStateError("Can't parse variable ({}) for {} of {}".
+                                           format(spec, output_state_name or OutputState.__name__, owner.name))
         elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
             return owner._params_dict
