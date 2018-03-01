@@ -342,68 +342,137 @@ Targets
 
 If learning is specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`, then
 target values for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
-are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method, which can be in
-any of three formats.  The two formats used for **inputs** (`Sequence <Run_Inputs_Sequence_Format>` and
-`Mechanism <Run_Inputs_Mechanism_Format>` format) can also be used for targets.  However, the format of the lists or
-ndarrays is simpler, since each `TARGET` Mechanism is assigned only a single target value, so there is never the need
-for the extra level of nesting (or dimension of ndarray) used for InputStates in the specification of **inputs**.
-Details concerning the use of the `Sequence <Run_Targets_Sequence_Format>`  and
-`Mechanism <Run_Targets_Mechanism_Format>` formats for targets is described below. Targets can also be specified
-as a `function <Run_Targets_Function_Format>` (for example, to allow the target to depend on the outcome of processing).
+are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method.
 
-If either the Sequence or Mechanism format is used, then the number of targets specified for each Mechanism must equal
-the number specified for the **inputs** argument;  as with **inputs**, if the number of `TRIAL` \\s specified is greater
-than the number of inputs (and targets), then the list will be cycled until the number of `TRIAL` \\s specified is
-completed.  If a function is used for the **targets**, then it will be used to generate a target for each `TRIAL`.
+Recall that the `TARGET`, or `ComparatorMechanism`, of a learning sequence receives a TARGET, which is provided by the
+user at run time, and a SAMPLE, which is received from a projection sent by the last mechanism of the learning sequence.
+The TARGET and SAMPLE values for a particular `TARGET` Mechanism must have the same shape. See `learning sequence
+<Process_Learning_Sequence>` for more details on how these components relate to each other.
 
-The number of targets specified in the Sequence or Mechanism formats for each `TRIAL`, or generated using
-the function format, must equal the number of `TARGET` Mechanisms for the Process or System being run (see Process
-`target_mechanisms <Process.Process.target_mechanisms>` or
-System `targetMechanism <System.target_mechanisms>` respectively), and the value of each target must
-match (in number and type of elements) that  of the `target <ComparatorMechanism.ComparatorMechanism.target>`
-attribute of the `TARGET` Mechanism for which it is intended.  Furthermore, if a range is specified for the output of
-the `TERMINAL` Mechanism with which the target is compared (that is, the Mechanism that provides the
-`ComparatorMechanism's <ComparatorMechanism>` `sample <ComparatorMechanism.ComparatorMechanism.sample>`
-value, then the target must be within that range (for example, if the `TERMINAL` Mechanism is a
-`TransferMechanism` that uses a `Logistic` function, its `range <TransferMechanism.TransferMechanism.range>` is
-[0,1], so the target must be within that range).
+The standard format for specifying targets is a Python dictionary where the keys are the last mechanism of each learning
+sequence, and the values are lists in which the i-th element represents the target value for that learning sequence on
+trial i. There must be the same number of keys in the target specification dictionary as there are `TARGET` Mechanisms
+in the system. Each target value must be compatible with the shape of the `TARGET` mechanism's TARGET `input state
+<ComparatorMechanism.input_states>`. This means that for a given key (which is always the last mechanism of the
+learning sequence) in the target specification dictionary, the value is usually a list of 1d lists/arrays.
 
-.. _Run_Targets_Sequence_Format:
+The number of targets specified for each Mechanism must equal the number specified for the **inputs** argument;  as
+with **inputs**, if the number of `TRIAL` \\s specified is greater than the number of inputs (and targets), then the
+list will be cycled until the number of `TRIAL` \\s specified is completed.
 
-Sequence Format
-^^^^^^^^^^^^^^^
++------------------------------------------+--------------+--------------+
+| Trial #                                  |1             |   2          |
++------------------------------------------+--------------+--------------+
+| Target value for the learning sequence   | [1.0, 1.0]   |   [2.0, 2.0] |
+| containing **Mechanism b**               |              |              |
++------------------------------------------+--------------+--------------+
+| Target value for the learning sequence   |  [1.0]       |   [2.0]      |
+| containing **Mechanism c**               |              |              |
++------------------------------------------+--------------+--------------+
 
-*(List[values] or ndarray):* -- there are at most three levels of nesting (or dimensions) required for
-targets:  one for `TRIAL` \\s, one for Mechanisms, and one for the elements of each input.  For a System
-with more than one `TARGET` Mechanism, the targets must be specified in the same order as they appear in the System's
-`target_mechanisms <System.target_mechanisms>` attribute.  This should be the same order in which
-they are declared, and can be displayed using the System's `show <System.show>` method). All
-other requirements are the same as the `Sequence format <Run_Inputs_Sequence_Format>` for **inputs**.
+::
 
-.. _Run_Targets_Mechanism_Format:
+        >>> import psyneulink as pnl
 
-Mechanism Format
-^^^^^^^^^^^^^^^^
-*(Dict[Mechanism, List[values] or ndarray]):* -- there must be one entry in the dictionary for each of the `TARGET`
-Mechanisms in the Process or System being run, though the entries can be specified in any order (making this format
-easier to use. The value of each entry is a list or ndarray of the target values for that Mechanism, one for each
-`TRIAL`.  There are at most two levels of nesting (or dimensions) required for each entry: one for the `TRIAL`,
-and the other for the elements of each input.  In all other respects, the format is the same as the
-`Mechanism format <Run_Inputs_Mechanism_Format>` for **inputs**.
+        >>> a = pnl.TransferMechanism(name="a")
+        >>> b = pnl.TransferMechanism(name="b",
+        ...                           default_variable=np.array([[0.0, 0.0]]))
+        >>> c = pnl.TransferMechanism(name="c")
 
-.. _Run_Targets_Function_Format:
+        >>> learning_sequence_1 = pnl.Process(name="learning-sequence-1",
+        ...                                   pathway=[a, b],
+        ...                                   learning=pnl.ENABLED)
+        >>> learning_sequence_2 = pnl.Process(name="learning-sequence-2",
+        ...                                   pathway=[a, c],
+        ...                                   learning=pnl.ENABLED)
 
-Function Format
-^^^^^^^^^^^^^^^
 
-*[Function]:* -- the function must return an array with a number of items equal to the number of `TARGET` Mechanisms
-for the Process or System being run, each of which must match (in number and type of elements) the
-`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the `TARGET` Mechanism for which it is intended.
-This format allows targets to be constructed programmatically, in response to computations made during the run.
+        >>> s = pnl.System(name="learning-system",
+        ...                processes=[learning_sequence_1, learning_sequence_2])
 
-COMMENT:
-    ADD EXAMPLE HERE
-COMMENT
+        >>> input_dictionary = {a: [[[0.1]], [[0.2]]]}
+
+        >>> target_dictionary = {b: [[1.0, 1.0], [2.0, 2.0]],
+        ...                      c: [[1.0], [2.0]]}
+
+        >>> s.run(inputs=input_dictionary,
+        ...       targets=target_dictionary)
+
+.. _Run_Targets_Fig:
+
+.. figure:: _static/target_spec_dictionary.svg
+   :alt: Example of dictionary format of target specification
+
+Alternatively, the value for a given key (last mechanism in the learning sequence) in the target specification
+dictionary may be a function. The output of that function must be compatible with the shape of the `TARGET` mechanism's
+TARGET `input state <ComparatorMechanism.input_states>`. The function will be executed at the start of the learning
+portion of each trial. This format allows targets to be constructed programmatically, in response
+to computations made during the run.
+
+::
+
+        >>> a = TransferMechanism(name="a")
+        >>> b = TransferMechanism(name="b",
+        ...                       default_variable=np.array([[0.0, 0.0]]))
+
+        >>> learning_sequence = Process(name="learning-sequence",
+        ...                             pathway=[A, B],
+        ...                             learning=ENABLED)
+
+        >>> s = System(name="learning-system",
+        ...            processes=[LP])
+
+        >>> def target_function():
+        ...     val_1 = NormalDist(mean=3.0).function()
+        ...     val_2 = NormalDist(mean=3.0).function()
+        ...     target_value = np.array([val_1, val_2])
+        ...     return target_value
+
+        >>> s.run(inputs={A: [[[1.0]], [[2.0]], [[3.0]]]},
+        ...       targets={B: target_function})
+
+.. note::
+
+    Target specification dictionaries that provide values for multiple learning sequences may contain functions for some
+    learning sequences and lists of values for others.
+
+Finally, for convenience, if there is only one learning sequence in a system, the targets may be specified in a list,
+rather than a dictionary.
+
++------------------------------------------+-------+------+------+------+------+
+| Trial #                                  |1      |2     |3     |4     |5     |
++------------------------------------------+-------+------+------+------+------+
+| Target corresponding to  **Mechanism b** |1.0    |2.0   |3.0   |4.0   |5.0   |
++------------------------------------------+-------+------+------+------+------+
+
+Complete input specification:
+
+::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> p1 = pnl.Process(pathway=[a, b])
+
+        >>> s = pnl.System(processes=[p1])
+
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+        >>> target_dictionary = {b: [[1.0], [2.0], [3.0], [4.0], [5.0]]}
+
+        >>> s.run(inputs=input_dictionary,
+        ...       targets=target_dictionary)
+
+Shorthand - specify the targets in a list because there is only one learning sequence:
+
+::
+
+        >>> target_list = [[1.0], [2.0], [3.0], [4.0], [5.0]]
+
+        >>> s.run(inputs=input_dictionary,
+        ...       targets=target_list)
+
 
 .. _Run_Class_Reference:
 
@@ -510,9 +579,8 @@ def run(object,
     initial_values : Dict[Mechanism:List[input]], List[input] or np.ndarray(input) : default None
         the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
-    targets : List[input] or np.ndarray(input) : default None
-        the target values assigned to the `ComparatorMechanism` for each `TRIAL` (used for learning).
-        The length must be equal to **inputs**.
+    targets : dict : default None
+        the target values assigned to the `ComparatorMechanism` of each learning sequence on each `TRIAL`.
 
     learning : bool :  default None
         enables or disables learning during execution for a `Process <Process_Execution_Learning>` or
@@ -572,11 +640,32 @@ def run(object,
     # num_trials = num_trials or num_inputs_sets  # num_trials may be provided by user, otherwise = # of input sets
 
     if targets is not None:
+
         if isinstance(targets, dict):
-            targets = _adjust_target_dict(object, targets)
-        elif not isinstance(targets, function_type):
-            raise RunError("Targets for {} must be a dictionary or function.".format(object.name))
-        _validate_targets(object, targets, num_inputs_sets, context=context)
+            targets, num_targets = _adjust_target_dict(object, targets)
+
+        elif isinstance(targets, (list, np.ndarray)):
+            # small version of former 'sequence' format -- only allowed if there is a single Target mechanism
+            if len(object.target_mechanisms) == 1:
+                targets = {object.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
+                targets, num_targets = _adjust_target_dict(object, targets)
+            else:
+                raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
+
+        elif isinstance(targets, function_type):
+            if len(object.target_mechanisms) == 1:
+                targets = {object.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
+                targets, num_targets = _adjust_target_dict(object, targets)
+            else:
+                raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
+        else:
+            raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
+
+        # if num_targets = -1, all targets were specified as functions
+        if num_targets != num_inputs_sets and num_targets != -1:
+            raise RunError("Number of target values specified ({}) for each learning sequence in {} must equal the "
+                           "number of input values specified ({}) for each origin mechanism in {}."
+                           .format(num_targets, object.name, num_inputs_sets, object.name))
 
     object_type = _get_object_type(object)
 
@@ -611,7 +700,6 @@ def run(object,
     # Class-specific validation:
     context = context or RUN + "validating " + object.name
 
-
     # INITIALIZATION
     if initialize:
         object.initialize()
@@ -624,6 +712,7 @@ def run(object,
 
     # EXECUTE
     execution_inputs = {}
+    execution_targets = {}
     for execution in range(num_trials):
 
         execution_id = _get_unique_id()
@@ -648,15 +737,17 @@ def run(object,
 
                 if isinstance(targets, function_type):
                     object.target = targets
+                else:
+                    for mech in targets:
+                        if callable(targets[mech]):
+                            execution_targets[mech] = targets[mech]
+                        else:
+                            execution_targets[mech] = targets[mech][input_num]
+                    if object_type is SYSTEM:
+                        object.target = execution_targets
+                        object.current_targets = execution_targets
 
-                # IMPLEMENTATION NOTE:  USE input_num since # of inputs must equal # targets,
-                #                       whereas targets can be assigned a function (so can't be used to generated #)
-                elif object_type == PROCESS:
-                    # object.target = targets[input_num][time_step]
-                    object.target = targets[input_num][time_step]
 
-                elif object_type == SYSTEM:
-                    object.current_targets = targets[input_num]
             # MODIFIED 3/16/17 END
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
@@ -724,6 +815,11 @@ def _input_matches_variable(input, var):
             if len(input[i]) != len(var[i]):
                 return False
         return "heterogeneous"
+    return False
+
+def _target_matches_input_state_variable(target, input_state_variable):
+    if np.shape(np.atleast_1d(target)) == np.shape(input_state_variable):
+        return True
     return False
 
 def _adjust_stimulus_dict(obj, stimuli):
@@ -804,233 +900,83 @@ def _adjust_stimulus_dict(obj, stimuli):
 
     return adjusted_stimuli, num_input_sets
 
-def _adjust_target_dict(object, stimuli):
-    object_type = _get_object_type(object)
+def _adjust_target_dict(component, target_dict):
 
-    # FIX: RE-WRITE USING NEXT AND StopIteration EXCEPTION ON FAIL TO FIND (THIS GIVES SPECIFICS)
-    # FIX: TRY USING compare METHOD OF DICT OR LIST?
-    # Check that every target in the process or system receives a projection from a mechanism named in the dict
-    for target in object.target_mechanisms:
+    # STEP 1: validate that there is a one-to-one mapping of target entries and target mechanisms
+    for target_mechanism in component.target_mechanisms:
         # If any projection to a target does not have a sender in the stimulus dict, raise an exception
         if not any(mech is projection.sender.owner for
-                   projection in target.input_states[SAMPLE].path_afferents
-                   for mech in stimuli.keys()):
+                   projection in target_mechanism.input_states[SAMPLE].path_afferents
+                   for mech in target_dict.keys()):
                 raise RunError("Entry for {} is missing from specification of targets for run of {}".
-                               format(target.input_states[SAMPLE].
-                                      afferents[0].sender.owner.name,
-                                      object.name))
+                               format(target_mechanism.input_states[SAMPLE].path_afferents[0].sender.owner.name,
+                                      component.name))
 
-    # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
-
-    # Check that each target referenced in the dict (key)
-    #     is the name of a mechanism that projects to a target (comparator) in the system
-    terminal_to_target_mapping = {}
-    for mech in stimuli.keys():
-        # If any mechanism in the stimulus dict does not have a projection to the target, raise an exception
+    for mech in target_dict:
+        # If any mechanism in the target dict does not have a projection to a target, raise an error
         if not any(target is projection.receiver.owner for
                    projection in mech.output_state.efferents
-                   for target in object.target_mechanisms):
-            raise RunError("{} is not a target Mechanism in {}".format(mech.name, object.name))
-        # Get target mech (comparator) for each entry in stimuli dict:
-        terminal_to_target_mapping[mech] = mech.output_state.efferents[0]
+                   for target in component.target_mechanisms):
+            raise RunError("{} does not project to a target Mechanism in {}".format(mech.name, component.name))
 
-    # Insure that target lists in dict are accessed in the same order as the
-    #   targets in the system's target_mechanisms list, by reassigning targets to an OrderedDict:
-    from collections import OrderedDict
-    ordered_targets = OrderedDict()
-    for target_mech in object.target_mechanisms:
-        # Get the process to which the TARGET mechanism belongs:
-        try:
-            process = next(projection.sender.owner for
-                           projection in target_mech.input_states[TARGET].path_afferents if
-                           isinstance(projection.sender, ProcessInputState))
-        except StopIteration:
-            raise RunError("PROGRAM ERROR: No process found for TARGET Mechanism ({}) "
-                           "supposed to be in target_mechanisms for {}".
-                           format(target_mech.name, object.name))
-        # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
-        terminal_mech = process.terminal_mechanisms[0]
-        try:
-            ordered_targets[terminal_mech] = stimuli[terminal_mech]
-        except KeyError:
-            raise RunError("{} (of {} process) not found target specification for run of {}".
-                           format(terminal_mech, object.name))
-    stimuli = ordered_targets
+        # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
 
-    # Convert all items to 2D arrays:
-    # - to match standard format of mech.instance_defaults.variable
-    # - to deal with case in which the lists have only one stimulus, one more more has length > 1,
-    #     and those are specified as lists or 1D arrays (which would be misinterpreted as > 1 stimulus)
-    stim_lists = list(stimuli.values())
-    num_input_sets = len(stim_lists[EXECUTION_SET_DIM])
+        # (1) Replace any user provided convenience notations with values that match the following specs:
+        # a - all dictionary values are lists containing a target value on each trial (even if only one trial)
+        # b - each input value is at least a 1d array that matches the variable of the TARGET input state
 
-    # Check that all lists have the same number of stimuli
-    if not all(len(np.array(stim_list)) == num_input_sets for stim_list in stim_lists):
-        raise RunError("The length of all the stimulus lists must be the same")
+        # (2) Verify that all mechanism values provide the same number of inputs (check length of each dictionary value)
 
-    stim_list = []
+    adjusted_targets = {}
+    num_targets = -1
+    for mech, target_list in target_dict.items():
+        if isinstance(target_list, (float, list, np.ndarray)):
+            input_state_variable = mech.output_state.efferents[0].receiver.owner.input_states[TARGET].instance_defaults.variable
+            num_targets = -1
 
-    for i in range(num_input_sets):
-        stims_in_execution = []
-        for mech in stimuli:
-            stims_in_execution.append(stimuli[mech][i])
-        stim_list.append(stims_in_execution)
+            # first check if only one target was provided:
+            if np.shape(np.atleast_1d(target_list)) == np.shape(input_state_variable):
+                adjusted_targets[mech] = [np.atleast_1d(target_list)]
+                if num_targets == -1:
+                    num_targets = 1
+                elif num_targets != 1:
+                    raise RunError("Target specification for {} is not valid. The number of targets (1) provided for {}"
+                                   "conflicts with at least one other mechanism's target specification."
+                                   .format(component.name, mech.name))
 
-    try:
-        stim_list = np.array(stim_list)
-    except ValueError:
-        for exec in range(len(stim_list)):
-            for phase in range(len(stim_list[exec])):
-                for mech in range(len(stim_list[exec][phase])):
-                    stim_list[exec][phase][mech] = stim_list[exec][phase][mech].tolist()
-        stim_list = np.array(stim_list)
-
-    return np.array(stim_list)
-
-
-
-def _validate_targets(object, targets, num_input_sets, context=None):
-    """
-    num_targets = number of target stimuli per execution
-    num_targets_sets = number sets of targets (one for each execution) in targets;  must match num_input_sets
-    """
-
-    object_type = _get_object_type(object)
-    num_target_sets = None
-
-    if isinstance(targets, function_type):
-        # Check that function returns a number of items equal to the number of target mechanisms
-        generated_targets = targets()
-        num_targets = len(generated_targets)
-        num_target_mechs = len(object.target_mechanisms)
-        if num_targets != num_target_mechs:
-            raise RunError("function for target argument of run returns {} items "
-                           "but {} has {} targets".
-                           format(num_targets, object.name, num_target_mechs))
-
-        # Check that each target generated is compatible with the targetMechanism for which it is intended
-        for target, targetMechanism in zip(generated_targets, object.target_mechanisms):
-            target_len = np.size(target)
-            if target_len != np.size(targetMechanism.input_states[TARGET].instance_defaults.variable):
-                if num_target_sets > 1:
-                    plural = 's'
-                else:
-                    plural = ''
-                raise RunError("Length ({}) of target{} specified for run of {}"
-                                   " does not match expected target length of {}".
-                                   format(target_len, plural, append_type_to_name(object),
-                                          np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
-        return
-
-    if object_type is PROCESS:
-
-        # If learning is enabled, validate target
-        if object._learning_enabled:
-            target_array = np.atleast_2d(targets)
-            target_len = np.size(target_array[0])
-            num_target_sets = np.size(target_array, 0)
-
-            if target_len != np.size(object.target_mechanisms[0].input_states[TARGET].instance_defaults.variable):
-                if num_target_sets > 1:
-                    plural = 's'
-                else:
-                    plural = ''
-                raise RunError("Length ({}) of target{} specified for run of {}"
-                                   " does not match expected target length of {}".
-                                   format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.target_mechanisms[0].target)))
-
-            if any(np.size(target) != target_len for target in target_array):
-                raise RunError("Not all of the targets specified for {} are of the same length".
-                                   format(append_type_to_name(object)))
-
-            if num_target_sets != num_input_sets:
-                raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
-                                   format(num_target_sets, num_input_sets, append_type_to_name(object)))
-
-    elif object_type is SYSTEM:
-
-        # FIX: VALIDATE THE LEARNING IS ENABLED
-        # FIX: CONSOLIDATE WITH TESTS FOR PROCESS ABOVE?
-
-        # If the system has any process with learning enabled
-        if any(process._learning_enabled for process in object.processes):
-
-            HOMOGENOUS_TARGETS = 1
-            HETEROGENOUS_TARGETS = 0
-
-            if targets.dtype in {np.dtype('int'), np.dtype('float')}:
-                process_structure = HOMOGENOUS_TARGETS
-            elif targets.dtype is np.dtype('O'):
-                process_structure = HETEROGENOUS_TARGETS
-            else:
-                raise RunError("Unknown data type for inputs in {}".format(object.name))
-
-            # Processed targets for a system should be 1 dim less than inputs (since don't include phase)
-            # If inputs to processes of system are heterogenous, inputs.ndim should be 2:
-            # If inputs to processes of system are homogeneous, inputs.ndim should be 3:
-            expected_dim = 2 + process_structure
-            if targets.ndim != expected_dim:
-                raise RunError("targets arg in call to {}.run() must be a {}D "
-                               "np.array or comparable list (currently {}D)".
-                               format(object.name, expected_dim, targets.ndim))
-
-            # FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
-            # # MODIFIED 2/16/17 OLD:
-            # num_target_sets = np.size(targets,PROCESSES_DIM-1)
-            # MODIFIED 2/16/17 NEW:
-            num_target_sets = targets.shape[0]
-            num_targets_per_set = np.size(targets,PROCESSES_DIM-1)
-            # MODIFIED 2/16/17 END
-            # Check that number of target values in each execution equals the number of target mechanisms in the system
-            if num_targets_per_set != len(object.target_mechanisms):
-                raise RunError("The number of target values for each execution ({}) in the call to {}.run() "
-                                  "does not match the number of Processes in the System ({})".
-                                  format(
-                                         # np.size(targets,PROCESSES_DIM),
-                                         num_targets_per_set,
-                                         object.name,
-                                         len(object.origin_mechanisms)))
-
-            # MODIFIED 12/23/16 NEW:
-            # Validate that each target is compatible with its corresponding targetMechanism
-            # FIX: CONSOLIDATE WITH TESTS FOR PROCESS AND FOR function_type ABOVE
-            # FIX: MAKE SURE THAT ITEMS IN targets ARE ALIGNED WITH CORRESPONDING object.target_mechanisms
-            target_array = np.atleast_2d(targets)
-
-            # FIX CW 1/31/18: this loop is not interpreting targets correctly, I think. Needs to be tested for systems
-            # with multiple target mechanisms.
-            for target, targetMechanism in zip(targets, object.target_mechanisms):
-                target_len = np.size(target)
-                if target_len != np.size(targetMechanism.input_states[TARGET].instance_defaults.variable):
-                    if num_targets_per_set > 1:
-                        plural = 's'
+            # iterate over list and check that each candidate target is compatible with corresponding TARGET input state
+            elif isinstance(target_list, (list, np.ndarray)):
+                adjusted_targets[mech] = []
+                for target_value in target_list:
+                    if np.shape(np.atleast_1d(target_value)) == np.shape(input_state_variable):
+                        adjusted_targets[mech].append(np.atleast_1d(target_value))
                     else:
-                        plural = ''
-                    raise RunError("Length ({}) of target{} specified for run "
-                                   "of {} does not match expected target "
-                                   "length of {} for target mechanism {}".
-                                   format(target_len,
-                                          plural,
-                                          append_type_to_name(object),
-                                          np.size(targetMechanism.input_states[
-                                                      TARGET].instance_defaults.variable),
-                                          targetMechanism.name))
+                        raise RunError("Target specification ({}) for {} is not valid. The shape of {} is not compatible "
+                                       "with the TARGET input state of the corresponding ComparatorMechanism ({})"
+                                       .format(target_list, mech.name, target_value,
+                                               mech.output_state.efferents[0].receiver.owner.name))
+                current_num_targets = len(adjusted_targets[mech])
+                # verify that all mechanisms have provided the same number of inputs
+                if num_targets == -1:
+                    num_targets = current_num_targets
+                elif num_targets != current_num_targets:
+                    raise RunError("Target specification for {} is not valid. The number of targets ({}) provided for {}"
+                                   "conflicts with at least one other mechanism's target specification."
+                                   .format(component.name, current_num_targets, mech.name))
 
-                if any(np.size(target) != target_len for target in target_array):
-                    raise RunError("Not all of the targets specified for {} are of the same length".
-                                       format(append_type_to_name(object)))
+        elif callable(target_list):
+            _validate_target_function(target_list, mech.output_state.efferents[0].receiver.owner, mech)
+            adjusted_targets[mech] = target_list
+    return adjusted_targets, num_targets
 
-                if num_target_sets != num_input_sets:
-                    raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
-                                       format(num_target_sets, num_input_sets, append_type_to_name(object)))
-            # MODIFIED 12/23/16 END
+def _validate_target_function(target_function, target_mechanism, sample_mechanism):
 
-    else:
-        raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_targets in Run module for ".
-                       format(object.__class__.__name__))
-
-    return num_target_sets
+    generated_targets = np.atleast_1d(target_function())
+    expected_shape = target_mechanism.input_states[TARGET].instance_defaults.variable
+    if np.shape(generated_targets) != np.shape(expected_shape):
+            raise RunError("Target values generated by target function ({}) are not compatible with TARGET input state "
+                           "of {} ({}). See {} entry in target specification dictionary. "
+                           .format(generated_targets, target_mechanism.name, expected_shape, sample_mechanism.name))
 
 def _get_object_type(object):
     if isinstance(object, Mechanism):

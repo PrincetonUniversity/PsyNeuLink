@@ -1862,11 +1862,30 @@ class Mechanism_Base(Mechanism):
         # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output states
         elif hasattr(self, "integrator_function"):
-            new_input = self.integrator_function.reinitialize(*args)
-            if hasattr(self, "initial_value"):
-                self.initial_value = np.atleast_1d(*args)[0]
-            self.value = self.function(new_input, context="REINITIALIZING")
-            self._update_output_states(context="REINITIALIZING")
+            if isinstance(self.integrator_function, Integrator):
+                new_input = self.integrator_function.reinitialize(*args)
+                if hasattr(self, "initial_value"):
+                    self.initial_value = np.atleast_2d(*args)
+                self.value = self.function(new_input, context="REINITIALIZING")
+                self._update_output_states(context="REINITIALIZING")
+
+            elif self.integrator_function is None:
+                if hasattr(self, "integrator_mode"):
+                    raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
+                                         "(It does not have an accumulator to reinitialize.) If this Mechanism "
+                                         "should be stateful, try setting the integrator_mode argument to True. "
+                                         .format(self.name))
+                else:
+                    raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
+                                         "(It does not have an accumulator to reinitialize).".format(self.name))
+
+            else:
+                raise MechanismError("Reinitializing {} is not allowed because its integrator_function is not an "
+                                     "Integrator type function, therefore the Mechanism does not have an accumulator to"
+                                     " reinitialize.".format(self.name))
+        else:
+            raise MechanismError("Reinitializing {} is not allowed because this Mechanism is not stateful. "
+                                 "(It does not have an accumulator to reinitialize).".format(self.name))
 
     def get_current_mechanism_param(self, param_name):
         try:

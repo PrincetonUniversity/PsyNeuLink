@@ -105,7 +105,7 @@ Structure
 
 The distinguishing feature of a RecurrentTransferMechanism is a self-projecting `AutoAssociativeProjection` -- that
 is, one that projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
-InputState <InputState_Primary>`.  This can be parametrized using its `matrix <RecurrentTransferMechanism.matrix>`,
+InputState <InputState_Primary>`.  This can be parameterized using its `matrix <RecurrentTransferMechanism.matrix>`,
 `auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is
 stored in its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` attribute.
 
@@ -257,7 +257,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     initial_value=None,                \
     noise=0.0,                         \
     smoothing_factor=0.5,              \
-    clip=(float:min, float:max),       \
+    clip=[float:min, float:max],       \
     learning_rate=None,                \
     learning_function=Hebbian,         \
     integrator_mode=False,             \
@@ -390,11 +390,12 @@ class RecurrentTransferMechanism(TransferMechanism):
          result = (smoothing_factor * variable) +
          (1-smoothing_factor * input to mechanism's function on the previous time step)
 
-    clip : Optional[Tuple[float, float]]
-        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`:
-        the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
-        any element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `clip <RecurrentTransferMechanism.clip>` that it exceeds.
+    clip : list [float, float] : default None (Optional)
+        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>` the item in
+        index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the maximum
+        allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
+        value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
+
 
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -501,12 +502,12 @@ class RecurrentTransferMechanism(TransferMechanism):
 
           result = (smoothing_factor * current input) + (1-smoothing_factor * result on previous time_step)
 
-    clip : Tuple[float, float]
-        determines the allowable range of the result: the first value specifies the minimum allowable value
-        and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `clip <RecurrentTransferMechanism.clip>` it exceeds.  If
-        `function <RecurrentTransferMechanism.function>`
-        is `Logistic`, `clip <RecurrentTransferMechanism.clip>` is set by default to (0,1).
+    clip : list [float, float] : default None (Optional)
+        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`
+
+        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
+        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
+         the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.

@@ -9794,6 +9794,8 @@ class BackPropagation(LearningFunction):
 
         """
 
+        self._check_args(variable=variable, params=params, context=context)
+
         # Manage error_matrix param
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
@@ -9816,7 +9818,7 @@ class BackPropagation(LearningFunction):
             raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
                                 format(self.__class__.__name__, owner_string))
 
-        self._check_args(variable=variable, params=params, context=context)
+        # self._check_args(variable=variable, params=params, context=context)
 
         # Manage learning_rate
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
@@ -9892,8 +9894,9 @@ class TDLearning(Reinforcement):
         variable = self._update_variable(super(Reinforcement, self)._validate_variable(variable, context))
 
         if len(variable) != 3:
-            raise ComponentError("Variable for {} ({}) must have three items (input"
-                                ", output, and error arrays".format(self.name, variable))
+            raise ComponentError("Variable for {} ({}) must have three items "
+                                 "(input, output, and error arrays)".format(self.name,
+                                                                            variable))
 
         self.activation_input = variable[LEARNING_ACTIVATION_INPUT]
         self.activation_output = variable[LEARNING_ACTIVATION_OUTPUT]
