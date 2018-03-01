@@ -11,33 +11,43 @@ from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 
+VECTOR_SIZE=4
+
 class TestTransferMechanismInputs:
     # VALID INPUTS
 
-    def test_transfer_mech_inputs_list_of_ints(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism")
+    def test_transfer_mech_inputs_list_of_ints(self, benchmark):
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             smoothing_factor=1.0,
             integrator_mode=True
         )
-        val = T.execute([10, 10, 10, 10])
-        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
-        assert len(T.size) == 1 and T.size[0] == 4 and isinstance(T.size[0], np.integer)
+        val = benchmark(T.execute, [10 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
+        assert len(T.size) == 1 and T.size[0] == VECTOR_SIZE and isinstance(T.size[0], np.integer)
         # this test assumes size is returned as a 1D array: if it's not, then several tests in this file must be changed
 
-    def test_transfer_mech_inputs_list_of_floats(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism")
+    def test_transfer_mech_inputs_list_of_floats(self, benchmark):
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             smoothing_factor=1.0,
             integrator_mode=True
         )
-        val = T.execute([10.0, 10.0, 10.0, 10.0])
-        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        val = benchmark(T.execute, [10.0 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
 
+    #@pytest.mark.mechanism
+    #@pytest.mark.transfer_mechanism
     # def test_transfer_mech_inputs_list_of_fns(self):
     #
     #     T = TransferMechanism(
@@ -48,6 +58,8 @@ class TestTransferMechanismInputs:
     #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()])
     #     assert np.allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_variable_3D_array(self):
 
         T = TransferMechanism(
@@ -57,6 +69,8 @@ class TestTransferMechanismInputs:
         )
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[[0, 0, 0, 0]], [[1, 1, 1, 1]]]))
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_variable_none_size_none(self):
 
         T = TransferMechanism(
@@ -64,6 +78,8 @@ class TestTransferMechanismInputs:
         )
         assert len(T.instance_defaults.variable) == 1 and T.instance_defaults.variable[0] == 0
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_inputs_list_of_strings(self):
         with pytest.raises(UtilitiesError) as error_text:
             T = TransferMechanism(
@@ -74,6 +90,8 @@ class TestTransferMechanismInputs:
             T.execute(["one", "two", "three", "four"])
         assert "has non-numeric entries" in str(error_text.value)
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_inputs_mismatched_with_default_longer(self):
         with pytest.raises(MechanismError) as error_text:
             T = TransferMechanism(
@@ -84,6 +102,8 @@ class TestTransferMechanismInputs:
             T.execute([1, 2, 3, 4, 5])
         assert "does not match required length" in str(error_text.value)
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_inputs_mismatched_with_default_shorter(self):
         with pytest.raises(MechanismError) as error_text:
             T = TransferMechanism(
@@ -97,19 +117,24 @@ class TestTransferMechanismInputs:
 
 class TestTransferMechanismNoise:
 
-    def test_transfer_mech_array_var_float_noise(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Linear noise")
+    def test_transfer_mech_array_var_float_noise(self, benchmark):
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
             noise=5.0,
             smoothing_factor=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[5.0, 5.0, 5.0, 5.0]])
+        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_array_var_normal_len_1_noise(self):
 
         T = TransferMechanism(
@@ -123,6 +148,8 @@ class TestTransferMechanismNoise:
         val = T.execute([0, 0, 0, 0])
         assert np.allclose(val, [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_array_var_normal_array_noise(self):
 
         T = TransferMechanism(
@@ -138,19 +165,24 @@ class TestTransferMechanismNoise:
         for i in range(len(val[0])):
             assert val[0][i] ==  expected[i]
 
-    def test_transfer_mech_array_var_normal_array_noise2(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Linear noise2")
+    def test_transfer_mech_array_var_normal_array_noise2(self, benchmark):
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
-            noise=[5.0, 5.0, 5.0, 5.0],
+            noise=[5.0 for i in range(VECTOR_SIZE)],
             smoothing_factor=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[5.0, 5.0, 5.0, 5.0]])
+        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_mismatched_shape_noise(self):
         with pytest.raises(MechanismError) as error_text:
             T = TransferMechanism(
@@ -165,6 +197,8 @@ class TestTransferMechanismNoise:
         assert 'Noise parameter' in str(error_text.value) and "does not match default variable" in str(
                 error_text.value)
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_mismatched_shape_noise_2(self):
         with pytest.raises(MechanismError) as error_text:
 
@@ -182,6 +216,8 @@ class TestTransferMechanismNoise:
 
 class TestDistributionFunctions:
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_normal_noise(self):
 
         T = TransferMechanism(
@@ -195,6 +231,8 @@ class TestDistributionFunctions:
         val = T.execute([0, 0, 0, 0])
         assert np.allclose(val, [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_normal_noise_standard_dev_error(self):
         with pytest.raises(FunctionError) as error_text:
             standard_deviation = -2.0
@@ -209,6 +247,8 @@ class TestDistributionFunctions:
 
         assert "The standard_dev parameter" in str(error_text) and "must be greater than zero" in str(error_text)
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_exponential_noise(self):
 
         T = TransferMechanism(
@@ -222,6 +262,8 @@ class TestDistributionFunctions:
         val = T.execute([0, 0, 0, 0])
         assert np.allclose(val, [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_uniform_to_normal_noise(self):
         try:
             import scipy
@@ -247,6 +289,8 @@ class TestDistributionFunctions:
             assert "The UniformToNormalDist function requires the SciPy package." in str(error_text)
 
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_Uniform_noise(self):
 
         T = TransferMechanism(
@@ -260,6 +304,8 @@ class TestDistributionFunctions:
         val = T.execute([0, 0, 0, 0])
         assert np.allclose(val, [[0.3834415188257777, 0.7917250380826646, 0.5288949197529045, 0.5680445610939323]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_Gamma_noise(self):
 
         T = TransferMechanism(
@@ -273,6 +319,8 @@ class TestDistributionFunctions:
         val = T.execute([0, 0, 0, 0])
         assert np.allclose(val, [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_Wald_noise(self):
 
         T = TransferMechanism(
@@ -289,42 +337,53 @@ class TestDistributionFunctions:
 
 class TestTransferMechanismFunctions:
 
-    def test_transfer_mech_logistic_fun(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Logistic")
+    def test_transfer_mech_logistic_fun(self, benchmark):
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Logistic(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.5, 0.5, 0.5, 0.5]])
+        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
 
-    def test_transfer_mech_exponential_fun(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Exponential")
+    def test_transfer_mech_exponential_fun(self, benchmark):
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Exponential(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[1.0, 1.0, 1.0, 1.0]])
+        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
-    def test_transfer_mech_softmax_fun(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism SoftMax")
+    def test_transfer_mech_softmax_fun(self, benchmark):
 
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=SoftMax(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
-        val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.25, 0.25, 0.25, 0.25]])
+        val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[1.0/VECTOR_SIZE for i in range(VECTOR_SIZE)]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_normal_fun(self):
         with pytest.raises(TransferError) as error_text:
             T = TransferMechanism(
@@ -337,6 +396,8 @@ class TestTransferMechanismFunctions:
             T.execute([0, 0, 0, 0])
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_reinforcement_fun(self):
         with pytest.raises(TransferError) as error_text:
             T = TransferMechanism(
@@ -349,6 +410,8 @@ class TestTransferMechanismFunctions:
             T.execute([0, 0, 0, 0])
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_integrator_fun(self):
         with pytest.raises(TransferError) as error_text:
             T = TransferMechanism(
@@ -361,6 +424,8 @@ class TestTransferMechanismFunctions:
             T.execute([0, 0, 0, 0])
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_reduce_fun(self):
         with pytest.raises(TransferError) as error_text:
             T = TransferMechanism(
@@ -376,41 +441,54 @@ class TestTransferMechanismFunctions:
 
 class TestTransferMechanismTimeConstant:
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_smoothing_factor_0_8(self):
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
             smoothing_factor=0.8,
             integrator_mode=True
         )
-        val = T.execute([1, 1, 1, 1])
-        assert np.allclose(val, [[0.8, 0.8, 0.8, 0.8]])
-        val = T.execute([1, 1, 1, 1])
-        assert np.allclose(val, [[0.96, 0.96, 0.96, 0.96]])
+        val = T.execute([1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[0.8 for i in range(VECTOR_SIZE)]])
+        val = T.execute([1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[0.96 for i in range(VECTOR_SIZE)]])
 
-    def test_transfer_mech_smoothing_factor_1_0(self):
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=1")
+    def test_transfer_mech_smoothin_factor_1_0(self, benchmark):
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
-        val = T.execute([1, 1, 1, 1])
-        assert np.allclose(val, [[1.0, 1.0, 1.0, 1.0]])
+        val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
 
-    def test_transfer_mech_smoothing_factor_0_0(self):
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Linear TimeConstant=0")
+    def test_transfer_mech_smoothing_factor_0_0(self, benchmark):
         T = TransferMechanism(
             name='T',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(),
             smoothing_factor=0.0,
             integrator_mode=True
         )
-        val = T.execute([1, 1, 1, 1])
-        assert np.allclose(val, [[0.0, 0.0, 0.0, 0.0]])
+        val = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[0.0 for i in range(VECTOR_SIZE)]])
 
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_smoothing_factor_0_8_initial_0_5(self):
         T = TransferMechanism(
             name='T',
@@ -427,6 +505,8 @@ class TestTransferMechanismTimeConstant:
         assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
 
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_smoothing_factor_0_8_list(self):
         with pytest.raises(TransferError) as error_text:
             T = TransferMechanism(
@@ -442,6 +522,9 @@ class TestTransferMechanismTimeConstant:
             and "must be a float" in str(error_text.value)
         )
 
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_smoothing_factor_2(self):
         with pytest.raises(TransferError) as error_text:
             T = TransferMechanism(
@@ -457,8 +540,11 @@ class TestTransferMechanismTimeConstant:
             and "must be a float between 0 and 1" in str(error_text.value)
         )
 
+
 class TestTransferMechanismSize:
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_int_check_var(self):
         T = TransferMechanism(
             name='T',
@@ -467,6 +553,9 @@ class TestTransferMechanismSize:
         assert len(T.instance_defaults.variable) == 1 and (T.instance_defaults.variable[0] == [0., 0., 0., 0.]).all()
         assert len(T.size) == 1 and T.size[0] == 4 and isinstance(T.size[0], np.integer)
 
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_int_inputs_ints(self):
         T = TransferMechanism(
             name='T',
@@ -479,18 +568,22 @@ class TestTransferMechanismSize:
     # TEST 3
     # size = int, variable = list of floats
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_int_inputs_floats(self):
         T = TransferMechanism(
             name='T',
-            size=4
+            size=VECTOR_SIZE
         )
-        val = T.execute([10.0, 10.0, 10.0, 10.0])
-        assert np.allclose(val, [[10.0, 10.0, 10.0, 10.0]])
+        val = T.execute([10.0 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
 
     # ------------------------------------------------------------------------------------------------
     # TEST 4
     # size = int, variable = list of functions
 
+    #@pytest.mark.mechanism
+    #@pytest.mark.transfer_mechanism
     # def test_transfer_mech_size_int_inputs_fns(self):
     #     T = TransferMechanism(
     #         name='T',
@@ -504,6 +597,8 @@ class TestTransferMechanismSize:
     # TEST 5
     # size = float, check if variable is an array of zeros
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_float_inputs_check_var(self):
         T = TransferMechanism(
             name='T',
@@ -516,6 +611,8 @@ class TestTransferMechanismSize:
     # TEST 6
     # size = float, variable = list of ints
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_float_inputs_ints(self):
         T = TransferMechanism(
             name='T',
@@ -528,6 +625,8 @@ class TestTransferMechanismSize:
     # TEST 7
     # size = float, variable = list of floats
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_float_inputs_floats(self):
         T = TransferMechanism(
             name='T',
@@ -540,6 +639,8 @@ class TestTransferMechanismSize:
     # TEST 8
     # size = float, variable = list of functions
 
+    #@pytest.mark.mechanism
+    #@pytest.mark.transfer_mechanism
     # def test_transfer_mech_size_float_inputs_fns(self):
     #     T = TransferMechanism(
     #         name='T',
@@ -553,6 +654,8 @@ class TestTransferMechanismSize:
     # TEST 9
     # size = list of ints, check that variable is correct
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_list_of_ints(self):
         T = TransferMechanism(
             name='T',
@@ -564,6 +667,8 @@ class TestTransferMechanismSize:
     # TEST 10
     # size = list of floats, check that variable is correct
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_list_of_floats(self):
         T = TransferMechanism(
             name='T',
@@ -572,8 +677,10 @@ class TestTransferMechanismSize:
         assert len(T.instance_defaults.variable) == 3 and len(T.instance_defaults.variable[0]) == 2 and len(T.instance_defaults.variable[1]) == 3 and len(T.instance_defaults.variable[2]) == 4
 
     # note that this output under the Linear function is useless/odd, but the purpose of allowing this configuration
-    # is for possible user-defined functionsthat do use unusual shapes.
+    # is for possible user-defined functions that do use unusual shapes.
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_var_both_lists(self):
         T = TransferMechanism(
             name='T',
@@ -586,6 +693,8 @@ class TestTransferMechanismSize:
     # TEST 12
     # size = int, variable = a compatible 2D array: check that variable is correct
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_scalar_var_2d(self):
         T = TransferMechanism(
             name='T',
@@ -599,6 +708,8 @@ class TestTransferMechanismSize:
     # TEST 13
     # variable = a 2D array: check that variable is correct
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_var_2d_array(self):
         T = TransferMechanism(
             name='T',
@@ -610,6 +721,8 @@ class TestTransferMechanismSize:
     # TEST 14
     # variable = a 1D array, size does not match: check that variable and output are correct
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_var_1D_size_wrong(self):
         T = TransferMechanism(
             name='T',
@@ -624,6 +737,8 @@ class TestTransferMechanismSize:
     # TEST 15
     # variable = a 1D array, size does not match again: check that variable and output are correct
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_var_1D_size_wrong_2(self):
         T = TransferMechanism(
             name='T',
@@ -638,6 +753,8 @@ class TestTransferMechanismSize:
     # TEST 16
     # size = int, variable = incompatible array, check variable
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_var_incompatible1(self):
         T = TransferMechanism(
             name='T',
@@ -650,6 +767,8 @@ class TestTransferMechanismSize:
     # TEST 17
     # size = array, variable = incompatible array, check variable
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_var_incompatible2(self):
         T = TransferMechanism(
             name='T',
@@ -666,6 +785,8 @@ class TestTransferMechanismSize:
     # TEST 1
     # size = 0, check less-than-one error
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_zero(self):
         with pytest.raises(ComponentError) as error_text:
             T = TransferMechanism(
@@ -678,6 +799,8 @@ class TestTransferMechanismSize:
     # TEST 2
     # size = -1.0, check less-than-one error
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_negative_one(self):
         with pytest.raises(ComponentError) as error_text:
             T = TransferMechanism(
@@ -717,6 +840,8 @@ class TestTransferMechanismSize:
     # size = 2D array, check variable is correctly instantiated
 
     # for now, since the test above doesn't work, we use this tesT.6/30/17 (CW)
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_size_2d(self):
         T = TransferMechanism(
             name='T',
