@@ -299,7 +299,7 @@ from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, ASSIGN, FUNCTION, FUNCTION_PARAMS, \
-    INDEX, INITIALIZING, NAME, OUTPUT_STATES,  VALUE, VARIABLE, kwPreferenceSetName
+    INDEX, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES,  OWNER_VALUE, VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, object_has_single_value
@@ -317,6 +317,7 @@ DEFAULT_VARIABLE = 0.0
 
 DECISION_VARIABLE = 'DECISION_VARIABLE'
 DECISION_VARIABLE_ARRAY = 'DECISION_VARIABLE_ARRAY'
+SELECTED_INPUT_ARRAY = 'SELECTED_INPUT_ARRAY'
 RESPONSE_TIME = 'RESPONSE_TIME'
 PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'
 PROBABILITY_LOWER_THRESHOLD = 'PROBABILITY_LOWER_THRESHOLD'
@@ -661,6 +662,10 @@ class DDM(ProcessingMechanism_Base):
                  context=componentType + INITIALIZING
     ):
 
+        self.standard_output_states = StandardOutputStates(self,
+                                                           DDM_standard_output_states,
+                                                           indices=SEQUENTIAL)
+
         # If input_format is specified to be ARRAY or VECTOR, instantiate:
         #    InputState with:
         #        2-item array as its variable
@@ -672,25 +677,36 @@ class DDM(ProcessingMechanism_Base):
         #            since they require input_format==ARRAY to be meaningful
         if input_format in {ARRAY, VECTOR}:
             size=1 # size of variable for DDM Mechanism
-            input_states=[{NAME:'ARRAY',
-                           VARIABLE:[0,0],
-                           FUNCTION: Reduce(weights=[1,-1])}
-                          ]
-            output_states = [{NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
-                              # INDEX:0,
-                              # ASSIGN: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]
-                              VARIABLE:(OWNER_VALUE,0),
-                              FUNCTION: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]},
-                              {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
-                              # INDEX:0,
-                              # ASSIGN: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]
-                              VARIABLE:(OWNER_VALUE,0),
-                              FUNCTION: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]        else:
-            input_states = None
+            input_states = [
+                {NAME:'ARRAY',
+                 VARIABLE:[0,0],
+                 FUNCTION: Reduce(weights=[1,-1])}
+            ]
+            output_states = [
 
-        self.standard_output_states = StandardOutputStates(self,
-                                                           DDM_standard_output_states,
-                                                           indices=SEQUENTIAL)
+                # Generates 1d 2-item array with dv in position corresponding to threshold crossed by dv
+                {NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
+                 # INDEX:0,
+                 # ASSIGN: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]
+                 VARIABLE:(OWNER_VALUE,0),
+                 FUNCTION: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]},
+
+                # Generates 1d 2-item array with input value in position corresponding to threshold crossed by dv
+                {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
+                 # INDEX:0,
+                 # ASSIGN: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]
+                 # VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX),
+
+                 VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX),
+                           (INPUT_STATE_VARIABLES, 0),
+                           THRESHOLD],
+                           # per VARIABLE assignment above, items of v of lambda function below are:
+                           #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
+                           #    v[1]=self.input_states[0].variable
+                           #    v[2]=self.parameter_states[THRESHOLD]
+                 FUNCTION: lambda v: [float(v[1][0]), 0] if (v[0]-v[2]) < (v[0]+v[2]) else [0, float(v[1][1])]}
+            ]
+            # input_states = None
 
         # Default output_states is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments
