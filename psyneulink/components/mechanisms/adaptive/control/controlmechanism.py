@@ -858,8 +858,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         #    reassign ControlSignal.variable to actual OWNER_VALUE below, once value has been expanded
         control_signal = _instantiate_state(state_type=ControlSignal,
                                             owner=self,
-                                            # variable=(OWNER_VALUE),
-                                            # variable=(OWNER_VALUE, len(self.output_states)),
                                             variable=defaultControlAllocation,
                                             reference_value=ControlSignal.ClassDefaults.allocation,
                                             modulation=self.modulation,
@@ -887,12 +885,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                  for i in range(len(self._output_states))])
         self.value = self.instance_defaults.value
 
-        # # Assign ControlSignal's variable to appended item of owner's value
+        # Assign ControlSignal's variable to appended item of owner's value
         # control_signal._variable = (OWNER_VALUE, len(self.instance_defaults.value) - 1)
-
-        # # if control_signal.index is SEQUENTIAL:
         if control_signal.owner_value_index is None:
-            # control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
             control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
         if not isinstance(control_signal.owner_value_index, int):
             raise ControlMechanismError(
