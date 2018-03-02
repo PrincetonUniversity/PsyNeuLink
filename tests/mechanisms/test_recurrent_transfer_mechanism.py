@@ -11,6 +11,8 @@ from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_
 from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferError, RecurrentTransferMechanism
 from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+
+
 class TestMatrixSpec:
     def test_recurrent_mech_matrix(self):
 
@@ -938,3 +940,20 @@ class TestRecurrentTransferMechanismReinitialize:
         assert np.allclose(R.previous_value, 0.7)
         assert np.allclose(R.initial_value, 0.5)
         assert np.allclose(R.integrator_function.initializer, 0.5)
+
+class TestClip:
+    def test_clip_float(self):
+        R = RecurrentTransferMechanism(clip=[-2.0, 2.0])
+        assert np.allclose(R.execute(3.0), 2.0)
+        assert np.allclose(R.execute(-3.0), -2.0)
+
+    def test_clip_array(self):
+        R = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                              clip=[-2.0, 2.0])
+        assert np.allclose(R.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
+
+    def test_clip_2d_array(self):
+        R = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+                              clip=[-2.0, 2.0])
+        assert np.allclose(R.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
+                           [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])

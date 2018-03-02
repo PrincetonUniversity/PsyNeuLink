@@ -400,7 +400,7 @@ class LCControlMechanism(ControlMechanism):
         mode_FHN=1.0,                       \
         uncorrelated_activity_FHN=0.0       \
         time_constant_w_FHN = 12.5,         \
-        integration_method_FHN="RK4"        \
+        integration_method="RK4"        \
         base_level_gain=0.5,                \
         scaling_factor_gain=3.0,            \
         modulation=None,                    \
@@ -487,7 +487,7 @@ class LCControlMechanism(ControlMechanism):
     time_constant_w_FHN  : float : default  12.5
         sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
 
-    integration_method_FHN : float : default "RK4"
+    integration_method : float : default "RK4"
         sets `integration_method <integration_method.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
 
     base_level_gain : float : default 0.5
@@ -638,7 +638,7 @@ class LCControlMechanism(ControlMechanism):
     time_constant_w_FHN  : float : default  12.5
         sets `time_constant_w <time_constant_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
 
-    integration_method_FHN : float : default "RK4"
+    integration_method : float : default "RK4"
         sets `integration_method <integration_method.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
 
     base_level_gain : float : default 0.5
