@@ -416,7 +416,7 @@ class GatingSignal(ModulatorySignal):
                  variable=None,
                  size=None,
                  index=None,
-                 assign=Linear,
+                 assign=None,
                  function=Linear(),
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,

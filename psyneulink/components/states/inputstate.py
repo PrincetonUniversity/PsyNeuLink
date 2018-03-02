@@ -1114,7 +1114,7 @@ class InputState(State_Base):
         self.path_afferents = assignment
 
     @staticmethod
-    def _get_state_function_value(function, variable):
+    def _get_state_function_value(owner, function, variable):
         """Overrided State method
 
         InputState variable must be embedded in a list (see InputState._get_state_function_value()).

@@ -729,7 +729,8 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
+from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, \
+    function_type, method_type
 from psyneulink.components.functions.function import Function, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXECUTING, EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
@@ -1255,15 +1256,9 @@ class State_Base(State):
                                        self.owner.name))
 
     def _instantiate_function(self, context=None):
-        """Insure that output of function (self.value) is compatible with its input (self.instance_defaults.variable)
-
-        This constraint reflects the role of State functions:
-            they simply update the value of the State;
-            accordingly, their variable and value must be compatible
-        """
 
         var_is_matrix = False
-        # If variable is a matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
+        # If variable is a 2d array or matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
         #     it needs to be embedded in a list so that it is properly handled by LinearCombination
         #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
         # Notes:
@@ -2018,7 +2013,7 @@ class State_Base(State):
         return False
 
     @staticmethod
-    def _get_state_function_value(function, variable):
+    def _get_state_function_value(owner, function, variable):
         """Execute the function of a State and return its value
 
         This is a stub, that a State subclass can override to treat execution of its function in a State-specific manner
@@ -2291,9 +2286,14 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     state_spec_dict.pop(VALUE, None)
 
-    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
+    # FIX: 2/25/18  GET REFERENCE_VALUE FROM REFERENCE_DICT?
+    # Get reference_value
     if state_spec_dict[REFERENCE_VALUE] is None:
-        state_spec_dict[REFERENCE_VALUE] = state_spec_dict[VARIABLE]
+        state_spec_dict[REFERENCE_VALUE] = reference_value
+        if reference_value is None:
+            state_spec_dict[REFERENCE_VALUE] = state_spec_dict[VARIABLE]
+
+    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(state_spec_dict[REFERENCE_VALUE],1)
 
     # INSTANTIATE STATE:
@@ -2811,7 +2811,7 @@ def _parse_state_spec(state_type=None,
         else:
             state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
 
-    # get the value spec value from the spec function if it exists,
+    # get the State's value from the spec function if it exists,
     # otherwise we can assume there is a default function that does not
     # affect the shape, so it matches variable
     # FIX: JDC 2/21/18 PROBLEM IS THAT, IF IT IS AN InputState, THEN EITHER update MUST BE CALLED
@@ -2819,11 +2819,12 @@ def _parse_state_spec(state_type=None,
     # FIX:    AS TWO ITEMS TO BE COMBINED RATHER THAN AS A 2D ARRAY
     try:
         spec_function = state_dict[PARAMS][FUNCTION]
-        if isinstance(spec_function, Function):
+        # if isinstance(spec_function, Function):
+        if isinstance(spec_function, (Function, function_type, method_type)):
             # # MODIFIED 2/21/18 OLD [KM]:
             # spec_function_value = spec_function.execute(state_dict[VARIABLE])
             # MODIFIED 2/21/18 NEW [JDC]:
-            spec_function_value = state_type._get_state_function_value(spec_function, state_dict[VARIABLE])
+            spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
             # MODIFIED 2/21/18 END
         elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
             try:
@@ -2833,10 +2834,11 @@ def _parse_state_spec(state_type=None,
             # # MODIFIED 2/21/18 OLD [KM]:
             # spec_function_value = spec_function.execute(state_dict[VARIABLE])
             # MODIFIED 2/21/18 NEW [JDC]:
-            spec_function_value = state_type._get_state_function_value(spec_function, state_dict[VARIABLE])
+            spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
             # MODIFIED 2/21/18 END
         else:
-            raise StateError('state_spec value for FUNCTION ({0}) must be a Function class or instance'.
+            raise StateError('state_spec value for FUNCTION ({0}) must be a function, method, '
+                             'Function class or instance of one'.
                              format(spec_function))
     except (KeyError, TypeError):
         spec_function_value = state_dict[VARIABLE]
@@ -2844,6 +2846,7 @@ def _parse_state_spec(state_type=None,
     # Assign value based on variable if not specified
     if state_dict[VALUE] is None:
         state_dict[VALUE] = spec_function_value
+    # Otherwise, make sure value returned by spec function is same as one specified for State's value
     else:
         if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
             raise StateError(
