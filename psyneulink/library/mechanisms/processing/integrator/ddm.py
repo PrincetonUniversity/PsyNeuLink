@@ -684,27 +684,27 @@ class DDM(ProcessingMechanism_Base):
             ]
             output_states = [
 
-                # Generates 1d 2-item array with dv in position corresponding to threshold crossed by dv
+                # Provides a 1d 2-item array with:
+                #    decision variable in position corresponding to threshold crossed, and 0 in the other position
                 {NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
-                 # INDEX:0,
-                 # ASSIGN: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]
-                 VARIABLE:(OWNER_VALUE,0),
-                 FUNCTION: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]},
-
-                # Generates 1d 2-item array with input value in position corresponding to threshold crossed by dv
-                {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
-                 # INDEX:0,
-                 # ASSIGN: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]
-                 # VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX),
-
-                 VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX),
-                           (INPUT_STATE_VARIABLES, 0),
-                           THRESHOLD],
+                 VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD],
                            # per VARIABLE assignment above, items of v of lambda function below are:
                            #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
-                           #    v[1]=self.input_states[0].variable
-                           #    v[2]=self.parameter_states[THRESHOLD]
-                 FUNCTION: lambda v: [float(v[1][0]), 0] if (v[0]-v[2]) < (v[0]+v[2]) else [0, float(v[1][1])]}
+                           #    v[1]=self.parameter_states[THRESHOLD]
+                 FUNCTION: lambda v: [float(v[0][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[0][1])]},
+
+                # Provides a 1d 2-item array with:
+                #    input value in position corresponding to threshold crossed by decision variable, and 0 in the other
+                {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
+                 VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX),
+                           THRESHOLD,
+                           (INPUT_STATE_VARIABLES, 0)],
+                           # per VARIABLE assignment above, items of v of lambda function below are:
+                           #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
+                           #    v[1]=self.parameter_states[THRESHOLD]
+                           #    v[2]=self.input_states[0].variable
+
+                 FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][1])]}
             ]
             # input_states = None
 
