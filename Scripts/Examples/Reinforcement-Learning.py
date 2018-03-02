@@ -45,14 +45,36 @@ def print_header(system):
 
 
 def show_weights():
-    print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
-    print(
-        '\nAction selected:  {}; predicted reward: {}'.format(
-            np.nonzero(action_selection.output_state.value)[0][0],
-            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
-        )
+    # print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+    # print(
+    #     '\nAction selected:  {}; predicted reward: {}'.format(
+    #         np.nonzero(action_selection.output_state.value)[0][0],
+    #         action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
+    #     )
+    assert True
+    comparator = action_selection.output_state.efferents[0].receiver.owner
+    learn_mech = action_selection.output_state.efferents[1].receiver.owner
+    print('\n'
+          '\naction_selection output:    {} '
+          '\ncomparator sample:          {} '
+          '\ncomparator target:          {} '
+          '\nlearning mech act in:       {} '
+          '\nlearning mech act out:      {} '
+          '\nlearning mech error in:     {} '
+          '\nlearning mech error out:    {} '
+          '\nlearning mech learning_sig: {} '
+          '\npredicted reward:           {} '.
+        format(
+            action_selection.output_state.value,
+            comparator.input_states[pnl.SAMPLE].value,
+            comparator.input_states[pnl.TARGET].value,
+            learn_mech.input_states[pnl.ACTIVATION_INPUT].value,
+            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].value,
+            learn_mech.input_states[pnl.ERROR_SIGNAL].value,
+            learn_mech.output_states[pnl.ERROR_SIGNAL].value,
+            learn_mech.output_states[pnl.LEARNING_SIGNAL].value,
+            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0])
     )
-
 
 p.run(
     num_trials=10,

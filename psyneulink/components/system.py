@@ -1606,25 +1606,28 @@ class System(System_Base):
 
             # If sender_mech is an ObjectiveMechanism, and:
             #    - none of the Mechanisms that project to it are are a TERMINAL Mechanism for the current Process, or
-            #    - all of the Mechanisms that project to it already have an ObjectiveMechanism, then:
-            #        - do not include the ObjectiveMechanism in the graph;
-            #        - be sure that its outputState projects to the ERROR_SIGNAL inputState of a LearningMechanism
-            #            (labelled "learning_mech" here -- raise an exception if it does not;
-            #        - determine whether learning_mech's ERROR_SIGNAL inputState receives any other projections
-            #            from another ObjectiveMechanism or LearningMechanism (labelled "error_signal_projection" here)
-            #            -- if it does, be sure that it is from the same system and if so return;
-            #               (note:  this shouldn't be true, but the test is here for completeness and sanity-checking)
-            #        - if learning_mech's ERROR_SIGNAL inputState does not receive any projections from
-            #            another objectiveMechanism and/or LearningMechanism in the system, then:
-            #            - find the sender to the ObjectiveMechanism (labelled "error_source" here)
-            #            - find the 1st projection from error_source that projects to the ACTIVATION_INPUT inputState of
-            #                a LearningMechanism (labelled "error_signal" here)
-            #            - instantiate a MappingProjection from error_signal to learning_mech
-            #                projected
+            #    - all of the Mechanisms that project to it already have an ObjectiveMechanism,
+            # Then:
+            #    - do not include the ObjectiveMechanism in the graph;
+            #    - be sure that its outputState projects to the ERROR_SIGNAL inputState of a LearningMechanism
+            #        (labelled "learning_mech" here -- raise an exception if it does not;
+            #    - determine whether learning_mech's ERROR_SIGNAL inputState receives any other projections
+            #        from another ObjectiveMechanism or LearningMechanism (labelled "error_signal_projection" here)
+            #        -- if it does, be sure that it is from the same system and if so return;
+            #           (note:  this shouldn't be true, but the test is here for completeness and sanity-checking)
+            #    - if learning_mech's ERROR_SIGNAL inputState does not receive any projections from
+            #        another objectiveMechanism and/or LearningMechanism in the system, then:
+            #        - find the sender to the ObjectiveMechanism (labelled "error_source" here)
+            #        - find the 1st projection from error_source that projects to the ACTIVATION_INPUT inputState of
+            #            a LearningMechanism (labelled "error_signal" here)
+            #        - instantiate a MappingProjection from error_signal to learning_mech
+            #            projected
             # IMPLEMENTATION NOTE: Composition should allow 1st condition if user indicates internal TARGET is desired;
-            #                      for now, however, assume this is not desired (i.e., only TERMINAL mechanisms
-            #                      should project to ObjectiveMechanisms) and always replace internal
-            #                      ObjectiveMechanism with projection from a LearningMechanism (if it is available)
+            #                  for now, however, assume this is not desired (i.e., only TERMINAL mechanisms
+            #                  should project to ObjectiveMechanisms) and always replace internal
+            #                  ObjectiveMechanism with projection from a LearningMechanism (if it is available)
+            # Otherwise:
+            #     - include it in the graph
 
             obj_mech_replaced = False
 
@@ -1646,13 +1649,21 @@ class System(System_Base):
                 if sample_mech != learning_mech.output_source:
                     assert False
 
-                # Its the 1st item in the learning_execution_graph, so could be for a TERMINAL Mechanism of the System
+                # ObjectiveMechanism the 1st item in the learning_execution_graph, so could be for:
+                #    - the last Mechanism in a learning sequence, or
+                #    - a TERMINAL Mechanism of the System
                 if len(self.learning_execution_graph) == 0:
-
-                    # If sample_mech is NOT for a TERMINAL Mechanism of the current System,
-                    #  - obj_mech should NOT be included in the learning_execution_graph and
-                    #  - should be replaced with appropriate projections to sample_mechs's afferent LearningMechanisms
-                    if not sample_mech.systems[self] is TERMINAL:
+                    # If is the last item in a learning sequence,
+                    #    doesn't matter if it is a TERMINAL Mechanism;  needs to remain as a Target for the System
+                    if not any(proj.has_learning_projection and self in proj.receiver.owner.systems
+                               for proj in sample_mech.output_state.efferents):
+                        pass
+                    # If sample_mech is:
+                    #    - NOT for a TERMINAL Mechanism of the current System
+                    # Then:
+                    #    - obj_mech should NOT be included in the learning_execution_graph and
+                    #    - should be replaced with appropriate projections to sample_mechs's afferent LearningMechanisms
+                    elif not sample_mech.systems[self] is TERMINAL:
                         _assign_error_signal_projections(sample_mech, self, obj_mech)
                         # Don't process ObjectiveMechanism any further (since its been replaced)
                         return
@@ -1683,9 +1694,13 @@ class System(System_Base):
 
                     # INTERNAL CONVERGENCE
                     # None of the mechanisms that project to it are a TERMINAL mechanism
-                    elif not all(all(projection.sender.owner.processes[proc] is TERMINAL
+                    elif (not all(all(projection.sender.owner.processes[proc] is TERMINAL
                                      for proc in projection.sender.owner.processes)
-                                 for projection in obj_mech.input_states[SAMPLE].path_afferents):
+                                 for projection in obj_mech.input_states[SAMPLE].path_afferents)
+                          # and it is not for the last Mechanism in a learning sequence
+                          and any(proj.has_learning_projection and self in proj.receiver.owner.systems
+                                  for proj in sample_mech.output_state.efferents)
+                    ):
 
                         _assign_error_signal_projections(sample_mech, self, obj_mech)
                         obj_mech_replaced = True
