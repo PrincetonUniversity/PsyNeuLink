@@ -24,14 +24,12 @@ import typecheck as tc
 # It does not yet implement learning or testing.
 
 
-def step(variable,params,context):
+def step(variable):
     if np.sum(variable)<.5:
         out=0
     else:
         out=1
     return(out)
-Step=pnl.UserDefinedFunction(custom_function=step,
-                            default_variable=np.zeros(4))
 
 #Processing Units:
 rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
@@ -42,10 +40,10 @@ rep_out = pnl.TransferMechanism(size=10, function=pnl.Logistic, name='REP_OUT')
 prop_out = pnl.TransferMechanism(size=12, function=pnl.Logistic, name='PROP_OUT')
 qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT')
 act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
-r_step = pnl.ProcessingMechanism(size=10, function=Step, name='REP_STEP')
-p_step = pnl.ProcessingMechanism(size=12, function=Step, name='PROP_STEP')
-q_step = pnl.ProcessingMechanism(size=13, function=Step, name='QUAL_STEP')
-a_step = pnl.ProcessingMechanism(size=14, function=Step, name='ACT_STEP')
+r_step = pnl.ProcessingMechanism(size=10, function=step, name='REP_STEP')
+p_step = pnl.ProcessingMechanism(size=12, function=step, name='PROP_STEP')
+q_step = pnl.ProcessingMechanism(size=13, function=step, name='QUAL_STEP')
+a_step = pnl.ProcessingMechanism(size=14, function=step, name='ACT_STEP')
 
 #Processes that comprise the System:
 # NOTE: this is one of several configuration of processes that can be used to construct the full network
