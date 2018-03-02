@@ -30,6 +30,9 @@ rep_out = pnl.TransferMechanism(size=10, function=pnl.Logistic, name='REP_OUT')
 prop_out = pnl.TransferMechanism(size=12, function=pnl.Logistic, name='PROP_OUT')
 qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT')
 act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
+act_step = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_STEP')
+qual_step = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='QUAL_STEP')
+prop_step = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='PROP_STEP')
 
 #Processes that comprise the System:
 # NOTE: this is one of several configuration of processes that can be used to construct the full network
@@ -53,8 +56,24 @@ rel_act_proc = pnl.Process(pathway=[rel_hidden, act_out],
                            learning=pnl.LEARNING,
                            name='REL_ACT_PROC')
 
+act_step_proc = pnl.Process(pathway=[act_out, act_step],
+                           name='ACT_STEP_PROC')
+qual_step_proc = pnl.Process(pathway=[qual_out, qual_step],
+                           name='QUAL_STEP_PROC')
+prop_step_proc = pnl.Process(pathway=[prop_out, prop_step],
+                           name='PROP_STEP_PROC')
+
+
 # The System:
-S = pnl.System(processes=[rep_hidden_proc, rel_hidden_proc, rel_rep_proc, rel_prop_proc, rel_qual_proc, rel_act_proc])
+S = pnl.System(processes=[rep_hidden_proc,
+                          rel_hidden_proc,
+                          rel_rep_proc,
+                          rel_prop_proc,
+                          rel_qual_proc,
+                          rel_act_proc,
+                          act_step_proc,
+                          qual_step_proc,
+                          prop_step_proc])
 
 # Shows just the processing network:
 # S.show_graph(show_dimensions=True)

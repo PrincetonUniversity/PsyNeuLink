@@ -1649,7 +1649,7 @@ class System(System_Base):
                     assert False
 
                 # ObjectiveMechanism the 1st item in the learning_execution_graph, so could be for:
-                #    - the last item in a learning sequence, or
+                #    - the last Mechanism in a learning sequence, or
                 #    - a TERMINAL Mechanism of the System
                 if len(self.learning_execution_graph) == 0:
                     # If is the last item in a learning sequence,
@@ -1693,9 +1693,13 @@ class System(System_Base):
 
                     # INTERNAL CONVERGENCE
                     # None of the mechanisms that project to it are a TERMINAL mechanism
-                    elif not all(all(projection.sender.owner.processes[proc] is TERMINAL
+                    elif (not all(all(projection.sender.owner.processes[proc] is TERMINAL
                                      for proc in projection.sender.owner.processes)
-                                 for projection in obj_mech.input_states[SAMPLE].path_afferents):
+                                 for projection in obj_mech.input_states[SAMPLE].path_afferents)
+                          # and it is not for the last Mechanism in a learning sequence
+                          and any(proj.has_learning_projection and self in proj.receiver.owner.systems
+                                  for proj in sample_mech.output_state.efferents)
+                    ):
 
                         _assign_error_signal_projections(sample_mech, self, obj_mech)
                         obj_mech_replaced = True
