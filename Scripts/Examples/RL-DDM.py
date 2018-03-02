@@ -40,7 +40,7 @@ action_selection = pnl.DDM(
                 starting_point=pnl.CONTROL,
                 noise=pnl.CONTROL,
         ),
-        output_states=[pnl.DECISION_VARIABLE_ARRAY],
+        output_states=[pnl.SELECTED_INPUT_ARRAY],
         name='DDM'
 )
 
