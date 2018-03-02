@@ -852,6 +852,9 @@ class TestTransferMechanismSize:
 
 class TestTransferMechanismMultipleInputStates:
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.mimo
     def test_transfer_mech_2d_variable(self):
         from psyneulink.globals.keywords import MEAN
         T = TransferMechanism(
@@ -862,6 +865,8 @@ class TestTransferMechanismMultipleInputStates:
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
     def test_transfer_mech_2d_variable_noise(self):
         T = TransferMechanism(
             name='T',
@@ -871,6 +876,9 @@ class TestTransferMechanismMultipleInputStates:
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.mimo
     def test_multiple_output_states_for_multiple_input_states(self):
         T = TransferMechanism(input_states=['a','b','c'])
         val = T.execute([[1],[2],[3]])
@@ -879,6 +887,9 @@ class TestTransferMechanismMultipleInputStates:
         assert len(T.output_states)==3
         assert all(a==b for a,b in zip(T.output_values,val))
 
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.mimo
     def test_MECHANISM_VALUE_standard_output_state(self):
         from psyneulink.globals.keywords import MECHANISM_VALUE
         T = TransferMechanism(input_states=[[[0],[0]],'b','c'],
