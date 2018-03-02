@@ -44,12 +44,31 @@ def print_header(system):
 
 
 def show_weights():
-    print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
-    print(
-        '\nAction selected:  {}; predicted reward: {}'.format(
+    # print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+    # print(
+    #     '\nAction selected:  {}; predicted reward: {}'.format(
+    #         np.nonzero(action_selection.output_state.value)[0][0],
+    #         action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
+    #     )
+
+    print('\n'
+          'action_selection output:    {} '
+          'comparator sample:          {} '
+          'comparator target:          {} '
+          'comparator target:          {} '
+          'learning mech act in:       {} '
+          'learning mech act out:      {} '
+          'learning mech error in:     {} '
+          'learning mech error out:    {} '
+          'learning mech learning_sig: {} '
+          'predicted reward:           {} '.format(
+            action_selection.output_state.value,
+            action_selection.output_state.efferents[1].receiver.owner.input_states[pnl.SAMPLE].value,
+            action_selection.output_state.efferents[1].receiver.owner.input_states[pnl.TARGET].value,
+            action_selection.afferents.value,
             np.nonzero(action_selection.output_state.value)[0][0],
             action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
-        )
+
     )
 
 
