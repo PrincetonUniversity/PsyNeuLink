@@ -1627,6 +1627,8 @@ class System(System_Base):
             #                  for now, however, assume this is not desired (i.e., only TERMINAL mechanisms
             #                  should project to ObjectiveMechanisms) and always replace internal
             #                  ObjectiveMechanism with projection from a LearningMechanism (if it is available)
+            # Otherwise:
+            #     - include it in the graph
 
             obj_mech_replaced = False
 
