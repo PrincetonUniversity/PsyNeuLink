@@ -50,27 +50,30 @@ def show_weights():
     #         np.nonzero(action_selection.output_state.value)[0][0],
     #         action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
     #     )
-
+    assert True
+    comparator = action_selection.output_state.efferents[0].receiver.owner
+    learn_mech = action_selection.output_state.efferents[1].receiver.owner
     print('\n'
-          'action_selection output:    {} '
-          'comparator sample:          {} '
-          'comparator target:          {} '
-          'comparator target:          {} '
-          'learning mech act in:       {} '
-          'learning mech act out:      {} '
-          'learning mech error in:     {} '
-          'learning mech error out:    {} '
-          'learning mech learning_sig: {} '
-          'predicted reward:           {} '.format(
+          '\naction_selection output:    {} '
+          '\ncomparator sample:          {} '
+          '\ncomparator target:          {} '
+          '\nlearning mech act in:       {} '
+          '\nlearning mech act out:      {} '
+          '\nlearning mech error in:     {} '
+          '\nlearning mech error out:    {} '
+          '\nlearning mech learning_sig: {} '
+          '\npredicted reward:           {} '.
+        format(
             action_selection.output_state.value,
-            action_selection.output_state.efferents[1].receiver.owner.input_states[pnl.SAMPLE].value,
-            action_selection.output_state.efferents[1].receiver.owner.input_states[pnl.TARGET].value,
-            action_selection.afferents.value,
-            np.nonzero(action_selection.output_state.value)[0][0],
-            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
-
+            comparator.input_states[pnl.SAMPLE].value,
+            comparator.input_states[pnl.TARGET].value,
+            learn_mech.input_states[pnl.ACTIVATION_INPUT].value,
+            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].value,
+            learn_mech.input_states[pnl.ERROR_SIGNAL].value,
+            learn_mech.output_states[pnl.ERROR_SIGNAL].value,
+            learn_mech.output_states[pnl.LEARNING_SIGNAL].value,
+            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0])
     )
-
 
 p.run(
     num_trials=10,
