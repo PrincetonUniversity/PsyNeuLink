@@ -466,12 +466,12 @@ class DDM(ProcessingMechanism_Base):
     #             ADD INFO ABOUT B VS. N&F
     #             ADD _instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
     """
-    DDM(                       \
+    DDM(                    \
     default_variable=None,  \
-    size=None,                 \
-    function=BogaczEtAl,       \
-    params=None,               \
-    name=None,                 \
+    size=None,              \
+    function=BogaczEtAl,    \
+    params=None,            \
+    name=None,              \
     prefs=None)
 
     Implement a Drift Diffusion Process, either by calculating an `analytic solution <DDM_Analytic_Mode>` or carrying
@@ -661,10 +661,15 @@ class DDM(ProcessingMechanism_Base):
                  context=componentType + INITIALIZING
     ):
 
-        # If input_format is specified to be ARRAY or VECTOR, instantiate InputState with:
-        #    2-item array as its variable
-        #    Reduce as its function, which will generate an array of len 1
-        #    and therefore specify size of Mechanism's variable as 1
+        # If input_format is specified to be ARRAY or VECTOR, instantiate:
+        #    InputState with:
+        #        2-item array as its variable
+        #        Reduce as its function, which will generate an array of len 1
+        #        and therefore specify size of Mechanism's variable as 1
+        #    OutputStates that report the decision variable and selected input in array format
+        #        IMPLEMENTATION NOTE:
+        #            These are created here rather than as StandardOutputStates
+        #            since they require input_format==ARRAY to be meaningful
         if input_format in {ARRAY, VECTOR}:
             size=1 # size of variable for DDM Mechanism
             input_states=[{NAME:'ARRAY',
@@ -672,9 +677,15 @@ class DDM(ProcessingMechanism_Base):
                            FUNCTION: Reduce(weights=[1,-1])}
                           ]
             output_states = [{NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
-                              INDEX:0,
-                              ASSIGN: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]
-        else:
+                              # INDEX:0,
+                              # ASSIGN: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]
+                              VARIABLE:(OWNER_VALUE,0),
+                              FUNCTION: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]},
+                              {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
+                              # INDEX:0,
+                              # ASSIGN: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]
+                              VARIABLE:(OWNER_VALUE,0),
+                              FUNCTION: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]        else:
             input_states = None
 
         self.standard_output_states = StandardOutputStates(self,
