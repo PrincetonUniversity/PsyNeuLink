@@ -668,7 +668,7 @@ class ControlSignal(ModulatorySignal):
                  variable=None,
                  size=None,
                  index=None,
-                 assign=Linear,
+                 assign=None,
                  function=Linear(),
                  cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.DEFAULTS,
                  intensity_cost_function:(is_function_type)=Exponential,
@@ -719,7 +719,7 @@ class ControlSignal(ModulatorySignal):
                          size=size,
                          modulation=modulation,
                          index=index,
-                         assign=assign,
+                         assign=None,
                          projections=projections,
                          params=params,
                          name=name,
@@ -1173,13 +1173,13 @@ class ControlSignal(ModulatorySignal):
         """
         return [self.intensity_cost, self.adjustment_cost, self.duration_cost]
 
-    @property
-    def variable(self):
-        return self.allocation
-
-    @variable.setter
-    def variable(self, assignment):
-        self.allocation = assignment
+    # @property
+    # def variable(self):
+    #     return self.allocation
+    #
+    # @variable.setter
+    # def variable(self, assignment):
+    #     self.allocation = assignment
 
     @property
     def value(self):

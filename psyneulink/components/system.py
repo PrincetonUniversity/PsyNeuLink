@@ -1587,7 +1587,6 @@ class System(System_Base):
         self.learningGraph = OrderedDict()
         self.learning_execution_graph = OrderedDict()
 
-
         def build_dependency_sets_by_traversing_projections(sender_mech, process):
 
             # MappingProjections are legal recipients of learning projections (hence the call)
@@ -2627,7 +2626,7 @@ class System(System_Base):
             except AttributeError as error_msg:
                 if not 'INIT' in context:
                     raise SystemError("PROGRAM ERROR: Problem executing controller for {}: {}".
-                                      format(self.name, error_msg))
+                                      format(self.name, error_msg.args[0]))
         #endregion
 
         # Report completion of system execution and value of designated outputs

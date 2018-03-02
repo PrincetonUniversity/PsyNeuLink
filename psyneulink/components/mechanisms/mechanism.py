@@ -786,7 +786,13 @@ from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import ADD_STATES, REMOVE_STATES, _parse_state_spec
-from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, UNCHANGED, VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.globals.keywords import \
+    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
+    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_VARIABLES, \
+    INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, \
+    OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, OWNER_VARIABLE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
+    PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, UNCHANGED, \
+    VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
@@ -2628,6 +2634,36 @@ class Mechanism_Base(Mechanism):
         return ContentAddressableList(component_type=Mechanism,
                                       list=[p.sender.owner for p in self.mod_afferents
                                             if isinstance(p.sender.owner, Mechanism_Base)])
+
+    from collections import UserDict
+    class MechParamsDict(UserDict):
+        pass
+
+    @property
+    def _params_dict(self):
+        # MODIFIED 2/24/18 OLD:
+        params_dict = {
+            # SELF:self,
+            # OWNER:self.owner,
+            OWNER_VARIABLE: self.variable,
+            OWNER_VALUE: self.value,
+            INPUT_STATE_VARIABLES: [input_state.variable for input_state in self.input_states]
+        }
+        # # MODIFIED 2/24/18 NEW:
+        # params_dict = self.MechParamsDict(
+        #     OWNER_VARIABLE = self.variable,
+        #     OWNER_VALUE = self.value,
+        #     INPUT_STATE_VARIABLES = [input_state.variable for input_state in self.input_states]
+        # )
+        # MODIFIED 2/24/18 END
+        params_dict.update(self.user_params)
+        del params_dict[FUNCTION]
+        del params_dict[FUNCTION_PARAMS]
+        del params_dict[INPUT_STATES]
+        del params_dict[OUTPUT_STATES]
+        params_dict.update(self.function_params)
+        return params_dict
+
 
 
 def _is_mechanism_spec(spec):

@@ -1220,7 +1220,7 @@ class Component(object):
 
         def _convert_function_to_class(function, source):
             from psyneulink.components.functions.function import Function
-            from inspect import isfunction
+            from inspect import isfunction, ismethod
             fct_cls = None
             fct_params = None
             # It is a PsyNeuLink Function class
@@ -1233,7 +1233,11 @@ class Component(object):
                 fct_cls = function.__class__
                 fct_params = function.user_params.copy()
             # It is a generic function
-            elif isfunction(function):
+            # # MODIFIED 2/26/18 OLD:
+            # elif isfunction(function):
+            # MODIFIED 2/26/18 NEW:
+            elif (isfunction(function) or ismethod(function)):
+            # MODIFIED 2/26/18 END
                 # Assign to paramClassDefaults as is (i.e., don't convert to class), since class is generic
                 # (_instantiate_function also tests for this and leaves it as is)
                 fct_cls = function
@@ -1360,7 +1364,11 @@ class Component(object):
                                                                 function.user_params_for_instantiation[param_name])
 
                     # It is a generic function
-                    elif inspect.isfunction(function):
+                    # # MODIFIED 2/26/18 OLD:
+                    # elif inspect.isfunction(function):
+                    # MODIFIED 2/26/18 NEW:
+                    elif (inspect.isfunction(function) or inspect.ismethod(function)):
+                    # MODIFIED 2/26/18 END
                         # Assign as is (i.e., don't convert to class), since class is generic
                         # (_instantiate_function also tests for this and leaves it as is)
                         params[FUNCTION] = function
@@ -2685,7 +2693,15 @@ class Component(object):
         #    assign function_object, function_params dict, and function's parameters from any ParameterStates
         from psyneulink.components.functions.function import Function
         if not isinstance(self, Function):
-            self.function_object = self.function.__self__
+            # # MODIFIED 2/24/18 OLD:
+            # self.function_object = self.function.__self__
+            # MODIFIED 2/24/18 NEW:
+            if isinstance(self.function, Function):
+                self.function_object = self.function
+                self.function = self.function_object.function
+            else:
+                self.function_object = self.function.__self__
+            # MODIFIED 2/24/18 END
             if not self.function_object.owner:
                 self.function_object.owner = self
             elif self.function_object.owner != self:

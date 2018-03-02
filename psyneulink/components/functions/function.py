@@ -1001,7 +1001,7 @@ class UserDefinedFunction(Function_Base):
 
     .. note::
         Be sure to match the **default_variable** argument of the `UserDefinedFunction` with the **default_variable**
-        of the mechanism. (In this example, for `myMech`, `size = 3` is equivalent to `default_variable = [[0, 0, 0]]`.)
+        of the Mechanism. (In this example, for `myMech`, `size = 3` is equivalent to `default_variable = [[0, 0, 0]]`.)
 
     Custom functions can be as elaborate as desired, and can even include PsyNeuLink functions indirectly, such as::
 
@@ -1126,12 +1126,14 @@ class UserDefinedFunction(Function_Base):
 
         # IMPLEMENT: PARSE ARGUMENTS FOR custom_function AND ASSIGN TO user_params
 
-    def function(self,
-                 **kwargs):
+    def function(self, **kwargs):
         try:
             return self.custom_function(**kwargs)
         except TypeError:
             return self.custom_function(kwargs[VARIABLE])
+
+
+
 
 # region **********************************  COMBINATION FUNCTIONS  ****************************************************
 # endregion
@@ -8516,6 +8518,13 @@ COMMENT
 
         self.functionOutputType = None
 
+    def _validate_variable(self, variable, context=None):
+        """Validates that variable is 1d array
+        """
+        if len(np.atleast_2d(variable)) != 1:
+            raise FunctionError("Variable for {} must contain a single array or list of numbers".format(self.name))
+        return variable
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate matrix param
 
@@ -8531,7 +8540,7 @@ COMMENT
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        # Validate error_matrix specification
+        # Validate matrix specification
         if MATRIX in target_set:
 
             from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
@@ -8854,7 +8863,7 @@ class Distance(ObjectiveFunction):
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
             # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
-            if context is not None and INITIALIZING in context:
+            if context is None or INITIALIZING in context:
                 v1 = np.where(v1==0, EPSILON, v1)
                 v2 = np.where(v2==0, EPSILON, v2)
             result = -np.sum(v1*np.log(v2))
@@ -9808,6 +9817,8 @@ class BackPropagation(LearningFunction):
                 owner_string = " of " + self.owner.name
             raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
                                 format(self.__class__.__name__, owner_string))
+
+        # self._check_args(variable=variable, params=params, context=context)
 
         # Manage learning_rate
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
