@@ -2243,7 +2243,7 @@ class Mechanism_Base(Mechanism):
     def _update_params_dicts(self, context=None):
         from psyneulink.globals.keywords import NOISE
         for state in self._parameter_states:
-            if NOISE in state.name:
+            if NOISE in state.name and INITIALIZING in context:
                 continue
             if state.name in self.user_params:
                 self.user_params.__additem__(state.name, state.value)

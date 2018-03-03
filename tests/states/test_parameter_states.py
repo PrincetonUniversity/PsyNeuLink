@@ -167,10 +167,10 @@ class TestConfigurableParameters:
         assert np.allclose(T._smoothing_factor, new_value)
         assert np.allclose(T.mod_smoothing_factor, new_value)
 
-        # assert np.allclose(T.user_params["noise"], new_value)
-        # assert np.allclose(T.noise, new_value)
-        # assert np.allclose(T._noise, new_value)
-        # assert np.allclose(T.mod_noise, new_value)
+        assert np.allclose(T.user_params["noise"], new_value)
+        assert np.allclose(T.noise, new_value)
+        assert np.allclose(T._noise, new_value)
+        assert np.allclose(T.mod_noise, new_value)
 
 class TestModParams:
     def test_mod_param_error(self):

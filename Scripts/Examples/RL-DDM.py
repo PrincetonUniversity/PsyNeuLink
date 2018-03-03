@@ -16,14 +16,6 @@ input_layer = pnl.TransferMechanism(
     name='Input Layer'
 )
 
-# def decision_variable_to_one_hot(x):
-#     """Generate "one-hot" 1d array designating selected action from DDM's scalar decision variable
-#     (used to generate value of OutputState for action_selection Mechanism"""
-#     if x > 0:
-#         return [1,0]
-#     else:
-#         return [0,-1]
-
 # Takes sum of input layer elements as external component of drift rate
 # Notes:
 #    - drift_rate parameter in constructor for DDM is the "internally modulated" component of the drift_rate;
@@ -111,8 +103,8 @@ def show_weights():
 
 
 # Specify reward values associated with each action (corresponding to elements of esaction_selection.output_state.value)
-reward_values = [10, 0]
-# reward_values = [0, 10]
+# reward_values = [10, 0]
+reward_values = [0, 10]
 
 # Used by System to generate a reward on each trial based on the outcome of the action_selection (DDM) Mechanism
 def reward():
