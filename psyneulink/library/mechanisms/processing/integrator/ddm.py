@@ -308,7 +308,7 @@ __all__ = [
     'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError',
     'DECISION_VARIABLE', 'DECISION_VARIABLE_ARRAY', 'PROBABILITY_LOWER_THRESHOLD', 'PROBABILITY_UPPER_THRESHOLD',
     'RESPONSE_TIME', 'RT_CORRECT_MEAN', 'RT_CORRECT_VARIANCE',
-    'SCALAR', 'ARRAY', 'VECTOR'
+    'SCALAR', 'SELECTED_INPUT_ARRAY', 'ARRAY', 'VECTOR'
 ]
 
 logger = logging.getLogger(__name__)
@@ -682,8 +682,8 @@ class DDM(ProcessingMechanism_Base):
                  VARIABLE:[0,0],
                  FUNCTION: Reduce(weights=[1,-1])}
             ]
-            output_states = [
-
+            # output_states = [
+            std_output_states = [
                 # Provides a 1d 2-item array with:
                 #    decision variable in position corresponding to threshold crossed, and 0 in the other position
                 {NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
@@ -691,22 +691,21 @@ class DDM(ProcessingMechanism_Base):
                            # per VARIABLE assignment above, items of v of lambda function below are:
                            #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
                            #    v[1]=self.parameter_states[THRESHOLD]
-                 FUNCTION: lambda v: [float(v[0][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[0][1])]},
+                 FUNCTION: lambda v: [float(v[0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[0])]},
 
                 # Provides a 1d 2-item array with:
                 #    input value in position corresponding to threshold crossed by decision variable, and 0 in the other
                 {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
-                 VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX),
-                           THRESHOLD,
-                           (INPUT_STATE_VARIABLES, 0)],
+                 VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD, (INPUT_STATE_VARIABLES, 0)],
                            # per VARIABLE assignment above, items of v of lambda function below are:
                            #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
                            #    v[1]=self.parameter_states[THRESHOLD]
                            #    v[2]=self.input_states[0].variable
-
                  FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][1])]}
             ]
-            # input_states = None
+
+        else:
+            input_states = None
 
         # Default output_states is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments

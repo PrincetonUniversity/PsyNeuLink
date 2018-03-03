@@ -871,8 +871,11 @@ class InputState(State_Base):
         # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
-            # TODO: stateful - this seems dangerous with statefulness, maybe safe when self.value is only passed or stateful
-            combined_values = self.function(variable=np.asarray(self._path_proj_values),
+            # TODO: stateful - this seems dangerous with statefulness,
+            #       maybe safe when self.value is only passed or stateful
+            variable = np.asarray(self._path_proj_values)
+            self._update_variable(variable[0])
+            combined_values = self.function(variable=variable,
                                             params=runtime_params,
                                             context=context)
             return combined_values
