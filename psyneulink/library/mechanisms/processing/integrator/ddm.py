@@ -682,8 +682,7 @@ class DDM(ProcessingMechanism_Base):
                  VARIABLE:[0,0],
                  FUNCTION: Reduce(weights=[1,-1])}
             ]
-            # output_states = [
-            std_output_states = [
+            self.standard_output_states.add_state_dicts([
                 # Provides a 1d 2-item array with:
                 #    decision variable in position corresponding to threshold crossed, and 0 in the other position
                 {NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
@@ -702,7 +701,7 @@ class DDM(ProcessingMechanism_Base):
                            #    v[1]=self.parameter_states[THRESHOLD]
                            #    v[2]=self.input_states[0].variable
                  FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][1])]}
-            ]
+            ])
 
         else:
             input_states = None

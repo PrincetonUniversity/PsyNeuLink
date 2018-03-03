@@ -1233,7 +1233,7 @@ class OutputState(State_Base):
         - to no items of owner.value (but possibly other params), return None
         """
         # Entire owner.value
-        if OWNER_VALUE == self._variable:
+        if isinstance(self._variable, str) and self.variable == OWNER_VALUE:
             return self.owner.value
         elif isinstance(self._variable, tuple):
             return self._variable[1]

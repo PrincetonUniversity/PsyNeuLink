@@ -118,7 +118,11 @@ reward_values = [10, 0]
 # Used by System to generate a reward on each trial based on the outcome of the action_selection (DDM) Mechanism
 def reward():
     """Return the reward associated with the selected action"""
-    return [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
+    selected_action = action_selection.output_state.value
+    if not any(selected_action):
+        # Deal with initialization, during which action_selection.output_state.value may == [0,0]
+        selected_action = np.array([1,0])
+    return [reward_values[int(np.nonzero(selected_action)[0])]]
 
 
 # Input stimuli for run of the System.
