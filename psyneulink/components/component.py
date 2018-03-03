@@ -3066,7 +3066,8 @@ def make_property(name):
             setattr(self, backing_field, val)
 
         # Update user_params dict with new value
-        self.user_params.__additem__(name, val)
+        # KAM COMMENTED OUT 3/2/18 -- we do not want to update user_params with the base value, only param state value
+        # self.user_params.__additem__(name, val)
 
         # If Component is a Function and has an owner, update function_params dict for owner
         #    also, get parameter_state_owner if one exists
@@ -3077,7 +3078,9 @@ def make_property(name):
             # "function_params" has no attribute __additem__ (this happens when it's a dict rather than a
             # ReadOnlyOrderedDict)) it may be caused by function_params not being included in paramInstanceDefaults,
             # which may be caused by _assign_args_to_param_dicts() bugs. LMK, if you're getting bugs here like that.
-            self.owner.function_params.__additem__(name, val)
+            # KAM COMMENTED OUT 3/2/18 --
+            # we do not want to update function_params with the base value, only param state value
+            # self.owner.function_params.__additem__(name, val)
         else:
             param_state_owner = self
 
