@@ -40,7 +40,7 @@ action_selection = pnl.DDM(
                 starting_point=pnl.CONTROL,
                 noise=pnl.CONTROL,
         ),
-        output_states=[pnl.DECISION_VARIABLE_ARRAY],
+        output_states=[pnl.SELECTED_INPUT_ARRAY],
         name='DDM'
 )
 
@@ -53,8 +53,8 @@ action_selection = pnl.DDM(
 p = pnl.Process(
     default_variable=[0, 0],
     # pathway=[input_layer, np.array([[1],[-1]]), action_selection],
-    pathway=[input_layer, action_selection],
-    learning=pnl.LearningProjection(learning_function=pnl.Reinforcement(learning_rate=0.05)),
+    pathway=[input_layer, pnl.IDENTITY_MATRIX, action_selection],
+    learning=pnl.LearningProjection(learning_function=pnl.Reinforcement(learning_rate=0.5)),
     target=0
 )
 
@@ -73,13 +73,42 @@ print('reward prediction weights: \n', action_selection.input_state.path_afferen
 def print_header(system):
     print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
 def show_weights():
-    print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
-    print(
-        '\nAction selected:  {}; predicted reward: {}'.format(
-            np.nonzero(action_selection.output_state.value)[0][0],
-            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
-        )
-    )
+    print('\nReward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+    # print(
+    #     '\nAction selected:  {}; predicted reward: {}'.format(
+    #         np.nonzero(action_selection.output_state.value)[0][0],
+    #         action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
+    #     )
+    # )
+    comparator = action_selection.output_state.efferents[0].receiver.owner
+    learn_mech = action_selection.output_state.efferents[1].receiver.owner
+    print('\nact_sel_in_state variable:  {} '
+          '\nact_sel_in_state value:     {} '
+          '\naction_selection variable:  {} '
+          '\naction_selection output:    {} '
+          '\ncomparator sample:          {} '
+          '\ncomparator target:          {} '
+          '\nlearning mech act in:       {} '
+          '\nlearning mech act out:      {} '
+          '\nlearning mech error in:     {} '
+          '\nlearning mech error out:    {} '
+          '\nlearning mech learning_sig: {} '
+          # '\npredicted reward:           {} '
+        .format(
+            action_selection.input_states[0].variable,
+            action_selection.input_states[0].value,
+            action_selection.variable,
+            action_selection.output_state.value,
+            comparator.input_states[pnl.SAMPLE].value,
+            comparator.input_states[pnl.TARGET].value,
+            learn_mech.input_states[pnl.ACTIVATION_INPUT].value,
+            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].value,
+            learn_mech.input_states[pnl.ERROR_SIGNAL].value,
+            learn_mech.output_states[pnl.ERROR_SIGNAL].value,
+            learn_mech.output_states[pnl.LEARNING_SIGNAL].value,
+            # action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
+    ))
+
 
 # Specify reward values associated with each action (corresponding to elements of esaction_selection.output_state.value)
 reward_values = [10, 0]
@@ -88,7 +117,11 @@ reward_values = [10, 0]
 # Used by System to generate a reward on each trial based on the outcome of the action_selection (DDM) Mechanism
 def reward():
     """Return the reward associated with the selected action"""
-    return [reward_values[int(np.nonzero(action_selection.output_state.value)[0])]]
+    selected_action = action_selection.output_state.value
+    if not any(selected_action):
+        # Deal with initialization, during which action_selection.output_state.value may == [0,0]
+        selected_action = np.array([1,0])
+    return [reward_values[int(np.nonzero(selected_action)[0])]]
 
 
 # Input stimuli for run of the System.
