@@ -71,12 +71,20 @@ The DDM Mechanism implements a general form of the decision process.
 Input
 ~~~~~
 
-A DDM Mechanism has a single `InputState`, the `value <DDM.value>` of which represents the stimulus for the decision
-process. It is assigned the **input** specified by the DDM's `execute <Mechanism_Base.execute>` or `run
-<Mechanism_Base.run>` methods.  The format of the input to a DDM
-By default, the input to the DDM is a single scalar value.
-However, if the
-**input_format** argument is specified in its constructor, then the input takes the
+The input to the `function <DDM_Function>` of a DDM Mechanism is always a scalar, irrespective of `type of function
+<DDM_Modes>` that is used.  Accordingly, the default `InputState` for a DDM takes a single scalar value as its input,
+that represents the stimulus for the decision process.  However, this can be configured using the **input_format**
+argument of the DDM's consructor, to accomodate use of the DDM with other Mechanisms that generate a stimulus array
+(e.g., representing the stimuli associated with each of the two choices). By default, the **input_format** is
+*SCALAR*.  However, if it is specified as *ARRAY*, the DDM's InputState is configured to accept a 1d 2-item vector,
+and to use `Reduce` as its Function, which subtract the 2nd element of the vector from the  1st, and provides this as
+the input to the DDM's `function <DDM.function>`.  If *ARRAY* is specified, two  `Standard OutputStates
+<DDM_Standard_OutputStates>` are added to the DDM, that allow the result of the decision process to be represented
+as an array corresponding to the stimulus array (see `below <DDM_Custom_OutputStates>`).
+
+COMMENT:
+ADD EXAMPLE HERE
+COMMENT
 
 COMMENT
 NOTE SURE WHAT THIS MEANS:
@@ -128,6 +136,8 @@ table below:
 | <DDM_RT_CORRECT_MEAN>`             |                         |        X                |                            |
 +------------------------------------+-------------------------+-------------------------+----------------------------+
 
+.. _DDM_Custom_OutputStates:
+
 The `output_states <DDM.output_states>` assigned to a DDM can be customized by specifying a list of the desired DDM
 `Standard OutputStates <DDM_Standard_OutputStates>` in the **output_states** argument of its constructor, or the
 *OUTPUT_STATES* entry of an `OutputState specification dictionary <OutputState_Specification_Dictionary>`.  This can
@@ -139,7 +149,7 @@ OutputStates <OutputState_Customization>` can also be created and assigned.
 .. _DDM_Modes:
 
 DDM Function Types
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 .. _DDM_Analytic_Mode:
 
@@ -402,11 +412,31 @@ class DDM_OUTPUT():
     .. _DDM_DECISION_VARIABLE_ARRAY:
 
     *DECISION_VARIABLE_ARRAY* : 1d nparray
-      • `analytic mode <DDM_Analytic_Mode>`: two element array, with the *DECISION_VARIABLE* as the first element
-         if it is closer to the upper threshold or in the second element if it is closer to the lower threshold;
-         the other element is 0. \n
+      .. note::
+         This is only available if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         (see `DDM_Input`).
+      • `analytic mode <DDM_Analytic_Mode>`: two element array, with the decision variable (1st item of the DDM's
+        `value <DDM.value>`) as the 1st element if the decision process crossed the upper threshold, and the 2nd element
+        if it is closer to the lower threshold; the other element is set to 0. \n
       • `integration mode <DDM_Integration_Mode>`: the value of the decision variable at the current TIME_STEP of
-        execution in the element as described above for *analytic mode*. \n
+        execution, assigned to the 1st element if the decision variable is closer to the upper threshold, and to the
+        2nd element if it is closer to the lower threshold; the other element is set to 0. \n
+
+    .. _DDM_DECISION_VARIABLE_ARRAY:
+
+    *SELECTED_INPUT_ARRAY* : 1d nparray
+      .. note::
+         This is only available if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         (see `DDM_Input`).
+      • `analytic mode <DDM_Analytic_Mode>`: two element array, with one ("value") element -- determined by the
+        outcome of the decision process -- set to the value of the corresponding element in the stimulus array (i.e.,
+        the DDM's input_state `variable <InputState.variable>`).  The "value" element is the 1st one if the decision
+        process resulted in crossing the upper threshold, and the 2nd if it crossed the lower threshold; the other
+        element is set to 0. \n
+      • `integration mode <DDM_Integration_Mode>`: the value of the element in the stimulus array based on the
+        decision variable (1st item of the DDM's `value <DDM.value>`) at the current TIME_STEP of execution:
+        it is assigned to the 1st element if the decision variable is closer to the upper threshold, and to the  2nd
+        element if the decision variable is closer to the lower threshold; the other element is set to 0. \n
 
     .. _DDM_RESPONSE_TIME:
 
@@ -481,11 +511,12 @@ class DDM_OUTPUT():
     """
     DECISION_VARIABLE=DECISION_VARIABLE
     RESPONSE_TIME=RESPONSE_TIME
-    DECISION_VARIABLE_ARRAY=DECISION_VARIABLE_ARRAY
     PROBABILITY_UPPER_THRESHOLD=PROBABILITY_UPPER_THRESHOLD
     PROBABILITY_LOWER_THRESHOLD=PROBABILITY_LOWER_THRESHOLD
     RT_CORRECT_MEAN=RT_CORRECT_MEAN
     RT_CORRECT_VARIANCE=RT_CORRECT_VARIANCE
+    DECISION_VARIABLE_ARRAY=DECISION_VARIABLE_ARRAY
+    SELECTED_INPUT_ARRAY=SELECTED_INPUT_ARRAY
 # THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_states]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
