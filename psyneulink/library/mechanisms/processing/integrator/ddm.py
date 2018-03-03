@@ -64,11 +64,31 @@ COMMENT
 Structure
 ---------
 
-The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism has a single `InputState`, the
-`value <DDM.value>` of which is assigned to the **input** specified by its `execute <Mechanism_Base.execute>` or `run
-<Mechanism_Base.run>` methods, which represents the stimulus for the process.  That parameter, along with all
-of the others for the DDM, must be assigned as parameters of the DDM's `function <DDM.function>` (see examples under
-`DDM_Modes` below, and individual `Functions <Function>` for additional details).
+The DDM Mechanism implements a general form of the decision process.
+
+.. _DDM_Input:
+
+Input
+~~~~~
+
+A DDM Mechanism has a single `InputState`, the `value <DDM.value>` of which represents the stimulus for the decision
+process. It is assigned the **input** specified by the DDM's `execute <Mechanism_Base.execute>` or `run
+<Mechanism_Base.run>` methods.  The format of the input to a DDM
+By default, the input to the DDM is a single scalar value.
+However, if the
+**input_format** argument is specified in its constructor, then the input takes the
+
+COMMENT
+NOTE SURE WHAT THIS MEANS:
+That parameter, along with all of the others for the DDM, must be assigned as
+parameters of the DDM's `function <DDM.function>` (see examples under `DDM_Modes` below, and individual `Functions
+<Function>` for additional details).
+COMMENT
+
+.. _DDM_Output:
+
+Output
+~~~~~~
 
 The DDM Mechanism can generate two different types of results depending on which function is selected. When a
 function representing an analytic solution is selected, the mechanism generates a single estimation for the process.
@@ -77,29 +97,44 @@ execution of the mechanism computes one step. (see `DDM_Modes` and `DDM_Executio
 
 The `value <DDM.value>` of the DDM Mechanism may have up to six items. The first two of these are always assigned, and
 are represented by the DDM Mechanism's two default `output_states <DDM.output_states>`: `DECISION_VARIABLE
-<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`. The other `output_states <DDM.output_states>` may be
-assigned depending on (1) whether the selected function produces the relevant quantities and (2) whether the *ARRAY*
-**input_format** has been specified (see XXX).
+<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`.  Other `output_states <DDM.output_states>` may be
+automatically assigned, depending on the `function <DDM.function>` that has been assigned to the DDM, as shown in the
+table below:
 
-+---------------------------------+-----------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|**Function**                     |**Type**   | **Output States**                                                                                                                                                    |
-|                                 |           +------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
-|                                 |           |`DECISION_VARIABLE      |`RESPONSE_TIME      |`PROBABILITY_UPPER_THRESHOLD      |`PROBABILITY_LOWER_THRESHOLD       |`RT_CORRECT_MEAN      |`RT_CORRECT_VARIANCE      |
-|                                 |           |<DDM_DECISION_VARIABLE>`|<DDM_RESPONSE_TIME>`|<DDM_PROBABILITY_UPPER_THRESHOLD>`|<DDM_PROBABILITY_LOWER_THRESHOLD>` |<DDM_RT_CORRECT_MEAN>`|<DDM_RT_CORRECT_VARIANCE>`|
-+---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
-|`BogaczEtAl <BogaczEtAl>`        |Analytic   |     X                  |   X                |     X                            |     X                             |                      |                          |
-+---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
-|`NavarroAndFuss <NavarroAndFuss>`|Analytic   |     X                  |   X                |     X                            |     X                             |         X            |             X            |
-+---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
-|`DriftDiffusionIntegrator        |Path       |                        |                    |                                  |                                   |                      |                          |
-|<DriftDiffusionIntegrator>`      |Integration|     X                  |   X                |                                  |                                   |                      |                          |
-+---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
++------------------------------------+--------------------------------------------------------------------------------+
+|                                    |                     **Function**                                               |
+|                                    |                      *(type)*                                                  |
++                                    +-------------------------+-------------------------+----------------------------+
+|                                    | `BogaczEtAl`            | `NavarroAndFuss`        | `DriftDiffusionIntegrator` |
+|                                    |   (`analytic            |   (`analytic            |   (`path integration)      |
+| **OutputStates:**                  |   <DDM_Analytic_Mode>`) |   <DDM_Analytic_Mode>`) |   <DDM_Integration_Mode>`) |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `DECISION_VARIABLE                 |                         |                         |                            |
+| <DDM_DECISION_VARIABLE>`           |       X                 |        X                |             X              |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `RESPONSE_TIME                     |                         |                         |                            |
+| <DDM_RESPONSE_TIME>`               |       X                 |        X                |             X              |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `PROBABILITY_UPPER_THRESHOLD       |                         |                         |                            |
+| <DDM_PROBABILITY_UPPER_THRESHOLD>` |       X                 |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `PROBABILITY_LOWER_THRESHOLD       |                         |                         |                            |
+| <DDM_PROBABILITY_LOWER_THRESHOLD>` |       X                 |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `RT_CORRECT_MEAN                   |                         |                         |                            |
+| <DDM_RT_CORRECT_MEAN>`             |                         |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `RT_CORRECT_VARIANCE               |                         |                         |                            |
+| <DDM_RT_CORRECT_MEAN>`             |                         |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
 
-The set of `output_states <DDM_output_states>` assigned can be customized by selecting ones from the DDM's set of
-`Standard OutputStates <DDM_Standard_OutputStates>`), and specifying these in the **output_states** argument of its
-constructor. Some `OutputStates <OutputState>`, or elements of `value <DDM.value>`, represent slightly different quantities
-depending on the function in which they are computed. See `Standard OutputStates <DDM_Standard_OutputStates>` for more
-details.
+The `output_states <DDM.output_states>` assigned to a DDM can be customized by specifying a list of the desired DDM
+`Standard OutputStates <DDM_Standard_OutputStates>` in the **output_states** argument of its constructor, or the
+*OUTPUT_STATES* entry of an `OutputState specification dictionary <OutputState_Specification_Dictionary>`.  This can
+include two additional `Standard OutputStates <DDM_Standard_OutputStates>` for the DDM - `DECISION_VARIABLE_ARRAY
+<DDM_DECISION_VARIABLE_ARRAY>` and `SELECTED_INPUT_ARRAY <DDM_SELECTED_INPUT_ARRAY>`, that are available if the
+*ARRAY* option is specified in its **input_format** argument (see `DDM_Input`).  As with any Mechanism, `customized
+OutputStates <OutputState_Customization>` can also be created and assigned.
 
 .. _DDM_Modes:
 
