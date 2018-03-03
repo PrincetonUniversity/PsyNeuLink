@@ -101,6 +101,7 @@ def show_weights():
             # action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
     ))
 
+
 # Specify reward values associated with each action (corresponding to elements of esaction_selection.output_state.value)
 # reward_values = [10, 0]
 reward_values = [0, 10]
