@@ -120,7 +120,8 @@ In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <D
 return an accuracy value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>`
 OutputState), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
 OutputState;  the `NavarroAndFuss <NavarroAndFuss>` Function also returns expected values for mean correct response time
-(`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>` and variance of correct response times (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
+(`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>` and variance of correct response times
+(`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
 
 Examples for each, that illustrate all of their parameters, are shown below:
 
