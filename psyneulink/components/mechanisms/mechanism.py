@@ -2233,6 +2233,11 @@ class Mechanism_Base(Mechanism):
         for state in self._parameter_states:
 
             state.update(params=runtime_params, context=context)
+            if state.name in self.user_params:
+                self.user_params.__additem__(state.name, state.value)
+
+            if state.name in self.function_params:
+                self.function_params.__additem__(state.name, state.value)
 
     def _update_output_states(self, runtime_params=None, context=None):
         """Execute function for each OutputState and assign result of each to corresponding item of self.output_values
