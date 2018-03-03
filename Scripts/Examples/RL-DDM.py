@@ -73,7 +73,7 @@ print('reward prediction weights: \n', action_selection.input_state.path_afferen
 def print_header(system):
     print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
 def show_weights():
-    print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
+    print('\nReward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
     # print(
     #     '\nAction selected:  {}; predicted reward: {}'.format(
     #         np.nonzero(action_selection.output_state.value)[0][0],
@@ -82,8 +82,7 @@ def show_weights():
     # )
     comparator = action_selection.output_state.efferents[0].receiver.owner
     learn_mech = action_selection.output_state.efferents[1].receiver.owner
-    print('\n'
-          '\nact_sel_in_state variable:  {} '
+    print('\nact_sel_in_state variable:  {} '
           '\nact_sel_in_state value:     {} '
           '\naction_selection variable:  {} '
           '\naction_selection output:    {} '
@@ -94,7 +93,7 @@ def show_weights():
           '\nlearning mech error in:     {} '
           '\nlearning mech error out:    {} '
           '\nlearning mech learning_sig: {} '
-          # '\npredicted reward:           {} '.
+          # '\npredicted reward:           {} '
         .format(
             action_selection.input_states[0].variable,
             action_selection.input_states[0].value,
@@ -107,7 +106,7 @@ def show_weights():
             learn_mech.input_states[pnl.ERROR_SIGNAL].value,
             learn_mech.output_states[pnl.ERROR_SIGNAL].value,
             learn_mech.output_states[pnl.LEARNING_SIGNAL].value,
-            # action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0])
+            # action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
     ))
 
 

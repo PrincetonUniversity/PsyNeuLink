@@ -78,7 +78,8 @@ execution of the mechanism computes one step. (see `DDM_Modes` and `DDM_Executio
 The `value <DDM.value>` of the DDM Mechanism may have up to six items. The first two of these are always assigned, and
 are represented by the DDM Mechanism's two default `output_states <DDM.output_states>`: `DECISION_VARIABLE
 <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`. The other `output_states <DDM.output_states>` may be
-assigned depending on (1) whether the selected function produces those quantities and (2) customization.
+assigned depending on (1) whether the selected function produces the relevant quantities and (2) whether the *ARRAY*
+**input_format** has been specified (see XXX).
 
 +---------------------------------+-----------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |**Function**                     |**Type**   | **Output States**                                                                                                                                                    |
