@@ -2530,7 +2530,7 @@ class ProcessInputState(OutputState):
         # MODIFIED 2/17/17 END
         # self.path_afferents = []
         # self.index = PRIMARY
-        # self.assign = Linear
+        # self.assign = None
 
     @property
     def value(self):

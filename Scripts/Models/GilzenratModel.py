@@ -155,7 +155,7 @@ LC = pnl.LCControlMechanism(
 task = pnl.System(processes=[decision_process])
 
 # This displays a diagram of the System
-task.show_graph(show_dimensions=True)
+task.show_graph()
 
 
 # Create Stimulus -----------------------------------------------------------------------------------------------------
@@ -263,6 +263,3 @@ plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
 plt.show()
 
 task.show()
-
-# This displays a diagram of the System
-task.show_graph()
