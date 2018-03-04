@@ -967,9 +967,7 @@ class Component(object):
         self.init_status = InitStatus.INITIALIZED
 
         self.__llvm_function_name = None
-        self.__llvm_regenerate = True
         self.__llvm_bin_function = None
-        self.__llvm_recompile = True
 
         self.nv_state = None
 
@@ -984,17 +982,15 @@ class Component(object):
 
     @property
     def llvmSymbolName(self):
-        if self.__llvm_regenerate:
+        if self.__llvm_function_name is None:
             self.__llvm_function_name = self._gen_llvm_function()
-            self.__llvm_regenerate = False
-            self.__llvm_recompile = True
+            self.__llvm_bin_function = None
         return self.__llvm_function_name
 
     @property
     def _llvmBinFunction(self):
-        if self.__llvm_recompile:
+        if self.__llvm_bin_function is None:
             self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self.llvmSymbolName)
-            self.__llvm_recompile = False
         return self.__llvm_bin_function
 
     def get_input_struct_type(self):
