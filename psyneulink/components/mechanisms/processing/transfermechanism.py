@@ -979,38 +979,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         return func_name
 
 
-    def _bin_execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 time_scale=TimeScale.TRIAL,
-                 context=None):
-
-
-        bf = self._llvmBinFunction
-
-        # Convert to float
-        variable = np.asarray(variable, dtype=np.float64)
-        # The output is the same size as input
-        ret = np.zeros_like(variable)
-        par_struct_ty, context_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
-
-        if self.nv_state is None:
-            ctx = self.get_context_initializer()
-            self.nv_state = context_struct_ty(*ctx)
-
-        ct_context = self.nv_state
-
-        params = self.get_param_initializer();
-        ct_param = par_struct_ty(*params)
-
-        # This is bit hacky because numpy can't cast to arrays
-        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
-
-        bf(ct_param, ctypes.byref(ct_context), ct_vi, ct_vo)
-
-        return ret
-
     def _execute(self,
                  variable=None,
                  runtime_params=None,
