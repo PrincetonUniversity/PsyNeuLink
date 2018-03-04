@@ -889,11 +889,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         return context_type
 
 
-    def get_output_struct_type(self):
-        vec_tys = [self.function_object.get_output_struct_type()]
-        return ir.LiteralStructType(vec_tys)
-
-
     def get_input_struct_type(self):
         if self.integrator_mode:
             vec_tys = [self.integrator_function.get_input_struct_type()]

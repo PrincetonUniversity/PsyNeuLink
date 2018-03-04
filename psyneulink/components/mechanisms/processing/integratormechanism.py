@@ -231,31 +231,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         return self.function_object.previous_value
     # MODIFIED 6/2/17 END
 
-    def get_param_struct_type(self):
-        param_type_list = [self.function_object.get_param_struct_type()]
-        return ir.LiteralStructType(param_type_list)
-
-
-    def get_context_struct_type(self):
-        context_type_list = [self.function_object.get_context_struct_type()]
-        context_type = ir.LiteralStructType(context_type_list)
-        return context_type
-
-
-    def get_output_struct_type(self):
-        vec_tys = [self.function_object.get_output_struct_type()]
-        return ir.LiteralStructType(vec_tys)
-
-
-    def get_input_struct_type(self):
-        vec_tys = [self.function_object.get_input_struct_type()]
-        return ir.LiteralStructType(vec_tys)
-
-
-    def get_param_initializer(self):
-        return tuple([self.function_object.get_param_initializer()]);
-
-
     def _gen_llvm_function(self):
         func_name = None
         llvm_func = None

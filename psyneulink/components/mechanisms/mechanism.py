@@ -798,6 +798,7 @@ from psyneulink.globals.registry import register_category, remove_instance_from_
 from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 import ctypes
+from llvmlite import ir
 
 __all__ = [
     'Mechanism_Base', 'MechanismError'
@@ -2284,6 +2285,31 @@ class Mechanism_Base(Mechanism):
                                      format(value, append_type_to_name(self)))
         self.value = np.atleast_1d(value)
         self._update_output_states(context="INITIAL_VALUE")
+
+
+    def get_param_struct_type(self):
+        param_type_list = [self.function_object.get_param_struct_type()]
+        return ir.LiteralStructType(param_type_list)
+
+
+    def get_context_struct_type(self):
+        context_type_list = [self.function_object.get_context_struct_type()]
+        return ir.LiteralStructType(context_type_list)
+
+
+    def get_output_struct_type(self):
+        vec_tys = [self.function_object.get_output_struct_type()]
+        return ir.LiteralStructType(vec_tys)
+
+
+    def get_input_struct_type(self):
+        vec_tys = [self.function_object.get_input_struct_type()]
+        return ir.LiteralStructType(vec_tys)
+
+
+    def get_param_initializer(self):
+        return tuple([self.function_object.get_param_initializer()]);
+
 
     def _bin_execute(self,
                  variable=None,
