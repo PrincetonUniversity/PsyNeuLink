@@ -147,7 +147,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 
-        super(CompositionInterfaceMechanism, self).__init__(variable=default_input_value,
+        super(CompositionInterfaceMechanism, self).__init__(default_variable=default_input_value,
                                                   size=size,
                                                   params=params,
                                                   name=name,
