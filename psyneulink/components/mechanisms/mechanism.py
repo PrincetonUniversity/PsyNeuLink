@@ -2311,12 +2311,15 @@ class Mechanism_Base(Mechanism):
         return tuple([self.function_object.get_param_initializer()]);
 
 
+    def get_context_initializer(self):
+        return tuple([self.function_object.get_context_initializer()]);
+
+
     def _bin_execute(self,
                  variable=None,
                  runtime_params=None,
                  context=None):
 
-        params = self.function_object.get_param_initializer()
 
         bf = self._llvmBinFunction
 
@@ -2326,11 +2329,12 @@ class Mechanism_Base(Mechanism):
         par_struct_ty, context_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         if self.nv_state is None:
-            initializer = self.function_object.get_context_initializer()
-            self.nv_state = context_struct_ty(initializer,)
+            initializer = self.get_context_initializer()
+            self.nv_state = context_struct_ty(*initializer)
 
         ct_context = self.nv_state
-        ct_param = par_struct_ty(params)
+        params = self.get_param_initializer()
+        ct_param = par_struct_ty(*params)
 
         # This is bit hacky because numpy can't cast to arrays
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
