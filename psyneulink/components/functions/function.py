@@ -4215,14 +4215,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             return ir.ArrayType(ctx.float_ty, self._result_length)
 
     def get_param_struct_type(self):
-        # TODO: move this to a nicer, shareable place
-        def nested_len(x):
-            try:
-                return sum(nested_len(y) for y in x)
-            except:
-                return 1
         with pnlvm.LLVMBuilderContext() as ctx:
-            matrix_ty = ir.ArrayType(ctx.float_ty, nested_len(self.matrix))
+            matrix_ty = ir.ArrayType(ctx.float_ty, self.matrix.size)
             param_type = ir.LiteralStructType((matrix_ty,))
         return param_type
 
