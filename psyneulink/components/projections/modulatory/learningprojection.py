@@ -207,6 +207,7 @@ class LearningProjection(ModulatoryProjection_Base):
     LearningProjection(               \
                  sender=None,         \
                  receiver=None,       \
+                 error_function,      \
                  learning_function,   \
                  learning_rate=None,  \
                  weight=None,         \
@@ -261,6 +262,12 @@ class LearningProjection(ModulatoryProjection_Base):
         specifies the function used to convert the `learning_signal` to the `weight_change_matrix
         <LearningProjection.weight_change_matrix>`, prior to applying the `learning_rate
         <LearningProjection.learning_rate>`.
+
+    error_function : Optional[Function or function] : default LinearCombination(weights=[[-1], [1]])
+        specifies a function to be used by the `TARGET Mechanism <LearningMechanism_Targets>` to compute the error
+        used for learning.  Since the `TARGET` Mechanism is a `ComparatorMechanism`, its function must have a `variable
+        <Function.variable>` with two items, that receives its values from the *SAMPLE* and *TARGET* InputStates of the
+        ComparatorMechanism.
 
     learning_function : Optional[LearningFunction or function] : default BackPropagation
         specifies a function to be used for learning by the `LearningMechanism` to which the
@@ -408,8 +415,8 @@ class LearningProjection(ModulatoryProjection_Base):
     def __init__(self,
                  sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
-                 learning_function:tc.optional(is_function_type)=BackPropagation,
                  error_function:tc.optional(is_function_type)=LinearCombination(weights=[[-1], [1]]),
+                 learning_function:tc.optional(is_function_type)=BackPropagation,
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                  # learning_signal_params:tc.optional(dict)=None,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
@@ -421,13 +428,14 @@ class LearningProjection(ModulatoryProjection_Base):
                  context=None):
 
         # IMPLEMENTATION NOTE:
-        #     the learning_function argument is implemented to preserve the ability to pass a learning function
-        #     specification from the specification of a LearningProjection (used to implement learning for a
-        #     MappingProjection, e.g., in a tuple) to the LearningMechanism responsible for implementing the function
+        #     the error_function and learning_function arguments are implemented to preserve the ability to pass
+        #     error function and learning function specifications from the specification of a LearningProjection (used
+        #     to implement learning for a MappingProjection, e.g., in a tuple) to the LearningMechanism responsible
+        #     for implementing the function; and for specifying the default LearningProjection for a Process.
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(learning_function=learning_function,
-                                                  error_function=error_function,
+        params = self._assign_args_to_param_dicts(error_function=error_function,
+                                                  learning_function=learning_function,
                                                   learning_rate=learning_rate,
                                                   # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                                                   # learning_signal_params=learning_signal_params,
