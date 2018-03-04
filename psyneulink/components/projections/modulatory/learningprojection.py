@@ -166,7 +166,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
-from psyneulink.components.functions.function import BackPropagation, Linear, is_function_type
+from psyneulink.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -409,6 +409,7 @@ class LearningProjection(ModulatoryProjection_Base):
                  sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
                  learning_function:tc.optional(is_function_type)=BackPropagation,
+                 error_function:tc.optional(is_function_type)=LinearCombination,
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                  # learning_signal_params:tc.optional(dict)=None,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
@@ -426,6 +427,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(learning_function=learning_function,
+                                                  error_function=error_function,
                                                   learning_rate=learning_rate,
                                                   # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                                                   # learning_signal_params=learning_signal_params,
