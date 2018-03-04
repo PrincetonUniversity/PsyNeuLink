@@ -141,7 +141,7 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.globals.keywords import BETA, CALCULATE, ENERGY, ENTROPY, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
+from psyneulink.globals.keywords import BETA, ASSIGN, ENERGY, ENTROPY, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
@@ -246,7 +246,7 @@ class LCA(RecurrentTransferMechanism):
         noise=0.0,                         \
         integrator_mode = True             \
         time_step_size = 0.1               \
-        clip=(float:min, float:max),       \
+        clip=[float:min, float:max],       \
         params=None,                       \
         name=None,                         \
         prefs=None)
@@ -329,11 +329,12 @@ class LCA(RecurrentTransferMechanism):
         sets the time_step_size used by the mechanism's `integrator_function <LCA.integrator_function>`. See
         `integrator_mode <LCA.integrator_mode>` for more details.
 
-    clip : Optional[Tuple[float, float]]
-        specifies the allowable range for the result of `function <TransferMechanism.function>`:
-        the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
-        any element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `clip <TransferMechanism.clip>` that it exceeds.
+    clip : list [float, float] : default None (Optional)
+        specifies the allowable range for the result of `function <LCA.function>` the item in index 0 specifies the
+        minimum allowable value of the result, and the item in index 1 specifies the maximum allowable value; any
+        element of the result that exceeds the specified minimum or maximum value is set to the value of
+        `clip <LCA.clip>` that it exceeds.
+
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -431,11 +432,13 @@ class LCA(RecurrentTransferMechanism):
             its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
             the noise will simply be an offset that remains the same across all executions.
 
-    clip : Tuple[float, float]
-        determines the allowable range of the result: the first value specifies the minimum allowable value
-        and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `clip <TransferMechanism.clip>` it exceeds.  If `function <TransferMechanism.function>`
-        is `Logistic`, `clip <TransferMechanism.clip>` is set by default to (0,1).
+    clip : list [float, float] : default None (Optional)
+        specifies the allowable range for the result of `function <LCA.function>`
+
+        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
+        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
+         the value of `clip <LCA.clip>` that it exceeds.
+
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of
@@ -498,16 +501,14 @@ class LCA(RecurrentTransferMechanism):
         # RATE: None,
         BETA: None
     })
-    class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
-        variable = [[0]]
 
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
     standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:MAX_VS_NEXT,
-                                    CALCULATE:max_vs_next},
+                                    ASSIGN:max_vs_next},
                                    {NAME:MAX_VS_AVG,
-                                    CALCULATE:max_vs_avg}])
+                                    ASSIGN:max_vs_avg}])
 
     @tc.typecheck
     def __init__(self,
@@ -648,15 +649,17 @@ class LCA(RecurrentTransferMechanism):
                                             rate=leak,
                                             owner=self)
 
-            current_input = self.integrator_function.execute(variable,
-                                                        # Should we handle runtime params?
-                                                              params={INITIALIZER: initial_value,
-                                                                      NOISE: noise,
-                                                                      RATE: leak,
-                                                                      TIME_STEP_SIZE: time_step_size},
-                                                              context=context
-
-                                                             )
+            current_input = self.integrator_function.execute(
+                variable,
+                # Should we handle runtime params?
+                runtime_params={
+                    INITIALIZER: initial_value,
+                    NOISE: noise,
+                    RATE: leak,
+                    TIME_STEP_SIZE: time_step_size
+                },
+                context=context
+            )
         else:
         # elif time_scale is TimeScale.TRIAL:
             noise = self._try_execute_param(noise, variable)
@@ -664,10 +667,10 @@ class LCA(RecurrentTransferMechanism):
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
             # when the input is given as a string.
             if (np.array(noise) != 0).any():
-                current_input = variable[0] + noise
+                current_input = variable + noise
             else:
 
-                current_input = variable[0]
+                current_input = variable
 
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)

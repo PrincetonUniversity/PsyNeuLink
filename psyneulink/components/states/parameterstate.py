@@ -351,24 +351,22 @@ Class Reference
 """
 
 import inspect
+
 from collections import Iterable
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, function_type, method_type, parameter_keywords, InitStatus
+from psyneulink.components.component import Component, InitStatus, function_type, method_type, parameter_keywords
 from psyneulink.components.functions.function import Linear, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.globals.keywords import \
-    NAME, CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, SENDER, \
-    PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
-    VALUE, REFERENCE_VALUE, CONTROL_SIGNAL, CONTROL_SIGNALS, LEARNING_SIGNAL, LEARNING_SIGNALS
+from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
+from psyneulink.globals.keywords import CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities \
-    import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
+    import ContentAddressableList, ReadOnlyOrderedDict, is_iterable, is_numeric, is_value_spec, iscompatible
 
 __all__ = [
     'ParameterState', 'ParameterStateError', 'state_type_keywords',
@@ -421,7 +419,7 @@ class ParameterState(State_Base):
         Class methods
         -------------
             _instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
-            update_state: updates self.value from Projections, base_value and runtime in PARAMETER_STATE_PARAMS
+            update: updates self.value from Projections, base_value and runtime in PARAMETER_STATE_PARAMS
 
         StateRegistry
         -------------
@@ -838,28 +836,30 @@ class ParameterState(State_Base):
 
         return state_spec, params_dict
 
-
-    def _execute(self, function_params, context):
+    def _execute(self, variable=None, runtime_params=None, context=None):
         """Call self.function with current parameter value as the variable
 
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
         Update its value in call to state's function.
         """
 
-        # Most commonly, ParameterState is for the parameter of a function
-        try:
-            param_value = getattr(self.owner.function_object, '_'+ self.name)
-            # param_value = self.owner.function_object.params[self.name]
+        if variable is not None:
+            return self.function(variable, runtime_params, context)
+        else:
+            # Most commonly, ParameterState is for the parameter of a function
+            try:
+                param_value = getattr(self.owner.function_object, '_'+ self.name)
+                # param_value = self.owner.function_object.params[self.name]
 
-       # Otherwise, should be for an attribute of the ParameterState's owner:
-        except AttributeError:
-            # param_value = self.owner.params[self.name]
-            param_value = getattr(self.owner, '_'+ self.name)
+           # Otherwise, should be for an attribute of the ParameterState's owner:
+            except AttributeError:
+                # param_value = self.owner.params[self.name]
+                param_value = getattr(self.owner, '_'+ self.name)
 
-        value = self.function(variable=param_value,
-                              params=function_params,
-                              context=context)
-        return value
+            value = self.function(variable=param_value,
+                                  params=runtime_params,
+                                  context=context)
+            return value
 
     @property
     def pathway_projections(self):
@@ -907,7 +907,7 @@ def _instantiate_parameter_states(owner, context=None):
     #                       (since that will assign values to the properties of each param;
     #                       and that, in turn, will overwrite their current values with the defaults from paramsCurrent)
     for param_name, param_value in owner.user_params_for_instantiation.items():
-        # Skip any parameter that has been specifically excluded by
+        # Skip any parameter that has been specifically excluded
         if param_name in owner.ClassDefaults.exclude_from_parameter_states:
             continue
         _instantiate_parameter_state(owner, param_name, param_value, context=context)
@@ -1053,10 +1053,10 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             # #                       which would make them inaccessible to the subsequent parse of state_spec
             from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
             from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-            if (isinstance(function_param_value, Iterable)
-                and any(isinstance(item, (ModulatorySignal,
-                                          ModulatoryProjection_Base,
-                                          AdaptiveMechanism_Base)) for item in function_param_value)):
+            if (
+                is_iterable(function_param_value)
+                and any(isinstance(item, (ModulatorySignal, ModulatoryProjection_Base, AdaptiveMechanism_Base)) for item in function_param_value)
+            ):
                 reference_value = function_param_value
             else:
                 from copy import deepcopy

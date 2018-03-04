@@ -32,15 +32,26 @@ for additional details about the role of InputStates in Mechanisms, and their as
 Creating an InputState
 ----------------------
 
-An InputState can be created by calling its constructor, but in general this is not necessary as a Mechanism can
+An InputState can be created by calling its constructor, but in general this is not necessary as a `Mechanism` can
 usually automatically create the InputState(s) it needs when it is created.  For example, if the Mechanism is
-being created within the `pathway <Process.pathway` of a `Process`, its InputState is created and  assigned as the
-`receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism <Mechanism>` in
-the `pathway <Process.pathway>`.  If it is created using its constructor, and a Mechanism is specified in the
-**owner** argument, it is automatically assigned to that Mechanism.  Note that its `value <InputState.value>` must
+being created within the `pathway <Process.pathway>` of a `Process`, its InputState is created and  assigned as the
+`receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding Mechanism in the `pathway
+<Process.pathway>`.  InputStates can also be specified in the **input_states** argument of a Mechanism's
+constructor (see `below <InputState_Specification>`).
+
+The `variable <variable.InputState>` of an InputState can be specified using the **variable** or **size** arguments of
+its constructor.  It can also be specified using the **projections** argument, if neither **variable** nor **size** is
+specified.  The **projections** argument is used to `specify Projections <State_Projections>` to the InputState. If
+neither the **variable** nor **size** arguments is specified, then the value of the `Projections(s) <Projection>` or
+their `sender <Projection_Base.sender>`\\s (all of which must be the same length) is used to determine the `variable
+<InputState.variable>` of the InputState.
+
+If an InputState is created using its constructor, and a Mechanism is specified in the **owner** argument,
+it is automatically assigned to that Mechanism.  Note that its `value <InputState.value>` (generally determined
+by the size of its `variable <InputState.variable>` -- see `below <InputState_Variable_and_Value>`) must
 be compatible (in number and type of elements) with the item of its owner's `variable <Mechanism_Base.variable>` to
 which it is assigned (see `below <InputState_Variable_and_Value>` and `Mechanism <Mechanism_Variable_and_InputStates>`).
-If the **owner* is not specified, `initialization is deferred.
+If the **owner** argument is not specified, `initialization <State_Deferred_Initialization>` is deferred.
 
 .. _InputState_Deferred_Initialization:
 
@@ -49,15 +60,13 @@ Owner Assignment and Deferred Initialization
 
 An InputState must be owned by a `Mechanism <Mechanism>`.  When InputState is specified in the constructor for a
 Mechanism (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If
-the InputState is created directly, its `owner <InputState.owner>` can specified in the **owner**  argument of its
-constructor, in which case it is assigned to that Mechanism. Otherwise, its initialization is `deferred
-<State_Deferred_Initialization>` until
+the InputState is created on its own, its `owner <InputState.owner>` can specified in the **owner**  argument of its
+constructor, in which case it is assigned to that Mechanism. If its **owner** argument is not specified, its
+initialization is `deferred <State_Deferred_Initialization>` until
 COMMENT:
 TBI: its `owner <State_Base.owner>` attribute is assigned or
 COMMENT
 the InputState is assigned to a Mechanism using the Mechanism's `add_states <Mechanism_Base.add_states>` method.
-
- If its **owner* is not specified, `initialization is deferred.
 
 .. _InputState_Primary:
 
@@ -96,8 +105,8 @@ former (that is, if an *INPUT_STATES* entry is included in the parameter diction
 
 .. _InputState_Variable_and_Value:
 
-*InputState's* `variable <InputState.variable>`, `value <InputState.value>` *and Mechanism's* `variable
-<Mechanism_Base.variable>`
+*InputState's* `variable <InputState.variable>`, `value <InputState.value>` *and Mechanism's* `variable <Mechanism_Base.variable>`
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Each InputState specified in the **input_states** argument of a Mechanism's constructor must correspond to an item of
 the Mechanism's `variable <Mechanism_Base.variable>` attribute (see `Mechanism <Mechanism_Variable_and_InputStates>`),
@@ -452,18 +461,14 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus
-from psyneulink.components.functions.function import Linear, LinearCombination
+from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.states.state import \
-    StateError, State_Base, _instantiate_state_list, state_type_keywords, ADD_STATES
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import \
-    INPUT_STATES, EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, \
-    MECHANISM, OUTPUT_STATES, MATRIX, PROJECTIONS, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT, REFERENCE_VALUE, \
-    OUTPUT_STATE, PROCESS_INPUT_STATE, SYSTEM_INPUT_STATE, LEARNING_SIGNAL, GATING_SIGNAL, SENDER, COMMAND_LINE
+from psyneulink.components.states.state import ADD_STATES, StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.globals.keywords import COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import append_type_to_name, iscompatible, is_numeric
+from psyneulink.globals.utilities import append_type_to_name, is_numeric, iscompatible
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords',
@@ -532,7 +537,7 @@ class InputState(State_Base):
         Class methods
         -------------
             _instantiate_function: insures that function is ARITHMETIC)
-            update_state: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
+            update: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
 
         StateRegistry
         -------------
@@ -556,6 +561,10 @@ class InputState(State_Base):
     variable : number, list or np.ndarray
         specifies the template for the InputState's `variable <InputState.variable>` attribute.
 
+    size : int, list or np.ndarray of ints
+        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+        if **variable** is specified, it takes precedence over the specification of **size**.
+
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to aggregate the `values <Projection_Base.value>` of the `Projections <Projection>`
         received by the InputState, under the possible influence of `GatingProjections <GatingProjection>` received
@@ -566,7 +575,10 @@ class InputState(State_Base):
         specifies the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
         received by the InputState, and that are listed in its `path_afferents <InputState.path_afferents>` and
         `mod_afferents <InputState.mod_afferents>` attributes, respectively (see
-        `InputState_Compatability_and_Constraints` for additional details).
+        `InputState_Compatability_and_Constraints` for additional details).  If **projections** but neither
+        **variable** nor **size** are specified, then the `value <Projection.value>` of the Projection(s) or their
+        `senders <Projection.sender>` specified in **projections** argument are used to determine the InputState's
+        `variable <InputState.variable>`.
 
     weight : number : default 1
         specifies the value of the `weight <InputState.weight>` attribute of the InputState.
@@ -605,14 +617,9 @@ class InputState(State_Base):
     variable : value, list or np.ndarray
         the template for the `value <Projection_Base.value>` of each Projection that the InputState receives,
         each of which must match the format (number and types of elements) of the InputState's
-        `variable <InputState.variable>`.
-
-    size : int, list or np.ndarray of ints
-        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
-        if **variable** is specified, it takes precedence over the specification of **size**.
-        As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+        `variable <InputState.variable>`.  If neither the **variable** or **size** argument is specified, and
+        **projections** is specified, then `variable <InputState.variable>` is assigned the `value
+        <Projection.value>` of the Projection(s) or its `sender <Projection.sender>`.
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
         performs an element-wise (Hadamard) aggregation of the `value <Projection_Base.value>` of each Projection
@@ -709,6 +716,9 @@ class InputState(State_Base):
         else:
             context = self
 
+        if variable is None and size is None and projections is not None:
+            variable = self._assign_variable_from_projection(variable, size, projections)
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   weight=weight,
@@ -746,6 +756,27 @@ class InputState(State_Base):
         if self.name is self.componentName or self.componentName + '-' in self.name:
             self._assign_default_state_name(context=context)
 
+    def _assign_variable_from_projection(self, variable, size, projections):
+        """Assign variable to value of Projection in projections
+        """
+        from psyneulink.components.projections.projection import \
+            Projection, _parse_connection_specs, ProjectionTuple
+
+        if not isinstance(projections, list):
+            projections = [projections]
+
+        # Use only first specification in the list returned, and assume any others are the same size 
+        #     (which they must be); leave validation of this to _instantiate_projections_to_state
+        proj_spec = _parse_connection_specs(InputState, self, projections)[0]
+        
+        if isinstance(proj_spec.projection, Projection):
+            variable = proj_spec.projection.value
+        elif isinstance(proj_spec.state, OutputState):
+            variable = proj_spec.state.value
+        else:
+            raise InputStateError("Unrecognized specification for \'{}\' arg of {}".format(PROJECTIONS, self.name))
+
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate weights and exponents
@@ -798,7 +829,7 @@ class InputState(State_Base):
         super()._instantiate_function(context=context)
 
         # Insure that function is Function.LinearCombination
-        if not isinstance(self.function.__self__, (LinearCombination, Linear)):
+        if not isinstance(self.function.__self__, (LinearCombination, Linear, Reduce)):
             raise StateError(
                 "{0} of {1} for {2} is {3}; it must be of LinearCombination "
                 "or Linear type".
@@ -829,21 +860,25 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    def _execute(self, function_params, context):
+    def _execute(self, variable=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
-        If there were no Transmissive Projections, ignore and return None
+        If there were no PathwayProjections, ignore and return None
         """
 
-        # If there were any Transmissive Projections:
-        if self._path_proj_values:
+        if variable is not None:
+            return self.function(variable, runtime_params, context)
+        # If there were any PathwayProjections:
+        elif self._path_proj_values:
             # Combine Projection values
-            # TODO: stateful - this seems dangerous with statefulness, maybe safe when self.value is only passed or stateful
-            combined_values = self.function(variable=self._path_proj_values,
-                                            params=function_params,
+            # TODO: stateful - this seems dangerous with statefulness,
+            #       maybe safe when self.value is only passed or stateful
+            variable = np.asarray(self._path_proj_values)
+            self._update_variable(variable[0])
+            combined_values = self.function(variable=variable,
+                                            params=runtime_params,
                                             context=context)
             return combined_values
-
         # There were no Projections
         else:
             # mark combined_values as none, so that (after being assigned to self.value)
@@ -1081,6 +1116,34 @@ class InputState(State_Base):
     def pathway_projections(self, assignment):
         self.path_afferents = assignment
 
+    @staticmethod
+    def _get_state_function_value(owner, function, variable):
+        """Overrided State method
+
+        InputState variable must be embedded in a list (see InputState._get_state_function_value()).
+        so that LinearCombination (its default function) returns a variable that is >=2d intact
+        (rather than as arrays to be combined);
+        this is normally done in State.update() (and in State._instantiate-function), but that
+        can't be called by _parse_state_spec since the InputState itself may not yet have been instantiated.
+
+        """
+        import inspect
+        if (
+                (
+                        (inspect.isclass(function) and issubclass(function, LinearCombination))
+                        or isinstance(function, LinearCombination)
+                )
+                and (
+                isinstance(variable, np.matrix)
+                or (
+                        isinstance(np.array(variable))
+                        and variable.ndim >=2
+                )
+        )
+        ):
+            variable = [variable]
+        return function.execute(variable)
+
 
 def _instantiate_input_states(owner, input_states=None, reference_value=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of InputState(s)
@@ -1142,11 +1205,8 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     if not variable_item_is_OK:
         old_variable = owner.instance_defaults.variable
-        new_variable = []
-        for state in owner.input_states:
-            new_variable.append(state.value)
-        owner.instance_defaults.variable = np.array(new_variable)
-        owner._update_variable(new_variable)
+        owner.instance_defaults.variable = owner._handle_default_variable(default_variable=[state.value for state in owner.input_states])
+
         if owner.verbosePref:
             warnings.warn(
                 "Variable for {} ({}) has been adjusted to match number and format of its input_states: ({})".format(

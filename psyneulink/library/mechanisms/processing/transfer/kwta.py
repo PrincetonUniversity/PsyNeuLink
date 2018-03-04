@@ -287,10 +287,10 @@ class KWTA(RecurrentTransferMechanism):
         is allowed, including positive offsets;  if set to `True`, a positive offset will be re-assigned the value of 0
         (see `inhibition_only <KWTA_inhibition_only>` for additional information).
 
-    clip : Optional[Tuple[float, float]]
-        specifies the allowable range for the result of `function <KWTA.function>`:
-        the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
-        any element of the result that exceeds the specified minimum or maximum value is set to the value of
+    clip : list [float, float] : default None (Optional)
+        specifies the allowable range for the result of `function <KWTA.function>` the item in index 0 specifies the
+        minimum allowable value of the result, and the item in index 1 specifies the maximum allowable value; any
+        element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <KWTA.clip>` that it exceeds.
 
     params : Dict[param keyword: param value] : default None
@@ -378,11 +378,12 @@ class KWTA(RecurrentTransferMechanism):
         "clipped" at (that is, any positive value is replaced by) 0.  Otherwise, any offset is allowed (see
         `inhibition_only <KWTA_inhibition_only>` for additional information).
 
-    clip : Tuple[float, float]
-        determines the allowable range of the result: the first value specifies the minimum allowable value
-        and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `clip <KWTA.clip>` it exceeds.  If `function <KWTA.function>`
-        is `Logistic`, `clip <KWTA.clip>` is set by default to (0,1).
+    clip : list [float, float] : default None (Optional)
+        specifies the allowable range for the result of `function <KWTA.function>`
+
+        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
+        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
+         the value of `clip <KWTA.clip>` that it exceeds.
 
     integrator_function:
         When *integrator_mode* is set to True, the KWTA executes its `integrator_function <KWTA.integrator_function>`,
@@ -636,24 +637,18 @@ class KWTA(RecurrentTransferMechanism):
                     raise KWTAError("k-value parameter ({}) for {} must be a single number".
                                     format(threshold_param, self))
 
-    def execute(self,
-                input=None,
-                runtime_params=None,
-                ignore_execution_id=False,
-                context=None):
-        if isinstance(input, str) or (isinstance(input, (list, np.ndarray)) and isinstance(input[0], str)):
-            raise KWTAError("input ({}) to {} was a string, which is not supported for {}".
-                            format(input, self, self.__class__.__name__))
-        return super().execute(input=input, runtime_params=runtime_params,
-                               ignore_execution_id=ignore_execution_id, context=context)
-
     def _execute(self,
                 variable=None,
                 runtime_params=None,
                 context=None):
 
+        if variable.dtype.char == "U":
+            raise KWTAError(
+                "input ({0}) to {1} was a string, which is not supported for {2}".format(
+                    variable, self, self.__class__.__name__
+                )
+            )
         variable = self._update_variable(self._kwta_scale(variable, context=context))
-
         return super()._execute(variable=variable,
                        runtime_params=runtime_params,
                        context=context)

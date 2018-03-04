@@ -229,7 +229,7 @@ class ModulatoryProjection_Base(Projection_Base):
 
         template = "{} for {}[{}]"
 
-        if self.init_status in {InitStatus.INITIALIZED, InitStatus.UNSET}:
+        if self.init_status in {InitStatus.INITIALIZED, InitStatus.INITIALIZING, InitStatus.UNSET}:
             # If the name is not a default name for the class, return
             if not self.className + '-' in self.name:
                 return self.name

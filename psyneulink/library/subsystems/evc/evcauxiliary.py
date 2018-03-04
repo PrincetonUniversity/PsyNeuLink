@@ -491,8 +491,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         # Convert EVC_max_policy into 2d array with one control_signal allocation per item,
         #     assign to controller.allocation_policy, and return (where it will be assigned to controller.value).
         #     (note:  the conversion is to be consistent with use of controller.value for assignments to control_signals.value)
-        controller.allocation_policy = np.array(controller.EVC_max_policy).reshape(len(controller.EVC_max_policy), -1)
-        return controller.allocation_policy
+        allocation_policy = np.array(controller.EVC_max_policy).reshape(len(controller.EVC_max_policy), -1)
+        controller.value = allocation_policy
+        return allocation_policy
         #endregion
 
 

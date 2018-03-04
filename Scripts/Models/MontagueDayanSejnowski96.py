@@ -23,7 +23,7 @@ def model_training():
 
     action_selection = pnl.TransferMechanism(
         default_variable=np.zeros(60),
-        function=pnl.Linear(slope=1.0, intercept=1.0),
+        function=pnl.Linear(slope=1.0, intercept=0.01),
         name='Action Selection'
     )
 
@@ -73,12 +73,8 @@ def model_training():
         delta_vals[trial] = s.mechanisms[2].value
         trial += 1
 
-        print(
-            'Reward prediction weights: \n{0}'.format(
-                np.diag(action_selection.input_state.path_afferents[0].matrix)
-            )
-        )
-        print("\nAction selection value: {}".format(action_selection.value[0][0]))
+        print('Delta values: \n{0}'.format(s.mechanisms[2].value))
+        
 
     input_list = {
         sample: samples
@@ -240,8 +236,6 @@ def model_training_response_extinction():
     # stop delivering reward after trial 70
     for i in range(71, 150):
         targets[i][reward_delivery] = 0
-
-    print("targets = {}".format(targets))
 
     pnl.MappingProjection(
         sender=sample,

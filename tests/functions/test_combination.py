@@ -12,9 +12,12 @@ class TestReduce:
         assert np.allclose(R_function.execute([1, 2, 3, 4, 5]), [15.0])
         assert np.allclose(R_function.execute([[1, 2, 3, 4, 5]]), [15.0])
         assert np.allclose(R_function.execute([[[1, 2, 3, 4, 5]]]), [1, 2, 3, 4, 5])
+        # assert np.allclose(R_function.execute([[[1, 2, 3, 4, 5]]]), [15.0])
 
         assert np.allclose(R_mechanism.execute([1, 2, 3, 4, 5]), [[15.0]])
         assert np.allclose(R_mechanism.execute([[1, 2, 3, 4, 5]]), [[15.0]])
+        assert np.allclose(R_mechanism.execute([1, 2, 3, 4, 5]), [15.0])
+        # assert np.allclose(R_mechanism.execute([[1, 2, 3, 4, 5]]), [15.0])
 
     def test_column_vector(self):
         R_function = pnl.Reduce(operation=pnl.SUM)
@@ -23,9 +26,11 @@ class TestReduce:
                                               name="R_mechanism")
 
         assert np.allclose(R_function.execute([[1], [2], [3], [4], [5]]), [1, 2, 3, 4, 5])
+        # assert np.allclose(R_function.execute([[1], [2], [3], [4], [5]]), [15.0])
         assert np.allclose(R_function.execute([[[1], [2], [3], [4], [5]]]), [15.0])
 
         assert np.allclose(R_mechanism.execute([[1], [2], [3], [4], [5]]), [1, 2, 3, 4, 5])
+        # assert np.allclose(R_mechanism.execute([[1], [2], [3], [4], [5]]), [15.0])
 
     def test_matrix(self):
         R_function = pnl.Reduce(operation=pnl.SUM)

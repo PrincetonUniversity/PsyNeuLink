@@ -185,10 +185,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'IntegratorMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        # Sets template for variable (input)
-        variable = [[0]]
-
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
@@ -210,11 +206,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
-        if default_variable is None and size is None:
-            default_variable = self.ClassDefaults.variable
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        # self.ClassDefaults.variable = default_variable or [[0]]
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 
@@ -223,7 +215,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         # self.size = size
 
-        super(IntegratorMechanism, self).__init__(variable=default_variable,
+        super(IntegratorMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   input_states=input_states,
                                                   params=params,

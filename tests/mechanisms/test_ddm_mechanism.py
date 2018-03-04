@@ -375,7 +375,7 @@ def test_DDM_input_list_len_2():
             ),
         )
         float(T.execute(stim)[0])
-    assert "must have only a single numeric item" in str(error_text.value)
+    assert "single numeric item" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -616,7 +616,7 @@ def test_DDM_size_too_large():
                 time_step_size=1.0
             ),
         )
-    assert "must have only a single numeric item" in str(error_text.value)
+    assert "single numeric item" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
 # TEST 4

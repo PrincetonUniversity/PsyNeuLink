@@ -47,7 +47,7 @@ An AutoAssociativeLearningMechanism is identical to a LearningMechanism in all r
     attribute that identifies the source of the activity vector used by the Mechanism's `function
     <AutoAssociativeLearningProjection.function>`.
 
-  * it's `function <AutoAssociativeLearningMechanism.function>` takes as its `variable <Function_Base.variable>`
+  * its `function <AutoAssociativeLearningMechanism.function>` takes as its `variable <Function_Base.variable>`
     a list or 1d np.array of numeric entries, corresponding in length to the AutoAssociativeLearningMechanism's
     *ACTIVATION_INPUT* InputState; and it returns a `learning_signal <LearningMechanism.learning_signal>`
     (a weight change matrix assigned to the Mechanism's *LEARNING_SIGNAL* OutputState), but not necessarily an
@@ -280,8 +280,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    # ClassDefaults.variable = None
-
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         CONTROL_PROJECTIONS: None,
@@ -292,7 +290,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 variable:tc.any(list, np.ndarray),
+                 default_variable:tc.any(list, np.ndarray),
                  size=None,
                  function:is_function_type=Hebbian,
                  learning_signals:tc.optional(list) = None,
@@ -317,12 +315,13 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # # Flag for deferred initialization
         # self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
-        self._learning_rate = learning_rate
+        # self._learning_rate = learning_rate
 
-        super().__init__(variable=variable,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          function=function,
                          modulation=modulation,
+                         learning_rate=learning_rate,
                          params=params,
                          name=name,
                          prefs=prefs,

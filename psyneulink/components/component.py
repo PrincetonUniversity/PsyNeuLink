@@ -371,7 +371,7 @@ from psyneulink.globals.registry import register_category
 # from psyneulink.globals.log import Log, LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength, object_has_single_value
 
 import psyneulink.llvm as pnlvm
 from llvmlite import ir
@@ -848,7 +848,11 @@ class Component(object):
         if param_defaults is not None:
             defaults.update(param_defaults)
 
-        if default_variable is not None:
+        v = self._handle_default_variable(default_variable, size)
+        if v is None:
+            default_variable = defaults[VARIABLE]
+        else:
+            default_variable = v
             defaults[VARIABLE] = default_variable
 
         self.instance_defaults = self.InstanceDefaults(**defaults)
@@ -890,18 +894,6 @@ class Component(object):
         # Used by run to store return value of execute
         self.results = []
 
-        # ENFORCE REQUIRED CLASS DEFAULTS
-
-        # All subclasses must implement self.ClassDefaults.variable
-        # Do this here, as _validate_variable might be overridden by subclass
-        try:
-            if self.ClassDefaults.variable is NotImplemented:
-                raise ComponentError("self.ClassDefaults.variable for {} must be assigned a value or \'None\'".
-                                     format(self.componentName))
-        except AttributeError:
-            raise ComponentError("self.ClassDefaults.variable must be defined for {} or its base class".
-                                format(self.componentName))
-
         # CHECK FOR REQUIRED PARAMS
 
         # All subclasses must implement, in their paramClassDefaults, params of types specified in
@@ -936,9 +928,6 @@ class Component(object):
                                         format(required_param_value.__name__, required_param, self.name, type_names))
             except TypeError:
                 pass
-
-        # If 'default_variable' was not specified, _handle_size() tries to infer 'default_variable' based on 'size'
-        default_variable = self._handle_size(size, default_variable)
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
@@ -1028,6 +1017,40 @@ class Component(object):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # Handlers
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def _handle_default_variable(self, default_variable=None, size=None):
+        '''
+            Finds whether default_variable can be determined using **default_variable** and **size**
+            arguments.
+
+            Returns
+            -------
+                a default variable if possible
+                None otherwise
+        '''
+        if self._default_variable_handled:
+            return default_variable
+
+        default_variable = self._parse_arg_variable(default_variable)
+
+        if default_variable is None:
+            default_variable = self._handle_size(size, default_variable)
+
+            if default_variable is None or default_variable is NotImplemented:
+                self._default_variable_handled = True
+                return None
+            else:
+                self._variable_not_specified = False
+        else:
+            self._variable_not_specified = False
+
+        self._default_variable_handled = True
+
+        return convert_to_np_array(default_variable, dimension=1)
+
     # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
     # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
     # through an override, when Composition is done. For now, only State.py overwrites _handle_size().
@@ -1041,7 +1064,8 @@ class Component(object):
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
         if size is not NotImplemented:
-
+            self._variable_not_specified = False
+            # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
             #     variable = self.ClassDefaults.variable
             # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
@@ -1246,7 +1270,7 @@ class Component(object):
 
         def _convert_function_to_class(function, source):
             from psyneulink.components.functions.function import Function
-            from inspect import isfunction
+            from inspect import isfunction, ismethod
             fct_cls = None
             fct_params = None
             # It is a PsyNeuLink Function class
@@ -1259,7 +1283,11 @@ class Component(object):
                 fct_cls = function.__class__
                 fct_params = function.user_params.copy()
             # It is a generic function
-            elif isfunction(function):
+            # # MODIFIED 2/26/18 OLD:
+            # elif isfunction(function):
+            # MODIFIED 2/26/18 NEW:
+            elif (isfunction(function) or ismethod(function)):
+            # MODIFIED 2/26/18 END
                 # Assign to paramClassDefaults as is (i.e., don't convert to class), since class is generic
                 # (_instantiate_function also tests for this and leaves it as is)
                 fct_cls = function
@@ -1278,6 +1306,11 @@ class Component(object):
 
             arg_name = parse_arg(arg)
 
+            # parse the argument either by specialized parser or generic
+            try:
+                kwargs[arg_name] = getattr(self, '_parse_arg_' + arg_name)(kwargs[arg_name])
+            except AttributeError:
+                kwargs[arg_name] = self._parse_arg_generic(kwargs[arg_name])
 
             # The params arg is never a default (nor is anything in it)
             if arg_name is PARAMS or arg_name is VARIABLE:
@@ -1381,7 +1414,11 @@ class Component(object):
                                                                 function.user_params_for_instantiation[param_name])
 
                     # It is a generic function
-                    elif inspect.isfunction(function):
+                    # # MODIFIED 2/26/18 OLD:
+                    # elif inspect.isfunction(function):
+                    # MODIFIED 2/26/18 NEW:
+                    elif (inspect.isfunction(function) or inspect.ismethod(function)):
+                    # MODIFIED 2/26/18 END
                         # Assign as is (i.e., don't convert to class), since class is generic
                         # (_instantiate_function also tests for this and leaves it as is)
                         params[FUNCTION] = function
@@ -1757,11 +1794,6 @@ class Component(object):
         if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
             # if variable has been passed then validate and, if OK, assign as self.instance_defaults.variable
             variable = self._update_variable(self._validate_variable(variable, context=context))
-            # if self.instance_defaults.variable is None:
-            if variable is None:
-                self.instance_defaults.variable = self.ClassDefaults.variable
-            else:
-                self.instance_defaults.variable = variable
 
         # If no params were passed, then done
         if request_set is None and target_set is None and default_set is None:
@@ -2060,6 +2092,49 @@ class Component(object):
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # Parsing methods
+    # ------------------------------------------------------------------------------------------------------------------
+    # ---------------------------------------------------------
+    # Argument parsers
+    # ---------------------------------------------------------
+
+    def _parse_arg_generic(self, arg_val):
+        """
+            Argument parser for any argument that does not have a specialized parser
+        """
+        return arg_val
+
+    def _parse_arg_variable(self, variable):
+        """
+            Transforms **variable** into a form that Components expect. Used to allow
+            users to pass input in convenient forms, like a single float when a list
+            for input states is expected
+
+            Returns
+            -------
+            The transformed **input**
+        """
+        if variable is None:
+            return variable
+
+        variable = np.atleast_1d(variable)
+
+        try:
+            # if variable has a single int/float/etc. within some number of dimensions, and the
+            # instance default variable expects a single value within another number of dimensions,
+            # convert variable to match instance default
+            if object_has_single_value(self.instance_defaults.variable) and object_has_single_value(variable):
+                variable.resize(self.instance_defaults.variable.shape)
+        except AttributeError:
+            pass
+
+        return convert_all_elements_to_np_array(variable)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Validation methods
+    # ------------------------------------------------------------------------------------------------------------------
+
     def _validate_variable(self, variable, context=None):
         """Validate variable and return validated variable
 
@@ -2088,21 +2163,11 @@ class Component(object):
             raise ComponentError("Assignment of class ({}) as a variable (for {}) is not allowed".
                                  format(variable.__name__, self.name))
 
-        pre_converted_variable_class_default = self.ClassDefaults.variable
-
-        # FIX: SAYS "list of np.ndarrays" BELOW, WHICH WOULD BE A 2D ARRAY, BUT CONVERSION BELOW ONLY INDUCES 1D ARRAY
-        # FIX: NOTE:  VARIABLE (BELOW) IS CONVERTED TO ONLY 1D ARRAY
-        # Convert self.ClassDefaults.variable to list of np.ndarrays
-        self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 1)
-        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 1)
-
         # If variable is not specified, then:
         #    - assign to (??now np-converted version of) self.ClassDefaults.variable
         #    - mark as not having been specified
         #    - return
-        self._variable_not_specified = False
         if variable is None:
-            self._variable_not_specified = True
             try:
                 return self.instance_defaults.variable
             except AttributeError:
@@ -2126,7 +2191,7 @@ class Component(object):
         if self.variableClassDefault_locked:
             if not variable.dtype is self.ClassDefaults.variable.dtype:
                 message = "Variable for {0} (in {1}) must be a {2}".\
-                    format(self.componentName, context, pre_converted_variable_class_default.__class__.__name__)
+                    format(self.componentName, context, self.ClassDefaults.variable.__class__.__name__)
                 raise ComponentError(message)
 
         return variable
@@ -2678,7 +2743,15 @@ class Component(object):
         #    assign function_object, function_params dict, and function's parameters from any ParameterStates
         from psyneulink.components.functions.function import Function
         if not isinstance(self, Function):
-            self.function_object = self.function.__self__
+            # # MODIFIED 2/24/18 OLD:
+            # self.function_object = self.function.__self__
+            # MODIFIED 2/24/18 NEW:
+            if isinstance(self.function, Function):
+                self.function_object = self.function
+                self.function = self.function_object.function
+            else:
+                self.function_object = self.function.__self__
+            # MODIFIED 2/24/18 END
             if not self.function_object.owner:
                 self.function_object.owner = self
             elif self.function_object.owner != self:
@@ -2730,8 +2803,11 @@ class Component(object):
     def initialize(self):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def execute(self, input=None, params=None, context=None):
-        raise ComponentError("{} class must implement execute".format(self.__class__.__name__))
+    def execute(self, variable=None, runtime_params=None, context=None):
+        return self._execute(variable=variable, runtime_params=runtime_params, context=context)
+
+    def _execute(self, variable=None, runtime_params=None, context=None):
+        return self.function(variable=variable, params=runtime_params, context=context)
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -2743,16 +2819,12 @@ class Component(object):
             Used to mirror assignments to local variable in an attribute
             Knowingly not threadsafe
         '''
-        self.variable = value
+        self._variable = value
         return value
 
-    # @property
-    # def variable(self):
-    #     return self._variable
-    #
-    # @variable.setter
-    # def variable(self, value):
-    #     self._variable = value
+    @property
+    def variable(self):
+        return self._variable
 
     def _change_function(self, to_function):
         pass
@@ -3001,6 +3073,31 @@ class Component(object):
             except AttributeError:
                 owner = None
 
+    @property
+    def _variable_not_specified(self):
+        try:
+            return self.__variable_not_specified
+        except AttributeError:
+            self.__variable_not_specified = True
+            return self.__variable_not_specified
+
+    @_variable_not_specified.setter
+    def _variable_not_specified(self, value):
+        self.__variable_not_specified = value
+
+    @property
+    def _default_variable_handled(self):
+        try:
+            return self.__default_variable_handled
+        except AttributeError:
+            self.__default_variable_handled = False
+            return self.__default_variable_handled
+
+    @_default_variable_handled.setter
+    def _default_variable_handled(self, value):
+        self.__default_variable_handled = value
+
+
 COMPONENT_BASE_CLASS = Component
 
 def make_property(name):
@@ -3019,7 +3116,8 @@ def make_property(name):
             setattr(self, backing_field, val)
 
         # Update user_params dict with new value
-        self.user_params.__additem__(name, val)
+        # KAM COMMENTED OUT 3/2/18 -- we do not want to update user_params with the base value, only param state value
+        # self.user_params.__additem__(name, val)
 
         # If Component is a Function and has an owner, update function_params dict for owner
         #    also, get parameter_state_owner if one exists
@@ -3030,7 +3128,9 @@ def make_property(name):
             # "function_params" has no attribute __additem__ (this happens when it's a dict rather than a
             # ReadOnlyOrderedDict)) it may be caused by function_params not being included in paramInstanceDefaults,
             # which may be caused by _assign_args_to_param_dicts() bugs. LMK, if you're getting bugs here like that.
-            self.owner.function_params.__additem__(name, val)
+            # KAM COMMENTED OUT 3/2/18 --
+            # we do not want to update function_params with the base value, only param state value
+            # self.owner.function_params.__additem__(name, val)
         else:
             param_state_owner = self
 

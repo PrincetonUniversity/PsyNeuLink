@@ -515,3 +515,23 @@ class TestKWTAAverageBased:
         kwta_input = {K: [[1, 2, 3, 4]]}
         s.run(inputs=kwta_input)
         assert np.allclose(K.value, [[-1.4, -0.3999999999999999, 0.6000000000000001, 1.6]])
+
+# class TestClip:
+#     def test_clip_float(self):
+#         K = KWTA(clip=[-2.0, 2.0],
+#                  integrator_mode=False)
+#         assert np.allclose(K.execute(3.0), 2.0)
+#         assert np.allclose(K.execute(-3.0), -2.0)
+#
+#     def test_clip_array(self):
+#         K = KWTA(default_variable=[[0.0, 0.0, 0.0]],
+#                  clip=[-2.0, 2.0],
+#                  integrator_mode=False)
+#         assert np.allclose(K.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
+#
+#     def test_clip_2d_array(self):
+#         K = KWTA(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+#                  clip=[-2.0, 2.0],
+#                  integrator_mode=False)
+#         assert np.allclose(K.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
+#                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])

@@ -323,8 +323,8 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
     * `value <State_Base.value>`:  for an `InputState` this is the aggregated value of the `PathwayProjections` it
       receives;  for a `ParameterState`, this represents the value of the parameter that will be used by the State's
       owner or its `function <Component.function>`; for an `OutputState`, it is the item of the  owner Mechanism's
-      `value <Mechanisms.value>` to which the OutputState is assigned, possibly modified by its `calculate
-      <OutputState_Calculate>` attribute and/or a `GatingSignal`, and used as the `value <Projection_Base.value>` of
+      `value <Mechanisms.value>` to which the OutputState is assigned, possibly modified by its `assign
+      <OutputState_Assign>` attribute and/or a `GatingSignal`, and used as the `value <Projection_Base.value>` of
       the Projections listed in its `efferents <OutputState.path_efferents>` attribute.
 
 .. _State_Modulation:
@@ -729,8 +729,9 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
-from psyneulink.components.functions.function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
+from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, \
+    function_type, method_type
+from psyneulink.components.functions.function import Function, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXECUTING, EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
@@ -763,6 +764,7 @@ state_type_keywords = {STATE_TYPE}
 STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 STATE_SPEC = 'state_spec'
 ADD_STATES = 'ADD_STATES'
+REMOVE_STATES = 'REMOVE_STATES'
 
 def _is_state_class(spec):
     if inspect.isclass(spec) and issubclass(spec, State):
@@ -879,7 +881,7 @@ class State_Base(State):
             - set_value(value) -
                 validates and assigns value, and updates observers
                 returns None
-            - update_state(context) -
+            - update(context) -
                 updates self.value by combining all projections and using them to compute new value
                 return None
 
@@ -985,9 +987,6 @@ class State_Base(State):
     paramsType = None
 
     stateAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
-
-    class ClassDefaults(State.ClassDefaults):
-        variable = [0]
 
     registry = StateRegistry
 
@@ -1257,15 +1256,9 @@ class State_Base(State):
                                        self.owner.name))
 
     def _instantiate_function(self, context=None):
-        """Insure that output of function (self.value) is compatible with its input (self.instance_defaults.variable)
-
-        This constraint reflects the role of State functions:
-            they simply update the value of the State;
-            accordingly, their variable and value must be compatible
-        """
 
         var_is_matrix = False
-        # If variable is a matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
+        # If variable is a 2d array or matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
         #     it needs to be embedded in a list so that it is properly handled by LinearCombination
         #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
         # Notes:
@@ -1284,7 +1277,11 @@ class State_Base(State):
                 isinstance(self.instance_defaults.variable, np.matrix)
                 or (
                     isinstance(self.instance_defaults.variable, np.ndarray)
-                    and self.instance_defaults.variable.ndim >= 2
+                    # # MODIFIED 2/21/18 OLD:
+                    # and len(self.instance_defaults.variable) < 2
+                    # MODIFIED 2/21/18 NEW:
+                    and self.instance_defaults.variable.ndim >=2
+                    # MODIFIED 2/21/18 END
                 )
             )
         ):
@@ -1296,24 +1293,6 @@ class State_Base(State):
         # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
         if var_is_matrix:
             self.instance_defaults.variable = self.instance_defaults.variable[0]
-
-        # Ensure that output of the function (self.value) is compatible with (same format as) its input (self.instance_defaults.variable)
-        #     (this enforces constraint that State functions should only combine values from multiple projections,
-        #     but not transform them in any other way;  so the format of its value should be the same as its variable).
-        if not iscompatible(self.instance_defaults.variable, self.value):
-            raise StateError(
-                "Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
-                " must be the same format as its input ({6}: {7})".format(
-                    type(self.value).__name__,
-                    self.value,
-                    self.function.__self__.componentName,
-                    self.name,
-                    self.__class__.__name__,
-                    self.owner.name,
-                    self.instance_defaults.variable.__class__.__name__,
-                    self.instance_defaults.variable
-                )
-            )
 
     # FIX: PROJECTION_REFACTOR
     #      - MOVE THESE TO Projection, WITH self (State) AS ADDED ARG
@@ -1490,7 +1469,7 @@ class State_Base(State):
 
                 # Validate value:
                 #    - check that output of projection's function (projection_spec.value) is compatible with
-                #        self.variable;  if it is not, raise exception:
+                #        self.able;  if it is not, raise exception:
                 #        the buck stops here; can't modify projection's function to accommodate the State,
                 #        or there would be an unmanageable regress of reassigning projections,
                 #        requiring reassignment or modification of sender OutputStates, etc.
@@ -1750,56 +1729,54 @@ class State_Base(State):
 
             # VALIDATE (if initialized or being initialized (UNSET))
 
-            if projection.init_status in {InitStatus.INITIALIZED, InitStatus.UNSET}:
+            if projection.init_status in {InitStatus.INITIALIZED, InitStatus.INITIALIZING, InitStatus.UNSET}:
 
                 # If still being initialized, then assign sender and receiver as necessary
-                if projection.init_status is InitStatus.UNSET:
+                if projection.init_status in {InitStatus.INITIALIZING, InitStatus.UNSET}:
                     if not isinstance(projection.sender, State):
                         projection.sender = self
-                        projection.instance_defaults.variable = self.value
 
                     if not isinstance(projection.receiver, State):
                         projection.receiver = receiver_state
 
-                    # FIX: 10/3/17 -- ??IS THE FOLLOWING LEGIT? (IT IS DONE TO PASS TESTS BELOW)
-                    # FIX:            [HASN'T BEEN ASSIGNED IN __init__ YET BECAUSE CALL CAN BE FROM
-                    # FIX:            LearningProjection._instantiate_sender() WHICH IS ITSELF CALLED
-                    # FIX:            FROM _instantiate_attributes_before_function
-                    projection.value = receiver.variable
+                try:
+                    # Validate variable
+                    #    - check that input to Projection is compatible with self.value
+                    if not iscompatible(self.value, projection.instance_defaults.variable):
+                        raise StateError("Input to {} ({}) is not compatible with the value ({}) of "
+                                         "the State from which it is supposed to project ({})".
+                                         format(projection.name, projection.variable, self.value, self.name))
 
-                # Validate variable
-                #    - check that input to Projection is compatible with self.value
-                if not iscompatible(self.value, projection.instance_defaults.variable):
-                    raise StateError("Input to {} ({}) is not compatible with the value ({}) of "
-                                     "the State from which it is supposed to project ({})".
-                                     format(projection.name, projection.variable, self.value, self.name))
+                    # Validate value:
+                    #    - check that output of projection's function (projection_spec.value) is compatible with
+                    #        variable of the State to which it projects;  if it is not, raise exception:
+                    #        the buck stops here; can't modify projection's function to accommodate the State,
+                    #        or there would be an unmanageable regress of reassigning projections,
+                    #        requiring reassignment or modification of sender OutputStates, etc.
 
-                # Validate value:
-                #    - check that output of projection's function (projection_spec.value) is compatible with
-                #        variable of the State to which it projects;  if it is not, raise exception:
-                #        the buck stops here; can't modify projection's function to accommodate the State,
-                #        or there would be an unmanageable regress of reassigning projections,
-                #        requiring reassignment or modification of sender OutputStates, etc.
+                    # PathwayProjection:
+                    #    - check that projection's value is compatible with the receiver's variable
+                    if isinstance(projection, PathwayProjection_Base):
+                        if not iscompatible(projection.value, receiver.instance_defaults.variable):
+                            raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
+                                             "the State to which it is supposed to project ({}).".
+                                             format(projection.name, projection.value,
+                                                    receiver.instance_defaults.variable, receiver.name, ))
 
-                # PathwayProjection:
-                #    - check that projection's value is compatible with the receiver's variable
-                if isinstance(projection, PathwayProjection_Base):
-                    if not iscompatible(projection.value, receiver.instance_defaults.variable):
-                        raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
-                                         "the State to which it is supposed to project ({}).".
-                                         format(projection.name, projection.value,
-                                                receiver.instance_defaults.variable, receiver.name, ))
-
-                # ModualatoryProjection:
-                #    - check that projection's value is compatible with value of the function param being modulated
-                elif isinstance(projection, ModulatoryProjection_Base):
-                    function_param_value = _get_modulated_param(receiver, projection).function_param_val
-                    # Match the projection's value with the value of the function parameter
-                    mod_proj_spec_value = type_match(projection.value, type(function_param_value))
-                    if (function_param_value is not None
-                        and not iscompatible(function_param_value, mod_proj_spec_value)):
-                        raise StateError("Output of {} ({}) is not compatible with the value of {} ({}).".
-                                         format(projection.name,mod_proj_spec_value,receiver.name,function_param_value))
+                    # ModualatoryProjection:
+                    #    - check that projection's value is compatible with value of the function param being modulated
+                    elif isinstance(projection, ModulatoryProjection_Base):
+                        function_param_value = _get_modulated_param(receiver, projection).function_param_val
+                        # Match the projection's value with the value of the function parameter
+                        mod_proj_spec_value = type_match(projection.value, type(function_param_value))
+                        if (function_param_value is not None
+                            and not iscompatible(function_param_value, mod_proj_spec_value)):
+                            raise StateError("Output of {} ({}) is not compatible with the value of {} ({}).".
+                                             format(projection.name,mod_proj_spec_value,receiver.name,function_param_value))
+                except AttributeError:
+                    # sometimes the above attributes like variable and value don't even exist when this is called
+                    # and additionally are set later to the values they're being validated against here
+                    pass
 
                 projection._assign_default_projection_name(state=self,
                                                            sender_name=self.name,
@@ -1945,10 +1922,9 @@ class State_Base(State):
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection) and not LEARNING in context:
-                # projection_value = projection.value
                 projection_value = projection.value * 0.0
             else:
-                projection_value = projection.execute(params=projection_params,
+                projection_value = projection.execute(runtime_params=projection_params,
                                                       context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
@@ -1956,7 +1932,7 @@ class State_Base(State):
                 continue
 
             if isinstance(projection, PathwayProjection_Base):
-                # Add projection_value to list of TransmissiveProjection values (for aggregation below)
+                # Add projection_value to list of PathwayProjection values (for aggregation below)
                 self._path_proj_values.append(projection_value)
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
@@ -2011,10 +1987,7 @@ class State_Base(State):
             function_params = self.stateParams[FUNCTION_PARAMS]
         except (KeyError, TypeError):
             function_params = None
-        self.value = self._execute(function_params=function_params, context=context)
-
-    def execute(self, input=None, params=None, context=None):
-        return self.function(variable=input, params=params, context=context)
+        self.value = self._execute(runtime_params=function_params, context=context)
 
     @property
     def owner(self):
@@ -2038,6 +2011,15 @@ class State_Base(State):
 
     def _assign_default_state_name(self, context=None):
         return False
+
+    @staticmethod
+    def _get_state_function_value(owner, function, variable):
+        """Execute the function of a State and return its value
+
+        This is a stub, that a State subclass can override to treat execution of its function in a State-specific manner
+        (e.g., InputState must sometimes embed its variable in a list-- see InputState._get_state_function_value).
+        """
+        return function.execute(variable)
 
 
 def _instantiate_state_list(owner,
@@ -2289,7 +2271,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         reference_value = reference_value if reference_value is not None else state.reference_value
         if not iscompatible(state.value, reference_value):
             raise StateError("{}'s value attribute ({}) is incompatible with the {} ({}) of its owner ({})".
-                             format(state.name, state.value, REFERENCE_VALUE, state.reference_value, owner.name))
+                             format(state.name, state.value, REFERENCE_VALUE, reference_value, owner.name))
 
         # State has already been assigned to an owner
         if state.owner is not None and not state.owner is owner:
@@ -2304,9 +2286,14 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     state_spec_dict.pop(VALUE, None)
 
-    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
+    # FIX: 2/25/18  GET REFERENCE_VALUE FROM REFERENCE_DICT?
+    # Get reference_value
     if state_spec_dict[REFERENCE_VALUE] is None:
-        state_spec_dict[REFERENCE_VALUE] = state_spec_dict[VARIABLE]
+        state_spec_dict[REFERENCE_VALUE] = reference_value
+        if reference_value is None:
+            state_spec_dict[REFERENCE_VALUE] = state_spec_dict[VARIABLE]
+
+    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(state_spec_dict[REFERENCE_VALUE],1)
 
     # INSTANTIATE STATE:
@@ -2496,7 +2483,14 @@ def _parse_state_spec(state_type=None,
         reference_value = convert_to_np_array(reference_value,1)
 
     # Validate that state_type is a State class
-    if not inspect.isclass(state_type) or not issubclass(state_type, State):
+    if isinstance(state_type, str):
+        try:
+            state_type = StateRegistry[state_type].subclass
+        except KeyError:
+            raise StateError("{} specified as a string (\'{}\') must be the name of a sublcass of {}".
+                             format(STATE_TYPE, state_type,State.__name__))
+        state_dict[STATE_TYPE] = state_type
+    elif not inspect.isclass(state_type) or not issubclass(state_type, State):
         raise StateError("\'state_type\' arg ({}) must be a sublcass of {}".format(state_type,
                                                                                    State.__name__))
     state_type_name = state_type.__name__
@@ -2811,21 +2805,58 @@ def _parse_state_spec(state_type=None,
     # If variable is none, use value:
     if state_dict[VARIABLE] is None:
         if state_dict[VALUE] is not None:
+            # TODO: be careful here - if the state spec has a function that
+            # changes the shape of its variable, this will be incorrect
             state_dict[VARIABLE] = state_dict[VALUE]
         else:
             state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
-    elif state_dict[REFERENCE_VALUE] is not None:
-        if not iscompatible(state_dict[VARIABLE], state_dict[REFERENCE_VALUE]):
-            if context is not None and context in '_parse_arg_input_states':
-                from psyneulink.components.mechanisms.mechanism import MechanismError
-                raise MechanismError('default variable determined from the specified input_states spec ({0}) '
-                                     'is not compatible with the specified default variable ({1})'.
-                                     format(state_dict[VARIABLE], state_dict[REFERENCE_VALUE]))
-            else:
-                name = state_dict[NAME] or state_type.__name__
-                raise StateError("Specification of {} for {} of {} ({}) is not compatible with its {} ({})".
-                                 format(VARIABLE, name, owner.name,
-                                        state_dict[VARIABLE], REFERENCE_VALUE, state_dict[REFERENCE_VALUE]))
+
+    # get the State's value from the spec function if it exists,
+    # otherwise we can assume there is a default function that does not
+    # affect the shape, so it matches variable
+    # FIX: JDC 2/21/18 PROBLEM IS THAT, IF IT IS AN InputState, THEN EITHER update MUST BE CALLED
+    # FIX:    OR VARIABLE MUST BE WRAPPED IN A LIST, ELSE LINEAR COMB MAY TREAT A 2D ARRAY
+    # FIX:    AS TWO ITEMS TO BE COMBINED RATHER THAN AS A 2D ARRAY
+    try:
+        spec_function = state_dict[PARAMS][FUNCTION]
+        # if isinstance(spec_function, Function):
+        if isinstance(spec_function, (Function, function_type, method_type)):
+            # # MODIFIED 2/21/18 OLD [KM]:
+            # spec_function_value = spec_function.execute(state_dict[VARIABLE])
+            # MODIFIED 2/21/18 NEW [JDC]:
+            spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
+            # MODIFIED 2/21/18 END
+        elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
+            try:
+                spec_function = spec_function(**state_dict[PARAMS][FUNCTION_PARAMS])
+            except (KeyError, TypeError):
+                spec_function = spec_function()
+            # # MODIFIED 2/21/18 OLD [KM]:
+            # spec_function_value = spec_function.execute(state_dict[VARIABLE])
+            # MODIFIED 2/21/18 NEW [JDC]:
+            spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
+            # MODIFIED 2/21/18 END
+        else:
+            raise StateError('state_spec value for FUNCTION ({0}) must be a function, method, '
+                             'Function class or instance of one'.
+                             format(spec_function))
+    except (KeyError, TypeError):
+        spec_function_value = state_dict[VARIABLE]
+
+    # Assign value based on variable if not specified
+    if state_dict[VALUE] is None:
+        state_dict[VALUE] = spec_function_value
+    # Otherwise, make sure value returned by spec function is same as one specified for State's value
+    else:
+        if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
+            raise StateError(
+                'state_spec value specified ({0}) is not compatible with the value '
+                'computed ({1}) from the state_spec function ({2})'.format(
+                    state_dict[VALUE],
+                    spec_function_value,
+                    spec_function
+                )
+            )
 
     return state_dict
 

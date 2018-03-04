@@ -231,13 +231,11 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import Linear, LinearCombination, _is_modulation_param
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.states.state import State_Base, _parse_state_type, _get_state_for_socket
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUENTIAL
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
-from psyneulink.globals.keywords import \
-    COMMAND_LINE, GATING_PROJECTION, GATING_SIGNAL, GATE, RECEIVER, SUM, PROJECTION_TYPE, \
-    INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS
+from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUENTIAL
+from psyneulink.components.states.state import State_Base, _get_state_for_socket, _parse_state_type
+from psyneulink.globals.keywords import COMMAND_LINE, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -262,7 +260,7 @@ class GatingSignal(ModulatorySignal):
     GatingSignal(                                   \
         owner,                                      \
         index=PRIMARY                               \
-        function=LinearCombination(operation=SUM),  \
+        function=Linear(),                          \
         modulation=ModulationParam.MULTIPLICATIVE,  \
         projections=None,                           \
         params=None,                                \
@@ -284,7 +282,7 @@ class GatingSignal(ModulatorySignal):
         Class attributes:
             + componentType (str) = GATING_SIGNAL
             + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination)
+                + FUNCTION (Linear)
                 + FUNCTION_PARAMS (Modulation.MULTIPLY)
 
         Class methods:
@@ -418,8 +416,8 @@ class GatingSignal(ModulatorySignal):
                  variable=None,
                  size=None,
                  index=None,
-                 calculate=Linear,
-                 function=LinearCombination(operation=SUM),
+                 assign=None,
+                 function=Linear(),
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
                  params=None,
@@ -432,7 +430,7 @@ class GatingSignal(ModulatorySignal):
         else:
             context = self
 
-        # Note: calculate is not currently used by GatingSignal;
+        # Note: assign is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.
         if index is None and owner is not None:
             if len(owner.gating_policy)==1:
@@ -456,7 +454,7 @@ class GatingSignal(ModulatorySignal):
                          size=size,
                          modulation=modulation,
                          index=index,
-                         calculate=calculate,
+                         assign=assign,
                          projections=projections,
                          params=params,
                          name=name,
@@ -465,19 +463,19 @@ class GatingSignal(ModulatorySignal):
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
             """Get connections specified in a ParameterState specification tuple
-    
+
             Tuple specification can be:
                 (State name, Mechanism)
             [TBI:] (Mechanism, State name, weight, exponent, projection_specs)
 
             Returns params dict with CONNECTIONS entries if any of these was specified.
-    
+
             """
             from psyneulink.components.projections.projection import _parse_connection_specs
-    
+
             params_dict = {}
             state_spec = state_specific_spec
-    
+
             if isinstance(state_specific_spec, dict):
                 return None, state_specific_spec
 
@@ -489,15 +487,12 @@ class GatingSignal(ModulatorySignal):
             elif state_specific_spec is not None:
                 raise GatingSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
                                       format(self.__class__.__name__, state_specific_spec))
-    
+
             if params_dict[PROJECTIONS] is None:
                 raise GatingSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
                                          "with specification of {}, {} or GatingProjection(s) to it".
                                             format(GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, owner.name))
             return state_spec, params_dict
-
-    def _execute(self, function_params, context):
-        return float(super()._execute(function_params=function_params, context=context))
 
     def _get_primary_state(self, mechanism):
         return mechanism.input_state

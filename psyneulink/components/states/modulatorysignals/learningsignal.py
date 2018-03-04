@@ -141,7 +141,7 @@ LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` as its
 `function <LearningSignal.function>` can be assigned another `TransferFunction`, or any other function that takes a
 scalar, ndarray or matrix and returns a similar value.
 
-.. note:: The `index <OutputState.OutputState.index>` and `calculate <OutputState.OutputState.calculate>`
+.. note:: The `index <OutputState.OutputState.index>` and `assign <OutputState.OutputState.assign>`
         attributes of a LearningSignal are automatically assigned and should not be modified.
 
 
@@ -199,7 +199,7 @@ class LearningSignal(ModulatorySignal):
     """
     LearningSignal(                                      \
         owner,                                           \
-        function=LinearCombination(operation=SUM),       \
+        function=Linear(),                               \
         modulation=ModulationParam.MULTIPLICATIVE        \
         learning_rate=None                               \
         params=None,                                     \
@@ -222,7 +222,7 @@ class LearningSignal(ModulatorySignal):
         Class attributes:
             + componentType (str) = LEARNING_SIGNAL
             + paramClassDefaults (dict)
-                + FUNCTION (LinearCombination)
+                + FUNCTION (Linear)
                 + FUNCTION_PARAMS   (Operation.PRODUCT)
 
         Class methods:
@@ -360,8 +360,8 @@ class LearningSignal(ModulatorySignal):
                  variable=None,
                  size=None,
                  index=PRIMARY,
-                 calculate=Linear,
-                 function=LinearCombination(operation=SUM),
+                 assign=None,
+                 function=Linear(),
                  learning_rate: tc.optional(parameter_spec) = None,
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
@@ -392,7 +392,7 @@ class LearningSignal(ModulatorySignal):
                          size=size,
                          modulation=modulation,
                          index=index,
-                         calculate=calculate,
+                         assign=None,
                          projections=projections,
                          params=params,
                          name=name,

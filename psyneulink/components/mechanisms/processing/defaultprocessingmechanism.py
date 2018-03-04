@@ -12,6 +12,7 @@
 **[DOCUMENTATION STILL UNDER CONSTRUCTION]**
 
 """
+import numpy as np
 import typecheck as tc
 
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -55,7 +56,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     #     kp<pref>: <setting>...}
 
     class ClassDefaults(Mechanism_Base.ClassDefaults):
-        variable = SystemDefaultInputValue
+        variable = np.array([SystemDefaultInputValue])
 
     from psyneulink.components.functions.function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -82,7 +83,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
 
         params = self._assign_args_to_param_dicts(params=params)
 
-        super(DefaultProcessingMechanism_Base, self).__init__(variable=default_variable,
+        super(DefaultProcessingMechanism_Base, self).__init__(default_variable=default_variable,
                                                               size=size,
                                                               params=params,
                                                               name=name,

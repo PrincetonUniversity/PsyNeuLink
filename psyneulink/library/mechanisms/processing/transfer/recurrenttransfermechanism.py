@@ -42,7 +42,7 @@ arguments of the Mechanism's constructor, and is assigned to the mechanism's `re
 <RecurrentTransferMechanism.recurrent_projection>` attribute.
 
 If the **matrix** argument is used to create the recurrent projection, it must specify either a square matrix or an
-`AutoAssociativeProjection` that uses one (the default is `FULL_CONNECTIVITY_MATRIX`).::
+`AutoAssociativeProjection` that uses one (the default is `HOLLOW_MATRIX`).::
 
     recurrent_mech_1 = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                                                       matrix=[[1.0, 2.0, 2.0],
@@ -105,7 +105,7 @@ Structure
 
 The distinguishing feature of a RecurrentTransferMechanism is a self-projecting `AutoAssociativeProjection` -- that
 is, one that projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
-InputState <InputState_Primary>`.  This can be parametrized using its `matrix <RecurrentTransferMechanism.matrix>`,
+InputState <InputState_Primary>`.  This can be parameterized using its `matrix <RecurrentTransferMechanism.matrix>`,
 `auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is
 stored in its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` attribute.
 
@@ -176,7 +176,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
-from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
+from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, HOLLOW_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
@@ -251,13 +251,13 @@ class RecurrentTransferMechanism(TransferMechanism):
     default_variable=None,             \
     size=None,                         \
     function=Linear,                   \
-    matrix=FULL_CONNECTIVITY_MATRIX,   \
+    matrix=HOLLOW_MATRIX,   \
     auto=None,                         \
     hetero=None,                       \
     initial_value=None,                \
     noise=0.0,                         \
-    smoothing_factor=0.5,                 \
-    clip=(float:min, float:max),      \
+    smoothing_factor=0.5,              \
+    clip=[float:min, float:max],       \
     learning_rate=None,                \
     learning_function=Hebbian,         \
     integrator_mode=False,             \
@@ -272,7 +272,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         -----------
             RecurrentTransferMechanism is a Subtype of the TransferMechanism Subtype of the ProcessingMechanisms Type
             of the Mechanism Category of the Component class.
-            It implements a TransferMechanism with a recurrent projection (default matrix: FULL_CONNECTIVITY_MATRIX).
+            It implements a TransferMechanism with a recurrent projection (default matrix: HOLLOW_MATRIX).
             In all other respects, it is identical to a TransferMechanism.
     COMMENT
 
@@ -297,26 +297,78 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
         or a custom function.
 
-    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
+    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default HOLLOW_MATRIX
         specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
-        or an AutoAssociativeProjection to use. If **auto** or **hetero** arguments are specified, the **matrix**
-        argument will be ignored in favor of those arguments.
+        or an AutoAssociativeProjection to use.
+
+        - If **auto** and **matrix** are both specified, the diagonal terms are determined by auto and the off-diagonal
+          terms are determined by matrix.
+
+        - If **hetero** and **matrix** are both specified, the diagonal terms are determined by matrix and the
+          off-diagonal terms are determined by hetero.
+
+        - If **auto**, **hetero**, and **matrix** are all specified, matrix is ignored in favor of auto and hetero.
 
     auto : number, 1D array, or None : default None
         specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
         If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
-        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
-        1 and all non-diagonal entries -1. If the **matrix** argument is specified, it will be overwritten by
-        **auto** and/or **hetero**, if either is specified. **auto** can be specified as a 1D array with length equal
-        to the size of the Mechanism, if a non-uniform diagonal is desired. Can be modified by control.
+        **hetero**.
+
+        In the following examples, assume that the default variable of the mechanism is length 4:
+
+        - setting **auto** to 1 and **hetero** to -1 sets matrix to have a diagonal of
+          1 and all non-diagonal entries -1:
+
+            .. math::
+
+                \\begin{bmatrix}
+                    1 & -1 & -1 & -1 \\\\
+                    -1 & 1 & -1 & -1 \\\\
+                    -1 & -1 & 1 & -1 \\\\
+                    -1 & -1 & -1 & 1 \\\\
+                \\end{bmatrix}
+
+        - setting **auto** to [1, 1, 2, 2] and **hetero** to -1 sets matrix to:
+
+            .. math::
+
+                \\begin{bmatrix}
+                    1 & -1 & -1 & -1 \\\\
+                    -1 & 1 & -1 & -1 \\\\
+                    -1 & -1 & 2 & -1 \\\\
+                    -1 & -1 & -1 & 2 \\\\
+                \\end{bmatrix}
+
+        - setting **auto** to [1, 1, 2, 2] and **hetero** to  [[3, 3, 3, 3], [3, 3, 3, 3], [4, 4, 4, 4], [4, 4, 4, 4]]
+          sets matrix to:
+
+            .. math::
+
+                \\begin{bmatrix}
+                    1 & 3 & 3 & 3 \\\\
+                    3 & 1 & 3 & 3 \\\\
+                    4 & 4 & 2 & 4 \\\\
+                    4 & 4 & 4 & 2 \\\\
+                \\end{bmatrix}
+
+        See **matrix** for details on how **auto** and **hetero** may overwrite matrix.
+
+        Can be modified by control.
 
     hetero : number, 2D array, or None : default None
         specifies matrix as a hollow matrix with all non-diagonal entries equal to **hetero**, if **hetero** is not None;
         If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
-        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
-        1 and all non-diagonal entries -1. If the **matrix** argument is specified, it will be overwritten by
-        **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
-        equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
+        **hetero**.
+
+        When diagonal entries of **hetero** are specified with non-zero values, these entries are set to zero before
+        hetero is used to produce a matrix.
+
+        See **hetero** (above) for details on how various **auto** and **hetero** specifications are summed to produce a
+        matrix.
+
+        See **matrix** (above) for details on how **auto** and **hetero** may overwrite matrix.
+
+        Can be modified by control.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
@@ -338,11 +390,12 @@ class RecurrentTransferMechanism(TransferMechanism):
          result = (smoothing_factor * variable) +
          (1-smoothing_factor * input to mechanism's function on the previous time step)
 
-    clip : Optional[Tuple[float, float]]
-        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`:
-        the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
-        any element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `clip <RecurrentTransferMechanism.clip>` that it exceeds.
+    clip : list [float, float] : default None (Optional)
+        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>` the item in
+        index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the maximum
+        allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
+        value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
+
 
     enable_learning : boolean : default False
         specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
@@ -449,12 +502,12 @@ class RecurrentTransferMechanism(TransferMechanism):
 
           result = (smoothing_factor * current input) + (1-smoothing_factor * result on previous time_step)
 
-    clip : Tuple[float, float]
-        determines the allowable range of the result: the first value specifies the minimum allowable value
-        and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `clip <RecurrentTransferMechanism.clip>` it exceeds.  If
-        `function <RecurrentTransferMechanism.function>`
-        is `Logistic`, `clip <RecurrentTransferMechanism.clip>` is set by default to (0,1).
+    clip : list [float, float] : default None (Optional)
+        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`
+
+        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
+        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
+         the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
@@ -534,6 +587,9 @@ class RecurrentTransferMechanism(TransferMechanism):
     """
     componentType = RECURRENT_TRANSFER_MECHANISM
 
+    class ClassDefaults(TransferMechanism.ClassDefaults):
+        variable = np.array([[0]])
+
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
 
     standard_output_states = TransferMechanism.standard_output_states.copy()
@@ -546,7 +602,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  default_variable=None,
                  size=None,
                  function=Linear,
-                 matrix=FULL_CONNECTIVITY_MATRIX,
+                 matrix=HOLLOW_MATRIX,
                  auto=None,
                  hetero=None,
                  initial_value=None,
@@ -804,22 +860,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 del self.output_states[ENTROPY]
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
-        """Implement decay
-        """
-        # KAM commented out 8/29/17 because self.previous_input is not a valid attrib of this mechanism
-
-        # if context is None or (INITIALIZING not in context):
-        #     if self.decay is not None and self.decay != 1.0:
-        #         self.previous_input = self.previous_input * float(self.decay)
-
-        return super()._execute(variable=variable,
-                                runtime_params=runtime_params,
-                                context=context)
-
     def _update_parameter_states(self, runtime_params=None, context=None):
         for state in self._parameter_states:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
@@ -942,8 +982,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism_Base,
                                           # this typecheck was failing, I didn't want to fix (7/19/17 CW)
-                                          # matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
-                                          matrix=FULL_CONNECTIVITY_MATRIX,
+                                          # matrix:is_matrix=HOLLOW_MATRIX,
+                                          matrix=HOLLOW_MATRIX,
                                           context=None):
         """Instantiate a AutoAssociativeProjection from Mechanism to itself
 
@@ -968,7 +1008,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                         matrix,
                                         context=None):
 
-        learning_mechanism = AutoAssociativeLearningMechanism(variable=[activity_vector.value],
+        learning_mechanism = AutoAssociativeLearningMechanism(default_variable=[activity_vector.value],
                                                               # learning_signals=[self.recurrent_projection],
                                                               function=learning_function,
                                                               learning_rate=learning_rate,
