@@ -906,6 +906,15 @@ class TransferMechanism(ProcessingMechanism_Base):
          return tuple(param_list)
 
 
+    def get_context_initializer(self):
+         context_list = [self.function_object.get_context_initializer()]
+         if self.integrator_mode:
+             assert self.integrator_function is not None
+             context_list.append(self.integrator_function.get_context_initializer())
+
+         return tuple(context_list)
+
+
     def __gen_llvm_clamp(self, builder, index, ctx, vo, min_val, max_val):
         ptri = builder.gep(vo, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
@@ -976,28 +985,23 @@ class TransferMechanism(ProcessingMechanism_Base):
                  time_scale=TimeScale.TRIAL,
                  context=None):
 
-        transfer_params = self.function_object.get_param_initializer()
-
-        if self.integrator_mode:
-            assert self.integrator_function is not None
-            integrator_params = self.integrator_function.get_param_initializer()
-        else:
-            integrator_params = tuple()
 
         bf = self._llvmBinFunction
 
+        # Convert to float
         variable = np.asarray(variable, dtype=np.float64)
         # The output is the same size as input
         ret = np.zeros_like(variable)
         par_struct_ty, context_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         if self.nv_state is None:
-            initializer_t = self.function_object.get_context_initializer()
-            initializer_i = self.integrator_function.get_context_initializer()
-            self.nv_state = context_struct_ty(initializer_t, initializer_i)
+            ctx = self.get_context_initializer()
+            self.nv_state = context_struct_ty(*ctx)
 
         ct_context = self.nv_state
-        ct_param = par_struct_ty(transfer_params, integrator_params)
+
+        params = self.get_param_initializer();
+        ct_param = par_struct_ty(*params)
 
         # This is bit hacky because numpy can't cast to arrays
         ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
