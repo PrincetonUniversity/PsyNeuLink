@@ -1033,9 +1033,11 @@ class TestTransferMechanismMultipleInputStates:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.mimo
-    def test_multiple_output_states_for_multiple_input_states(self):
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    @pytest.mark.benchmark(group="MIMO")
+    def test_multiple_output_states_for_multiple_input_states(self, benchmark, mode):
         T = TransferMechanism(input_states=['a','b','c'])
-        val = T.execute([[1],[2],[3]])
+        val = benchmark(T.execute, [[1],[2],[3]], bin_execute=(mode=='LLVM'))
         assert len(T.variable)==3
         assert all(a==b for a,b in zip(val, [[ 1.],[ 2.],[ 3.]]))
         assert len(T.output_states)==3
