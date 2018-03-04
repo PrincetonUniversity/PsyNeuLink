@@ -908,14 +908,7 @@ class Composition(object):
         if bin_execute:
             bin_mech_extract = self.__get_bin_mech_output_extract(num)
             data, out = bin_mech_extract.byref_arg_types
-            #FIXME This assumes the result is the same format as
-            #      default variable
-            def nested_len(x):
-                try:
-                    return sum(nested_len(y) for y in x)
-                except:
-                    return 1
-            res = np.zeros(nested_len(num.instance_defaults.variable))
+            res = np.zeros_like(num.instance_defaults.variable, dtype=np.float64)
             ct_res = res.ctypes.data_as(ctypes.POINTER(out))
             bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ct_res)
             num=[res]
