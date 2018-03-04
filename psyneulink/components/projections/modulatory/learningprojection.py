@@ -409,7 +409,7 @@ class LearningProjection(ModulatoryProjection_Base):
                  sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
                  learning_function:tc.optional(is_function_type)=BackPropagation,
-                 error_function:tc.optional(is_function_type)=LinearCombination,
+                 error_function:tc.optional(is_function_type)=LinearCombination(weights=[[-1], [1]]),
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                  # learning_signal_params:tc.optional(dict)=None,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
