@@ -1233,7 +1233,7 @@ class OutputState(State_Base):
         - to no items of owner.value (but possibly other params), return None
         """
         # Entire owner.value
-        if OWNER_VALUE == self._variable:
+        if isinstance(self._variable, str) and self.variable == OWNER_VALUE:
             return self.owner.value
         elif isinstance(self._variable, tuple):
             return self._variable[1]
@@ -1411,8 +1411,12 @@ class StandardOutputStatesError(Exception):
 
 
 class StandardOutputStates():
-    """Collection of OutputState specification dictionaries for `standard
-    OutputStates <OutputState_Standard>` of a class
+    """Collection of OutputState specification dicts for `standard OutputStates <OutputState_Standard>` of a class.
+
+    Parses specification of VARIABLE, assigning indices to OWNER_VALUE if specified.
+    Adds <NAME_INDEX> of each OutputState as property of the owner's class, that returns the index of the OutputState
+    in the list.
+
 
     Arguments
     ---------
@@ -1463,14 +1467,19 @@ class StandardOutputStates():
                  owner:Component,
                  output_state_dicts:list,
                  indices:tc.optional(tc.any(int, str, list))=None):
+        self.owner = owner
+        self._instantiate_state_list(output_state_dicts, indices)
+
+    def _instantiate_state_list(self, output_state_dicts, indices):
+
+        self.data = output_state_dicts.copy()
 
         # Validate that all items in output_state_dicts are dicts
         for item in output_state_dicts:
             if not isinstance(item, dict):
                 raise StandardOutputStatesError(
                     "All items of {} for {} must be dicts (but {} is not)".
-                    format(self.__class__.__name__, owner.componentName, item))
-        self.data = output_state_dicts.copy()
+                    format(self.__class__.__name__, self.owner.componentName, item))
 
         # Assign indices
 
@@ -1488,7 +1497,7 @@ class StandardOutputStates():
                                                 "OutputStates dicts provided "
                                                 "({}) length".format(
                         self.__class__.__name__,
-                        owner.name,
+                        self.owner.name,
                         len(indices),
                         len(output_state_dicts)))
 
@@ -1498,7 +1507,7 @@ class StandardOutputStates():
                                                 "of {}) must be ints".
                                                 format(self.__class__.__name__,
                                                        self.name,
-                                                       owner.name))
+                                                       self.owner.name))
 
             for index, state_dict in zip(indices, self.data):
                 state_dict.update({VARIABLE:(OWNER_VALUE, index)})
@@ -1515,16 +1524,6 @@ class StandardOutputStates():
                     continue
                 state_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
 
-
-
-        # # No indices specification, so assign None to INDEX for all OutputStates in output_state_dicts
-        # #  that don't already have an index specified
-        # else:
-        #     for state_dict in self.data:
-        #         if INDEX in state_dict:
-        #             continue
-        #         state_dict[INDEX] = None
-
         # Validate all INDEX specification, parse any assigned as ALL, and
         # Add names of each OutputState as property of the owner's class that returns its name string
         for state in self.data:
@@ -1538,15 +1537,22 @@ class StandardOutputStates():
                                            format(SEQUENTIAL.upper(), OutputState.__name__, OUTPUT_STATE.upper(),
                                                   self.name))
                 del state[INDEX]
-            setattr(owner.__class__, state[NAME], make_readonly_property(state[NAME]))
+            setattr(self.owner.__class__, state[NAME], make_readonly_property(state[NAME]))
 
-        # Add <NAME_INDEX> of each OutputState as property of the owner's class, that returns its index
+        # For each OutputState dict with a VARIABLE entry that references it's owner's value (by index)
+        # add <NAME_INDEX> as property of the OutputState owner's class that returns its index.
         for state in self.data:
             if isinstance(state[VARIABLE], tuple):
                 index = state[VARIABLE][1]
-            else:
+            elif isinstance(state[VARIABLE], int):
                 index = state[VARIABLE]
-            setattr(owner.__class__, state[NAME]+'_INDEX', make_readonly_property(index))
+            else:
+                continue
+            setattr(self.owner.__class__, state[NAME]+'_INDEX', make_readonly_property(index))
+
+    @tc.typecheck
+    def add_state_dicts(self, output_state_dicts:list, indices:tc.optional(tc.any(int, str, list))=None):
+        self.data.append(self._instantiate_state_list(output_state_dicts, indices))
 
     @tc.typecheck
     def get_state_dict(self, name:str):

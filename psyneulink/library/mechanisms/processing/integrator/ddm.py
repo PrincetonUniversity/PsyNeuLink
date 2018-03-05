@@ -64,11 +64,39 @@ COMMENT
 Structure
 ---------
 
-The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism has a single `InputState`, the
-`value <DDM.value>` of which is assigned to the **input** specified by its `execute <Mechanism_Base.execute>` or `run
-<Mechanism_Base.run>` methods, which represents the stimulus for the process.  That parameter, along with all
-of the others for the DDM, must be assigned as parameters of the DDM's `function <DDM.function>` (see examples under
-`DDM_Modes` below, and individual `Functions <Function>` for additional details).
+The DDM Mechanism implements a general form of the decision process.
+
+.. _DDM_Input:
+
+Input
+~~~~~
+
+The input to the `function <DDM_Function>` of a DDM Mechanism is always a scalar, irrespective of `type of function
+<DDM_Modes>` that is used.  Accordingly, the default `InputState` for a DDM takes a single scalar value as its input,
+that represents the stimulus for the decision process.  However, this can be configured using the **input_format**
+argument of the DDM's consructor, to accomodate use of the DDM with other Mechanisms that generate a stimulus array
+(e.g., representing the stimuli associated with each of the two choices). By default, the **input_format** is
+*SCALAR*.  However, if it is specified as *ARRAY*, the DDM's InputState is configured to accept a 1d 2-item vector,
+and to use `Reduce` as its Function, which subtract the 2nd element of the vector from the  1st, and provides this as
+the input to the DDM's `function <DDM.function>`.  If *ARRAY* is specified, two  `Standard OutputStates
+<DDM_Standard_OutputStates>` are added to the DDM, that allow the result of the decision process to be represented
+as an array corresponding to the stimulus array (see `below <DDM_Custom_OutputStates>`).
+
+COMMENT:
+ADD EXAMPLE HERE
+COMMENT
+
+COMMENT
+NOTE SURE WHAT THIS MEANS:
+That parameter, along with all of the others for the DDM, must be assigned as
+parameters of the DDM's `function <DDM.function>` (see examples under `DDM_Modes` below, and individual `Functions
+<Function>` for additional details).
+COMMENT
+
+.. _DDM_Output:
+
+Output
+~~~~~~
 
 The DDM Mechanism can generate two different types of results depending on which function is selected. When a
 function representing an analytic solution is selected, the mechanism generates a single estimation for the process.
@@ -77,33 +105,51 @@ execution of the mechanism computes one step. (see `DDM_Modes` and `DDM_Executio
 
 The `value <DDM.value>` of the DDM Mechanism may have up to six items. The first two of these are always assigned, and
 are represented by the DDM Mechanism's two default `output_states <DDM.output_states>`: `DECISION_VARIABLE
-<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`. The other `output_states <DDM.output_states>` may be
-assigned depending on (1) whether the selected function produces those quantities and (2) customization.
+<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`.  Other `output_states <DDM.output_states>` may be
+automatically assigned, depending on the `function <DDM.function>` that has been assigned to the DDM, as shown in the
+table below:
 
-+---------------------------------+-----------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|**Function**                     |**Type**   | **Output States**                                                                                                                                                    |
-|                                 |           +------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
-|                                 |           |`DECISION_VARIABLE      |`RESPONSE_TIME      |`PROBABILITY_UPPER_THRESHOLD      |`PROBABILITY_LOWER_THRESHOLD       |`RT_CORRECT_MEAN      |`RT_CORRECT_VARIANCE      |
-|                                 |           |<DDM_DECISION_VARIABLE>`|<DDM_RESPONSE_TIME>`|<DDM_PROBABILITY_UPPER_THRESHOLD>`|<DDM_PROBABILITY_LOWER_THRESHOLD>` |<DDM_RT_CORRECT_MEAN>`|<DDM_RT_CORRECT_VARIANCE>`|
-+---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
-|`BogaczEtAl <BogaczEtAl>`        |Analytic   |     X                  |   X                |     X                            |     X                             |                      |                          |
-+---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
-|`NavarroAndFuss <NavarroAndFuss>`|Analytic   |     X                  |   X                |     X                            |     X                             |         X            |             X            |
-+---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
-|`DriftDiffusionIntegrator        |Path       |                        |                    |                                  |                                   |                      |                          |
-|<DriftDiffusionIntegrator>`      |Integration|     X                  |   X                |                                  |                                   |                      |                          |
-+---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
++------------------------------------+--------------------------------------------------------------------------------+
+|                                    |                     **Function**                                               |
+|                                    |                      *(type)*                                                  |
++                                    +-------------------------+-------------------------+----------------------------+
+|                                    | `BogaczEtAl`            | `NavarroAndFuss`        | `DriftDiffusionIntegrator` |
+|                                    |   (`analytic            |   (`analytic            |   (`path integration)      |
+| **OutputStates:**                  |   <DDM_Analytic_Mode>`) |   <DDM_Analytic_Mode>`) |   <DDM_Integration_Mode>`) |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `DECISION_VARIABLE                 |                         |                         |                            |
+| <DDM_DECISION_VARIABLE>`           |       X                 |        X                |             X              |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `RESPONSE_TIME                     |                         |                         |                            |
+| <DDM_RESPONSE_TIME>`               |       X                 |        X                |             X              |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `PROBABILITY_UPPER_THRESHOLD       |                         |                         |                            |
+| <DDM_PROBABILITY_UPPER_THRESHOLD>` |       X                 |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `PROBABILITY_LOWER_THRESHOLD       |                         |                         |                            |
+| <DDM_PROBABILITY_LOWER_THRESHOLD>` |       X                 |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `RT_CORRECT_MEAN                   |                         |                         |                            |
+| <DDM_RT_CORRECT_MEAN>`             |                         |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
+| `RT_CORRECT_VARIANCE               |                         |                         |                            |
+| <DDM_RT_CORRECT_MEAN>`             |                         |        X                |                            |
++------------------------------------+-------------------------+-------------------------+----------------------------+
 
-The set of `output_states <DDM_output_states>` assigned can be customized by selecting ones from the DDM's set of
-`Standard OutputStates <DDM_Standard_OutputStates>`), and specifying these in the **output_states** argument of its
-constructor. Some `OutputStates <OutputState>`, or elements of `value <DDM.value>`, represent slightly different quantities
-depending on the function in which they are computed. See `Standard OutputStates <DDM_Standard_OutputStates>` for more
-details.
+.. _DDM_Custom_OutputStates:
+
+The `output_states <DDM.output_states>` assigned to a DDM can be customized by specifying a list of the desired DDM
+`Standard OutputStates <DDM_Standard_OutputStates>` in the **output_states** argument of its constructor, or the
+*OUTPUT_STATES* entry of an `OutputState specification dictionary <OutputState_Specification_Dictionary>`.  This can
+include two additional `Standard OutputStates <DDM_Standard_OutputStates>` for the DDM - `DECISION_VARIABLE_ARRAY
+<DDM_DECISION_VARIABLE_ARRAY>` and `SELECTED_INPUT_ARRAY <DDM_SELECTED_INPUT_ARRAY>`, that are available if the
+*ARRAY* option is specified in its **input_format** argument (see `DDM_Input`).  As with any Mechanism, `customized
+OutputStates <OutputState_Customization>` can also be created and assigned.
 
 .. _DDM_Modes:
 
 DDM Function Types
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 .. _DDM_Analytic_Mode:
 
@@ -119,7 +165,8 @@ In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <D
 return an accuracy value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>`
 OutputState), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
 OutputState;  the `NavarroAndFuss <NavarroAndFuss>` Function also returns expected values for mean correct response time
-(`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>` and variance of correct response times (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
+(`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>` and variance of correct response times
+(`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
 
 Examples for each, that illustrate all of their parameters, are shown below:
 
@@ -299,7 +346,7 @@ from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, ASSIGN, FUNCTION, FUNCTION_PARAMS, \
-    INDEX, INITIALIZING, NAME, OUTPUT_STATES,  VALUE, VARIABLE, kwPreferenceSetName
+    INDEX, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES,  OWNER_VALUE, VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, object_has_single_value
@@ -308,7 +355,7 @@ __all__ = [
     'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError',
     'DECISION_VARIABLE', 'DECISION_VARIABLE_ARRAY', 'PROBABILITY_LOWER_THRESHOLD', 'PROBABILITY_UPPER_THRESHOLD',
     'RESPONSE_TIME', 'RT_CORRECT_MEAN', 'RT_CORRECT_VARIANCE',
-    'SCALAR', 'ARRAY', 'VECTOR'
+    'SCALAR', 'SELECTED_INPUT_ARRAY', 'ARRAY', 'VECTOR'
 ]
 
 logger = logging.getLogger(__name__)
@@ -317,6 +364,7 @@ DEFAULT_VARIABLE = 0.0
 
 DECISION_VARIABLE = 'DECISION_VARIABLE'
 DECISION_VARIABLE_ARRAY = 'DECISION_VARIABLE_ARRAY'
+SELECTED_INPUT_ARRAY = 'SELECTED_INPUT_ARRAY'
 RESPONSE_TIME = 'RESPONSE_TIME'
 PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'
 PROBABILITY_LOWER_THRESHOLD = 'PROBABILITY_LOWER_THRESHOLD'
@@ -364,11 +412,31 @@ class DDM_OUTPUT():
     .. _DDM_DECISION_VARIABLE_ARRAY:
 
     *DECISION_VARIABLE_ARRAY* : 1d nparray
-      • `analytic mode <DDM_Analytic_Mode>`: two element array, with the *DECISION_VARIABLE* as the first element
-         if it is closer to the upper threshold or in the second element if it is closer to the lower threshold;
-         the other element is 0. \n
+      .. note::
+         This is only available if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         (see `DDM_Input`).
+      • `analytic mode <DDM_Analytic_Mode>`: two element array, with the decision variable (1st item of the DDM's
+        `value <DDM.value>`) as the 1st element if the decision process crossed the upper threshold, and the 2nd element
+        if it is closer to the lower threshold; the other element is set to 0. \n
       • `integration mode <DDM_Integration_Mode>`: the value of the decision variable at the current TIME_STEP of
-        execution in the element as described above for *analytic mode*. \n
+        execution, assigned to the 1st element if the decision variable is closer to the upper threshold, and to the
+        2nd element if it is closer to the lower threshold; the other element is set to 0. \n
+
+    .. _DDM_DECISION_VARIABLE_ARRAY:
+
+    *SELECTED_INPUT_ARRAY* : 1d nparray
+      .. note::
+         This is only available if **input_format** is specified as *ARRAY** in the DDM Mechanism's constructor
+         (see `DDM_Input`).
+      • `analytic mode <DDM_Analytic_Mode>`: two element array, with one ("value") element -- determined by the
+        outcome of the decision process -- set to the value of the corresponding element in the stimulus array (i.e.,
+        the DDM's input_state `variable <InputState.variable>`).  The "value" element is the 1st one if the decision
+        process resulted in crossing the upper threshold, and the 2nd if it crossed the lower threshold; the other
+        element is set to 0. \n
+      • `integration mode <DDM_Integration_Mode>`: the value of the element in the stimulus array based on the
+        decision variable (1st item of the DDM's `value <DDM.value>`) at the current TIME_STEP of execution:
+        it is assigned to the 1st element if the decision variable is closer to the upper threshold, and to the  2nd
+        element if the decision variable is closer to the lower threshold; the other element is set to 0. \n
 
     .. _DDM_RESPONSE_TIME:
 
@@ -443,11 +511,12 @@ class DDM_OUTPUT():
     """
     DECISION_VARIABLE=DECISION_VARIABLE
     RESPONSE_TIME=RESPONSE_TIME
-    DECISION_VARIABLE_ARRAY=DECISION_VARIABLE_ARRAY
     PROBABILITY_UPPER_THRESHOLD=PROBABILITY_UPPER_THRESHOLD
     PROBABILITY_LOWER_THRESHOLD=PROBABILITY_LOWER_THRESHOLD
     RT_CORRECT_MEAN=RT_CORRECT_MEAN
     RT_CORRECT_VARIANCE=RT_CORRECT_VARIANCE
+    DECISION_VARIABLE_ARRAY=DECISION_VARIABLE_ARRAY
+    SELECTED_INPUT_ARRAY=SELECTED_INPUT_ARRAY
 # THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_states]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
@@ -466,12 +535,12 @@ class DDM(ProcessingMechanism_Base):
     #             ADD INFO ABOUT B VS. N&F
     #             ADD _instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
     """
-    DDM(                       \
+    DDM(                    \
     default_variable=None,  \
-    size=None,                 \
-    function=BogaczEtAl,       \
-    params=None,               \
-    name=None,                 \
+    size=None,              \
+    function=BogaczEtAl,    \
+    params=None,            \
+    name=None,              \
     prefs=None)
 
     Implement a Drift Diffusion Process, either by calculating an `analytic solution <DDM_Analytic_Mode>` or carrying
@@ -661,25 +730,49 @@ class DDM(ProcessingMechanism_Base):
                  context=componentType + INITIALIZING
     ):
 
-        # If input_format is specified to be ARRAY or VECTOR, instantiate InputState with:
-        #    2-item array as its variable
-        #    Reduce as its function, which will generate an array of len 1
-        #    and therefore specify size of Mechanism's variable as 1
-        if input_format in {ARRAY, VECTOR}:
-            size=1 # size of variable for DDM Mechanism
-            input_states=[{NAME:'ARRAY',
-                           VARIABLE:[0,0],
-                           FUNCTION: Reduce(weights=[1,-1])}
-                          ]
-            output_states = [{NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
-                              INDEX:0,
-                              ASSIGN: lambda x: [float(x),0] if x >= 0 else [0, float(-x)]}]
-        else:
-            input_states = None
-
         self.standard_output_states = StandardOutputStates(self,
                                                            DDM_standard_output_states,
                                                            indices=SEQUENTIAL)
+
+        # If input_format is specified to be ARRAY or VECTOR, instantiate:
+        #    InputState with:
+        #        2-item array as its variable
+        #        Reduce as its function, which will generate an array of len 1
+        #        and therefore specify size of Mechanism's variable as 1
+        #    OutputStates that report the decision variable and selected input in array format
+        #        IMPLEMENTATION NOTE:
+        #            These are created here rather than as StandardOutputStates
+        #            since they require input_format==ARRAY to be meaningful
+        if input_format in {ARRAY, VECTOR}:
+            size=1 # size of variable for DDM Mechanism
+            input_states = [
+                {NAME:'ARRAY',
+                 VARIABLE:[0,0],
+                 FUNCTION: Reduce(weights=[1,-1])}
+            ]
+            self.standard_output_states.add_state_dicts([
+                # Provides a 1d 2-item array with:
+                #    decision variable in position corresponding to threshold crossed, and 0 in the other position
+                {NAME: DECISION_VARIABLE_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
+                 VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD],
+                           # per VARIABLE assignment above, items of v of lambda function below are:
+                           #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
+                           #    v[1]=self.parameter_states[THRESHOLD]
+                 FUNCTION: lambda v: [float(v[0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[0])]},
+
+                # Provides a 1d 2-item array with:
+                #    input value in position corresponding to threshold crossed by decision variable, and 0 in the other
+                {NAME: SELECTED_INPUT_ARRAY, # 1d len 2, DECISION_VARIABLE as element 0 or 1
+                 VARIABLE:[(OWNER_VALUE, self.DECISION_VARIABLE_INDEX), THRESHOLD, (INPUT_STATE_VARIABLES, 0)],
+                           # per VARIABLE assignment above, items of v of lambda function below are:
+                           #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
+                           #    v[1]=self.parameter_states[THRESHOLD]
+                           #    v[2]=self.input_states[0].variable
+                 FUNCTION: lambda v: [float(v[2][0]), 0] if (v[1]-v[0]) < (v[1]+v[0]) else [0, float(v[2][1])]}
+            ])
+
+        else:
+            input_states = None
 
         # Default output_states is specified in constructor as a tuple rather than a list
         # to avoid "gotcha" associated with mutable default arguments

@@ -1797,6 +1797,8 @@ class Mechanism_Base(Mechanism):
             or process InputStates before and/or after call to _instantiate_output_states
         """
         from psyneulink.components.states.outputstate import _instantiate_output_states
+        # self._update_parameter_states(context=context)
+        self._update_params_dicts(context=context)
         _instantiate_output_states(owner=self, output_states=self.output_states, context=context)
 
     def _add_projection_to_mechanism(self, state, projection, context=None):
@@ -2231,8 +2233,22 @@ class Mechanism_Base(Mechanism):
     def _update_parameter_states(self, runtime_params=None, context=None):
 
         for state in self._parameter_states:
-
             state.update(params=runtime_params, context=context)
+            # if state.name in self.user_params:
+            #     self.user_params.__additem__(state.name, state.value)
+            # if state.name in self.function_params:
+            #     self.function_params.__additem__(state.name, state.value)
+        self._update_params_dicts(context=context)
+
+    def _update_params_dicts(self, context=None):
+        from psyneulink.globals.keywords import NOISE
+        for state in self._parameter_states:
+            if NOISE in state.name and INITIALIZING in context:
+                continue
+            if state.name in self.user_params:
+                self.user_params.__additem__(state.name, state.value)
+            if state.name in self.function_params:
+                self.function_params.__additem__(state.name, state.value)
 
     def _update_output_states(self, runtime_params=None, context=None):
         """Execute function for each OutputState and assign result of each to corresponding item of self.output_values

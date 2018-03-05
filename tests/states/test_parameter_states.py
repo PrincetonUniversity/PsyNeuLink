@@ -95,7 +95,9 @@ class TestConfigurableParameters:
 
         T.function_object.slope = new_value
 
-        assert np.allclose(T.user_params["function_params"]["slope"], new_value)
+        # KAM changed 3/2/18 --
+        # function_params looks at parameter state value, so this will not update until next execution
+        assert np.allclose(T.user_params["function_params"]["slope"], old_value)
         assert np.allclose(T.function_object.slope, new_value)
         assert np.allclose(T.function_object._slope, new_value)
         assert np.allclose(T.mod_slope, old_value)
@@ -109,7 +111,9 @@ class TestConfigurableParameters:
 
         T.function_object.intercept = new_value
 
-        assert np.allclose(T.user_params["function_params"]["intercept"], new_value)
+        # KAM changed 3/2/18 --
+        # function_params looks at parameter state value, so this will not update until next execution
+        assert np.allclose(T.user_params["function_params"]["intercept"], old_value)
         assert np.allclose(T.function_object.intercept, new_value)
         assert np.allclose(T.function_object._intercept, new_value)
         assert np.allclose(T.mod_intercept, old_value)
@@ -123,7 +127,9 @@ class TestConfigurableParameters:
 
         T.smoothing_factor = new_value
 
-        assert np.allclose(T.user_params["smoothing_factor"], new_value)
+        # KAM changed 3/2/18 --
+        # function_params looks at parameter state value, so this will not update until next execution
+        assert np.allclose(T.user_params["smoothing_factor"], old_value)
         assert np.allclose(T.smoothing_factor, new_value)
         assert np.allclose(T._smoothing_factor, new_value)
         assert np.allclose(T.mod_smoothing_factor, old_value)
@@ -137,7 +143,9 @@ class TestConfigurableParameters:
 
         T.noise = new_value
 
-        assert np.allclose(T.user_params["noise"], new_value)
+        # KAM changed 3/2/18 --
+        # function_params looks at parameter state value, so this will not update until next execution
+        assert np.allclose(T.user_params["noise"], old_value)
         assert np.allclose(T.noise, new_value)
         assert np.allclose(T._noise, new_value)
         assert np.allclose(T.mod_noise, old_value)
