@@ -3360,7 +3360,7 @@ class System(System_Base):
                 if show_dimensions in {ALL, MECHANISMS}:
                     input_str = "in ({})".format(",".join(str(len(input_state.variable))
                                                        for input_state in item.input_states))
-                    output_str = "out ({})".format(",".join(str(len(output_state.value))
+                    output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
                                                         for output_state in item.output_states))
                     return "{}\n{}\n{}".format(output_str, item.name, input_str)
                 else:
