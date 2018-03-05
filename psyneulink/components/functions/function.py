@@ -5499,9 +5499,12 @@ class AdaptiveIntegrator(
         return param_type
 
     def get_param_initializer(self):
+        noise = self.get_current_function_param(NOISE)
+        # Arrays need to be initialized using tuple
+        if hasattr(noise, "__len__") and len(noise) > 1:
+            noise = tuple(np.asarray(noise, dtype=np.float64).flatten().tolist())
         return (self.get_current_function_param(RATE),
-                self.get_current_function_param(OFFSET),
-                self.get_current_function_param(NOISE))
+                self.get_current_function_param(OFFSET), noise)
 
 
     def get_context_struct_type(self):
@@ -5513,9 +5516,7 @@ class AdaptiveIntegrator(
 
     def get_context_initializer(self, data=None):
         if data is None:
-            # FIXME: previous value should be extended version of the
-            # initializer. for some reason it's nested list
-            data = self.previous_value[0]
+            data = np.asarray(self.previous_value, dtype=np.float64).flatten().tolist()
         return (tuple(data),)
 
 
@@ -5590,32 +5591,7 @@ class AdaptiveIntegrator(
                      time_scale=TimeScale.TRIAL,
                      context=None):
 
-        # TODO: port this to LLVM
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        rate = self.get_current_function_param(RATE)
-        offset = self.get_current_function_param(OFFSET)
-        # execute noise if it is a function
-        # TODO: port this to LLVM
-        noise = self._try_execute_param(self.get_current_function_param(NOISE),
-                                        variable)
-        if hasattr(noise, "__len__"):
-            # Arrays need to be initialized using tuple
-            # Take the first input
-            noise = tuple(noise[0])
-
-        bf = self._llvmBinFunction
-
-        ret = np.zeros(len(variable))
-        par_struct_ty, old_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
-
-        ct_param = par_struct_ty(rate, offset, noise)
-        ct_old = old_struct_ty(tuple(self.previous_value))
-        # This is bit hacky because numpy can't cast to arrays
-        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
-
-        bf(ct_param, ct_old, ct_vi, ct_vo)
+        ret = super().bin_function(variable, params, time_scale, context)
 
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
