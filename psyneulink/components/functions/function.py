@@ -725,7 +725,7 @@ class Function_Base(Function):
 
         bf = self._llvmBinFunction
 
-        ret = np.zeros(len(variable))
+        ret = np.zeros(self._result_length)
 
         par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
@@ -4131,19 +4131,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         else:
             return np.array(specification)
 
-    def get_output_struct_type(self):
-        # Override default with vxm result
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ir.ArrayType(ctx.float_ty, self._result_length)
-
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
             matrix_ty = ir.ArrayType(ctx.float_ty, self.matrix.size)
-            param_type = ir.LiteralStructType((matrix_ty,))
+            param_type = ir.LiteralStructType([matrix_ty])
         return param_type
 
     def get_param_initializer(self):
-        return tuple(np.array(self.matrix).flatten().tolist())
+        return tuple([tuple(np.array(self.matrix).flatten().tolist())])
 
     def _gen_llvm_function(self):
         func_name = None
@@ -4177,30 +4172,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
             builder.ret_void()
         return func_name
-
-    def bin_function(self,
-                 variable=None,
-                 params=None,
-                 time_scale=TimeScale.TRIAL,
-                 context=None):
-
-        # TODO: Port this to llvm
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        bf = self._llvmBinFunction
-
-        ret = np.zeros(self._result_length)
-
-        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
-
-        ct_param = par_struct_ty(self.get_param_initializer())
-        ct_state = state_struct_ty()
-
-        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
-        bf(ct_param, ct_state, ct_vi, ct_vo)
-
-        return ret
 
     def function(self,
                  variable=None,

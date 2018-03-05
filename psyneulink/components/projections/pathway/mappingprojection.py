@@ -728,8 +728,7 @@ class MappingProjection(PathwayProjection_Base):
 
 
     def get_param_initializer(self):
-        # FIXME: This is ridiculous
-        return tuple([tuple([self.function_object.get_param_initializer()])]);
+        return tuple([self.function_object.get_param_initializer()])
 
 
     def _gen_llvm_function(self):

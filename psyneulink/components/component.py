@@ -981,6 +981,11 @@ class Component(object):
         self._variable_length = nested_len(default_variable)
 
     @property
+    def _result_length(self):
+        # By default same vector as input
+        return self._variable_length
+
+    @property
     def llvmSymbolName(self):
         if self.__llvm_function_name is None:
             self.__llvm_function_name = self._gen_llvm_function()
@@ -998,9 +1003,8 @@ class Component(object):
             return ir.ArrayType(ctx.float_ty, self._variable_length)
 
     def get_output_struct_type(self):
-        # By default same vector as input
         with pnlvm.LLVMBuilderContext() as ctx:
-            return ir.ArrayType(ctx.float_ty, self._variable_length)
+            return ir.ArrayType(ctx.float_ty, self._result_length)
 
     def get_context_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
