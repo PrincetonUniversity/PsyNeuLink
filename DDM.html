@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.4.4.4+3.g90c9ab4 documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.4.4.4+91.g261f368 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+3.g90c9ab4 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+91.g261f368 documentation" href="index.html"/>
         <link rel="up" title="IntegratorMechanisms" href="IntegratorMechanisms.html"/>
         <link rel="next" title="Objective Mechanisms" href="ObjectiveMechanisms.html"/>
         <link rel="prev" title="IntegratorMechanisms" href="IntegratorMechanisms.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.4+3
+                0.4.4.4+91
               </div>
             
           
@@ -216,75 +216,98 @@ argument. The function selection can be simply the name of a DDM function:</p>
 </div>
 <div class="section" id="structure">
 <span id="ddm-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism has a single <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>, the
-<a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of which is assigned to the <strong>input</strong> specified by its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods, which represents the stimulus for the process.  That parameter, along with all
-of the others for the DDM, must be assigned as parameters of the DDM’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see examples under
-<a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a> below, and individual <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> for additional details).</p>
+<p>The DDM Mechanism implements a general form of the decision process.</p>
+<div class="section" id="input">
+<span id="ddm-input"></span><h3>Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
+<p>The input to the <code class="xref any docutils literal"><span class="pre">function</span></code> of a DDM Mechanism is always a scalar, irrespective of <a class="reference internal" href="#ddm-modes"><span class="std std-ref">type of function</span></a> that is used.  Accordingly, the default <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> for a DDM takes a single scalar value as its input,
+that represents the stimulus for the decision process.  However, this can be configured using the <strong>input_format</strong>
+argument of the DDM’s consructor, to accomodate use of the DDM with other Mechanisms that generate a stimulus array
+(e.g., representing the stimuli associated with each of the two choices). By default, the <strong>input_format</strong> is
+<em>SCALAR</em>.  However, if it is specified as <em>ARRAY</em>, the DDM’s InputState is configured to accept a 1d 2-item vector,
+and to use <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Reduce" title="psyneulink.components.functions.function.Reduce"><code class="xref any py py-class docutils literal"><span class="pre">Reduce</span></code></a> as its Function, which subtract the 2nd element of the vector from the  1st, and provides this as
+the input to the DDM’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  If <em>ARRAY</em> is specified, two  <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">Standard OutputStates</span></a> are added to the DDM, that allow the result of the decision process to be represented
+as an array corresponding to the stimulus array (see <a class="reference internal" href="#ddm-custom-outputstates"><span class="std std-ref">below</span></a>).</p>
+</div>
+<div class="section" id="output">
+<span id="ddm-output"></span><h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
 <p>The DDM Mechanism can generate two different types of results depending on which function is selected. When a
 function representing an analytic solution is selected, the mechanism generates a single estimation for the process.
 When the path integration function is selected, the mechanism carries out step-wise integration of the process; each
 execution of the mechanism computes one step. (see <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a> and <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> for additional details).</p>
 <p>The <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the DDM Mechanism may have up to six items. The first two of these are always assigned, and
-are represented by the DDM Mechanism’s two default <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>: <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>. The other <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> may be
-assigned depending on (1) whether the selected function produces those quantities and (2) customization.</p>
+are represented by the DDM Mechanism’s two default <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>: <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>.  Other <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> may be
+automatically assigned, depending on the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> that has been assigned to the DDM, as shown in the
+table below:</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="16%" />
-<col width="5%" />
-<col width="12%" />
-<col width="10%" />
-<col width="17%" />
-<col width="17%" />
-<col width="11%" />
-<col width="13%" />
+<col width="32%" />
+<col width="22%" />
+<col width="22%" />
+<col width="25%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td rowspan="2"><strong>Function</strong></td>
-<td rowspan="2"><strong>Type</strong></td>
-<td colspan="6"><strong>Output States</strong></td>
+<tr class="row-odd"><td rowspan="2"><strong>OutputStates:</strong></td>
+<td colspan="3"><dl class="first last docutils">
+<dt><strong>Function</strong></dt>
+<dd><em>(type)</em></dd>
+</dl>
+</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a></td>
-<td><a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a></td>
-<td><a class="reference internal" href="#ddm-probability-upper-threshold"><span class="std std-ref">PROBABILITY_UPPER_THRESHOLD</span></a></td>
-<td><a class="reference internal" href="#ddm-probability-lower-threshold"><span class="std std-ref">PROBABILITY_LOWER_THRESHOLD</span></a></td>
-<td><a class="reference internal" href="#ddm-rt-correct-mean"><span class="std std-ref">RT_CORRECT_MEAN</span></a></td>
-<td><a class="reference internal" href="#ddm-rt-correct-variance"><span class="std std-ref">RT_CORRECT_VARIANCE</span></a></td>
+<tr class="row-even"><td><dl class="first last docutils">
+<dt><a class="reference internal" href="Function.html#psyneulink.components.functions.function.BogaczEtAl" title="psyneulink.components.functions.function.BogaczEtAl"><code class="xref any py py-class docutils literal"><span class="pre">BogaczEtAl</span></code></a></dt>
+<dd>(<a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic</span></a>)</dd>
+</dl>
+</td>
+<td><dl class="first last docutils">
+<dt><a class="reference internal" href="Function.html#psyneulink.components.functions.function.NavarroAndFuss" title="psyneulink.components.functions.function.NavarroAndFuss"><code class="xref any py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code></a></dt>
+<dd>(<a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic</span></a>)</dd>
+</dl>
+</td>
+<td><dl class="first last docutils">
+<dt><a class="reference internal" href="Function.html#psyneulink.components.functions.function.DriftDiffusionIntegrator" title="psyneulink.components.functions.function.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code></a></dt>
+<dd>(<a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">path integration)</span></a>)</dd>
+</dl>
+</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="Function.html#bogaczetal"><span class="std std-ref">BogaczEtAl</span></a></td>
-<td>Analytic</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
-<td>&#160;</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="Function.html#navarroandfuss"><span class="std std-ref">NavarroAndFuss</span></a></td>
-<td>Analytic</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
+<tr class="row-odd"><td><a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a></td>
 <td>X</td>
 <td>X</td>
 <td>X</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="Function.html#driftdiffusionintegrator"><span class="std std-ref">DriftDiffusionIntegrator</span></a></td>
-<td>Path
-Integration</td>
+<tr class="row-even"><td><a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a></td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#ddm-probability-upper-threshold"><span class="std std-ref">PROBABILITY_UPPER_THRESHOLD</span></a></td>
 <td>X</td>
 <td>X</td>
 <td>&#160;</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#ddm-probability-lower-threshold"><span class="std std-ref">PROBABILITY_LOWER_THRESHOLD</span></a></td>
+<td>X</td>
+<td>X</td>
 <td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#ddm-rt-correct-mean"><span class="std std-ref">RT_CORRECT_MEAN</span></a></td>
 <td>&#160;</td>
+<td>X</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#ddm-rt-correct-mean"><span class="std std-ref">RT_CORRECT_VARIANCE</span></a></td>
+<td>&#160;</td>
+<td>X</td>
 <td>&#160;</td>
 </tr>
 </tbody>
 </table>
-<p>The set of <code class="xref any docutils literal"><span class="pre">output_states</span></code> assigned can be customized by selecting ones from the DDM’s set of
-<a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">Standard OutputStates</span></a>), and specifying these in the <strong>output_states</strong> argument of its
-constructor. Some <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, or elements of <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, represent slightly different quantities
-depending on the function in which they are computed. See <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">Standard OutputStates</span></a> for more
-details.</p>
+<p id="ddm-custom-outputstates">The <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> assigned to a DDM can be customized by specifying a list of the desired DDM
+<a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">Standard OutputStates</span></a> in the <strong>output_states</strong> argument of its constructor, or the
+<em>OUTPUT_STATES</em> entry of an <a class="reference internal" href="OutputState.html#outputstate-specification-dictionary"><span class="std std-ref">OutputState specification dictionary</span></a>.  This can
+include two additional <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">Standard OutputStates</span></a> for the DDM - <code class="xref any docutils literal"><span class="pre">DECISION_VARIABLE_ARRAY</span></code> and <code class="xref any docutils literal"><span class="pre">SELECTED_INPUT_ARRAY</span></code>, that are available if the
+<em>ARRAY</em> option is specified in its <strong>input_format</strong> argument (see <a class="reference internal" href="#ddm-input"><span class="std std-ref">Input</span></a>).  As with any Mechanism, <a class="reference internal" href="OutputState.html#outputstate-customization"><span class="std std-ref">customized
+OutputStates</span></a> can also be created and assigned.</p>
+</div>
 <div class="section" id="ddm-function-types">
 <span id="ddm-modes"></span><h3>DDM Function Types<a class="headerlink" href="#ddm-function-types" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="analytic-solutions">
@@ -297,7 +320,8 @@ and <a class="reference internal" href="Function.html#navarroandfuss"><span clas
 return an accuracy value (represented in the <a class="reference internal" href="#ddm-probability-upper-threshold"><span class="std std-ref">PROBABILITY_UPPER_THRESHOLD</span></a>
 OutputState), and an error rate value (in the <a class="reference internal" href="#ddm-probability-lower-threshold"><span class="std std-ref">PROBABILITY_LOWER_THRESHOLD</span></a>
 OutputState;  the <a class="reference internal" href="Function.html#navarroandfuss"><span class="std std-ref">NavarroAndFuss</span></a> Function also returns expected values for mean correct response time
-(<a class="reference internal" href="#ddm-rt-correct-mean"><span class="std std-ref">RT_CORRECT_MEAN</span></a> and variance of correct response times (<a class="reference internal" href="#ddm-rt-correct-variance"><span class="std std-ref">RT_CORRECT_VARIANCE</span></a>.</p>
+(<a class="reference internal" href="#ddm-rt-correct-mean"><span class="std std-ref">RT_CORRECT_MEAN</span></a> and variance of correct response times
+(<a class="reference internal" href="#ddm-rt-correct-variance"><span class="std std-ref">RT_CORRECT_VARIANCE</span></a>.</p>
 <p>Examples for each, that illustrate all of their parameters, are shown below:</p>
 <p><a class="reference internal" href="Function.html#bogaczetal"><span class="std std-ref">BogaczEtAl</span></a> Function:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_DDM_BogaczEtAl</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span>
@@ -378,15 +402,38 @@ execution.</li>
 </dl>
 <dl class="docutils" id="ddm-decision-variable-array">
 <dt><em>DECISION_VARIABLE_ARRAY</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d nparray</span></dt>
-<dd><ul class="first last simple">
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic mode</span></a>: two element array, with the <em>DECISION_VARIABLE</em> as the first element</dt>
-<dd>if it is closer to the upper threshold or in the second element if it is closer to the lower threshold;
-the other element is 0.</dd>
-</dl>
-</li>
+<dd><div class="first admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is only available if <strong>input_format</strong> is specified as <em>ARRAY*</em> in the DDM Mechanism’s constructor
+(see <a class="reference internal" href="#ddm-input"><span class="std std-ref">Input</span></a>).</p>
+</div>
+<ul class="last simple">
+<li><a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic mode</span></a>: two element array, with the decision variable (1st item of the DDM’s
+<a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>) as the 1st element if the decision process crossed the upper threshold, and the 2nd element
+if it is closer to the lower threshold; the other element is set to 0.</li>
 <li><a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">integration mode</span></a>: the value of the decision variable at the current TIME_STEP of
-execution in the element as described above for <em>analytic mode</em>.</li>
+execution, assigned to the 1st element if the decision variable is closer to the upper threshold, and to the
+2nd element if it is closer to the lower threshold; the other element is set to 0.</li>
+</ul>
+</dd>
+</dl>
+<dl class="docutils" id="id1">
+<dt><em>SELECTED_INPUT_ARRAY</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d nparray</span></dt>
+<dd><div class="first admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is only available if <strong>input_format</strong> is specified as <em>ARRAY*</em> in the DDM Mechanism’s constructor
+(see <a class="reference internal" href="#ddm-input"><span class="std std-ref">Input</span></a>).</p>
+</div>
+<ul class="last simple">
+<li><a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic mode</span></a>: two element array, with one (“value”) element – determined by the
+outcome of the decision process – set to the value of the corresponding element in the stimulus array (i.e.,
+the DDM’s input_state <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>).  The “value” element is the 1st one if the decision
+process resulted in crossing the upper threshold, and the 2nd if it crossed the lower threshold; the other
+element is set to 0.</li>
+<li><a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">integration mode</span></a>: the value of the element in the stimulus array based on the
+decision variable (1st item of the DDM’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>) at the current TIME_STEP of execution:
+it is assigned to the 1st element if the decision variable is closer to the upper threshold, and to the  2nd
+element if the decision variable is closer to the lower threshold; the other element is set to 0.</li>
 </ul>
 </dd>
 </dl>
@@ -397,7 +444,7 @@ execution in the element as described above for <em>analytic mode</em>.</li>
 or negative value of the DDM <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>’s threshold attribute as estimated by the analytic
 solution calculated by the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>);</li>
 <li><a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">integration mode</span></a>: the number of <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> that have occurred since the DDM began
-to execute in the current <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> or, if it has reached the positive or negative value of the DDM <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>’s threshold attribute, the <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> at which that occurred.</li>
+to execute in the current <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> or, if it has reached the positive or negative value of the DDM <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>’s threshold attribute, the <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> at which that occurred.</li>
 </ul>
 <p class="last">Corresponds to the 2nd item of the DDM’s <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
 </dd>
@@ -463,7 +510,7 @@ out <a class="reference internal" href="#ddm-integration-mode"><span class="std 
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
+<li><strong>default_variable</strong> (<a class="reference internal" href="Process.html#psyneulink.components.process.Process.value" title="psyneulink.components.process.Process.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
 <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods; also serves as a template to specify the length of the <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.variable" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <a class="reference internal" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputState</span></code> of the
 DDM (see <code class="xref any docutils literal"><span class="pre">Input</span></code> &lt;DDM_Creation&gt;` for how an input with a length of greater than 1 is handled).</li>
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – <p>specifies the <code class="xref any docutils literal"><span class="pre">default_variable</span></code> as array(s) of zeros if <strong>default_variable</strong> is not
@@ -611,7 +658,7 @@ towards a specified threshold</td>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+3.g90c9ab4',
+            VERSION:'0.4.4.4+91.g261f368',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
