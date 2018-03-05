@@ -714,6 +714,31 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
+    def bin_function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+
+        # TODO: Port this to llvm
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        bf = self._llvmBinFunction
+
+        ret = np.zeros(len(variable))
+
+        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+
+        ct_param = par_struct_ty(*self.get_param_initializer())
+        ct_state = state_struct_ty(*self.get_context_initializer())
+
+        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
+        bf(ct_param, ct_state, ct_vi, ct_vo)
+
+        return ret
+
+
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
 PROPENSITY = "PROPENSITY"
@@ -2774,30 +2799,6 @@ class SoftMax(NormalizingFunction):
             builder.ret_void()
         return func_name
 
-    def bin_function(self,
-                 variable=None,
-                 params=None,
-                 time_scale=TimeScale.TRIAL,
-                 context=None):
-
-        # TODO: Port this to llvm
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        bf = self._llvmBinFunction
-
-        ret = np.zeros(len(variable))
-        gain = self.get_current_function_param(GAIN)
-        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
-
-        ct_param = par_struct_ty(gain)
-        ct_state = state_struct_ty()
-        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
-
-        bf(ct_param, ct_state, ct_vi, ct_vo)
-
-        return ret
-
     def function(self,
                  variable=None,
                  params=None,
@@ -3152,32 +3153,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
             builder.ret_void()
         return func_name
 
-    def bin_function(self,
-                 variable=None,
-                 params=None,
-                 time_scale=TimeScale.TRIAL,
-                 context=None):
-
-        # TODO: Port this to llvm
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        bf = self._llvmBinFunction
-
-        ret = np.zeros(len(variable))
-        slope = self.get_current_function_param(SLOPE)
-        intercept = self.get_current_function_param(INTERCEPT)
-
-        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
-
-        ct_param = par_struct_ty(slope, intercept)
-        ct_state = state_struct_ty()
-
-        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
-        bf(ct_param, ct_state, ct_vi, ct_vo)
-
-        return ret
-
     def function(self,
                  variable=None,
                  params=None,
@@ -3441,32 +3416,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
             builder.ret_void()
         return func_name
 
-    def bin_function(self,
-                 variable=None,
-                 params=None,
-                 time_scale=TimeScale.TRIAL,
-                 context=None):
-
-        # TODO: Port this to llvm
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        bf = self._llvmBinFunction
-        ret = np.zeros(len(variable))
-
-        rate = self.get_current_function_param(RATE)
-        scale = self.get_current_function_param(SCALE)
-
-        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
-
-        ct_param = par_struct_ty(rate, scale)
-        ct_state = state_struct_ty()
-        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
-
-        bf(ct_param, ct_state, ct_vi, ct_vo)
-
-        return ret
-
     def function(self,
                  variable=None,
                  params=None,
@@ -3687,33 +3636,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
             builder.ret_void()
         return func_name
-
-    def bin_function(self,
-                 variable=None,
-                 params=None,
-                 time_scale=TimeScale.TRIAL,
-                 context=None):
-
-        # TODO: Port this to llvm
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        bf = self._llvmBinFunction
-
-        ret = np.zeros(len(variable))
-        gain = self.get_current_function_param(GAIN)
-        bias = self.get_current_function_param(BIAS)
-        offset = self.get_current_function_param(OFFSET)
-
-        par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
-
-        ct_param = par_struct_ty(gain, bias, offset)
-        ct_state = state_struct_ty()
-
-        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
-        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
-        bf(ct_param, ct_state, ct_vi, ct_vo)
-
-        return ret
 
     def function(self,
                  variable=None,
