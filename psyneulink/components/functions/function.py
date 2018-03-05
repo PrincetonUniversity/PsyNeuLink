@@ -2696,7 +2696,7 @@ class SoftMax(NormalizingFunction):
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.get_current_function_param(GAIN)])
+        return (self.get_current_function_param(GAIN),)
 
     def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -3105,8 +3105,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.get_current_function_param(SLOPE),
-                      self.get_current_function_param(INTERCEPT)])
+        return (self.get_current_function_param(SLOPE),
+                self.get_current_function_param(INTERCEPT))
 
     def __gen_llvm_linear(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -3365,8 +3365,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.get_current_function_param(RATE),
-                      self.get_current_function_param(SCALE)])
+        return (self.get_current_function_param(RATE),
+                self.get_current_function_param(SCALE))
 
     def __gen_llvm_exponential(self, builder, index, ctx, vi, vo, rate, scale):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -3580,9 +3580,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.get_current_function_param(GAIN),
-                      self.get_current_function_param(BIAS),
-                      self.get_current_function_param(OFFSET)])
+        return (self.get_current_function_param(GAIN),
+                self.get_current_function_param(BIAS),
+                self.get_current_function_param(OFFSET))
 
     def __gen_llvm_logistic(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -4138,7 +4138,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         return param_type
 
     def get_param_initializer(self):
-        return tuple([tuple(np.array(self.matrix).flatten().tolist())])
+        return (tuple(np.array(self.matrix).flatten().tolist()),)
 
     def _gen_llvm_function(self):
         func_name = None
@@ -5499,9 +5499,9 @@ class AdaptiveIntegrator(
         return param_type
 
     def get_param_initializer(self):
-        return tuple([self.get_current_function_param(RATE),
-                      self.get_current_function_param(OFFSET),
-                      self.get_current_function_param(NOISE)])
+        return (self.get_current_function_param(RATE),
+                self.get_current_function_param(OFFSET),
+                self.get_current_function_param(NOISE))
 
 
     def get_context_struct_type(self):
@@ -5516,7 +5516,7 @@ class AdaptiveIntegrator(
             # FIXME: previous value should be extended version of the
             # initializer. for some reason it's nested list
             data = self.previous_value[0]
-        return tuple([tuple(data)])
+        return (tuple(data),)
 
 
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
