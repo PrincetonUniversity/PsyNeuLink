@@ -1191,6 +1191,7 @@ class Process(Process_Base):
         # ASSIGN DEFAULT PROJECTION PARAMS
 
         # If learning is specified for the Process, add learning specification to default Projection params
+        #    and store any learning-related specifications
         if self.learning:
 
             # if spec is LEARNING or ENABLED (convenience spec),
@@ -2530,7 +2531,7 @@ class ProcessInputState(OutputState):
         # MODIFIED 2/17/17 END
         # self.path_afferents = []
         # self.index = PRIMARY
-        # self.assign = Linear
+        # self.assign = None
 
     @property
     def value(self):
