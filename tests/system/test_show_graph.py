@@ -1,18 +1,10 @@
-import numpy as np
-import pytest
-
-from psyneulink.components.component import ComponentError
-from psyneulink.components.functions.function import FunctionError
-from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax
-from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
-from psyneulink.components.mechanisms.mechanism import MechanismError
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
+from psyneulink.components.functions.function import Linear
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.globals.utilities import UtilitiesError
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
-from psyneulink.globals.keywords import ENABLED
+from psyneulink.globals.keywords import ENABLED, ALL
 
 class TestSimpleSystems:
 
@@ -25,8 +17,11 @@ class TestSimpleSystems:
         s = System(name="s",
                    processes=[p])
 
-        s.show_graph()
-        s.show_graph(show_dimensions=True)
+        a_label = s._get_label(a, ALL)
+        b_label = s._get_label(b, ALL)
+
+        assert "out (3)" in a_label and "in (3)" in a_label
+        assert "out (1)" in b_label and "in (1)" in b_label
 
     def test_diverging_pathways(self):
         a = TransferMechanism(name="a",
@@ -41,8 +36,13 @@ class TestSimpleSystems:
         s = System(name="s",
                    processes=[p, p2])
 
-        s.show_graph()
-        s.show_graph(show_dimensions=True)
+        a_label = s._get_label(a, ALL)
+        b_label = s._get_label(b, ALL)
+        c_label = s._get_label(c, ALL)
+
+        assert "out (3)" in a_label and "in (3)" in a_label
+        assert "out (1)" in b_label and "in (1)" in b_label
+        assert "out (5)" in c_label and "in (5)" in c_label
 
     def test_converging_pathways(self):
         a = TransferMechanism(name="a",
@@ -57,24 +57,31 @@ class TestSimpleSystems:
         s = System(name="s",
                    processes=[p, p2])
 
-        s.show_graph()
-        s.show_graph(show_dimensions=True)
+        a_label = s._get_label(a, ALL)
+        b_label = s._get_label(b, ALL)
+        c_label = s._get_label(c, ALL)
+
+        assert "out (3)" in a_label and "in (3)" in a_label
+        assert "out (1)" in b_label and "in (1)" in b_label
+        assert "out (5)" in c_label and "in (5)" in c_label
 
 class TestLearning:
 
     def test_process(self):
-        a = TransferMechanism(name="a",
+        a = TransferMechanism(name="a-sg",
                               default_variable=[0, 0, 0])
-        b = TransferMechanism(name="b")
+        b = TransferMechanism(name="b-sg")
         p = Process(name="p",
                     pathway=[a, b],
                     learning=ENABLED)
         s = System(name="s",
                    processes=[p])
 
-        s.show_graph()
-        s.show_graph(show_dimensions=True)
-        s.show_graph(show_learning=True, show_dimensions=True)
+        a_label = s._get_label(a, ALL)
+        b_label = s._get_label(b, ALL)
+
+        assert "out (3)" in a_label and "in (3)" in a_label
+        assert "out (1)" in b_label and "in (1)" in b_label
 
     def test_diverging_pathways(self):
         a = TransferMechanism(name="a",
@@ -91,9 +98,13 @@ class TestLearning:
         s = System(name="s",
                    processes=[p, p2])
 
-        s.show_graph()
-        s.show_graph(show_dimensions=True)
-        s.show_graph(show_learning=True, show_dimensions=True)
+        a_label = s._get_label(a, ALL)
+        b_label = s._get_label(b, ALL)
+        c_label = s._get_label(c, ALL)
+
+        assert "out (3)" in a_label and "in (3)" in a_label
+        assert "out (1)" in b_label and "in (1)" in b_label
+        assert "out (5)" in c_label and "in (5)" in c_label
 
     def test_converging_pathways(self):
         a = TransferMechanism(name="a",
@@ -110,9 +121,13 @@ class TestLearning:
         s = System(name="s",
                    processes=[p, p2])
 
-        s.show_graph()
-        s.show_graph(show_dimensions=True)
-        s.show_graph(show_learning=True, show_dimensions=True)
+        a_label = s._get_label(a, ALL)
+        b_label = s._get_label(b, ALL)
+        c_label = s._get_label(c, ALL)
+
+        assert "out (3)" in a_label and "in (3)" in a_label
+        assert "out (1)" in b_label and "in (1)" in b_label
+        assert "out (5)" in c_label and "in (5)" in c_label
 
 class TestControl:
 
@@ -131,8 +146,11 @@ class TestControl:
         s = System(name="s",
                    processes=[p])
 
-        s.show_graph()
-        s.show_graph(show_dimensions=True)
+        a_label = s._get_label(a, ALL)
+        b_label = s._get_label(b, ALL)
+
+        assert "out (3)" in a_label and "in (3)" in a_label
+        assert "out (1)" in b_label and "in (1)" in b_label
 
     def test_diverging_pathways(self):
         a = TransferMechanism(name="a",
@@ -153,8 +171,13 @@ class TestControl:
         s = System(name="s",
                    processes=[p, p2])
 
-        s.show_graph()
-        s.show_graph(show_dimensions=True)
+        a_label = s._get_label(a, ALL)
+        b_label = s._get_label(b, ALL)
+        c_label = s._get_label(c, ALL)
+
+        assert "out (3)" in a_label and "in (3)" in a_label
+        assert "out (1)" in b_label and "in (1)" in b_label
+        assert "out (5)" in c_label and "in (5)" in c_label
 
     def test_converging_pathways(self):
         a = TransferMechanism(name="a",
@@ -175,5 +198,10 @@ class TestControl:
         s = System(name="s",
                    processes=[p, p2])
 
-        s.show_graph()
-        s.show_graph(show_dimensions=True)
+        a_label = s._get_label(a, ALL)
+        b_label = s._get_label(b, ALL)
+        c_label = s._get_label(c, ALL)
+
+        assert "out (3)" in a_label and "in (3)" in a_label
+        assert "out (1)" in b_label and "in (1)" in b_label
+        assert "out (5)" in c_label and "in (5)" in c_label
