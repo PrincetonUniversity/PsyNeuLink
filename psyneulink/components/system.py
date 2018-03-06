@@ -453,6 +453,11 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, insert_list, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.projection import Projection
+
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
@@ -1606,25 +1611,28 @@ class System(System_Base):
 
             # If sender_mech is an ObjectiveMechanism, and:
             #    - none of the Mechanisms that project to it are are a TERMINAL Mechanism for the current Process, or
-            #    - all of the Mechanisms that project to it already have an ObjectiveMechanism, then:
-            #        - do not include the ObjectiveMechanism in the graph;
-            #        - be sure that its outputState projects to the ERROR_SIGNAL inputState of a LearningMechanism
-            #            (labelled "learning_mech" here -- raise an exception if it does not;
-            #        - determine whether learning_mech's ERROR_SIGNAL inputState receives any other projections
-            #            from another ObjectiveMechanism or LearningMechanism (labelled "error_signal_projection" here)
-            #            -- if it does, be sure that it is from the same system and if so return;
-            #               (note:  this shouldn't be true, but the test is here for completeness and sanity-checking)
-            #        - if learning_mech's ERROR_SIGNAL inputState does not receive any projections from
-            #            another objectiveMechanism and/or LearningMechanism in the system, then:
-            #            - find the sender to the ObjectiveMechanism (labelled "error_source" here)
-            #            - find the 1st projection from error_source that projects to the ACTIVATION_INPUT inputState of
-            #                a LearningMechanism (labelled "error_signal" here)
-            #            - instantiate a MappingProjection from error_signal to learning_mech
-            #                projected
+            #    - all of the Mechanisms that project to it already have an ObjectiveMechanism,
+            # Then:
+            #    - do not include the ObjectiveMechanism in the graph;
+            #    - be sure that its outputState projects to the ERROR_SIGNAL inputState of a LearningMechanism
+            #        (labelled "learning_mech" here -- raise an exception if it does not;
+            #    - determine whether learning_mech's ERROR_SIGNAL inputState receives any other projections
+            #        from another ObjectiveMechanism or LearningMechanism (labelled "error_signal_projection" here)
+            #        -- if it does, be sure that it is from the same system and if so return;
+            #           (note:  this shouldn't be true, but the test is here for completeness and sanity-checking)
+            #    - if learning_mech's ERROR_SIGNAL inputState does not receive any projections from
+            #        another objectiveMechanism and/or LearningMechanism in the system, then:
+            #        - find the sender to the ObjectiveMechanism (labelled "error_source" here)
+            #        - find the 1st projection from error_source that projects to the ACTIVATION_INPUT inputState of
+            #            a LearningMechanism (labelled "error_signal" here)
+            #        - instantiate a MappingProjection from error_signal to learning_mech
+            #            projected
             # IMPLEMENTATION NOTE: Composition should allow 1st condition if user indicates internal TARGET is desired;
-            #                      for now, however, assume this is not desired (i.e., only TERMINAL mechanisms
-            #                      should project to ObjectiveMechanisms) and always replace internal
-            #                      ObjectiveMechanism with projection from a LearningMechanism (if it is available)
+            #                  for now, however, assume this is not desired (i.e., only TERMINAL mechanisms
+            #                  should project to ObjectiveMechanisms) and always replace internal
+            #                  ObjectiveMechanism with projection from a LearningMechanism (if it is available)
+            # Otherwise:
+            #     - include it in the graph
 
             obj_mech_replaced = False
 
@@ -1646,13 +1654,21 @@ class System(System_Base):
                 if sample_mech != learning_mech.output_source:
                     assert False
 
-                # Its the 1st item in the learning_execution_graph, so could be for a TERMINAL Mechanism of the System
+                # ObjectiveMechanism the 1st item in the learning_execution_graph, so could be for:
+                #    - the last Mechanism in a learning sequence, or
+                #    - a TERMINAL Mechanism of the System
                 if len(self.learning_execution_graph) == 0:
-
-                    # If sample_mech is NOT for a TERMINAL Mechanism of the current System,
-                    #  - obj_mech should NOT be included in the learning_execution_graph and
-                    #  - should be replaced with appropriate projections to sample_mechs's afferent LearningMechanisms
-                    if not sample_mech.systems[self] is TERMINAL:
+                    # If is the last item in a learning sequence,
+                    #    doesn't matter if it is a TERMINAL Mechanism;  needs to remain as a Target for the System
+                    if not any(proj.has_learning_projection and self in proj.receiver.owner.systems
+                               for proj in sample_mech.output_state.efferents):
+                        pass
+                    # If sample_mech is:
+                    #    - NOT for a TERMINAL Mechanism of the current System
+                    # Then:
+                    #    - obj_mech should NOT be included in the learning_execution_graph and
+                    #    - should be replaced with appropriate projections to sample_mechs's afferent LearningMechanisms
+                    elif not sample_mech.systems[self] is TERMINAL:
                         _assign_error_signal_projections(sample_mech, self, obj_mech)
                         # Don't process ObjectiveMechanism any further (since its been replaced)
                         return
@@ -1683,9 +1699,13 @@ class System(System_Base):
 
                     # INTERNAL CONVERGENCE
                     # None of the mechanisms that project to it are a TERMINAL mechanism
-                    elif not all(all(projection.sender.owner.processes[proc] is TERMINAL
+                    elif (not all(all(projection.sender.owner.processes[proc] is TERMINAL
                                      for proc in projection.sender.owner.processes)
-                                 for projection in obj_mech.input_states[SAMPLE].path_afferents):
+                                 for projection in obj_mech.input_states[SAMPLE].path_afferents)
+                          # and it is not for the last Mechanism in a learning sequence
+                          and any(proj.has_learning_projection and self in proj.receiver.owner.systems
+                                  for proj in sample_mech.output_state.efferents)
+                    ):
 
                         _assign_error_signal_projections(sample_mech, self, obj_mech)
                         obj_mech_replaced = True
@@ -2611,7 +2631,7 @@ class System(System_Base):
             except AttributeError as error_msg:
                 if not 'INIT' in context:
                     raise SystemError("PROGRAM ERROR: Problem executing controller for {}: {}".
-                                      format(self.name, error_msg))
+                                      format(self.name, error_msg.args[0]))
         #endregion
 
         # Report completion of system execution and value of designated outputs
@@ -3207,6 +3227,44 @@ class System(System_Base):
         else:
             return self.controller.control_signals
 
+    def _get_label(self, item, show_dimensions):
+
+        # For Mechanisms, show length of each InputState and OutputState
+        if isinstance(item, Mechanism):
+            if show_dimensions in {ALL, MECHANISMS}:
+                input_str = "in ({})".format(",".join(str(len(input_state.variable))
+                                                      for input_state in item.input_states))
+                output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
+                                                        for output_state in item.output_states))
+                return "{}\n{}\n{}".format(output_str, item.name, input_str)
+            else:
+                return item.name
+
+        # For Projection, show dimensions of matrix
+        elif isinstance(item, Projection):
+            if show_dimensions in {ALL, PROJECTIONS}:
+                # MappingProjections use matrix
+                if isinstance(item, MappingProjection):
+                    value = np.array(item.matrix)
+                    dim_string = "({})".format("x".join([str(i) for i in value.shape]))
+                    return "{}\n{}".format(item.name, dim_string)
+                # ModulatoryProjections use value
+                else:
+                    value = np.array(item.value)
+                    dim_string = "({})".format(len(value))
+                    return "{}\n{}".format(item.name, dim_string)
+            else:
+                return item.name
+
+        elif isinstance(item, System):
+            if "SYSTEM" in item.name.upper():
+                return item.name
+            else:
+                return "{}\nSystem".format(item.name)
+
+        else:
+            raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
+
     def show_graph(self,
                    direction = 'BT',
                    show_learning = False,
@@ -3319,11 +3377,6 @@ class System(System_Base):
 
         """
 
-        from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
-        from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.components.projections.projection import Projection
-
         import graphviz as gv
 
         system_graph = self.graph
@@ -3336,47 +3389,6 @@ class System(System_Base):
         projection_shape = 'diamond'
         # projection_shape = 'Mdiamond'
         # projection_shape = 'hexagon'
-
-        def _get_label(item):
-
-
-            # For Mechanisms, show length of each InputState and OutputState
-            if isinstance(item, Mechanism):
-                if show_dimensions in {ALL, MECHANISMS}:
-                    input_str = "in ({})".format(",".join(str(len(input_state.variable))
-                                                       for input_state in item.input_states))
-                    output_str = "out ({})".format(",".join(str(len(output_state.value))
-                                                        for output_state in item.output_states))
-                    return "{}\n{}\n{}".format(output_str, item.name, input_str)
-                else:
-                    return item.name
-
-            # For Projection, show dimensions of matrix
-            elif isinstance(item, Projection):
-                if show_dimensions in {ALL, PROJECTIONS}:
-                    # MappingProjections use matrix
-                    if isinstance(item, MappingProjection):
-                        value = np.array(item.matrix)
-                        dim_string = "({})".format("x".join([str(i) for i in value.shape]))
-                        return "{}\n{}".format(item.name, dim_string)
-                    # ModulatoryProjections use value
-                    else:
-                        value = np.array(item.value)
-                        dim_string = "({})".format(len(value))
-                        return "{}\n{}".format(item.name, dim_string)
-                else:
-                    return item.name
-
-            elif isinstance(item, System):
-                if "SYSTEM" in item.name.upper():
-                    return item.name
-                else:
-                    return "{}\nSystem".format(item.name)
-
-            else:
-                raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
-
-
 
         # build graph and configure visualisation settings
         G = gv.Digraph(engine = "dot",
@@ -3400,7 +3412,7 @@ class System(System_Base):
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
-            rcvr_name = _get_label(rcvr)
+            rcvr_name = self._get_label(rcvr, show_dimensions)
             # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
             rcvr_label = rcvr_name
             G.node(rcvr_label, shape=mechanism_shape)
@@ -3410,7 +3422,7 @@ class System(System_Base):
                 for proj in input_state.path_afferents:
                     if proj.sender.owner is not rcvr:
                         continue
-                    edge_label = _get_label(proj)
+                    edge_label = self._get_label(proj, show_dimensions)
                     try:
                         has_learning = proj.has_learning_projection
                     except AttributeError:
@@ -3426,7 +3438,7 @@ class System(System_Base):
             # loop through senders
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
-                sndr_name = _get_label(sndr)
+                sndr_name = self._get_label(sndr, show_dimensions)
                 # sndr_shape = sndr.instance_defaults.variable.shape[1]
                 sndr_label = sndr_name
 
@@ -3435,7 +3447,7 @@ class System(System_Base):
                     projs = output_state.efferents
                     for proj in projs:
                         if proj.receiver.owner == rcvr:
-                            edge_name = _get_label(proj)
+                            edge_name = self._get_label(proj, show_dimensions)
                             # edge_shape = proj.matrix.shape
                             try:
                                 has_learning = proj.has_learning_projection
@@ -3479,7 +3491,7 @@ class System(System_Base):
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
                         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
-                        G.edge(_get_label(sndr), _get_label(rcvr), color=learning_color, label = edge_label)
+                        G.edge(self._get_label(sndr, show_dimensions), self._get_label(rcvr, show_dimensions), color=learning_color, label = edge_label)
                 else:
                     # Implement edges for Projections to each LearningMechanism from other LearningMechanisms
                     # and from ProcessingMechanisms if 'ALL' is set
@@ -3488,19 +3500,19 @@ class System(System_Base):
                     for input_state in rcvr.input_states:
                         for proj in input_state.path_afferents:
                             sndr = proj.sender.owner
-                            G.node(_get_label(rcvr), color=learning_color)
+                            G.node(self._get_label(rcvr, show_dimensions), color=learning_color)
                             # If Projection is not from another learning component
                             #    only show if ALL is set, and don't color
                             if (isinstance(sndr, LearningMechanism) or
                                 (isinstance(sndr, ObjectiveMechanism)
                                  and sndr._role is LEARNING
                                  and self in sndr.systems)):
-                                G.node(_get_label(sndr), color=learning_color)
+                                G.node(self._get_label(sndr, show_dimensions), color=learning_color)
                             else:
                                 if show_learning is True:
                                     continue
                             if self in sndr.systems:
-                                G.edge(_get_label(sndr), _get_label(rcvr), color=learning_color, label=proj.name)
+                                G.edge(self._get_label(sndr, show_dimensions), self._get_label(rcvr, show_dimensions), color=learning_color, label=proj.name)
 
                             # Get Projections to ComparatorMechanism as well
                             if (isinstance(sndr, ObjectiveMechanism)
@@ -3514,9 +3526,9 @@ class System(System_Base):
                                         if isinstance(output_mech, Process):
                                             continue
                                         elif isinstance(output_mech, System):
-                                            G.node(_get_label(output_mech), color=system_color, penwidth='3')
-                                        G.edge(_get_label(output_mech),
-                                               _get_label(sndr),
+                                            G.node(self._get_label(output_mech), color=system_color, penwidth='3')
+                                        G.edge(self._get_label(output_mech, show_dimensions),
+                                               self._get_label(sndr, show_dimensions),
                                                color=learning_color,
                                                label=proj.name)
                                         assert True
@@ -3535,9 +3547,9 @@ class System(System_Base):
             objmech = connector.sender.owner
 
             # main edge
-            G.node(_get_label(controller), color=control_color)
-            G.node(_get_label(objmech), color=control_color)
-            G.edge(_get_label(objmech), _get_label(controller), label=connector.name, color=control_color)
+            G.node(self._get_label(controller, show_dimensions), color=control_color)
+            G.node(self._get_label(objmech, show_dimensions), color=control_color)
+            G.edge(self._get_label(objmech, show_dimensions), self._get_label(controller, show_dimensions), label=connector.name, color=control_color)
 
             # outgoing edges
             for output_state in controller.control_signals:
@@ -3545,24 +3557,24 @@ class System(System_Base):
                     # MODIFIED 7/21/17 CW: this edge_name statement below didn't do anything and caused errors, so
                     # I commented it out.
                     # edge_name
-                    rcvr_name = _get_label(projection.receiver.owner)
-                    G.edge(_get_label(controller), rcvr_name, label=projection.name, color=control_color)
+                    rcvr_name = self._get_label(projection.receiver.owner, show_dimensions)
+                    G.edge(self._get_label(controller, show_dimensions), rcvr_name, label=projection.name, color=control_color)
 
             # incoming edges
             for istate in objmech.input_states:
                 for proj in istate.path_afferents:
-                    sndr_name = _get_label(proj.sender.owner)
-                    G.edge(sndr_name, _get_label(objmech), label=proj.name, color=control_color)
+                    sndr_name = self._get_label(proj.sender.owner, show_dimensions)
+                    G.edge(sndr_name, self._get_label(objmech, show_dimensions), label=proj.name, color=control_color)
 
             # prediction mechanisms
             for object_item in self.execution_list:
                 mech = object_item
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-                    G.node(_get_label(mech),
+                    G.node(self._get_label(mech, show_dimensions),
                            color=prediction_mechanism_color)
                     recvr = mech.origin_mech
-                    G.edge(_get_label(mech),
-                           _get_label(recvr),
+                    G.edge(self._get_label(mech, show_dimensions),
+                           self._get_label(recvr, show_dimensions),
                            label=' prediction assignment',
                            color=prediction_mechanism_color)
                     pass
