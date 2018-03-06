@@ -695,6 +695,7 @@ class TestTransferMechanismTimeConstant:
             and "must be a float between 0 and 1" in str(error_text.value)
         )
 
+
 class TestTransferMechanismSize:
 
     @pytest.mark.mechanism
