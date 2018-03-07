@@ -525,6 +525,7 @@ LINEAR_FUNCTION = "Linear Function"
 LEABRA_FUNCTION = "Leabra Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
 LOGISTIC_FUNCTION = "Logistic Function"
+ONE_HOT_FUNCTION = "OneHote Function"
 SOFTMAX_FUNCTION = 'SoftMax Function'
 INTEGRATOR_FUNCTION = "Integrator Function"
 SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
@@ -810,7 +811,9 @@ DIST_MEAN = 'mean'
 OUTPUT_TYPE = 'output'
 ALL = 'all'
 MAX_VAL = 'max_val'
+MAX_ABS_VAL = 'max_abs_val'
 MAX_INDICATOR = 'max_indicator'
+MAX_ABS_INDICATOR = 'max_abs_indicator'
 PROB = 'prob'
 MUTUAL_ENTROPY = 'mutual entropy'
 
