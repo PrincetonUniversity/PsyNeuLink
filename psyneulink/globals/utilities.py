@@ -1153,3 +1153,32 @@ def safe_len(arr, fallback=1):
         return len(arr)
     except TypeError:
         return fallback
+
+
+# one_hot functions
+
+def one_hot_max_val(value):
+    """Return array with maximum value left as is, all others set to 0
+    """
+    max_value = np.max(value)
+    return np.where(value == max_value, max_value, 0)
+
+
+def one_hot_max_indicator(value):
+    """Return array with maximum value set to 1, all others set to 0
+    """
+    max_value = np.max(value)
+    return np.where(value == max_value, 1, 0)
+
+
+def one_hot_prob(value):
+    """Return array one element probabisistcally chosen to retain its value and others set to 0
+
+    All values are normalized to be between 0 and 1, which are then used as proabilities for choosing each
+    """
+    normed = value / np.sum(value, axis=0)
+    cum_sum = np.cumsum(normed)
+    random_value = np.random.uniform()
+    chosen_item = next(element for element in cum_sum if element > random_value)
+    chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
+    return value * chosen_in_cum_sum

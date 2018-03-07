@@ -3245,8 +3245,6 @@ class OneHot(TransferFunction):  # ---------------------------------------------
 
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-
-
         return value
 
 
