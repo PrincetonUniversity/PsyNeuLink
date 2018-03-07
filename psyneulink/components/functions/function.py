@@ -214,7 +214,9 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
+from psyneulink.globals.utilities import \
+    AutoNumber, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, \
+    one_hot_max_val, one_hot_max_indicator, one_hot_prob, parameter_spec
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
@@ -3207,7 +3209,8 @@ class OneHot(TransferFunction):  # ---------------------------------------------
                  context=componentName + INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(params=params)
+        params = self._assign_args_to_param_dicts(mode=mode,
+                                                  params=params)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -3244,6 +3247,14 @@ class OneHot(TransferFunction):  # ---------------------------------------------
         """
 
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        if self.mode is MAX_VAL:
+            return one_hot_max_val(variable)
+        elif self.mode is MAX_ABS_VAL:
+            return one_hot_max_val(variable, abs=True)
+        elif self.mode is MAX_INDICATOR:
+            return one_hot_max_indicator(variable, abs=True)
+
 
         return value
 
