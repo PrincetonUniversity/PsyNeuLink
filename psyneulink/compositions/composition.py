@@ -338,7 +338,9 @@ class Composition(object):
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.mechanisms = []
-        self.input_mechanisms = {}
+        self.CIM = CompositionInterfaceMechanism(name="Stimulus_CIM")
+        self.CIM_output_states = {}
+        self.execution_ids = []
 
         self._scheduler_processing = None
         self._scheduler_learning = None
@@ -388,7 +390,12 @@ class Composition(object):
             :getter: Returns the default processing scheduler, and builds it if it needs updating since the last access.
         '''
         if self.needs_update_scheduler_processing or self._scheduler_processing is None:
+            old_scheduler = self._scheduler_processing
             self._scheduler_processing = Scheduler(graph=self.graph_processing)
+
+            if old_scheduler is not None:
+                self._scheduler_processing.add_condition_set(old_scheduler.condition_set)
+
             self.needs_update_scheduler_processing = False
 
         return self._scheduler_processing
@@ -402,7 +409,12 @@ class Composition(object):
             :getter: Returns the default learning scheduler, and builds it if it needs updating since the last access.
         '''
         if self.needs_update_scheduler_learning or self._scheduler_learning is None:
+            old_scheduler = self._scheduler_learning
             self._scheduler_learning = Scheduler(graph=self.graph)
+
+            if old_scheduler is not None:
+                self._scheduler_learning.add_condition_set(old_scheduler.condition_set)
+
             self.needs_update_scheduler_learning = False
 
         return self._scheduler_learning
@@ -428,6 +440,8 @@ class Composition(object):
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
+            self.needs_update_scheduler_processing = True
+            self.needs_update_scheduler_learning = True
 
     def add_projection(self, sender, projection, receiver):
         '''
@@ -457,6 +471,36 @@ class Composition(object):
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
+            self.needs_update_scheduler_processing = True
+            self.needs_update_scheduler_learning = True
+    def add_pathway(self, path):
+        '''
+            Adds an existing Pathway to the current Composition
+
+            Arguments
+            ---------
+
+            path: the Pathway (Composition) to be added
+
+        '''
+
+        # identify mechanisms and projections
+        mechanisms, projections = [], []
+        for c in path.graph.vertices:
+            if isinstance(c.component, Mechanism):
+                mechanisms.append(c.component)
+            elif isinstance(c.component, Projection):
+                projections.append(c.component)
+
+        # add all mechanisms first
+        for m in mechanisms:
+            self.add_mechanism(m)
+
+        # then projections
+        for p in projections:
+            self.add_projection(p.sender.owner, p, p.receiver.owner)
+
+        self._analyze_graph()
 
     def add_linear_processing_pathway(self, pathway):
         # First, verify that the pathway begins with a mechanism
@@ -600,6 +644,8 @@ class Composition(object):
                         elif child not in visited:
                             next_visit_stack.append(child)
 
+        self._create_CIM_output_states()
+
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
@@ -669,6 +715,12 @@ class Composition(object):
         except KeyError as e:
             raise CompositionError('Mechanism not assigned to role in mechanisms_to_roles: {0}'.format(e))
 
+    def get_roles_by_mechanism(self, mechanism):
+        try:
+            return self.mechanisms_to_roles[mechanism]
+        except KeyError:
+            raise CompositionError('Mechanism {0} not found in {1}.mechanisms_to_roles'.format(mechanism, self))
+
     def _set_mechanism_roles(self, mech, roles):
         self.clear_mechanism_role(mech)
         for role in roles:
@@ -720,39 +772,72 @@ class Composition(object):
                                          "{!s} where the InputState takes values of length {!s}".
                                          format(i, mech.name, val_length, state_length))
 
-    def _create_input_mechanisms(self):
+    def _create_CIM_output_states(self):
         '''
-            builds a dictionary of { Mechanism : InputMechanism } pairs where each 'ORIGIN' Mechanism has a
-            corresponding InputMechanism
+            builds a dictionary of { Mechanism : OutputState } pairs where each origin mechanism has at least one
+            corresponding OutputState on the CompositionInterfaceMechanism
         '''
-        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
-        has_input_mechanism = self.input_mechanisms.keys()
+        # FIX BUG: stimulus CIM output states are not properly destroyed when analyze graph is run multiple times
+        # (extra mechanisms are marked as CIMs when graph is analyzed too early, so they create CIM output states)
 
-        # consider all of the mechanisms that are only origins OR have input mechanisms
-        for mech in is_origin.difference(has_input_mechanism):
+        # loop over all origin mechanisms
+        current_input_states = set()
+        for mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN):
 
-            # If mech IS AN ORIGIN mechanism but it doesn't have an input mechanism, ADD input mechanism
-            if mech not in has_input_mechanism:
-                new_input_mech = CompositionInterfaceMechanism()
-                self.input_mechanisms[mech] = new_input_mech
-                MappingProjection(sender=new_input_mech, receiver=mech)
+            for input_state in mech.input_states:
+                # add it to our set of current input states
+                current_input_states.add(input_state)
 
-            # If mech HAS AN INPUT mechanism but isn't an origin, REMOVE the input mechanism
+                # if there is not a corresponding CIM output state, add one
+                if input_state not in set(self.CIM_output_states.keys()):
+                    interface_output_state = OutputState(owner=self.CIM,
+                                                         variable=input_state.variable,
+                                                         reference_value= input_state.variable,
+                                                         name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
+                    # self.CIM.add_states(interface_output_state)
+                    self.CIM.output_states.append(interface_output_state)
+                    self.CIM_output_states[input_state] = interface_output_state
+                    MappingProjection(sender=interface_output_state,
+                                      receiver=input_state,
+                                      matrix= IDENTITY_MATRIX,
+                                      name="("+interface_output_state.name + ") to ("
+                                           + input_state.owner.name + "-" + input_state.name+")")
+
+        sends_to_input_states = set(self.CIM_output_states.keys())
+        # For any output state still registered on the CIM that does not map to a corresponding ORIGIN mech I.S.:
+        for input_state in sends_to_input_states.difference(current_input_states):
+            for projection in input_state.path_afferents:
+                if projection.sender == self.CIM_output_states[input_state]:
+                    # remove the corresponding projection from the ORIGIN mechanism's path afferents
+                    input_state.path_afferents.remove(projection)
+                    projection = None
+
+            # remove the output state associated with this input state (this iteration) from the CIM output states
+            self.CIM.output_states.remove(self.CIM_output_states[input_state])
+
+            # and from the dictionary of CIM output state/input state pairs
+            del self.CIM_output_states[input_state]
+
+    def _assign_values_to_CIM_output_states(self, inputs):
+        current_mechanisms = set()
+        for key in inputs:
+            if isinstance(key, Mechanism):
+                self.CIM_output_states[key.input_state].value = inputs[key]
+                current_mechanisms.add(key)
             else:
-                del self.input_mechanisms[mech]
+                self.CIM_output_states[key].value = inputs[key]
+                current_mechanisms.add(key.owner)
 
-    def _assign_values_to_input_mechanisms(self, input_dict):
-        '''
-            loops over the input values in the inputs dictionary and assigns each value directly to the output state of
-            its corresponding input Mechanism
-        '''
-        for mech in self.input_mechanisms.keys():
-            if mech in input_dict.keys():
-                self.input_mechanisms[mech]._output_states[0].value = np.array(input_dict[mech])
-            else:
-                self.input_mechanisms[mech]._output_states[0].value = np.array(mech.instance_defaults.variable)
+        origins = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
 
-    def _assign_execution_ids(self, execution_id):
+        # NOTE: This may need to change from default_variable to wherever a default value of the mechanism's variable
+        # is stored -- the point is that if an input is not supplied for an origin mechanism, the mechanism should use
+        # its default variable value
+        for mech in origins.difference(set(current_mechanisms)):
+            self.CIM_output_states[mech.input_state].value = mech.instance_defaults.variable
+
+
+    def _assign_execution_ids(self, execution_id=None):
         '''
             assigns the same uuid to each Mechanism in the composition's processing graph as well as all input
             mechanisms for this composition. The uuid is either specified in the user's call to run(), or generated
@@ -760,12 +845,35 @@ class Composition(object):
         '''
 
         # Traverse processing graph and assign one uuid to all of its mechanisms
-        self._execution_id = execution_id or self._get_unique_id()
+        if execution_id is None:
+            execution_id = self._get_unique_id()
+
+        if execution_id not in self.execution_ids:
+            self.execution_ids.append(execution_id)
+
         for v in self._graph_processing.vertices:
-            v.component._execution_id = self._execution_id
+            v.component._execution_id = execution_id
+
         # Assign the uuid to all input mechanisms
-        for k in self.input_mechanisms.keys():
-            self.input_mechanisms[k]._execution_id = self._execution_id
+        # for k in self.input_mechanisms.keys():
+        #     self.input_mechanisms[k]._execution_id = execution_id
+
+        self.CIM._execution_id = execution_id
+        # self.target_CIM._execution_id = execution_id
+
+        self._execution_id = execution_id
+        return execution_id
+
+    def _identify_clamp_inputs(self, list_type, input_type, origins):
+        # clamp type of this list is same as the one the user set for the whole composition; return all mechanisms
+        if list_type == input_type:
+            return origins
+        # the user specified different types of clamps for each origin mechanism; generate a list accordingly
+        elif isinstance(input_type, dict):
+            return [k for k, v in input_type.items() if list_type == v]
+        # clamp type of this list is NOT same as the one the user set for the whole composition; return empty list
+        else:
+            return []
 
     def execute(
         self,
@@ -776,7 +884,9 @@ class Composition(object):
         call_before_pass=None,
         call_after_time_step=None,
         call_after_pass=None,
-        execution_id=None
+        execution_id=None,
+        clamp_input=SOFT_CLAMP,
+        targets=None
     ):
         '''
             Passes inputs to any Mechanisms receiving inputs directly from the user, then coordinates with the Scheduler
@@ -818,47 +928,88 @@ class Composition(object):
             output value of the final Mechanism executed in the Composition : various
         '''
 
+        if targets is None:
+            targets = {}
+        execution_id = self._assign_execution_ids(execution_id)
+        origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
 
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
-        self._create_input_mechanisms()
-        self._assign_values_to_input_mechanisms(inputs)
-        self._assign_execution_ids(execution_id)
+        self._assign_values_to_CIM_output_states(inputs)
+        # self._assign_values_to_target_CIM_output_states(targets)
         next_pass_before = 1
         next_pass_after = 1
+        if clamp_input:
+            soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, origin_mechanisms)
+            hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, origin_mechanisms)
+            pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, origin_mechanisms)
+            no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, origin_mechanisms)
         # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
+        execution_scheduler._init_counts(execution_id=execution_id)
         num = None
 
         if call_before_pass:
             call_before_pass()
 
-        for next_execution_set in execution_scheduler.run():
+        for next_execution_set in execution_scheduler.run(execution_id=execution_id):
             if call_after_pass:
-                if next_pass_after == execution_scheduler.clock.time.pass_:
-                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.clock.current_pass()))
+                if next_pass_after == execution_scheduler.times[execution_id][TimeScale.TRIAL][TimeScale.PASS]:
+                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.times[execution_id][TimeScale.TRIAL][TimeScale.PASS]))
                     call_after_pass()
                     next_pass_after += 1
 
             if call_before_pass:
-                if next_pass_before == execution_scheduler.clock.time.pass_:
+                if next_pass_before == execution_scheduler.times[execution_id][TimeScale.TRIAL][TimeScale.PASS]:
                     call_before_pass()
-                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.format(next_pass_before, execution_scheduler.clock.current_pass()))
+                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.format(next_pass_before, execution_scheduler.times[execution_id][TimeScale.TRIAL][TimeScale.PASS]))
                     next_pass_before += 1
 
             if call_before_time_step:
                 call_before_time_step()
             # execute each mechanism with EXECUTING in context
             for mechanism in next_execution_set:
+
+                if mechanism in origin_mechanisms:
+                    # KAM 8/28 commenting out the below code because it's not necessarily how we want to handle
+                    # a recurrent projection on the first time step (meaning, before its mechanism has executed)
+                    # FIX: determine the correct behavior for this case & document it
+
+                    # if (
+                    #     scheduler_processing.times[execution_id][TimeScale.TRIAL][TimeScale.TIME_STEP] == 0
+                    #     and hasattr(mechanism, "recurrent_projection")
+                    # ):
+                    #     mechanism.recurrent_projection.sender.value = [0.0]
+                    if clamp_input:
+                        if mechanism in hard_clamp_inputs:
+                            # clamp = HARD_CLAMP --> "turn off" recurrent projection
+                            if hasattr(mechanism, "recurrent_projection"):
+                                mechanism.recurrent_projection.sender.value = [0.0]
+                        elif mechanism in no_clamp_inputs:
+                            for input_state in mechanism.input_states:
+                                self.CIM_output_states[input_state].value = 0.0
+                            # self.input_mechanisms[mechanism]._output_states[0].value = 0.0
+
                 if isinstance(mechanism, Mechanism):
-                    num = mechanism.execute(context=EXECUTING + "composition")
-                    print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
-                    print("result = ", num)
-                    print()
-                    print()
+                    current_context = EXECUTING + "composition "
+                    # if isinstance(mechanism, LearningMechanism) or isinstance(mechanism, ComparatorMechanism):
+                    #     current_context += "LEARNING "
+                    if any(isinstance(m, LearningMechanism) for m in self.mechanisms):
+                        current_context += " LEARNING "
+                    num = mechanism.execute(context=current_context)
+
+
+                if mechanism in origin_mechanisms:
+                    if clamp_input:
+                        if mechanism in pulse_clamp_inputs:
+                            for input_state in mechanism.input_states:
+                            # clamp = None --> "turn off" input mechanism
+                            # self.input_mechanisms[mechanism]._output_states[0].value = 0
+                                self.CIM_output_states[input_state].value = 0
 
             if call_after_time_step:
                 call_after_time_step()
@@ -883,6 +1034,8 @@ class Composition(object):
         call_after_pass=None,
         call_before_trial=None,
         call_after_trial=None,
+        clamp_input=SOFT_CLAMP,
+        targets=None
     ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
@@ -935,6 +1088,7 @@ class Composition(object):
 
             output value of the final Mechanism executed in the composition : various
         '''
+
         reuse_inputs = False
 
         if scheduler_processing is None:
@@ -943,54 +1097,77 @@ class Composition(object):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
+        self._analyze_graph()
+
+        execution_id = self._assign_execution_ids(execution_id)
+
+        scheduler_processing._init_counts(execution_id=execution_id)
+        scheduler_learning._init_counts(execution_id=execution_id)
         scheduler_processing.update_termination_conditions(termination_processing)
         scheduler_learning.update_termination_conditions(termination_learning)
 
-        if inputs is None:
+        if inputs is not None:
+            len_inputs = self._process_inputs(inputs)
+        else:
             inputs = {}
             len_inputs = 1
-        else:
 
-            len_inputs = len(list(inputs.values())[0])
+        if targets is None:
+            targets = {}
 
         # check whether the num trials given in the input dict matches the num_trials param
         if num_trials is not None:
             if len_inputs != num_trials:
-                # if one set of inputs was provided for many trials, set 'reuse_inputs' flag
+                # if one set of inputs was provided for many trials, set 'reuse_inputs' flag and re-set len_inputs to
+                # the number of trials given by the user
                 if len_inputs == 1:
                     reuse_inputs = True
+                    len_inputs = num_trials
                 # otherwise, warn user that there is something wrong with their input specification
                 else:
                     raise CompositionError(
                         "The number of trials [{}] specified for the composition [{}] does not match the "
-                        "length [{}] of the inputs specified in the inputs dictionary [{}]. "
+                        "number [{}] of inputs specified per mechanism (or input state) in the inputs dictionary [{}]. "
                         .format(num_trials, self, len_inputs, inputs)
                     )
 
         input_indices = range(len_inputs)
 
-        scheduler_processing._reset_counts_total(TimeScale.RUN)
-
-        # TBI: Handle learning graph
+        scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
+        scheduler_processing._reset_time(TimeScale.RUN, execution_id)
 
         # TBI: Handle runtime params?
         result = None
 
-        # loop over the length of the list of inputs (# of trials)
+        # --- RESET FOR NEXT TRIAL ---
+        # by looping over the length of the list of inputs - each input represents a TRIAL
         for input_index in input_indices:
+
+            # Execute call before trial "hook" (user defined function)
             if call_before_trial:
                 call_before_trial()
-            if scheduler_processing.termination_conds[TimeScale.RUN].is_satisfied():
+
+            if scheduler_processing.termination_conds[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing,
+                                                                                  execution_id=execution_id):
                 break
 
-            execution_inputs = {}
+        # PROCESSING ------------------------------------------------------------------------
 
-            # loop over all mechanisms that receive inputs from the outside world
+            # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
+            execution_stimuli = {}
+
+            # loop over all mechanisms that receive stimuli from the outside world
             for mech in inputs.keys():
-                execution_inputs[mech] = inputs[mech][0 if reuse_inputs else input_index]
+                if isinstance(inputs[mech], dict):
+                    for input_state in inputs[mech].keys():
+                        execution_stimuli[input_state] = inputs[mech][input_state][0 if reuse_inputs else input_index]
+                else:
+                    execution_stimuli[mech] = inputs[mech][0 if reuse_inputs else input_index]
 
+            # execute processing
+            # pass along the stimuli for this trial
             num = self.execute(
-                execution_inputs,
+                execution_stimuli,
                 scheduler_processing,
                 scheduler_learning,
                 call_before_time_step,
@@ -998,15 +1175,45 @@ class Composition(object):
                 call_after_time_step,
                 call_after_pass,
                 execution_id,
+                clamp_input,
             )
 
+        # ---------------------------------------------------------------------------------
+            # store the result of this execute in case it will be the final result
             if num is not None:
                 result = num
+
+        # LEARNING ------------------------------------------------------------------------
+            # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
+            execution_targets = {}
+
+            # loop over all mechanisms that receive targets from the outside world
+            for mech in targets.keys():
+                if callable(targets[mech]):
+                    execution_targets[mech] = targets[mech]
+                elif len(targets[mech]) == 1:
+                    execution_targets[mech] = targets[mech][0]
+                else:
+                    execution_targets[mech] = targets[mech][input_index]
+
+            # execute learning
+            # pass along the targets for this trial
+            self.learning_composition.execute(execution_targets,
+                                              scheduler_processing,
+                                              scheduler_learning,
+                                              call_before_time_step,
+                                              call_before_pass,
+                                              call_after_time_step,
+                                              call_after_pass,
+                                              execution_id,
+                                              clamp_input,
+                                              )
 
             if call_after_trial:
                 call_after_trial()
 
-        scheduler_processing.clock._increment_time(TimeScale.RUN)
+            # ---------------------------------------------------------------------------------
+        scheduler_processing._increment_time(TimeScale.RUN, execution_id=execution_id)
 
         # return the output of the LAST mechanism executed in the composition
         return result
