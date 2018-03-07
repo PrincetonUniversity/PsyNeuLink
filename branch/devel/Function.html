@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Functions &mdash; PsyNeuLink 0.4.4.4+98.g23dc69f documentation</title>
+  <title>Functions &mdash; PsyNeuLink 0.4.4.4+99.gb423464 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+98.g23dc69f documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+99.gb423464 documentation" href="index.html"/>
         <link rel="up" title="Components" href="Component.html"/>
         <link rel="next" title="Compositions" href="Composition.html"/>
         <link rel="prev" title="GatingSignal" href="GatingSignal.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.4+98
+                0.4.4.4+99
               </div>
             
           
@@ -200,6 +200,7 @@
 <li><a class="reference internal" href="#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.components.functions.function.Exponential" title="psyneulink.components.functions.function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a></li>
+<li><code class="xref any docutils literal"><span class="pre">OneHot</span></code></li>
 <li><a class="reference internal" href="#psyneulink.components.functions.function.SoftMax" title="psyneulink.components.functions.function.SoftMax"><code class="xref any py py-class docutils literal"><span class="pre">SoftMax</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.components.functions.function.LinearMatrix" title="psyneulink.components.functions.function.LinearMatrix"><code class="xref any py py-class docutils literal"><span class="pre">LinearMatrix</span></code></a></li>
 </ul>
@@ -566,7 +567,7 @@ in your custom function to verify the variable’s format.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>custom_function</strong> (<a class="reference internal" href="LearningSignal.html#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.function" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.function"><em>function</em></a>) – specifies the function to “wrap.” It can be any function, but like any PsyNeuLink function it must take three
+<li><strong>custom_function</strong> (<a class="reference internal" href="#psyneulink.components.functions.function.FHNIntegrator.function" title="psyneulink.components.functions.function.FHNIntegrator.function"><em>function</em></a>) – specifies the function to “wrap.” It can be any function, but like any PsyNeuLink function it must take three
 named arguments: <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code> (the input to the function), <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code>, and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>. The
 <a class="reference internal" href="#psyneulink.components.functions.function.UserDefinedFunction.custom_function" title="psyneulink.components.functions.function.UserDefinedFunction.custom_function"><code class="xref any py py-attr docutils literal"><span class="pre">custom_function</span></code></a> can return any value(s), so long as they fit with the context. For example, if the dimensions
 of your custom function’s output change, then it is not appropriate to pass your function’s output to a
@@ -877,143 +878,11 @@ arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="class">
-<dt id="psyneulink.components.functions.function.SoftMax">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>default_variable</em>, <em>gain=1.0</em>, <em>output=ALL</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax" title="Permalink to this definition">¶</a></dt>
-<dd><p id="softmax">SoftMax transform of variable (see <a class="reference external" href="http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/">The Softmax function and its derivative</a> for a nice discussion).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>1d np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
-<li><strong>gain</strong> (<em>float : default 1.0</em>) – specifies a value by which to multiply <a class="reference internal" href="#psyneulink.components.functions.function.Linear.variable" title="psyneulink.components.functions.function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before SoftMax transformation.</li>
-<li><strong>output</strong> (<a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL"><em>ALL</em></a><em>, </em><em>MAX_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, or </em><em>PROB : default ALL</em>) – specifies the format of array returned by <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.function" title="psyneulink.components.functions.function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
-(see <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.output" title="psyneulink.components.functions.function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> for details).</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</li>
-<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
-<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="#psyneulink.components.functions.function.Function_Base.prefs" title="psyneulink.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="psyneulink.components.functions.function.SoftMax.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> – contains value to be transformed.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.functions.function.SoftMax.gain">
-<code class="descname">gain</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.gain" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> – value by which <a class="reference internal" href="#psyneulink.components.functions.function.Logistic.variable" title="psyneulink.components.functions.function.Logistic.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is multiplied before the SoftMax transformation;  determines
-the “sharpness” of the distribution.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.functions.function.SoftMax.output">
-<code class="descname">output</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.output" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ALL, MAX_VAL, MAX_INDICATOR, or PROB</em> – determines how the SoftMax-transformed values of the elements in <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.variable" title="psyneulink.components.functions.function.SoftMax.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> are reported
-in the array returned by <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.function" title="psyneulink.components.functions.function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>:</p>
-<blockquote>
-<div><ul class="simple">
-<li><strong>ALL</strong>: array of all SoftMax-transformed values (the default);</li>
-<li><strong>MAX_VAL</strong>: SoftMax-transformed value for the element with the maximum such value, 0 for all others;</li>
-<li><strong>MAX_INDICATOR</strong>: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;</li>
-<li><strong>PROB</strong>: probabilistically chosen element based on SoftMax-transformed values after normalizing sum of
-values to 1, 0 for all others.</li>
-</ul>
-</div></blockquote>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.functions.function.SoftMax.bounds">
-<code class="descname">bounds</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.bounds" title="Permalink to this definition">¶</a></dt>
-<dd><p>None if <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.output" title="psyneulink.components.functions.function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> == MAX_VAL, else (0,1) : default (0,1)</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.functions.function.SoftMax.owner">
-<code class="descname">owner</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.functions.function.SoftMax.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a
-default is assigned by FunctionRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.components.functions.function.SoftMax.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.components.functions.function.SoftMax.function">
-<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: e**(<a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.gain" title="psyneulink.components.functions.function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> * <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.variable" title="psyneulink.components.functions.function.SoftMax.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) /
-sum(e**(<a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.gain" title="psyneulink.components.functions.function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> * <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.variable" title="psyneulink.components.functions.function.SoftMax.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>)),
-filtered by <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.output" title="psyneulink.components.functions.function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">ouptput</span></code></a> specification.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>1d np.array : default ClassDefaults.variable</em>) – an array to be transformed.</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>SoftMax transformation of variable</strong></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.components.functions.function.SoftMax.derivative">
-<code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.derivative" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the derivative of <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.function" title="psyneulink.components.functions.function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.  If OUTPUT_TYPE for the SoftMax Function is ALL,
-return Jacobian matrix (derivative for each element of the output array with respect to each of the others):</p>
-<blockquote>
-<div>D<sub>j</sub>S<sub>i</sub> = S<sub>i</sub>(𝜹<sub>i,j</sub> - S<sub>j</sub>),
-where 𝜹<sub>i,j</sub>=1 if i=j and 𝜹<sub>i,j</sub>=0 if i≠j.</div></blockquote>
-<p>If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
-value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
-(since it is ambiguous as to which element would have been chosen by the SoftMax function)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivative</strong> – derivative of values returns by SoftMax.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="psyneulink.components.functions.function.TransferFunction">
 <em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">TransferFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>owner</em>, <em>prefs</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.TransferFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that transforms variable but maintains its shape</p>
 <p>All TransferFunctions must have the following attributes:</p>
-<p><a class="reference internal" href="#psyneulink.components.functions.function.Exponential.bounds" title="psyneulink.components.functions.function.Exponential.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+<p><a class="reference internal" href="#psyneulink.components.functions.function.Linear.bounds" title="psyneulink.components.functions.function.Linear.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
 <code class="xref any docutils literal"><span class="pre">None</span></code>;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
 respectively, with <code class="xref any docutils literal"><span class="pre">None</span></code> as the entry for no bound.</p>
 <p><code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal"><span class="pre">additive_param</span></code> – each of these is assigned the name of one of the function’s
@@ -1366,6 +1235,139 @@ arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="class">
+<dt id="psyneulink.components.functions.function.SoftMax">
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>default_variable</em>, <em>gain=1.0</em>, <em>output=ALL</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax" title="Permalink to this definition">¶</a></dt>
+<dd><p id="softmax">SoftMax transform of variable (see <a class="reference external" href="http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/">The Softmax function and its derivative</a> for a nice discussion).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>1d np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed.</li>
+<li><strong>gain</strong> (<em>float : default 1.0</em>) – specifies a value by which to multiply <a class="reference internal" href="#psyneulink.components.functions.function.Linear.variable" title="psyneulink.components.functions.function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before SoftMax transformation.</li>
+<li><strong>output</strong> (<a class="reference internal" href="ControlSignal.html#psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL" title="psyneulink.components.states.modulatorysignals.controlsignal.ControlSignalCosts.ALL"><em>ALL</em></a><em>, </em><em>MAX_VAL</em><em>, </em><em>MAX_INDICATOR</em><em>, or </em><em>PROB : default ALL</em>) – specifies the format of array returned by <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.function" title="psyneulink.components.functions.function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+(see <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.output" title="psyneulink.components.functions.function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> for details).</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="#psyneulink.components.functions.function.Function_Base.prefs" title="psyneulink.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.components.functions.function.SoftMax.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> – contains value to be transformed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.functions.function.SoftMax.gain">
+<code class="descname">gain</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.gain" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – value by which <a class="reference internal" href="#psyneulink.components.functions.function.Logistic.variable" title="psyneulink.components.functions.function.Logistic.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is multiplied before the SoftMax transformation;  determines
+the “sharpness” of the distribution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.functions.function.SoftMax.output">
+<code class="descname">output</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.output" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ALL, MAX_VAL, MAX_INDICATOR, or PROB</em> – determines how the SoftMax-transformed values of the elements in <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.variable" title="psyneulink.components.functions.function.SoftMax.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> are reported
+in the array returned by <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.function" title="psyneulink.components.functions.function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>ALL</strong>: array of all SoftMax-transformed values (the default);</li>
+<li><strong>MAX_VAL</strong>: SoftMax-transformed value for the element with the maximum such value, 0 for all others;</li>
+<li><strong>MAX_INDICATOR</strong>: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;</li>
+<li><strong>PROB</strong>: probabilistically chosen element based on SoftMax-transformed values after normalizing the
+sum of values to 1 (i.e., their <a class="reference external" href="https://en.wikipedia.org/wiki/Luce%27s_choice_axiom">Luce Ratio</a>),
+0 for all others.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.functions.function.SoftMax.bounds">
+<code class="descname">bounds</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>None if <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.output" title="psyneulink.components.functions.function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> == MAX_VAL, else (0,1) : default (0,1)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.functions.function.SoftMax.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.functions.function.SoftMax.name">
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a
+default is assigned by FunctionRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.functions.function.SoftMax.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.PreferenceSet" title="psyneulink.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.components.functions.function.SoftMax.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return: e**(<a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.gain" title="psyneulink.components.functions.function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> * <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.variable" title="psyneulink.components.functions.function.SoftMax.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) /
+sum(e**(<a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.gain" title="psyneulink.components.functions.function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> * <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.variable" title="psyneulink.components.functions.function.SoftMax.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>)),
+filtered by <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.output" title="psyneulink.components.functions.function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">ouptput</span></code></a> specification.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>1d np.array : default ClassDefaults.variable</em>) – an array to be transformed.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>SoftMax transformation of variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.components.functions.function.SoftMax.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.SoftMax.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the derivative of <a class="reference internal" href="#psyneulink.components.functions.function.SoftMax.function" title="psyneulink.components.functions.function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.  If OUTPUT_TYPE for the SoftMax Function is ALL,
+return Jacobian matrix (derivative for each element of the output array with respect to each of the others):</p>
+<blockquote>
+<div>D<sub>j</sub>S<sub>i</sub> = S<sub>i</sub>(𝜹<sub>i,j</sub> - S<sub>j</sub>),
+where 𝜹<sub>i,j</sub>=1 if i=j and 𝜹<sub>i,j</sub>=0 if i≠j.</div></blockquote>
+<p>If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
+value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
+(since it is ambiguous as to which element would have been chosen by the SoftMax function)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>derivative</strong> – derivative of values returns by SoftMax.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="psyneulink.components.functions.function.LinearMatrix">
 <em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">LinearMatrix</code><span class="sig-paren">(</span><em>default_variable</em>, <em>matrix=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.LinearMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p id="linearmatrix">Matrix transform of variable:</p>
@@ -1378,7 +1380,7 @@ arguments of the constructor.</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>variable</strong> (<em>list</em><em> or </em><em>1d np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#psyneulink.components.functions.function.LinearMatrix.matrix" title="psyneulink.components.functions.function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
-<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="LearningSignal.html#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.function" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – <p>specifies matrix used to transform <a class="reference internal" href="#psyneulink.components.functions.function.LinearMatrix.variable" title="psyneulink.components.functions.function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="#psyneulink.components.functions.function.FHNIntegrator.function" title="psyneulink.components.functions.function.FHNIntegrator.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – <p>specifies matrix used to transform <a class="reference internal" href="#psyneulink.components.functions.function.LinearMatrix.variable" title="psyneulink.components.functions.function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#psyneulink.components.functions.function.LinearMatrix.matrix" title="psyneulink.components.functions.function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> for specification details).</p>
 <p>When LinearMatrix is the <code class="xref any docutils literal"><span class="pre">function</span></code> of a projection:</p>
 <blockquote>
@@ -1508,7 +1510,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.Integrator">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate: &lt;function parameter_spec at 0x10499df28&gt; = 1.0</em>, <em>noise=0.0</em>, <em>initializer=None</em>, <em>params: &lt;typecheck.framework.optional object at 0x104035128&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x1049b08c8&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate: &lt;function parameter_spec at 0x10418df28&gt; = 1.0</em>, <em>noise=0.0</em>, <em>initializer=None</em>, <em>params: &lt;typecheck.framework.optional object at 0x10429a470&gt; = None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x1041ae8c8&gt; = None</em>, <em>context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Integrator(                         default_variable=None,          rate=1.0,</dt>
 <dd>noise=0.0,                      time_step_size=1.0,             initializer,             params=None,                    owner=None,                     prefs=None,                     )</dd>
@@ -3952,7 +3954,7 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.Stability">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>matrix='HollowMatrix'</em>, <em>metric: &lt;typecheck.tc_predicates.any object at 0x104a9c828&gt; = 'energy'</em>, <em>transfer_fct: &lt;typecheck.framework.optional object at 0x104a9c908&gt; = None</em>, <em>normalize: bool = False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x1049b08c8&gt; = None</em>, <em>context='Stability Function INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Stability" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>matrix='HollowMatrix'</em>, <em>metric: &lt;typecheck.tc_predicates.any object at 0x10428bb38&gt; = 'energy'</em>, <em>transfer_fct: &lt;typecheck.framework.optional object at 0x10428bc18&gt; = None</em>, <em>normalize: bool = False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs: &lt;function is_pref_set at 0x1041ae8c8&gt; = None</em>, <em>context='Stability Function INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.Stability" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>Stability(                                          default_variable=None,                          matrix=HOLLOW_MATRIX,                           metric=ENERGY                                   transfer_fct=None                               normalize=False,                                params=None,                                    owner=None,                                     prefs=None                                      )</p>
 <p id="stability">Return the stability of <code class="xref any docutils literal"><span class="pre">variable</span></code> based on a state transformation matrix.</p>
@@ -4407,7 +4409,7 @@ uses the BackPropagation LearningFunction).</p>
 <a class="reference internal" href="#psyneulink.components.functions.function.BackPropagation.activation_input" title="psyneulink.components.functions.function.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d np.array),
 <a class="reference internal" href="#psyneulink.components.functions.function.BackPropagation.activation_output" title="psyneulink.components.functions.function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array),
 <a class="reference internal" href="#psyneulink.components.functions.function.BackPropagation.error_signal" title="psyneulink.components.functions.function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d np.array).</li>
-<li><strong>activation_derivative_fct</strong> (<em>Function</em><em> or </em><a class="reference internal" href="LearningSignal.html#psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.function" title="psyneulink.components.states.modulatorysignals.learningsignal.LearningSignal.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
+<li><strong>activation_derivative_fct</strong> (<em>Function</em><em> or </em><a class="reference internal" href="#psyneulink.components.functions.function.FHNIntegrator.function" title="psyneulink.components.functions.function.FHNIntegrator.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
 <a class="reference internal" href="#psyneulink.components.functions.function.BackPropagation.activation_output" title="psyneulink.components.functions.function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>.</li>
 <li><strong>learning_rate</strong> (<em>float : default default_learning_rate</em>) – supersedes any specification for the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the function’s
 <code class="xref any docutils literal"><span class="pre">owner</span></code> belongs (see <a class="reference internal" href="#psyneulink.components.functions.function.BackPropagation.learning_rate" title="psyneulink.components.functions.function.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for details).</li>
@@ -4544,7 +4546,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.components.functions.function.TDLearning">
-<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">TDLearning</code><span class="sig-paren">(</span><em>default_variable=array([[0],        [0],        [0]]), activation_function: &lt;typecheck.tc_predicates.any object at 0x104c1a198&gt; = &lt;class 'psyneulink.components.functions.function.SoftMax'&gt;, learning_rate=0.05, params=None, owner=None, prefs=None, context='TDLearning Function Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.TDLearning" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.functions.function.</code><code class="descname">TDLearning</code><span class="sig-paren">(</span><em>default_variable=array([[0],        [0],        [0]]), activation_function: &lt;typecheck.tc_predicates.any object at 0x1045094e0&gt; = &lt;class 'psyneulink.components.functions.function.SoftMax'&gt;, learning_rate=0.05, params=None, owner=None, prefs=None, context='TDLearning Function Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.functions.function.TDLearning" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class is used to implement temporal difference learning via the
 <a class="reference internal" href="#psyneulink.components.functions.function.Reinforcement" title="psyneulink.components.functions.function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span></code></a> function. See <a class="reference internal" href="#psyneulink.components.functions.function.Reinforcement" title="psyneulink.components.functions.function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span></code></a> for class details.</p>
 </dd></dl>
@@ -4596,7 +4598,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+98.g23dc69f',
+            VERSION:'0.4.4.4+99.gb423464',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
