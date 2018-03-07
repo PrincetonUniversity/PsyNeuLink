@@ -3134,8 +3134,9 @@ class OneHot(TransferFunction):  # ---------------------------------------------
     Arguments
     ---------
 
-    variable : np.array : default ClassDefaults.variable
-        specifies a template for the value to be transformed.
+    variable : 2d np.array : default ClassDefaults.variable
+        First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
+        *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
 
     mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
         specifies the nature of the single non-zero value in the array returned by `function <OneHot.function>`
@@ -3161,7 +3162,9 @@ class OneHot(TransferFunction):  # ---------------------------------------------
     ----------
 
     variable : number or np.array
-        contains value to be transformed.
+        1st item contains value to be transformed;  if `mode <OneHot.mode>` is *PROB*, 2nd item is a probability
+        distribution, each element of which specifies the probability for selecting the corresponding element of the
+        1st item.
 
     mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
         determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`:
@@ -3169,8 +3172,8 @@ class OneHot(TransferFunction):  # ---------------------------------------------
             * *MAX_ABS_VAL**: element with the maximum absolute value;
             * **MAX_INDICATOR**: 1 in place of the element with the maximum signed value;
             * **MAX_ABS_INDICATOR**: 1 in place of the element with the maximum absolute value;
-            * **PROB**: probabilistically chosen element based on the values of the original array normalized to
-              sum to 1 (i.e., their `Luce Ratio <https://en.wikipedia.org/wiki/Luce%27s_choice_axiom>`_).
+            * **PROB**: probabilistically chosen element based on probabilities passed in second item of
+              `variable <OneHot.variable>`.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3216,6 +3219,9 @@ class OneHot(TransferFunction):  # ---------------------------------------------
         params = self._assign_args_to_param_dicts(mode=mode,
                                                   params=params)
 
+        if mode is PROB and default_variable is None:
+            default_variable = [[0],[0]]
+
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -3223,6 +3229,11 @@ class OneHot(TransferFunction):  # ---------------------------------------------
                          context=context)
 
         # self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        # VALIDATE THAT IF MODE IS PROB, VARIABLE IS 2 ITEMS OF SAME LENGTH, AND THAT ALL ELEMENTS OF 2ND ITEM ARE
+        # FROM 0 AND 1 (I.E., PROBABILITIES)
+        pass
 
     def function(self,
                  variable=None,
@@ -3234,8 +3245,9 @@ class OneHot(TransferFunction):  # ---------------------------------------------
         Arguments
         ---------
 
-        variable : np.array : default ClassDefaults.variable
-           an array to be transformed.
+        variable : 2d np.array : default ClassDefaults.variable
+           1st item is an array to be transformed;  if `mode <OneHot.mode>` is *PROB*, 2nd item must be an array of
+           probabilities (i.e., elements between 0 and 1) of equal length to the 1st item.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -3268,15 +3280,20 @@ class OneHot(TransferFunction):  # ---------------------------------------------
             max_value = np.max(np.absolute(variable))
             return np.where(variable == max_value, 1, 0)
 
-        elif self.mode is PROB:
-            if not variable.any():
-                return variable
-            normed = variable / np.sum(variable, axis=0)
-            cum_sum = np.cumsum(normed)
+        elif self.mode is PROB: # 1st item of variable should be data, and 2nd a probability distribution for choosing
+            v = variable[0]
+            prob_dist = variable[1]
+            # if not prob_dist.any() and INITIALIZING in context:
+            if not prob_dist.any():
+                return v
+            cum_sum = np.cumsum(prob_dist)
             random_value = np.random.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-            return variable * chosen_in_cum_sum
+            return v * chosen_in_cum_sum
+            # chosen_item = np.random.choice(v, 1, p=prob_dist)
+            # one_hot_indicator = np.where(v == chosen_item, 1, 0)
+            # return v * one_hot_indicator
 
 
 class NormalizingFunction(Function_Base):
