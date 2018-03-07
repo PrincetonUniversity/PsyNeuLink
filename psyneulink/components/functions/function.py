@@ -3232,8 +3232,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
         # self.functionOutputType = None
 
     def _validate_params(self, request_set, target_set=None, context=None):
-                # VALIDATE THAT IF MODE IS PROB, VARIABLE IS 2 ITEMS OF SAME LENGTH, AND THAT ALL ELEMENTS OF 2ND ITEM ARE
-        # FROM 0 AND 1 (I.E., PROBABILITIES)
+
         if request_set[MODE] is PROB:
             if not self.variable.ndim == 2:
                 raise FunctionError("If {} for {} {} is set to {}, variable must be 2d array".
@@ -3253,9 +3252,8 @@ class OneHot(TransferFunction):  # ---------------------------------------------
                 return
             if not np.sum(prob_dist)==1:
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
-                                    "array of probilities that sum to 1".
+                                    "array of probabilities that sum to 1".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
-
 
     def function(self,
                  variable=None,
