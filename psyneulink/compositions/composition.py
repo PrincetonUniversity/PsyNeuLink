@@ -57,7 +57,7 @@ import numpy as np
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.globals.keywords import EXECUTING
+from psyneulink.globals.keywords import EXECUTING, SOFT_CLAMP
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 

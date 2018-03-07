@@ -1,8 +1,18 @@
-from psyneulink.compositions.composition import Composition, MechanismRole
-from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import Projection
-from psyneulink.globals.keywords import SOFT_CLAMP
+from psyneulink.compositions.composition import Composition
+
+__all__ = [
+    'SystemComposition', 'SystemCompositionError'
+]
+
+
+class SystemCompositionError(Exception):
+
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
+
 
 class SystemComposition(Composition):
     '''
