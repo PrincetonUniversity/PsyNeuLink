@@ -3269,6 +3269,8 @@ class OneHot(TransferFunction):  # ---------------------------------------------
             return np.where(variable == max_value, 1, 0)
 
         elif self.mode is PROB:
+            if not variable.any():
+                return variable
             normed = variable / np.sum(variable, axis=0)
             cum_sum = np.cumsum(normed)
             random_value = np.random.uniform()

@@ -591,12 +591,15 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, InitStatus
-from psyneulink.components.functions.function import Function, Linear, function_type, method_type, is_function_type
+from psyneulink.components.functions.function import Function, \
+    Linear, OneHot, function_type, method_type, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, FUNCTION_PARAMS, GATING_SIGNAL,\
-    INDEX, INITIALIZING, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MEAN, MECHANISM_VALUE, MEDIAN, NAME, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, \
+    INDEX, INITIALIZING, INPUT_STATE, INPUT_STATES, \
+    MAPPING_PROJECTION, MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MEAN, MECHANISM_VALUE, MEDIAN, NAME, \
+    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, \
+    PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, \
     PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, \
     VALUE, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -629,19 +632,12 @@ class OUTPUTS():
     MEDIAN=MEDIAN
     STANDARD_DEVIATION=STANDARD_DEVIATION
     VARIANCE=VARIANCE
-
-# standard_output_states = [{NAME: RESULT},
-#                           {NAME:MEAN,
-#                            ASSIGN:lambda x: np.mean(x)},
-#                           {NAME:MEDIAN,
-#                            ASSIGN:lambda x: np.median(x)},
-#                           {NAME:STANDARD_DEVIATION,
-#                            ASSIGN:lambda x: np.std(x)},
-#                           {NAME:VARIANCE,
-#                            ASSIGN:lambda x: np.var(x)},
-#                           {NAME: MECHANISM_VALUE,
-#                            INDEX: ALL}
-#                           ]
+    MECHANISM_VALUE=MECHANISM_VALUE
+    MAX_VAL=MAX_VAL
+    MAX_ABS_VAL=MAX_VAL
+    MAX_INDICATOR=MAX_INDICATOR
+    MAX_ABS_INDICATOR=MAX_INDICATOR
+    PROB=PROB
 
 standard_output_states = [{NAME: RESULT},
                           {NAME:MEAN,
@@ -653,7 +649,17 @@ standard_output_states = [{NAME: RESULT},
                           {NAME:VARIANCE,
                            FUNCTION:lambda x: np.var(x)},
                           {NAME: MECHANISM_VALUE,
-                           VARIABLE: OWNER_VALUE}
+                           VARIABLE: OWNER_VALUE},
+                          {NAME: MAX_VAL,
+                           FUNCTION: OneHot(mode=MAX_VAL).function},
+                          {NAME: MAX_ABS_VAL,
+                           FUNCTION: OneHot(mode=MAX_ABS_VAL).function},
+                          {NAME: MAX_INDICATOR,
+                           FUNCTION: OneHot(mode=MAX_INDICATOR).function},
+                          {NAME: MAX_ABS_INDICATOR,
+                           FUNCTION: OneHot(mode=MAX_ABS_INDICATOR).function},
+                          {NAME: PROB,
+                           FUNCTION: OneHot(mode=PROB).function}
                           ]
 
 
