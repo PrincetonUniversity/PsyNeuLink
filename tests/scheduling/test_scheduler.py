@@ -5,12 +5,11 @@ import pytest
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.composition import Composition
+from psyneulink.compositions.composition import Composition
 from psyneulink.scheduling.condition import AfterNCalls, AfterNTrials, AfterPass, All, Always, Any, AtPass, \
     BeforePass, EveryNCalls, EveryNPasses, JustRan, WhenFinished
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
-
 
 logger = logging.getLogger(__name__)
 

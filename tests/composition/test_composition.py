@@ -1,6 +1,5 @@
 import functools
 import logging
-
 from timeit import timeit
 
 import numpy as np
@@ -10,7 +9,7 @@ from psyneulink.components.functions.function import Linear, SimpleIntegrator
 from psyneulink.components.mechanisms.processing import integratormechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.composition import Composition, CompositionError, MechanismRole
+from psyneulink.compositions.composition import Composition, CompositionError, MechanismRole
 from psyneulink.scheduling.condition import EveryNCalls
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
