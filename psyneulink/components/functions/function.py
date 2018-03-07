@@ -3238,11 +3238,24 @@ class OneHot(TransferFunction):  # ---------------------------------------------
             if not self.variable.ndim == 2:
                 raise FunctionError("If {} for {} {} is set to {}, variable must be 2d array".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB))
-            if len(self.variable[0])!=len(self.variable[1]):
+            values = self.variable[0]
+            prob_dist = self.variable[1]
+            if len(values)!=len(prob_dist):
                 raise FunctionError("If {} for {} {} is set to {}, the two items of its variable must be of equal "
                                     "length (len item 1 = {}; len item 2 = {}".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB,
-                                           len(self.variable[0]), len(self.variable[1])))
+                                           len(values), len(prob_dist)))
+            if not all((elem>=0 and elem<=1) for elem in prob_dist)==1:
+                raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
+                                    "array of elements each of which is in the (0,1) interval".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
+            if INITIALIZING in context:
+                return
+            if not np.sum(prob_dist)==1:
+                raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
+                                    "array of probilities that sum to 1".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
+
 
     def function(self,
                  variable=None,
