@@ -650,6 +650,8 @@ standard_output_states = [{NAME: RESULT},
                            FUNCTION:lambda x: np.var(x)},
                           {NAME: MECHANISM_VALUE,
                            VARIABLE: OWNER_VALUE},
+                          {NAME: OWNER_VALUE,
+                           VARIABLE: OWNER_VALUE},
                           {NAME: MAX_VAL,
                            FUNCTION: OneHot(mode=MAX_VAL).function},
                           {NAME: MAX_ABS_VAL,
@@ -895,7 +897,7 @@ class OutputState(State_Base):
         if 'calculate' in kwargs:
             assign = kwargs['calculate']
         if params:
-            _convert_assign_and_index(params)
+            _maintain_backward_compatibility(params, name, owner)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
@@ -1362,7 +1364,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                 from psyneulink.components.states.state import _parse_state_spec
                 output_state = _parse_state_spec(state_type=OutputState, owner=owner, state_spec=output_state)
 
-                _convert_assign_and_index(output_state)
+                _maintain_backward_compatibility(output_state, output_state[NAME], owner)
 
                 # If OutputState's name matches the name entry of a dict in standard_output_states:
                 #    - use the named Standard OutputState
@@ -1370,7 +1372,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                 if output_state[NAME] and hasattr(owner, STANDARD_OUTPUT_STATES):
                     std_output_state = owner.standard_output_states.get_state_dict(output_state[NAME])
                     if std_output_state is not None:
-                        _convert_assign_and_index(std_output_state)
+                        _maintain_backward_compatibility(std_output_state, output_state[NAME], owner)
                         recursive_update(output_state, std_output_state, non_destructive=True)
 
                 if FUNCTION in output_state and output_state[FUNCTION] is not None:
@@ -1685,10 +1687,17 @@ def make_readonly_property(val):
 
 
 @tc.typecheck
-def _convert_assign_and_index(d:dict):
+def _maintain_backward_compatibility(d:dict, name, owner):
+    """Maintain compatibility with use of INDEX, ASSIGN and CALCULATE in OutputState specification"""
 
     def replace_entries(x):
+
+        index_present = False
+        assign_present = False
+        calculate_present = False
+
         if INDEX in x:
+            index_present = True
             # if output_state[INDEX] is SEQUENTIAL:
             #     return
             if x[INDEX] is ALL:
@@ -1697,18 +1706,41 @@ def _convert_assign_and_index(d:dict):
                 x[VARIABLE] = (OWNER_VALUE, x[INDEX])
             del x[INDEX]
         if ASSIGN in x:
+            assign_present = True
             x[FUNCTION] = x[ASSIGN]
             del x[ASSIGN]
         if CALCULATE in x:
+            calculate_present = True
             x[FUNCTION] = x[CALCULATE]
             del x[CALCULATE]
-        return x
+        return x, index_present, assign_present, calculate_present
 
-    d = replace_entries(d)
+    d, i, a, c = replace_entries(d)
 
     if PARAMS in d and isinstance(d[PARAMS], dict):
-        p = replace_entries(d[PARAMS])
+        p, i, a, c = replace_entries(d[PARAMS])
         recursive_update(d, p, non_destructive=True)
         for i in {VARIABLE, FUNCTION}:
             if i in d[PARAMS]:
                 del d[PARAMS][i]
+
+    # if i:
+    #     warnings.warn("The use of \'INDEX\' has been deprecated; it is still supported, but entry in {} specification "
+    #                   "dictionary for {} of {} should be changed to \'VARIABLE: (OWNER_VALUE, <index int>)\' "
+    #                   " for future compatibility.".
+    #                   format(OutputState.__name__, name, owner.name))
+    # if a:
+    #     warnings.warn("The use of \'ASSIGN\' has been deprecated; it is still supported, but entry in {} specification "
+    #                   "dictionary for {} of {} should be changed to \'FUNCTION\' for future compatibility.".
+    #                   format(OutputState.__name__, name, owner.name))
+    # if c:
+    #     warnings.warn("The use of \'CALCULATE\' has been deprecated; it is still supported, but entry in {} "
+    #                   "specification dictionary for {} of {} should be changed to \'FUNCTION\' "
+    #                   "for future compatibility.".format(OutputState.__name__, name, owner.name))
+    #
+    # if name is MECHANISM_VALUE:
+    #     warnings.warn("The name of the \'MECHANISM_VALUE\' StandardOutputState has been changed to \'OWNER_VALUE\';  "
+    #                   "it will still work, but should be changed in {} specification of {} for future compatibility.".
+    #                   format(OUTPUT_STATES, owner.name))
+
+

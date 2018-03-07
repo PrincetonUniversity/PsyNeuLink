@@ -3526,7 +3526,9 @@ class System(System_Base):
                                         if isinstance(output_mech, Process):
                                             continue
                                         elif isinstance(output_mech, System):
-                                            G.node(self._get_label(output_mech), color=system_color, penwidth='3')
+                                            G.node(self._get_label(output_mech, show_dimensions),
+                                                   color=system_color,
+                                                   penwidth='3')
                                         G.edge(self._get_label(output_mech, show_dimensions),
                                                self._get_label(sndr, show_dimensions),
                                                color=learning_color,
