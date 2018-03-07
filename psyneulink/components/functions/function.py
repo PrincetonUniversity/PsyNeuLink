@@ -232,7 +232,7 @@ __all__ = [
     'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
     'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT',
     'LEARNING_ERROR_OUTPUT', 'LearningFunction', 'Linear', 'LinearCombination',
-    'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next', 'ModulatedParam',
+    'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next', 'MODE', 'ModulatedParam',
     'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM',
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
@@ -3114,6 +3114,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         return output * (1 - output)
 
 
+MODE = 'mode'
 class OneHot(TransferFunction):  # -------------------------------------------------------------------------------------
     """
     OneHot(                \
@@ -3231,9 +3232,17 @@ class OneHot(TransferFunction):  # ---------------------------------------------
         # self.functionOutputType = None
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        # VALIDATE THAT IF MODE IS PROB, VARIABLE IS 2 ITEMS OF SAME LENGTH, AND THAT ALL ELEMENTS OF 2ND ITEM ARE
+                # VALIDATE THAT IF MODE IS PROB, VARIABLE IS 2 ITEMS OF SAME LENGTH, AND THAT ALL ELEMENTS OF 2ND ITEM ARE
         # FROM 0 AND 1 (I.E., PROBABILITIES)
-        pass
+        if request_set[MODE] is PROB:
+            if not self.variable.ndim == 2:
+                raise FunctionError("If {} for {} {} is set to {}, variable must be 2d array".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB))
+            if len(self.variable[0])!=len(self.variable[1]):
+                raise FunctionError("If {} for {} {} is set to {}, the two items of its variable must be of equal "
+                                    "length (len item 1 = {}; len item 2 = {}".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB,
+                                           len(self.variable[0]), len(self.variable[1])))
 
     def function(self,
                  variable=None,
