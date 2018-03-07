@@ -1155,6 +1155,8 @@ def safe_len(arr, fallback=1):
         return fallback
 
 
+# ******************************** MATHEMATICAL UTILITIY FUNCTION  *******************************************
+
 # one_hot functions
 
 def one_hot_max_val(value):
