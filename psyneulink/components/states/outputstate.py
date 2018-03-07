@@ -1688,7 +1688,7 @@ def make_readonly_property(val):
 
 @tc.typecheck
 def _maintain_backward_compatibility(d:dict, name, owner):
-
+    """Maintain compatibility with use of INDEX, ASSIGN and CALCULATE in OutputState specification"""
 
     def replace_entries(x):
 
