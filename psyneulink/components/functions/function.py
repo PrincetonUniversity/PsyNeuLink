@@ -214,9 +214,7 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import \
-    AutoNumber, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, \
-    one_hot_max_val, one_hot_max_indicator, one_hot_prob, parameter_spec
+from psyneulink.globals.utilities import AutoNumber, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
@@ -3148,6 +3146,8 @@ class OneHot(TransferFunction):  # ---------------------------------------------
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
+    bounds : None
+
     owner : Component
         `component <Component>` to which to assign the Function.
 
@@ -3186,6 +3186,10 @@ class OneHot(TransferFunction):  # ---------------------------------------------
     """
 
     componentName = ONE_HOT_FUNCTION
+
+    bounds = None
+    multiplicative_param = None
+    additive_param = None
 
     classPreferences = {
         kwPreferenceSetName: 'OneHotClassPreferences',
@@ -3249,14 +3253,28 @@ class OneHot(TransferFunction):  # ---------------------------------------------
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         if self.mode is MAX_VAL:
-            return one_hot_max_val(variable)
-        elif self.mode is MAX_ABS_VAL:
-            return one_hot_max_val(variable, abs=True)
+            max_value = np.max(variable)
+            return np.where(variable == max_value, max_value, 0)
+
+        if self.mode is MAX_ABS_VAL:
+            max_value = np.max(np.absolute(variable))
+            return np.where(variable == max_value, max_value, 0)
+
         elif self.mode is MAX_INDICATOR:
-            return one_hot_max_indicator(variable, abs=True)
+            max_value = np.max(variable)
+            return np.where(variable == max_value, 1, 0)
 
+        elif self.mode is MAX_ABS_INDICATOR:
+            max_value = np.max(np.absolute(variable))
+            return np.where(variable == max_value, 1, 0)
 
-        return value
+        elif self.mode is PROB:
+            normed = variable / np.sum(variable, axis=0)
+            cum_sum = np.cumsum(normed)
+            random_value = np.random.uniform()
+            chosen_item = next(element for element in cum_sum if element > random_value)
+            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
+            return variable * chosen_in_cum_sum
 
 
 class NormalizingFunction(Function_Base):
@@ -3406,14 +3424,29 @@ class SoftMax(NormalizingFunction):
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   output=output,
                                                   params=params)
-        if output is MAX_VAL:
-            bounds = None
 
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
                          context=context)
+
+    def _instantiate_function(self, context=None):
+
+        self.one_hot_function = None
+        output_type = self.get_current_function_param(OUTPUT_TYPE)
+
+        if output_type is MAX_VAL:
+            bounds = None
+            self.one_hot_function = OneHot(default_variable=self.variable,
+                                           mode=MAX_VAL).function
+        elif output_type is MAX_INDICATOR:
+            bounds = None
+            self.one_hot_function = OneHot(default_variable=self.variable,
+                                           mode=MAX_INDICATOR).function
+
+        super()._instantiate_function(context=context)
+
 
     def function(self,
                  variable=None,
@@ -3458,16 +3491,15 @@ class SoftMax(NormalizingFunction):
         # Normalize (to sum to 1)
         sm = v / np.sum(v, axis=0)
 
-        # For the element that is max of softmax, set it's value to its softmax value, set others to zero
-        if output_type is MAX_VAL:
-            max_value = np.max(sm)
-            sm = np.where(sm == max_value, max_value, 0)
+        # For the element that is max of softmax, set it's value to its softmax value or 1, set others to zero
+        if output_type in {MAX_VAL, MAX_INDICATOR}:
+            sm = self.one_hot_function(sm)
 
-        # For the element that is max of softmax, set its value to 1, set others to zero
-        elif output_type is MAX_INDICATOR:
-            # sm = np.where(sm == np.max(sm), 1, 0)
-            max_value = np.max(sm)
-            sm = np.where(sm == max_value, 1, 0)
+        # # For the element that is max of softmax, set its value to 1, set others to zero
+        # elif output_type is MAX_INDICATOR:
+        #     # sm = np.where(sm == np.max(sm), 1, 0)
+        #     max_value = np.max(sm)
+        #     sm = np.where(sm == max_value, 1, 0)
 
         # Choose a single element probabilistically based on softmax of their values;
         #    leave that element's value intact, set others to zero

@@ -53,11 +53,6 @@ KVO
 
 * observe_value_at_keypath
 
-MATHEMATICAL
-~~~~~~~~~~~~
-* `one_hot_max_val`
-* `one_hot_max_indicator`
-* `one_hot_prob`
 
 OTHER
 ~~~~~
@@ -99,7 +94,7 @@ __all__ = [
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
     'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d',
-    'object_has_single_value', 'one_hot_max_val', 'one_hot_max_indicator', 'one_hot_prob', 'optional_parameter_spec',
+    'object_has_single_value', 'optional_parameter_spec',
     'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError',
 ]
@@ -1160,34 +1155,3 @@ def safe_len(arr, fallback=1):
         return len(arr)
     except TypeError:
         return fallback
-
-
-# ******************************** MATHEMATICAL UTILITIY FUNCTION  *******************************************
-
-# one_hot functions
-
-def one_hot_max_val(value, abs=False):
-    """Return array with maximum value (or maximum absolute value, if abs=`True`) left as is, all others set to 0
-    """
-    max_value = np.max(value)
-    return np.where(value == max_value, max_value, 0)
-
-
-def one_hot_max_indicator(value, abs=False):
-    """Return array with maximum value (or maximum absolute value, if abs=`True`) set to 1, all others set to 0
-    """
-    max_value = np.max(value)
-    return np.where(value == max_value, 1, 0)
-
-
-def one_hot_prob(value):
-    """Return array one element probabisistcally chosen to retain its value and others set to 0
-
-    All values are normalized to be between 0 and 1, which are then used as proabilities for choosing each
-    """
-    normed = value / np.sum(value, axis=0)
-    cum_sum = np.cumsum(normed)
-    random_value = np.random.uniform()
-    chosen_item = next(element for element in cum_sum if element > random_value)
-    chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-    return value * chosen_in_cum_sum
