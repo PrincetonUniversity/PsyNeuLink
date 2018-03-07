@@ -1191,6 +1191,7 @@ class Process(Process_Base):
         # ASSIGN DEFAULT PROJECTION PARAMS
 
         # If learning is specified for the Process, add learning specification to default Projection params
+        #    and store any learning-related specifications
         if self.learning:
 
             # if spec is LEARNING or ENABLED (convenience spec),
