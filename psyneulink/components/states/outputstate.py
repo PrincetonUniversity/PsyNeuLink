@@ -852,7 +852,7 @@ class OutputState(State_Base):
     componentType = OUTPUT_STATE
     paramsType = OUTPUT_STATE_PARAMS
 
-    stateAttributes = State_Base.stateAttributes | {INDEX, ASSIGN}
+    # stateAttributes = State_Base.stateAttributes | {INDEX, ASSIGN}
 
     connectsWith = [INPUT_STATE, GATING_SIGNAL]
     connectsWithAttribute = [INPUT_STATES]
@@ -867,9 +867,9 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
-                               ASSIGN: None,
-                               INDEX: PRIMARY})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
+                               # ASSIGN: None,
+                               # INDEX: PRIMARY})
     #endregion
 
     @tc.typecheck
@@ -1112,34 +1112,21 @@ class OutputState(State_Base):
         state_spec = state_specific_spec
 
         if isinstance(state_specific_spec, dict):
-            # MODIFIED 2/24/18 OLD:
             return None, state_specific_spec
-            # MODIFIED 2/24/18 NEW:
-            # # CHECK IF FUNCTION IS IN state_specific_spec
-            # # CHECK IF VARIABLE IS IN state_dict (ERROR IF IT IS A DICT AND THERE IS NO FCT IN state_specific_spec)
             state_dict[VARIABLE] = _parse_output_state_variable(owner, state_dict[VARIABLE])
-            # state_specific_spec[FUNCTION] = _parse_output_state_function(owner,
-            #                                                              state_dict[NAME],
-            #                                                              state_specific_spec[FUNCTION],
-            #                                                              state_dict[VARIABLE]==PARAMS_DICT)
             return None, state_specific_spec
-            # MODIFIED 2/24/18 END
 
         elif isinstance(state_specific_spec, ProjectionTuple):
-            # MODIFIED 11/25/17 NEW:
             state_spec = None
-            # MODIFIED 11/25/17 END:
             params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                owner=owner,
                                                                connections=[state_specific_spec])
 
         elif isinstance(state_specific_spec, tuple):
-
             tuple_spec = state_specific_spec
             state_spec = None
             INDEX_INDEX = 1
 
-            # MODIFIED 11/23/17 NEW:
             if is_numeric(tuple_spec[0]):
                 state_spec = tuple_spec[0]
                 reference_value = state_dict[REFERENCE_VALUE]
@@ -1152,14 +1139,8 @@ class OutputState(State_Base):
                                      "is not compatible with its {} ({})".
                                      format(OutputState.__name__, owner.name, state_spec,
                                             REFERENCE_VALUE, reference_value))
-                # # MODIFIED 11/28/17 OLD:
                 projection_spec = tuple_spec[1]
-                # MODIFIED 11/28/17 NEW:
-                # projection_spec =
-                # MODIFIED 11/28/17 END:
-            # MODIFIED 11/23/17 END
 
-            # MODIFIED 11/23/17 NEW: ADDED ELSE AND INDENTED
             else:
                 projection_spec = state_specific_spec if len(state_specific_spec)==2 else (state_specific_spec[0],
                                                                                            state_specific_spec[-1])
@@ -1180,6 +1161,7 @@ class OutputState(State_Base):
             # Get INDEX specification from (state_spec, index, connections) tuple:
             if len(tuple_spec) == 3:
 
+                # MODIFIED 3/8/18 OLD:
                 index = tuple_spec[INDEX_INDEX]
 
                 if index is not None and not isinstance(index, numbers.Number):
@@ -1193,6 +1175,30 @@ class OutputState(State_Base):
                                            format(INDEX, OutputState.__name__, owner.name, index,
                                                   owner.name, owner.instance_defaults.value, len(owner.instance_defaults.value)-1))
                 params_dict[INDEX] = index
+                # # MODIFIED 3/8/18 NEW:
+                # assert False
+                # tuple_variable_spec = tuple_spec[INDEX_INDEX]
+                # if VARIABLE in params_dict:
+                #     dict_variable_spec = params_dict[VARIABLE]
+                # elif VARIABLE in state_dict:
+                #     dict_variable_spec = params_dict[VARIABLE]
+                #
+                # # if isinstance(index, int):
+                # index = tuple_variable_spec
+                #
+                # if index is not None and not isinstance(index, numbers.Number):
+                #     raise OutputStateError("The {} (2nd) item of the {} specification tuple for {} ({}) "
+                #                            "must be a number".format(INDEX, OutputState.__name__, owner.name, index))
+                # try:
+                #     owner.instance_defaults.value[index]
+                # except IndexError:
+                #     raise OutputStateError("The {0} (2nd) item of the {1} specification tuple for {2} ({3}) is out "
+                #                            "of bounds for the number of items in {4}'s value ({5}, max index: {6})".
+                #                            format(INDEX, OutputState.__name__, owner.name, index,
+                #                                   owner.name, owner.instance_defaults.value, len(owner.instance_defaults.value)-1))
+                # params_dict[INDEX] = index
+                # MODIFIED 3/8/18 END
+
 
         elif state_specific_spec is not None:
             raise OutputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
@@ -1525,7 +1531,8 @@ class StandardOutputStates():
             for index, state_dict in enumerate(self.data):
                 state_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
-        # Assign PRIMARY as INDEX for all OutputStates in output_state_dicts that don't already have an index specified
+        # Assign (OWNER_VALUE, PRIMARY) as VARIABLE for all OutputStates in output_state_dicts that don't
+        #    have VARIABLE (or INDEX) specified (INDEX is included here for backward compatibility)
         elif indices is PRIMARY:
             for state_dict in self.data:
                 if INDEX in state_dict or VARIABLE in state_dict:
