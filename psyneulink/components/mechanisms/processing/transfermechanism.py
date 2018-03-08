@@ -311,15 +311,19 @@ from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.globals.keywords import FUNCTION, INDEX, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NAME, NOISE, NORMALIZING_FUNCTION_TYPE, RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from psyneulink.globals.keywords import FUNCTION, INDEX, INITIALIZER, INITIALIZING, \
+    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MEAN, MEDIAN, NAME, NOISE, NORMALIZING_FUNCTION_TYPE, \
+    PROB,RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, \
+    kwPreferenceSetName
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, \
+    kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
-    'INITIAL_VALUE', 'CLIP', 'SMOOTHING_FACTOR', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN', 'Transfer_DEFAULT_LENGTH',
-    'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
+    'INITIAL_VALUE', 'CLIP', 'SMOOTHING_FACTOR', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN',
+    'Transfer_DEFAULT_LENGTH', 'Transfer_DEFAULT_OFFSET', 'TRANSFER_OUTPUT', 'TransferError', 'TransferMechanism',
 ]
 
 # TransferMechanism parameter keywords:
@@ -389,6 +393,11 @@ class TRANSFER_OUTPUT():
     MEDIAN=MEDIAN
     STANDARD_DEVIATION=STANDARD_DEVIATION
     VARIANCE=VARIANCE
+    MAX_VAL=MAX_VAL
+    MAX_ABS_VAL=MAX_ABS_VAL
+    MAX_INDICATOR=MAX_INDICATOR
+    MAX_ABS_INDICATOR=MAX_ABS_INDICATOR
+    PROB=PROB
 
 # THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_states]:

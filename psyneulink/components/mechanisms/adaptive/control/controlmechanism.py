@@ -1059,7 +1059,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 and not self.control_signals[0].efferents):
             del self._output_states[0]
             del self.control_signals[0]
-            self.allocation_policy = None
+            self.value = None
 
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
@@ -1100,17 +1100,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         try:
             self._objective_mechanism._monitored_output_states = value
         except AttributeError:
-            # # MODIFIED 11/25/17 OLD:
-            # raise ControlMechanismError("Control Mechanism {}'s Objective "
-            #                             "Mechanism has not been "
-            #                             "instantiated.".format(self.name))
-            # MODIFIED 11/25/17 NEW:
             return None
-
-            # # MODIFIED 11/25/17 NEWER:
-            # self._instantiate_objective_mechanism(context='INSTANTIATE_OBJECTIVE_MECHANISM')
-            # return self.monitored_output_states
-            # MODIFIED 11/25/17 END:
 
     @property
     def monitored_output_states_weights_and_exponents(self):
