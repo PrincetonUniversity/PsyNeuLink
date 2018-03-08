@@ -345,7 +345,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, ASSIGN, FUNCTION, FUNCTION_PARAMS, \
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, \
     INDEX, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES,  OWNER_VALUE, VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
