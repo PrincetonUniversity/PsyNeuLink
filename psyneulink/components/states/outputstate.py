@@ -116,7 +116,7 @@ that serve as the OutputState's `variable <OutputState.variable>`, and are used 
 to generate the OutputState's `value <OutputState.value>`.  By default, it uses the first item of its `owner
 <OutputState.owner>` Mechanism's `value <Mechanism_Base.value>`.  However, other attributes (or combinations of them)
 can be specified in the **variable** argument of the OutputState's constructor, or the *VARIABLE* entry in an
-`OutputState Specification Dictionary <OutputState_Specification_Dictionary>` (see `OutputState_Customization`).
+`OutputState specification dictionary <OutputState_Specification_Dictionary>` (see `OutputState_Customization`).
 The specification must be compatible (in the number and type of items it generates) with the input expected by the
 OutputState's `function <OutputState.function>`. The OutputState's `variable <OutputState.variable>` is used as the
 input to its `function <OutputState.function>` to generate the OutputState's `value <OutputState.value>`, possibly
@@ -268,9 +268,9 @@ which it should project. Each of these is described below:
         * **2-item tuple:** *(<State, Mechanism, or list of them>, Projection specification)* -- this is a contracted
           form of the 3-item tuple described below
         |
-        * **3-item tuple:** *(<value, State spec, or list of State specs>, index, Projection specification)* -- this
-          allows the specification of State(s) to which the OutputState should project, together with a
-          specification of its `index <OutputState.index>` attribute, and (optionally) parameters of the
+        * **3-item tuple:** *(<value, State spec, or list of State specs>, variable spec, Projection specification)* --
+          this allows the specification of State(s) to which the OutputState should project, together with a
+          specification of its `variable <OutputState.variable>` attribute, and (optionally) parameters of the
           Projection(s) to use (e.g., their `weight <Projection_Base.weight>` and/or `exponent
           <Projection_Base.exponent>` attributes.  Each tuple must have at least the first two items (in the
           order listed), and can include the third:
@@ -282,7 +282,8 @@ which it should project. Each of these is described below:
               consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included.
             |
-            * **index** -- must be an integer; specifies the `index <OutputState.index>` for the OutputState.
+            * **variable spec** -- specifies the attributes of the OutputState's `owner <OutputState.owner>` Mechanism
+              used for its `variable <OutputState.variable>` (see `OutputState_Customization`).
             |
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
               must be compatible with the State specification(s) in the 1st item; if there is more than one
@@ -382,17 +383,18 @@ OutputState Customization
 
 An OutputState's `value <OutputState.value>` can be customized by specifying its `variable <OutputState.variable>`
 and/or `function <OutputState.function>` in the **variable** and **function** arguments of the OutputState's
-constructor, respectively, or the corresponding entries (*VARIABLE* and *FUNCTION*) of an
-`OutputState_Specification_Dictionary`.
+constructor, respectively, the corresponding entries (*VARIABLE* and *FUNCTION*) of an `OutputState specification
+dictionary <OutputState_Specification_Dictionary>`, or in the variable spec item of a `3-item tuple
+<OutputState_Tuple_Specification>` for the OutputState.
 
 *OutputState* `variable <OutputState.variable>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, an OutputState uses the first (and usually only) item of the owner Mechanism's `value
-<Mechanism_Base.value>` as its `variable <OutputState.variable>`.  However, this can be customized by assigning it
-any other item of its `owner <OutputState.owner>`\\s `value <Mechanism_Base.value>`, the full
-`value <Mechanism_Base.value>` itself, other attributes of the `owner <OutputState.owner>`, or any combination of these
-uing the following keywords:
+<Mechanism_Base.value>` as its `variable <OutputState.variable>`.  However, this can be customized by specifying
+any other item of its `owner <OutputState.owner>`\\s `value <Mechanism_Base.value>`, the full `value
+<Mechanism_Base.value>` itself, other attributes of the `owner <OutputState.owner>`, or any combination of these
+using the following keywords:
 
     *OWNER_VALUE* -- the entire `value <Mechanism_Base.value>` of the OutputState's `owner <OutputState.owner>`.
 
@@ -565,16 +567,13 @@ Execution
 ---------
 
 An OutputState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
-When the Mechanism is executed, it places the results of its execution in its `value <Mechanism_Base.value>`
-attribute. The OutputState's `index <OutputState.index>` attribute designates the item of the Mechanism's
-`value <Mechanism_Base.value>` for use by the OutputState.  The OutputState is updated by calling the function
-specified by its `assign <OutputState_Assign>` attribute with the designated item of the Mechanism's
-`value <Mechanism_Base.value>` as its input.  This is used by the Mechanism's
-`function <Mechanism_Base.function>`, modified by any `GatingProjections <GatingProjection>` it receives (listed in
-its `mod_afferents <OutputState.mod_afferents>` attribute), to generate the `value <OutputState.value>` of the
-OutputState.  This is assigned to a corresponding item of the Mechanism's `output_values
-<Mechanism_Base.output_values>` attribute, and is used as the input to any projections for which the
-OutputState is the `sender <Projection_Base.sender>`.
+When the Mechanism is executed, the values of its attributes specified for the OutputState's `variable
+<OutputState.variable>` (see `OutputState_Customization`) are used as the input to the OutputState's `function
+<OutputState.function>`. The OutputState is updated by calling its `function <OutputState.function>`.  The result,
+modified by any `GatingProjections <GatingProjection>` the OutputState receives (listed in its `mod_afferents
+<OutputState.mod_afferents>` attribute), is assigned as the `value <OutputState.value>` of the OutputState.  This is
+assigned to a corresponding item of the Mechanism's `output_values <Mechanism_Base.output_values>` attribute,
+and is used as the input to any projections for which the OutputState is the `sender <Projection_Base.sender>`.
 
 .. _OutputState_Class_Reference:
 
@@ -725,11 +724,10 @@ class OutputState(State_Base):
         context in which the OutputState is created.
 
     reference_value : number, list or np.ndarray
-        a template that specifies the format of the item of the owner Mechanism's
-        `value <Mechanism_Base.value>` attribute to which the OutputState will be assigned (specified by
-        the **index** argument).  This must match (in number and type of elements) the OutputState's
-        **variable** argument.  It is used to insure the compatibility of the source of the
-        input for the OutputState with its `variable <OutputState.variable>`.
+        a template that specifies the format of the OutputState's `variable <OutputState.variable>`;  if it is
+        specified in addition to the **variable** argument, then these must be compatible (both in the number and
+        type of elements).  It is used to insure the compatibility of the source of the input for the OutputState
+        with its `function <OutputState.function>`.
 
     variable : number, list or np.ndarray
         specifies the attributes of the  OutputState's `owner <OutputState.owner>` Mechanism to be used by the
@@ -792,8 +790,8 @@ class OutputState(State_Base):
 
     variable : value, list or np.ndarray
         the value(s) of the item(s) of the `owner <OutputState.owner>` Mechanism's attributes specified in the
-        **variable** argument of the constructor or *VARIABLE* entry of the `OutputState_Specification_Dictionary`
-        used to construct the OutputState.
+        **variable** argument of the constructor, or a *VARIABLE* entry in the `OutputState specification dictionary
+        <OutputState_Specification_Dictionary>` used to construct the OutputState.
 
     COMMENT:
     index : int
@@ -879,8 +877,6 @@ class OutputState(State_Base):
                  variable=None,
                  size=None,
                  function=Linear(),
-                 # index=PRIMARY,
-                 # assign:tc.optional(is_function_type)=None,
                  projections=None,
                  params=None,
                  name=None,
@@ -901,8 +897,6 @@ class OutputState(State_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
-                # index=index,
-                # assign=assign,
                 function=function,
                 params=params)
 
@@ -1086,11 +1080,11 @@ class OutputState(State_Base):
 
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
-        """Get index and/or connections specified in an OutputState specification tuple
+        """Get variable spec and/or connections specified in an OutputState specification tuple
 
         Tuple specification can be:
             (state_spec, connections)
-            (state_spec, index, connections)
+            (state_spec, variable spec, connections)
 
         See State._parse_state_specific_spec for additional info.
 
@@ -1150,7 +1144,7 @@ class OutputState(State_Base):
                                        "either 2 ({} and {}) or 3 (optional additional {}) items, "
                                        "or must be a {}".
                                        format(OutputState.__name__, owner.name, tuple_spec,
-                                              STATE, PROJECTION, INDEX, ProjectionTuple.__name__))
+                                              STATE, PROJECTION, 'variable spec', ProjectionTuple.__name__))
 
 
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
@@ -1158,7 +1152,7 @@ class OutputState(State_Base):
                                                                connections=projection_spec)
 
 
-            # Get INDEX specification from (state_spec, index, connections) tuple:
+            # Get VARIABLE specification from (state_spec, variable spec, connections) tuple:
             if len(tuple_spec) == 3:
 
                 tuple_variable_spec = tuple_spec[TUPLE_VARIABLE_INDEX]
@@ -1176,7 +1170,7 @@ class OutputState(State_Base):
                                            format(VARIABLE, name, tuple_spec[TUPLE_VARIABLE_INDEX],
                                                   owner.name, dict_variable_spec))
 
-                # if isinstance(index, int) Included for backwward compatibility with INDEX
+                # Included for backward compatibility with INDEX
                 if isinstance(tuple_variable_spec, int):
                     tuple_variable_spec = (OWNER_VALUE, tuple_variable_spec)
 
@@ -1270,21 +1264,19 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         - if owner.output_states is empty, use owner.value to create a default OutputState
 
     For each OutputState:
-         check for index param:
-             if it is a State, get from index attribute
-             if it is dict, look for INDEX entry
-             if it is anything else, assume index is PRIMARY
-         get indexed value from output.value
-         append the indexed value to reference_value
+         check for VARIABLE and FUNCTION specifications:
+             if it is a State, get from variable and function attributes
+             if it is dict, look for VARIABLE and FUNCTION entries (and INDEX and ASSIGN for backward compatibility)
+             if it is anything else, assume variable spec is (OWNER_VALUE, 0) and FUNCTION is Linear
+         get OutputState's value using _parse_output_state_variable() and append to reference_value
              so that it matches specification of OutputStates (by # and function return values)
-         instantiate assign function if specified
 
     When completed:
         - self.output_states contains a ContentAddressableList of one or more OutputStates;
         - self.output_state contains first or only OutputState in list;
         - paramsCurrent[OUTPUT_STATES] contains the same ContentAddressableList (of one or more OutputStates)
-        - each OutputState corresponds to an item in the output of the owner's function
-        - if there is only one OutputState, it is assigned the full value
+        - each OutputState properly references, for its variable, the specified attributes of its owner Mechanism
+        - if there is only one OutputState, it is assigned the full value of its owner.
 
     (See State._instantiate_state_list() for additional details)
 
