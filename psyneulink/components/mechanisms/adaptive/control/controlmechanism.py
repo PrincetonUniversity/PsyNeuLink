@@ -1059,7 +1059,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 and not self.control_signals[0].efferents):
             del self._output_states[0]
             del self.control_signals[0]
-            self.allocation_policy = None
+            self.value = None
 
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
