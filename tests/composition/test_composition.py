@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from psyneulink.components.functions.function import Linear, SimpleIntegrator
-from psyneulink.components.mechanisms.processing import integratormechanism
+from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.compositions.composition import Composition, CompositionError, MechanismRole
@@ -35,19 +35,17 @@ class TestConstructor:
         comp_2 = Composition()
         assert isinstance(comp, Composition)
 
-    @pytest.mark.stress
-    @pytest.mark.parametrize(
-        'count', [
-            10000,
-        ]
-    )
-    def test_timing_no_args(self, count):
-        t = timeit('comp = Composition()', setup='from psyneulink.composition import Composition', number=count)
-        print()
-        logger.info('completed {0} creation{2} of Composition() in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
+    # @pytest.mark.stress
+    # @pytest.mark.parametrize(
+    #     'count', [
+    #         10000,
+    #     ]
+    # )
+    # def test_timing_no_args(self, count):
+    #     t = timeit('comp = Composition()', setup='from psyneulink.compositions.composition import Composition', number=count)
+    #     print()
+    #     logger.info('completed {0} creation{2} of Composition() in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
-
-# Unit tests for Composition.add_mechanis
 class TestAddMechanism:
 
     def test_add_once(self):
@@ -65,32 +63,27 @@ class TestAddMechanism:
         comp.add_mechanism(mech)
         comp.add_mechanism(mech)
 
-    @pytest.mark.stress
-    @pytest.mark.parametrize(
-        'count', [
-            100,
-        ]
-    )
-    def test_timing_stress(self, count):
-        t = timeit(
-            'comp.add_mechanism(TransferMechanism())',
-            setup='''
-<<<<<<< HEAD
-from psyneulink.components.mechanisms.Mechanism import mechanism
-from PsyNeuLink.Composition import Composition
-=======
-from psyNeuLink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.composition import Composition
->>>>>>> devel
-comp = Composition()
-''',
-            number=count
-        )
-        print()
-        logger.info('completed {0} addition{2} of a Mechanism to a Composition in {1:.8f}s'.
-                    format(count, t, 's' if count != 1 else ''))
+    # @pytest.mark.stress
+    # @pytest.mark.parametrize(
+    #     'count', [
+    #         100,
+    #     ]
+    # )
+#     def test_timing_stress(self, count):
+#         t = timeit(
+#             'comp.add_mechanism(TransferMechanism())',
+#             setup='''
+#
+# from psyNeuLink.components.mechanisms.processing.transfermechanism import TransferMechanism
+# from psyneulink.compositions.composition import Composition
+# comp = Composition()
+# ''',
+#             number=count
+#         )
+#         print()
+#         logger.info('completed {0} addition{2} of a Mechanism to a Composition in {1:.8f}s'.
+#                     format(count, t, 's' if count != 1 else ''))
 
-# Unit tests for Composition.add_projectio
 class TestAddProjection:
 
     def test_add_once(self):
@@ -120,34 +113,30 @@ class TestAddProjection:
         comp.add_projection(A, proj, B)
         comp.add_projection(A, proj, B)
 
-    @pytest.mark.stress
-    @pytest.mark.parametrize(
-        'count', [
-            1000,
-        ]
-    )
-    def test_timing_stress(self, count):
-        t = timeit('comp.add_projection(A, MappingProjection(), B)',
-                   setup='''
-<<<<<<< HEAD
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Composition import Composition
-=======
-from psyneulink.components.mechanisms.processingmechanisms.transfermechanism import TransferMechanism
-from psyneulink.components.projections.pathwayprojections.mappingprojection import MappingProjection
-from psyneulink.composition import Composition
->>>>>>> devel
-comp = Composition()
-A = TransferMechanism(name='A')
-B = TransferMechanism(name='B')
-comp.add_mechanism(A)
-comp.add_mechanism(B)
-''',
-                   number=count
-                   )
-        print()
-        logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
+    # @pytest.mark.stress
+    # @pytest.mark.parametrize(
+    #     'count', [
+    #         1000,
+    #     ]
+    # )
+#     def test_timing_stress(self, count):
+#         t = timeit('comp.add_projection(A, MappingProjection(), B)',
+#                    setup='''
+#
+# from psyneulink.components.mechanisms.processingmechanisms.transfermechanism import TransferMechanism
+# from psyneulink.components.projections.pathwayprojections.mappingprojection import MappingProjection
+# from psyneulink.compositions.composition import Composition
+#
+# comp = Composition()
+# A = TransferMechanism(name='A')
+# B = TransferMechanism(name='B')
+# comp.add_mechanism(A)
+# comp.add_mechanism(B)
+# ''',
+#                    number=count
+#                    )
+#         print()
+#         logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
 class TestAnalyzeGraph:
 
@@ -701,7 +690,7 @@ class TestRun:
 
     def test_run_2_mechanisms_default_input_1(self):
         comp = Composition()
-        A = integratormechanism(default_variable=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -715,7 +704,7 @@ class TestRun:
 
     def test_run_2_mechanisms_input_5(self):
         comp = Composition()
-        A = integratormechanism(default_variable=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -804,7 +793,7 @@ class TestRun:
     def test_run_2_mechanisms_with_scheduling_AAB_integrator(self):
         comp = Composition()
 
-        A = integratormechanism(name="A [integrator]", default_variable=2.0, function=SimpleIntegrator(rate=1.0))
+        A = IntegratorMechanism(name="A [integrator]", default_variable=2.0, function=SimpleIntegrator(rate=1.0))
         # (1) value = 0 + (5.0 * 1.0) + 0  --> return 5.0
         # (2) value = 5.0 + (5.0 * 1.0) + 0  --> return 10.0
         B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
@@ -882,7 +871,7 @@ class TestRun:
 
     def test_run_2_mechanisms_reuse_input(self):
         comp = Composition()
-        A = integratormechanism(default_variable=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -899,7 +888,7 @@ class TestRun:
 
     def test_run_2_mechanisms_incorrect_trial_spec(self):
         comp = Composition()
-        A = integratormechanism(default_variable=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -917,7 +906,7 @@ class TestRun:
 
     def test_run_2_mechanisms_double_trial_specs(self):
         comp = Composition()
-        A = integratormechanism(default_variable=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -934,7 +923,7 @@ class TestRun:
 
     def test_execute_composition(self):
         comp = Composition()
-        A = integratormechanism(default_variable=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -1212,8 +1201,8 @@ class TestCallBeforeAfterTimescale:
 
         comp = Composition()
 
-        A = integratormechanism(name="A [transfer]", function=SimpleIntegrator(rate=1))
-        B = integratormechanism(name="B [transfer]", function=SimpleIntegrator(rate=2))
+        A = IntegratorMechanism(name="A [transfer]", function=SimpleIntegrator(rate=1))
+        B = IntegratorMechanism(name="B [transfer]", function=SimpleIntegrator(rate=2))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)

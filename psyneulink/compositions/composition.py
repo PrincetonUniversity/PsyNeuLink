@@ -56,8 +56,9 @@ import numpy as np
 
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.globals.keywords import EXECUTING, SOFT_CLAMP
+from psyneulink.globals.keywords import EXECUTING, SOFT_CLAMP, IDENTITY_MATRIX
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -1101,8 +1102,10 @@ class Composition(object):
 
         execution_id = self._assign_execution_ids(execution_id)
 
-        scheduler_processing._init_counts(execution_id=execution_id)
-        scheduler_learning._init_counts(execution_id=execution_id)
+        # scheduler_processing._init_counts(execution_id=execution_id)
+        # scheduler_learning._init_counts(execution_id=execution_id)
+        scheduler_processing._init_counts()
+        scheduler_learning._init_counts()
         scheduler_processing.update_termination_conditions(termination_processing)
         scheduler_learning.update_termination_conditions(termination_learning)
 

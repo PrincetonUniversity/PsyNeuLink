@@ -52,7 +52,6 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = ['CompositionInterfaceMechanism']
 
@@ -60,7 +59,7 @@ __all__ = ['CompositionInterfaceMechanism']
 class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     """
     CompositionInterfaceMechanism(                            \
-    default_input_value=None,                               \
+    default_variable=None,                               \
     size=None,                                              \
     function=Linear(slope = 1.0, intercept = 0.0), \
     params=None,                                            \
@@ -72,7 +71,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : number, list or np.ndarray
+    default_variable : number, list or np.ndarray
         the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <CompositionInterfaceMechanism.variable>` for
@@ -80,8 +79,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         Mechanism.
 
     size : int, list or np.ndarray of ints
-        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
-        if **default_input_value** is specified, it takes precedence over the specification of **size**.
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
 
     function : IntegratorFunction : default Integrator
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
@@ -130,37 +129,32 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'CompositionInterfaceMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        # Sets template for variable (input)
-        variable = [[0]]
-
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({})
     paramNames = paramClassDefaults.keys()
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
-                 function = Linear(slope = 1, intercept=0.0),
-                 time_scale=TimeScale.TRIAL,
+                 function=Linear(slope=1, intercept=0.0),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
-        if default_input_value is None and size is None:
-            default_input_value = self.ClassDefaults.variable
+        if default_variable is None and size is None:
+            default_variable = self.ClassDefaults.variable
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 
-        super(CompositionInterfaceMechanism, self).__init__(variable=default_input_value,
-                                                  size=size,
-                                                  params=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=self)
+        super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,
+                                                            size=size,
+                                                            params=params,
+                                                            name=name,
+                                                            prefs=prefs,
+                                                            context=self)
 
 
 
