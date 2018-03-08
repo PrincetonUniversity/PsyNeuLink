@@ -1017,17 +1017,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
             for spec in target_set[LEARNING_SIGNALS]:
                 learning_signal = _parse_state_spec(state_type=LearningSignal, owner=self, state_spec=spec)
 
-
                 # Validate that the receiver of the LearningProjection (if specified)
                 #     is a MappingProjection and in the same System as self (if specified)
-                try:
+                if learning_signal[PARAMS] and PROJECTIONS in learning_signal[PARAMS]:
                     for learning_projection in  learning_signal[PARAMS][PROJECTIONS]:
                         _validate_receiver(sender_mech=self,
                                            projection=learning_projection,
                                            expected_owner_type=MappingProjection,
                                            spec_type=LEARNING_SIGNAL,
                                            context=context)
-                except KeyError:
+                else:
                     pass
 
     def _instantiate_attributes_before_function(self, context=None):

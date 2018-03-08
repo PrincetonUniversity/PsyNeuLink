@@ -1125,7 +1125,7 @@ class OutputState(State_Base):
         elif isinstance(state_specific_spec, tuple):
             tuple_spec = state_specific_spec
             state_spec = None
-            INDEX_INDEX = 1
+            TUPLE_VARIABLE_INDEX = 1
 
             if is_numeric(tuple_spec[0]):
                 state_spec = tuple_spec[0]
@@ -1161,43 +1161,29 @@ class OutputState(State_Base):
             # Get INDEX specification from (state_spec, index, connections) tuple:
             if len(tuple_spec) == 3:
 
-                # MODIFIED 3/8/18 OLD:
-                index = tuple_spec[INDEX_INDEX]
+                tuple_variable_spec = tuple_spec[TUPLE_VARIABLE_INDEX]
 
-                if index is not None and not isinstance(index, numbers.Number):
-                    raise OutputStateError("The {} (2nd) item of the {} specification tuple for {} ({}) "
-                                           "must be a number".format(INDEX, OutputState.__name__, owner.name, index))
-                try:
-                    owner.instance_defaults.value[index]
-                except IndexError:
-                    raise OutputStateError("The {0} (2nd) item of the {1} specification tuple for {2} ({3}) is out "
-                                           "of bounds for the number of items in {4}'s value ({5}, max index: {6})".
-                                           format(INDEX, OutputState.__name__, owner.name, index,
-                                                  owner.name, owner.instance_defaults.value, len(owner.instance_defaults.value)-1))
-                params_dict[INDEX] = index
-                # # MODIFIED 3/8/18 NEW:
-                # assert False
-                # tuple_variable_spec = tuple_spec[INDEX_INDEX]
-                # if VARIABLE in params_dict:
-                #     dict_variable_spec = params_dict[VARIABLE]
-                # elif VARIABLE in state_dict:
-                #     dict_variable_spec = params_dict[VARIABLE]
-                #
-                # # if isinstance(index, int):
-                # index = tuple_variable_spec
-                #
-                # if index is not None and not isinstance(index, numbers.Number):
-                #     raise OutputStateError("The {} (2nd) item of the {} specification tuple for {} ({}) "
-                #                            "must be a number".format(INDEX, OutputState.__name__, owner.name, index))
-                # try:
-                #     owner.instance_defaults.value[index]
-                # except IndexError:
-                #     raise OutputStateError("The {0} (2nd) item of the {1} specification tuple for {2} ({3}) is out "
-                #                            "of bounds for the number of items in {4}'s value ({5}, max index: {6})".
-                #                            format(INDEX, OutputState.__name__, owner.name, index,
-                #                                   owner.name, owner.instance_defaults.value, len(owner.instance_defaults.value)-1))
-                # params_dict[INDEX] = index
-                # MODIFIED 3/8/18 END
+                # Make sure OutputState's variable has not already been specified
+                dict_variable_spec = None
+                if VARIABLE in params_dict and params_dict[VARIABLE] is not None:
+                    dict_variable_spec = params_dict[VARIABLE]
+                elif VARIABLE in state_dict and state_dict[VARIABLE] is not None:
+                    dict_variable_spec = params_dict[VARIABLE]
+                if dict_variable_spec:
+                    name = state_dict[NAME] or self.__name__
+                    raise OutputStateError("Specification of {} in item 2 of 3-item tuple for {} ({})"
+                                           "conflicts with its specification elsewhere in the constructor for {} ({})".
+                                           format(VARIABLE, name, tuple_spec[TUPLE_VARIABLE_INDEX],
+                                                  owner.name, dict_variable_spec))
+
+                # if isinstance(index, int) Included for backwward compatibility with INDEX
+                if isinstance(tuple_variable_spec, int):
+                    tuple_variable_spec = (OWNER_VALUE, tuple_variable_spec)
+
+                # validate that it is a legitimate spec
+                _parse_output_state_variable(owner, tuple_variable_spec)
+
+                params_dict[VARIABLE] = tuple_variable_spec
 
 
         elif state_specific_spec is not None:
