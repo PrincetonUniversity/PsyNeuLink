@@ -1386,37 +1386,32 @@ class Log:
         Returns:
             2d np.array
         """
-
+        log_dict = OrderedDict()
         entries = self._validate_entries_arg(entries, logged=True)
 
-        if not entries:
-            return None
+        if entries:
+            time_values = self._parse_entries_for_time_values(entries)
 
+            # If all time values are recorded - - - log_dict = {"Run": array, "Trial": array, "Time_step": array}
+            if time_values:
+                for i in range(NUM_TIME_SCALES):
+                    row = [[t[i]] for t in time_values]
+                    time_header = TIME_SCALE_NAMES[i].capitalize()
+                    log_dict[time_header] = row
 
-        time_values = self._parse_entries_for_time_values(entries)
+            # If ANY time values are empty (components were run outside of a System) - - - log_dict = {"Index": array}
+            else:
+                # find number of values logged by zeroth component
+                num_indicies = len(self.logged_entries[self._dealias_owner_name(entries[0])])
 
-        log_dict = OrderedDict()
+                # If there are no time values, only support entries of the same length
+                if not all(len(self.logged_entries[self._dealias_owner_name(e)]) == num_indicies for e in entries):
+                    raise LogError("nparray output requires that all entries have time values or are of equal length")
 
-        # If all time values are recorded - - - log_dict = {"Run": array, "Trial": array, "Time_step": array}
-        if time_values:
-            for i in range(NUM_TIME_SCALES):
-                row = [[t[i]] for t in time_values]
-                time_header = TIME_SCALE_NAMES[i].capitalize()
-                log_dict[time_header] = row
+                log_dict["Index"] = np.arange(num_indicies).reshape(num_indicies, 1).tolist()
 
-        # If ANY time values are empty (components were run outside of a System) - - - log_dict = {"Index": array}
-        else:
-            # find number of values logged by zeroth component
-            num_indicies = len(self.logged_entries[self._dealias_owner_name(entries[0])])
-
-            # If there are no time values, only support entries of the same length
-            if not all(len(self.logged_entries[self._dealias_owner_name(e)]) == num_indicies for e in entries):
-                raise LogError("nparray output requires that all entries have time values or are of equal length")
-
-            log_dict["Index"] = np.arange(num_indicies).reshape(num_indicies, 1).tolist()
-
-        for entry in entries:
-            log_dict[self._alias_owner_name(entry)] = np.array(self._assemble_entry_data(entry, time_values))
+            for entry in entries:
+                log_dict[self._alias_owner_name(entry)] = np.array(self._assemble_entry_data(entry, time_values))
 
         return log_dict
 
