@@ -1100,17 +1100,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         try:
             self._objective_mechanism._monitored_output_states = value
         except AttributeError:
-            # # MODIFIED 11/25/17 OLD:
-            # raise ControlMechanismError("Control Mechanism {}'s Objective "
-            #                             "Mechanism has not been "
-            #                             "instantiated.".format(self.name))
-            # MODIFIED 11/25/17 NEW:
             return None
-
-            # # MODIFIED 11/25/17 NEWER:
-            # self._instantiate_objective_mechanism(context='INSTANTIATE_OBJECTIVE_MECHANISM')
-            # return self.monitored_output_states
-            # MODIFIED 11/25/17 END:
 
     @property
     def monitored_output_states_weights_and_exponents(self):
