@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputState &mdash; PsyNeuLink 0.4.4.4+101.g3fbb4b8 documentation</title>
+  <title>OutputState &mdash; PsyNeuLink 0.4.4.4+102.g0241e93 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+101.g3fbb4b8 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+102.g0241e93 documentation" href="index.html"/>
         <link rel="up" title="States" href="State.html"/>
         <link rel="next" title="Modulatory Signals" href="ModulatorySignal.html"/>
         <link rel="prev" title="ParameterState" href="ParameterState.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.4+101
+                0.4.4.4+102
               </div>
             
           
@@ -265,7 +265,7 @@ to the list (that is, it does <em>not</em> replace the one that was already ther
 that serve as the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and are used by its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.function" title="psyneulink.components.states.outputstate.OutputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
 to generate the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  By default, it uses the first item of its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.owner" title="psyneulink.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  However, other attributes (or combinations of them)
 can be specified in the <strong>variable</strong> argument of the OutputState’s constructor, or the <em>VARIABLE</em> entry in an
-<a class="reference internal" href="#outputstate-specification-dictionary"><span class="std std-ref">OutputState Specification Dictionary</span></a> (see <a class="reference internal" href="#outputstate-customization"><span class="std std-ref">OutputState Customization</span></a>).
+<a class="reference internal" href="#outputstate-specification-dictionary"><span class="std std-ref">OutputState specification dictionary</span></a> (see <a class="reference internal" href="#outputstate-customization"><span class="std std-ref">OutputState Customization</span></a>).
 The specification must be compatible (in the number and type of items it generates) with the input expected by the
 OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.function" title="psyneulink.components.states.outputstate.OutputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. The OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is used as the
 input to its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.function" title="psyneulink.components.states.outputstate.OutputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to generate the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, possibly
@@ -360,7 +360,7 @@ used for compatibility with future versions.</p>
 <div class="line"><br /></div>
 </div>
 <ul class="simple">
-<li><em>ASSIGN</em>:&lt;function&gt; <em>[DEPRECATED in version 0.4.5]</em> - specifies the OutputState’s <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination.function" title="psyneulink.components.functions.function.LinearCombination.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
+<li><em>ASSIGN</em>:&lt;function&gt; <em>[DEPRECATED in version 0.4.5]</em> - specifies the OutputState’s <a class="reference internal" href="GatingMechanism.html#psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
 &lt;OutputState.assign&gt;` attribute;  <em>FUNCTION</em> should be used for compatibility with future versions.</li>
 </ul>
 </li>
@@ -370,7 +370,7 @@ used for compatibility with future versions.</p>
 Projection(s). Specifying an OutputState in this way creates both the OutputState and any of the specified or
 implied Projection(s) (if they don’t already exist). <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>
 are assigned to the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.efferents" title="psyneulink.components.states.outputstate.OutputState.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> attribute, and <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> to its <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.mod_afferents" title="psyneulink.components.states.inputstate.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. Any of the following can be used
-to specify an InputState by the Components that projection to it (see <code class="xref any docutils literal"><span class="pre">below</span></code> for an explanation of the relationship between the <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.variable" title="psyneulink.components.projections.projection.Projection_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of these
+to specify an InputState by the Components that projection to it (see <code class="xref any docutils literal"><span class="pre">below</span></code> for an explanation of the relationship between the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.ConstantIntegrator.variable" title="psyneulink.components.functions.function.ConstantIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of these
 Components and the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>):</p>
 <ul class="simple">
 <li><strong>InputState, GatingSignal, Mechanism, or list with any of these</strong> – creates an OutputState with
@@ -404,9 +404,9 @@ form of the 3-item tuple described below</li>
 <div class="line"><br /></div>
 </div>
 <ul>
-<li><p class="first"><strong>3-item tuple:</strong> <em>(&lt;value, State spec, or list of State specs&gt;, index, Projection specification)</em> – this
-allows the specification of State(s) to which the OutputState should project, together with a
-specification of its <code class="xref any docutils literal"><span class="pre">index</span></code> attribute, and (optionally) parameters of the
+<li><p class="first"><strong>3-item tuple:</strong> <em>(&lt;value, State spec, or list of State specs&gt;, variable spec, Projection specification)</em> –
+this allows the specification of State(s) to which the OutputState should project, together with a
+specification of its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute, and (optionally) parameters of the
 Projection(s) to use (e.g., their <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.weight" title="psyneulink.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> and/or <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.exponent" title="psyneulink.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> attributes.  Each tuple must have at least the first two items (in the
 order listed), and can include the third:</p>
 <blockquote>
@@ -420,7 +420,8 @@ consistent with (that is, their <a class="reference internal" href="State.html#p
 <div class="line"><br /></div>
 </div>
 <ul class="simple">
-<li><strong>index</strong> – must be an integer; specifies the <code class="xref any docutils literal"><span class="pre">index</span></code> for the OutputState.</li>
+<li><strong>variable spec</strong> – specifies the attributes of the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.owner" title="psyneulink.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> Mechanism
+used for its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#outputstate-customization"><span class="std std-ref">OutputState Customization</span></a>).</li>
 </ul>
 <div class="line-block">
 <div class="line"><br /></div>
@@ -486,7 +487,7 @@ receiver (as described just above);  if neither its <a class="reference internal
 </div>
 <ul class="simple">
 <li><strong>GatingProjection, GatingSignal or GatingMechanism</strong> – any of these can be used to specify an OutputState;
-their <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value" title="psyneulink.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> does not need to be compatible with the OutputState’s <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> or
+their <a class="reference internal" href="Process.html#psyneulink.components.process.Process.value" title="psyneulink.components.process.Process.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> does not need to be compatible with the OutputState’s <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.variable" title="psyneulink.components.states.inputstate.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> or
 <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, however it does have to be compatible with the <a class="reference internal" href="Function.html#function-modulatory-params"><span class="std std-ref">modulatory parameter</span></a> of the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.function" title="psyneulink.components.states.outputstate.OutputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
 </ul>
 </li>
@@ -520,14 +521,13 @@ result.</p>
 <span id="id8"></span><h3>OutputState Customization<a class="headerlink" href="#outputstate-customization" title="Permalink to this headline">¶</a></h3>
 <p>An OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> can be customized by specifying its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 and/or <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.function" title="psyneulink.components.states.outputstate.OutputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> in the <strong>variable</strong> and <strong>function</strong> arguments of the OutputState’s
-constructor, respectively, or the corresponding entries (<em>VARIABLE</em> and <em>FUNCTION</em>) of an
-<code class="xref any docutils literal"><span class="pre">OutputState_Specification_Dictionary</span></code>.</p>
+constructor, respectively, the corresponding entries (<em>VARIABLE</em> and <em>FUNCTION</em>) of an <a class="reference internal" href="#outputstate-specification-dictionary"><span class="std std-ref">OutputState specification
+dictionary</span></a>, or in the variable spec item of a <a class="reference internal" href="#outputstate-tuple-specification"><span class="std std-ref">3-item tuple</span></a> for the OutputState.</p>
 <div class="section" id="outputstate-variable">
 <h4><em>OutputState</em> <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a><a class="headerlink" href="#outputstate-variable" title="Permalink to this headline">¶</a></h4>
-<p>By default, an OutputState uses the first (and usually only) item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> as its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  However, this can be customized by assigning it
-any other item of its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.owner" title="psyneulink.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, the full
-<a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> itself, other attributes of the <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.owner" title="psyneulink.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, or any combination of these
-uing the following keywords:</p>
+<p>By default, an OutputState uses the first (and usually only) item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> as its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  However, this can be customized by specifying
+any other item of its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.owner" title="psyneulink.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, the full <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> itself, other attributes of the <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.owner" title="psyneulink.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, or any combination of these
+using the following keywords:</p>
 <blockquote>
 <div><p><em>OWNER_VALUE</em> – the entire <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.owner" title="psyneulink.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.</p>
 <p><em>(OWNER_VALUE, &lt;int&gt;)</em> – tuple specifying an item of the <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.owner" title="psyneulink.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).</p>
@@ -637,15 +637,10 @@ projections that the OutputStatue sends.</li>
 <div class="section" id="execution">
 <span id="outputstate-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An OutputState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
-When the Mechanism is executed, it places the results of its execution in its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
-attribute. The OutputState’s <code class="xref any docutils literal"><span class="pre">index</span></code> attribute designates the item of the Mechanism’s
-<a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for use by the OutputState.  The OutputState is updated by calling the function
-specified by its <code class="xref any docutils literal"><span class="pre">assign</span></code> attribute with the designated item of the Mechanism’s
-<a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> as its input.  This is used by the Mechanism’s
-<a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, modified by any <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> it receives (listed in
-its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.mod_afferents" title="psyneulink.components.states.outputstate.OutputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute), to generate the <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the
-OutputState.  This is assigned to a corresponding item of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute, and is used as the input to any projections for which the
-OutputState is the <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.sender" title="psyneulink.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</p>
+When the Mechanism is executed, the values of its attributes specified for the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#outputstate-customization"><span class="std std-ref">OutputState Customization</span></a>) are used as the input to the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.function" title="psyneulink.components.states.outputstate.OutputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. The OutputState is updated by calling its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.function" title="psyneulink.components.states.outputstate.OutputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The result,
+modified by any <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> the OutputState receives (listed in its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.mod_afferents" title="psyneulink.components.states.outputstate.OutputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute), is assigned as the <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the OutputState.  This is
+assigned to a corresponding item of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute,
+and is used as the input to any projections for which the OutputState is the <a class="reference internal" href="Projection.html#psyneulink.components.projections.projection.Projection_Base.sender" title="psyneulink.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="outputstate-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -660,14 +655,13 @@ OutputState is the <a class="reference internal" href="Projection.html#psyneulin
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<em>Mechanism</em>) – the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the OutputState belongs; it must be specified or determinable from the
 context in which the OutputState is created.</li>
-<li><strong>reference_value</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – a template that specifies the format of the item of the owner Mechanism’s
-<a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute to which the OutputState will be assigned (specified by
-the <strong>index</strong> argument).  This must match (in number and type of elements) the OutputState’s
-<strong>variable</strong> argument.  It is used to insure the compatibility of the source of the
-input for the OutputState with its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>reference_value</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – a template that specifies the format of the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if it is
+specified in addition to the <strong>variable</strong> argument, then these must be compatible (both in the number and
+type of elements).  It is used to insure the compatibility of the source of the input for the OutputState
+with its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.function" title="psyneulink.components.states.outputstate.OutputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
 <li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the attributes of the  OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.owner" title="psyneulink.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> Mechanism to be used by the
 OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.function" title="psyneulink.components.states.outputstate.OutputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>  in generating its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
-<li><strong>function</strong> (<em>Function</em><em>, </em><a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination.function" title="psyneulink.components.functions.function.LinearCombination.function"><em>function</em></a><em>, or </em><em>method : default Linear</em>) – specifies the function used to transform and/or combine the items designated by the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> into its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, under the possible influence of
+<li><strong>function</strong> (<em>Function</em><em>, </em><a class="reference internal" href="GatingMechanism.html#psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function" title="psyneulink.components.mechanisms.adaptive.gating.gatingmechanism.GatingMechanism.function"><em>function</em></a><em>, or </em><em>method : default Linear</em>) – specifies the function used to transform and/or combine the items designated by the OutputState’s <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> into its <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, under the possible influence of
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by the OutputState.</li>
 <li><strong>projections</strong> (<em>list of Projection specifications</em>) – species the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> to be sent by the OutputState, and/or
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections(s)</span></a> to be received (see <code class="xref any docutils literal"><span class="pre">OutputState_Projections</span></code> for additional details);
@@ -699,8 +693,7 @@ in the dictionary override any assigned to those parameters in arguments of the 
 <dt id="psyneulink.components.states.outputstate.OutputState.variable">
 <code class="descname">variable</code><a class="headerlink" href="#psyneulink.components.states.outputstate.OutputState.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>value, list or np.ndarray</em> – the value(s) of the item(s) of the <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.owner" title="psyneulink.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> Mechanism’s attributes specified in the
-<strong>variable</strong> argument of the constructor or <em>VARIABLE</em> entry of the <code class="xref any docutils literal"><span class="pre">OutputState_Specification_Dictionary</span></code>
-used to construct the OutputState.</p>
+<strong>variable</strong> argument of the constructor, or a <em>VARIABLE</em> entry in the <a class="reference internal" href="#outputstate-specification-dictionary"><span class="std std-ref">OutputState specification dictionary</span></a> used to construct the OutputState.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -778,7 +771,7 @@ If the OutputState has been assigned to:
 
 <dl class="class">
 <dt id="psyneulink.components.states.outputstate.StandardOutputStates">
-<em class="property">class </em><code class="descclassname">psyneulink.components.states.outputstate.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: psyneulink.components.component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10456b5f8&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.states.outputstate.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.states.outputstate.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: psyneulink.components.component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10456e4a8&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.states.outputstate.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputState specification dicts for <a class="reference internal" href="#outputstate-standard"><span class="std std-ref">standard OutputStates</span></a> of a class.</p>
 <p>Parses specification of VARIABLE, assigning indices to OWNER_VALUE if specified.
 Adds &lt;NAME_INDEX&gt; of each OutputState as property of the owner’s class, that returns the index of the OutputState
@@ -789,19 +782,19 @@ in the list.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.components.component.Component" title="psyneulink.components.component.Component"><em>Component</em></a>) – the Component to which this OutputState belongs</li>
-<li><strong>output_state_dicts</strong> (<em>list of dicts</em>) – list of dictionaries specifying OutputStates for the Component specified by <a class="reference internal" href="Function.html#psyneulink.components.functions.function.ExponentialDist.owner" title="psyneulink.components.functions.function.ExponentialDist.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
+<li><strong>output_state_dicts</strong> (<em>list of dicts</em>) – list of dictionaries specifying OutputStates for the Component specified by <a class="reference internal" href="#psyneulink.components.states.outputstate.OutputState.owner" title="psyneulink.components.states.outputstate.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
 <li><strong>indices</strong> (<em>PRIMARY</em><em>,</em>) – </li>
-<li><strong>list of ints</strong> (<em>SEQUENTIAL</em><em>,</em>) – <p>specifies how to assign the INDEX entry for each dict listed in <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code>;</p>
+<li><strong>list of ints</strong> (<em>SEQUENTIAL</em><em>,</em>) – <p>specifies how to assign the (OWNER_VALUE, int) entry for each dict listed in <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code>;</p>
 <p>The effects of each value of indices are as follows:</p>
 <blockquote>
 <div><ul>
-<li><em>PRIMARY</em> – assigns the INDEX for the owner’s primary OutputState to all output_states
-for which an INDEX entry is not already specified;</li>
-<li><em>SEQUENTIAL</em> – assigns sequentially incremented int to each INDEX entry,
-ignoring any INDEX entries previously specified for individual OutputStates;</li>
-<li>list of ints – assigns each int to the corresponding entry in <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code>;
-ignoring any INDEX entries previously specified for individual OutputStates;</li>
-<li>None – assigns <code class="xref any docutils literal"><span class="pre">None</span></code> to INDEX entries for all OutputStates for which it is not already specified.</li>
+<li><em>PRIMARY</em> – assigns (OWNER_VALUE, PRIMARY) to all output_states for which a VARIABLE entry is not
+specified;</li>
+<li><em>SEQUENTIAL</em> – assigns sequentially incremented int to (OWNER_VALUE, int) spec of each OutputState,
+ignoring any VARIABLE entries previously specified for individual OutputStates;</li>
+<li>list of ints – assigns each int to an (OWNER_VALUE, int) entry of the corresponding OutputState in
+<a href="#id9"><span class="problematic" id="id10">`</span></a>output_state_dicts, ignoring any VARIABLE entries previously specified for individual OutputStates;</li>
+<li>None – assigns <code class="xref any docutils literal"><span class="pre">None</span></code> to VARIABLE entries for all OutputStates for which it is not already specified.</li>
 </ul>
 </div></blockquote>
 </li>
@@ -895,7 +888,7 @@ ignoring any INDEX entries previously specified for individual OutputStates;</li
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+101.g3fbb4b8',
+            VERSION:'0.4.4.4+102.g0241e93',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
