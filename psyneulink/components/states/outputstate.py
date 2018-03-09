@@ -163,7 +163,7 @@ which it should project. Each of these is described below:
     .. _OutputState_Specification_by_Variable:
 
     * **variable** -- creates an OutputState using the specification as the OutputState's `variable
-    <OutputState.variable>` (see `OutputState_Customization`).  This must be compatible with (have the same number
+      <OutputState.variable>` (see `OutputState_Customization`).  This must be compatible with (have the same number
       and type of elements as) the OutputState's `function <OutputState.function>`.  A default name is assigned based
       on the name of the Mechanism (see `Naming`).
     ..
@@ -177,15 +177,15 @@ which it should project. Each of these is described below:
 
       * *VARIABLE*:<keyword or list> - specifies the attribute(s) of its `owner <OutputState.owner>` Mechanism to use
         as the input to the OutputState's `function <OutputState.function>` (see `OutputState_Customization`); this
-        must be compatible with (in the number and format of the items it specifies) with the OutputState's
-        `function <OutputState.function>`.
+        must be compatible (in the number and format of the items it specifies) with the OutputState's `function
+        <OutputState.function>`.
       |
       * *FUNCTION*:<`Function <Function>`, function or method> - specifies the function used to transform and/or
         combine the item(s) specified for the OutputState's `variable <OutputState.variable>` into its
         `value <OutputState.value>`;  its input must be compatible (in the number and format of elements) with the
         specification of the OutputState's `variable <OutputState.variable>` (see `OutputState_Customization`).
       |
-      * *PROJECTIONS* or *MECHANISMS*:<list of `Projections <Projection> and/or `Mechanisms <Mechanism>`> - specifies
+      * *PROJECTIONS* or *MECHANISMS*:<list of `Projections <Projection>` and/or `Mechanisms <Mechanism>`> - specifies
         one or more efferent `MappingProjections <MappingProjection>` from the OutputState, Mechanims that should
         receive them, and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive;  this may be constrained
         by or have consequences for the OutputState's `variable <InputState.variable>` and/or its `value
@@ -383,8 +383,8 @@ OutputState Customization
 
 An OutputState's `value <OutputState.value>` can be customized by specifying its `variable <OutputState.variable>`
 and/or `function <OutputState.function>` in the **variable** and **function** arguments of the OutputState's
-constructor, respectively, the corresponding entries (*VARIABLE* and *FUNCTION*) of an `OutputState specification
-dictionary <OutputState_Specification_Dictionary>`, or in the variable spec item of a `3-item tuple
+constructor, the corresponding entries (*VARIABLE* and *FUNCTION*) of an `OutputState specification
+dictionary <OutputState_Specification_Dictionary>`, or in the variable spec (2nd) item of a `3-item tuple
 <OutputState_Tuple_Specification>` for the OutputState.
 
 *OutputState* `variable <OutputState.variable>`
