@@ -116,7 +116,7 @@ that serve as the OutputState's `variable <OutputState.variable>`, and are used 
 to generate the OutputState's `value <OutputState.value>`.  By default, it uses the first item of its `owner
 <OutputState.owner>` Mechanism's `value <Mechanism_Base.value>`.  However, other attributes (or combinations of them)
 can be specified in the **variable** argument of the OutputState's constructor, or the *VARIABLE* entry in an
-`OutputState Specification Dictionary <OutputState_Specification_Dictionary>` (see `OutputState_Customization`).
+`OutputState specification dictionary <OutputState_Specification_Dictionary>` (see `OutputState_Customization`).
 The specification must be compatible (in the number and type of items it generates) with the input expected by the
 OutputState's `function <OutputState.function>`. The OutputState's `variable <OutputState.variable>` is used as the
 input to its `function <OutputState.function>` to generate the OutputState's `value <OutputState.value>`, possibly
@@ -268,9 +268,9 @@ which it should project. Each of these is described below:
         * **2-item tuple:** *(<State, Mechanism, or list of them>, Projection specification)* -- this is a contracted
           form of the 3-item tuple described below
         |
-        * **3-item tuple:** *(<value, State spec, or list of State specs>, index, Projection specification)* -- this
-          allows the specification of State(s) to which the OutputState should project, together with a
-          specification of its `index <OutputState.index>` attribute, and (optionally) parameters of the
+        * **3-item tuple:** *(<value, State spec, or list of State specs>, variable spec, Projection specification)* --
+          this allows the specification of State(s) to which the OutputState should project, together with a
+          specification of its `variable <OutputState.variable>` attribute, and (optionally) parameters of the
           Projection(s) to use (e.g., their `weight <Projection_Base.weight>` and/or `exponent
           <Projection_Base.exponent>` attributes.  Each tuple must have at least the first two items (in the
           order listed), and can include the third:
@@ -282,7 +282,8 @@ which it should project. Each of these is described below:
               consistent with (that is, their `value <State_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included.
             |
-            * **index** -- must be an integer; specifies the `index <OutputState.index>` for the OutputState.
+            * **variable spec** -- specifies the attributes of the OutputState's `owner <OutputState.owner>` Mechanism
+              used for its `variable <OutputState.variable>` (see `OutputState_Customization`).
             |
             * **Projection specification** (optional) -- `specifies a Projection <Projection_Specification>` that
               must be compatible with the State specification(s) in the 1st item; if there is more than one
@@ -382,17 +383,18 @@ OutputState Customization
 
 An OutputState's `value <OutputState.value>` can be customized by specifying its `variable <OutputState.variable>`
 and/or `function <OutputState.function>` in the **variable** and **function** arguments of the OutputState's
-constructor, respectively, or the corresponding entries (*VARIABLE* and *FUNCTION*) of an
-`OutputState_Specification_Dictionary`.
+constructor, respectively, the corresponding entries (*VARIABLE* and *FUNCTION*) of an `OutputState specification
+dictionary <OutputState_Specification_Dictionary>`, or in the variable spec item of a `3-item tuple
+<OutputState_Tuple_Specification>` for the OutputState.
 
 *OutputState* `variable <OutputState.variable>`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, an OutputState uses the first (and usually only) item of the owner Mechanism's `value
-<Mechanism_Base.value>` as its `variable <OutputState.variable>`.  However, this can be customized by assigning it
-any other item of its `owner <OutputState.owner>`\\s `value <Mechanism_Base.value>`, the full
-`value <Mechanism_Base.value>` itself, other attributes of the `owner <OutputState.owner>`, or any combination of these
-uing the following keywords:
+<Mechanism_Base.value>` as its `variable <OutputState.variable>`.  However, this can be customized by specifying
+any other item of its `owner <OutputState.owner>`\\s `value <Mechanism_Base.value>`, the full `value
+<Mechanism_Base.value>` itself, other attributes of the `owner <OutputState.owner>`, or any combination of these
+using the following keywords:
 
     *OWNER_VALUE* -- the entire `value <Mechanism_Base.value>` of the OutputState's `owner <OutputState.owner>`.
 
@@ -565,16 +567,13 @@ Execution
 ---------
 
 An OutputState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
-When the Mechanism is executed, it places the results of its execution in its `value <Mechanism_Base.value>`
-attribute. The OutputState's `index <OutputState.index>` attribute designates the item of the Mechanism's
-`value <Mechanism_Base.value>` for use by the OutputState.  The OutputState is updated by calling the function
-specified by its `assign <OutputState_Assign>` attribute with the designated item of the Mechanism's
-`value <Mechanism_Base.value>` as its input.  This is used by the Mechanism's
-`function <Mechanism_Base.function>`, modified by any `GatingProjections <GatingProjection>` it receives (listed in
-its `mod_afferents <OutputState.mod_afferents>` attribute), to generate the `value <OutputState.value>` of the
-OutputState.  This is assigned to a corresponding item of the Mechanism's `output_values
-<Mechanism_Base.output_values>` attribute, and is used as the input to any projections for which the
-OutputState is the `sender <Projection_Base.sender>`.
+When the Mechanism is executed, the values of its attributes specified for the OutputState's `variable
+<OutputState.variable>` (see `OutputState_Customization`) are used as the input to the OutputState's `function
+<OutputState.function>`. The OutputState is updated by calling its `function <OutputState.function>`.  The result,
+modified by any `GatingProjections <GatingProjection>` the OutputState receives (listed in its `mod_afferents
+<OutputState.mod_afferents>` attribute), is assigned as the `value <OutputState.value>` of the OutputState.  This is
+assigned to a corresponding item of the Mechanism's `output_values <Mechanism_Base.output_values>` attribute,
+and is used as the input to any projections for which the OutputState is the `sender <Projection_Base.sender>`.
 
 .. _OutputState_Class_Reference:
 
@@ -725,11 +724,10 @@ class OutputState(State_Base):
         context in which the OutputState is created.
 
     reference_value : number, list or np.ndarray
-        a template that specifies the format of the item of the owner Mechanism's
-        `value <Mechanism_Base.value>` attribute to which the OutputState will be assigned (specified by
-        the **index** argument).  This must match (in number and type of elements) the OutputState's
-        **variable** argument.  It is used to insure the compatibility of the source of the
-        input for the OutputState with its `variable <OutputState.variable>`.
+        a template that specifies the format of the OutputState's `variable <OutputState.variable>`;  if it is
+        specified in addition to the **variable** argument, then these must be compatible (both in the number and
+        type of elements).  It is used to insure the compatibility of the source of the input for the OutputState
+        with its `function <OutputState.function>`.
 
     variable : number, list or np.ndarray
         specifies the attributes of the  OutputState's `owner <OutputState.owner>` Mechanism to be used by the
@@ -792,8 +790,8 @@ class OutputState(State_Base):
 
     variable : value, list or np.ndarray
         the value(s) of the item(s) of the `owner <OutputState.owner>` Mechanism's attributes specified in the
-        **variable** argument of the constructor or *VARIABLE* entry of the `OutputState_Specification_Dictionary`
-        used to construct the OutputState.
+        **variable** argument of the constructor, or a *VARIABLE* entry in the `OutputState specification dictionary
+        <OutputState_Specification_Dictionary>` used to construct the OutputState.
 
     COMMENT:
     index : int
@@ -852,7 +850,7 @@ class OutputState(State_Base):
     componentType = OUTPUT_STATE
     paramsType = OUTPUT_STATE_PARAMS
 
-    stateAttributes = State_Base.stateAttributes | {INDEX, ASSIGN}
+    # stateAttributes = State_Base.stateAttributes | {INDEX, ASSIGN}
 
     connectsWith = [INPUT_STATE, GATING_SIGNAL]
     connectsWithAttribute = [INPUT_STATES]
@@ -867,9 +865,7 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
-                               ASSIGN: None,
-                               INDEX: PRIMARY})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
     #endregion
 
     @tc.typecheck
@@ -879,8 +875,6 @@ class OutputState(State_Base):
                  variable=None,
                  size=None,
                  function=Linear(),
-                 # index=PRIMARY,
-                 # assign:tc.optional(is_function_type)=None,
                  projections=None,
                  params=None,
                  name=None,
@@ -901,8 +895,6 @@ class OutputState(State_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
-                # index=index,
-                # assign=assign,
                 function=function,
                 params=params)
 
@@ -1086,17 +1078,17 @@ class OutputState(State_Base):
 
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
-        """Get index and/or connections specified in an OutputState specification tuple
+        """Get variable spec and/or connections specified in an OutputState specification tuple
 
         Tuple specification can be:
             (state_spec, connections)
-            (state_spec, index, connections)
+            (state_spec, variable spec, connections)
 
         See State._parse_state_specific_spec for additional info.
 
         Returns:
              - state_spec:  1st item of tuple
-             - params dict with INDEX and/or PROJECTIONS entries if either of them was specified
+             - params dict with VARIABLE and/or PROJECTIONS entries if either of them was specified
 
         """
         # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
@@ -1112,34 +1104,21 @@ class OutputState(State_Base):
         state_spec = state_specific_spec
 
         if isinstance(state_specific_spec, dict):
-            # MODIFIED 2/24/18 OLD:
             return None, state_specific_spec
-            # MODIFIED 2/24/18 NEW:
-            # # CHECK IF FUNCTION IS IN state_specific_spec
-            # # CHECK IF VARIABLE IS IN state_dict (ERROR IF IT IS A DICT AND THERE IS NO FCT IN state_specific_spec)
             state_dict[VARIABLE] = _parse_output_state_variable(owner, state_dict[VARIABLE])
-            # state_specific_spec[FUNCTION] = _parse_output_state_function(owner,
-            #                                                              state_dict[NAME],
-            #                                                              state_specific_spec[FUNCTION],
-            #                                                              state_dict[VARIABLE]==PARAMS_DICT)
             return None, state_specific_spec
-            # MODIFIED 2/24/18 END
 
         elif isinstance(state_specific_spec, ProjectionTuple):
-            # MODIFIED 11/25/17 NEW:
             state_spec = None
-            # MODIFIED 11/25/17 END:
             params_dict[PROJECTIONS] = _parse_connection_specs(self,
                                                                owner=owner,
                                                                connections=[state_specific_spec])
 
         elif isinstance(state_specific_spec, tuple):
-
             tuple_spec = state_specific_spec
             state_spec = None
-            INDEX_INDEX = 1
+            TUPLE_VARIABLE_INDEX = 1
 
-            # MODIFIED 11/23/17 NEW:
             if is_numeric(tuple_spec[0]):
                 state_spec = tuple_spec[0]
                 reference_value = state_dict[REFERENCE_VALUE]
@@ -1152,14 +1131,8 @@ class OutputState(State_Base):
                                      "is not compatible with its {} ({})".
                                      format(OutputState.__name__, owner.name, state_spec,
                                             REFERENCE_VALUE, reference_value))
-                # # MODIFIED 11/28/17 OLD:
                 projection_spec = tuple_spec[1]
-                # MODIFIED 11/28/17 NEW:
-                # projection_spec =
-                # MODIFIED 11/28/17 END:
-            # MODIFIED 11/23/17 END
 
-            # MODIFIED 11/23/17 NEW: ADDED ELSE AND INDENTED
             else:
                 projection_spec = state_specific_spec if len(state_specific_spec)==2 else (state_specific_spec[0],
                                                                                            state_specific_spec[-1])
@@ -1169,7 +1142,7 @@ class OutputState(State_Base):
                                        "either 2 ({} and {}) or 3 (optional additional {}) items, "
                                        "or must be a {}".
                                        format(OutputState.__name__, owner.name, tuple_spec,
-                                              STATE, PROJECTION, INDEX, ProjectionTuple.__name__))
+                                              STATE, PROJECTION, 'variable spec', ProjectionTuple.__name__))
 
 
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_state_type=self,
@@ -1177,22 +1150,33 @@ class OutputState(State_Base):
                                                                connections=projection_spec)
 
 
-            # Get INDEX specification from (state_spec, index, connections) tuple:
+            # Get VARIABLE specification from (state_spec, variable spec, connections) tuple:
             if len(tuple_spec) == 3:
 
-                index = tuple_spec[INDEX_INDEX]
+                tuple_variable_spec = tuple_spec[TUPLE_VARIABLE_INDEX]
 
-                if index is not None and not isinstance(index, numbers.Number):
-                    raise OutputStateError("The {} (2nd) item of the {} specification tuple for {} ({}) "
-                                           "must be a number".format(INDEX, OutputState.__name__, owner.name, index))
-                try:
-                    owner.instance_defaults.value[index]
-                except IndexError:
-                    raise OutputStateError("The {0} (2nd) item of the {1} specification tuple for {2} ({3}) is out "
-                                           "of bounds for the number of items in {4}'s value ({5}, max index: {6})".
-                                           format(INDEX, OutputState.__name__, owner.name, index,
-                                                  owner.name, owner.instance_defaults.value, len(owner.instance_defaults.value)-1))
-                params_dict[INDEX] = index
+                # Make sure OutputState's variable has not already been specified
+                dict_variable_spec = None
+                if VARIABLE in params_dict and params_dict[VARIABLE] is not None:
+                    dict_variable_spec = params_dict[VARIABLE]
+                elif VARIABLE in state_dict and state_dict[VARIABLE] is not None:
+                    dict_variable_spec = params_dict[VARIABLE]
+                if dict_variable_spec:
+                    name = state_dict[NAME] or self.__name__
+                    raise OutputStateError("Specification of {} in item 2 of 3-item tuple for {} ({})"
+                                           "conflicts with its specification elsewhere in the constructor for {} ({})".
+                                           format(VARIABLE, name, tuple_spec[TUPLE_VARIABLE_INDEX],
+                                                  owner.name, dict_variable_spec))
+
+                # Included for backward compatibility with INDEX
+                if isinstance(tuple_variable_spec, int):
+                    tuple_variable_spec = (OWNER_VALUE, tuple_variable_spec)
+
+                # validate that it is a legitimate spec
+                _parse_output_state_variable(owner, tuple_variable_spec)
+
+                params_dict[VARIABLE] = tuple_variable_spec
+
 
         elif state_specific_spec is not None:
             raise OutputStateError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
@@ -1278,21 +1262,19 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         - if owner.output_states is empty, use owner.value to create a default OutputState
 
     For each OutputState:
-         check for index param:
-             if it is a State, get from index attribute
-             if it is dict, look for INDEX entry
-             if it is anything else, assume index is PRIMARY
-         get indexed value from output.value
-         append the indexed value to reference_value
+         check for VARIABLE and FUNCTION specifications:
+             if it is a State, get from variable and function attributes
+             if it is dict, look for VARIABLE and FUNCTION entries (and INDEX and ASSIGN for backward compatibility)
+             if it is anything else, assume variable spec is (OWNER_VALUE, 0) and FUNCTION is Linear
+         get OutputState's value using _parse_output_state_variable() and append to reference_value
              so that it matches specification of OutputStates (by # and function return values)
-         instantiate assign function if specified
 
     When completed:
         - self.output_states contains a ContentAddressableList of one or more OutputStates;
         - self.output_state contains first or only OutputState in list;
         - paramsCurrent[OUTPUT_STATES] contains the same ContentAddressableList (of one or more OutputStates)
-        - each OutputState corresponds to an item in the output of the owner's function
-        - if there is only one OutputState, it is assigned the full value
+        - each OutputState properly references, for its variable, the specified attributes of its owner Mechanism
+        - if there is only one OutputState, it is assigned the full value of its owner.
 
     (See State._instantiate_state_list() for additional details)
 
@@ -1436,20 +1418,20 @@ class StandardOutputStates():
 
     indices : PRIMARY,
     SEQUENTIAL, list of ints
-        specifies how to assign the INDEX entry for each dict listed in `output_state_dicts`;
+        specifies how to assign the (OWNER_VALUE, int) entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:
 
-            * *PRIMARY* -- assigns the INDEX for the owner's primary OutputState to all output_states
-              for which an INDEX entry is not already specified;
+            * *PRIMARY* -- assigns (OWNER_VALUE, PRIMARY) to all output_states for which a VARIABLE entry is not
+              specified;
 
-            * *SEQUENTIAL* -- assigns sequentially incremented int to each INDEX entry,
-              ignoring any INDEX entries previously specified for individual OutputStates;
+            * *SEQUENTIAL* -- assigns sequentially incremented int to (OWNER_VALUE, int) spec of each OutputState,
+              ignoring any VARIABLE entries previously specified for individual OutputStates;
 
-            * list of ints -- assigns each int to the corresponding entry in `output_state_dicts`;
-              ignoring any INDEX entries previously specified for individual OutputStates;
+            * list of ints -- assigns each int to an (OWNER_VALUE, int) entry of the corresponding OutputState in
+              `output_state_dicts, ignoring any VARIABLE entries previously specified for individual OutputStates;
 
-            * None -- assigns `None` to INDEX entries for all OutputStates for which it is not already specified.
+            * None -- assigns `None` to VARIABLE entries for all OutputStates for which it is not already specified.
 
     Attributes
     ----------
@@ -1494,7 +1476,7 @@ class StandardOutputStates():
         # List was provided, so check that:
         # - it has the appropriate number of items
         # - they are all ints
-        # and then assign each int to the INDEX entry in the corresponding dict
+        # and then assign each int to an (OWNER_VALUE, int) VARIABLE entry in the corresponding dict
         # in output_state_dicts
         # OutputState
         if isinstance(indices, list):
@@ -1525,7 +1507,8 @@ class StandardOutputStates():
             for index, state_dict in enumerate(self.data):
                 state_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
-        # Assign PRIMARY as INDEX for all OutputStates in output_state_dicts that don't already have an index specified
+        # Assign (OWNER_VALUE, PRIMARY) as VARIABLE for all OutputStates in output_state_dicts that don't
+        #    have VARIABLE (or INDEX) specified (INDEX is included here for backward compatibility)
         elif indices is PRIMARY:
             for state_dict in self.data:
                 if INDEX in state_dict or VARIABLE in state_dict:
@@ -1581,9 +1564,9 @@ class StandardOutputStates():
     def names(self):
         return [item[NAME] for item in self.data]
 
-    @property
-    def indices(self):
-        return [item[INDEX] for item in self.data]
+    # @property
+    # def indices(self):
+    #     return [item[INDEX] for item in self.data]
 
 
 def  _parse_output_state_variable(owner, variable, output_state_name=None):
@@ -1720,27 +1703,30 @@ def _maintain_backward_compatibility(d:dict, name, owner):
     if PARAMS in d and isinstance(d[PARAMS], dict):
         p, i, a, c = replace_entries(d[PARAMS])
         recursive_update(d, p, non_destructive=True)
-        for i in {VARIABLE, FUNCTION}:
-            if i in d[PARAMS]:
-                del d[PARAMS][i]
+        for spec in {VARIABLE, FUNCTION}:
+            if spec in d[PARAMS]:
+                del d[PARAMS][spec]
 
-    # if i:
-    #     warnings.warn("The use of \'INDEX\' has been deprecated; it is still supported, but entry in {} specification "
-    #                   "dictionary for {} of {} should be changed to \'VARIABLE: (OWNER_VALUE, <index int>)\' "
-    #                   " for future compatibility.".
-    #                   format(OutputState.__name__, name, owner.name))
-    # if a:
-    #     warnings.warn("The use of \'ASSIGN\' has been deprecated; it is still supported, but entry in {} specification "
-    #                   "dictionary for {} of {} should be changed to \'FUNCTION\' for future compatibility.".
-    #                   format(OutputState.__name__, name, owner.name))
-    # if c:
-    #     warnings.warn("The use of \'CALCULATE\' has been deprecated; it is still supported, but entry in {} "
-    #                   "specification dictionary for {} of {} should be changed to \'FUNCTION\' "
-    #                   "for future compatibility.".format(OutputState.__name__, name, owner.name))
-    #
-    # if name is MECHANISM_VALUE:
-    #     warnings.warn("The name of the \'MECHANISM_VALUE\' StandardOutputState has been changed to \'OWNER_VALUE\';  "
-    #                   "it will still work, but should be changed in {} specification of {} for future compatibility.".
-    #                   format(OUTPUT_STATES, owner.name))
+    if i:
+        warnings.warn("The use of \'INDEX\' has been deprecated; it is still supported, but entry in {} specification "
+                      "dictionary for {} of {} should be changed to \'VARIABLE: (OWNER_VALUE, <index int>)\' "
+                      " for future compatibility.".
+                      format(OutputState.__name__, name, owner.name))
+        assert False
+    if a:
+        warnings.warn("The use of \'ASSIGN\' has been deprecated; it is still supported, but entry in {} specification "
+                      "dictionary for {} of {} should be changed to \'FUNCTION\' for future compatibility.".
+                      format(OutputState.__name__, name, owner.name))
+        assert False
+    if c:
+        warnings.warn("The use of \'CALCULATE\' has been deprecated; it is still supported, but entry in {} "
+                      "specification dictionary for {} of {} should be changed to \'FUNCTION\' "
+                      "for future compatibility.".format(OutputState.__name__, name, owner.name))
+
+    if name is MECHANISM_VALUE:
+        warnings.warn("The name of the \'MECHANISM_VALUE\' StandardOutputState has been changed to \'OWNER_VALUE\';  "
+                      "it will still work, but should be changed in {} specification of {} for future compatibility.".
+                      format(OUTPUT_STATES, owner.name))
+        assert False
 
 

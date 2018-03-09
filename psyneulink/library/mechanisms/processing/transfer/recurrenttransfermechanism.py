@@ -594,8 +594,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     standard_output_states = TransferMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:ENERGY}, {NAME:ENTROPY}])
-    # FIX: 11/19/17 ??SHOULD THE ABOVE BE:
-    # standard_output_states.extend([{NAME:ENERGY, INDEX:PRIMARY}, {NAME:ENTROPY, INDEX:PRIMARY}])
 
     @tc.typecheck
     def __init__(self,

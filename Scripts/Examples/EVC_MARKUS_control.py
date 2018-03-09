@@ -46,8 +46,8 @@ Decision = pnl.DDM(function=pnl.BogaczEtAl(
         pnl.PROBABILITY_UPPER_THRESHOLD,
         {
             pnl.NAME: 'OFFSET RT',
-            pnl.INDEX: 2,
-            pnl.ASSIGN: pnl.Linear(0, slope=1.0, intercept=1)
+            pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
+            pnl.FUNCTION: pnl.Linear(0, slope=1.0, intercept=1)
         }
     ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
 Decision.set_log_conditions('DECISION_VARIABLE')
