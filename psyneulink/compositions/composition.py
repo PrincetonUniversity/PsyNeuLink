@@ -53,12 +53,12 @@ from collections import Iterable, OrderedDict
 from enum import Enum
 
 import numpy as np
-
+from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.globals.keywords import EXECUTING, SOFT_CLAMP, IDENTITY_MATRIX
+from psyneulink.globals.keywords import SYSTEM, EXECUTING, SOFT_CLAMP, IDENTITY_MATRIX
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -336,6 +336,7 @@ class Composition(object):
 
     def __init__(self):
         # core attributes
+        self.name = "Composition-TestName"
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.mechanisms = []
@@ -1090,8 +1091,6 @@ class Composition(object):
             output value of the final Mechanism executed in the composition : various
         '''
 
-        reuse_inputs = False
-
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
 
@@ -1109,42 +1108,42 @@ class Composition(object):
         scheduler_processing.update_termination_conditions(termination_processing)
         scheduler_learning.update_termination_conditions(termination_learning)
 
-        if inputs is not None:
-            len_inputs = self._process_inputs(inputs)
+        # ------------------------------------ FROM DEVEL START ------------------------------------
+        origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        # if there is only one origin mechanism, allow inputs to be specified in a list
+        if isinstance(inputs, (list, np.ndarray)):
+            if len(origin_mechanisms) == 1:
+                inputs = {next(iter(origin_mechanisms)): inputs}
+            else:
+                raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
+                               "mechanisms.".format(self.name, len(origin_mechanisms)))
+        elif not isinstance(inputs, dict):
+            if len(origin_mechanisms) == 1:
+                raise CompositionError(
+                    "Inputs to {} must be specified in a list or in a dictionary with the origin mechanism({}) "
+                    "as its only key".format(self.name, next(iter(origin_mechanisms)).name))
+            else:
+                raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
+                               "mechanisms.".format(self.name, len(origin_mechanisms)))
+
+        inputs, num_inputs_sets = self._adjust_stimulus_dict(self, inputs)
+
+        if num_trials is not None:
+            num_trials = num_trials
         else:
-            inputs = {}
-            len_inputs = 1
+            num_trials = num_inputs_sets
 
         if targets is None:
             targets = {}
 
-        # check whether the num trials given in the input dict matches the num_trials param
-        if num_trials is not None:
-            if len_inputs != num_trials:
-                # if one set of inputs was provided for many trials, set 'reuse_inputs' flag and re-set len_inputs to
-                # the number of trials given by the user
-                if len_inputs == 1:
-                    reuse_inputs = True
-                    len_inputs = num_trials
-                # otherwise, warn user that there is something wrong with their input specification
-                else:
-                    raise CompositionError(
-                        "The number of trials [{}] specified for the composition [{}] does not match the "
-                        "number [{}] of inputs specified per mechanism (or input state) in the inputs dictionary [{}]. "
-                        .format(num_trials, self, len_inputs, inputs)
-                    )
-
-        input_indices = range(len_inputs)
-
-        scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
-        scheduler_processing._reset_time(TimeScale.RUN, execution_id)
+        scheduler_processing._reset_counts_total(TimeScale.RUN)
 
         # TBI: Handle runtime params?
         result = None
 
         # --- RESET FOR NEXT TRIAL ---
         # by looping over the length of the list of inputs - each input represents a TRIAL
-        for input_index in input_indices:
+        for trial_num in range(num_trials):
 
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
@@ -1158,18 +1157,13 @@ class Composition(object):
 
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             execution_stimuli = {}
-
-            # loop over all mechanisms that receive stimuli from the outside world
-            for mech in inputs.keys():
-                if isinstance(inputs[mech], dict):
-                    for input_state in inputs[mech].keys():
-                        execution_stimuli[input_state] = inputs[mech][input_state][0 if reuse_inputs else input_index]
-                else:
-                    execution_stimuli[mech] = inputs[mech][0 if reuse_inputs else input_index]
+            stimulus_index = trial_num % num_inputs_sets
+            for mech in inputs:
+                execution_stimuli[mech] = inputs[mech][stimulus_index]
 
             # execute processing
             # pass along the stimuli for this trial
-            num = self.execute(
+            trial_output = self.execute(
                 execution_stimuli,
                 scheduler_processing,
                 scheduler_learning,
@@ -1183,21 +1177,28 @@ class Composition(object):
 
         # ---------------------------------------------------------------------------------
             # store the result of this execute in case it will be the final result
-            if num is not None:
-                result = num
+            if trial_output is not None:
+                result = trial_output
 
         # LEARNING ------------------------------------------------------------------------
             # Prepare targets from the outside world  -- collect the targets for this TRIAL and store them in a dict
             execution_targets = {}
+            target_index = trial_num % num_inputs_sets
+            # Assign targets:
+            if targets is not None:
 
-            # loop over all mechanisms that receive targets from the outside world
-            for mech in targets.keys():
-                if callable(targets[mech]):
-                    execution_targets[mech] = targets[mech]
-                elif len(targets[mech]) == 1:
-                    execution_targets[mech] = targets[mech][0]
+                if isinstance(targets, function_type):
+                    self.target = targets
                 else:
-                    execution_targets[mech] = targets[mech][input_index]
+                    for mech in targets:
+                        if callable(targets[mech]):
+                            execution_targets[mech] = targets[mech]
+                        else:
+                            execution_targets[mech] = targets[mech][target_index]
+
+                    # devel needs the lines below because target and current_targets are attrs of system
+                    # self.target = execution_targets
+                    # self.current_targets = execution_targets
 
             # execute learning
             # pass along the targets for this trial
@@ -1220,3 +1221,95 @@ class Composition(object):
 
         # return the output of the LAST mechanism executed in the composition
         return result
+
+    def _input_matches_variable(self, input_value, var):
+        # input_value states are uniform
+        if np.shape(np.atleast_2d(input_value)) == np.shape(var):
+            return "homogeneous"
+        # input_value states have different lengths
+        elif len(np.shape(var)) == 1 and isinstance(var[0], (list, np.ndarray)):
+            for i in range(len(input_value)):
+                if len(input_value[i]) != len(var[i]):
+                    return False
+            return "heterogeneous"
+        return False
+
+    def _adjust_stimulus_dict(self, stimuli):
+
+        # STEP 1: validate that there is a one-to-one mapping of input entries to origin mechanisms
+
+
+        # Check that all of the mechanisms listed in the inputs dict are ORIGIN mechanisms in the self
+        origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        for mech in stimuli.keys():
+            if not mech in origin_mechanisms.mechanisms:
+                raise CompositionError("{} in inputs dict for {} is not one of its ORIGIN mechanisms".
+                               format(mech.name, self.name))
+        # Check that all of the ORIGIN mechanisms in the self are represented by entries in the inputs dict
+        for mech in origin_mechanisms:
+            if not mech in stimuli:
+                raise RunError("Entry for ORIGIN Mechanism {} is missing from the inputs dict for {}".
+                               format(mech.name, self.name))
+
+        # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
+
+        # (1) Replace any user provided convenience notations with values that match the following specs:
+        # a - all dictionary values are lists containing and input value on each trial (even if only one trial)
+        # b - each input value is a 2d array that matches variable
+        # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
+        #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
+        # (2) Verify that all mechanism values provide the same number of inputs (check length of each dictionary value)
+
+        adjusted_stimuli = {}
+        num_input_sets = -1
+
+        for mech, stim_list in stimuli.items():
+
+            check_spec_type = self._input_matches_variable(stim_list, mech.instance_defaults.variable)
+            # If a mechanism provided a single input, wrap it in one more list in order to represent trials
+            if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
+                if check_spec_type == "homogeneous":
+                    # np.atleast_2d will catch any single-input states specified without an outer list
+                    # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
+                    adjusted_stimuli[mech] = [np.atleast_2d(stim_list)]
+                else:
+                    adjusted_stimuli[mech] = [stim_list]
+
+                # verify that all mechanisms have provided the same number of inputs
+                if num_input_sets == -1:
+                    num_input_sets = 1
+                elif num_input_sets != 1:
+                    raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
+                                   "conflicts with at least one other mechanism's input specification.".format(self.name,
+                                                                                                               mech.name))
+            else:
+                adjusted_stimuli[mech] = []
+                for stim in stimuli[mech]:
+                    check_spec_type = _input_matches_variable(stim, mech.instance_defaults.variable)
+                    # loop over each input to verify that it matches variable
+                    if check_spec_type == False:
+                        err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
+                            format(stim, mech.name, mech.instance_defaults.variable)
+                        # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
+                        # for "functionality" but rather a hack for user clarity
+                        if "KWTA" in str(type(mech)):
+                            err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
+                                                " to represent the outside stimulus for the inhibition input state, and " \
+                                                "for systems, put your inputs"
+                        raise RunError(err_msg)
+                    elif check_spec_type == "homogeneous":
+                        # np.atleast_2d will catch any single-input states specified without an outer list
+                        # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
+                        adjusted_stimuli[mech].append(np.atleast_2d(stim))
+                    else:
+                        adjusted_stimuli[mech].append(stim)
+
+                # verify that all mechanisms have provided the same number of inputs
+                if num_input_sets == -1:
+                    num_input_sets = len(stimuli[mech])
+                elif num_input_sets != len(stimuli[mech]):
+                    raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {}"
+                                   "conflicts with at least one other mechanism's input specification."
+                                   .format(self.name, (stimuli[mech]), mech.name))
+
+        return adjusted_stimuli, num_input_sets
