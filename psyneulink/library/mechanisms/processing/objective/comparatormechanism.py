@@ -172,6 +172,10 @@ class COMPARATOR_OUTPUT():
     MSE = MSE
 
 
+def MSE_fct(input=0, extra=0):
+    return np.sum(input*input)/len(input+extra)
+
+
 class ComparatorMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -316,10 +320,16 @@ class ComparatorMechanism(ObjectiveMechanism):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
+
+    from psyneulink.components.functions.function import MULTIPLICATIVE_PARAM, UserDefinedFunction
     standard_output_states.extend([{NAME: SSE,
                                     FUNCTION: lambda x: np.sum(x*x)},
+                                   # {NAME: MSE,
+                                   #  FUNCTION: lambda x: np.sum(x*x)/len(x)}])
                                    {NAME: MSE,
-                                    FUNCTION: lambda x: np.sum(x*x)/len(x)}])
+                                   #  FUNCTION: MSE_fct}])
+                                    FUNCTION: UserDefinedFunction(custom_function=MSE_fct,
+                                                                  params={MULTIPLICATIVE_PARAM:'extra'})}])
 
     # MODIFIED 10/10/17 OLD:
     @tc.typecheck
