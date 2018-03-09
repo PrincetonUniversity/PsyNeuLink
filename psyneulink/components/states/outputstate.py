@@ -866,8 +866,6 @@ class OutputState(State_Base):
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
-                               # ASSIGN: None,
-                               # INDEX: PRIMARY})
     #endregion
 
     @tc.typecheck
@@ -1090,7 +1088,7 @@ class OutputState(State_Base):
 
         Returns:
              - state_spec:  1st item of tuple
-             - params dict with INDEX and/or PROJECTIONS entries if either of them was specified
+             - params dict with VARIABLE and/or PROJECTIONS entries if either of them was specified
 
         """
         # FIX: ADD FACILITY TO SPECIFY WEIGHTS AND/OR EXPONENTS FOR INDIVIDUAL OutputState SPECS
@@ -1420,20 +1418,20 @@ class StandardOutputStates():
 
     indices : PRIMARY,
     SEQUENTIAL, list of ints
-        specifies how to assign the INDEX entry for each dict listed in `output_state_dicts`;
+        specifies how to assign the (OWNER_VALUE, int) entry for each dict listed in `output_state_dicts`;
 
         The effects of each value of indices are as follows:
 
-            * *PRIMARY* -- assigns the INDEX for the owner's primary OutputState to all output_states
-              for which an INDEX entry is not already specified;
+            * *PRIMARY* -- assigns (OWNER_VALUE, PRIMARY) to all output_states for which a VARIABLE entry is not
+              specified;
 
-            * *SEQUENTIAL* -- assigns sequentially incremented int to each INDEX entry,
-              ignoring any INDEX entries previously specified for individual OutputStates;
+            * *SEQUENTIAL* -- assigns sequentially incremented int to (OWNER_VALUE, int) spec of each OutputState,
+              ignoring any VARIABLE entries previously specified for individual OutputStates;
 
-            * list of ints -- assigns each int to the corresponding entry in `output_state_dicts`;
-              ignoring any INDEX entries previously specified for individual OutputStates;
+            * list of ints -- assigns each int to an (OWNER_VALUE, int) entry of the corresponding OutputState in
+              `output_state_dicts, ignoring any VARIABLE entries previously specified for individual OutputStates;
 
-            * None -- assigns `None` to INDEX entries for all OutputStates for which it is not already specified.
+            * None -- assigns `None` to VARIABLE entries for all OutputStates for which it is not already specified.
 
     Attributes
     ----------
@@ -1478,7 +1476,7 @@ class StandardOutputStates():
         # List was provided, so check that:
         # - it has the appropriate number of items
         # - they are all ints
-        # and then assign each int to the INDEX entry in the corresponding dict
+        # and then assign each int to an (OWNER_VALUE, int) VARIABLE entry in the corresponding dict
         # in output_state_dicts
         # OutputState
         if isinstance(indices, list):
@@ -1705,27 +1703,27 @@ def _maintain_backward_compatibility(d:dict, name, owner):
     if PARAMS in d and isinstance(d[PARAMS], dict):
         p, i, a, c = replace_entries(d[PARAMS])
         recursive_update(d, p, non_destructive=True)
-        for i in {VARIABLE, FUNCTION}:
-            if i in d[PARAMS]:
-                del d[PARAMS][i]
+        for spec in {VARIABLE, FUNCTION}:
+            if spec in d[PARAMS]:
+                del d[PARAMS][spec]
 
-    # if i:
-    #     warnings.warn("The use of \'INDEX\' has been deprecated; it is still supported, but entry in {} specification "
-    #                   "dictionary for {} of {} should be changed to \'VARIABLE: (OWNER_VALUE, <index int>)\' "
-    #                   " for future compatibility.".
-    #                   format(OutputState.__name__, name, owner.name))
-    # if a:
-    #     warnings.warn("The use of \'ASSIGN\' has been deprecated; it is still supported, but entry in {} specification "
-    #                   "dictionary for {} of {} should be changed to \'FUNCTION\' for future compatibility.".
-    #                   format(OutputState.__name__, name, owner.name))
-    # if c:
-    #     warnings.warn("The use of \'CALCULATE\' has been deprecated; it is still supported, but entry in {} "
-    #                   "specification dictionary for {} of {} should be changed to \'FUNCTION\' "
-    #                   "for future compatibility.".format(OutputState.__name__, name, owner.name))
-    #
-    # if name is MECHANISM_VALUE:
-    #     warnings.warn("The name of the \'MECHANISM_VALUE\' StandardOutputState has been changed to \'OWNER_VALUE\';  "
-    #                   "it will still work, but should be changed in {} specification of {} for future compatibility.".
-    #                   format(OUTPUT_STATES, owner.name))
+    if i:
+        warnings.warn("The use of \'INDEX\' has been deprecated; it is still supported, but entry in {} specification "
+                      "dictionary for {} of {} should be changed to \'VARIABLE: (OWNER_VALUE, <index int>)\' "
+                      " for future compatibility.".
+                      format(OutputState.__name__, name, owner.name))
+    if a:
+        warnings.warn("The use of \'ASSIGN\' has been deprecated; it is still supported, but entry in {} specification "
+                      "dictionary for {} of {} should be changed to \'FUNCTION\' for future compatibility.".
+                      format(OutputState.__name__, name, owner.name))
+    if c:
+        warnings.warn("The use of \'CALCULATE\' has been deprecated; it is still supported, but entry in {} "
+                      "specification dictionary for {} of {} should be changed to \'FUNCTION\' "
+                      "for future compatibility.".format(OutputState.__name__, name, owner.name))
+
+    if name is MECHANISM_VALUE:
+        warnings.warn("The name of the \'MECHANISM_VALUE\' StandardOutputState has been changed to \'OWNER_VALUE\';  "
+                      "it will still work, but should be changed in {} specification of {} for future compatibility.".
+                      format(OUTPUT_STATES, owner.name))
 
 
