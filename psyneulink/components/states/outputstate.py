@@ -1564,9 +1564,9 @@ class StandardOutputStates():
     def names(self):
         return [item[NAME] for item in self.data]
 
-    @property
-    def indices(self):
-        return [item[INDEX] for item in self.data]
+    # @property
+    # def indices(self):
+    #     return [item[INDEX] for item in self.data]
 
 
 def  _parse_output_state_variable(owner, variable, output_state_name=None):
@@ -1712,10 +1712,12 @@ def _maintain_backward_compatibility(d:dict, name, owner):
                       "dictionary for {} of {} should be changed to \'VARIABLE: (OWNER_VALUE, <index int>)\' "
                       " for future compatibility.".
                       format(OutputState.__name__, name, owner.name))
+        assert False
     if a:
         warnings.warn("The use of \'ASSIGN\' has been deprecated; it is still supported, but entry in {} specification "
                       "dictionary for {} of {} should be changed to \'FUNCTION\' for future compatibility.".
                       format(OutputState.__name__, name, owner.name))
+        assert False
     if c:
         warnings.warn("The use of \'CALCULATE\' has been deprecated; it is still supported, but entry in {} "
                       "specification dictionary for {} of {} should be changed to \'FUNCTION\' "
@@ -1725,5 +1727,6 @@ def _maintain_backward_compatibility(d:dict, name, owner):
         warnings.warn("The name of the \'MECHANISM_VALUE\' StandardOutputState has been changed to \'OWNER_VALUE\';  "
                       "it will still work, but should be changed in {} specification of {} for future compatibility.".
                       format(OUTPUT_STATES, owner.name))
+        assert False
 
 
