@@ -3481,7 +3481,6 @@ class SoftMax(NormalizingFunction):
 
         super()._instantiate_function(context=context)
 
-
     def function(self,
                  variable=None,
                  params=None,
@@ -3501,7 +3500,6 @@ class SoftMax(NormalizingFunction):
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
-
 
         Returns
         -------
