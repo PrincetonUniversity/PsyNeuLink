@@ -311,9 +311,9 @@ from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.globals.keywords import FUNCTION, INDEX, INITIALIZER, INITIALIZING, \
+from psyneulink.globals.keywords import FUNCTION, INITIALIZER, INITIALIZING, OWNER_VALUE, \
     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MEAN, MEDIAN, NAME, NOISE, NORMALIZING_FUNCTION_TYPE, \
-    PROB,RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, \
+    PROB,RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE, \
     kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, \
     kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
@@ -871,7 +871,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if len(self.instance_defaults.variable) > 1 and len(self.output_states) == 1 and self.output_states[0] == RESULTS:
             self.output_states = []
             for i, item in enumerate(self.instance_defaults.variable):
-                self.output_states.append({NAME: RESULT, INDEX: i})
+                self.output_states.append({NAME: RESULT, VARIABLE: (OWNER_VALUE, i)})
         super()._instantiate_output_states(context=context)
 
     def _execute(self,
