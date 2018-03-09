@@ -1579,9 +1579,9 @@ def  _parse_output_state_variable(owner, variable, output_state_name=None):
     """
 
     def parse_variable_spec(spec):
-        # from psyneulink.components.mechanisms.mechanism import MechParamsDict
-        # if spec is None or is_numeric(spec) or isinstance(spec, MechParamsDict):
-        if spec is None or is_numeric(spec) or isinstance(spec, dict):
+        from psyneulink.components.mechanisms.mechanism import MechParamsDict
+        if spec is None or is_numeric(spec) or isinstance(spec, MechParamsDict):
+        # if spec is None or is_numeric(spec) or isinstance(spec, dict):
             return spec
         elif isinstance(spec, tuple):
             # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))
