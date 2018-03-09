@@ -324,14 +324,13 @@ class ComparatorMechanism(ObjectiveMechanism):
     from psyneulink.components.functions.function import MULTIPLICATIVE_PARAM, UserDefinedFunction
     standard_output_states.extend([{NAME: SSE,
                                     FUNCTION: lambda x: np.sum(x*x)},
-                                   # {NAME: MSE,
-                                   #  FUNCTION: lambda x: np.sum(x*x)/len(x)}])
                                    {NAME: MSE,
-                                   #  FUNCTION: MSE_fct}])
+                                   #  FUNCTION: lambda x: np.sum(x*x)/len(x)}])
+                                    # FUNCTION: lambda x,y: np.sum(x*y)/len(x)}])
+                                    # FUNCTION: MSE_fct}])
                                     FUNCTION: UserDefinedFunction(custom_function=MSE_fct,
                                                                   params={MULTIPLICATIVE_PARAM:'extra'})}])
 
-    # MODIFIED 10/10/17 OLD:
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

@@ -1155,6 +1155,8 @@ class UserDefinedFunction(Function_Base):
         #    To declare modulatory params (additive_param and multiplicative_param) UserDefinedFunction must be
         #        called explicitly, with a params dict that has entries mapping the arguments of the custom_function
         #        to the desired modulatory params)
+        # NOTE: FOR NOW, CAN ONLY HANDLE LAMBDA FUNCTIONS WITH ONE ARG;  CAN FIX THIS LATER
+        #       (GETTING HUNG IN INIT WHEN TRYING TO CALL LAMBDA FUNCTION WITH A SINGLE ARGE (VARIABLE) THAT EXPECTS >1
         # EXAMPLE:
         #     def MSE_fct(input=0, extra=0):
         #         return np.sum(input*input)/len(input+extra)
@@ -1171,15 +1173,18 @@ class UserDefinedFunction(Function_Base):
         # MODIFIED 3/9/18 NEW:
         def get_cust_fct_args(custom_function):
             """Get args of custom_function
-            Return value of first arg (used as default_variable for UDF) and dict with all others
+            Return:
+                - value of first arg (to be used as default_variable for UDF)
+                - and dict with all others (to be assigned as params of UDF)
             """
             from inspect import getcallargs
-            cust_fct_args = getcallargs(custom_function)
-            cust_fct_args_ordered = getcallargs(custom_function, *tuple(range(len(cust_fct_args))))
-            cust_fct_variable_arg_name = [key for key in cust_fct_args_ordered if cust_fct_args_ordered[key]==0][0]
-            cust_fct_other_args = {key:value for key, value in cust_fct_args.items()
+            arg_count = custom_function.__code__.co_argcount
+            args = getcallargs(custom_function, *tuple(range(arg_count)))
+            cust_fct_variable_arg_name = [key for key in args if args[key]==0][0]
+            cust_fct_other_args = {key:value for key, value in args.items()
                                    if not key is cust_fct_variable_arg_name}
-            return cust_fct_args[cust_fct_variable_arg_name], cust_fct_other_args
+            return args[cust_fct_variable_arg_name], cust_fct_other_args
+
 
         # Get variable and names of other any other args for custom_function
         variable, self.cust_fct_args = get_cust_fct_args(custom_function)
@@ -1189,11 +1194,11 @@ class UserDefinedFunction(Function_Base):
         default_variable = default_variable or variable
 
         # Update params with custom_function args (except 1st, which is used as variable of UDF)
-        if self.cust_fct_args:
-            if params is None:
-                params = self.cust_fct_args
-            else:
-                params.update(self.cust_fct_args)
+        # if self.cust_fct_args:
+        #     if params is None:
+        #         params = self.cust_fct_args
+        #     else:
+        #         params.update(self.cust_fct_args)
 
         # Assign any args specified as modulatory params to their respective modulatory_param
         if ADDITIVE_PARAM in params:
@@ -1205,7 +1210,7 @@ class UserDefinedFunction(Function_Base):
         # MODIFIED 3/9/18 END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(custom_function=custom_function, params=params)
+        params = self._assign_args_to_param_dicts(custom_function=custom_function, params=params, **self.cust_fct_args)
 
         super().__init__(default_variable=default_variable,
                          params=params,

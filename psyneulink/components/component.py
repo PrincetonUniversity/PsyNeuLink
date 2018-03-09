@@ -2173,7 +2173,7 @@ class Component(object):
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
                 # these are always allowable since they are attribs of every Component
-                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES}:  # added SIZE here (7/5/17, CW)
+                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES}:
                     continue
                 # function is a class, so function_params has not yet been implemented
                 self._function = request_set[FUNCTION]
