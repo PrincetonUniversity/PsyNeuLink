@@ -1033,19 +1033,26 @@ class UserDefinedFunction(Function_Base):
         >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
         >>> myMech.execute(input = [1, 2, 3])
 
-    Custom functions should generally ignore the **params** and **context** arguments, since **variable** is
-    the input to the function.
+    UserDefinedFunctions, like any other `Function`, are passed the **params** and **context**, however it is up to
+    the `custom_function <UserDefinedFunction.custom_function>` to determine whether it uses or ignores these arguments.
+    It is also not required to include these as arguments (if the attempt to call it with these arguments fails it will
+    be called without them.  A `custom_function <UserDefinedFunction.custom_function>` function **must** include a
+    **variable** argument, which is used to pass the input to the function.
 
     COMMENT:
         CW 1/29/18: Adding params for custom functions sounds useful, but slightly thorny.
     COMMENT
 
     .. note::
-        Note that variable's format may be slightly different than you expect, because PsyNeuLink may change the
+        Note that variable's format may be slightly different than expected, because PsyNeuLink may change the
         formatting while processing the input. For example, PsyNeuLink converts an input of [1, 2, 3] to [[1, 2, 3]].
-        If your custom_function returns the sum of the input, you should use `sum(variable[0])` in this case rather
-        than `sum(variable)`. When in doubt, add a `print(variable)` or `print(type(variable))` statement
-        in your custom function to verify the variable's format.
+        For example, if the custom_function returns the sum of its input, `sum(variable[0])` should be used, and not
+        `sum(variable)`.
+
+    .. tip::
+       The format of the `variable <UserDefinedFunction.variable>` passed to the `custom_function
+       <UserDefinedFunction.custom_function>` function can be verified by adding a ``print(variable)`` or
+       ``print(type(variable))`` statement to the function.
 
 
     Arguments
