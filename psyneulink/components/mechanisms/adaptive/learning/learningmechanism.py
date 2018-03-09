@@ -549,10 +549,10 @@ from psyneulink.components.states.state import ADD_STATES
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, \
+from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
     MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, \
-    PROJECTIONS, SAMPLE, STATE_TYPE, TARGET
+    PROJECTIONS, SAMPLE, STATE_TYPE, TARGET, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
@@ -893,9 +893,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         INPUT_STATES:input_state_names,
         OUTPUT_STATES:[{NAME:ERROR_SIGNAL,
                         STATE_TYPE:OUTPUT_STATE,
-                        INDEX:1},
+                        VARIABLE: (OWNER_VALUE, 1)},
                        {NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        INDEX:0}
+                        VARIABLE: (OWNER_VALUE, 0)}
                        ]})
 
     @tc.typecheck
@@ -1017,17 +1017,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
             for spec in target_set[LEARNING_SIGNALS]:
                 learning_signal = _parse_state_spec(state_type=LearningSignal, owner=self, state_spec=spec)
 
-
                 # Validate that the receiver of the LearningProjection (if specified)
                 #     is a MappingProjection and in the same System as self (if specified)
-                try:
+                if learning_signal[PARAMS] and PROJECTIONS in learning_signal[PARAMS]:
                     for learning_projection in  learning_signal[PARAMS][PROJECTIONS]:
                         _validate_receiver(sender_mech=self,
                                            projection=learning_projection,
                                            expected_owner_type=MappingProjection,
                                            spec_type=LEARNING_SIGNAL,
                                            context=context)
-                except KeyError:
+                else:
                     pass
 
     def _instantiate_attributes_before_function(self, context=None):
