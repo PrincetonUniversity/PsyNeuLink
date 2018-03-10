@@ -172,10 +172,6 @@ class COMPARATOR_OUTPUT():
     MSE = MSE
 
 
-def MSE_fct(input=0, extra=0):
-    return np.sum(input*input)/len(input+extra)
-
-
 class ComparatorMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -325,11 +321,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     standard_output_states.extend([{NAME: SSE,
                                     FUNCTION: lambda x: np.sum(x*x)},
                                    {NAME: MSE,
-                                   #  FUNCTION: lambda x: np.sum(x*x)/len(x)}])
-                                    # FUNCTION: lambda x,y: np.sum(x*y)/len(x)}])
-                                    # FUNCTION: MSE_fct}])
-                                    FUNCTION: UserDefinedFunction(custom_function=MSE_fct,
-                                                                  params={MULTIPLICATIVE_PARAM:'extra'})}])
+                                    FUNCTION: lambda x: np.sum(x*x)/len(x)}])
 
     @tc.typecheck
     def __init__(self,

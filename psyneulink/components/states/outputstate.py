@@ -1190,7 +1190,11 @@ class OutputState(State_Base):
         #      THOUGH COULD PASS IN OWNER TO DETERMINE IT
         fct_variable = _parse_output_state_variable(owner, variable)
         fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable is PARAMS_DICT)
-        return fct(fct_variable)
+        try:
+            return fct(fct_variable)
+        except TypeError as e:
+            raise OutputStateError("Error in function assigned to {} of {}: {}".
+                                   format(OutputState.__name__, owner.name, e.args[0]))
 
     @property
     def variable(self):

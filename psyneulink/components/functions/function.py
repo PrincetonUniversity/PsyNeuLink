@@ -193,7 +193,7 @@ from psyneulink.components.shellclasses import Function
 from psyneulink.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, \
     AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, \
-    COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, \
+    COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY,\
     DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
     DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
     EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, \
@@ -205,7 +205,7 @@ from psyneulink.globals.keywords import \
     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_ABS_INDICATOR, MAX_VAL, MAX_ABS_VAL, \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
-    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, \
+    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMS, PARAMETER_STATE_PARAMS, PEARSON, \
     PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
     RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, \
     STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, \
@@ -1000,6 +1000,57 @@ class UserDefinedFunction(Function_Base):
             assigned as attributes of the UserDefinedFunction object or its owner, nor to its :keyword:`user_params` dict.
     COMMENT
 
+    COMMENT:  ADD THIS REGARDING CUST PARAMS INCLUDING MODULATORY PARAMS
+        # IMPLEMENTATION NOTE: PARSE ARGUMENTS FOR custom_function AND ASSIGN TO user_params
+        # USE params DICT TO SPECIFY WHICH ARGS ARE MODULATORY:
+        #            multiplicative_param, additive_param;
+        #            any others? -- interface with ModulationParam (ability to add new custom ones)
+        # API for using args of a function to specify params of a UDF
+        #    first arg must correspond to the variable of the UDF
+        #        this will always be passed, and will be the only argument passed when the function is called by PNL
+        #        doesn't matter what it is called (it will be not be passed by name
+        #    any other args will be used to define parameters, that will:
+        #        receive ParameterStates on any Mechanisms or Projections to which the function is assigned;
+        #        can be defined as ModulatoryParmas for any States to which the function is assigned
+        #    To declare modulatory params (additive_param and multiplicative_param) UserDefinedFunction must be
+        #        called explicitly, with a params dict that has entries mapping the arguments of the custom_function
+        #        to the desired modulatory params)
+        # NOTE: FOR NOW, CAN ONLY HANDLE LAMBDA FUNCTIONS WITH ONE ARG;  CAN FIX THIS LATER
+        #       (GETTING HUNG IN INIT WHEN TRYING TO CALL LAMBDA FUNCTION WITH A SINGLE ARGE (VARIABLE) THAT EXPECTS >1
+        # EXAMPLE:
+        #     def MSE_fct(input=0, extra=0):
+        #         return np.sum(input*input)/len(input+extra)
+        #     output_states=[{NAME: MSE,
+        #                     FUNCTION: lambda x: np.sum(x*x)/len(x)},
+        #                    {NAME: MSE,
+        #                     FUNCTION: MSE_fct,                                                   <- Simple case
+        #                     FUNCTION: UserDefinedFunction(custom_function=MSE_fct,               <- Case that defines
+        #                                                   params={MULTIPLICATIVE_PARAM:'extra'})    modulatory_params
+        #                     }
+        #     ]
+
+
+        from psyneulink.components.functions.function import MULTIPLICATIVE_PARAM, UserDefinedFunction
+        # def MSE_fct(input=0):
+        #     return np.sum(input*input)/len(input)
+        # def MSE_fct(input=0, extra=0, params={MULTIPLICATIVE_PARAM:'extra'}):
+        #     return np.sum(input*input)/len(input+extra)
+        def MSE_fct(input, extra=1, params={MULTIPLICATIVE_PARAM:'extra'}):
+            return np.sum(input*input)/len(input+extra)
+
+        # standard_output_states.extend([{NAME: SSE,
+        #                                 FUNCTION: lambda x: np.sum(x*x)},
+        #                                 FUNCTION: lambda x,y: np.sum(x*y)/len(x)}])
+        #                                 FUNCTION: lambda x=1,y=2: np.sum(x*y)/len(x)}])
+        #                                 FUNCTION: MSE_fct}])
+        #                                 FUNCTION: UserDefinedFunction(custom_function=MSE_fct).custom_function}])
+        #                                 FUNCTION: UserDefinedFunction(custom_function=MSE_fct,
+        #                                                               params={
+        #                                                                   MULTIPLICATIVE_PARAM:'extra'}).custom_function}])
+
+
+    COMMENT
+
     This is used to "wrap" custom functions in the PsyNeuLink Function API. It is automatically invoked and applied to
     user-defined functions that are assigned to the `function <Component.function>` attribute of a PsyNeuLink component
     (other than a Function itself). UserDefinedFunction is generally used with `ProcessingMechanism`. For example, if
@@ -1141,76 +1192,57 @@ class UserDefinedFunction(Function_Base):
                  prefs: is_pref_set = None,
                  context=componentName + INITIALIZING):
 
-        # IMPLEMENTATION NOTE: PARSE ARGUMENTS FOR custom_function AND ASSIGN TO user_params
-        # USE params DICT TO SPECIFY WHICH ARGS ARE MODULATORY:
-        #            multiplicative_param, additive_param;
-        #            any others? -- interface with ModulationParam (ability to add new custom ones)
-        # API for using args of a function to specify params of a UDF
-        #    first arg must correspond to the variable of the UDF
-        #        this will always be passed, and will be the only argument passed when the function is called by PNL
-        #        doesn't matter what it is called (it will be not be passed by name
-        #    any other args will be used to define parameters, that will:
-        #        receive ParameterStates on any Mechanisms or Projections to which the function is assigned;
-        #        can be defined as ModulatoryParmas for any States to which the function is assigned
-        #    To declare modulatory params (additive_param and multiplicative_param) UserDefinedFunction must be
-        #        called explicitly, with a params dict that has entries mapping the arguments of the custom_function
-        #        to the desired modulatory params)
-        # NOTE: FOR NOW, CAN ONLY HANDLE LAMBDA FUNCTIONS WITH ONE ARG;  CAN FIX THIS LATER
-        #       (GETTING HUNG IN INIT WHEN TRYING TO CALL LAMBDA FUNCTION WITH A SINGLE ARGE (VARIABLE) THAT EXPECTS >1
-        # EXAMPLE:
-        #     def MSE_fct(input=0, extra=0):
-        #         return np.sum(input*input)/len(input+extra)
-        #     output_states=[{NAME: MSE,
-        #                     FUNCTION: lambda x: np.sum(x*x)/len(x)},
-        #                    {NAME: MSE,
-        #                     FUNCTION: MSE_fct,                                                   <- Simple case
-        #                     FUNCTION: UserDefinedFunction(custom_function=MSE_fct,               <- Case that defines
-        #                                                   params={MULTIPLICATIVE_PARAM:'extra'})    modulatory_params
-        #                     }
-        #     ]
-
-
-        # MODIFIED 3/9/18 NEW:
         def get_cust_fct_args(custom_function):
             """Get args of custom_function
             Return:
                 - value of first arg (to be used as default_variable for UDF)
                 - and dict with all others (to be assigned as params of UDF)
             """
-            from inspect import getcallargs
-            arg_count = custom_function.__code__.co_argcount
-            args = getcallargs(custom_function, *tuple(range(arg_count)))
-            cust_fct_variable_arg_name = [key for key in args if args[key]==0][0]
-            cust_fct_other_args = {key:value for key, value in args.items()
-                                   if not key is cust_fct_variable_arg_name}
-            return args[cust_fct_variable_arg_name], cust_fct_other_args
+            from inspect import signature, _empty
+            # arg_count = custom_function.__code__.co_argcount
+            arg_names = custom_function.__code__.co_varnames
+            args = {}
+            for arg_name, arg in signature(custom_function).parameters.items():
+                args[arg_name] = arg.default
 
+            # Assign default value of first arg as variable and remove from dict
+            variable = args[arg_names[0]]
+            if variable is _empty:
+                variable = None
+            del args[arg_names[0]]
 
-        # Get variable and names of other any other args for custom_function
-        variable, self.cust_fct_args = get_cust_fct_args(custom_function)
+            # Assign any specified modulatory params to their respective modulatory_param and delete from set
+            if PARAMS in args:
+                if args[PARAMS] is not None and not args[PARAMS] is _empty:
+                    params = args[PARAMS]
+                    if ADDITIVE_PARAM in params:
+                        self.additive_param = params[ADDITIVE_PARAM]
+                        del params[ADDITIVE_PARAM]
+                    if MULTIPLICATIVE_PARAM in params:
+                        self.multiplicative_param = params[MULTIPLICATIVE_PARAM]
+                        del params[MULTIPLICATIVE_PARAM]
+                    args.update(args[PARAMS])
+                del args[PARAMS]
+            if CONTEXT in args and args[CONTEXT] is _empty:
+                args[CONTEXT] = None
+
+            return variable, args
+
+        # Get variable and names of other any other args for custom_function and assign to cust_fct_params
+        cust_fct_variable, self.cust_fct_params = get_cust_fct_args(custom_function)
 
         # Assign variable to default_variable if latter was not specified
-        # FIX: RESOLVE WHICH SHOULD TAKE PRECEDENCE
-        default_variable = default_variable or variable
+        if default_variable is None:
+            default_variable = cust_fct_variable
+        elif cust_fct_variable and not iscompatible(default_variable, cust_fct_variable):
+            raise FunctionError("Specification of \'default_variable\' for {} in {} ({}) "
+                                "is conflict with specification in the function itself ({})")
 
-        # Update params with custom_function args (except 1st, which is used as variable of UDF)
-        # if self.cust_fct_args:
-        #     if params is None:
-        #         params = self.cust_fct_args
-        #     else:
-        #         params.update(self.cust_fct_args)
-
-        # Assign any args specified as modulatory params to their respective modulatory_param
-        if ADDITIVE_PARAM in params:
-            self.additive_param = params[ADDITIVE_PARAM]
-            del params[ADDITIVE_PARAM]
-        if MULTIPLICATIVE_PARAM in params:
-            self.multiplicative_param = params[MULTIPLICATIVE_PARAM]
-            del params[MULTIPLICATIVE_PARAM]
-        # MODIFIED 3/9/18 END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(custom_function=custom_function, params=params, **self.cust_fct_args)
+        params = self._assign_args_to_param_dicts(custom_function=custom_function,
+                                                  params=params,
+                                                  **self.cust_fct_params)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -1221,14 +1253,18 @@ class UserDefinedFunction(Function_Base):
         self.functionOutputType = None
 
     def function(self, **kwargs):
-        # SEARCH kwargs FOR ANY IN self.cust_fct_params AND THEN CALL _get_current_function_param TO ASSIGN VALUES
-        # BEFORE CALLING custom_function with self.cust_fct_params and their values BELOW
-        #     return self.custom_function(variable, **self.cust_fct_params, context)
+
+        # Update value of parms in cust_fct_params
+        for param in self.cust_fct_params:
+            self.cust_fct_params[param] = self.get_current_function_param(param)
+        kwargs.update(self.cust_fct_params)
 
         try:
+            # Try calling with full list of args (including context and params)
             return self.custom_function(**kwargs)
         except TypeError:
-            return self.custom_function(kwargs[VARIABLE])
+            # Try calling with just variable and cust_fct_params
+            return self.custom_function(kwargs[VARIABLE], **self.cust_fct_params)
 
 
 # region **********************************  COMBINATION FUNCTIONS  ****************************************************
