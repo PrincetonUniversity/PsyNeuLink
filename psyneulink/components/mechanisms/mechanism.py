@@ -2138,6 +2138,7 @@ class Mechanism_Base(Mechanism):
 
         #endregion
 
+        self.current_execution_time = self._get_current_execution_time(context=context)
         return self.value
 
     def run(

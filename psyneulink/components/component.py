@@ -2749,7 +2749,6 @@ class Component(object):
             for param_state in self._parameter_states:
                 setattr(self.__class__, "mod_"+param_state.name, make_property_mod(param_state.name))
 
-
     def initialize(self):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
