@@ -975,13 +975,13 @@ class ArgumentTherapy(Function_Base):
 
 class UserDefinedFunction(Function_Base):
     """
-    UserDefinedFunction(           \
-         custom_function=None,           \
-         default_variable=None,      \
-         params=None,        \
-         owner=None,         \
-         name=None,          \
-         prefs=None          \
+    UserDefinedFunction(        \
+         custom_function=None,  \
+         default_variable=None, \
+         params=None,           \
+         owner=None,            \
+         name=None,             \
+         prefs=None             \
     )
     COMMENT:
         CW 1/25/18: Below is the documentation from before I modified the UserDefinedFunction. I leave it here as a
@@ -1235,8 +1235,11 @@ class UserDefinedFunction(Function_Base):
         if default_variable is None:
             default_variable = cust_fct_variable
         elif cust_fct_variable and not iscompatible(default_variable, cust_fct_variable):
-            raise FunctionError("Specification of \'default_variable\' for {} in {} ({}) "
-                                "is conflict with specification in the function itself ({})")
+            raise FunctionError("Value passed as \'default_variable\' for {} ({}) of {} {} for {} ({}) "
+                                "conflicts with specification of first argument in constructor for {} itself ({})".
+                                format(self.__class__.__name__, custom_function.__name__,
+                                       owner.name, owner.__class__.__name__, owner.owner.name,
+                                       default_variable, custom_function.__name__, cust_fct_variable))
 
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
