@@ -27,13 +27,13 @@ def my_sinusoidal_fct(input,
     return amplitude * np.sin(2 * np.pi * frequency * t + phase)
 
 Input_Layer = pnl.TransferMechanism(
-    name='Input Layer',
+    name='Input_Layer',
     default_variable=np.zeros((2,)),
     function=pnl.Logistic
 )
 
 Output_Layer = pnl.TransferMechanism(
-        name='Output Layer',
+        name='Output_Layer',
         default_variable=[0, 0, 0],
         function=pnl.Linear,
         # function=pnl.Logistic,
@@ -42,15 +42,16 @@ Output_Layer = pnl.TransferMechanism(
         #                pnl.FUNCTION: my_sinusoidal_fct}
         output_states={pnl.NAME: 'RESULTS USING UDF',
                        pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
-                       # pnl.FUNCTION: my_linear_fct}
-                       pnl.FUNCTION: my_exp_fct}
+                       pnl.FUNCTION: my_linear_fct}
+                       # pnl.FUNCTION: my_exp_fct}
 )
 
 Gating_Mechanism = pnl.GatingMechanism(
     # default_gating_policy=0.0,
     size=[1],
     gating_signals=[
-        Output_Layer,
+        # Output_Layer
+        Output_Layer.output_state,
     ]
 )
 
@@ -83,9 +84,13 @@ def print_header(system):
 
 
 def show_target():
-    print('- Input:       ', Input_Layer.value)
-    print('- Output:      ', Output_Layer.value)
-    print('- OutputState: ', Output_Layer.output_state.value)
+    print('Gated: ',
+          Gating_Mechanism.gating_signals[0].efferents[0].receiver.owner.name,
+          Gating_Mechanism.gating_signals[0].efferents[0].receiver.name)
+    print('- Input_Layer.value:                  ', Input_Layer.value)
+    print('- Output_Layer.value:                 ', Output_Layer.value)
+    print('- Output_Layer.output_state.variable: ', Output_Layer.output_state.variable)
+    print('- Output_Layer.output_state.value:    ', Output_Layer.output_state.value)
 
 mySystem = pnl.System(processes=[p, g])
 
