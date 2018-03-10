@@ -964,38 +964,15 @@ class OutputState(State_Base):
         """
         return
 
-        # if reference_value is not None and not iscompatible(reference_value, self.instance_defaults.variable):
-        # if (reference_value is not None and
-        #         not iscompatible(reference_value, self._get_state_function_value(self.owner,
-        #                                                                          self.function,
-        #                                                                          self.variable))):
-        #     name = self.name or ""
-        #     raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
-        #                            "with its expected format ({})".
-        #                            format(name, self.componentName, self.owner.name, self.instance_defaults.variable, reference_value))
+    def _instantiate_attributes_before_function(self, context=None):
+        """Instantiate default variable if it is None or numeric
+        """
+        super()._instantiate_attributes_before_function(context=context)
 
-        # if reference_value is not None:
-        #     fct_val = self.function(self.variable)
-        #     if not iscompatible(reference_value, fct_val):
-        #         name = self.name or ""
-        #         raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
-        #                                "with its expected format ({})".
-        #                                format(name, self.componentName, self.owner.name,
-        #                                       self.instance_defaults.variable, reference_value))
-
-    # def _instantiate_function(self, context=None):
-    #     """Parse variable specification and instantiate lambda function that passes it to specified function
-    #     """
-    #     super()._instantiate_function(context=context)
-    #
-    # def _instantiate_attributes_after_function(self, context=None):
-    #     """Instantiate assign function
-    #     """
-    #     super()._instantiate_attributes_after_function(context=context)
-    #
-    #     # If ASSIGN is specified as a Function or other callable object, assume it takes only a single argument,
-    #     #    and instantiate it as a lambda function that is called with OutputState's value as its argument
-    #     self.assign = _parse_output_state_function(self.assign)
+        # If variable has not been assigned, or it is numeric (in which case it can be assumed that
+        #    the value was a reference_value generated during initialization/parsing and passed in the constructor
+        if self._variable is None or is_numeric(self._variable):
+            self._variable = DEFAULT_VARIABLE_SPEC
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -1084,7 +1061,6 @@ class OutputState(State_Base):
                              context=context)
         return value
 
-
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
 
@@ -1119,8 +1095,11 @@ class OutputState(State_Base):
         state_spec = state_specific_spec
 
         if isinstance(state_specific_spec, dict):
-            return None, state_specific_spec
-            state_dict[VARIABLE] = _parse_output_state_variable(owner, state_dict[VARIABLE])
+            # state_dict[VARIABLE] = _parse_output_state_variable(owner, state_dict[VARIABLE])
+            # # MODIFIED 3/10/18 NEW:
+            # if state_dict[VARIABLE] is None:
+            #     state_dict[VARIABLE] = DEFAULT_VARIABLE_SPEC
+            # # MODIFIED 3/10/18 END
             return None, state_specific_spec
 
         elif isinstance(state_specific_spec, ProjectionTuple):

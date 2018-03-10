@@ -1051,13 +1051,82 @@ class UserDefinedFunction(Function_Base):
 
     COMMENT
 
-    This is used to "wrap" custom functions in the PsyNeuLink Function API. It is automatically invoked and applied to
-    user-defined functions that are assigned to the `function <Component.function>` attribute of a PsyNeuLink component
-    (other than a Function itself). UserDefinedFunction is generally used with `ProcessingMechanism`. For example, if
-    you want a mechanism that takes in a vector of length 3, then calculates the sum and adds 2, you could write::
+    .. _UDF_Description:
+
+    A UserDefinedFunction (UDF) is used to "wrap" a Python function or method, including a lamdba function,
+    as a PsyNeuLink `Function`, so that it can be used as the `function <Component.function>` of a `Component
+    <Component>`.  This is done automatically if a Python function or method is assigned as the `function
+    <Component.function>` attribute of a Component.  A Python function or method can also be wrapped on its own,
+    by calling the UserDefinedFunction constructor, and assigning the Python function or method as its
+    **custom_function** argument.  The Python function or method must obey the following conventions to be treated
+    correctly as a UserDefinedFunction (UDF):
+
+    .. _UDF_Variable:
+
+    * It must have **at least one argument** (that can be a positional or a keyword argument);  this will be treated
+      as the UDF's `variable <UserDefinedFunction.variable>` attribute. When the function or method wrapped by the
+      UDF is called, an initial attempt is made to do so with **variable** as the name of the first argument; if that
+      fails, it is called positionally.  The argument is always passed as a 2d np.array, that may contain one or more
+      items (elements in axis 0), depending upon the Component to which the UDF is assigned.
+    ..
+    .. _UDF_Additional_Arguments:
+
+    * It my have have any number of additional arguments (positional and/or keyword);  these are treated as parameters
+      of the UDF, and can be modulated by `ModulatorySignals <Modulatory>` like the parameters of ordinary PsyNeuLink
+      `Functions <Function>`.  If the UDF is assigned to (or automatically created for) a `Mechanism` or `Projection`,
+      these parameters are each automatically assigned a `ParameterState` so that they can be modulated by
+      `ControlSignals <ControlSignal>` or `LearningSignals <LearningSignal>`, respectively.  If the UDF is assigned to
+      (or automatically created for) an `InputState` or `OutputState`, and any of the parameters are specified as
+      `Function_Modulatory_Params` (see `below <UDF_Modulatory_Params>`), then they can be modulated by `GatingSignals
+      <GatingSignal>`. The function or method wrapped by the UDF is called with these parameters by their name and with
+      their current values (i.e., as determined by any modulatory influences to which they are subject).
+    ..
+    .. _UDF_Params_Context:
+
+    * It may include **context** and **params** arguments;  these are not required, but can be included to receive
+      information about the current conditions of execution.  When the function or method is called, an initial attempt
+      is made to do so with these arguments; if that fails, it is called again without them.
+    ..
+    .. _UDF_Modulatory_Params:
+
+    * The parameters of a UDF can be specified as `Function_Modulatory_Params` in a `parameter specification dictionary
+      <ParameterState_Specification>` assigned to the **params** argument of the constructor for the Python function or
+      UDF that includes either or both of the following two entries:  *MULTIPLICATIVE_PARAM*:<parameter name> and/or
+      *ADDITIVE_PARAM*:<parameter name>.  These are used only when the UDF is assigned as the `function
+      <State.function>` of an InputState or OutputState that receives one more more `GatingProjections
+      <GatingProjection>`.
+
+      COMMENT:
+      # IMPLEMENT INTERFACE FOR OTHER ModulationParam TYPES (i.e., for ability to add new custom ones)
+      COMMENT
+
+    COMMENT:
+        CW 1/29/18: Adding params for custom functions sounds useful, but slightly thorny.
+    COMMENT
+
+    .. note::
+        Note that variable's format may be slightly different than expected, because PsyNeuLink may change the
+        formatting while processing the input. For example, PsyNeuLink converts an input of [1, 2, 3] to [[1, 2, 3]].
+        For example, if the custom_function returns the sum of its input, `sum(variable[0])` should be used, and not
+        `sum(variable)`.
+
+    .. tip::
+       The format of the `variable <UserDefinedFunction.variable>` passed to the `custom_function
+       <UserDefinedFunction.custom_function>` function can be verified by adding a ``print(variable)`` or
+       ``print(type(variable))`` statement to the function.
+
+    Examples
+    --------
+
+    *Assignment of a custom function to a Mechanism*
+
+    Below are some examples of the use of UDFs for assigning a custom function to Mechanisms and States:
+
+
+    If you want a mechanism that takes in a vector of length 3, then calculates the sum and adds 2, you could write::
 
         >>> import psyneulink as pnl
-        >>> def myFunction(variable, params, context):
+        >>> def my_function(variable):
         ...     return sum(variable[0]) + 2
         >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
         >>> myMech.execute(input = [1, 2, 3])
@@ -1084,27 +1153,6 @@ class UserDefinedFunction(Function_Base):
         >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
         >>> myMech.execute(input = [1, 2, 3])
 
-    UserDefinedFunctions, like any other `Function`, are passed the **params** and **context**, however it is up to
-    the `custom_function <UserDefinedFunction.custom_function>` to determine whether it uses or ignores these arguments.
-    It is also not required to include these as arguments (if the attempt to call it with these arguments fails it will
-    be called without them.  A `custom_function <UserDefinedFunction.custom_function>` function **must** include a
-    **variable** argument, which is used to pass the input to the function.
-
-    COMMENT:
-        CW 1/29/18: Adding params for custom functions sounds useful, but slightly thorny.
-    COMMENT
-
-    .. note::
-        Note that variable's format may be slightly different than expected, because PsyNeuLink may change the
-        formatting while processing the input. For example, PsyNeuLink converts an input of [1, 2, 3] to [[1, 2, 3]].
-        For example, if the custom_function returns the sum of its input, `sum(variable[0])` should be used, and not
-        `sum(variable)`.
-
-    .. tip::
-       The format of the `variable <UserDefinedFunction.variable>` passed to the `custom_function
-       <UserDefinedFunction.custom_function>` function can be verified by adding a ``print(variable)`` or
-       ``print(type(variable))`` statement to the function.
-
 
     Arguments
     ---------
@@ -1117,19 +1165,15 @@ class UserDefinedFunction(Function_Base):
         with the context in which the UserDefinedFunction will be used.
     COMMENT
     custom_function : function
-        specifies the function to "wrap." It can be any function, but like any PsyNeuLink function it must take three
-        named arguments: :keyword:`variable` (the input to the function), :keyword:`params`, and :keyword:`context`. The
-        `custom_function` can return any value(s), so long as they fit with the context. For example, if the dimensions
-        of your custom function's output change, then it is not appropriate to pass your function's output to a
-        `MappingProjection`, since the `MappingProjection` expects input of consistent dimensions.
-
-    variable : value : default ClassDefaults.variable
-        specifies the format and a default value for the input to `function <Function>`.
+        specifies the function to "wrap." It can be any function or method, including a lambda function;
+        see `above <UDF_Description>` for additional details.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        This can be used to define an `additive_param <UserDefinedFunction.additive_param>` and/or
+        `multiplicative_param <UserDefinedFunction.multiplicative_param>` for the UDF, by including
+        *ADDITIVE_PARAM*:<param_name> and/or *MULTIPLICATIVE_PARAM*:<param_name> entries. Values specified for
+        parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     owner : Component
         `component <Component>` to which to assign the Function.
@@ -1144,11 +1188,18 @@ class UserDefinedFunction(Function_Base):
     ----------
 
     variable: value
-        format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
-        they are specified by the Function's :keyword:`ClassDefaults.variable`.
+        format and default value of the function "wrapped" by the UDF.
 
     custom_function : function
         the user-specified function: called by the Function's `owner <Function_Base.owner>` when it is executed.
+
+    additive_param : str
+        this contains the name of the additive_param, if one has been specified for the UDF
+        (see `above <UDF_Modulatory_Params>` for details).
+
+    multiplicative_param : str
+        this contains the name of the multiplicative_param, if one has been specified for the UDF
+        (see `above <UDF_Modulatory_Params>` for details).
 
     COMMENT:
     functionOutputTypeConversion : Bool : False

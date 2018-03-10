@@ -44,16 +44,13 @@ Output_Layer = pnl.TransferMechanism(
         #                pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
         #                pnl.FUNCTION: my_sinusoidal_fct}
         output_states={pnl.NAME: 'RESULTS USING UDF',
-                       pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
+                       # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
                        # pnl.FUNCTION: my_linear_fct
                        # pnl.FUNCTION: my_exp_fct
                        pnl.FUNCTION:pnl.UserDefinedFunction(custom_function=my_simple_linear_fct,
                                                             params={pnl.ADDITIVE_PARAM:'b',
                                                                     pnl.MULTIPLICATIVE_PARAM:'m'}
                                                             )
-                       # pnl.FUNCTION:pnl.Linear(slope=1, intercept=2)
-        #                                 FUNCTION: UserDefinedFunction(custom_function=MSE_fct,
-        #                                                               params={
                        }
 )
 
