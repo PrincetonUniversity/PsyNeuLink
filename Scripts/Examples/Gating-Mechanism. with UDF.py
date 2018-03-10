@@ -2,6 +2,7 @@ import functools
 import numpy as np
 import psyneulink as pnl
 
+
 def my_linear_fct(x,
                   m=1.0,
                   b=0.0,
