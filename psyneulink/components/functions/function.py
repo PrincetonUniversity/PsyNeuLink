@@ -1259,7 +1259,12 @@ class UserDefinedFunction(Function_Base):
 
         # Update value of parms in cust_fct_params
         for param in self.cust_fct_params:
-            self.cust_fct_params[param] = self.get_current_function_param(param)
+            # First check for value passed in params as runtime param:
+            if PARAMS in kwargs and kwargs[PARAMS] is not None and param in kwargs[PARAMS]:
+                self.cust_fct_params[param] = kwargs[PARAMS][param]
+            else:
+            # Otherwise, get current value from ParameterState (in case it is being modulated by ControlSignal(s)
+                self.cust_fct_params[param] = self.get_current_function_param(param)
         kwargs.update(self.cust_fct_params)
 
         try:

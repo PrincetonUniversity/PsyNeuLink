@@ -3,8 +3,8 @@ import numpy as np
 import psyneulink as pnl
 
 def my_linear_fct(x,
-                  m=1,
-                  b=0,
+                  m=1.0,
+                  b=0.0,
                   params={pnl.ADDITIVE_PARAM:'b',
                           pnl.MULTIPLICATIVE_PARAM:'m'}):
     return m * x + b
