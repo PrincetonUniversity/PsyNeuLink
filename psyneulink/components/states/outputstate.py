@@ -1209,14 +1209,20 @@ class OutputState(State_Base):
         if fct_variable is None:
             if owner.value is not None:
                 fct_variable = owner.value[0]
+            # Get owner's value by calling its function
             else:
                 owner.function(owner.variable)[0]
+
         fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable is PARAMS_DICT)
+
         try:
-            return fct(fct_variable)
-        except TypeError as e:
-            raise OutputStateError("Error in function assigned to {} of {}: {}".
-                                   format(OutputState.__name__, owner.name, e.args[0]))
+            return fct(variable=fct_variable)
+        except:
+            try:
+                return fct(fct_variable)
+            except TypeError as e:
+                raise OutputStateError("Error in function assigned to {} of {}: {}".
+                                       format(OutputState.__name__, owner.name, e.args[0]))
 
     @property
     def variable(self):

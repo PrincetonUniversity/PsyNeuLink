@@ -10,6 +10,8 @@ def my_linear_fct(x,
                           pnl.MULTIPLICATIVE_PARAM:'m'}):
     return m * x + b
 
+def my_simple_linear_fct(x, m=1.0, b=0.0):
+    return m * x + b
 
 def my_exp_fct(x,
                r=1,
@@ -43,8 +45,16 @@ Output_Layer = pnl.TransferMechanism(
         #                pnl.FUNCTION: my_sinusoidal_fct}
         output_states={pnl.NAME: 'RESULTS USING UDF',
                        pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
-                       pnl.FUNCTION: my_linear_fct}
-                       # pnl.FUNCTION: my_exp_fct}
+                       # pnl.FUNCTION: my_linear_fct
+                       # pnl.FUNCTION: my_exp_fct
+                       pnl.FUNCTION:pnl.UserDefinedFunction(custom_function=my_simple_linear_fct,
+                                                            params={pnl.ADDITIVE_PARAM:'b',
+                                                                    pnl.MULTIPLICATIVE_PARAM:'m'}
+                                                            )
+                       # pnl.FUNCTION:pnl.Linear(slope=1, intercept=2)
+        #                                 FUNCTION: UserDefinedFunction(custom_function=MSE_fct,
+        #                                                               params={
+                       }
 )
 
 Gating_Mechanism = pnl.GatingMechanism(

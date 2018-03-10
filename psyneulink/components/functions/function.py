@@ -1180,7 +1180,9 @@ class UserDefinedFunction(Function_Base):
     paramClassDefaults.update({
         FUNCTION_OUTPUT_TYPE_CONVERSION: False,
         PARAMETER_STATE_PARAMS: None,
-        CUSTOM_FUNCTION: None
+        CUSTOM_FUNCTION: None,
+        MULTIPLICATIVE_PARAM:None,
+        ADDITIVE_PARAM:None
     })
 
     @tc.typecheck
@@ -1229,6 +1231,8 @@ class UserDefinedFunction(Function_Base):
             return variable, args
 
         # Get variable and names of other any other args for custom_function and assign to cust_fct_params
+        if params is not None and CUSTOM_FUNCTION in params:
+            custom_function = params[CUSTOM_FUNCTION]
         cust_fct_variable, self.cust_fct_params = get_cust_fct_args(custom_function)
 
         # Assign variable to default_variable if latter was not specified
