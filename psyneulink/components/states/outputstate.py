@@ -624,6 +624,8 @@ OUTPUT_STATE_TYPE = 'outputStateType'
 PRIMARY = 0
 SEQUENTIAL = 'SEQUENTIAL'
 
+DEFAULT_VARIABLE_SPEC = (OWNER_VALUE, 0)
+
 # This is a convenience class that provides list of standard_output_state names in IDE
 class OUTPUTS():
     RESULT=RESULT
@@ -865,7 +867,9 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
+                               # DEFAULT_VARIABLE_SPEC: [(OWNER_VALUE, 0)]
+                               })
     #endregion
 
     @tc.typecheck
@@ -920,11 +924,22 @@ class OutputState(State_Base):
         if variable is None:
             if reference_value is None:
                 # variable = owner.instance_defaults.value[0]
-                variable = (OWNER_VALUE, 0) # Default is 1st item of owner.value
+                # variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC] # Default is 1st item of owner.value
+                variable = DEFAULT_VARIABLE_SPEC
             else:
                 variable = reference_value
+        # MODIFIED 3/10/18 OLD:
         if not is_numeric(variable):
             self._variable = variable
+        # # MODIFIED 3/10/18 NEW:
+        # # FIX: SHOULD HANDLE THIS MORE GRACEFULLY IN _instantiate_state and/or instaniate_output_state
+        # # If variable is numeric, assume it is a default spec passed in that had been parsed for initializatoin purposes
+        # if is_numeric(variable):
+        #     # self._variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC]
+        #     self._variable = DEFAULT_VARIABLE_SPEC
+        # else:
+        #     self._variable = variable
+        # MODIFIED 3/10/18 END:
 
 
         # FIX: 5/26/16

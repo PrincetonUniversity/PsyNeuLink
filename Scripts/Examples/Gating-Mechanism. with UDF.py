@@ -56,7 +56,6 @@ Gating_Mechanism = pnl.GatingMechanism(
 )
 
 p = pnl.Process(
-    # default_variable=[0, 0],
     size=2,
     pathway=[
         Input_Layer,
