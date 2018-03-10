@@ -3911,10 +3911,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             #      - AT LEAST CHANGE THE NAME FROM kwReceiver TO output_template OR SOMETHING LIKE THAT
             #      - MAKE ARG?  OR ADD OTHER PARAMS:  E.G., FILLER?
             #      - OR REFACTOR TO INCLUDE AS MATRIX SPEC:
-            #                  IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
-            #                     IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
-            #                     IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
-            #                     NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
+            #          IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
+            #          IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
+            #          IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
+            #          NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
             #      - DOCUMENT WHEN DONE
             # MODIFIED 3/26/17 OLD:
             # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
@@ -4058,9 +4058,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                    self.owner_name,
                                                    MATRIX_KEYWORD_NAMES))
                 else:
-                    message += "Unrecognized param ({}) specified for the {} function of {}\n".format(param_name,
-                                                                                                      self.componentName,
-                                                                                                      self.owner_name)
+                    message += "Unrecognized param ({}) specified for the {} function of {}\n".\
+                        format(param_name, self.componentName, self.owner_name)
                     continue
             if message:
                 raise FunctionError(message)
@@ -4073,12 +4072,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                 # numeric value specified; verify that it is compatible with variable
                 if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
-                    if np.size(np.atleast_2d(param_value), 0) != np.size(np.atleast_2d(self.instance_defaults.variable),1):
-                        raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. "
-                                            "The shapes of variable {} and matrix {} are not compatible for "
-                                            "multiplication".format(self.name,
-                                                                    np.shape(np.atleast_2d(self.instance_defaults.variable)),
-                                                                    np.shape(np.atleast_2d(param_value))))
+                    if np.size(np.atleast_2d(param_value),0)!=np.size(np.atleast_2d(self.instance_defaults.variable),1):
+                        raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. The "
+                                            "shapes of variable {} and matrix {} are not compatible for multiplication".
+                                            format(self.name, np.shape(np.atleast_2d(self.instance_defaults.variable)),
+                                                   np.shape(np.atleast_2d(param_value))))
 
                 # keyword matrix specified - not valid outside of a projection
                 elif param_value in MATRIX_KEYWORD_VALUES:
@@ -4138,8 +4136,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
             # This should never happen (should have been picked up in validate_param or above)
             if matrix is None:
-                raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function that returns "
-                                    "one, a matrix specification keyword ({}), or a number (filler)".
+                raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function "
+                                    "that returns one, a matrix specification keyword ({}), or a number (filler)".
                                     format(specification, self.name, self.owner_name, MATRIX_KEYWORD_NAMES))
             else:
                 return matrix
@@ -4296,7 +4294,7 @@ class IntegratorFunction(Function_Base):
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
 # • can noise and initializer be an array?  If so, validated in validate_param?
 
-class Integrator(IntegratorFunction):  # --------------------------------------------------------------------------------
+class Integrator(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
     Integrator(                 \
         default_variable=None,  \
@@ -4471,8 +4469,8 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
                     #       Integrator's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
-                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism); in that
+                    #       case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
                     if self._variable_not_specified:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
@@ -4525,17 +4523,18 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif not iscompatible(np.atleast_2d(noise), var) and not iscompatible(np.atleast_1d(noise), var) and len(noise) > 1:
+            elif (not iscompatible(np.atleast_2d(noise), var)
+                  and not iscompatible(np.atleast_1d(noise), var) and len(noise) > 1):
                 raise FunctionError(
-                    "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified "
-                    "as a float, a function, or an array of the appropriate shape ({})."
-                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
+                        "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
+                        "must be specified as a float, a function, or an array of the appropriate shape ({})."
+                            .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
             else:
                 for noise_item in noise:
                     if not isinstance(noise_item, (float, int)) and not callable(noise_item):
                         raise FunctionError(
-                            "The elements of a noise list or array must be floats or functions. {} is not a valid noise "
-                            "element for {}".format(noise_item, self.name))
+                            "The elements of a noise list or array must be floats or functions. "
+                            "{} is not a valid noise element for {}".format(noise_item, self.name))
 
         # Otherwise, must be a float, int or function
         elif not isinstance(noise, (float, int)) and not callable(noise):
@@ -4662,7 +4661,8 @@ class SimpleIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>` for details).
+        `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -4686,8 +4686,8 @@ class SimpleIntegrator(
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values. If it has a single element, it
-        applies to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
+        determines the rate of integration based on current and prior values. If it has a single element, it applies
+        to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
         applies to the corresponding element of `variable <SimpleIntegrator.variable>`.
 
     noise : float, function, list, or 1d np.array
@@ -4695,16 +4695,16 @@ class SimpleIntegrator(
 
         If noise is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or
+        array, noise will be applied to each variable element. In the case of a noise function, this means that the
+        function will be executed separately for each variable element.
 
 
         .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
 
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
@@ -4902,15 +4902,15 @@ class LCAIntegrator(
 
         If noise is a list or array, it must be the same length as `variable <LCAIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or
+        array, noise will be applied to each variable element. In the case of a noise function, this means that the
+        function will be executed separately for each variable element.
 
         .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
 
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
@@ -5035,7 +5035,7 @@ class LCAIntegrator(
 
         return adjusted_value
 
-class ConstantIntegrator(Integrator):  # --------------------------------------------------------------------------------
+class ConstantIntegrator(Integrator):  # -------------------------------------------------------------------------------
     """
     ConstantIntegrator(                 \
         default_variable=None,          \
@@ -5074,7 +5074,8 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>` for details).
+        `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5111,21 +5112,22 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         If noise is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is a list
+        or array, noise will be applied to each variable element. In the case of a noise function, this means that
+        the function will be executed separately for each variable element.
 
         .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
 
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
         `previous_value <ConstantIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
+        If initializer is a list or array, it must be the same length as
+        `variable <ConstantIntegrator.default_variable>`.
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
@@ -5259,8 +5261,8 @@ class AdaptiveIntegrator(
 
     Computes an exponentially weighted moving average.
 
-    (1 - `rate <AdaptiveIntegrator.rate>`) * `previous_value <AdaptiveIntegrator.previous_value>` + `rate <AdaptiveIntegrator.rate>` *
-    `variable <AdaptiveIntegrator.variable>` + `noise <AdaptiveIntegrator.noise>`
+    (1 - `rate <AdaptiveIntegrator.rate>`) * `previous_value <AdaptiveIntegrator.previous_value>` + `rate
+    <AdaptiveIntegrator.rate>` * `variable <AdaptiveIntegrator.variable>` + `noise <AdaptiveIntegrator.noise>`
 
 
     Arguments
@@ -5280,7 +5282,8 @@ class AdaptiveIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <AdaptiveIntegrator.default_variable>` (see `initializer <AdaptiveIntegrator.initializer>` for details).
+        `default_variable <AdaptiveIntegrator.default_variable>` (see `initializer <AdaptiveIntegrator.initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5318,9 +5321,9 @@ class AdaptiveIntegrator(
 
         If noise is a list or array, it must be the same length as `variable <AdaptiveIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <AdaptiveIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <AdaptiveIntegrator.variable>` is a list
+        or array, noise will be applied to each variable element. In the case of a noise function, this means that
+        the function will be executed separately for each variable element.
 
         .. note::
             In order to generate random noise, we recommend selecting a probability distribution function
@@ -5332,7 +5335,8 @@ class AdaptiveIntegrator(
         determines the starting value for time-averaging (i.e., the value to which
         `previous_value <AdaptiveIntegrator.previous_value>` is originally set).
 
-        If initializer is a list or array, it must be the same length as `variable <AdaptiveIntegrator.default_variable>`.
+        If initializer is a list or array, it must be the same length as
+        `variable <AdaptiveIntegrator.default_variable>`.
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
@@ -5405,11 +5409,11 @@ class AdaptiveIntegrator(
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
-                    #       AdaptiveIntegrator's constructor, where that is used as a specification for a function parameter
-                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       AdaptiveIntegrator's constructor, where that is used as a specification for a function
+                    #       parameter (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
-                    #       the object itself, thus does not see the array specification for the input.
+                    #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]])
+                    #       before the object itself, thus does not see the array specification for the input.
                     if self._variable_not_specified:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
@@ -5438,8 +5442,8 @@ class AdaptiveIntegrator(
                         # OLD:
                         # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
-                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
-                        # to have a rate parameter of type ndarray/list
+                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator
+                        # function to have a rate parameter of type ndarray/list
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -5556,7 +5560,8 @@ class DriftDiffusionIntegrator(
 
     initializer : float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
+        `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer
+        <DriftDiffusionIntegrator.initializer>` for details).
 
     threshold : float : default 0.0
         specifies the threshold (boundaries) of the drift diffusion process (i.e., at which the
@@ -5613,7 +5618,8 @@ class DriftDiffusionIntegrator(
         determines the starting value for integration (i.e., the value to which
         `previous_value <DriftDiffusionIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.default_variable>`.
+        If initializer is a list or array, it must be the same length as
+        `variable <DriftDiffusionIntegrator.default_variable>`.
 
     previous_time : float
         stores previous time at which the function was executed and accumulates with each execution according to

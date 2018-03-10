@@ -2,6 +2,15 @@ import functools
 import numpy as np
 import psyneulink as pnl
 
+def my_sinusoidal_fct(input,
+                      phase=0,
+                      amplitude=1,
+                      params={pnl.ADDITIVE_PARAM:'phase',
+                              pnl.MULTIPLICATIVE_PARAM:'amplitude'}):
+    frequency = input[0]
+    t = input[1]
+    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
+
 Input_Layer = pnl.TransferMechanism(
     name='Input Layer',
     default_variable=np.zeros((2,)),
@@ -21,9 +30,12 @@ Hidden_Layer_2 = pnl.TransferMechanism(
 )
 
 Output_Layer = pnl.TransferMechanism(
-    name='Output Layer',
-    default_variable=[0, 0, 0],
-    function=pnl.Logistic
+        name='Output Layer',
+        default_variable=[0, 0, 0],
+        function=pnl.Logistic,
+        output_states={pnl.NAME: 'RESULTS USING UDF',
+                       pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
+                       pnl.FUNCTION: my_sinusoidal_fct}
 )
 
 Gating_Mechanism = pnl.GatingMechanism(

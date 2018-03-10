@@ -2759,6 +2759,10 @@ class Component(object):
     def _execute(self, variable=None, runtime_params=None, context=None):
         return self.function(variable=variable, params=runtime_params, context=context)
 
+    def _get_current_execution_time(self, context):
+        from psyneulink.globals.log import _get_log_context
+        return self.log._get_time(context=context ,context_flags=_get_log_context(context))
+
     def _update_value(self, context=None):
         """Evaluate execute method
         """
@@ -2996,7 +3000,6 @@ class Component(object):
         of the Component's `log <Component.log>`.
         """
         self.log.log_values(entries)
-
 
     @property
     def logged_items(self):
