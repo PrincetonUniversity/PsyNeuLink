@@ -1189,6 +1189,10 @@ class OutputState(State_Base):
         # -- CALL TO GET DEFAULT VALUE AND RETURN THAT (CAN'T USE VARIABLE SINCE DON'T KNOW MECH YET)
         #      THOUGH COULD PASS IN OWNER TO DETERMINE IT
         fct_variable = _parse_output_state_variable(owner, variable)
+
+        # If variable has not been specified, assume it is the default of (OWNER_VALUE,0), and use that value
+        if fct_variable is None:
+            fct_variable = owner.value[0]
         fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable is PARAMS_DICT)
         try:
             return fct(fct_variable)

@@ -2,6 +2,13 @@ import functools
 import numpy as np
 import psyneulink as pnl
 
+def my_linear_fct(x,
+                  m=1,
+                  b=0,
+                  params={pnl.ADDITIVE_PARAM:'b',
+                          pnl.MULTIPLICATIVE_PARAM:'m'}):
+    return m * x + b
+
 def my_sinusoidal_fct(input,
                       phase=0,
                       amplitude=1,
@@ -33,9 +40,11 @@ Output_Layer = pnl.TransferMechanism(
         name='Output Layer',
         default_variable=[0, 0, 0],
         function=pnl.Logistic,
+        # output_states={pnl.NAME: 'RESULTS USING UDF',
+        #                pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
+        #                pnl.FUNCTION: my_sinusoidal_fct}
         output_states={pnl.NAME: 'RESULTS USING UDF',
-                       pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
-                       pnl.FUNCTION: my_sinusoidal_fct}
+                       pnl.FUNCTION: my_linear_fct}
 )
 
 Gating_Mechanism = pnl.GatingMechanism(
