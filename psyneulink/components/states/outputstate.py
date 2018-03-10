@@ -1207,7 +1207,10 @@ class OutputState(State_Base):
 
         # If variable has not been specified, assume it is the default of (OWNER_VALUE,0), and use that value
         if fct_variable is None:
-            fct_variable = owner.value[0]
+            if owner.value is not None:
+                fct_variable = owner.value[0]
+            else:
+                owner.function(owner.variable)[0]
         fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable is PARAMS_DICT)
         try:
             return fct(fct_variable)
