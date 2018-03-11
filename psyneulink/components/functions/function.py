@@ -1187,11 +1187,13 @@ class UserDefinedFunction(Function_Base):
     else, that is fine.
 
     Notice also that the function assumes that it gets two items in its ``input`` argument, that it assigns to
-    the ``frequncy`` and ``t`` variables of the function.  The function also has two other arguments, ``phase``
+    the ``frequency`` and ``t`` variables of the function.  The function also has two other arguments, ``phase``
     and ``amplitude``.   When it is wrapped as a UDF, ``my_wave_mech`` is assigned `ParameterStates <ParameterState>`
     for these parameters, that can then be modified by `ControlSignals <ControlSignal>`.
 
-
+    COMMENT:
+    IMPLEMENT & DOCUMENT HOW TO ASSIGN ControlSignals HERE
+    COMMENT
 
         >>> def my_sinusoidal_fct(input,
         ...                      phase=0,
@@ -1331,12 +1333,12 @@ class UserDefinedFunction(Function_Base):
                     params = args[PARAMS]
                     if ADDITIVE_PARAM in params:
                         self.additive_param = params[ADDITIVE_PARAM]
-                        del params[ADDITIVE_PARAM]
+                        # del params[ADDITIVE_PARAM]
                     if MULTIPLICATIVE_PARAM in params:
                         self.multiplicative_param = params[MULTIPLICATIVE_PARAM]
-                        del params[MULTIPLICATIVE_PARAM]
+                        # del params[MULTIPLICATIVE_PARAM]
                     args.update(args[PARAMS])
-                del args[PARAMS]
+                # del args[PARAMS]
             if CONTEXT in args and args[CONTEXT] is _empty:
                 args[CONTEXT] = None
 
