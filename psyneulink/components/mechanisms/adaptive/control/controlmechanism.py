@@ -885,9 +885,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                  for i in range(len(self._output_states))])
         self.value = self.instance_defaults.value
 
-        # Assign ControlSignal's variable to appended item of owner's value
-        if control_signal.owner_value_index is None:
-            control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
+        # Assign ControlSignal's variable to index appended item of owner's value
+        # if control_signal.owner_value_index is None:
+        control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
         if not isinstance(control_signal.owner_value_index, int):
             raise ControlMechanismError(
                     "PROGRAM ERROR: The \'owner_value_index\' attribute for {} of {} ({})is not an int."

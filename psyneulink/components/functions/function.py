@@ -1352,9 +1352,12 @@ class UserDefinedFunction(Function_Base):
                 # Otherwise, use the default value from the definition of the function (if it exists)
                 else:
                     args[arg_name] = arg.default
-                # Either was, use definition from the function as default,
-                #    assigned to paramClassDefaults in _assign_args_to_params_dicts
-                defaults[arg_name] = arg.default
+                # Either way, use definition from the function (or None) as default,
+                #    (assigned to paramClassDefaults in _assign_args_to_params_dicts)
+                if arg.default is _empty:
+                    defaults[arg_name] = None
+                else:
+                    defaults[arg_name] = arg.default
 
             # Assign default value of first arg as variable and remove from dict
             variable = args[arg_names[0]]
