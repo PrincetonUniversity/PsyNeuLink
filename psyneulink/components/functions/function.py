@@ -1102,10 +1102,6 @@ class UserDefinedFunction(Function_Base):
       # IMPLEMENT INTERFACE FOR OTHER ModulationParam TYPES (i.e., for ability to add new custom ones)
       COMMENT
 
-    COMMENT:
-        CW 1/29/18: Adding params for custom functions sounds useful, but slightly thorny.
-    COMMENT
-
     .. note::
         Note that variable's format may be slightly different than expected, because PsyNeuLink may change the
         formatting while processing the input. For example, PsyNeuLink converts an input of [1, 2, 3] to [[1, 2, 3]].
@@ -1160,16 +1156,7 @@ class UserDefinedFunction(Function_Base):
     This will produce the same result as the last example.  This can be useful for assigning the function to more than
     one Component.
 
-    In all of the examples above, a UDF was automatically created for the functions assigned the Mechanism.  A UDF
-    can also be created explicitly, as follows:
-
-        >>> def my_fct(variable):
-        ...     return variable[0] + variable[1]
-        >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_fct)
-        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
-        ...                                   function=my_UDF)
-
-    Functions with more than one parameter can also be used;  for example::
+    More complicated functions, including ones with more than one parameter can also be used;  for example::
 
         >>> def my_sinusoidal_fct(input,
         ...                      phase=0,
@@ -1180,20 +1167,58 @@ class UserDefinedFunction(Function_Base):
         >>> my_wave_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
         ...                                        function=my_sinusoidal_fct)
 
-    Note that ``input`` is used as the name of the first argument, instead of ``variable`` as in the examples above.
-    The name of the first argument of a function to be "wrapped" as a UDF does not matter;  in general it is good
-    practice to use ``variable``, as that the `variable <Component.variable>` of the Component to which the UDF is
-    assigned is what is passed as the function's first argument.  However, if it is helpful to name it something
-    else, that is fine.
+    Note that in this example, ``input`` is used as the name of the first argument, instead of ``variable``
+    as in the examples above. The name of the first argument of a function to be "wrapped" as a UDF does not matter;
+    in general it is good practice to use ``variable``, as the `variable <Component.variable>` of the Component
+    to which the UDF is assigned is what is passed to the function as its first argument.  However, if it is helpful to
+    name it something else, that is fine.
 
-    Notice also that the function assumes that it gets two items in its ``input`` argument, that it assigns to
-    the ``frequency`` and ``t`` variables of the function.  The function also has two other arguments, ``phase``
-    and ``amplitude``.   When it is wrapped as a UDF, ``my_wave_mech`` is assigned `ParameterStates <ParameterState>`
-    for these parameters, that can then be modified by `ControlSignals <ControlSignal>`.
+    Notice also that in this example, the function assumes that it gets two items in its ``input`` argument,
+    that it assigns to the ``frequency`` and ``t`` variables of the function.  The function also has two other
+    arguments, ``phase`` and ``amplitude``.   When it is wrapped as a UDF, ``my_wave_mech`` is assigned
+    `ParameterStates <ParameterState>` for these parameters, that can then be modified by `ControlSignals
+    <ControlSignal>`.
+
+    In all of the examples above, a UDF was automatically created for the functions assigned to the Mechanism.  A UDF
+    can also be created explicitly, as follows:
+
+        >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct)
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=my_UDF)
+
+    When the UDF is defined explicitly, parameters of the function can be included as arguments to its constructor,
+    to assign them default values that differ from the those in the definition of the function, or for parameters
+    that don't define default values.  For example::
+
+        >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct,
+        ...                                  phase=1,
+        ...                                  amplitude=0)
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=my_UDF)
+
+    assigns ``my_sinusoidal_fct`` as the `function <Mechanism_Base.function>` for ``my_mech``, but with the default
+    values of its ``phase`` and ``amplitude`` parameters assigned new values.  This can be useful for assigning the
+    same function to different Mechanisms with different default values.
+
+    Explicitly defining the UDF can also be used to specify parameters of the function to be controlled, as in the
+    following example::
+
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=UserDefinedFunction(custom_function=my_sinusoidal_fct,
+        ...                                                                amplitude=pnl.CONTROL))
+
+    This specifies that the ``amplitude`` parameter of the ``my_sinusoidal_fct`` function assigned to ``my_mech``
+    should be modulated by a `ControlSignal`.
+
 
     COMMENT:
     IMPLEMENT & DOCUMENT HOW TO ASSIGN ControlSignals HERE
     COMMENT
+
+    XXXXXXX
+
+
+    *Assignment of a custom function to a State*
 
         >>> def my_sinusoidal_fct(input,
         ...                      phase=0,
@@ -1204,7 +1229,6 @@ class UserDefinedFunction(Function_Base):
             t = input[1]
             return amplitude * np.sin(2 * np.pi * frequency * t + phase)
 
-    *Assignment of a custom function to a State*
 
 
     Custom functions can be as elaborate as desired, and can even include PsyNeuLink functions indirectly, such as::
@@ -1306,7 +1330,8 @@ class UserDefinedFunction(Function_Base):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 context=componentName + INITIALIZING,
+                 **kwargs):
 
         def get_cust_fct_args(custom_function):
             """Get args of custom_function
@@ -1318,8 +1343,18 @@ class UserDefinedFunction(Function_Base):
             # arg_count = custom_function.__code__.co_argcount
             arg_names = custom_function.__code__.co_varnames
             args = {}
+            defaults = {}
             for arg_name, arg in signature(custom_function).parameters.items():
-                args[arg_name] = arg.default
+                # FIX: SAVE ORIGINAL VALUE TO PASS IN DEFAULTS TO _assign_args_to_param_dicts
+                # If arg is specified in the constructor for the UDF, assign that as its value
+                if arg_name in kwargs:
+                    args[arg_name] = kwargs[arg_name]
+                # Otherwise, use the default value from the definition of the function (if it exists)
+                else:
+                    args[arg_name] = arg.default
+                # Either was, use definition from the function as default,
+                #    assigned to paramClassDefaults in _assign_args_to_params_dicts
+                defaults[arg_name] = arg.default
 
             # Assign default value of first arg as variable and remove from dict
             variable = args[arg_names[0]]
@@ -1342,12 +1377,12 @@ class UserDefinedFunction(Function_Base):
             if CONTEXT in args and args[CONTEXT] is _empty:
                 args[CONTEXT] = None
 
-            return variable, args
+            return variable, args, defaults
 
         # Get variable and names of other any other args for custom_function and assign to cust_fct_params
         if params is not None and CUSTOM_FUNCTION in params:
             custom_function = params[CUSTOM_FUNCTION]
-        cust_fct_variable, self.cust_fct_params = get_cust_fct_args(custom_function)
+        cust_fct_variable, self.cust_fct_params, defaults = get_cust_fct_args(custom_function)
 
         if PARAMS in self.cust_fct_params:
             if self.cust_fct_params[PARAMS]:
@@ -1371,6 +1406,7 @@ class UserDefinedFunction(Function_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(custom_function=custom_function,
                                                   params=params,
+                                                  defaults=defaults,
                                                   **self.cust_fct_params)
 
         super().__init__(default_variable=default_variable,

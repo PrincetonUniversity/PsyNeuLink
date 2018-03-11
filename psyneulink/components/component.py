@@ -1183,13 +1183,16 @@ class Component(object):
     def _assign_default_name(self, **kwargs):
         return
 
-    def _assign_args_to_param_dicts(self, **kwargs):
+    def _assign_args_to_param_dicts(self, defaults=None, **kwargs):
         """Assign args passed in __init__() to params
 
         Get args and their corresponding values in call to constructor
         - get default values for all args and assign to class.paramClassDefaults if they have not already been
         - assign arg values to local copy of params dict
         - override those with any values specified in params dict passed as "params" arg
+
+        Accepts defaults dict that, if provided, overrides any values assigned to arguments in self.__init__
+
         """
 
         # Get args in call to constructor and create dictionary of their default values (for use below)
@@ -1197,10 +1200,13 @@ class Component(object):
         defaults_dict = {}
         for arg_name, arg in inspect.signature(self.__init__).parameters.items():
             defaults_dict[arg_name] = arg.default
+        if defaults:
+            defaults_dict.update(defaults)
         def default(val):
             try:
                 return defaults_dict[val]
             except KeyError:
+                # FIX: IF CUSTOM_FUNCTION IS IN PARAMS, TRY GETTING ITS ARGS
                 # raise ComponentError("PROGRAM ERROR: \'{}\' not declared in {}.__init__() "
                 #                      "but expected by its parent class ({}).".
                 #                      format(val,
