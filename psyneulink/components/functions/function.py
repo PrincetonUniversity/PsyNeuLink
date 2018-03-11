@@ -1330,14 +1330,14 @@ class UserDefinedFunction(Function_Base):
             # Assign any specified modulatory params to their respective modulatory_param and delete from set
             if PARAMS in args:
                 if args[PARAMS] is not None and not args[PARAMS] is _empty:
-                    params = args[PARAMS]
-                    if ADDITIVE_PARAM in params:
-                        self.additive_param = params[ADDITIVE_PARAM]
+                    cust_fct_params = args[PARAMS]
+                    if ADDITIVE_PARAM in cust_fct_params:
+                        self.additive_param = cust_fct_params[ADDITIVE_PARAM]
                         # del params[ADDITIVE_PARAM]
-                    if MULTIPLICATIVE_PARAM in params:
-                        self.multiplicative_param = params[MULTIPLICATIVE_PARAM]
+                    if MULTIPLICATIVE_PARAM in cust_fct_params:
+                        self.multiplicative_param = cust_fct_params[MULTIPLICATIVE_PARAM]
                         # del params[MULTIPLICATIVE_PARAM]
-                    args.update(args[PARAMS])
+                    # args.update(args[PARAMS])
                 # del args[PARAMS]
             if CONTEXT in args and args[CONTEXT] is _empty:
                 args[CONTEXT] = None
@@ -1348,6 +1348,14 @@ class UserDefinedFunction(Function_Base):
         if params is not None and CUSTOM_FUNCTION in params:
             custom_function = params[CUSTOM_FUNCTION]
         cust_fct_variable, self.cust_fct_params = get_cust_fct_args(custom_function)
+
+        if PARAMS in self.cust_fct_params:
+            if self.cust_fct_params[PARAMS]:
+                if params:
+                    params.update(self.cust_fct_params)
+                else:
+                    params = self.cust_fct_params[PARAMS]
+            del self.cust_fct_params[PARAMS]
 
         # Assign variable to default_variable if latter was not specified
         if default_variable is None:
