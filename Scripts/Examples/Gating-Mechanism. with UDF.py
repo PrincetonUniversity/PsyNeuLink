@@ -4,7 +4,7 @@ import psyneulink as pnl
 
 
 def my_linear_fct(x,
-                  m=1.0,
+                  m=2.0,
                   b=0.0,
                   params={pnl.ADDITIVE_PARAM:'b',
                           pnl.MULTIPLICATIVE_PARAM:'m'}):
@@ -17,9 +17,9 @@ def my_simple_linear_fct(x,
     return m * x + b
 
 def my_exp_fct(x,
-               r=1,
+               r=1.0,
                # b=pnl.CONTROL,
-               b=0,
+               b=0.0,
                params={pnl.ADDITIVE_PARAM:'b',
                        pnl.MULTIPLICATIVE_PARAM:'r'}
                ):
@@ -50,17 +50,17 @@ Output_Layer = pnl.TransferMechanism(
         #                pnl.FUNCTION: my_sinusoidal_fct}
         output_states={pnl.NAME: 'RESULTS USING UDF',
                        # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
-                       # pnl.FUNCTION: pnl.Linear(slope=pnl.GATING)
+                       pnl.FUNCTION: pnl.Linear(slope=pnl.GATING)
                        # pnl.FUNCTION: pnl.Logistic(gain=pnl.GATING)
                        # pnl.FUNCTION: my_linear_fct
                        # pnl.FUNCTION: my_exp_fct
-                       pnl.FUNCTION:pnl.UserDefinedFunction(custom_function=my_simple_linear_fct,
-                                                            params={pnl.ADDITIVE_PARAM:'b',
-                                                                    pnl.MULTIPLICATIVE_PARAM:'m',
-                                                                    },
-                                                            m=pnl.GATING,
-                                                            b=2.0
-                                                            )
+                       # pnl.FUNCTION:pnl.UserDefinedFunction(custom_function=my_simple_linear_fct,
+                       #                                      params={pnl.ADDITIVE_PARAM:'b',
+                       #                                              pnl.MULTIPLICATIVE_PARAM:'m',
+                       #                                              },
+                                                            # m=pnl.GATING,
+                                                            # b=2.0
+                                                            # )
                        }
 )
 

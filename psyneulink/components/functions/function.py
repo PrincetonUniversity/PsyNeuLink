@@ -1340,24 +1340,23 @@ class UserDefinedFunction(Function_Base):
                 - and dict with all others (to be assigned as params of UDF)
             """
             from inspect import signature, _empty
-            # arg_count = custom_function.__code__.co_argcount
             arg_names = custom_function.__code__.co_varnames
             args = {}
             defaults = {}
             for arg_name, arg in signature(custom_function).parameters.items():
-                # FIX: SAVE ORIGINAL VALUE TO PASS IN DEFAULTS TO _assign_args_to_param_dicts
-                # If arg is specified in the constructor for the UDF, assign that as its value
-                if arg_name in kwargs:
-                    args[arg_name] = kwargs[arg_name]
-                # Otherwise, use the default value from the definition of the function (if it exists)
-                else:
-                    args[arg_name] = arg.default
-                # Either way, use definition from the function (or None) as default,
-                #    (assigned to paramClassDefaults in _assign_args_to_params_dicts)
+                # Use definition from the function as default;
+                #    this allows UDF to assign a value for this instance (including a MODULATORY spec)
+                #    while assigning an actual value to paramClassDefaults (in _assign_args_to_params_dicts);
                 if arg.default is _empty:
                     defaults[arg_name] = None
                 else:
                     defaults[arg_name] = arg.default
+                # If arg is specified in the constructor for the UDF, assign that as its value
+                if arg_name in kwargs:
+                    args[arg_name] = kwargs[arg_name]
+                # Otherwise, use the default value from the definition of the function
+                else:
+                    args[arg_name] = defaults[arg_name]
 
             # Assign default value of first arg as variable and remove from dict
             variable = args[arg_names[0]]
@@ -1365,20 +1364,16 @@ class UserDefinedFunction(Function_Base):
                 variable = None
             del args[arg_names[0]]
 
-            # Assign any specified modulatory params to their respective modulatory_param and delete from set
-            if PARAMS in args:
-                if args[PARAMS] is not None and not args[PARAMS] is _empty:
-                    cust_fct_params = args[PARAMS]
-                    if ADDITIVE_PARAM in cust_fct_params:
-                        self.additive_param = cust_fct_params[ADDITIVE_PARAM]
-                        # del params[ADDITIVE_PARAM]
-                    if MULTIPLICATIVE_PARAM in cust_fct_params:
-                        self.multiplicative_param = cust_fct_params[MULTIPLICATIVE_PARAM]
-                        # del params[MULTIPLICATIVE_PARAM]
-                    # args.update(args[PARAMS])
-                # del args[PARAMS]
-            if CONTEXT in args and args[CONTEXT] is _empty:
-                args[CONTEXT] = None
+            # Assign any specified modulatory params to their respective modulatory_param
+            # if PARAMS in args:
+            #     if args[PARAMS] is not None and not args[PARAMS] is _empty:
+            #         cust_fct_params = args[PARAMS]
+            #         if ADDITIVE_PARAM in cust_fct_params:
+            #             self.additive_param = cust_fct_params[ADDITIVE_PARAM]
+            #         if MULTIPLICATIVE_PARAM in cust_fct_params:
+            #             self.multiplicative_param = cust_fct_params[MULTIPLICATIVE_PARAM]
+            # if CONTEXT in args and args[CONTEXT] is _empty:
+            #     args[CONTEXT] = None
 
             return variable, args, defaults
 
@@ -1410,7 +1405,8 @@ class UserDefinedFunction(Function_Base):
         params = self._assign_args_to_param_dicts(custom_function=custom_function,
                                                   params=params,
                                                   defaults=defaults,
-                                                  **self.cust_fct_params)
+                                                  **self.cust_fct_params
+                                                  )
 
         super().__init__(default_variable=default_variable,
                          params=params,

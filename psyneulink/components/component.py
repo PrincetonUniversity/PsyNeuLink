@@ -2653,8 +2653,10 @@ class Component(object):
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
                 from psyneulink.components.functions.function import UserDefinedFunction
-                self.function = UserDefinedFunction(default_variable=self.instance_defaults.variable, owner=self,
-                                                    custom_function=function, context=context).function
+                self.function = UserDefinedFunction(default_variable=self.instance_defaults.variable,
+                                                    owner=self,
+                                                    custom_function=function,
+                                                    context=context).function
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
