@@ -10,14 +10,19 @@ def my_linear_fct(x,
                           pnl.MULTIPLICATIVE_PARAM:'m'}):
     return m * x + b
 
-def my_simple_linear_fct(x, m=1.0, b=0.0):
+def my_simple_linear_fct(x,
+                         m=1.0,
+                         b=0.0
+                         ):
     return m * x + b
 
 def my_exp_fct(x,
                r=1,
+               # b=pnl.CONTROL,
                b=0,
                params={pnl.ADDITIVE_PARAM:'b',
-                       pnl.MULTIPLICATIVE_PARAM:'r'}):
+                       pnl.MULTIPLICATIVE_PARAM:'r'}
+               ):
     return x**r + b
 
 def my_sinusoidal_fct(input,
@@ -49,7 +54,8 @@ Output_Layer = pnl.TransferMechanism(
                        # pnl.FUNCTION: my_exp_fct
                        pnl.FUNCTION:pnl.UserDefinedFunction(custom_function=my_simple_linear_fct,
                                                             params={pnl.ADDITIVE_PARAM:'b',
-                                                                    pnl.MULTIPLICATIVE_PARAM:'m'}
+                                                                    pnl.MULTIPLICATIVE_PARAM:'m',
+                                                                    }
                                                             )
                        }
 )

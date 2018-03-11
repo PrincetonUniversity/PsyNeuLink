@@ -1067,7 +1067,9 @@ class UserDefinedFunction(Function_Base):
       as the UDF's `variable <UserDefinedFunction.variable>` attribute. When the function or method wrapped by the
       UDF is called, an initial attempt is made to do so with **variable** as the name of the first argument; if that
       fails, it is called positionally.  The argument is always passed as a 2d np.array, that may contain one or more
-      items (elements in axis 0), depending upon the Component to which the UDF is assigned.
+      items (elements in axis 0), depending upon the Component to which the UDF is assigned.  It is the user's
+      responsibility to insure that the number of items expected in its first argument is compatible with circumstances
+      in which it will be used.
     ..
     .. _UDF_Additional_Arguments:
 
@@ -1118,31 +1120,90 @@ class UserDefinedFunction(Function_Base):
     Examples
     --------
 
+    .. _UDF_Example_1:
+
     *Assignment of a custom function to a Mechanism*
 
-    Below are some examples of the use of UDFs for assigning a custom function to Mechanisms and States:
-
-
-    If you want a mechanism that takes in a vector of length 3, then calculates the sum and adds 2, you could write::
+    The following example assigns a simple lambda function that returns the sum of the elements of a 1d array) to a
+    `TransferMechanism`::
 
         >>> import psyneulink as pnl
-        >>> def my_function(variable):
-        ...     return sum(variable[0]) + 2
-        >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
-        >>> myMech.execute(input = [1, 2, 3])
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0,0,0]],
+        ...                                   function=lambda x:sum(x[0]))
 
-    Equivalently, you can also explicitly create a `UserDefinedFunction` and use it as the function::
+    Calling::
 
-        >>> import psyneulink as pnl
-        >>> def myFunction(variable, params, context):
-        ...     return sum(variable[0]) + 2
-        >>> U = pnl.UserDefinedFunction(custom_function=myFunction, default_variable = [[0, 0, 0]])
-        >>> myMech = pnl.ProcessingMechanism(function = U, size = 3, name = 'myMech')
-        >>> myMech.execute(input = [1, 2, 3])
+        >>> my_mech.execute(input = [1, 2, 3])
 
-    .. note::
-        Be sure to match the **default_variable** argument of the `UserDefinedFunction` with the **default_variable**
-        of the Mechanism. (In this example, for `myMech`, `size = 3` is equivalent to `default_variable = [[0, 0, 0]]`.)
+    will return ``6``.  Note that the function treats its argument, x, as a 2d array, and accesses its first item for
+    the calculation.  This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the
+    **size** argument of its constructor as having a single item (a 1d array of length 3;  (see `size
+    <Component.size>`).  In the following example, a function is defined for a Mechanism in which the variable
+    has two items, that are summed by the function::
+
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=lambda x: x[0] + x[1]))
+
+    Calling::
+
+        >>> my_mech.execute(input = [[1],[2]])
+
+    will return ``3``.
+
+    The **function** argument can also be assigned a function defined in Python::
+
+        >>> def my_fct(variable):
+        ...     return variable[0] + variable[1]
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=my_fct)
+
+    This will produce the same result as the last example.  This can be useful for assigning the function to more than
+    one Component.
+
+    In all of the examples above, a UDF was automatically created for the functions assigned the Mechanism.  A UDF
+    can also be created explicitly, as follows:
+
+        >>> def my_fct(variable):
+        ...     return variable[0] + variable[1]
+        >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_fct)
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=my_UDF)
+
+    Functions with more than one parameter can also be used;  for example::
+
+        >>> def my_sinusoidal_fct(input,
+        ...                      phase=0,
+        ...                      amplitude=1):
+        ...    frequency = input[0]
+        ...    t = input[1]
+        ...    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
+        >>> my_wave_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                        function=my_sinusoidal_fct)
+
+    Note that ``input`` is used as the name of the first argument, instead of ``variable`` as in the examples above.
+    The name of the first argument of a function to be "wrapped" as a UDF does not matter;  in general it is good
+    practice to use ``variable``, as that the `variable <Component.variable>` of the Component to which the UDF is
+    assigned is what is passed as the function's first argument.  However, if it is helpful to name it something
+    else, that is fine.
+
+    Notice also that the function assumes that it gets two items in its ``input`` argument, that it assigns to
+    the ``frequncy`` and ``t`` variables of the function.  The function also has two other arguments, ``phase``
+    and ``amplitude``.   When it is wrapped as a UDF, ``my_wave_mech`` is assigned `ParameterStates <ParameterState>`
+    for these parameters, that can then be modified by `ControlSignals <ControlSignal>`.
+
+
+
+        >>> def my_sinusoidal_fct(input,
+        ...                      phase=0,
+        ...                      amplitude=1,
+        ...                      params={pnl.ADDITIVE_PARAM:'phase',
+        ...                              pnl.MULTIPLICATIVE_PARAM:'amplitude'}):
+            frequency = input[0]
+            t = input[1]
+            return amplitude * np.sin(2 * np.pi * frequency * t + phase)
+
+    *Assignment of a custom function to a State*
+
 
     Custom functions can be as elaborate as desired, and can even include PsyNeuLink functions indirectly, such as::
 
