@@ -983,73 +983,6 @@ class UserDefinedFunction(Function_Base):
          name=None,             \
          prefs=None             \
     )
-    COMMENT:
-        CW 1/25/18: Below is the documentation from before I modified the UserDefinedFunction. I leave it here as a
-        comment. Also, this doc is a bit long: should it be a separate doc page?
-
-        Implement user-defined Function.
-
-        This is used to "wrap" custom functions in the PsyNeuLink `Function API <LINK>`.
-        It is automatically invoked and applied to any function that is assigned to the `function <Component.function>`
-        attribute of a PsyNeuLink component (other than a Function itself).  The function can take any arguments and
-        return any values.  However, if UserDefinedFunction is used to create a custom version of another PsyNeuLink
-        `Function <Function>`, then it must conform to the requirements of that Function's type.
-
-        .. note::
-            Currently the arguments for the `function <UserDefinedFunction.function>` of a UserDefinedFunction are NOT
-            assigned as attributes of the UserDefinedFunction object or its owner, nor to its :keyword:`user_params` dict.
-    COMMENT
-
-    COMMENT:  ADD THIS REGARDING CUST PARAMS INCLUDING MODULATORY PARAMS
-        # IMPLEMENTATION NOTE: PARSE ARGUMENTS FOR custom_function AND ASSIGN TO user_params
-        # USE params DICT TO SPECIFY WHICH ARGS ARE MODULATORY:
-        #            multiplicative_param, additive_param;
-        #            any others? -- interface with ModulationParam (ability to add new custom ones)
-        # API for using args of a function to specify params of a UDF
-        #    first arg must correspond to the variable of the UDF
-        #        this will always be passed, and will be the only argument passed when the function is called by PNL
-        #        doesn't matter what it is called (it will be not be passed by name
-        #    any other args will be used to define parameters, that will:
-        #        receive ParameterStates on any Mechanisms or Projections to which the function is assigned;
-        #        can be defined as ModulatoryParmas for any States to which the function is assigned
-        #    To declare modulatory params (additive_param and multiplicative_param) UserDefinedFunction must be
-        #        called explicitly, with a params dict that has entries mapping the arguments of the custom_function
-        #        to the desired modulatory params)
-        # NOTE: FOR NOW, CAN ONLY HANDLE LAMBDA FUNCTIONS WITH ONE ARG;  CAN FIX THIS LATER
-        #       (GETTING HUNG IN INIT WHEN TRYING TO CALL LAMBDA FUNCTION WITH A SINGLE ARGE (VARIABLE) THAT EXPECTS >1
-        # EXAMPLE:
-        #     def MSE_fct(input=0, extra=0):
-        #         return np.sum(input*input)/len(input+extra)
-        #     output_states=[{NAME: MSE,
-        #                     FUNCTION: lambda x: np.sum(x*x)/len(x)},
-        #                    {NAME: MSE,
-        #                     FUNCTION: MSE_fct,                                                   <- Simple case
-        #                     FUNCTION: UserDefinedFunction(custom_function=MSE_fct,               <- Case that defines
-        #                                                   params={MULTIPLICATIVE_PARAM:'extra'})    modulatory_params
-        #                     }
-        #     ]
-
-
-        from psyneulink.components.functions.function import MULTIPLICATIVE_PARAM, UserDefinedFunction
-        # def MSE_fct(input=0):
-        #     return np.sum(input*input)/len(input)
-        # def MSE_fct(input=0, extra=0, params={MULTIPLICATIVE_PARAM:'extra'}):
-        #     return np.sum(input*input)/len(input+extra)
-        def MSE_fct(input, extra=1, params={MULTIPLICATIVE_PARAM:'extra'}):
-            return np.sum(input*input)/len(input+extra)
-
-        # standard_output_states.extend([{NAME: SSE,
-        #                                 FUNCTION: lambda x: np.sum(x*x)},
-        #                                 FUNCTION: lambda x,y: np.sum(x*y)/len(x)}])
-        #                                 FUNCTION: lambda x=1,y=2: np.sum(x*y)/len(x)}])
-        #                                 FUNCTION: MSE_fct}])
-        #                                 FUNCTION: UserDefinedFunction(custom_function=MSE_fct).custom_function}])
-        #                                 FUNCTION: UserDefinedFunction(custom_function=MSE_fct,
-        #                                                               params={
-        #                                                                   MULTIPLICATIVE_PARAM:'extra'}).custom_function}])
-
-
-    COMMENT
 
     .. _UDF_Description:
 
@@ -1064,24 +997,25 @@ class UserDefinedFunction(Function_Base):
     .. _UDF_Variable:
 
     * It must have **at least one argument** (that can be a positional or a keyword argument);  this will be treated
-      as the UDF's `variable <UserDefinedFunction.variable>` attribute. When the function or method wrapped by the
-      UDF is called, an initial attempt is made to do so with **variable** as the name of the first argument; if that
-      fails, it is called positionally.  The argument is always passed as a 2d np.array, that may contain one or more
-      items (elements in axis 0), depending upon the Component to which the UDF is assigned.  It is the user's
-      responsibility to insure that the number of items expected in its first argument is compatible with circumstances
-      in which it will be used.
+      as the `variable <UserDefinedFunction.variable>` attribute of the UDF's `function <UserDefinedFunction.function>`.
+      When the UDF calls the function or method that it wraps, an initial attempt is made to do so with **variable**
+      as the name of the first argument; if that fails, it is called positionally.  The argument is always passed as a
+      2d np.array, that may contain one or more items (elements in axis 0), depending upon the Component to which the
+      UDF is assigned.  It is the user's responsibility to insure that the number of items expected in the first
+      argument of the function or method is compatible with the circumstances in which it will be called.
     ..
     .. _UDF_Additional_Arguments:
 
-    * It my have have any number of additional arguments (positional and/or keyword);  these are treated as parameters
-      of the UDF, and can be modulated by `ModulatorySignals <Modulatory>` like the parameters of ordinary PsyNeuLink
-      `Functions <Function>`.  If the UDF is assigned to (or automatically created for) a `Mechanism` or `Projection`,
-      these parameters are each automatically assigned a `ParameterState` so that they can be modulated by
-      `ControlSignals <ControlSignal>` or `LearningSignals <LearningSignal>`, respectively.  If the UDF is assigned to
-      (or automatically created for) an `InputState` or `OutputState`, and any of the parameters are specified as
-      `Function_Modulatory_Params` (see `below <UDF_Modulatory_Params>`), then they can be modulated by `GatingSignals
-      <GatingSignal>`. The function or method wrapped by the UDF is called with these parameters by their name and with
-      their current values (i.e., as determined by any modulatory influences to which they are subject).
+    * It may have have **any number of additional arguments** (positional and/or keyword);  these are treated as
+      parameters of the UDF, and can be modulated by `ModulatorySignals <ModulatorySignal>` like the parameters of
+      ordinary PsyNeuLink `Functions <Function>`.  If the UDF is assigned to (or automatically created for) a
+      `Mechanism` or `Projection <Projection>`, these parameters are each automatically assigned a `ParameterState`
+      so that they can be modulated by `ControlSignals <ControlSignal>` or `LearningSignals <LearningSignal>`,
+      respectively.  If the UDF is assigned to (or automatically created for) an `InputState` or `OutputState`,
+      and any of the parameters are specified as `Function_Modulatory_Params` (see `below <UDF_Modulatory_Params>`),
+      then they can be modulated by `GatingSignals <GatingSignal>`. The function or method wrapped by the UDF is
+      called with these parameters by their name and with their current values (i.e., as determined by any
+      `ModulatorySignals <ModulatorySignal>` assigned to them).
     ..
     .. _UDF_Params_Context:
 
@@ -1092,21 +1026,16 @@ class UserDefinedFunction(Function_Base):
     .. _UDF_Modulatory_Params:
 
     * The parameters of a UDF can be specified as `Function_Modulatory_Params` in a `parameter specification dictionary
-      <ParameterState_Specification>` assigned to the **params** argument of the constructor for the Python function or
-      UDF that includes either or both of the following two entries:  *MULTIPLICATIVE_PARAM*:<parameter name> and/or
-      *ADDITIVE_PARAM*:<parameter name>.  These are used only when the UDF is assigned as the `function
-      <State.function>` of an InputState or OutputState that receives one more more `GatingProjections
-      <GatingProjection>`.
+      <ParameterState_Specification>` assigned to the **params** argument of the constructor for either the Python
+      function or method, or of an explicitly defined UDF.  It can include either or both of the following two entries:
+         *MULTIPLICATIVE_PARAM*: <parameter name>\n
+         *ADDITIVE_PARAM*: <parameter name>
+      These are used only when the UDF is assigned as the `function <State_Base.function>` of an InputState or
+      OutputState that receives one more more `GatingProjections <GatingProjection>`.
 
       COMMENT:
       # IMPLEMENT INTERFACE FOR OTHER ModulationParam TYPES (i.e., for ability to add new custom ones)
       COMMENT
-
-    .. note::
-        Note that variable's format may be slightly different than expected, because PsyNeuLink may change the
-        formatting while processing the input. For example, PsyNeuLink converts an input of [1, 2, 3] to [[1, 2, 3]].
-        For example, if the custom_function returns the sum of its input, `sum(variable[0])` should be used, and not
-        `sum(variable)`.
 
     .. tip::
        The format of the `variable <UserDefinedFunction.variable>` passed to the `custom_function
@@ -1116,9 +1045,7 @@ class UserDefinedFunction(Function_Base):
     Examples
     --------
 
-    .. _UDF_Example_1:
-
-    *Assignment of a custom function to a Mechanism*
+    **Assigning a custom function to a Mechanism**
 
     The following example assigns a simple lambda function that returns the sum of the elements of a 1d array) to a
     `TransferMechanism`::
@@ -1131,8 +1058,8 @@ class UserDefinedFunction(Function_Base):
 
         >>> my_mech.execute(input = [1, 2, 3])
 
-    will return ``6``.  Note that the function treats its argument, x, as a 2d array, and accesses its first item for
-    the calculation.  This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the
+    return ``[[6]]``.  Note that the function treats its argument, x, as a 2d array, and accesses its first item
+    for the calculation.  This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the
     **size** argument of its constructor as having a single item (a 1d array of length 3;  (see `size
     <Component.size>`).  In the following example, a function is defined for a Mechanism in which the variable
     has two items, that are summed by the function::
@@ -1144,7 +1071,7 @@ class UserDefinedFunction(Function_Base):
 
         >>> my_mech.execute(input = [[1],[2]])
 
-    will return ``3``.
+    returns ``[[3]]``.
 
     The **function** argument can also be assigned a function defined in Python::
 
@@ -1191,8 +1118,8 @@ class UserDefinedFunction(Function_Base):
     that don't define default values.  For example::
 
         >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct,
-        ...                                  phase=1,
-        ...                                  amplitude=0)
+        ...                                  phase=10,
+        ...                                  amplitude=3)
         >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
         ...                                   function=my_UDF)
 
@@ -1205,40 +1132,69 @@ class UserDefinedFunction(Function_Base):
 
         >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
         ...                                   function=UserDefinedFunction(custom_function=my_sinusoidal_fct,
-        ...                                                                amplitude=pnl.CONTROL))
+        ...                                                                amplitude=(1.0, pnl.CONTROL))
 
-    This specifies that the ``amplitude`` parameter of the ``my_sinusoidal_fct`` function assigned to ``my_mech``
-    should be modulated by a `ControlSignal`.
+    This specifies that the default value of the ``amplitude`` parameter of ``my_sinusoidal_fct`` be ``1.0``, but
+    its value should be modulated by a `ControlSignal`.
 
-
-    COMMENT:
-    IMPLEMENT & DOCUMENT HOW TO ASSIGN ControlSignals HERE
-    COMMENT
-
-    XXXXXXX
-
-
-    *Assignment of a custom function to a State*
-
-        >>> def my_sinusoidal_fct(input,
-        ...                      phase=0,
-        ...                      amplitude=1,
-        ...                      params={pnl.ADDITIVE_PARAM:'phase',
-        ...                              pnl.MULTIPLICATIVE_PARAM:'amplitude'}):
-            frequency = input[0]
-            t = input[1]
-            return amplitude * np.sin(2 * np.pi * frequency * t + phase)
-
-
-
-    Custom functions can be as elaborate as desired, and can even include PsyNeuLink functions indirectly, such as::
+    Custom functions can be as elaborate as desired, and can even include other PsyNeuLink `Functions <Function>`
+    indirectly, such as::
 
         >>> import psyneulink as pnl
         >>> L = pnl.Logistic(gain = 2)
-        >>> def myFunction(variable, params, context):
+        >>> def my_fct(variable):
         ...     return L.function(variable) + 2
-        >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
-        >>> myMech.execute(input = [1, 2, 3])
+        >>> my_mech = pnl.ProcessingMechanism(size = 3, function = my_fct)
+
+    Calling::
+
+        >>> my_mech.execute(input = [1, 2, 3])
+
+    returns ``[[ 2.88079708  2.98201379  2.99752738]]``.
+
+    **Assigning of a custom function to a State**
+
+    A custom function can also be assigned as the `function <State_Base.function>` of an `InputState` or `OutputState`.
+    For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputState.function>` of an OutputState
+    of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
+
+        >>> my_wave_mech = pnl.ProcessingMechanism(size=3,
+        ...                                        function=Logistic,
+        ...                                        output_states={NAME: 'SINUSOIDAL OUTPUT',
+        ...                                                       FUNCTION: my_sinusoidal_fct})
+
+    The parameters of a custom function assigned to an InputState or OutputState can also be used for `gating
+    <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be defined.
+    This can be done in the **param** argument of the definition of the function itself::
+
+        >>> def my_sinusoidal_fct(input,
+        ...                      phase=0,
+        ...                      amplitude=1):
+        ...                      params={pnl.ADDITIVE_PARAM:'phase',
+        ...                              pnl.MULTIPLICATIVE_PARAM:'amplitude'}):
+        ...    frequency = input[0]
+        ...    t = input[1]
+        ...    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
+
+    Even if they are not defined in the function itself, they can still be included in the explicit definition
+    of a UDF, such as::
+
+        >>> def my_linear_fct(x, m=1, b=0):
+        ...     return m*x+b
+        >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_linear_fct,
+        ...                                  params={pnl.ADDITIVE_PARAM:'b',
+        ...                                          pnl.MULTIPLICATIVE_PARAM:'m'})
+
+    These can now be used for gating, either by referencing them in the definition of a `GatingSignal`, or where the
+    function is defined for an InputState or OutputState.  For example::
+
+        >>> my_mech = pnl.ProcessingMechanism(function=Logistic,
+        ...                                   output_states={NAME: 'GATED OUTPUT_STATE',
+        ...                                                  FUNCTION: my_linear_fct(m=(2.0, GATING)})
+
+    assigns ``my_linear_fct`` as the `function <OutputState.function>` for the `Primary OutputState
+    <OutputState_Primary>` of ``my_mech``, and specifies ``m`` to be modulated by a `GatingSignal`, with a
+    default value of ``2.0``.
 
 
     Arguments
@@ -1258,9 +1214,12 @@ class UserDefinedFunction(Function_Base):
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
         This can be used to define an `additive_param <UserDefinedFunction.additive_param>` and/or
-        `multiplicative_param <UserDefinedFunction.multiplicative_param>` for the UDF, by including
-        *ADDITIVE_PARAM*:<param_name> and/or *MULTIPLICATIVE_PARAM*:<param_name> entries. Values specified for
-        parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
+        `multiplicative_param <UserDefinedFunction.multiplicative_param>` for the UDF, by including one or both
+        of the following entries:\n
+          *ADDITIVE_PARAM*: <param_name>\n
+          *MULTIPLICATIVE_PARAM*: <param_name>\n
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of
+        the constructor.
 
     owner : Component
         `component <Component>` to which to assign the Function.
