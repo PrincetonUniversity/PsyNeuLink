@@ -1337,7 +1337,8 @@ class UserDefinedFunction(Function_Base):
             """Get args of custom_function
             Return:
                 - value of first arg (to be used as default_variable for UDF)
-                - and dict with all others (to be assigned as params of UDF)
+                - dict with all others (to be assigned as params of UDF)
+                - dict with default values (from function definition, else set to None)
             """
             from inspect import signature, _empty
             arg_names = custom_function.__code__.co_varnames
@@ -1363,17 +1364,6 @@ class UserDefinedFunction(Function_Base):
             if variable is _empty:
                 variable = None
             del args[arg_names[0]]
-
-            # Assign any specified modulatory params to their respective modulatory_param
-            # if PARAMS in args:
-            #     if args[PARAMS] is not None and not args[PARAMS] is _empty:
-            #         cust_fct_params = args[PARAMS]
-            #         if ADDITIVE_PARAM in cust_fct_params:
-            #             self.additive_param = cust_fct_params[ADDITIVE_PARAM]
-            #         if MULTIPLICATIVE_PARAM in cust_fct_params:
-            #             self.multiplicative_param = cust_fct_params[MULTIPLICATIVE_PARAM]
-            # if CONTEXT in args and args[CONTEXT] is _empty:
-            #     args[CONTEXT] = None
 
             return variable, args, defaults
 
