@@ -624,6 +624,8 @@ OUTPUT_STATE_TYPE = 'outputStateType'
 PRIMARY = 0
 SEQUENTIAL = 'SEQUENTIAL'
 
+DEFAULT_VARIABLE_SPEC = (OWNER_VALUE, 0)
+
 # This is a convenience class that provides list of standard_output_state names in IDE
 class OUTPUTS():
     RESULT=RESULT
@@ -865,7 +867,9 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
+                               # DEFAULT_VARIABLE_SPEC: [(OWNER_VALUE, 0)]
+                               })
     #endregion
 
     @tc.typecheck
@@ -920,11 +924,22 @@ class OutputState(State_Base):
         if variable is None:
             if reference_value is None:
                 # variable = owner.instance_defaults.value[0]
-                variable = (OWNER_VALUE, 0) # Default is 1st item of owner.value
+                # variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC] # Default is 1st item of owner.value
+                variable = DEFAULT_VARIABLE_SPEC
             else:
                 variable = reference_value
+        # MODIFIED 3/10/18 OLD:
         if not is_numeric(variable):
             self._variable = variable
+        # # MODIFIED 3/10/18 NEW:
+        # # FIX: SHOULD HANDLE THIS MORE GRACEFULLY IN _instantiate_state and/or instaniate_output_state
+        # # If variable is numeric, assume it is a default spec passed in that had been parsed for initializatoin purposes
+        # if is_numeric(variable):
+        #     # self._variable = self.paramClassDefaults[DEFAULT_VARIABLE_SPEC]
+        #     self._variable = DEFAULT_VARIABLE_SPEC
+        # else:
+        #     self._variable = variable
+        # MODIFIED 3/10/18 END:
 
 
         # FIX: 5/26/16
@@ -949,38 +964,15 @@ class OutputState(State_Base):
         """
         return
 
-        # if reference_value is not None and not iscompatible(reference_value, self.instance_defaults.variable):
-        # if (reference_value is not None and
-        #         not iscompatible(reference_value, self._get_state_function_value(self.owner,
-        #                                                                          self.function,
-        #                                                                          self.variable))):
-        #     name = self.name or ""
-        #     raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
-        #                            "with its expected format ({})".
-        #                            format(name, self.componentName, self.owner.name, self.instance_defaults.variable, reference_value))
+    def _instantiate_attributes_before_function(self, context=None):
+        """Instantiate default variable if it is None or numeric
+        """
+        super()._instantiate_attributes_before_function(context=context)
 
-        # if reference_value is not None:
-        #     fct_val = self.function(self.variable)
-        #     if not iscompatible(reference_value, fct_val):
-        #         name = self.name or ""
-        #         raise OutputStateError("Value specified for {} {} of {} ({}) is not compatible "
-        #                                "with its expected format ({})".
-        #                                format(name, self.componentName, self.owner.name,
-        #                                       self.instance_defaults.variable, reference_value))
-
-    # def _instantiate_function(self, context=None):
-    #     """Parse variable specification and instantiate lambda function that passes it to specified function
-    #     """
-    #     super()._instantiate_function(context=context)
-    #
-    # def _instantiate_attributes_after_function(self, context=None):
-    #     """Instantiate assign function
-    #     """
-    #     super()._instantiate_attributes_after_function(context=context)
-    #
-    #     # If ASSIGN is specified as a Function or other callable object, assume it takes only a single argument,
-    #     #    and instantiate it as a lambda function that is called with OutputState's value as its argument
-    #     self.assign = _parse_output_state_function(self.assign)
+        # If variable has not been assigned, or it is numeric (in which case it can be assumed that
+        #    the value was a reference_value generated during initialization/parsing and passed in the constructor
+        if self._variable is None or is_numeric(self._variable):
+            self._variable = DEFAULT_VARIABLE_SPEC
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -1069,7 +1061,6 @@ class OutputState(State_Base):
                              context=context)
         return value
 
-
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
 
@@ -1104,8 +1095,11 @@ class OutputState(State_Base):
         state_spec = state_specific_spec
 
         if isinstance(state_specific_spec, dict):
-            return None, state_specific_spec
-            state_dict[VARIABLE] = _parse_output_state_variable(owner, state_dict[VARIABLE])
+            # state_dict[VARIABLE] = _parse_output_state_variable(owner, state_dict[VARIABLE])
+            # # MODIFIED 3/10/18 NEW:
+            # if state_dict[VARIABLE] is None:
+            #     state_dict[VARIABLE] = DEFAULT_VARIABLE_SPEC
+            # # MODIFIED 3/10/18 END
             return None, state_specific_spec
 
         elif isinstance(state_specific_spec, ProjectionTuple):
@@ -1189,8 +1183,25 @@ class OutputState(State_Base):
         # -- CALL TO GET DEFAULT VALUE AND RETURN THAT (CAN'T USE VARIABLE SINCE DON'T KNOW MECH YET)
         #      THOUGH COULD PASS IN OWNER TO DETERMINE IT
         fct_variable = _parse_output_state_variable(owner, variable)
+
+        # If variable has not been specified, assume it is the default of (OWNER_VALUE,0), and use that value
+        if fct_variable is None:
+            if owner.value is not None:
+                fct_variable = owner.value[0]
+            # Get owner's value by calling its function
+            else:
+                owner.function(owner.variable)[0]
+
         fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable is PARAMS_DICT)
-        return fct(fct_variable)
+
+        try:
+            return fct(variable=fct_variable)
+        except:
+            try:
+                return fct(fct_variable)
+            except TypeError as e:
+                raise OutputStateError("Error in function assigned to {} of {}: {}".
+                                       format(OutputState.__name__, owner.name, e.args[0]))
 
     @property
     def variable(self):
@@ -1581,7 +1592,6 @@ def  _parse_output_state_variable(owner, variable, output_state_name=None):
     def parse_variable_spec(spec):
         from psyneulink.components.mechanisms.mechanism import MechParamsDict
         if spec is None or is_numeric(spec) or isinstance(spec, MechParamsDict):
-        # if spec is None or is_numeric(spec) or isinstance(spec, dict):
             return spec
         elif isinstance(spec, tuple):
             # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))

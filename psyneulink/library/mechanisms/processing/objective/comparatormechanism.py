@@ -316,12 +316,13 @@ class ComparatorMechanism(ObjectiveMechanism):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
+
+    from psyneulink.components.functions.function import MULTIPLICATIVE_PARAM, UserDefinedFunction
     standard_output_states.extend([{NAME: SSE,
                                     FUNCTION: lambda x: np.sum(x*x)},
                                    {NAME: MSE,
                                     FUNCTION: lambda x: np.sum(x*x)/len(x)}])
 
-    # MODIFIED 10/10/17 OLD:
     @tc.typecheck
     def __init__(self,
                  default_variable=None,

@@ -193,7 +193,7 @@ from psyneulink.components.shellclasses import Function
 from psyneulink.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, \
     AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, \
-    COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, \
+    COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY,\
     DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
     DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
     EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, \
@@ -205,7 +205,7 @@ from psyneulink.globals.keywords import \
     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_ABS_INDICATOR, MAX_VAL, MAX_ABS_VAL, \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
-    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, \
+    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMS, PARAMETER_STATE_PARAMS, PEARSON, \
     PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
     RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, \
     STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, \
@@ -975,77 +975,226 @@ class ArgumentTherapy(Function_Base):
 
 class UserDefinedFunction(Function_Base):
     """
-    UserDefinedFunction(           \
-         custom_function=None,           \
-         default_variable=None,      \
-         params=None,        \
-         owner=None,         \
-         name=None,          \
-         prefs=None          \
+    UserDefinedFunction(        \
+         custom_function=None,  \
+         default_variable=None, \
+         params=None,           \
+         owner=None,            \
+         name=None,             \
+         prefs=None             \
     )
-    COMMENT:
-        CW 1/25/18: Below is the documentation from before I modified the UserDefinedFunction. I leave it here as a
-        comment. Also, this doc is a bit long: should it be a separate doc page?
 
-        Implement user-defined Function.
+    .. _UDF_Description:
 
-        This is used to "wrap" custom functions in the PsyNeuLink `Function API <LINK>`.
-        It is automatically invoked and applied to any function that is assigned to the `function <Component.function>`
-        attribute of a PsyNeuLink component (other than a Function itself).  The function can take any arguments and
-        return any values.  However, if UserDefinedFunction is used to create a custom version of another PsyNeuLink
-        `Function <Function>`, then it must conform to the requirements of that Function's type.
+    A UserDefinedFunction (UDF) is used to "wrap" a Python function or method, including a lamdba function,
+    as a PsyNeuLink `Function`, so that it can be used as the `function <Component.function>` of a `Component
+    <Component>`.  This is done automatically if a Python function or method is assigned as the `function
+    <Component.function>` attribute of a Component.  A Python function or method can also be wrapped on its own,
+    by calling the UserDefinedFunction constructor, and assigning the Python function or method as its
+    **custom_function** argument.  The Python function or method must obey the following conventions to be treated
+    correctly as a UserDefinedFunction (UDF):
 
-        .. note::
-            Currently the arguments for the `function <UserDefinedFunction.function>` of a UserDefinedFunction are NOT
-            assigned as attributes of the UserDefinedFunction object or its owner, nor to its :keyword:`user_params` dict.
-    COMMENT
+    .. _UDF_Variable:
 
-    This is used to "wrap" custom functions in the PsyNeuLink Function API. It is automatically invoked and applied to
-    user-defined functions that are assigned to the `function <Component.function>` attribute of a PsyNeuLink component
-    (other than a Function itself). UserDefinedFunction is generally used with `ProcessingMechanism`. For example, if
-    you want a mechanism that takes in a vector of length 3, then calculates the sum and adds 2, you could write::
+    * It must have **at least one argument** (that can be a positional or a keyword argument);  this will be treated
+      as the `variable <UserDefinedFunction.variable>` attribute of the UDF's `function <UserDefinedFunction.function>`.
+      When the UDF calls the function or method that it wraps, an initial attempt is made to do so with **variable**
+      as the name of the first argument; if that fails, it is called positionally.  The argument is always passed as a
+      2d np.array, that may contain one or more items (elements in axis 0), depending upon the Component to which the
+      UDF is assigned.  It is the user's responsibility to insure that the number of items expected in the first
+      argument of the function or method is compatible with the circumstances in which it will be called.
+    ..
+    .. _UDF_Additional_Arguments:
+
+    * It may have have **any number of additional arguments** (positional and/or keyword);  these are treated as
+      parameters of the UDF, and can be modulated by `ModulatorySignals <ModulatorySignal>` like the parameters of
+      ordinary PsyNeuLink `Functions <Function>`.  If the UDF is assigned to (or automatically created for) a
+      `Mechanism` or `Projection <Projection>`, these parameters are each automatically assigned a `ParameterState`
+      so that they can be modulated by `ControlSignals <ControlSignal>` or `LearningSignals <LearningSignal>`,
+      respectively.  If the UDF is assigned to (or automatically created for) an `InputState` or `OutputState`,
+      and any of the parameters are specified as `Function_Modulatory_Params` (see `below <UDF_Modulatory_Params>`),
+      then they can be modulated by `GatingSignals <GatingSignal>`. The function or method wrapped by the UDF is
+      called with these parameters by their name and with their current values (i.e., as determined by any
+      `ModulatorySignals <ModulatorySignal>` assigned to them).
+    ..
+    .. _UDF_Params_Context:
+
+    * It may include **context** and **params** arguments;  these are not required, but can be included to receive
+      information about the current conditions of execution.  When the function or method is called, an initial attempt
+      is made to do so with these arguments; if that fails, it is called again without them.
+    ..
+    .. _UDF_Modulatory_Params:
+
+    * The parameters of a UDF can be specified as `Function_Modulatory_Params` in a `parameter specification dictionary
+      <ParameterState_Specification>` assigned to the **params** argument of the constructor for either the Python
+      function or method, or of an explicitly defined UDF.  It can include either or both of the following two entries:
+         *MULTIPLICATIVE_PARAM*: <parameter name>\n
+         *ADDITIVE_PARAM*: <parameter name>
+      These are used only when the UDF is assigned as the `function <State_Base.function>` of an InputState or
+      OutputState that receives one more more `GatingProjections <GatingProjection>`.
+
+      COMMENT:
+      # IMPLEMENT INTERFACE FOR OTHER ModulationParam TYPES (i.e., for ability to add new custom ones)
+      COMMENT
+
+    .. tip::
+       The format of the `variable <UserDefinedFunction.variable>` passed to the `custom_function
+       <UserDefinedFunction.custom_function>` function can be verified by adding a ``print(variable)`` or
+       ``print(type(variable))`` statement to the function.
+
+    Examples
+    --------
+
+    **Assigning a custom function to a Mechanism**
+
+    The following example assigns a simple lambda function that returns the sum of the elements of a 1d array) to a
+    `TransferMechanism`::
 
         >>> import psyneulink as pnl
-        >>> def myFunction(variable, params, context):
-        ...     return sum(variable[0]) + 2
-        >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
-        >>> myMech.execute(input = [1, 2, 3])
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0,0,0]],
+        ...                                   function=lambda x:sum(x[0]))
 
-    Equivalently, you can also explicitly create a `UserDefinedFunction` and use it as the function::
+    Calling::
 
-        >>> import psyneulink as pnl
-        >>> def myFunction(variable, params, context):
-        ...     return sum(variable[0]) + 2
-        >>> U = pnl.UserDefinedFunction(custom_function=myFunction, default_variable = [[0, 0, 0]])
-        >>> myMech = pnl.ProcessingMechanism(function = U, size = 3, name = 'myMech')
-        >>> myMech.execute(input = [1, 2, 3])
+        >>> my_mech.execute(input = [1, 2, 3])
 
-    .. note::
-        Be sure to match the **default_variable** argument of the `UserDefinedFunction` with the **default_variable**
-        of the Mechanism. (In this example, for `myMech`, `size = 3` is equivalent to `default_variable = [[0, 0, 0]]`.)
+    return ``[[6]]``.  Note that the function treats its argument, x, as a 2d array, and accesses its first item
+    for the calculation.  This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the
+    **size** argument of its constructor as having a single item (a 1d array of length 3;  (see `size
+    <Component.size>`).  In the following example, a function is defined for a Mechanism in which the variable
+    has two items, that are summed by the function::
 
-    Custom functions can be as elaborate as desired, and can even include PsyNeuLink functions indirectly, such as::
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=lambda x: x[0] + x[1]))
+
+    Calling::
+
+        >>> my_mech.execute(input = [[1],[2]])
+
+    returns ``[[3]]``.
+
+    The **function** argument can also be assigned a function defined in Python::
+
+        >>> def my_fct(variable):
+        ...     return variable[0] + variable[1]
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=my_fct)
+
+    This will produce the same result as the last example.  This can be useful for assigning the function to more than
+    one Component.
+
+    More complicated functions, including ones with more than one parameter can also be used;  for example::
+
+        >>> def my_sinusoidal_fct(input,
+        ...                      phase=0,
+        ...                      amplitude=1):
+        ...    frequency = input[0]
+        ...    t = input[1]
+        ...    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
+        >>> my_wave_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                        function=my_sinusoidal_fct)
+
+    Note that in this example, ``input`` is used as the name of the first argument, instead of ``variable``
+    as in the examples above. The name of the first argument of a function to be "wrapped" as a UDF does not matter;
+    in general it is good practice to use ``variable``, as the `variable <Component.variable>` of the Component
+    to which the UDF is assigned is what is passed to the function as its first argument.  However, if it is helpful to
+    name it something else, that is fine.
+
+    Notice also that in this example, the function assumes that it gets two items in its ``input`` argument,
+    that it assigns to the ``frequency`` and ``t`` variables of the function.  The function also has two other
+    arguments, ``phase`` and ``amplitude``.   When it is wrapped as a UDF, ``my_wave_mech`` is assigned
+    `ParameterStates <ParameterState>` for these parameters, that can then be modified by `ControlSignals
+    <ControlSignal>`.
+
+    In all of the examples above, a UDF was automatically created for the functions assigned to the Mechanism.  A UDF
+    can also be created explicitly, as follows:
+
+        >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct)
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=my_UDF)
+
+    When the UDF is defined explicitly, parameters of the function can be included as arguments to its constructor,
+    to assign them default values that differ from the those in the definition of the function, or for parameters
+    that don't define default values.  For example::
+
+        >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct,
+        ...                                  phase=10,
+        ...                                  amplitude=3)
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=my_UDF)
+
+    assigns ``my_sinusoidal_fct`` as the `function <Mechanism_Base.function>` for ``my_mech``, but with the default
+    values of its ``phase`` and ``amplitude`` parameters assigned new values.  This can be useful for assigning the
+    same function to different Mechanisms with different default values.
+
+    Explicitly defining the UDF can also be used to specify parameters of the function to be controlled, as in the
+    following example::
+
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=UserDefinedFunction(custom_function=my_sinusoidal_fct,
+        ...                                                                amplitude=(1.0, pnl.CONTROL))
+
+    This specifies that the default value of the ``amplitude`` parameter of ``my_sinusoidal_fct`` be ``1.0``, but
+    its value should be modulated by a `ControlSignal`.
+
+    Custom functions can be as elaborate as desired, and can even include other PsyNeuLink `Functions <Function>`
+    indirectly, such as::
 
         >>> import psyneulink as pnl
         >>> L = pnl.Logistic(gain = 2)
-        >>> def myFunction(variable, params, context):
+        >>> def my_fct(variable):
         ...     return L.function(variable) + 2
-        >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
-        >>> myMech.execute(input = [1, 2, 3])
+        >>> my_mech = pnl.ProcessingMechanism(size = 3, function = my_fct)
 
-    Custom functions should generally ignore the **params** and **context** arguments, since **variable** is
-    the input to the function.
+    Calling::
 
-    COMMENT:
-        CW 1/29/18: Adding params for custom functions sounds useful, but slightly thorny.
-    COMMENT
+        >>> my_mech.execute(input = [1, 2, 3])
 
-    .. note::
-        Note that variable's format may be slightly different than you expect, because PsyNeuLink may change the
-        formatting while processing the input. For example, PsyNeuLink converts an input of [1, 2, 3] to [[1, 2, 3]].
-        If your custom_function returns the sum of the input, you should use `sum(variable[0])` in this case rather
-        than `sum(variable)`. When in doubt, add a `print(variable)` or `print(type(variable))` statement
-        in your custom function to verify the variable's format.
+    returns ``[[ 2.88079708  2.98201379  2.99752738]]``.
+
+    **Assigning of a custom function to a State**
+
+    A custom function can also be assigned as the `function <State_Base.function>` of an `InputState` or `OutputState`.
+    For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputState.function>` of an OutputState
+    of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
+
+        >>> my_wave_mech = pnl.ProcessingMechanism(size=3,
+        ...                                        function=Logistic,
+        ...                                        output_states={NAME: 'SINUSOIDAL OUTPUT',
+        ...                                                       FUNCTION: my_sinusoidal_fct})
+
+    The parameters of a custom function assigned to an InputState or OutputState can also be used for `gating
+    <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be defined.
+    This can be done in the **param** argument of the definition of the function itself::
+
+        >>> def my_sinusoidal_fct(input,
+        ...                      phase=0,
+        ...                      amplitude=1):
+        ...                      params={pnl.ADDITIVE_PARAM:'phase',
+        ...                              pnl.MULTIPLICATIVE_PARAM:'amplitude'}):
+        ...    frequency = input[0]
+        ...    t = input[1]
+        ...    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
+
+    Even if they are not defined in the function itself, they can still be included in the explicit definition
+    of a UDF, such as::
+
+        >>> def my_linear_fct(x, m=1, b=0):
+        ...     return m*x+b
+        >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_linear_fct,
+        ...                                  params={pnl.ADDITIVE_PARAM:'b',
+        ...                                          pnl.MULTIPLICATIVE_PARAM:'m'})
+
+    These can now be used for gating, either by referencing them in the definition of a `GatingSignal`, or where the
+    function is defined for an InputState or OutputState.  For example::
+
+        >>> my_mech = pnl.ProcessingMechanism(function=Logistic,
+        ...                                   output_states={NAME: 'GATED OUTPUT_STATE',
+        ...                                                  FUNCTION: my_linear_fct(m=(2.0, GATING)})
+
+    assigns ``my_linear_fct`` as the `function <OutputState.function>` for the `Primary OutputState
+    <OutputState_Primary>` of ``my_mech``, and specifies ``m`` to be modulated by a `GatingSignal`, with a
+    default value of ``2.0``.
 
 
     Arguments
@@ -1059,19 +1208,18 @@ class UserDefinedFunction(Function_Base):
         with the context in which the UserDefinedFunction will be used.
     COMMENT
     custom_function : function
-        specifies the function to "wrap." It can be any function, but like any PsyNeuLink function it must take three
-        named arguments: :keyword:`variable` (the input to the function), :keyword:`params`, and :keyword:`context`. The
-        `custom_function` can return any value(s), so long as they fit with the context. For example, if the dimensions
-        of your custom function's output change, then it is not appropriate to pass your function's output to a
-        `MappingProjection`, since the `MappingProjection` expects input of consistent dimensions.
-
-    variable : value : default ClassDefaults.variable
-        specifies the format and a default value for the input to `function <Function>`.
+        specifies the function to "wrap." It can be any function or method, including a lambda function;
+        see `above <UDF_Description>` for additional details.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        This can be used to define an `additive_param <UserDefinedFunction.additive_param>` and/or
+        `multiplicative_param <UserDefinedFunction.multiplicative_param>` for the UDF, by including one or both
+        of the following entries:\n
+          *ADDITIVE_PARAM*: <param_name>\n
+          *MULTIPLICATIVE_PARAM*: <param_name>\n
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of
+        the constructor.
 
     owner : Component
         `component <Component>` to which to assign the Function.
@@ -1086,11 +1234,18 @@ class UserDefinedFunction(Function_Base):
     ----------
 
     variable: value
-        format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
-        they are specified by the Function's :keyword:`ClassDefaults.variable`.
+        format and default value of the function "wrapped" by the UDF.
 
     custom_function : function
         the user-specified function: called by the Function's `owner <Function_Base.owner>` when it is executed.
+
+    additive_param : str
+        this contains the name of the additive_param, if one has been specified for the UDF
+        (see `above <UDF_Modulatory_Params>` for details).
+
+    multiplicative_param : str
+        this contains the name of the multiplicative_param, if one has been specified for the UDF
+        (see `above <UDF_Modulatory_Params>` for details).
 
     COMMENT:
     functionOutputTypeConversion : Bool : False
@@ -1122,7 +1277,9 @@ class UserDefinedFunction(Function_Base):
     paramClassDefaults.update({
         FUNCTION_OUTPUT_TYPE_CONVERSION: False,
         PARAMETER_STATE_PARAMS: None,
-        CUSTOM_FUNCTION: None
+        CUSTOM_FUNCTION: None,
+        MULTIPLICATIVE_PARAM:None,
+        ADDITIVE_PARAM:None
     })
 
     @tc.typecheck
@@ -1132,10 +1289,73 @@ class UserDefinedFunction(Function_Base):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 context=componentName + INITIALIZING,
+                 **kwargs):
+
+        def get_cust_fct_args(custom_function):
+            """Get args of custom_function
+            Return:
+                - value of first arg (to be used as default_variable for UDF)
+                - dict with all others (to be assigned as params of UDF)
+                - dict with default values (from function definition, else set to None)
+            """
+            from inspect import signature, _empty
+            arg_names = custom_function.__code__.co_varnames
+            args = {}
+            defaults = {}
+            for arg_name, arg in signature(custom_function).parameters.items():
+                # Use definition from the function as default;
+                #    this allows UDF to assign a value for this instance (including a MODULATORY spec)
+                #    while assigning an actual value to paramClassDefaults (in _assign_args_to_params_dicts);
+                if arg.default is _empty:
+                    defaults[arg_name] = None
+                else:
+                    defaults[arg_name] = arg.default
+                # If arg is specified in the constructor for the UDF, assign that as its value
+                if arg_name in kwargs:
+                    args[arg_name] = kwargs[arg_name]
+                # Otherwise, use the default value from the definition of the function
+                else:
+                    args[arg_name] = defaults[arg_name]
+
+            # Assign default value of first arg as variable and remove from dict
+            variable = args[arg_names[0]]
+            if variable is _empty:
+                variable = None
+            del args[arg_names[0]]
+
+            return variable, args, defaults
+
+        # Get variable and names of other any other args for custom_function and assign to cust_fct_params
+        if params is not None and CUSTOM_FUNCTION in params:
+            custom_function = params[CUSTOM_FUNCTION]
+        cust_fct_variable, self.cust_fct_params, defaults = get_cust_fct_args(custom_function)
+
+        if PARAMS in self.cust_fct_params:
+            if self.cust_fct_params[PARAMS]:
+                if params:
+                    params.update(self.cust_fct_params)
+                else:
+                    params = self.cust_fct_params[PARAMS]
+            del self.cust_fct_params[PARAMS]
+
+        # Assign variable to default_variable if latter was not specified
+        if default_variable is None:
+            default_variable = cust_fct_variable
+        elif cust_fct_variable and not iscompatible(default_variable, cust_fct_variable):
+            raise FunctionError("Value passed as \'default_variable\' for {} ({}) of {} {} for {} ({}) "
+                                "conflicts with specification of first argument in constructor for {} itself ({})".
+                                format(self.__class__.__name__, custom_function.__name__,
+                                       owner.name, owner.__class__.__name__, owner.owner.name,
+                                       default_variable, custom_function.__name__, cust_fct_variable))
+
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(custom_function=custom_function, params=params)
-        # self.custom_function = custom_function
+        params = self._assign_args_to_param_dicts(custom_function=custom_function,
+                                                  params=params,
+                                                  defaults=defaults,
+                                                  **self.cust_fct_params
+                                                  )
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -1145,13 +1365,24 @@ class UserDefinedFunction(Function_Base):
 
         self.functionOutputType = None
 
-        # IMPLEMENT: PARSE ARGUMENTS FOR custom_function AND ASSIGN TO user_params
-
     def function(self, **kwargs):
+
+        # Update value of parms in cust_fct_params
+        for param in self.cust_fct_params:
+            # First check for value passed in params as runtime param:
+            if PARAMS in kwargs and kwargs[PARAMS] is not None and param in kwargs[PARAMS]:
+                self.cust_fct_params[param] = kwargs[PARAMS][param]
+            else:
+            # Otherwise, get current value from ParameterState (in case it is being modulated by ControlSignal(s)
+                self.cust_fct_params[param] = self.get_current_function_param(param)
+        kwargs.update(self.cust_fct_params)
+
         try:
+            # Try calling with full list of args (including context and params)
             return self.custom_function(**kwargs)
         except TypeError:
-            return self.custom_function(kwargs[VARIABLE])
+            # Try calling with just variable and cust_fct_params
+            return self.custom_function(kwargs[VARIABLE], **self.cust_fct_params)
 
 
 # region **********************************  COMBINATION FUNCTIONS  ****************************************************
@@ -3795,10 +4026,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             #      - AT LEAST CHANGE THE NAME FROM kwReceiver TO output_template OR SOMETHING LIKE THAT
             #      - MAKE ARG?  OR ADD OTHER PARAMS:  E.G., FILLER?
             #      - OR REFACTOR TO INCLUDE AS MATRIX SPEC:
-            #                  IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
-            #                     IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
-            #                     IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
-            #                     NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
+            #          IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
+            #          IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
+            #          IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
+            #          NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
             #      - DOCUMENT WHEN DONE
             # MODIFIED 3/26/17 OLD:
             # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
@@ -3942,9 +4173,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                    self.owner_name,
                                                    MATRIX_KEYWORD_NAMES))
                 else:
-                    message += "Unrecognized param ({}) specified for the {} function of {}\n".format(param_name,
-                                                                                                      self.componentName,
-                                                                                                      self.owner_name)
+                    message += "Unrecognized param ({}) specified for the {} function of {}\n".\
+                        format(param_name, self.componentName, self.owner_name)
                     continue
             if message:
                 raise FunctionError(message)
@@ -3957,12 +4187,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                 # numeric value specified; verify that it is compatible with variable
                 if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
-                    if np.size(np.atleast_2d(param_value), 0) != np.size(np.atleast_2d(self.instance_defaults.variable),1):
-                        raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. "
-                                            "The shapes of variable {} and matrix {} are not compatible for "
-                                            "multiplication".format(self.name,
-                                                                    np.shape(np.atleast_2d(self.instance_defaults.variable)),
-                                                                    np.shape(np.atleast_2d(param_value))))
+                    if np.size(np.atleast_2d(param_value),0)!=np.size(np.atleast_2d(self.instance_defaults.variable),1):
+                        raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. The "
+                                            "shapes of variable {} and matrix {} are not compatible for multiplication".
+                                            format(self.name, np.shape(np.atleast_2d(self.instance_defaults.variable)),
+                                                   np.shape(np.atleast_2d(param_value))))
 
                 # keyword matrix specified - not valid outside of a projection
                 elif param_value in MATRIX_KEYWORD_VALUES:
@@ -4022,8 +4251,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
             # This should never happen (should have been picked up in validate_param or above)
             if matrix is None:
-                raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function that returns "
-                                    "one, a matrix specification keyword ({}), or a number (filler)".
+                raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function "
+                                    "that returns one, a matrix specification keyword ({}), or a number (filler)".
                                     format(specification, self.name, self.owner_name, MATRIX_KEYWORD_NAMES))
             else:
                 return matrix
@@ -4180,7 +4409,7 @@ class IntegratorFunction(Function_Base):
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
 # • can noise and initializer be an array?  If so, validated in validate_param?
 
-class Integrator(IntegratorFunction):  # --------------------------------------------------------------------------------
+class Integrator(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
     Integrator(                 \
         default_variable=None,  \
@@ -4355,8 +4584,8 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
                     #       Integrator's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
-                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism); in that
+                    #       case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
                     if self._variable_not_specified:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
@@ -4409,17 +4638,18 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif not iscompatible(np.atleast_2d(noise), var) and not iscompatible(np.atleast_1d(noise), var) and len(noise) > 1:
+            elif (not iscompatible(np.atleast_2d(noise), var)
+                  and not iscompatible(np.atleast_1d(noise), var) and len(noise) > 1):
                 raise FunctionError(
-                    "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified "
-                    "as a float, a function, or an array of the appropriate shape ({})."
-                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
+                        "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
+                        "must be specified as a float, a function, or an array of the appropriate shape ({})."
+                            .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
             else:
                 for noise_item in noise:
                     if not isinstance(noise_item, (float, int)) and not callable(noise_item):
                         raise FunctionError(
-                            "The elements of a noise list or array must be floats or functions. {} is not a valid noise "
-                            "element for {}".format(noise_item, self.name))
+                            "The elements of a noise list or array must be floats or functions. "
+                            "{} is not a valid noise element for {}".format(noise_item, self.name))
 
         # Otherwise, must be a float, int or function
         elif not isinstance(noise, (float, int)) and not callable(noise):
@@ -4546,7 +4776,8 @@ class SimpleIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>` for details).
+        `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -4570,8 +4801,8 @@ class SimpleIntegrator(
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values. If it has a single element, it
-        applies to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
+        determines the rate of integration based on current and prior values. If it has a single element, it applies
+        to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
         applies to the corresponding element of `variable <SimpleIntegrator.variable>`.
 
     noise : float, function, list, or 1d np.array
@@ -4579,16 +4810,16 @@ class SimpleIntegrator(
 
         If noise is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or
+        array, noise will be applied to each variable element. In the case of a noise function, this means that the
+        function will be executed separately for each variable element.
 
 
         .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
 
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
@@ -4786,15 +5017,15 @@ class LCAIntegrator(
 
         If noise is a list or array, it must be the same length as `variable <LCAIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or
+        array, noise will be applied to each variable element. In the case of a noise function, this means that the
+        function will be executed separately for each variable element.
 
         .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
 
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
@@ -4919,7 +5150,7 @@ class LCAIntegrator(
 
         return adjusted_value
 
-class ConstantIntegrator(Integrator):  # --------------------------------------------------------------------------------
+class ConstantIntegrator(Integrator):  # -------------------------------------------------------------------------------
     """
     ConstantIntegrator(                 \
         default_variable=None,          \
@@ -4958,7 +5189,8 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>` for details).
+        `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -4995,21 +5227,22 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         If noise is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is a list
+        or array, noise will be applied to each variable element. In the case of a noise function, this means that
+        the function will be executed separately for each variable element.
 
         .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
 
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
         `previous_value <ConstantIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
+        If initializer is a list or array, it must be the same length as
+        `variable <ConstantIntegrator.default_variable>`.
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
@@ -5143,8 +5376,8 @@ class AdaptiveIntegrator(
 
     Computes an exponentially weighted moving average.
 
-    (1 - `rate <AdaptiveIntegrator.rate>`) * `previous_value <AdaptiveIntegrator.previous_value>` + `rate <AdaptiveIntegrator.rate>` *
-    `variable <AdaptiveIntegrator.variable>` + `noise <AdaptiveIntegrator.noise>`
+    (1 - `rate <AdaptiveIntegrator.rate>`) * `previous_value <AdaptiveIntegrator.previous_value>` + `rate
+    <AdaptiveIntegrator.rate>` * `variable <AdaptiveIntegrator.variable>` + `noise <AdaptiveIntegrator.noise>`
 
 
     Arguments
@@ -5164,7 +5397,8 @@ class AdaptiveIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <AdaptiveIntegrator.default_variable>` (see `initializer <AdaptiveIntegrator.initializer>` for details).
+        `default_variable <AdaptiveIntegrator.default_variable>` (see `initializer <AdaptiveIntegrator.initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5202,9 +5436,9 @@ class AdaptiveIntegrator(
 
         If noise is a list or array, it must be the same length as `variable <AdaptiveIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <AdaptiveIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <AdaptiveIntegrator.variable>` is a list
+        or array, noise will be applied to each variable element. In the case of a noise function, this means that
+        the function will be executed separately for each variable element.
 
         .. note::
             In order to generate random noise, we recommend selecting a probability distribution function
@@ -5216,7 +5450,8 @@ class AdaptiveIntegrator(
         determines the starting value for time-averaging (i.e., the value to which
         `previous_value <AdaptiveIntegrator.previous_value>` is originally set).
 
-        If initializer is a list or array, it must be the same length as `variable <AdaptiveIntegrator.default_variable>`.
+        If initializer is a list or array, it must be the same length as
+        `variable <AdaptiveIntegrator.default_variable>`.
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
@@ -5289,11 +5524,11 @@ class AdaptiveIntegrator(
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
-                    #       AdaptiveIntegrator's constructor, where that is used as a specification for a function parameter
-                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       AdaptiveIntegrator's constructor, where that is used as a specification for a function
+                    #       parameter (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
-                    #       the object itself, thus does not see the array specification for the input.
+                    #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]])
+                    #       before the object itself, thus does not see the array specification for the input.
                     if self._variable_not_specified:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
@@ -5322,8 +5557,8 @@ class AdaptiveIntegrator(
                         # OLD:
                         # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
-                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
-                        # to have a rate parameter of type ndarray/list
+                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator
+                        # function to have a rate parameter of type ndarray/list
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -5440,7 +5675,8 @@ class DriftDiffusionIntegrator(
 
     initializer : float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
+        `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer
+        <DriftDiffusionIntegrator.initializer>` for details).
 
     threshold : float : default 0.0
         specifies the threshold (boundaries) of the drift diffusion process (i.e., at which the
@@ -5497,7 +5733,8 @@ class DriftDiffusionIntegrator(
         determines the starting value for integration (i.e., the value to which
         `previous_value <DriftDiffusionIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.default_variable>`.
+        If initializer is a list or array, it must be the same length as
+        `variable <DriftDiffusionIntegrator.default_variable>`.
 
     previous_time : float
         stores previous time at which the function was executed and accumulates with each execution according to
