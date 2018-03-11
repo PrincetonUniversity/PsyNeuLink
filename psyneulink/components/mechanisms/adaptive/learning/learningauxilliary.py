@@ -398,7 +398,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
         learning_function = Hebbian(default_variable=activation,
-                                    activation_function=lc.activation_mech_fct,
+                                    # activation_function=lc.activation_mech_fct,
                                     learning_rate=learning_rate)
 
         objective_mechanism = lc.activation_mech
@@ -417,7 +417,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
         learning_function = Reinforcement(default_variable=[activation_input, activation_output, error_signal],
-                                          activation_function=lc.activation_mech_fct,
+                                          # activation_function=lc.activation_mech_fct,
                                           learning_rate=learning_rate)
 
     elif learning_function.componentName is TDLEARNING_FUNCTION:
@@ -431,7 +431,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         learning_function = TDLearning(default_variable=[activation_input,
                                                          activation_output,
                                                          error_signal],
-                                       activation_function=lc.activation_mech_fct,
+                                       # activation_function=lc.activation_mech_fct,
                                        learning_rate=learning_rate)
 
     # BACKPROPAGATION LEARNING FUNCTION
