@@ -2263,7 +2263,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         # # variable:
         # #   InputState: set of projections it receives
         # #   ParameterState: value of its sender
-        # #   OutputState: value[INDEX] of its owner
+        # #   OutputState: _parse_output_state_variable()
         # # FIX: ----------------------------------------------------------
 
         # FIX: THIS SHOULD ONLY APPLY TO InputState AND ParameterState; WHAT ABOUT OutputState?

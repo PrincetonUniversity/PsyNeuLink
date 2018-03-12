@@ -4,26 +4,26 @@ import psyneulink as pnl
 
 Input_Layer = pnl.TransferMechanism(
     name='Input Layer',
-    function=pnl.Logistic,
-    default_variable=np.zeros((2,))
+    default_variable=np.zeros((2,)),
+    function=pnl.Logistic
 )
 
 Hidden_Layer_1 = pnl.TransferMechanism(
     name='Hidden Layer_1',
-    function=pnl.Logistic(),
-    default_variable=np.zeros((5,))
+    default_variable=np.zeros((5,)),
+    function=pnl.Logistic()
 )
 
 Hidden_Layer_2 = pnl.TransferMechanism(
     name='Hidden Layer_2',
-    function=pnl.Logistic(),
-    default_variable=[0, 0, 0, 0]
+    default_variable=[0, 0, 0, 0],
+    function=pnl.Logistic()
 )
 
 Output_Layer = pnl.TransferMechanism(
     name='Output Layer',
-    function=pnl.Logistic,
-    default_variable=[0, 0, 0]
+    default_variable=[0, 0, 0],
+    function=pnl.Logistic
 )
 
 Gating_Mechanism = pnl.GatingMechanism(

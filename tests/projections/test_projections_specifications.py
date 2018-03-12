@@ -97,13 +97,13 @@ class TestProjectionSpecificationFormats:
         assert T2.output_states[0].efferents[1].receiver.name == 'InputState-1'
         assert T2.output_states[0].efferents[1].matrix.shape == (1,3)
 
-    def test_mapping_projection_using_2_item_tuple_with_index_specs(self):
+    def test_mapping_projection_using_2_item_tuple_and_3_item_tuples_with_index_specs(self):
 
         T1 = pnl.TransferMechanism(name='T1', input_states=[[0,0],[0,0,0]])
         T2 = pnl.TransferMechanism(name='T2',
                                    input_states=['a','b','c'],
                                    output_states=[(['InputState-0','InputState-1'], T1),
-                                                  ('InputState-0', 2, T1),
+                                                  ('InputState-0', (pnl.OWNER_VALUE, 2), T1),
                                                   (['InputState-0','InputState-1'], 1, T1)])
         assert len(T2.output_states)==3
         assert T2.output_states[0].efferents[0].receiver.name == 'InputState-0'
