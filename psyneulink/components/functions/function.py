@@ -1160,7 +1160,6 @@ class UserDefinedFunction(Function_Base):
     This is required so that the format of the variable can be checked for compatibilty with other Components
     with which it interacts.
 
-
     .. note::
        Built-in Python functions and methods (including numpy functions) cannot be assigned to a UDF
 
