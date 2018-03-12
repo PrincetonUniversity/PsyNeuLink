@@ -1206,7 +1206,7 @@ class UserDefinedFunction(Function_Base):
         ...    t = input[1]
         ...    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
 
-    of in the explicit creation of a UDF::
+    or in the explicit creation of a UDF::
 
         >>> my_sinusoidal_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct,
         ...                                             phase=0,
@@ -1216,7 +1216,8 @@ class UserDefinedFunction(Function_Base):
 
 
     The ``phase`` and ``amplitude`` parameters of ``my_sinusoidal_fct`` can now be used for gating any InputState
-    or OutputState to which the function is assigned (see `GatingSignal_Specification` and `GatingSignal_Examples`).
+    or OutputState to which the function is assigned (see `GatingMechanism_Specifying_Gating` and
+    `GatingSignal_Examples`).
 
     COMMENT:
     or where the function is assigned to an InputState or OutputState.  For example::
@@ -1239,6 +1240,9 @@ class UserDefinedFunction(Function_Base):
 
 
     COMMENT
+
+    **Class Definition:**
+
 
     Arguments
     ---------
