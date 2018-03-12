@@ -1215,9 +1215,9 @@ class UserDefinedFunction(Function_Base):
         ...                                                     pnl.MULTIPLICATIVE_PARAM:'amplitude'})
 
 
-    The ``phase`` and ``amplitude`` parameters of ``my_sinusoidal_fct`` can now be used for gating any InputState
-    or OutputState to which the function is assigned (see `GatingMechanism_Specifying_Gating` and
-    `GatingSignal_Examples`).
+    The ``phase`` and ``amplitude`` parameters of ``my_sinusoidal_fct`` can now be used as the
+    `Function_Modulatory_Params` for gating any InputState or OutputState to which the function is assigned (see
+    `GatingMechanism_Specifying_Gating` and `GatingSignal_Examples`).
 
     COMMENT:
     or where the function is assigned to an InputState or OutputState.  For example::
