@@ -1013,8 +1013,8 @@ class UserDefinedFunction(Function_Base):
       so that they can be modulated by `ControlSignals <ControlSignal>` or `LearningSignals <LearningSignal>`,
       respectively.  If the UDF is assigned to (or automatically created for) an `InputState` or `OutputState`,
       and any of the parameters are specified as `Function_Modulatory_Params` (see `below <UDF_Modulatory_Params>`),
-      then they can be modulated by `GatingSignals <GatingSignal>`. The function or method wrapped by the UDF is
-      called with these parameters by their name and with their current values (i.e., as determined by any
+      then they can be modulated by `GatingSignals <GatingSignal>`. The function or method wrapped by the UDF is called
+      with these parameters by their name and with their current values (i.e., as determined by any
       `ModulatorySignals <ModulatorySignal>` assigned to them).
     ..
     .. _UDF_Params_Context:
@@ -1027,7 +1027,8 @@ class UserDefinedFunction(Function_Base):
 
     * The parameters of a UDF can be specified as `Function_Modulatory_Params` in a `parameter specification dictionary
       <ParameterState_Specification>` assigned to the **params** argument of the constructor for either the Python
-      function or method, or of an explicitly defined UDF.  It can include either or both of the following two entries:
+      function or method, or of an explicitly defined UDF (see `examples below <UDF_Modulatory_Params_Examples>`).
+      It can include either or both of the following two entries:
          *MULTIPLICATIVE_PARAM*: <parameter name>\n
          *ADDITIVE_PARAM*: <parameter name>
       These are used only when the UDF is assigned as the `function <State_Base.function>` of an InputState or
@@ -1047,31 +1048,29 @@ class UserDefinedFunction(Function_Base):
 
     **Assigning a custom function to a Mechanism**
 
+    .. _UDF_Lambda_Function_Examples:
+
     The following example assigns a simple lambda function that returns the sum of the elements of a 1d array) to a
     `TransferMechanism`::
 
         >>> import psyneulink as pnl
         >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0,0,0]],
         ...                                   function=lambda x:sum(x[0]))
-
-    Calling::
-
         >>> my_mech.execute(input = [1, 2, 3])
+        array([[6]])
 
-    return ``[[6]]``.  Note that the function treats its argument, x, as a 2d array, and accesses its first item
-    for the calculation.  This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the
-    **size** argument of its constructor as having a single item (a 1d array of length 3;  (see `size
-    <Component.size>`).  In the following example, a function is defined for a Mechanism in which the variable
-    has two items, that are summed by the function::
+    Note that the function treats its argument, x, as a 2d array, and accesses its first item for the calculation.
+    This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the **size** argument of
+    its constructor as having a single item (a 1d array of length 3;  (see `size <Component.size>`).  In the
+    following example, a function is defined for a Mechanism in which the variable has two items, that are summed by
+    the function::
 
         >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
-        ...                                   function=lambda x: x[0] + x[1]))
-
-    Calling::
-
+        ...                                   function=lambda x: x[0] + x[1])
         >>> my_mech.execute(input = [[1],[2]])
+        array([[3]])
 
-    returns ``[[3]]``.
+    .. _UDF_Defined_Function_Examples:
 
     The **function** argument can also be assigned a function defined in Python::
 
@@ -1085,9 +1084,9 @@ class UserDefinedFunction(Function_Base):
 
     More complicated functions, including ones with more than one parameter can also be used;  for example::
 
-        >>> def my_sinusoidal_fct(input,
-        ...                      phase=0,
-        ...                      amplitude=1):
+        >>> def my_sinusoidal_fct(input=[[0],[0]],
+        ...                       phase=0,
+        ...                       amplitude=1):
         ...    frequency = input[0]
         ...    t = input[1]
         ...    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
@@ -1100,42 +1099,71 @@ class UserDefinedFunction(Function_Base):
     to which the UDF is assigned is what is passed to the function as its first argument.  However, if it is helpful to
     name it something else, that is fine.
 
-    Notice also that in this example, the function assumes that it gets two items in its ``input`` argument,
-    that it assigns to the ``frequency`` and ``t`` variables of the function.  The function also has two other
-    arguments, ``phase`` and ``amplitude``.   When it is wrapped as a UDF, ``my_wave_mech`` is assigned
-    `ParameterStates <ParameterState>` for these parameters, that can then be modified by `ControlSignals
-    <ControlSignal>`.
+    Notice also that ``my_sinusoidal_fct`` takes two values in its ``input`` argument, that it assigns to the
+    ``frequency`` and ``t`` variables of the function.  While  it could have been specified more compactly as a 1d array
+    with two elements (i.e. [0,0]), it is specified in the example as a 2d array with two items to make it clear that
+    it matches the format of the **default_variable** for the ProcessingMechanism to which it will be assigned,
+    which requires it be formatted this way (since the `variable <Component.variable>` of all Components are converted
+    to a 2d array).
+
+    ``my_sinusoidal_fct`` also has two other arguments, ``phase`` and ``amplitude``.   When it is assigned to
+    ``my_wave_mech``, those parameters are assigned to `ParameterStates <ParameterState>` of ``my_wave_mech``, which
+    that be used to modify their values by `ControlSignals <ControlSignal>` (see `example below <_
+    UDF_Control_Signal_Example>`).
+
+    .. _UDF_Explicit_Creation_Examples:
 
     In all of the examples above, a UDF was automatically created for the functions assigned to the Mechanism.  A UDF
     can also be created explicitly, as follows:
 
-        >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct)
-        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
-        ...                                   function=my_UDF)
+        >>> my_sinusoidal_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct)
+        >>> my_wave_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                        function=my_sinusoidal_UDF)
 
-    When the UDF is defined explicitly, parameters of the function can be included as arguments to its constructor,
+    When the UDF is created explicitly, parameters of the function can be included as arguments to its constructor,
     to assign them default values that differ from the those in the definition of the function, or for parameters
     that don't define default values.  For example::
 
-        >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct,
+        >>> my_sinusoidal_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct,
         ...                                  phase=10,
         ...                                  amplitude=3)
-        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
-        ...                                   function=my_UDF)
+        >>> my_wave_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                        function=my_sinusoidal_UDF)
 
     assigns ``my_sinusoidal_fct`` as the `function <Mechanism_Base.function>` for ``my_mech``, but with the default
     values of its ``phase`` and ``amplitude`` parameters assigned new values.  This can be useful for assigning the
     same function to different Mechanisms with different default values.
 
-    Explicitly defining the UDF can also be used to specify parameters of the function to be controlled, as in the
-    following example::
+    .. _UDF_Control_Signal_Example:
+
+    Explicitly defining the UDF can also be used to `specify control <ControlSignal_Specification>` for parameters of
+    the function, as in the following example::
 
         >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
         ...                                   function=UserDefinedFunction(custom_function=my_sinusoidal_fct,
-        ...                                                                amplitude=(1.0, pnl.CONTROL))
+        ...                                                                amplitude=(1.0, pnl.CONTROL)))
 
     This specifies that the default value of the ``amplitude`` parameter of ``my_sinusoidal_fct`` be ``1.0``, but
     its value should be modulated by a `ControlSignal`.
+
+    COMMENT:
+    Note:  if a function explicitly defined in a UDF does not assign a default value to its first argument (i.e.,
+    it is a positional argument), then the UDF that must define the variable, as in:
+
+    Note:  if the function does not assign a default value to its first argument i.e., it is a positional arg),
+    then if it is explicitly wrapped in a UDF that must define the variable, as in:
+        xxx my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=UserDefinedFunction(default_variable=[[0],[0]],
+        ...                                                                custom_function=my_sinusoidal_fct,
+        ...                                                                amplitude=(1.0, pnl.CONTROL)))
+
+    This is required so that the format of the variable can be checked for compatibilty with other Components
+    with which it interacts.
+
+    .. note::
+       Built-in Python functions and methods (including numpy functions) cannot be assigned to a UDF
+
+    COMMENT
 
     Custom functions can be as elaborate as desired, and can even include other PsyNeuLink `Functions <Function>`
     indirectly, such as::
@@ -1145,12 +1173,11 @@ class UserDefinedFunction(Function_Base):
         >>> def my_fct(variable):
         ...     return L.function(variable) + 2
         >>> my_mech = pnl.ProcessingMechanism(size = 3, function = my_fct)
-
-    Calling::
-
         >>> my_mech.execute(input = [1, 2, 3])
+        array([[2.88079708, 2.98201379, 2.99752738]])
 
-    returns ``[[ 2.88079708  2.98201379  2.99752738]]``.
+
+    .. _UDF_Assign_to_State_Examples:
 
     **Assigning of a custom function to a State**
 
@@ -1160,42 +1187,58 @@ class UserDefinedFunction(Function_Base):
 
         >>> my_wave_mech = pnl.ProcessingMechanism(size=3,
         ...                                        function=Logistic,
-        ...                                        output_states={NAME: 'SINUSOIDAL OUTPUT',
-        ...                                                       FUNCTION: my_sinusoidal_fct})
+        ...                                        output_states={pnl.NAME: 'SINUSOIDAL OUTPUT',
+        ...                                                       pnl.FUNCTION: my_sinusoidal_fct})
+
+    .. _UDF_Modulatory_Params_Examples:
 
     The parameters of a custom function assigned to an InputState or OutputState can also be used for `gating
-    <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be defined.
-    This can be done in the **param** argument of the definition of the function itself::
+    <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be specified
+    (see `above <UDF_Modulatory_Params>`). This can be done by including a **params** argument in the definition of
+    the function itself::
 
-        >>> def my_sinusoidal_fct(input,
+        >>> def my_sinusoidal_fct(input=[[0],[0]],
         ...                      phase=0,
-        ...                      amplitude=1):
+        ...                      amplitude=1,
         ...                      params={pnl.ADDITIVE_PARAM:'phase',
         ...                              pnl.MULTIPLICATIVE_PARAM:'amplitude'}):
         ...    frequency = input[0]
         ...    t = input[1]
         ...    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
 
-    Even if they are not defined in the function itself, they can still be included in the explicit definition
-    of a UDF, such as::
+    of in the explicit creation of a UDF::
 
-        >>> def my_linear_fct(x, m=1, b=0):
-        ...     return m*x+b
-        >>> my_UDF = pnl.UserDefinedFunction(custom_function=my_linear_fct,
-        ...                                  params={pnl.ADDITIVE_PARAM:'b',
-        ...                                          pnl.MULTIPLICATIVE_PARAM:'m'})
+        >>> my_sinusoidal_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct,
+        ...                                             phase=0,
+        ...                                             amplitude=1,
+        ...                                             params={pnl.ADDITIVE_PARAM:'phase',
+        ...                                                     pnl.MULTIPLICATIVE_PARAM:'amplitude'})
 
-    These can now be used for gating, either by referencing them in the definition of a `GatingSignal`, or where the
-    function is defined for an InputState or OutputState.  For example::
 
-        >>> my_mech = pnl.ProcessingMechanism(function=Logistic,
-        ...                                   output_states={NAME: 'GATED OUTPUT_STATE',
-        ...                                                  FUNCTION: my_linear_fct(m=(2.0, GATING)})
+    The ``phase`` and ``amplitude`` parameters of ``my_sinusoidal_fct`` can now be used for gating any InputState
+    or OutputState to which the function is assigned (see `GatingSignal_Specification` and `GatingSignal_Examples`).
 
-    assigns ``my_linear_fct`` as the `function <OutputState.function>` for the `Primary OutputState
-    <OutputState_Primary>` of ``my_mech``, and specifies ``m`` to be modulated by a `GatingSignal`, with a
-    default value of ``2.0``.
+    COMMENT:
+    or where the function is assigned to an InputState or OutputState.  For example::
 
+        xxx my_wave_mech = pnl.ProcessingMechanism(
+        ...                            function=Logistic,
+        ...                            output_states={pnl.NAME: 'GATED OUTPUT_STATE',
+        ...                                           pnl.FUNCTION: pnl.UserDefinedFunction(
+        ...                                                                  custom_function=my_sinusoidal_fct,
+        ...                                                                  amplitude=(2.0,pnl.GATING))})
+
+    XXX Note that to specify a modulatory signal for a parameter of a custom function, it must be defined explicity in a
+    UDF
+
+        xxx my_wave_mech = pnl.ProcessingMechanism(function=Logistic,
+        ...                                        output_states={pnl.NAME: 'GATED OUTPUT_STATE',
+        ...                                                       pnl.FUNCTION: my_sinusoidal_fct(amplitude=(2.0,pnl.GATING))})
+
+    Note that, to specify gating for a parameter
+
+
+    COMMENT
 
     Arguments
     ---------
@@ -1300,7 +1343,10 @@ class UserDefinedFunction(Function_Base):
                 - dict with default values (from function definition, else set to None)
             """
             from inspect import signature, _empty
-            arg_names = custom_function.__code__.co_varnames
+            try:
+                arg_names = custom_function.__code__.co_varnames
+            except AttributeError:
+                raise FunctionError("Can't get __code__ for custom_function")
             args = {}
             defaults = {}
             for arg_name, arg in signature(custom_function).parameters.items():
@@ -1329,7 +1375,11 @@ class UserDefinedFunction(Function_Base):
         # Get variable and names of other any other args for custom_function and assign to cust_fct_params
         if params is not None and CUSTOM_FUNCTION in params:
             custom_function = params[CUSTOM_FUNCTION]
-        cust_fct_variable, self.cust_fct_params, defaults = get_cust_fct_args(custom_function)
+        try:
+            cust_fct_variable, self.cust_fct_params, defaults = get_cust_fct_args(custom_function)
+        except FunctionError:
+            raise FunctionError("Assignment of a built-in function or method ({}) to a {} is not supported".
+                                format(custom_function, self.__class__.__name__))
 
         if PARAMS in self.cust_fct_params:
             if self.cust_fct_params[PARAMS]:
@@ -1339,15 +1389,14 @@ class UserDefinedFunction(Function_Base):
                     params = self.cust_fct_params[PARAMS]
             del self.cust_fct_params[PARAMS]
 
-        # Assign variable to default_variable if latter was not specified
+        # Assign variable to default_variable if default_variable was not specified
         if default_variable is None:
             default_variable = cust_fct_variable
         elif cust_fct_variable and not iscompatible(default_variable, cust_fct_variable):
-            raise FunctionError("Value passed as \'default_variable\' for {} ({}) of {} {} for {} ({}) "
+            raise FunctionError("Value passed as \'default_variable\' for {} ({}) of {} ({}) "
                                 "conflicts with specification of first argument in constructor for {} itself ({})".
                                 format(self.__class__.__name__, custom_function.__name__,
-                                       owner.name, owner.__class__.__name__, owner.owner.name,
-                                       default_variable, custom_function.__name__, cust_fct_variable))
+                                       owner.name, default_variable, custom_function.__name__, cust_fct_variable))
 
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
