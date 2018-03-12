@@ -1174,7 +1174,7 @@ class UserDefinedFunction(Function_Base):
         ...     return L.function(variable) + 2
         >>> my_mech = pnl.ProcessingMechanism(size = 3, function = my_fct)
         >>> my_mech.execute(input = [1, 2, 3])
-        array([[ 2.88079708,  2.98201379,  2.99752738]])
+        array([[2.88079708, 2.98201379, 2.99752738]])
 
 
     .. _UDF_Assign_to_State_Examples:
@@ -1193,8 +1193,10 @@ class UserDefinedFunction(Function_Base):
     .. _UDF_Modulatory_Params_Examples:
 
     The parameters of a custom function assigned to an InputState or OutputState can also be used for `gating
-    <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be defined.
-    This can be done in the **param** argument of the definition of the function itself::
+    <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be defined
+    (see
+
+    This can be done by including a **params** argument in the definition of the function itself::
 
         >>> def my_sinusoidal_fct(input=[0,0],
         ...                      phase=0,
