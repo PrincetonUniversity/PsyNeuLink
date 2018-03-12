@@ -1111,7 +1111,7 @@ class UserDefinedFunction(Function_Base):
     that be used to modify their values by `ControlSignals <ControlSignal>` (see `example below <_
     UDF_Control_Signal_Example>`).
 
-    .. _UDF_Explicit_Definition_Examples:
+    .. _UDF_Explicit_Creation_Examples:
 
     In all of the examples above, a UDF was automatically created for the functions assigned to the Mechanism.  A UDF
     can also be created explicitly, as follows:
@@ -1120,7 +1120,7 @@ class UserDefinedFunction(Function_Base):
         >>> my_wave_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
         ...                                        function=my_sinusoidal_UDF)
 
-    When the UDF is defined explicitly, parameters of the function can be included as arguments to its constructor,
+    When the UDF is created explicitly, parameters of the function can be included as arguments to its constructor,
     to assign them default values that differ from the those in the definition of the function, or for parameters
     that don't define default values.  For example::
 
@@ -1147,7 +1147,7 @@ class UserDefinedFunction(Function_Base):
     its value should be modulated by a `ControlSignal`.
 
     COMMENT:
-    Note:  if a function explicitliy defined in a UDF does not assign a default value to its first argument (i.e.,
+    Note:  if a function explicitly defined in a UDF does not assign a default value to its first argument (i.e.,
     it is a positional argument), then the UDF that must define the variable, as in:
 
     Note:  if the function does not assign a default value to its first argument i.e., it is a positional arg),
@@ -1193,12 +1193,11 @@ class UserDefinedFunction(Function_Base):
     .. _UDF_Modulatory_Params_Examples:
 
     The parameters of a custom function assigned to an InputState or OutputState can also be used for `gating
-    <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be defined
-    (see
+    <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be specified
+    (see `above <UDF_Modulatory_Params>`). This can be done by including a **params** argument in the definition of
+    the function itself::
 
-    This can be done by including a **params** argument in the definition of the function itself::
-
-        >>> def my_sinusoidal_fct(input=[0,0],
+        >>> def my_sinusoidal_fct(input=[[0],[0]],
         ...                      phase=0,
         ...                      amplitude=1,
         ...                      params={pnl.ADDITIVE_PARAM:'phase',
@@ -1207,29 +1206,39 @@ class UserDefinedFunction(Function_Base):
         ...    t = input[1]
         ...    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
 
-    These can now be used for gating, either by referencing them in the definition of a `GatingSignal`, or where the
-    function is defined for an InputState or OutputState.  For example::
+    of in the explicit creation of a UDF::
 
-        >>> my_wave_mech = pnl.ProcessingMechanism(
+        >>> my_sinusoidal_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct,
+        ...                                             phase=0,
+        ...                                             amplitude=1,
+        ...                                             params={pnl.ADDITIVE_PARAM:'phase',
+        ...                                                     pnl.MULTIPLICATIVE_PARAM:'amplitude'})
+
+
+    The ``phase`` and ``amplitude`` parameters of ``my_sinusoidal_fct`` can now be used for gating any InputState
+    or OutputState to which the function is assigned (see `GatingSignal_Specification` and `GatingSignal_Examples`).
+
+    COMMENT:
+    or where the function is assigned to an InputState or OutputState.  For example::
+
+        xxx my_wave_mech = pnl.ProcessingMechanism(
         ...                            function=Logistic,
         ...                            output_states={pnl.NAME: 'GATED OUTPUT_STATE',
         ...                                           pnl.FUNCTION: pnl.UserDefinedFunction(
         ...                                                                  custom_function=my_sinusoidal_fct,
         ...                                                                  amplitude=(2.0,pnl.GATING))})
 
+    XXX Note that to specify a modulatory signal for a parameter of a custom function, it must be defined explicity in a
+    UDF
 
-        >>> def my_sinusoidal_fct(input=[0,0],
-        ...                      phase=0,
-        ...                      amplitude=1,
-        ...                      params={pnl.ADDITIVE_PARAM:'phase',
-        ...                              pnl.MULTIPLICATIVE_PARAM:'amplitude'}):
-        ...    frequency = input[0]
-        ...    t = input[1]
-        ...    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
-
-        >>> my_wave_mech = pnl.ProcessingMechanism(function=Logistic,
+        xxx my_wave_mech = pnl.ProcessingMechanism(function=Logistic,
         ...                                        output_states={pnl.NAME: 'GATED OUTPUT_STATE',
         ...                                                       pnl.FUNCTION: my_sinusoidal_fct(amplitude=(2.0,pnl.GATING))})
+
+    Note that, to specify gating for a parameter
+
+
+    COMMENT
 
     Arguments
     ---------
