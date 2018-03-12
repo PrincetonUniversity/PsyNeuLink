@@ -1219,28 +1219,6 @@ class UserDefinedFunction(Function_Base):
     `Function_Modulatory_Params` for gating any InputState or OutputState to which the function is assigned (see
     `GatingMechanism_Specifying_Gating` and `GatingSignal_Examples`).
 
-    COMMENT:
-    or where the function is assigned to an InputState or OutputState.  For example::
-
-        xxx my_wave_mech = pnl.ProcessingMechanism(
-        ...                            function=Logistic,
-        ...                            output_states={pnl.NAME: 'GATED OUTPUT_STATE',
-        ...                                           pnl.FUNCTION: pnl.UserDefinedFunction(
-        ...                                                                  custom_function=my_sinusoidal_fct,
-        ...                                                                  amplitude=(2.0,pnl.GATING))})
-
-    XXX Note that to specify a modulatory signal for a parameter of a custom function, it must be defined explicity in a
-    UDF
-
-        xxx my_wave_mech = pnl.ProcessingMechanism(function=Logistic,
-        ...                                        output_states={pnl.NAME: 'GATED OUTPUT_STATE',
-        ...                                                       pnl.FUNCTION: my_sinusoidal_fct(amplitude=(2.0,pnl.GATING))})
-
-    Note that, to specify gating for a parameter
-
-
-    COMMENT
-
     **Class Definition:**
 
 
