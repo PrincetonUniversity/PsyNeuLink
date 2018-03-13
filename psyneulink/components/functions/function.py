@@ -2761,6 +2761,11 @@ class SoftMax(NormalizingFunction):
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
+            # Cast input to an array
+            vector_length = ctx.int32_ty(self._variable_length)
+            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+
+
             exp_sum_ptr = builder.alloca(ctx.float_ty)
             builder.store(ctx.float_ty(0), exp_sum_ptr)
             max_ptr = builder.alloca(ctx.float_ty)
@@ -2772,7 +2777,6 @@ class SoftMax(NormalizingFunction):
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "max_ptr": max_ptr, "gain":gain, "max_ind_ptr":max_ind_ptr, "exp_sum_ptr":exp_sum_ptr}
             inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
 
-            vector_length = ctx.int32_ty(self.get_input_struct_type().count)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
 
             output_type = self.params[OUTPUT_TYPE]
@@ -3144,10 +3148,13 @@ class Linear(TransferFunction):  # ---------------------------------------------
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
+            # Cast input to an array
+            vector_length = ctx.int32_ty(self._variable_length)
+            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
             inner = functools.partial(self.__gen_llvm_linear, **kwargs)
 
-            vector_length = ctx.int32_ty(self.get_input_struct_type().count)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
 
             builder.ret_void()
@@ -3402,6 +3409,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
+            # Cast input to an array
+            vector_length = ctx.int32_ty(self._variable_length)
+            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+
             rate_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
             scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             rate = builder.load(rate_ptr)
@@ -3410,7 +3421,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "rate":rate, "scale":scale}
             inner = functools.partial(self.__gen_llvm_exponential, **kwargs)
 
-            vector_length = ctx.int32_ty(self.get_input_struct_type().count)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exponential")
 
             builder.ret_void()
@@ -3628,10 +3638,13 @@ class Logistic(TransferFunction):  # -------------------------------------------
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
+            # Cast input to an array
+            vector_length = ctx.int32_ty(self._variable_length)
+            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
             inner = functools.partial(self.__gen_llvm_logistic, **kwargs)
 
-            vector_length = ctx.int32_ty(self.get_input_struct_type().count)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "logistic")
 
             builder.ret_void()
@@ -4163,6 +4176,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
+
+            # Cast input to an array
+            vector_length = ctx.int32_ty(self._variable_length)
+            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+
             vec_in = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
             matrix = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
             vec_out = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -5574,12 +5592,16 @@ class AdaptiveIntegrator(
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
+
+            # Cast input to an array
+            vector_length = ctx.int32_ty(self._variable_length)
+            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+
             vi = builder.gep(vi, [ctx.int32_ty(0)])
             vo = builder.gep(vo, [ctx.int32_ty(0)])
 
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params": params, "state":state}
             inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
-            vector_length = ctx.int32_ty(self.get_input_struct_type().count)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "integrate")
 
             builder.ret_void()

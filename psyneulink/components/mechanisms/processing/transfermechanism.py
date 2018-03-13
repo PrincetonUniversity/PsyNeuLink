@@ -960,12 +960,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                 if_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
                 if_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
                 builder.call(integrator_function, [if_params, if_state, vi, vtmp])
+                # Cast output array to input type
+                vi_type = main_function.args[2].type
+                vi = builder.bitcast(vtmp, vi_type)
 
-                # We know that TransferFunction is not stateful, but a consistent interface would be nicer
-                builder.call(main_function, [mf_params, mf_state, vtmp, vo])
-            else:
-                # We know that TransferFunction is not stateful, but a consistent interface would be nicer
-                builder.call(main_function, [mf_params, mf_state, vi, vo])
+            builder.call(main_function, [mf_params, mf_state, vi, vo])
 
             clip = self.get_current_mechanism_param("clip")
             if clip is not None:

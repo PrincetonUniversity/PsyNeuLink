@@ -1098,15 +1098,20 @@ class Composition(object):
 
     def __bin_initialize(self, inputs, reinit=False):
         #FIXME this is an ugly hack to make us work with vectors
+        #FIXME converts instacned efault variable to arrays of floats
+        data = [inputs[m] if m in inputs else m.instance_defaults.variable.tolist()[0] for m in self.input_mechanisms.keys()]
+        c_data = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())
         def tupleize(x):
-            return tuple(x) if isinstance(x, (list)) else x
-        data = [tupleize(inputs[m]) if m in inputs else tuple(m.instance_defaults.variable) for m in self.input_mechanisms.keys()]
-        self.__data_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())(tuple(data))
+            if hasattr(x, "__len__"):
+                return tuple([tupleize(y) for y in x])
+            return tuple([x])
+        self.__data_struct = c_data(tupleize(data))
         if reinit or self.__params_struct is None:
             params = [m.get_param_initializer() for m in self.mechanisms]
-            params += [tupleize(p.get_param_initializer()) for p in self.projections]
+            params += [tuple(p.get_param_initializer()) for p in self.projections]
             params = tuple(params)
-            self.__params_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())(*params) # FIXME: I have no idea why this needs *
+            c_params = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())
+            self.__params_struct = c_params(*params) # FIXME: I have no idea why this needs *
         if reinit or self.__context_struct is None:
             self.__context_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_context_struct_type())()
 
@@ -1155,9 +1160,10 @@ class Composition(object):
             if not is_input_mechanism:
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
-                proj_vo = builder.alloca(mech.get_input_struct_type())
+                mech_vi = builder.alloca(mech.get_input_struct_type())
+                proj_vo = builder.bitcast(mech_vi, proj_function.args[3].type)
                 builder.call(proj_function, [proj_params, context, vi, proj_vo])
-                vi = proj_vo
+                vi = mech_vi
 
             params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             mech_function = ctx.get_llvm_function(mech.llvmSymbolName)

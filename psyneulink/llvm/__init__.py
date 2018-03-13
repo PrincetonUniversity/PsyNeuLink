@@ -8,6 +8,7 @@
 
 # ********************************************* LLVM bindings **************************************************************
 
+import numpy as np
 from llvmlite import binding,ir
 import ctypes
 import os
@@ -162,6 +163,22 @@ def _convert_llvm_ir_to_ctype(t):
         return element_type * len(t)
 
     print(t)
+    assert(False)
+
+def _convert_python_struct_to_llvm_ir(ctx, t):
+    if type(t) is list:
+        assert( all(type(x) == type(t[0]) for x in t))
+        elem_t = _convert_python_struct_to_llvm_ir(ctx, t[0])
+        return ir.ArrayType(elem_t, len(t))
+    elif type(t) is tuple:
+        elems_t = [_convert_python_struct_to_llvm_ir(ctx, x) for x in t]
+        return ir.LiteralStructType([elems_t])
+    elif isinstance(t, (int, float)):
+        return ctx.float_ty
+    elif isinstance(t, np.ndarray):
+        return _convert_python_struct_to_llvm_ir(ctx, t.tolist())
+
+    print(type(t))
     assert(False)
 
 _binaries = {}

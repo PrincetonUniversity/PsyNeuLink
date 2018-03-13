@@ -2334,7 +2334,7 @@ class Mechanism_Base(Mechanism):
         ct_param = par_struct_ty(*self.get_param_initializer())
 
         vi_init = tuple([tuple(x) for x in variable])
-        ct_vi = vi_ty(*vi_init)
+        ct_vi = vi_ty(vi_init)
 
         # The output is the same size as input
         ret = np.zeros_like(variable, dtype=np.float64)
