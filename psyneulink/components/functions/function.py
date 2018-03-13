@@ -9277,12 +9277,10 @@ class Distance(ObjectiveFunction):
 
         self.functionOutputType = None
 
-
-    # Override default detection. The default variable includes two inputs
+    # Override defaults. We only output single value
     @property
-    def _variable_length(self):
-        default_var = self.get_current_function_param(VARIABLE)
-        return len(default_var[0])
+    def _result_length(self):
+        return 1;
 
 
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
@@ -9422,21 +9420,25 @@ class Distance(ObjectiveFunction):
         func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
             func_name = ctx.module.get_unique_name("distance")
-            double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
-            func_ty = ir.FunctionType(ctx.float_ty, (double_ptr_ty, double_ptr_ty))
+            func_ty = ir.FunctionType(ir.VoidType(), [
+                self.get_param_struct_type().as_pointer(),
+                self.get_context_struct_type().as_pointer(),
+                self.get_input_struct_type().as_pointer(),
+                self.get_output_struct_type().as_pointer()])
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             llvm_func.attributes.add('argmemonly')
             llvm_func.attributes.add('alwaysinline')
-            v1, v2 = llvm_func.args
-            for a in v1,v2:
+            _, _, vi, vo = llvm_func.args
+            for a in vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
 
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
+            v1 = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            v2 = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
 
             acc_ptr = builder.alloca(ctx.float_ty)
             builder.store(ctx.float_ty(0), acc_ptr)
@@ -9471,15 +9473,16 @@ class Distance(ObjectiveFunction):
                 raise RuntimeError('Unsupported metric')
 
 
-            vector_length = ctx.int32_ty(self._variable_length)
+            vector_length = ctx.int32_ty(self._variable_length // 2)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, self.metric)
+            sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
             ret = builder.load(acc_ptr)
             if (self.metric == EUCLIDEAN):
                 ret = builder.call(sqrt, [ret])
             elif (self.metric == PEARSON):
                 # (n * acc_xy - acc_x * acc_y) /
                 # sqrt((n * acc_x2 - acc_x^2)*(n * acc_y2 - acc_y^2))
-                fn = ctx.float_ty(self._variable_length)
+                fn = ctx.float_ty(self._variable_length // 2)
                 acc_xy = builder.load(acc_xy_ptr)
                 acc_x = builder.load(acc_x_ptr)
                 acc_y = builder.load(acc_y_ptr)
@@ -9504,11 +9507,13 @@ class Distance(ObjectiveFunction):
                 ret = builder.fdiv(numerator, denominator)
 
             if self.normalize:
-                norm_factor = self._variable_length
+                norm_factor = self._variable_length // 2
                 if self.metric == ENERGY:
                     norm_factor = norm_factor ** 2
                 ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
-            builder.ret(ret)
+            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(ret, vo)
+            builder.ret_void()
         return func_name
 
     def bin_function(self,
@@ -9517,23 +9522,11 @@ class Distance(ObjectiveFunction):
                  time_scale=TimeScale.TRIAL,
                  context=None):
 
-        # TODO: Port this to llvm
-        # Validate variable and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        v1 = variable[0]
-        v2 = variable[1]
-
-        bf = self._llvmBinFunction
-        v1_ty, v2_ty = bf.c_func.argtypes
-
-        ct_v1 = v1.ctypes.data_as(v1_ty)
-        ct_v2 = v2.ctypes.data_as(v2_ty)
-        ret = bf(ct_v1, ct_v2)
+        ret = super().bin_function(variable, params, time_scale, context)
 
         # FIXME: PEARSON breaks output format
         if (self.metric == PEARSON):
-            selfcor = 1/self._variable_length if self.normalize else 1
+            selfcor = 1/(self._variable_length // 2) if self.normalize else 1
             return np.array([[selfcor, ret], [ret, selfcor]])
         return ret
 
