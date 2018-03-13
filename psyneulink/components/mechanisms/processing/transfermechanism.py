@@ -945,7 +945,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  self.get_input_struct_type().as_pointer(),
                  self.get_output_struct_type().as_pointer()))
 
-            func_name = ctx.module.get_unique_name("integrator_machanism")
+            func_name = ctx.module.get_unique_name("transfer_machanism")
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             params, state, si, so = llvm_func.args
             for p in params, state, si, so:
