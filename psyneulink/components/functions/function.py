@@ -9255,8 +9255,12 @@ class Distance(ObjectiveFunction):
 
         self.functionOutputType = None
 
-        # Override default detection. The default variable includes two inputs
-        self._variable_length = len(default_variable[0])
+
+    # Override default detection. The default variable includes two inputs
+    @property
+    def _variable_length(self):
+        default_var = self.get_current_function_param(VARIABLE)
+        return len(default_var[0])
 
 
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
