@@ -2349,6 +2349,74 @@ class Mechanism_Base(Mechanism):
 
         print("- output: {}".format(output_string))
 
+    def show_mechanism(self,
+                       direction = 'BT',
+                       show_function = False,
+                       show_value = False,
+                       output_fmt='pdf'
+                       ):
+
+        import graphviz as gv
+
+        open_bracket = r'{'
+        pipe = r' | '
+        close_bracket = r'}'
+
+        def mech_string(mech):
+            mech_name = r'MECHANISM:\n{}'.format(mech.name)
+            mech_function = ''
+            if show_function:
+                mech_function = r'\n({})'.format(mech.function_object.name)
+            mech_value = ''
+            if show_value:
+                mech_value = r'\n({})'.format(mech.value)
+            return mech_name + mech_function + mech_value
+
+        def states_string(state_list:ContentAddressableList, include_function:bool=False, include_value:bool=False):
+            states = open_bracket
+            for i, state in enumerate(state_list):
+                if i:
+                    states += pipe
+                function = ''
+                if include_function:
+                    function = r'\n({})'.format(state.function_object.name)
+                value = ''
+                if include_value:
+                    value = r'\n({})'.format(state.value)
+                states += r'{}{}{}'.format(state.name, function, value)
+            states += close_bracket
+            return states
+
+        # Get Component strings
+        mech = mech_string(self)
+        input_states = r'______InputStates______\n\|' \
+                       r'\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \|' + \
+                       pipe + states_string(self.input_states,
+                                            include_function=show_function,
+                                            include_value=show_value)
+        parameter_states = r'PameterStates:' + pipe + states_string(self.parameter_states, include_value=show_value)
+        output_states = states_string(self.output_states,
+                                      include_function=show_function,
+                                      include_value=show_value) + pipe + r'\|______OutputStates______\|'
+
+        # Make node
+        default_color = 'black'
+        shape = 'oval'
+        m = gv.Digraph('mechanisms',
+                       filename='mechanisms_revisited.gv',
+                       node_attr={'shape': 'record'},
+                       # graph_attr={"rankdir" : direction}
+                       )
+
+        m_node_spec = open_bracket + \
+                      output_states + pipe + \
+                      open_bracket + mech + pipe + \
+                      parameter_states + close_bracket + pipe +\
+                      input_states + \
+                      close_bracket
+
+        m.node('mechanism', m_node_spec)
+        m.view()
 
     def plot(self, x_range=None):
         """Generate a plot of the Mechanism's `function <Mechanism_Base.function>` using the specified parameter values
@@ -2672,7 +2740,6 @@ class Mechanism_Base(Mechanism):
         del params_dict[OUTPUT_STATES]
         params_dict.update(self.function_params)
         return params_dict
-
 
 
 def _is_mechanism_spec(spec):
