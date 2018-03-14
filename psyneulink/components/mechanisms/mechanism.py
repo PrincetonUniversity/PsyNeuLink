@@ -2366,10 +2366,10 @@ class Mechanism_Base(Mechanism):
             mech_name = r'MECHANISM:\n{}'.format(mech.name)
             mech_function = ''
             if show_function:
-                mech_function = r'\n({})'.format(mech.function_object.name)
+                mech_function = r'\n({})'.format(mech.function_object.__class__.__name__)
             mech_value = ''
             if show_value:
-                mech_value = r'\n({})'.format(mech.value)
+                mech_value = r'\n={}'.format(mech.value)
             return mech_name + mech_function + mech_value
 
         def states_string(state_list:ContentAddressableList, include_function:bool=False, include_value:bool=False):
@@ -2379,10 +2379,10 @@ class Mechanism_Base(Mechanism):
                     states += pipe
                 function = ''
                 if include_function:
-                    function = r'\n({})'.format(state.function_object.name)
+                    function = r'\n({})'.format(state.function_object.__class__.__name__)
                 value = ''
                 if include_value:
-                    value = r'\n({})'.format(state.value)
+                    value = r'\n={}'.format(state.value)
                 states += r'{}{}{}'.format(state.name, function, value)
             states += close_bracket
             return states
@@ -2394,7 +2394,9 @@ class Mechanism_Base(Mechanism):
                        pipe + states_string(self.input_states,
                                             include_function=show_function,
                                             include_value=show_value)
-        parameter_states = r'PameterStates:' + pipe + states_string(self.parameter_states, include_value=show_value)
+        parameter_states = r'PameterStates:' + pipe + states_string(self.parameter_states,
+                                                                    include_function=show_function,
+                                                                    include_value=show_value)
         output_states = states_string(self.output_states,
                                       include_function=show_function,
                                       include_value=show_value) + pipe + r'\|______OutputStates______\|'
