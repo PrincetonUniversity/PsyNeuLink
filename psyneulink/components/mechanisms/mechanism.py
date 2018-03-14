@@ -2349,12 +2349,12 @@ class Mechanism_Base(Mechanism):
 
         print("- output: {}".format(output_string))
 
-    def show_mechanism(self,
-                       direction = 'BT',
-                       show_function = False,
-                       show_value = False,
-                       output_fmt='pdf'
-                       ):
+    def show_struture(self,
+                      direction = 'BT',
+                      show_function = False,
+                      show_value = False,
+                      output_fmt='pdf'
+                      ):
 
         import graphviz as gv
 
