@@ -1180,6 +1180,39 @@ class TestIntegratorMode:
         assert "not allowed because this Mechanism is not stateful." in str(err_txt) \
                and "try setting the integrator_mode argument to True." in str(err_txt)
 
+    def test_switch_mode(self):
+        T = TransferMechanism(integrator_mode=True)
+        P = Process(pathway=[T])
+        S = System(processes=[P])
+        integrator_function = T.integrator_function
+
+        # T starts with integrator_mode = True; confirm that T behaves correctly
+        S.run({T: [[1.0], [1.0], [1.0]]})
+        assert np.allclose(T.value, [[0.875]])
+
+        assert T.integrator_mode is True
+        assert T.integrator_function is integrator_function
+
+        # Switch integrator_mode to False; confirm that T behaves correctly
+        T.integrator_mode = False
+
+        assert T.integrator_mode is False
+        assert T.integrator_function is None
+
+        S.run({T: [[1.0], [1.0], [1.0]]})
+        assert np.allclose(T.value, [[1.0]])
+
+        # Switch integrator_mode BACK to True; confirm that T picks up where it left off
+        T.integrator_mode = True
+
+        assert T.integrator_mode is True
+        assert T.integrator_function is integrator_function
+
+        S.run({T: [[1.0], [1.0], [1.0]]})
+        assert np.allclose(T.value, [[0.984375]])
+
+
+
 class TestClip:
     def test_clip_float(self):
         T = TransferMechanism(clip=[-2.0, 2.0])
