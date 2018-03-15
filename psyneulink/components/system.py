@@ -3291,8 +3291,8 @@ class System(System_Base):
         Displays a graph showing the structure of the System (based on the `System's graph <System.graph>`).
         By default, only the primary processing Components are shown, and Mechanisms are displayed as simple nodes.
         However, the **show_mechanism_structure** argument can be used to display more detailed informationa about
-        each Mechanism, including its States and, optionally the `function <Component.function>`\\s and `value
-        <Component.value>`\\s of the Mechanism and its States (using the **show_functions** and **show_values**
+        each Mechanism, including its States and, optionally the `function <Component.function>` and `value
+        <Component.value>` of the Mechanism and each of its States (using the **show_functions** and **show_values**
         arguments, respectively).  In addition, the **show_learning** and **show_control** arguments can be used to
         also show the Components associated with `learning <LearningMechanism>` and those associated with the
         System's `controller <System_Control>`. `Mechanisms <Mechanism>` are always displayed as (oval) nodes.
@@ -3318,7 +3318,8 @@ class System(System_Base):
             `States` and, optionally, the `function <Component.function>` and `value <Component.value>` of each
             (these can be specified using the **show_functions** and **show_values** arguments.  If this option
             is specified, Projections are connected to and from the State that is the `sender <Projection.sender>` or
-            `receiver <Projection.receiver>` of each.
+            `receiver <Projection.receiver>` of each.  Note:  setting this option calls the
+            `Mechanism_Base.show_structure` method for each Mechanism in the graph.
 
         show_functions : bool : default False
             specifies whether or not to show `function <Component.function>` of Mechanisms and their States in the

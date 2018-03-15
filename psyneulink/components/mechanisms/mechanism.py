@@ -2362,7 +2362,8 @@ class Mechanism_Base(Mechanism):
            (standard with PsyNeuLink pip install)
 
         Displays the structure of a Mechanism using the GraphViz
-        `record <http://soc.if.usp.br/manual/graphviz/html/info/shapes.html#record>`_ shape.
+        `record <http://soc.if.usp.br/manual/graphviz/html/info/shapes.html#record>`_ shape.  This method is called
+        by `System.show_graph` if its **show_mechanism_structure** argument is specified as `True` when it is called.
 
         Arguments
         ---------
@@ -2376,10 +2377,10 @@ class Mechanism_Base(Mechanism):
             in the record.
 
         output_fmt : keyword : default 'pdf'
-            'pdf': generate and open a pdf with the visualization;
-            'jupyter': return the object (ideal for working in jupyter/ipython notebooks).
+            'pdf': generate and open a pdf with the visualization;\n
+            'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
             'struct': return a string that specifies the structure of the record shape,
-                that can be used in a GraphViz node specification.
+            that can be used in a GraphViz node specification.
 
         """
 
