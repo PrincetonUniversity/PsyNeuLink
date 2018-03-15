@@ -2363,6 +2363,8 @@ class Mechanism_Base(Mechanism):
         close_bracket = r'}'
 
         def mech_string(mech):
+            '''Return string with name of mechanism possibly with function and/or value
+            Inclusion of function and value is determined by arguments of call to show_structure '''
             mech_name = r'MECHANISM:\n{}'.format(mech.name)
             mech_function = ''
             if show_function:
@@ -2373,6 +2375,7 @@ class Mechanism_Base(Mechanism):
             return mech_name + mech_function + mech_value
 
         def states_string(state_list:ContentAddressableList, include_function:bool=False, include_value:bool=False):
+            '''Return string with name of states in ContentAddressableList with functions and/or values as specified'''
             states = open_bracket
             for i, state in enumerate(state_list):
                 if i:
@@ -2400,7 +2403,6 @@ class Mechanism_Base(Mechanism):
         output_states = states_string(self.output_states,
                                       include_function=show_function,
                                       include_value=show_value) + pipe + r'\|______OutputStates______\|'
-
         # Make node
         default_color = 'black'
         shape = 'oval'
