@@ -2350,27 +2350,60 @@ class Mechanism_Base(Mechanism):
         print("- output: {}".format(output_string))
 
     def show_structure(self,
-                      direction = 'BT',
-                      show_function = False,
-                      show_value = False,
+                      # direction = 'BT',
+                      show_functions = False,
+                      show_values = False,
                       output_fmt='pdf'
                       ):
+        """Generate a detailed display of a the structure of a Mechanism.
+
+        .. note::
+           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
+           (standard with PsyNeuLink pip install)
+
+        Displays the structure of a Mechanism using the GraphViz
+        `record <http://soc.if.usp.br/manual/graphviz/html/info/shapes.html#record>`_ shape.
+
+        Arguments
+        ---------
+
+        show_functions : bool : default False
+            specifies whether or not to show the `function <Component.function>` of the Mechanism and each of its
+            States in the record.
+
+        show_values : bool : default False
+            specifies whether or not to show the `value <Component.value>` of the Mechanism and each of its States
+            in the record.
+
+        output_fmt : keyword : default 'pdf'
+            'pdf': generate and open a pdf with the visualization;
+            'jupyter': return the object (ideal for working in jupyter/ipython notebooks).
+            'struct': return a string that specifies the structure of the record shape,
+                that can be used in a GraphViz node specification.
+
+        """
+
 
         import graphviz as gv
 
         open_bracket = r'{'
         pipe = r' | '
         close_bracket = r'}'
+        mechanism_heading = r'MECHANISM:\n'
+        input_states_heading = r'______InputStates______\n' \
+                         r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\'
+        parameter_states_heading = r'ParameterStates:'
+        output_states_heading = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ _______/\nOutputStates'
 
         def mech_string(mech):
             '''Return string with name of mechanism possibly with function and/or value
             Inclusion of function and value is determined by arguments of call to show_structure '''
-            mech_name = r' <{0}> MECHANISM:\n{0}'.format(mech.name)
+            mech_name = r' <{0}> {1}{0}'.format(mech.name, mechanism_heading)
             mech_function = ''
-            if show_function:
+            if show_functions:
                 mech_function = r'\n({})'.format(mech.function_object.__class__.__name__)
             mech_value = ''
-            if show_value:
+            if show_values:
                 mech_value = r'\n={}'.format(mech.value)
             return mech_name + mech_function + mech_value
 
@@ -2390,30 +2423,17 @@ class Mechanism_Base(Mechanism):
             states += close_bracket
             return states
 
-        # Get Component strings
+        # Construct structure specification
         mech = mech_string(self)
-        input_states = r'______InputStates______\n' \
-                       r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\' + \
-                       pipe + states_string(self.input_states,
-                                            include_function=show_function,
-                                            include_value=show_value)
-        parameter_states = r'PameterStates:' + pipe + states_string(self.parameter_states,
-                                                                    include_function=show_function,
-                                                                    include_value=show_value)
+        input_states = input_states_heading + pipe + states_string(self.input_states,
+                                                                   include_function=show_functions,
+                                                                   include_value=show_values)
+        parameter_states = parameter_states_heading + pipe + states_string(self.parameter_states,
+                                                                           include_function=show_functions,
+                                                                           include_value=show_values)
         output_states = states_string(self.output_states,
-                                      include_function=show_function,
-                                      include_value=show_value) + pipe + \
-                                      r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ _______/\n' \
-                                      r'OutputStates'
-        # Make node
-        default_color = 'black'
-        shape = 'oval'
-        m = gv.Digraph('mechanisms',
-                       filename='mechanisms_revisited.gv',
-                       node_attr={'shape': 'record'},
-                       # graph_attr={"rankdir" : direction}
-                       )
-
+                                      include_function=show_functions,
+                                      include_value=show_values) + pipe + output_states_heading
         m_node_struct = open_bracket + \
                         output_states + pipe + \
                         open_bracket + mech + pipe + \
@@ -2421,9 +2441,14 @@ class Mechanism_Base(Mechanism):
                         input_states + \
                         close_bracket
 
+        # Make node
+        m = gv.Digraph('mechanisms',
+                       filename='mechanisms_revisited.gv',
+                       node_attr={'shape': 'record'},
+                       )
         m.node(self.name, m_node_struct, shape='record')
-        # m.edges([(self.name+":<"+self.input_states[0].name+">", self.name+":<"+self.output_states[0].name+">")])
 
+        # Return requested format
         if output_fmt == 'pdf':
             m.view(self.name.replace(" ", "-"), cleanup=True)
         elif output_fmt == 'jupyter':
