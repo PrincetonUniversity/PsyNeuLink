@@ -3270,6 +3270,7 @@ class System(System_Base):
                    show_learning = False,
                    show_control = False,
                    show_dimensions = False,
+                   show_mechanism_structure=False,
                    origin_color = 'green',
                    terminal_color = 'red',
                    origin_and_terminal_color = 'brown',
@@ -3306,6 +3307,13 @@ class System(System_Base):
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
+
+        show_mechanism_structure : bool : default False
+            specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
+            `States` and, optionally, the `function <Component.function>` and `value <Component.value>` of each
+            (these can be specified using the **show_functions** and **show_values** arguments.  If this option
+            is specified, Projections are connected to and from the State that is the `sender <Projection.sender>` or
+            `receiver <Projection.receiver>` of each.
 
         show_learning : bool or ALL : default False
             specifies whether or not to show the learning components of the system;
@@ -3367,7 +3375,6 @@ class System(System_Base):
             'pdf': generate and open a pdf with the visualization;
             'jupyter': return the object (ideal for working in jupyter/ipython notebooks).
 
-
         Returns
         -------
 
@@ -3395,7 +3402,8 @@ class System(System_Base):
                        node_attr  = {
                            'fontsize':'12',
                            'fontname':'arial',
-                           'shape':mechanism_shape,
+                           # 'shape':mechanism_shape,
+                           'shape':'record',
                            'color':default_node_color
                        },
                        edge_attr  = {
@@ -3415,7 +3423,10 @@ class System(System_Base):
             rcvr_name = self._get_label(rcvr, show_dimensions)
             # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
             rcvr_label = rcvr_name
-            G.node(rcvr_label, shape=mechanism_shape)
+            if show_mechanism_structure:
+                G.node(rcvr_label, rcvr.show_structure(output_fmt='struct'))
+            else:
+                G.node(rcvr_label, shape=mechanism_shape)
 
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
@@ -3455,12 +3466,14 @@ class System(System_Base):
                                 has_learning = None
                 edge_label = edge_name
 
-                # if rcvr is learning mechanism, draw arrow with learning color
+                # if rcvr is a LearningMechanism or an ObjectiveMechanism used for control:
+                #    break, as those handled below
                 if isinstance(rcvr, LearningMechanism):
                     break
-                # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller, use control color
+                # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
                 if isinstance(rcvr, ObjectiveMechanism) and rcvr.controller is True:
                     break
+
                 arrow_color="black"
                 if show_learning and has_learning:
                     # expand

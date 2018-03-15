@@ -2349,7 +2349,7 @@ class Mechanism_Base(Mechanism):
 
         print("- output: {}".format(output_string))
 
-    def show_struture(self,
+    def show_structure(self,
                       direction = 'BT',
                       show_function = False,
                       show_value = False,
@@ -2365,7 +2365,7 @@ class Mechanism_Base(Mechanism):
         def mech_string(mech):
             '''Return string with name of mechanism possibly with function and/or value
             Inclusion of function and value is determined by arguments of call to show_structure '''
-            mech_name = r'MECHANISM:\n{}'.format(mech.name)
+            mech_name = r' <{0}> MECHANISM:\n{0}'.format(mech.name)
             mech_function = ''
             if show_function:
                 mech_function = r'\n({})'.format(mech.function_object.__class__.__name__)
@@ -2386,7 +2386,7 @@ class Mechanism_Base(Mechanism):
                 value = ''
                 if include_value:
                     value = r'\n={}'.format(state.value)
-                states += r'{}{}{}'.format(state.name, function, value)
+                states += r'<{0}> {0}{1}{2}'.format(state.name, function, value)
             states += close_bracket
             return states
 
@@ -2414,15 +2414,23 @@ class Mechanism_Base(Mechanism):
                        # graph_attr={"rankdir" : direction}
                        )
 
-        m_node_spec = open_bracket + \
-                      output_states + pipe + \
-                      open_bracket + mech + pipe + \
-                      parameter_states + close_bracket + pipe +\
-                      input_states + \
-                      close_bracket
+        m_node_struct = open_bracket + \
+                        output_states + pipe + \
+                        open_bracket + mech + pipe + \
+                        parameter_states + close_bracket + pipe + \
+                        input_states + \
+                        close_bracket
 
-        m.node('mechanism', m_node_spec)
-        m.view()
+        m.node(self.name, m_node_struct, shape='record')
+        # m.edges([(self.name+":<"+self.input_states[0].name+">", self.name+":<"+self.output_states[0].name+">")])
+
+        if output_fmt == 'pdf':
+            m.view(self.name.replace(" ", "-"), cleanup=True)
+        elif output_fmt == 'jupyter':
+            return m
+        elif output_fmt == 'struct':
+            # return m.node
+            return m_node_struct
 
     def plot(self, x_range=None):
         """Generate a plot of the Mechanism's `function <Mechanism_Base.function>` using the specified parameter values
