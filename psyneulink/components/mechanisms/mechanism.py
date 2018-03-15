@@ -2392,8 +2392,8 @@ class Mechanism_Base(Mechanism):
 
         # Get Component strings
         mech = mech_string(self)
-        input_states = r'______InputStates______\n\|' \
-                       r'\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \|' + \
+        input_states = r'______InputStates______\n' \
+                       r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\' + \
                        pipe + states_string(self.input_states,
                                             include_function=show_function,
                                             include_value=show_value)
@@ -2402,7 +2402,9 @@ class Mechanism_Base(Mechanism):
                                                                     include_value=show_value)
         output_states = states_string(self.output_states,
                                       include_function=show_function,
-                                      include_value=show_value) + pipe + r'\|______OutputStates______\|'
+                                      include_value=show_value) + pipe + \
+                                      r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ _______/\n' \
+                                      r'OutputStates'
         # Make node
         default_color = 'black'
         shape = 'oval'
