@@ -697,6 +697,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   params=params)
 
         self.integrator_function = None
+        self.original_integrator_function = None
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -945,7 +946,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                             noise=noise,
                                             rate=smoothing_factor,
                                             owner=self)
-
+                self.original_integrator_function = self.integrator_function
             current_input = self.integrator_function.execute(
                 variable,
                 # Should we handle runtime params?
@@ -1051,3 +1052,24 @@ class TransferMechanism(ProcessingMechanism_Base):
         if self.integrator_function:
             return self.value - self.integrator_function.previous_value
         return None
+
+    @property
+    def integrator_mode(self):
+        return self._integrator_mode
+
+    @integrator_mode.setter
+    def integrator_mode(self, val):
+        if val is True:
+            if self.integrator_function is None:
+                self.integrator_function = self.original_integrator_function
+                self._integrator_mode = True
+        elif val is False:
+            if self.integrator_function is not None:
+                self.original_integrator_function = self.integrator_function
+            self.integrator_function = None
+            self._integrator_mode = False
+        else:
+            raise MechanismError("{}'s integrator_mode attribute may only be True or False.".format(self.name))
+
+
+
