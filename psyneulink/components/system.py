@@ -3434,14 +3434,14 @@ class System(System_Base):
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
-            rcvr_name = self._get_label(rcvr, show_dimensions)
             # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
-            rcvr_label = rcvr_name
             if show_mechanism_structure:
+                rcvr_label=rcvr.name
                 G.node(rcvr_label, rcvr.show_structure(show_functions=show_functions,
                                                        show_values=show_values,
                                                        output_fmt='struct'))
             else:
+                rcvr_label = self._get_label(rcvr, show_dimensions)
                 G.node(rcvr_label, shape=mechanism_shape)
 
             # handle auto-recurrent projections
@@ -3449,6 +3449,11 @@ class System(System_Base):
                 for proj in input_state.path_afferents:
                     if proj.sender.owner is not rcvr:
                         continue
+                    if show_mechanism_structure:
+                        sndr_proj_label = '{}:{}'.format(rcvr.name, proj.sender.name)
+                        rcvr_proj_label = '{}:{}'.format(rcvr.name, proj.receiver.name)
+                    else:
+                        sndr_proj_label = rcvr_proj_label = rcvr_label
                     edge_label = self._get_label(proj, show_dimensions)
                     try:
                         has_learning = proj.has_learning_projection
@@ -3456,24 +3461,31 @@ class System(System_Base):
                         has_learning = None
                     if show_learning and has_learning:
                         G.node(edge_label, shape=projection_shape)
-                        G.edge(rcvr_label, edge_label, arrowhead='none')
-                        G.edge(edge_label, rcvr_label)
+                        G.edge(sndr_proj_label, edge_label, arrowhead='none')
+                        G.edge(edge_label, rcvr_proj_label)
                     else:
                         # render normally
-                        G.edge(rcvr_label, rcvr_label, label=edge_label)
+                        G.edge(sndr_proj_label, rcvr_proj_label, label=edge_label)
 
             # loop through senders
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
-                sndr_name = self._get_label(sndr, show_dimensions)
-                # sndr_shape = sndr.instance_defaults.variable.shape[1]
-                sndr_label = sndr_name
+                if show_mechanism_structure:
+                    sndr_label = sndr.name
+                else:
+                    sndr_label = self._get_label(sndr, show_dimensions)
 
                 # find edge name
                 for output_state in sndr.output_states:
                     projs = output_state.efferents
                     for proj in projs:
                         if proj.receiver.owner == rcvr:
+                            if show_mechanism_structure:
+                                sndr_proj_label = '{}:{}'.format(sndr_label, proj.sender.name)
+                                rcvr_proj_label = '{}:{}'.format(rcvr_label, proj.receiver.name)
+                            else:
+                                sndr_proj_label = sndr_label
+                                rcvr_proj_label = rcvr_label
                             edge_name = self._get_label(proj, show_dimensions)
                             # edge_shape = proj.matrix.shape
                             try:
@@ -3496,11 +3508,11 @@ class System(System_Base):
                     G.node(sndr_label, shape=mechanism_shape)
                     G.node(edge_label, shape=projection_shape)
                     G.node(rcvr_label, shape=mechanism_shape)
-                    G.edge(sndr_label, edge_label, arrowhead='none')
-                    G.edge(edge_label, rcvr_label)
+                    G.edge(sndr_proj_label, edge_label, arrowhead='none')
+                    G.edge(edge_label, rcvr_proj_label)
                 else:
                     # render normally
-                    G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
+                    G.edge(sndr_proj_label, rcvr_proj_label, label = edge_label, color=arrow_color)
 
                 if ORIGIN in sndr.systems[self]:
                     G.node(sndr_label, color=origin_color, penwidth='3')
@@ -3574,28 +3586,62 @@ class System(System_Base):
                        "can't be used in its show_graph() method\n".format(self.name))
                 return
 
-            connector = controller.input_state.path_afferents[0]
-            objmech = connector.sender.owner
+            objmech_ctlr_proj = controller.input_state.path_afferents[0]
+            objmech = objmech_ctlr_proj.sender.owner
 
-            # main edge
-            G.node(self._get_label(controller, show_dimensions), color=control_color)
-            G.node(self._get_label(objmech, show_dimensions), color=control_color)
-            G.edge(self._get_label(objmech, show_dimensions), self._get_label(controller, show_dimensions), label=connector.name, color=control_color)
+            if show_mechanism_structure:
+                ctlr_label = controller.name
+                objmech_label = objmech.name
+                G.node(ctlr_label,
+                       controller.show_structure(show_functions=show_functions,
+                                                 show_values=show_values,
+                                                 output_fmt='struct'),
+                       color=control_color)
+                G.node(objmech_label,
+                       objmech.show_structure(show_functions=show_functions,
+                                              show_values=show_values,
+                                              output_fmt='struct'),
+                       color=control_color)
+            else:
+                ctlr_label = self._get_label(controller, show_dimensions)
+                objmech_label = self._get_label(objmech, show_dimensions)
+                G.node(ctlr_label, color=control_color)
+                G.node(objmech_label, color=control_color)
+
+            # objmech to controller edge
+            if show_mechanism_structure:
+                G.edge(objmech.name+':'+objmech_ctlr_proj.sender.name,
+                       controller.name+':'+objmech_ctlr_proj.receiver.name,
+                       label=objmech_ctlr_proj.name, 
+                       color=control_color)
+            else:
+                G.edge(objmech_label, ctlr_label, label=objmech_ctlr_proj.name, color=control_color)
 
             # outgoing edges
             for output_state in controller.control_signals:
                 for projection in output_state.efferents:
-                    # MODIFIED 7/21/17 CW: this edge_name statement below didn't do anything and caused errors, so
-                    # I commented it out.
-                    # edge_name
-                    rcvr_name = self._get_label(projection.receiver.owner, show_dimensions)
-                    G.edge(self._get_label(controller, show_dimensions), rcvr_name, label=projection.name, color=control_color)
+                    if show_mechanism_structure:
+                        ctlr_proj_label = ctlr_label+':'+output_state.name
+                        rcvr_proj_label = projection.receiver.owner.name+':'+projection.receiver.name
+                    else:
+                        ctlr_proj_label = ctlr_label
+                        rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions)
+                    G.edge(ctlr_proj_label,
+                           rcvr_proj_label,
+                           label=projection.name, 
+                           color=control_color)
 
             # incoming edges
             for istate in objmech.input_states:
-                for proj in istate.path_afferents:
-                    sndr_name = self._get_label(proj.sender.owner, show_dimensions)
-                    G.edge(sndr_name, self._get_label(objmech, show_dimensions), label=proj.name, color=control_color)
+                for projection in istate.path_afferents:
+                    if show_mechanism_structure:
+                        sndr_proj_label = projection.sender.owner.name+':'+projection.sender.name
+                        # objmech_proj_label = projection.receiver.owner.name+':'+projection.receiver.name
+                        objmech_proj_label = objmech_label+':'+istate.name
+                    else:
+                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions)
+                        objmech_proj_label = self._get_label(objmech, show_dimensions)
+                    G.edge(sndr_proj_label, objmech_proj_label)
 
             # prediction mechanisms
             for object_item in self.execution_list:

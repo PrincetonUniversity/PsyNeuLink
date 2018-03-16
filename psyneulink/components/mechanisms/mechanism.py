@@ -2361,8 +2361,8 @@ class Mechanism_Base(Mechanism):
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
            (standard with PsyNeuLink pip install)
 
-        Displays the structure of a Mechanism using the GraphViz
-        `record <http://soc.if.usp.br/manual/graphviz/html/info/shapes.html#record>`_ shape.  This method is called
+        Displays the structure of a Mechanism using the GraphViz `record
+        <http://graphviz.readthedocs.io/en/stable/examples.html#structs-revisited-py>`_ shape.  This method is called
         by `System.show_graph` if its **show_mechanism_structure** argument is specified as `True` when it is called.
 
         Arguments
