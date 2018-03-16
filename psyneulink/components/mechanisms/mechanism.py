@@ -2416,7 +2416,10 @@ class Mechanism_Base(Mechanism):
                 mech_value = r'\n={}'.format(mech.value)
             return mech_name + mech_function + mech_value
 
-        def states_string(state_list:ContentAddressableList, include_function:bool=False, include_value:bool=False):
+        def states_string(state_list:ContentAddressableList,
+                          state_type,
+                          include_function:bool=False,
+                          include_value:bool=False):
             '''Return string with name of states in ContentAddressableList with functions and/or values as specified'''
             states = open_bracket
             for i, state in enumerate(state_list):
@@ -2428,7 +2431,10 @@ class Mechanism_Base(Mechanism):
                 value = ''
                 if include_value:
                     value = r'\n={}'.format(state.value)
-                states += r'<{0}> {0}{1}{2}'.format(state.name, function, value)
+                states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
+                                                        state.name,
+                                                        function,
+                                                        value)
             states += close_bracket
             return states
 
@@ -2436,22 +2442,28 @@ class Mechanism_Base(Mechanism):
         mech = mech_string(self)
         if show_headers:
             input_states = input_states_header + pipe + states_string(self.input_states,
-                                                                       include_function=show_functions,
-                                                                       include_value=show_values)
+                                                                      InputState,
+                                                                      include_function=show_functions,
+                                                                      include_value=show_values)
             parameter_states = parameter_states_header + pipe + states_string(self.parameter_states,
-                                                                               include_function=show_functions,
-                                                                               include_value=show_values)
+                                                                              ParameterState,
+                                                                              include_function=show_functions,
+                                                                              include_value=show_values)
             output_states = states_string(self.output_states,
+                                          OutputState,
                                           include_function=show_functions,
                                           include_value=show_values) + pipe + output_states_header
         else:
             input_states = states_string(self.input_states,
+                                         InputState,
                                          include_function=show_functions,
                                          include_value=show_values)
             parameter_states = states_string(self.parameter_states,
+                                             ParameterState,
                                              include_function=show_functions,
                                              include_value=show_values)
             output_states = states_string(self.output_states,
+                                          OutputState,
                                           include_function=show_functions,
                                           include_value=show_values)
         m_node_struct = open_bracket + \
