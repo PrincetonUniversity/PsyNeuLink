@@ -816,6 +816,12 @@ class MechanismError(Exception):
         return repr(self.error_value)
 
 
+from collections import UserDict
+class MechParamsDict(UserDict):
+    """Subclass for validation of dicts used to pass Mechanism parameters to OutputState for variable specification."""
+    pass
+
+
 class Mechanism_Base(Mechanism):
     """Base class for Mechanism.
 
@@ -2143,6 +2149,7 @@ class Mechanism_Base(Mechanism):
 
         #endregion
 
+        self.current_execution_time = self._get_current_execution_time(context=context)
         return self.value
 
     def run(
@@ -2413,6 +2420,78 @@ class Mechanism_Base(Mechanism):
 
         print("- output: {}".format(output_string))
 
+    def show_struture(self,
+                      direction = 'BT',
+                      show_function = False,
+                      show_value = False,
+                      output_fmt='pdf'
+                      ):
+
+        import graphviz as gv
+
+        open_bracket = r'{'
+        pipe = r' | '
+        close_bracket = r'}'
+
+        def mech_string(mech):
+            '''Return string with name of mechanism possibly with function and/or value
+            Inclusion of function and value is determined by arguments of call to show_structure '''
+            mech_name = r'MECHANISM:\n{}'.format(mech.name)
+            mech_function = ''
+            if show_function:
+                mech_function = r'\n({})'.format(mech.function_object.__class__.__name__)
+            mech_value = ''
+            if show_value:
+                mech_value = r'\n={}'.format(mech.value)
+            return mech_name + mech_function + mech_value
+
+        def states_string(state_list:ContentAddressableList, include_function:bool=False, include_value:bool=False):
+            '''Return string with name of states in ContentAddressableList with functions and/or values as specified'''
+            states = open_bracket
+            for i, state in enumerate(state_list):
+                if i:
+                    states += pipe
+                function = ''
+                if include_function:
+                    function = r'\n({})'.format(state.function_object.__class__.__name__)
+                value = ''
+                if include_value:
+                    value = r'\n={}'.format(state.value)
+                states += r'{}{}{}'.format(state.name, function, value)
+            states += close_bracket
+            return states
+
+        # Get Component strings
+        mech = mech_string(self)
+        input_states = r'______InputStates______\n\|' \
+                       r'\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \|' + \
+                       pipe + states_string(self.input_states,
+                                            include_function=show_function,
+                                            include_value=show_value)
+        parameter_states = r'PameterStates:' + pipe + states_string(self.parameter_states,
+                                                                    include_function=show_function,
+                                                                    include_value=show_value)
+        output_states = states_string(self.output_states,
+                                      include_function=show_function,
+                                      include_value=show_value) + pipe + r'\|______OutputStates______\|'
+        # Make node
+        default_color = 'black'
+        shape = 'oval'
+        m = gv.Digraph('mechanisms',
+                       filename='mechanisms_revisited.gv',
+                       node_attr={'shape': 'record'},
+                       # graph_attr={"rankdir" : direction}
+                       )
+
+        m_node_spec = open_bracket + \
+                      output_states + pipe + \
+                      open_bracket + mech + pipe + \
+                      parameter_states + close_bracket + pipe +\
+                      input_states + \
+                      close_bracket
+
+        m.node('mechanism', m_node_spec)
+        m.view()
 
     def plot(self, x_range=None):
         """Generate a plot of the Mechanism's `function <Mechanism_Base.function>` using the specified parameter values
@@ -2722,27 +2801,13 @@ class Mechanism_Base(Mechanism):
                                       list=[p.sender.owner for p in self.mod_afferents
                                             if isinstance(p.sender.owner, Mechanism_Base)])
 
-    from collections import UserDict
-    class MechParamsDict(UserDict):
-        pass
-
     @property
     def _params_dict(self):
-        # MODIFIED 2/24/18 OLD:
-        params_dict = {
-            # SELF:self,
-            # OWNER:self.owner,
-            OWNER_VARIABLE: self.variable,
-            OWNER_VALUE: self.value,
-            INPUT_STATE_VARIABLES: [input_state.variable for input_state in self.input_states]
-        }
-        # # MODIFIED 2/24/18 NEW:
-        # params_dict = self.MechParamsDict(
-        #     OWNER_VARIABLE = self.variable,
-        #     OWNER_VALUE = self.value,
-        #     INPUT_STATE_VARIABLES = [input_state.variable for input_state in self.input_states]
-        # )
-        # MODIFIED 2/24/18 END
+        params_dict = MechParamsDict(
+                OWNER_VARIABLE = self.variable,
+                OWNER_VALUE = self.value,
+                INPUT_STATE_VARIABLES = [input_state.variable for input_state in self.input_states]
+        )
         params_dict.update(self.user_params)
         del params_dict[FUNCTION]
         del params_dict[FUNCTION_PARAMS]
@@ -2750,7 +2815,6 @@ class Mechanism_Base(Mechanism):
         del params_dict[OUTPUT_STATES]
         params_dict.update(self.function_params)
         return params_dict
-
 
 
 def _is_mechanism_spec(spec):

@@ -1244,13 +1244,16 @@ class Component(object):
     def _assign_default_name(self, **kwargs):
         return
 
-    def _assign_args_to_param_dicts(self, **kwargs):
+    def _assign_args_to_param_dicts(self, defaults=None, **kwargs):
         """Assign args passed in __init__() to params
 
         Get args and their corresponding values in call to constructor
         - get default values for all args and assign to class.paramClassDefaults if they have not already been
         - assign arg values to local copy of params dict
         - override those with any values specified in params dict passed as "params" arg
+
+        Accepts defaults dict that, if provided, overrides any values assigned to arguments in self.__init__
+
         """
 
         # Get args in call to constructor and create dictionary of their default values (for use below)
@@ -1258,10 +1261,13 @@ class Component(object):
         defaults_dict = {}
         for arg_name, arg in inspect.signature(self.__init__).parameters.items():
             defaults_dict[arg_name] = arg.default
+        if defaults:
+            defaults_dict.update(defaults)
         def default(val):
             try:
                 return defaults_dict[val]
             except KeyError:
+                # FIX: IF CUSTOM_FUNCTION IS IN PARAMS, TRY GETTING ITS ARGS
                 # raise ComponentError("PROGRAM ERROR: \'{}\' not declared in {}.__init__() "
                 #                      "but expected by its parent class ({}).".
                 #                      format(val,
@@ -2234,7 +2240,7 @@ class Component(object):
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             if not param_name in self.paramClassDefaults:
                 # these are always allowable since they are attribs of every Component
-                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES}:  # added SIZE here (7/5/17, CW)
+                if param_name in {VARIABLE, NAME, VALUE, PARAMS, SIZE, LOG_ENTRIES}:
                     continue
                 # function is a class, so function_params has not yet been implemented
                 self._function = request_set[FUNCTION]
@@ -2708,8 +2714,10 @@ class Component(object):
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
                 from psyneulink.components.functions.function import UserDefinedFunction
-                self.function = UserDefinedFunction(default_variable=self.instance_defaults.variable, owner=self,
-                                                    custom_function=function, context=context).function
+                self.function = UserDefinedFunction(default_variable=self.instance_defaults.variable,
+                                                    owner=self,
+                                                    custom_function=function,
+                                                    context=context).function
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
@@ -2810,7 +2818,6 @@ class Component(object):
             for param_state in self._parameter_states:
                 setattr(self.__class__, "mod_"+param_state.name, make_property_mod(param_state.name))
 
-
     def initialize(self):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
@@ -2819,6 +2826,10 @@ class Component(object):
 
     def _execute(self, variable=None, runtime_params=None, context=None):
         return self.function(variable=variable, params=runtime_params, context=context)
+
+    def _get_current_execution_time(self, context):
+        from psyneulink.globals.log import _get_log_context
+        return self.log._get_time(context=context ,context_flags=_get_log_context(context))
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -3057,7 +3068,6 @@ class Component(object):
         of the Component's `log <Component.log>`.
         """
         self.log.log_values(entries)
-
 
     @property
     def logged_items(self):

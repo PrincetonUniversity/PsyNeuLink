@@ -311,7 +311,7 @@ from psyneulink.components.mechanisms.adaptive.adaptivemechanism import Adaptive
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.shellclasses import System_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.components.states.outputstate import INDEX, SEQUENTIAL
+from psyneulink.components.states.outputstate import SEQUENTIAL
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTROL, CONTROLLER, CONTROL_PROJECTION, \
     CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, \
@@ -885,20 +885,15 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                  for i in range(len(self._output_states))])
         self.value = self.instance_defaults.value
 
-        # Assign ControlSignal's variable to appended item of owner's value
-        # control_signal._variable = (OWNER_VALUE, len(self.instance_defaults.value) - 1)
-        if control_signal.owner_value_index is None:
-            control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
+        # Assign ControlSignal's variable to index appended item of owner's value
+        # if control_signal.owner_value_index is None:
+        control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
         if not isinstance(control_signal.owner_value_index, int):
             raise ControlMechanismError(
-                "PROGRAM ERROR: {} attribute of {} for {} is not {} or an int".format(
-                    INDEX, ControlSignal.__name__, SEQUENTIAL, self.name
-                )
-            )
-
+                    "PROGRAM ERROR: The \'owner_value_index\' attribute for {} of {} ({})is not an int."
+                        .format(control_signal.name, self.name, control_signal.owner_value_index))
         # Validate index
         try:
-
             self.value[control_signal.owner_value_index]
         except IndexError:
             raise ControlMechanismError(
@@ -1059,7 +1054,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 and not self.control_signals[0].efferents):
             del self._output_states[0]
             del self.control_signals[0]
-            self.allocation_policy = None
+            self.value = None
 
         # Add any ControlSignals specified for System
         for control_signal_spec in system_control_signals:
@@ -1100,17 +1095,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         try:
             self._objective_mechanism._monitored_output_states = value
         except AttributeError:
-            # # MODIFIED 11/25/17 OLD:
-            # raise ControlMechanismError("Control Mechanism {}'s Objective "
-            #                             "Mechanism has not been "
-            #                             "instantiated.".format(self.name))
-            # MODIFIED 11/25/17 NEW:
             return None
-
-            # # MODIFIED 11/25/17 NEWER:
-            # self._instantiate_objective_mechanism(context='INSTANTIATE_OBJECTIVE_MECHANISM')
-            # return self.monitored_output_states
-            # MODIFIED 11/25/17 END:
 
     @property
     def monitored_output_states_weights_and_exponents(self):

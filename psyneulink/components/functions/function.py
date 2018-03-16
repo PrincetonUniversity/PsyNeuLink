@@ -23,6 +23,7 @@ TransferMechanism Functions:
   * `Linear`
   * `Exponential`
   * `Logistic`
+  * `OneHot`
   * `SoftMax`
   * `LinearMatrix`
 
@@ -189,7 +190,27 @@ from random import randint
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
-from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import \
+    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, \
+    AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, \
+    COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY,\
+    DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
+    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
+    EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, \
+    FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, \
+    GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, \
+    INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
+    LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
+    LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
+    MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_ABS_INDICATOR, MAX_VAL, MAX_ABS_VAL, \
+    NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
+    OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
+    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMS, PARAMETER_STATE_PARAMS, PEARSON, \
+    PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
+    RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, \
+    STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, \
+    USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, \
+    WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -211,11 +232,11 @@ __all__ = [
     'kwNavarrosAndFuss', 'LCAIntegrator', 'LEARNING_ACTIVATION_FUNCTION',
     'LEARNING_ACTIVATION_INPUT', 'LEARNING_ACTIVATION_OUTPUT',
     'LEARNING_ERROR_OUTPUT', 'LearningFunction', 'Linear', 'LinearCombination',
-    'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next', 'ModulatedParam',
+    'LinearMatrix', 'Logistic', 'max_vs_avg', 'max_vs_next', 'MODE', 'ModulatedParam',
     'ModulationParam', 'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM',
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
-    'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
+    'OneHot', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
     'PROPENSITY', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
@@ -985,77 +1006,251 @@ class ArgumentTherapy(Function_Base):
 
 class UserDefinedFunction(Function_Base):
     """
-    UserDefinedFunction(           \
-         custom_function=None,           \
-         default_variable=None,      \
-         params=None,        \
-         owner=None,         \
-         name=None,          \
-         prefs=None          \
+    UserDefinedFunction(        \
+         custom_function=None,  \
+         default_variable=None, \
+         params=None,           \
+         owner=None,            \
+         name=None,             \
+         prefs=None             \
     )
+
+    .. _UDF_Description:
+
+    A UserDefinedFunction (UDF) is used to "wrap" a Python function or method, including a lamdba function,
+    as a PsyNeuLink `Function`, so that it can be used as the `function <Component.function>` of a `Component
+    <Component>`.  This is done automatically if a Python function or method is assigned as the `function
+    <Component.function>` attribute of a Component.  A Python function or method can also be wrapped on its own,
+    by calling the UserDefinedFunction constructor, and assigning the Python function or method as its
+    **custom_function** argument.  The Python function or method must obey the following conventions to be treated
+    correctly as a UserDefinedFunction (UDF):
+
+    .. _UDF_Variable:
+
+    * It must have **at least one argument** (that can be a positional or a keyword argument);  this will be treated
+      as the `variable <UserDefinedFunction.variable>` attribute of the UDF's `function <UserDefinedFunction.function>`.
+      When the UDF calls the function or method that it wraps, an initial attempt is made to do so with **variable**
+      as the name of the first argument; if that fails, it is called positionally.  The argument is always passed as a
+      2d np.array, that may contain one or more items (elements in axis 0), depending upon the Component to which the
+      UDF is assigned.  It is the user's responsibility to insure that the number of items expected in the first
+      argument of the function or method is compatible with the circumstances in which it will be called.
+    ..
+    .. _UDF_Additional_Arguments:
+
+    * It may have have **any number of additional arguments** (positional and/or keyword);  these are treated as
+      parameters of the UDF, and can be modulated by `ModulatorySignals <ModulatorySignal>` like the parameters of
+      ordinary PsyNeuLink `Functions <Function>`.  If the UDF is assigned to (or automatically created for) a
+      `Mechanism` or `Projection <Projection>`, these parameters are each automatically assigned a `ParameterState`
+      so that they can be modulated by `ControlSignals <ControlSignal>` or `LearningSignals <LearningSignal>`,
+      respectively.  If the UDF is assigned to (or automatically created for) an `InputState` or `OutputState`,
+      and any of the parameters are specified as `Function_Modulatory_Params` (see `below <UDF_Modulatory_Params>`),
+      then they can be modulated by `GatingSignals <GatingSignal>`. The function or method wrapped by the UDF is called
+      with these parameters by their name and with their current values (i.e., as determined by any
+      `ModulatorySignals <ModulatorySignal>` assigned to them).
+    ..
+    .. _UDF_Params_Context:
+
+    * It may include **context** and **params** arguments;  these are not required, but can be included to receive
+      information about the current conditions of execution.  When the function or method is called, an initial attempt
+      is made to do so with these arguments; if that fails, it is called again without them.
+    ..
+    .. _UDF_Modulatory_Params:
+
+    * The parameters of a UDF can be specified as `Function_Modulatory_Params` in a `parameter specification dictionary
+      <ParameterState_Specification>` assigned to the **params** argument of the constructor for either the Python
+      function or method, or of an explicitly defined UDF (see `examples below <UDF_Modulatory_Params_Examples>`).
+      It can include either or both of the following two entries:
+         *MULTIPLICATIVE_PARAM*: <parameter name>\n
+         *ADDITIVE_PARAM*: <parameter name>
+      These are used only when the UDF is assigned as the `function <State_Base.function>` of an InputState or
+      OutputState that receives one more more `GatingProjections <GatingProjection>`.
+
+      COMMENT:
+      # IMPLEMENT INTERFACE FOR OTHER ModulationParam TYPES (i.e., for ability to add new custom ones)
+      COMMENT
+
+    .. tip::
+       The format of the `variable <UserDefinedFunction.variable>` passed to the `custom_function
+       <UserDefinedFunction.custom_function>` function can be verified by adding a ``print(variable)`` or
+       ``print(type(variable))`` statement to the function.
+
+    Examples
+    --------
+
+    **Assigning a custom function to a Mechanism**
+
+    .. _UDF_Lambda_Function_Examples:
+
+    The following example assigns a simple lambda function that returns the sum of the elements of a 1d array) to a
+    `TransferMechanism`::
+
+        >>> import psyneulink as pnl
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0,0,0]],
+        ...                                   function=lambda x:sum(x[0]))
+        >>> my_mech.execute(input = [1, 2, 3])
+        array([[6]])
+
+    Note that the function treats its argument, x, as a 2d array, and accesses its first item for the calculation.
+    This is because  the `variable <Mechanism_Base.variable>` of ``my_mech`` is defined in the **size** argument of
+    its constructor as having a single item (a 1d array of length 3;  (see `size <Component.size>`).  In the
+    following example, a function is defined for a Mechanism in which the variable has two items, that are summed by
+    the function::
+
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=lambda x: x[0] + x[1])
+        >>> my_mech.execute(input = [[1],[2]])
+        array([[3]])
+
+    .. _UDF_Defined_Function_Examples:
+
+    The **function** argument can also be assigned a function defined in Python::
+
+        >>> def my_fct(variable):
+        ...     return variable[0] + variable[1]
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=my_fct)
+
+    This will produce the same result as the last example.  This can be useful for assigning the function to more than
+    one Component.
+
+    More complicated functions, including ones with more than one parameter can also be used;  for example::
+
+        >>> def my_sinusoidal_fct(input=[[0],[0]],
+        ...                       phase=0,
+        ...                       amplitude=1):
+        ...    frequency = input[0]
+        ...    t = input[1]
+        ...    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
+        >>> my_wave_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                        function=my_sinusoidal_fct)
+
+    Note that in this example, ``input`` is used as the name of the first argument, instead of ``variable``
+    as in the examples above. The name of the first argument of a function to be "wrapped" as a UDF does not matter;
+    in general it is good practice to use ``variable``, as the `variable <Component.variable>` of the Component
+    to which the UDF is assigned is what is passed to the function as its first argument.  However, if it is helpful to
+    name it something else, that is fine.
+
+    Notice also that ``my_sinusoidal_fct`` takes two values in its ``input`` argument, that it assigns to the
+    ``frequency`` and ``t`` variables of the function.  While  it could have been specified more compactly as a 1d array
+    with two elements (i.e. [0,0]), it is specified in the example as a 2d array with two items to make it clear that
+    it matches the format of the **default_variable** for the ProcessingMechanism to which it will be assigned,
+    which requires it be formatted this way (since the `variable <Component.variable>` of all Components are converted
+    to a 2d array).
+
+    ``my_sinusoidal_fct`` also has two other arguments, ``phase`` and ``amplitude``.   When it is assigned to
+    ``my_wave_mech``, those parameters are assigned to `ParameterStates <ParameterState>` of ``my_wave_mech``, which
+    that be used to modify their values by `ControlSignals <ControlSignal>` (see `example below <_
+    UDF_Control_Signal_Example>`).
+
+    .. _UDF_Explicit_Creation_Examples:
+
+    In all of the examples above, a UDF was automatically created for the functions assigned to the Mechanism.  A UDF
+    can also be created explicitly, as follows:
+
+        >>> my_sinusoidal_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct)
+        >>> my_wave_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                        function=my_sinusoidal_UDF)
+
+    When the UDF is created explicitly, parameters of the function can be included as arguments to its constructor,
+    to assign them default values that differ from the those in the definition of the function, or for parameters
+    that don't define default values.  For example::
+
+        >>> my_sinusoidal_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct,
+        ...                                  phase=10,
+        ...                                  amplitude=3)
+        >>> my_wave_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                        function=my_sinusoidal_UDF)
+
+    assigns ``my_sinusoidal_fct`` as the `function <Mechanism_Base.function>` for ``my_mech``, but with the default
+    values of its ``phase`` and ``amplitude`` parameters assigned new values.  This can be useful for assigning the
+    same function to different Mechanisms with different default values.
+
+    .. _UDF_Control_Signal_Example:
+
+    Explicitly defining the UDF can also be used to `specify control <ControlSignal_Specification>` for parameters of
+    the function, as in the following example::
+
+        >>> my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=UserDefinedFunction(custom_function=my_sinusoidal_fct,
+        ...                                                                amplitude=(1.0, pnl.CONTROL)))
+
+    This specifies that the default value of the ``amplitude`` parameter of ``my_sinusoidal_fct`` be ``1.0``, but
+    its value should be modulated by a `ControlSignal`.
+
     COMMENT:
-        CW 1/25/18: Below is the documentation from before I modified the UserDefinedFunction. I leave it here as a
-        comment. Also, this doc is a bit long: should it be a separate doc page?
+    Note:  if a function explicitly defined in a UDF does not assign a default value to its first argument (i.e.,
+    it is a positional argument), then the UDF that must define the variable, as in:
 
-        Implement user-defined Function.
+    Note:  if the function does not assign a default value to its first argument i.e., it is a positional arg),
+    then if it is explicitly wrapped in a UDF that must define the variable, as in:
+        xxx my_mech = pnl.ProcessingMechanism(default_variable=[[0],[0]],
+        ...                                   function=UserDefinedFunction(default_variable=[[0],[0]],
+        ...                                                                custom_function=my_sinusoidal_fct,
+        ...                                                                amplitude=(1.0, pnl.CONTROL)))
 
-        This is used to "wrap" custom functions in the PsyNeuLink `Function API <LINK>`.
-        It is automatically invoked and applied to any function that is assigned to the `function <Component.function>`
-        attribute of a PsyNeuLink component (other than a Function itself).  The function can take any arguments and
-        return any values.  However, if UserDefinedFunction is used to create a custom version of another PsyNeuLink
-        `Function <Function>`, then it must conform to the requirements of that Function's type.
-
-        .. note::
-            Currently the arguments for the `function <UserDefinedFunction.function>` of a UserDefinedFunction are NOT
-            assigned as attributes of the UserDefinedFunction object or its owner, nor to its :keyword:`user_params` dict.
-    COMMENT
-
-    This is used to "wrap" custom functions in the PsyNeuLink Function API. It is automatically invoked and applied to
-    user-defined functions that are assigned to the `function <Component.function>` attribute of a PsyNeuLink component
-    (other than a Function itself). UserDefinedFunction is generally used with `ProcessingMechanism`. For example, if
-    you want a mechanism that takes in a vector of length 3, then calculates the sum and adds 2, you could write::
-
-        >>> import psyneulink as pnl
-        >>> def myFunction(variable, params, context):
-        ...     return sum(variable[0]) + 2
-        >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
-        >>> myMech.execute(input = [1, 2, 3])
-
-    Equivalently, you can also explicitly create a `UserDefinedFunction` and use it as the function::
-
-        >>> import psyneulink as pnl
-        >>> def myFunction(variable, params, context):
-        ...     return sum(variable[0]) + 2
-        >>> U = pnl.UserDefinedFunction(custom_function=myFunction, default_variable = [[0, 0, 0]])
-        >>> myMech = pnl.ProcessingMechanism(function = U, size = 3, name = 'myMech')
-        >>> myMech.execute(input = [1, 2, 3])
+    This is required so that the format of the variable can be checked for compatibilty with other Components
+    with which it interacts.
 
     .. note::
-        Be sure to match the **default_variable** argument of the `UserDefinedFunction` with the **default_variable**
-        of the Mechanism. (In this example, for `myMech`, `size = 3` is equivalent to `default_variable = [[0, 0, 0]]`.)
+       Built-in Python functions and methods (including numpy functions) cannot be assigned to a UDF
 
-    Custom functions can be as elaborate as desired, and can even include PsyNeuLink functions indirectly, such as::
+    COMMENT
+
+    Custom functions can be as elaborate as desired, and can even include other PsyNeuLink `Functions <Function>`
+    indirectly, such as::
 
         >>> import psyneulink as pnl
         >>> L = pnl.Logistic(gain = 2)
-        >>> def myFunction(variable, params, context):
+        >>> def my_fct(variable):
         ...     return L.function(variable) + 2
-        >>> myMech = pnl.ProcessingMechanism(function = myFunction, size = 3, name = 'myMech')
-        >>> myMech.execute(input = [1, 2, 3])
+        >>> my_mech = pnl.ProcessingMechanism(size = 3, function = my_fct)
+        >>> my_mech.execute(input = [1, 2, 3])
+        array([[2.88079708, 2.98201379, 2.99752738]])
 
-    Custom functions should generally ignore the **params** and **context** arguments, since **variable** is
-    the input to the function.
 
-    COMMENT:
-        CW 1/29/18: Adding params for custom functions sounds useful, but slightly thorny.
-    COMMENT
+    .. _UDF_Assign_to_State_Examples:
 
-    .. note::
-        Note that variable's format may be slightly different than you expect, because PsyNeuLink may change the
-        formatting while processing the input. For example, PsyNeuLink converts an input of [1, 2, 3] to [[1, 2, 3]].
-        If your custom_function returns the sum of the input, you should use `sum(variable[0])` in this case rather
-        than `sum(variable)`. When in doubt, add a `print(variable)` or `print(type(variable))` statement
-        in your custom function to verify the variable's format.
+    **Assigning of a custom function to a State**
+
+    A custom function can also be assigned as the `function <State_Base.function>` of an `InputState` or `OutputState`.
+    For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputState.function>` of an OutputState
+    of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
+
+        >>> my_wave_mech = pnl.ProcessingMechanism(size=3,
+        ...                                        function=Logistic,
+        ...                                        output_states={pnl.NAME: 'SINUSOIDAL OUTPUT',
+        ...                                                       pnl.FUNCTION: my_sinusoidal_fct})
+
+    .. _UDF_Modulatory_Params_Examples:
+
+    The parameters of a custom function assigned to an InputState or OutputState can also be used for `gating
+    <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be specified
+    (see `above <UDF_Modulatory_Params>`). This can be done by including a **params** argument in the definition of
+    the function itself::
+
+        >>> def my_sinusoidal_fct(input=[[0],[0]],
+        ...                      phase=0,
+        ...                      amplitude=1,
+        ...                      params={pnl.ADDITIVE_PARAM:'phase',
+        ...                              pnl.MULTIPLICATIVE_PARAM:'amplitude'}):
+        ...    frequency = input[0]
+        ...    t = input[1]
+        ...    return amplitude * np.sin(2 * np.pi * frequency * t + phase)
+
+    or in the explicit creation of a UDF::
+
+        >>> my_sinusoidal_UDF = pnl.UserDefinedFunction(custom_function=my_sinusoidal_fct,
+        ...                                             phase=0,
+        ...                                             amplitude=1,
+        ...                                             params={pnl.ADDITIVE_PARAM:'phase',
+        ...                                                     pnl.MULTIPLICATIVE_PARAM:'amplitude'})
+
+
+    The ``phase`` and ``amplitude`` parameters of ``my_sinusoidal_fct`` can now be used as the
+    `Function_Modulatory_Params` for gating any InputState or OutputState to which the function is assigned (see
+    `GatingMechanism_Specifying_Gating` and `GatingSignal_Examples`).
+
+    **Class Definition:**
 
 
     Arguments
@@ -1069,19 +1264,18 @@ class UserDefinedFunction(Function_Base):
         with the context in which the UserDefinedFunction will be used.
     COMMENT
     custom_function : function
-        specifies the function to "wrap." It can be any function, but like any PsyNeuLink function it must take three
-        named arguments: :keyword:`variable` (the input to the function), :keyword:`params`, and :keyword:`context`. The
-        `custom_function` can return any value(s), so long as they fit with the context. For example, if the dimensions
-        of your custom function's output change, then it is not appropriate to pass your function's output to a
-        `MappingProjection`, since the `MappingProjection` expects input of consistent dimensions.
-
-    variable : value : default ClassDefaults.variable
-        specifies the format and a default value for the input to `function <Function>`.
+        specifies the function to "wrap." It can be any function or method, including a lambda function;
+        see `above <UDF_Description>` for additional details.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        This can be used to define an `additive_param <UserDefinedFunction.additive_param>` and/or
+        `multiplicative_param <UserDefinedFunction.multiplicative_param>` for the UDF, by including one or both
+        of the following entries:\n
+          *ADDITIVE_PARAM*: <param_name>\n
+          *MULTIPLICATIVE_PARAM*: <param_name>\n
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of
+        the constructor.
 
     owner : Component
         `component <Component>` to which to assign the Function.
@@ -1096,11 +1290,18 @@ class UserDefinedFunction(Function_Base):
     ----------
 
     variable: value
-        format and default value can be specified by the :keyword:`variable` argument of the constructor;  otherwise,
-        they are specified by the Function's :keyword:`ClassDefaults.variable`.
+        format and default value of the function "wrapped" by the UDF.
 
     custom_function : function
         the user-specified function: called by the Function's `owner <Function_Base.owner>` when it is executed.
+
+    additive_param : str
+        this contains the name of the additive_param, if one has been specified for the UDF
+        (see `above <UDF_Modulatory_Params>` for details).
+
+    multiplicative_param : str
+        this contains the name of the multiplicative_param, if one has been specified for the UDF
+        (see `above <UDF_Modulatory_Params>` for details).
 
     COMMENT:
     functionOutputTypeConversion : Bool : False
@@ -1132,7 +1333,9 @@ class UserDefinedFunction(Function_Base):
     paramClassDefaults.update({
         FUNCTION_OUTPUT_TYPE_CONVERSION: False,
         PARAMETER_STATE_PARAMS: None,
-        CUSTOM_FUNCTION: None
+        CUSTOM_FUNCTION: None,
+        MULTIPLICATIVE_PARAM:None,
+        ADDITIVE_PARAM:None
     })
 
     @tc.typecheck
@@ -1142,10 +1345,79 @@ class UserDefinedFunction(Function_Base):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 context=componentName + INITIALIZING,
+                 **kwargs):
+
+        def get_cust_fct_args(custom_function):
+            """Get args of custom_function
+            Return:
+                - value of first arg (to be used as default_variable for UDF)
+                - dict with all others (to be assigned as params of UDF)
+                - dict with default values (from function definition, else set to None)
+            """
+            from inspect import signature, _empty
+            try:
+                arg_names = custom_function.__code__.co_varnames
+            except AttributeError:
+                raise FunctionError("Can't get __code__ for custom_function")
+            args = {}
+            defaults = {}
+            for arg_name, arg in signature(custom_function).parameters.items():
+                # Use definition from the function as default;
+                #    this allows UDF to assign a value for this instance (including a MODULATORY spec)
+                #    while assigning an actual value to paramClassDefaults (in _assign_args_to_params_dicts);
+                if arg.default is _empty:
+                    defaults[arg_name] = None
+                else:
+                    defaults[arg_name] = arg.default
+                # If arg is specified in the constructor for the UDF, assign that as its value
+                if arg_name in kwargs:
+                    args[arg_name] = kwargs[arg_name]
+                # Otherwise, use the default value from the definition of the function
+                else:
+                    args[arg_name] = defaults[arg_name]
+
+            # Assign default value of first arg as variable and remove from dict
+            variable = args[arg_names[0]]
+            if variable is _empty:
+                variable = None
+            del args[arg_names[0]]
+
+            return variable, args, defaults
+
+        # Get variable and names of other any other args for custom_function and assign to cust_fct_params
+        if params is not None and CUSTOM_FUNCTION in params:
+            custom_function = params[CUSTOM_FUNCTION]
+        try:
+            cust_fct_variable, self.cust_fct_params, defaults = get_cust_fct_args(custom_function)
+        except FunctionError:
+            raise FunctionError("Assignment of a built-in function or method ({}) to a {} is not supported".
+                                format(custom_function, self.__class__.__name__))
+
+        if PARAMS in self.cust_fct_params:
+            if self.cust_fct_params[PARAMS]:
+                if params:
+                    params.update(self.cust_fct_params)
+                else:
+                    params = self.cust_fct_params[PARAMS]
+            del self.cust_fct_params[PARAMS]
+
+        # Assign variable to default_variable if default_variable was not specified
+        if default_variable is None:
+            default_variable = cust_fct_variable
+        elif cust_fct_variable and not iscompatible(default_variable, cust_fct_variable):
+            raise FunctionError("Value passed as \'default_variable\' for {} ({}) of {} ({}) "
+                                "conflicts with specification of first argument in constructor for {} itself ({})".
+                                format(self.__class__.__name__, custom_function.__name__,
+                                       owner.name, default_variable, custom_function.__name__, cust_fct_variable))
+
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(custom_function=custom_function, params=params)
-        # self.custom_function = custom_function
+        params = self._assign_args_to_param_dicts(custom_function=custom_function,
+                                                  params=params,
+                                                  defaults=defaults,
+                                                  **self.cust_fct_params
+                                                  )
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -1155,15 +1427,24 @@ class UserDefinedFunction(Function_Base):
 
         self.functionOutputType = None
 
-        # IMPLEMENT: PARSE ARGUMENTS FOR custom_function AND ASSIGN TO user_params
-
     def function(self, **kwargs):
+
+        # Update value of parms in cust_fct_params
+        for param in self.cust_fct_params:
+            # First check for value passed in params as runtime param:
+            if PARAMS in kwargs and kwargs[PARAMS] is not None and param in kwargs[PARAMS]:
+                self.cust_fct_params[param] = kwargs[PARAMS][param]
+            else:
+            # Otherwise, get current value from ParameterState (in case it is being modulated by ControlSignal(s)
+                self.cust_fct_params[param] = self.get_current_function_param(param)
+        kwargs.update(self.cust_fct_params)
+
         try:
+            # Try calling with full list of args (including context and params)
             return self.custom_function(**kwargs)
         except TypeError:
-            return self.custom_function(kwargs[VARIABLE])
-
-
+            # Try calling with just variable and cust_fct_params
+            return self.custom_function(kwargs[VARIABLE], **self.cust_fct_params)
 
 
 # region **********************************  COMBINATION FUNCTIONS  ****************************************************
@@ -2533,399 +2814,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         return delta
 
 
-# *********************************** NORMALIZING FUNCTIONS **************************************************
-
-class NormalizingFunction(Function_Base):
-    """Function that adjusts a set of values
-    """
-    componentType = NORMALIZING_FUNCTION_TYPE
-
-    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
-    def __init__(self, default_variable,
-                 params,
-                 owner,
-                 prefs,
-                 context):
-
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-    @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
-
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
-
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
-
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
-
-
-class SoftMax(NormalizingFunction):
-    """
-    SoftMax(               \
-         default_variable, \
-         gain=1.0,         \
-         output=ALL,       \
-         params=None,      \
-         owner=None,       \
-         name=None,        \
-         prefs=None        \
-         )
-
-    .. _SoftMax:
-
-    SoftMax transform of variable (see `The Softmax function and its derivative
-    <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
-
-    Arguments
-    ---------
-
-    default_variable : 1d np.array : default ClassDefaults.variable
-        specifies a template for the value to be transformed.
-
-    gain : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
-
-    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
-        specifies the format of array returned by `function <SoftMax.function>`
-        (see `output <SoftMax.output>` for details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
-
-    owner : Component
-        `component <Component>` to which to assign the Function.
-
-    name : str : default see `name <Function.name>`
-        specifies the name of the Function.
-
-    prefs : PreferenceSet or specification dict : default Function.classPreferences
-        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
-
-    Attributes
-    ----------
-
-    variable : 1d np.array
-        contains value to be transformed.
-
-    gain : float
-        value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
-        the "sharpness" of the distribution.
-
-    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
-        determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
-        in the array returned by `function <SoftMax.function>`:
-            * **ALL**: array of all SoftMax-transformed values (the default);
-            * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
-            * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
-            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after normalizing sum of
-              values to 1, 0 for all others.
-
-    bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
-
-    owner : Component
-        `component <Component>` to which the Function has been assigned.
-
-    name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-    """
-
-    componentName = SOFTMAX_FUNCTION
-
-    bounds = (0,1)
-    multiplicative_param = GAIN
-    additive_param = None
-
-    class ClassDefaults(NormalizingFunction.ClassDefaults):
-        variable = 0
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
-    @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
-                 params: tc.optional(dict) = None,
-                 owner=None,
-                 prefs: is_pref_set = None,
-                 context='SoftMax Init'):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  output=output,
-                                                  params=params)
-        if output is MAX_VAL:
-            bounds = None
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-    def get_param_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            param_type = ir.LiteralStructType([ctx.float_ty])
-        return param_type
-
-    def get_param_initializer(self):
-        return (self.get_current_function_param(GAIN),)
-
-    def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
-        orig_val = builder.load(ptri)
-        val = builder.fmul(orig_val, gain)
-        exp_val = builder.call(exp_f, [val])
-
-        exp_sum = builder.load(exp_sum_ptr)
-        new_exp_sum = builder.fadd(exp_sum, exp_val)
-        builder.store(new_exp_sum, exp_sum_ptr)
-
-        old_max = builder.load(max_ptr)
-        gt = builder.fcmp_ordered(">", exp_val, old_max)
-        new_max = builder.select(gt, exp_val, old_max)
-        builder.store(new_max, max_ptr)
-
-        old_index = builder.load(max_ind_ptr)
-        new_index = builder.select(gt, index, old_index)
-        builder.store(new_index, max_ind_ptr)
-
-
-    def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
-        output_type = self.params[OUTPUT_TYPE]
-        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        if output_type in (MAX_VAL, MAX_INDICATOR):
-            builder.store(ctx.float_ty(0), ptro)
-            return
-
-        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
-        orig_val = builder.load(ptri)
-        val = builder.fmul(orig_val, gain)
-        val = builder.call(exp_f, [val])
-        val = builder.fdiv(val, exp_sum)
-        builder.store(val, ptro)
-
-
-    def _gen_llvm_function(self):
-        func_name = None
-        llvm_func = None
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("softmax")
-            func_ty = ir.FunctionType(ir.VoidType(), (
-                self.get_param_struct_type().as_pointer(),
-                self.get_context_struct_type().as_pointer(),
-                self.get_input_struct_type().as_pointer(),
-                self.get_output_struct_type().as_pointer()))
-
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            llvm_func.attributes.add('alwaysinline')
-            params, state, vi, vo = llvm_func.args
-            for a in params, vi, vo:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
-
-            # Cast input to an array
-            vector_length = ctx.int32_ty(self._variable_length)
-            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
-
-
-            exp_sum_ptr = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty(0), exp_sum_ptr)
-            max_ptr = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty(float('-inf')), max_ptr)
-            max_ind_ptr = builder.alloca(ctx.int32_ty)
-            gain_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            gain = builder.load(gain_ptr)
-
-            kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "max_ptr": max_ptr, "gain":gain, "max_ind_ptr":max_ind_ptr, "exp_sum_ptr":exp_sum_ptr}
-            inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
-
-            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
-
-            output_type = self.params[OUTPUT_TYPE]
-            exp_sum = builder.load(exp_sum_ptr)
-            index = builder.load(max_ind_ptr)
-            ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-            if output_type == ALL:
-                kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "gain":gain, "exp_sum":exp_sum}
-                inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
-                builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_div")
-            elif output_type == MAX_VAL:
-                ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-                exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
-                orig_val = builder.load(ptri)
-                val = builder.fmul(orig_val, gain)
-                val = builder.call(exp_f, [val])
-                val = builder.fdiv(val, exp_sum)
-                builder.store(val, ptro)
-            elif output_type == MAX_INDICATOR:
-                builder.store(ctx.float_ty(1), ptro)
-
-
-            builder.ret_void()
-        return func_name
-
-    def function(self,
-                 variable=None,
-                 params=None,
-                 context=None):
-        """
-        Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
-        sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
-        filtered by `ouptput <SoftMax.output>` specification.
-
-        Arguments
-        ---------
-
-        variable : 1d np.array : default ClassDefaults.variable
-           an array to be transformed.
-
-        params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-
-        Returns
-        -------
-
-        SoftMax transformation of variable : number or np.array
-
-        """
-
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-
-        # Assign the params and return the result
-        output_type = self.get_current_function_param(OUTPUT_TYPE)
-        gain = self.get_current_function_param(GAIN)
-
-        # Modulate variable by gain
-        v = gain * variable
-        # Shift by max to avoid extreme values:
-        v = v - np.max(v)
-        # Exponentiate
-        v = np.exp(v)
-        # Normalize (to sum to 1)
-        sm = v / np.sum(v, axis=0)
-
-        # For the element that is max of softmax, set it's value to its softmax value, set others to zero
-        if output_type is MAX_VAL:
-            max_value = np.max(sm)
-            sm = np.where(sm == max_value, max_value, 0)
-
-        # For the element that is max of softmax, set its value to 1, set others to zero
-        elif output_type is MAX_INDICATOR:
-            # sm = np.where(sm == np.max(sm), 1, 0)
-            max_value = np.max(sm)
-            sm = np.where(sm == max_value, 1, 0)
-
-        # Choose a single element probabilistically based on softmax of their values;
-        #    leave that element's value intact, set others to zero
-        elif output_type is PROB:
-            cum_sum = np.cumsum(sm)
-            random_value = np.random.uniform()
-            chosen_item = next(element for element in cum_sum if element > random_value)
-            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-            sm = variable * chosen_in_cum_sum
-
-        return sm
-
-    def derivative(self, output, input=None):
-        """
-        derivative(output)
-
-        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL,
-        return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
-            COMMENT:
-                D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
-            COMMENT
-            D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
-            where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
-        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
-        value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
-        (since it is ambiguous as to which element would have been chosen by the SoftMax function)
-
-        Returns
-        -------
-
-        derivative :  1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)
-            derivative of values returns by SoftMax.
-
-        """
-
-        output_type = self.params[OUTPUT_TYPE]
-        size = len(output)
-        sm = self.function(output, params={OUTPUT_TYPE: ALL})
-
-        if output_type is ALL:
-            # Return full Jacobian matrix of derivatives
-            derivative = np.empty([size, size])
-            for j in range(size):
-                for i, val in zip(range(size), output):
-                    if i==j:
-                        d = 1
-                    else:
-                        d = 0
-                    derivative[j,i] = sm[i] * (d - sm[j])
-
-        elif output_type in {MAX_VAL, MAX_INDICATOR}:
-            # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
-            derivative = np.empty(size)
-            # Get the element of output returned as non-zero when output_type is not ALL
-            index_of_max = int(np.where(output==np.max(output))[0])
-            max_val = sm[index_of_max]
-            for i in range(size):
-                if i==index_of_max:
-                    d = 1
-                else:
-                    d = 0
-                derivative[i] = sm[i] * (d - max_val)
-
-        else:
-            raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
-                                "(and therefore the relevant element is ambiguous)".format(self.owner_name))
-
-        return derivative
-
-
 # region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 # endregion
 
@@ -3159,6 +3047,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
             builder.ret_void()
         return func_name
+
 
     def function(self,
                  variable=None,
@@ -3583,7 +3472,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
                          prefs=prefs,
                          context=context)
 
-
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
             param_type = ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.float_ty))
@@ -3649,7 +3537,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
             builder.ret_void()
         return func_name
-
     def function(self,
                  variable=None,
                  params=None,
@@ -3659,7 +3546,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         .. math::
 
-           \\fract{1}{1 + e^{ - gain ( variable - bias ) + offset}}
+            \\frac{1}{1 + e^{ - gain ( variable - bias ) + offset}}
 
         Arguments
         ---------
@@ -3701,6 +3588,598 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         """
         return output * (1 - output)
+
+
+MODE = 'mode'
+class OneHot(TransferFunction):  # -------------------------------------------------------------------------------------
+    """
+    OneHot(                \
+         default_variable, \
+         mode=MAX_VAL,     \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _OneHot:
+
+    Return an array with one non-zero value.
+
+    The `mode <OneHot.mode>` parameter determines the nature of the non-zero value:
+
+    Arguments
+    ---------
+
+    variable : 2d np.array : default ClassDefaults.variable
+        First (possibly only) item specifies a template for the array to be transformed;  if `mode <OneHot.mode>` is
+        *PROB* then a 2nd item must be included that is a probability distribution with same length as 1st item.
+
+    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
+        specifies the nature of the single non-zero value in the array returned by `function <OneHot.function>`
+        (see `mode <OneHot.mode>` for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    bounds : None
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        1st item contains value to be transformed;  if `mode <OneHot.mode>` is *PROB*, 2nd item is a probability
+        distribution, each element of which specifies the probability for selecting the corresponding element of the
+        1st item.
+
+    mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
+        determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`:
+            * **MAX_VAL**: element with the maximum signed value in the original array;
+            * *MAX_ABS_VAL**: element with the maximum absolute value;
+            * **MAX_INDICATOR**: 1 in place of the element with the maximum signed value;
+            * **MAX_ABS_INDICATOR**: 1 in place of the element with the maximum absolute value;
+            * **PROB**: probabilistically chosen element based on probabilities passed in second item of
+              `variable <OneHot.variable>`.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = ONE_HOT_FUNCTION
+
+    bounds = None
+    multiplicative_param = None
+    additive_param = None
+
+    classPreferences = {
+        kwPreferenceSetName: 'OneHotClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        FUNCTION_OUTPUT_TYPE_CONVERSION: False,
+        PARAMETER_STATE_PARAMS: None
+    })
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB)=MAX_VAL,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context=componentName + INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(mode=mode,
+                                                  params=params)
+
+        if mode is PROB and default_variable is None:
+            default_variable = [[0],[0]]
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        # self.functionOutputType = None
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        if request_set[MODE] is PROB:
+            if not self.variable.ndim == 2:
+                raise FunctionError("If {} for {} {} is set to {}, variable must be 2d array".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB))
+            values = self.variable[0]
+            prob_dist = self.variable[1]
+            if len(values)!=len(prob_dist):
+                raise FunctionError("If {} for {} {} is set to {}, the two items of its variable must be of equal "
+                                    "length (len item 1 = {}; len item 2 = {}".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB,
+                                           len(values), len(prob_dist)))
+            if not all((elem>=0 and elem<=1) for elem in prob_dist)==1:
+                raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
+                                    "array of elements each of which is in the (0,1) interval".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
+            if INITIALIZING in context:
+                return
+            if not np.sum(prob_dist)==1:
+                raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
+                                    "array of probabilities that sum to 1".
+                                    format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+        Return array of len(`variable <Linear.variable>`) with single non-zero value specified by `mode <OneHot.mode>`.
+
+        Arguments
+        ---------
+
+        variable : 2d np.array : default ClassDefaults.variable
+           1st item is an array to be transformed;  if `mode <OneHot.mode>` is *PROB*, 2nd item must be an array of
+           probabilities (i.e., elements between 0 and 1) of equal length to the 1st item.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+
+        Returns
+        -------
+
+        array with single non-zero value : np.array
+
+        """
+
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        if self.mode is MAX_VAL:
+            max_value = np.max(variable)
+            return np.where(variable == max_value, max_value, 0)
+
+        if self.mode is MAX_ABS_VAL:
+            max_value = np.max(np.absolute(variable))
+            return np.where(variable == max_value, max_value, 0)
+
+        elif self.mode is MAX_INDICATOR:
+            max_value = np.max(variable)
+            return np.where(variable == max_value, 1, 0)
+
+        elif self.mode is MAX_ABS_INDICATOR:
+            max_value = np.max(np.absolute(variable))
+            return np.where(variable == max_value, 1, 0)
+
+        elif self.mode is PROB: # 1st item of variable should be data, and 2nd a probability distribution for choosing
+            v = variable[0]
+            prob_dist = variable[1]
+            # if not prob_dist.any() and INITIALIZING in context:
+            if not prob_dist.any():
+                return v
+            cum_sum = np.cumsum(prob_dist)
+            random_value = np.random.uniform()
+            chosen_item = next(element for element in cum_sum if element > random_value)
+            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
+            return v * chosen_in_cum_sum
+            # chosen_item = np.random.choice(v, 1, p=prob_dist)
+            # one_hot_indicator = np.where(v == chosen_item, 1, 0)
+            # return v * one_hot_indicator
+
+
+class NormalizingFunction(Function_Base):
+    """Function that adjusts a set of values
+    """
+    componentType = NORMALIZING_FUNCTION_TYPE
+
+    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
+    def __init__(self, default_variable,
+                 params,
+                 owner,
+                 prefs,
+                 context):
+
+        if not hasattr(self, MULTIPLICATIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
+                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
+
+        if not hasattr(self, ADDITIVE_PARAM):
+            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
+                                format(self.__class__.__name__, ADDITIVE_PARAM))
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    @property
+    def multiplicative(self):
+        return getattr(self, self.multiplicative_param)
+
+    @multiplicative.setter
+    def multiplicative(self, val):
+        setattr(self, self.multiplicative_param, val)
+
+    @property
+    def additive(self):
+        return getattr(self, self.additive_param)
+
+    @additive.setter
+    def additive(self, val):
+        setattr(self, self.additive_param, val)
+
+
+class SoftMax(NormalizingFunction):
+    """
+    SoftMax(               \
+         default_variable, \
+         gain=1.0,         \
+         output=ALL,       \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _SoftMax:
+
+    SoftMax transform of variable (see `The Softmax function and its derivative
+    <http://eli.thegreenplace.net/2016/the-softmax-function-and-its-derivative/>`_ for a nice discussion).
+
+    Arguments
+    ---------
+
+    default_variable : 1d np.array : default ClassDefaults.variable
+        specifies a template for the value to be transformed.
+
+    gain : float : default 1.0
+        specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
+
+    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
+        specifies the format of array returned by `function <SoftMax.function>`
+        (see `output <SoftMax.output>` for details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : 1d np.array
+        contains value to be transformed.
+
+    gain : float
+        value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
+        the "sharpness" of the distribution.
+
+    output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
+        determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
+        in the array returned by `function <SoftMax.function>`:
+            * **ALL**: array of all SoftMax-transformed values (the default);
+            * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
+            * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
+            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after normalizing the
+              sum of values to 1 (i.e., their `Luce Ratio <https://en.wikipedia.org/wiki/Luce%27s_choice_axiom>`_),
+              0 for all others.
+
+    bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+
+    componentName = SOFTMAX_FUNCTION
+
+    bounds = (0,1)
+    multiplicative_param = GAIN
+    additive_param = None
+
+    class ClassDefaults(NormalizingFunction.ClassDefaults):
+        variable = 0
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 gain: parameter_spec = 1.0,
+                 output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context='SoftMax Init'):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(gain=gain,
+                                                  output=output,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    def _instantiate_function(self, context=None):
+
+        self.one_hot_function = None
+        output_type = self.get_current_function_param(OUTPUT_TYPE)
+        bounds = None
+
+        if not output_type is ALL:
+            self.one_hot_function = OneHot(mode=output_type).function
+
+        super()._instantiate_function(context=context)
+
+    def get_param_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            param_type = ir.LiteralStructType([ctx.float_ty])
+        return param_type
+
+    def get_param_initializer(self):
+        return (self.get_current_function_param(GAIN),)
+
+    def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        orig_val = builder.load(ptri)
+        val = builder.fmul(orig_val, gain)
+        exp_val = builder.call(exp_f, [val])
+
+        exp_sum = builder.load(exp_sum_ptr)
+        new_exp_sum = builder.fadd(exp_sum, exp_val)
+        builder.store(new_exp_sum, exp_sum_ptr)
+
+        old_max = builder.load(max_ptr)
+        gt = builder.fcmp_ordered(">", exp_val, old_max)
+        new_max = builder.select(gt, exp_val, old_max)
+        builder.store(new_max, max_ptr)
+
+        old_index = builder.load(max_ind_ptr)
+        new_index = builder.select(gt, index, old_index)
+        builder.store(new_index, max_ind_ptr)
+
+
+    def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
+        output_type = self.params[OUTPUT_TYPE]
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        if output_type in (MAX_VAL, MAX_INDICATOR):
+            builder.store(ctx.float_ty(0), ptro)
+            return
+
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        orig_val = builder.load(ptri)
+        val = builder.fmul(orig_val, gain)
+        val = builder.call(exp_f, [val])
+        val = builder.fdiv(val, exp_sum)
+        builder.store(val, ptro)
+
+
+    def _gen_llvm_function(self):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_name = ctx.module.get_unique_name("softmax")
+            func_ty = ir.FunctionType(ir.VoidType(), (
+                self.get_param_struct_type().as_pointer(),
+                self.get_context_struct_type().as_pointer(),
+                self.get_input_struct_type().as_pointer(),
+                self.get_output_struct_type().as_pointer()))
+
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
+            params, state, vi, vo = llvm_func.args
+            for a in params, vi, vo:
+                a.attributes.add('nonnull')
+                a.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+
+            # Cast input to an array
+            vector_length = ctx.int32_ty(self._variable_length)
+            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+
+
+            exp_sum_ptr = builder.alloca(ctx.float_ty)
+            builder.store(ctx.float_ty(0), exp_sum_ptr)
+            max_ptr = builder.alloca(ctx.float_ty)
+            builder.store(ctx.float_ty(float('-inf')), max_ptr)
+            max_ind_ptr = builder.alloca(ctx.int32_ty)
+            gain_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            gain = builder.load(gain_ptr)
+
+            kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "max_ptr": max_ptr, "gain":gain, "max_ind_ptr":max_ind_ptr, "exp_sum_ptr":exp_sum_ptr}
+            inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
+
+            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
+
+            output_type = self.params[OUTPUT_TYPE]
+            exp_sum = builder.load(exp_sum_ptr)
+            index = builder.load(max_ind_ptr)
+            ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+            if output_type == ALL:
+                kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "gain":gain, "exp_sum":exp_sum}
+                inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
+                builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_div")
+            elif output_type == MAX_VAL:
+                ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+                exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+                orig_val = builder.load(ptri)
+                val = builder.fmul(orig_val, gain)
+                val = builder.call(exp_f, [val])
+                val = builder.fdiv(val, exp_sum)
+                builder.store(val, ptro)
+            elif output_type == MAX_INDICATOR:
+                builder.store(ctx.float_ty(1), ptro)
+
+
+            builder.ret_void()
+        return func_name
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+        Return: e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`) /
+        sum(e**(`gain <SoftMax.gain>` * `variable <SoftMax.variable>`)),
+        filtered by `ouptput <SoftMax.output>` specification.
+
+        Arguments
+        ---------
+
+        variable : 1d np.array : default ClassDefaults.variable
+           an array to be transformed.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        SoftMax transformation of variable : number or np.array
+
+        """
+
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        # Assign the params and return the result
+        output_type = self.get_current_function_param(OUTPUT_TYPE)
+        gain = self.get_current_function_param(GAIN)
+
+        # Compute softmax and assign to sm
+
+        # Modulate variable by gain
+        v = gain * variable
+        # Shift by max to avoid extreme values:
+        v = v - np.max(v)
+        # Exponentiate
+        v = np.exp(v)
+        # Normalize (to sum to 1)
+        sm = v / np.sum(v, axis=0)
+
+        # Generate one-hot encoding based on selected output_type
+
+        if output_type in {MAX_VAL, MAX_INDICATOR}:
+            return self.one_hot_function(sm)
+        elif output_type is PROB:
+            return self.one_hot_function([variable, sm])
+        else:
+            return sm
+
+    def derivative(self, output, input=None):
+        """
+        derivative(output)
+
+        Calculate the derivative of `function <SoftMax.function>`.  If OUTPUT_TYPE for the SoftMax Function is ALL,
+        return Jacobian matrix (derivative for each element of the output array with respect to each of the others):
+            COMMENT:
+                D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
+            COMMENT
+            D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
+            where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
+        If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
+        value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
+        (since it is ambiguous as to which element would have been chosen by the SoftMax function)
+
+        Returns
+        -------
+
+        derivative :  1d or 2d np.array (depending on OUTPUT_TYPE of SoftMax)
+            derivative of values returns by SoftMax.
+
+        """
+
+        output_type = self.params[OUTPUT_TYPE]
+        size = len(output)
+        sm = self.function(output, params={OUTPUT_TYPE: ALL})
+
+        if output_type is ALL:
+            # Return full Jacobian matrix of derivatives
+            derivative = np.empty([size, size])
+            for j in range(size):
+                for i, val in zip(range(size), output):
+                    if i==j:
+                        d = 1
+                    else:
+                        d = 0
+                    derivative[j,i] = sm[i] * (d - sm[j])
+
+        elif output_type in {MAX_VAL, MAX_INDICATOR}:
+            # Return 1d array of derivatives for max element (i.e., the one chosen by SoftMax)
+            derivative = np.empty(size)
+            # Get the element of output returned as non-zero when output_type is not ALL
+            index_of_max = int(np.where(output==np.max(output))[0])
+            max_val = sm[index_of_max]
+            for i in range(size):
+                if i==index_of_max:
+                    d = 1
+                else:
+                    d = 0
+                derivative[i] = sm[i] * (d - max_val)
+
+        else:
+            raise FunctionError("Can't assign derivative for SoftMax function{} since OUTPUT_TYPE is PROB "
+                                "(and therefore the relevant element is ambiguous)".format(self.owner_name))
+
+        return derivative
+
 
 class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
     """
@@ -3909,10 +4388,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             #      - AT LEAST CHANGE THE NAME FROM kwReceiver TO output_template OR SOMETHING LIKE THAT
             #      - MAKE ARG?  OR ADD OTHER PARAMS:  E.G., FILLER?
             #      - OR REFACTOR TO INCLUDE AS MATRIX SPEC:
-            #                  IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
-            #                     IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
-            #                     IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
-            #                     NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
+            #          IF MATRIX IS 1D, USE AS OUTPUT TEMPLATE
+            #          IF ALL ITS VALUES ARE 1'S => FULL CONNECTIVITY MATRIX
+            #          IF ALL ITS VALUES ARE 0'S => RANDOM CONNECTIVITY MATRIX
+            #          NOTE:  NO NEED FOR IDENTITY MATRIX, AS THAT WOULD BE SQUARE SO NO NEED FOR OUTPUT TEMPLATE
             #      - DOCUMENT WHEN DONE
             # MODIFIED 3/26/17 OLD:
             # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
@@ -4056,9 +4535,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                    self.owner_name,
                                                    MATRIX_KEYWORD_NAMES))
                 else:
-                    message += "Unrecognized param ({}) specified for the {} function of {}\n".format(param_name,
-                                                                                                      self.componentName,
-                                                                                                      self.owner_name)
+                    message += "Unrecognized param ({}) specified for the {} function of {}\n".\
+                        format(param_name, self.componentName, self.owner_name)
                     continue
             if message:
                 raise FunctionError(message)
@@ -4071,12 +4549,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                 # numeric value specified; verify that it is compatible with variable
                 if isinstance(param_value, (float, list, np.ndarray, np.matrix)):
-                    if np.size(np.atleast_2d(param_value), 0) != np.size(np.atleast_2d(self.instance_defaults.variable),1):
-                        raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. "
-                                            "The shapes of variable {} and matrix {} are not compatible for "
-                                            "multiplication".format(self.name,
-                                                                    np.shape(np.atleast_2d(self.instance_defaults.variable)),
-                                                                    np.shape(np.atleast_2d(param_value))))
+                    if np.size(np.atleast_2d(param_value),0)!=np.size(np.atleast_2d(self.instance_defaults.variable),1):
+                        raise FunctionError("Specification of matrix and/or default_variable for {} is not valid. The "
+                                            "shapes of variable {} and matrix {} are not compatible for multiplication".
+                                            format(self.name, np.shape(np.atleast_2d(self.instance_defaults.variable)),
+                                                   np.shape(np.atleast_2d(param_value))))
 
                 # keyword matrix specified - not valid outside of a projection
                 elif param_value in MATRIX_KEYWORD_VALUES:
@@ -4136,8 +4613,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
             # This should never happen (should have been picked up in validate_param or above)
             if matrix is None:
-                raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function that returns "
-                                    "one, a matrix specification keyword ({}), or a number (filler)".
+                raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function "
+                                    "that returns one, a matrix specification keyword ({}), or a number (filler)".
                                     format(specification, self.name, self.owner_name, MATRIX_KEYWORD_NAMES))
             else:
                 return matrix
@@ -4254,7 +4731,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 #         return True
 #     return False
 
-
 def get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
 
@@ -4342,7 +4818,7 @@ class IntegratorFunction(Function_Base):
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
 # • can noise and initializer be an array?  If so, validated in validate_param?
 
-class Integrator(IntegratorFunction):  # --------------------------------------------------------------------------------
+class Integrator(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
     Integrator(                 \
         default_variable=None,  \
@@ -4517,8 +4993,8 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
                     #       Integrator's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
-                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism); in that
+                    #       case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
                     if self._variable_not_specified:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
@@ -4571,17 +5047,18 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif not iscompatible(np.atleast_2d(noise), var) and not iscompatible(np.atleast_1d(noise), var) and len(noise) > 1:
+            elif (not iscompatible(np.atleast_2d(noise), var)
+                  and not iscompatible(np.atleast_1d(noise), var) and len(noise) > 1):
                 raise FunctionError(
-                    "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified "
-                    "as a float, a function, or an array of the appropriate shape ({})."
-                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
+                        "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
+                        "must be specified as a float, a function, or an array of the appropriate shape ({})."
+                            .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
             else:
                 for noise_item in noise:
                     if not isinstance(noise_item, (float, int)) and not callable(noise_item):
                         raise FunctionError(
-                            "The elements of a noise list or array must be floats or functions. {} is not a valid noise "
-                            "element for {}".format(noise_item, self.name))
+                            "The elements of a noise list or array must be floats or functions. "
+                            "{} is not a valid noise element for {}".format(noise_item, self.name))
 
         # Otherwise, must be a float, int or function
         elif not isinstance(noise, (float, int)) and not callable(noise):
@@ -4708,7 +5185,8 @@ class SimpleIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>` for details).
+        `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -4732,8 +5210,8 @@ class SimpleIntegrator(
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values. If it has a single element, it
-        applies to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
+        determines the rate of integration based on current and prior values. If it has a single element, it applies
+        to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
         applies to the corresponding element of `variable <SimpleIntegrator.variable>`.
 
     noise : float, function, list, or 1d np.array
@@ -4741,16 +5219,16 @@ class SimpleIntegrator(
 
         If noise is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or
+        array, noise will be applied to each variable element. In the case of a noise function, this means that the
+        function will be executed separately for each variable element.
 
 
         .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
 
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
@@ -4948,15 +5426,15 @@ class LCAIntegrator(
 
         If noise is a list or array, it must be the same length as `variable <LCAIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <LCAIntegrator.variable>` is a list or
+        array, noise will be applied to each variable element. In the case of a noise function, this means that the
+        function will be executed separately for each variable element.
 
         .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
 
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
@@ -5081,7 +5559,7 @@ class LCAIntegrator(
 
         return adjusted_value
 
-class ConstantIntegrator(Integrator):  # --------------------------------------------------------------------------------
+class ConstantIntegrator(Integrator):  # -------------------------------------------------------------------------------
     """
     ConstantIntegrator(                 \
         default_variable=None,          \
@@ -5120,7 +5598,8 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>` for details).
+        `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5157,21 +5636,22 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         If noise is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is a list
+        or array, noise will be applied to each variable element. In the case of a noise function, this means that
+        the function will be executed separately for each variable element.
 
         .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+            In order to generate random noise, we recommend selecting a probability distribution function (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
 
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
         `previous_value <ConstantIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
+        If initializer is a list or array, it must be the same length as
+        `variable <ConstantIntegrator.default_variable>`.
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
@@ -5305,8 +5785,8 @@ class AdaptiveIntegrator(
 
     Computes an exponentially weighted moving average.
 
-    (1 - `rate <AdaptiveIntegrator.rate>`) * `previous_value <AdaptiveIntegrator.previous_value>` + `rate <AdaptiveIntegrator.rate>` *
-    `variable <AdaptiveIntegrator.variable>` + `noise <AdaptiveIntegrator.noise>`
+    (1 - `rate <AdaptiveIntegrator.rate>`) * `previous_value <AdaptiveIntegrator.previous_value>` + `rate
+    <AdaptiveIntegrator.rate>` * `variable <AdaptiveIntegrator.variable>` + `noise <AdaptiveIntegrator.noise>`
 
 
     Arguments
@@ -5326,7 +5806,8 @@ class AdaptiveIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <AdaptiveIntegrator.default_variable>` (see `initializer <AdaptiveIntegrator.initializer>` for details).
+        `default_variable <AdaptiveIntegrator.default_variable>` (see `initializer <AdaptiveIntegrator.initializer>`
+        for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5364,9 +5845,9 @@ class AdaptiveIntegrator(
 
         If noise is a list or array, it must be the same length as `variable <AdaptiveIntegrator.default_variable>`.
 
-        If noise is specified as a single float or function, while `variable <AdaptiveIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+        If noise is specified as a single float or function, while `variable <AdaptiveIntegrator.variable>` is a list
+        or array, noise will be applied to each variable element. In the case of a noise function, this means that
+        the function will be executed separately for each variable element.
 
         .. note::
             In order to generate random noise, we recommend selecting a probability distribution function
@@ -5378,7 +5859,8 @@ class AdaptiveIntegrator(
         determines the starting value for time-averaging (i.e., the value to which
         `previous_value <AdaptiveIntegrator.previous_value>` is originally set).
 
-        If initializer is a list or array, it must be the same length as `variable <AdaptiveIntegrator.default_variable>`.
+        If initializer is a list or array, it must be the same length as
+        `variable <AdaptiveIntegrator.default_variable>`.
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
@@ -5450,11 +5932,11 @@ class AdaptiveIntegrator(
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
-                    #       AdaptiveIntegrator's constructor, where that is used as a specification for a function parameter
-                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       AdaptiveIntegrator's constructor, where that is used as a specification for a function
+                    #       parameter (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
-                    #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
-                    #       the object itself, thus does not see the array specification for the input.
+                    #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]])
+                    #       before the object itself, thus does not see the array specification for the input.
                     if self._variable_not_specified:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
@@ -5483,8 +5965,8 @@ class AdaptiveIntegrator(
                         # OLD:
                         # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
-                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
-                        # to have a rate parameter of type ndarray/list
+                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator
+                        # function to have a rate parameter of type ndarray/list
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -5716,7 +6198,8 @@ class DriftDiffusionIntegrator(
 
     initializer : float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
+        `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer
+        <DriftDiffusionIntegrator.initializer>` for details).
 
     threshold : float : default 0.0
         specifies the threshold (boundaries) of the drift diffusion process (i.e., at which the
@@ -5773,7 +6256,8 @@ class DriftDiffusionIntegrator(
         determines the starting value for integration (i.e., the value to which
         `previous_value <DriftDiffusionIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.default_variable>`.
+        If initializer is a list or array, it must be the same length as
+        `variable <DriftDiffusionIntegrator.default_variable>`.
 
     previous_time : float
         stores previous time at which the function was executed and accumulates with each execution according to
@@ -7716,16 +8200,16 @@ kwNavarrosAndFuss = "NavarroAndFuss"
 class BogaczEtAl(
     IntegratorFunction):  # --------------------------------------------------------------------------------
     """
-    BogaczEtAl(                                 \
+    BogaczEtAl(                 \
         default_variable=None,  \
-        drift_rate=1.0,                         \
-        threshold=1.0,                          \
-        starting_point=0.0,                     \
-        t0=0.2                                  \
-        noise=0.5,                              \
-        params=None,                            \
-        owner=None,                             \
-        prefs=None                              \
+        drift_rate=1.0,         \
+        threshold=1.0,          \
+        starting_point=0.0,     \
+        t0=0.2                  \
+        noise=0.5,              \
+        params=None,            \
+        owner=None,             \
+        prefs=None              \
         )
 
     .. _BogaczEtAl:
@@ -9706,12 +10190,11 @@ class LearningFunction(Function_Base):
 
 class Hebbian(LearningFunction):  # -------------------------------------------------------------------------------
     """
-    Hebbian(                                             \
-        default_variable=None,                           \
-        activation_function=Linear,                      \
-        learning_rate=None,                              \
-        params=None,                                     \
-        name=None,                                       \
+    Hebbian(                    \
+        default_variable=None,  \
+        learning_rate=None,     \
+        params=None,            \
+        name=None,              \
         prefs=None)
 
     Implements a function that calculates a matrix of weight changes using the Hebbian (correlational) learning rule.
@@ -9722,9 +10205,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
     variable : List[number] or 1d np.array : default ClassDefaults.variable
        specifies the activation values, the pair-wise products of which are used to generate the a weight change matrix.
 
+    COMMENT:
     activation_function : Function or function : SoftMax
         specifies the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations
         in `variable <Hebbian.variable>`.
+    COMMENT
 
     learning_rate : scalar or list, 1d or 2d np.array, or np.matrix of numeric values: default default_learning_rate
         specifies the learning rate used by the `function <Hebbian.function>`; supersedes any specification  for the
@@ -9751,9 +10236,11 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         activation values, the pair-wise products of which are used to generate the weight change matrix returned by
         the `function <Hebbian.function>`.
 
+    COMMENT:
     activation_function : Function or function : SoftMax
         the `function <Mechanism_Base.function>` of the `Mechanism` that generated the array of activations in
         `variable <Hebbian.variable>`.
+    COMMENT
 
     learning_rate : float, 1d or 2d np.array
         used by the `function <Hebbian.function>` to scale the weight change matrix returned by the `function
@@ -9792,7 +10279,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
+                 # activation_function: tc.any(Linear, tc.enum(Linear)) = Linear,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
@@ -9801,9 +10288,10 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  context='Component Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(activation_function=activation_function,
-                                                  learning_rate=learning_rate,
-                                                  params=params)
+        params = self._assign_args_to_param_dicts(
+                # activation_function=activation_function,
+                learning_rate=learning_rate,
+                params=params)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -9917,36 +10405,32 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
 class Reinforcement(LearningFunction):  # -------------------------------------------------------------------------------
     """
-    Reinforcement(                                       \
-        default_variable=None,                           \
-        activation_function=SoftMax,                     \
-        learning_rate=None,                              \
-        params=None,                                     \
-        name=None,                                       \
+    Reinforcement(                     \
+        default_variable=None,         \
+        learning_rate=None,            \
+        params=None,                   \
+        name=None,                     \
         prefs=None)
 
-    Implements a function that calculates a diagonal matrix of weight changes using the reinforcement (delta)
-    learning rule.
+    Implements a function that returns an error term for a single item in an input array, scaled by the learning_rate.
 
-    COMMENT:
-        Reinforcement learning rule
-          [matrix]         [scalar]        [col array]
-        delta_weight =  learning rate   *     error
-          return     =  LEARNING_RATE  *  variable
+    Reinforcement takes an array with a single non-zero value (`activation_output <Reinforcement.activation_output>`),
+    and returns an array of the same length with the single non-zero value replaced by the `error_signal
+    <Reinforcement.error_signal>` scaled by the `learning_rate <Reinforcement.learning_rate>`.
+    The non-zero item in `activation_output <Reinforcement.activation_output>` can be thought of as the predicted
+    likelihood of a stimulus or value of an action, and the `error_signal <Reinforcement.error_signal>` as the error in
+    the prediction for that value.
 
-        Reinforcement.function:
-            variable must be a 2D np.array with three items (standard for learning functions)
-                note: only the LEARNING_ACTIVATION_OUTPUT and LEARNING_ERROR_OUTPUT items are used by RL
-            assumes matrix to which errors are applied is the identity matrix
-                (i.e., set of "parallel" weights from input to output)
-            LEARNING_RATE param must be a float
-            returns matrix of weight changes
+    .. note::
+       To preserve compatibility with other LearningFunctions:
 
-        Initialization arguments:
-         - variable (list or np.array): must a single 1D np.array
-         - params (dict): specifies
-             + LEARNING_RATE: (float) - learning rate (default: 1.0)
-    COMMENT
+       * the **variable** argument of both the constructor and calls to the Reinforcement `function
+         <Reinforcement.function>` must have three items, although only the 2nd and 3rd items are used
+         (for the `activation_output <Reinforcement.activation_output>` and `error_signal
+         <Reinforcement.error_signal>` attributes, respectively);
+       ..
+       * the Reinforcement `function <Reinforcement.function>` returns two copies of the error array
+         (the first is a "place-marker", where a matrix of weights changes is often returned).
 
     Arguments
     ---------
@@ -9954,12 +10438,17 @@ class Reinforcement(LearningFunction):  # --------------------------------------
     variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
        template for the three items provided as the variable in the call to the `function <Reinforcement.function>`
        (in order):
-       `activation_input <Reinforcement.activation_input>` (1d np.array),
-       `activation_output <Reinforcement.activation_output>` (1d np.array),
-       `error_signal <Reinforcement.error_signal>` (1d np.array).
 
+           * `activation_input <Reinforcement.activation_input>` (1d np.array);
+
+           * `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value);
+
+           * `error_signal <Reinforcement.error_signal>`  (1d np.array with a single value).
+
+    COMMENT:
     activation_function : Function or function : SoftMax
         specifies the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`.
+    COMMENT
 
     learning_rate : float : default default_learning_rate
         supersedes any specification for the `Process` and/or `System` to which the function's
@@ -9984,26 +10473,30 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     variable: 2d np.array
         specifies three values used as input to the `function <Reinforcement.function>`:
-       `activation_input <Reinforcement.activation_input>`,
-       `activation_output <Reinforcement.activation_output>`, and
-       `error_signal <Reinforcement.error_signal>`.
+
+            * `activation_input <Reinforcement.activation_input>`,
+
+            * `activation_output <Reinforcement.activation_output>`, and
+
+            * `error_signal <Reinforcement.error_signal>`.
 
     activation_input : 1d np.array
-        first item of `variable <Reinforcement.variable>`;  this is not used (it is implemented for consistency
+        first item of `variable <Reinforcement.variable>`;  this is not used (it is implemented for compatibility
         with other `LearningFunctions <LearningFunction>`).
 
     activation_output : 1d np.array
-        the output of the function for which the matrix being modified provides the input; must have a single non-zero
-        value (corresponding to the selected "action").
+        an array containing a single "prediction" or "action" value as one of its elements, the remainder of which
+        are zero.
 
     error_signal : 1d np.array
-        the error signal associated with the `activation_output <Reinforcement.activation_output>`; must be the same
-        length as `activation_output <Reinforcement.activation_output>` and must have a single non-zero value in the
-        same position as the one in `activation_output <Reinforcement.activation_output>`.
+        contains a single item, specifying the error associated with the non-zero item in `activation_output
+        <Reinforcement.activation_output>`.
 
+    COMMENT:
     activation_function : Function or function : SoftMax
         the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`; must
         return an array with a single non-zero value.
+    COMMENT
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
@@ -10037,7 +10530,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
+                 # activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
                  # learning_rate: tc.optional(parameter_spec) = None,
                  learning_rate=None,
                  params=None,
@@ -10046,11 +10539,9 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                  context='Component Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(activation_function=activation_function,
+        params = self._assign_args_to_param_dicts(# activation_function=activation_function,
                                                   learning_rate=learning_rate,
                                                   params=params)
-
-        # self.return_val = ReturnVal(None, None)
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -10077,7 +10568,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                                  "single element for {}".
                                  format(self.name, self.error_signal))
 
-        # Allow initializion with zero but not during a run (i.e., when called from check_args())
+        # Allow initialization with zero but not during a run (i.e., when called from check_args())
         if not INITIALIZING in context:
             if np.count_nonzero(self.activation_output) != 1:
                 raise ComponentError("Second item ({}) of variable for {} must be an array with a single non-zero value "
@@ -10099,46 +10590,42 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                  params=None,
                  context=None,
                  **kwargs):
-        """Calculate a matrix of weight changes from a single (scalar) error term
+        """Return an error array for the specified item of activation_output scaled by the learning_rate.
 
-        COMMENT:
-            Assume output array has a single non-zero value chosen by the softmax function of the error_source
-            Assume error is a single scalar value
-            Assume weight matrix (for MappingProjection to error_source) is a diagonal matrix
-                (one weight for corresponding pairs of elements in the input and output arrays)
-            Adjust the weight corresponding to  chosen element of the output array, using error value and learning rate
+        Returns a 1d error array with a single non-zero value in the same position as the non-zero item
+        in `activation_output <Reinforcement.activation_output>` (2nd item of the **variable** argument),
+        that is the `error_signal <Reinforcement.error_signal>` (3rd item of
+        **variable** argument) scaled by the `learning_rate <Reinforement.learning_rate>`.
 
-            Note: assume variable is a 2D np.array with three items (input, output, error)
-                  for compatibility with other learning functions (and calls from LearningProjection)
+        .. note::
+           In order to preserve compatibilty with other `LearningFunctions <LearningFunction>`:
 
-        COMMENT
+           * **variable** must have three items, although only the 2nd and 3rd are used;
+           ..
+           * `function <Reinforcement.function>` returns two copies of the error array.
 
         Arguments
         ---------
 
         variable : List or 2d np.array [length 3 in axis 0] : default ClassDefaults.variable
            must have three items that are the values for (in order):
-           `activation_input <Reinforcement.activation_input>` (not used),
-           `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
-           `error_signal <Reinforcement.error_signal>` (1d np.array).
+
+               * `activation_input <Reinforcement.activation_input>` (not used),
+
+               * `activation_output <Reinforcement.activation_output>` (1d np.array with a single non-zero value),
+
+               * `error_signal <Reinforcement.error_signal>` (1d np.array with a single item).
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
+           a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+           function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+           arguments of the constructor.
 
         Returns
         -------
-        diagonal weight change matrix : 2d np.array
-            has a single non-zero entry in the same row and column as the one in
-            `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`.
 
-        error signal : 1d np.array
-            COMMENT:
-            same as value received in `error_signal <Reinforcement.error_signal>` argument.
-            COMMENT
-            1d array of error terms (the diagonal elements of the weight change matrix)
+        error array : List[1d np.array, 1d np.array]
+            Two copies of a 1d array with a single non-zero error term.
 
         """
 
@@ -10182,7 +10669,8 @@ class BackPropagation(LearningFunction):
         prefs=None)
 
     Implements a `function <BackPropagation.function>` that calculate a matrix of weight changes using the
-    backpropagation (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_)
+    `backpropagation <https://en.wikipedia.org/wiki/Backpropagation>`_
+     (`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_)
     learning algorithm.  The weight change matrix is computed as:
 
         *weight_change_matrix* = `learning_rate <BackPropagation.learning_rate>` * `activation_input
@@ -10198,8 +10686,9 @@ class BackPropagation(LearningFunction):
                `error_signal <BackPropagation.error_signal>`
 
                  is the derivative of the error with respect to `activation_output
-                 <BackPropagation.activation_output>` (i.e., the weighted contribution of each output unit to the
-                 `error_signal <BackPropagation.error_signal>`); and
+                 <BackPropagation.activation_output>` (i.e., the weighted contribution to the `error_signal
+                 <BackPropagation.error_signal>` of each unit that receives activity from the weight matrix being
+                 learned); and
 
                :math:`\\frac{\delta A}{\delta W}` =
                `activation_derivative_fct <BackPropagation.activation_derivative_fct>`
@@ -10292,8 +10781,9 @@ class BackPropagation(LearningFunction):
         same as 3rd item of `variable <BackPropagation.variable>`.
 
     error_matrix : 2d np.array or ParameterState
-        matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`;
-        if it is a `ParameterState`, it refers to the MATRIX parameterState of the `MappingProjection` being learned.
+        matrix, the input of which is `activation_output <BackPropagation.activation_output>` and the output of which
+        is used to calculate the `error_signal <BackPropagation.error_signal>`; if it is a `ParameterState`,
+        it refers to the MATRIX parameterState of the `MappingProjection` being learned.
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
@@ -10575,7 +11065,7 @@ class TDLearning(Reinforcement):
 
     def __init__(self,
                  default_variable=Reinforcement.ClassDefaults.variable,
-                 activation_function: tc.any(SoftMax, tc.enum(SoftMax))=SoftMax,
+                 # activation_function: tc.any(SoftMax, tc.enum(SoftMax))=SoftMax,
                  learning_rate=Reinforcement.default_learning_rate,
                  params=None,
                  owner=None,
@@ -10596,7 +11086,7 @@ class TDLearning(Reinforcement):
         # params = self._assign_args_to_param_dicts(learning_rate=learning_rate,
                                                   # params=params)
         super().__init__(default_variable=default_variable,
-                         activation_function=activation_function,
+                         # activation_function=activation_function,
                          learning_rate=learning_rate,
                          params=params,
                          context=context,

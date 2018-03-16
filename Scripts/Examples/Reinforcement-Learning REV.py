@@ -8,11 +8,16 @@ input_layer = pnl.TransferMechanism(
 )
 
 action_selection = pnl.TransferMechanism(
-    size=3,
-    function=pnl.SoftMax(
-        output=pnl.PROB,
-        gain=1.0
-    ),
+        size=3,
+        function=pnl.SoftMax(
+                output=pnl.ALL,
+                gain=1.0),
+        output_states={pnl.NAME: 'SELECTED ACTION',
+                       pnl.VARIABLE:[(pnl.INPUT_STATE_VARIABLES, 0), (pnl.OWNER_VALUE, 0)],
+                       pnl.FUNCTION: pnl.OneHot(mode=pnl.PROB).function},
+    # output_states={pnl.NAME: "SOFT_MAX",
+    #                pnl.VARIABLE: (pnl.OWNER_VALUE,0),
+    #                pnl.FUNCTION: pnl.SoftMax(output=pnl.PROB,gain=1.0)},
     name='Action Selection'
 )
 
