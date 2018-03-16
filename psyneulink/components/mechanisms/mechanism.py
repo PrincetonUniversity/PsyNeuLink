@@ -2350,11 +2350,12 @@ class Mechanism_Base(Mechanism):
         print("- output: {}".format(output_string))
 
     def show_structure(self,
-                      # direction = 'BT',
-                      show_functions = False,
-                      show_values = False,
-                      output_fmt='pdf'
-                      ):
+                       # direction = 'BT',
+                       show_functions = False,
+                       show_values = False,
+                       show_headers = False,
+                       output_fmt='pdf'
+                       ):
         """Generate a detailed display of a the structure of a Mechanism.
 
         .. note::
@@ -2376,6 +2377,9 @@ class Mechanism_Base(Mechanism):
             specifies whether or not to show the `value <Component.value>` of the Mechanism and each of its States
             in the record.
 
+        show_headers : bool : default False
+            specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers.
+
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;\n
             'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
@@ -2390,16 +2394,20 @@ class Mechanism_Base(Mechanism):
         open_bracket = r'{'
         pipe = r' | '
         close_bracket = r'}'
-        mechanism_heading = r'MECHANISM:\n'
-        input_states_heading = r'______InputStates______\n' \
+        mechanism_header = r'MECHANISM:\n'
+        input_states_header = r'______INPUTSTATES______\n' \
                          r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\'
-        parameter_states_heading = r'ParameterStates:'
-        output_states_heading = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ _______/\nOutputStates'
+        parameter_states_header = r'PARAMETERSTATES:'
+        output_states_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ _______/\nOUTPUTSTATES'
 
         def mech_string(mech):
             '''Return string with name of mechanism possibly with function and/or value
             Inclusion of function and value is determined by arguments of call to show_structure '''
-            mech_name = r' <{0}> {1}{0}'.format(mech.name, mechanism_heading)
+            if show_headers:
+                mech_header = mechanism_header
+            else:
+                mech_header = ''
+            mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
             mech_function = ''
             if show_functions:
                 mech_function = r'\n({})'.format(mech.function_object.__class__.__name__)
@@ -2426,15 +2434,26 @@ class Mechanism_Base(Mechanism):
 
         # Construct structure specification
         mech = mech_string(self)
-        input_states = input_states_heading + pipe + states_string(self.input_states,
-                                                                   include_function=show_functions,
-                                                                   include_value=show_values)
-        parameter_states = parameter_states_heading + pipe + states_string(self.parameter_states,
-                                                                           include_function=show_functions,
-                                                                           include_value=show_values)
-        output_states = states_string(self.output_states,
-                                      include_function=show_functions,
-                                      include_value=show_values) + pipe + output_states_heading
+        if show_headers:
+            input_states = input_states_header + pipe + states_string(self.input_states,
+                                                                       include_function=show_functions,
+                                                                       include_value=show_values)
+            parameter_states = parameter_states_header + pipe + states_string(self.parameter_states,
+                                                                               include_function=show_functions,
+                                                                               include_value=show_values)
+            output_states = states_string(self.output_states,
+                                          include_function=show_functions,
+                                          include_value=show_values) + pipe + output_states_header
+        else:
+            input_states = states_string(self.input_states,
+                                         include_function=show_functions,
+                                         include_value=show_values)
+            parameter_states = states_string(self.parameter_states,
+                                             include_function=show_functions,
+                                             include_value=show_values)
+            output_states = states_string(self.output_states,
+                                          include_function=show_functions,
+                                          include_value=show_values)
         m_node_struct = open_bracket + \
                         output_states + pipe + \
                         open_bracket + mech + pipe + \
