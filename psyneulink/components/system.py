@@ -3532,7 +3532,9 @@ class System(System_Base):
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
                         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
-                        G.edge(self._get_label(sndr, show_dimensions), self._get_label(rcvr, show_dimensions), color=learning_color, label = edge_label)
+                        G.edge(self._get_label(sndr, show_dimensions),
+                               self._get_label(rcvr, show_dimensions),
+                               color=learning_color, label = edge_label)
                 else:
                     # Implement edges for Projections to each LearningMechanism from other LearningMechanisms
                     # and from ProcessingMechanisms if 'ALL' is set
@@ -3553,7 +3555,9 @@ class System(System_Base):
                                 if show_learning is True:
                                     continue
                             if self in sndr.systems:
-                                G.edge(self._get_label(sndr, show_dimensions), self._get_label(rcvr, show_dimensions), color=learning_color, label=proj.name)
+                                G.edge(self._get_label(sndr, show_dimensions),
+                                       self._get_label(rcvr, show_dimensions), color=learning_color,
+                                       label=proj.name)
 
                             # Get Projections to ComparatorMechanism as well
                             if (isinstance(sndr, ObjectiveMechanism)
@@ -3610,8 +3614,8 @@ class System(System_Base):
 
             # objmech to controller edge
             if show_mechanism_structure:
-                G.edge(objmech.name+':'+objmech_ctlr_proj.sender.name,
-                       controller.name+':'+objmech_ctlr_proj.receiver.name,
+                G.edge(objmech.name + ':' + objmech_ctlr_proj.sender.name,
+                       controller.name + ':' + objmech_ctlr_proj.receiver.name,
                        label=objmech_ctlr_proj.name, 
                        color=control_color)
             else:
@@ -3621,8 +3625,8 @@ class System(System_Base):
             for output_state in controller.control_signals:
                 for projection in output_state.efferents:
                     if show_mechanism_structure:
-                        ctlr_proj_label = ctlr_label+':'+output_state.name
-                        rcvr_proj_label = projection.receiver.owner.name+':'+projection.receiver.name
+                        ctlr_proj_label = ctlr_label + ':' + output_state.name
+                        rcvr_proj_label = projection.receiver.owner.name + ':' + projection.receiver.name
                     else:
                         ctlr_proj_label = ctlr_label
                         rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions)
@@ -3635,25 +3639,41 @@ class System(System_Base):
             for istate in objmech.input_states:
                 for projection in istate.path_afferents:
                     if show_mechanism_structure:
-                        sndr_proj_label = projection.sender.owner.name+':'+projection.sender.name
-                        # objmech_proj_label = projection.receiver.owner.name+':'+projection.receiver.name
-                        objmech_proj_label = objmech_label+':'+istate.name
+                        sndr_proj_label = projection.sender.owner.name + ':' + projection.sender.name
+                        # objmech_proj_label = projection.receiver.owner.name + ':' + projection.receiver.name
+                        objmech_proj_label = objmech_label + ':' + istate.name
                     else:
                         sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions)
                         objmech_proj_label = self._get_label(objmech, show_dimensions)
                     G.edge(sndr_proj_label, objmech_proj_label)
 
             # prediction mechanisms
-            for object_item in self.execution_list:
-                mech = object_item
+            for mech in self.execution_list:
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-                    G.node(self._get_label(mech, show_dimensions),
-                           color=prediction_mechanism_color)
                     recvr = mech.origin_mech
-                    G.edge(self._get_label(mech, show_dimensions),
-                           self._get_label(recvr, show_dimensions),
-                           label=' prediction assignment',
-                           color=prediction_mechanism_color)
+
+                    # IMPLEMENTATION NOTE:
+                    #     THIS IS HERE FOR FUTURE COMPATABLITY WITH FULL IMPLEMENTATION OF PredictionMechanisms
+                    if show_mechanism_structure and False:
+                        proj = mech.output_state.efferents[0]
+                        G.node(mech.name,
+                               mech.show_structure(show_functions=show_functions,
+                                                   show_values=show_values,
+                                                   output_fmt='struct'),
+                               color=prediction_mechanism_color)
+
+
+                        G.edge(mech.name + ':' + mech.output_state.name,
+                               rcvr.name + ':' + proj.receiver.name,
+                               label=' prediction assignment',
+                               color=prediction_mechanism_color)
+                    else:
+                        G.node(self._get_label(mech, show_dimensions),
+                               color=prediction_mechanism_color)
+                        G.edge(self._get_label(mech, show_dimensions),
+                               self._get_label(recvr, show_dimensions),
+                               label=' prediction assignment',
+                               color=prediction_mechanism_color)
                     pass
 
         # return
