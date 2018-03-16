@@ -3266,6 +3266,7 @@ class System(System_Base):
             raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
 
     def show_graph(self,
+                   active_item = None,
                    direction = 'BT',
                    show_learning = False,
                    show_control = False,
@@ -3273,6 +3274,7 @@ class System(System_Base):
                    show_mechanism_structure=False,
                    show_functions=False,
                    show_values=False,
+                   active_color = 'yellow',
                    origin_color = 'green',
                    terminal_color = 'red',
                    origin_and_terminal_color = 'brown',
@@ -3435,14 +3437,20 @@ class System(System_Base):
         # loop through receivers
         for rcvr in rcvrs:
             # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
+            if rcvr is active_item:
+                color = active_color
+            else:
+                color = default_node_color
             if show_mechanism_structure:
                 rcvr_label=rcvr.name
-                G.node(rcvr_label, rcvr.show_structure(show_functions=show_functions,
-                                                       show_values=show_values,
-                                                       output_fmt='struct'))
+                G.node(rcvr_label,
+                       rcvr.show_structure(show_functions=show_functions,
+                                           show_values=show_values,
+                                           output_fmt='struct'),
+                       color=color)
             else:
                 rcvr_label = self._get_label(rcvr, show_dimensions)
-                G.node(rcvr_label, shape=mechanism_shape)
+                G.node(rcvr_label, shape=mechanism_shape, color=color)
 
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
@@ -3460,7 +3468,11 @@ class System(System_Base):
                     except AttributeError:
                         has_learning = None
                     if show_learning and has_learning:
-                        G.node(edge_label, shape=projection_shape)
+                        if proj is active_item:
+                            proj_color = active_color
+                        else:
+                            proj_color = default_node_color
+                        G.node(edge_label, shape=projection_shape, color=proj_color)
                         G.edge(sndr_proj_label, edge_label, arrowhead='none')
                         G.edge(edge_label, rcvr_proj_label)
                     else:
