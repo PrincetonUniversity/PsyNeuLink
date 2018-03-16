@@ -3632,12 +3632,11 @@ class System(System_Base):
                            color=control_color)
 
             # incoming edges
-            for istate in objmech.input_states:
-                for projection in istate.path_afferents:
+            for input_state in objmech.input_states:
+                for projection in input_state.path_afferents:
                     if show_mechanism_structure:
                         sndr_proj_label = projection.sender.owner.name+':'+projection.sender.name
-                        # objmech_proj_label = projection.receiver.owner.name+':'+projection.receiver.name
-                        objmech_proj_label = objmech_label+':'+istate.name
+                        objmech_proj_label = objmech_label+':'+input_state.name
                     else:
                         sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions)
                         objmech_proj_label = self._get_label(objmech, show_dimensions)
