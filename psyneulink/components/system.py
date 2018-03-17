@@ -3624,7 +3624,7 @@ class System(System_Base):
                     else:
                         G.node(sndr_label, color=sndr_color, penwidth='3')
 
-        # add learning graph if show_learning
+        # Add learning-related Components to graph if show_learning
         if show_learning:
             rcvrs = list(learning_graph.keys())
             for rcvr in rcvrs:
@@ -3781,7 +3781,7 @@ class System(System_Base):
                                                    label=edge_label)
 
 
-        # add control graph if show_control
+        # Add control-related Components to graph if show_control
         if show_control:
 
             controller = self.controller
