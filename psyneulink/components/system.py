@@ -858,7 +858,7 @@ class System(System_Base):
                           context=context)
 
         if not context:
-            context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
+            context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT # cxt
 
         super().__init__(default_variable=default_variable,
                          size=size,
@@ -2516,7 +2516,7 @@ class System(System_Base):
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
         if not context:
-            context = EXECUTING + " " + SYSTEM + " " + self.name
+            context = EXECUTING + " " + SYSTEM + " " + self.name # cxt
             self.execution_status = ExecutionStatus.EXECUTING
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller

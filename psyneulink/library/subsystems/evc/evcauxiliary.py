@@ -309,7 +309,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller.EVC_policies = []
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        context = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION))
+        context = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION)) # cxt
 
         # Print progress bar
         if controller.prefs.reportOutputPref:
@@ -513,7 +513,7 @@ def _compute_EVC(args):
 
     """
 
-    ctlr, allocation_vector, runtime_params, context = args
+    ctlr, allocation_vector, runtime_params, context = args # cxt
 
     # # TEST PRINT:
     # print("Allocation vector: {}\nPredicted input: {}".

@@ -682,9 +682,9 @@ class ControlSignal(ModulatorySignal):
                  context=None):
 
         if context is None:
-            context = COMMAND_LINE
+            context = COMMAND_LINE # cxt
         else:
-            context = self
+            context = self # cxt
 
         # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:

@@ -526,7 +526,7 @@ class LearningProjection(ModulatoryProjection_Base):
                 import _instantiate_learning_components
             _instantiate_learning_components(
                 learning_projection=self,
-                context="{0} {1}".format(context, self.name)
+                context="{0} {1}".format(context, self.name) # cxt
             )
 
         if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):

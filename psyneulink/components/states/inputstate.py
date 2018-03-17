@@ -712,9 +712,9 @@ class InputState(State_Base):
                  context=None):
 
         if context is None:
-            context = COMMAND_LINE
+            context = COMMAND_LINE # cxt
         else:
-            context = self
+            context = self # cxt
 
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)

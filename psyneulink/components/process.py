@@ -857,7 +857,7 @@ class Process(Process_Base):
 
         if not context:
             # context = self.__class__.__name__
-            context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
+            context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT # cxt
 
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
         if default_variable is None and len(pathway) > 0:
@@ -2112,7 +2112,7 @@ class Process(Process_Base):
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
         if not context:
-            context = EXECUTING + " " + PROCESS + " " + self.name
+            context = EXECUTING + " " + PROCESS + " " + self.name # cxt
             self.execution_status = ExecutionStatus.EXECUTING
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
@@ -2242,7 +2242,7 @@ class Process(Process_Base):
                             # Call parameter_state.update with LEARNING in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                            context = context.replace(EXECUTING, LEARNING + ' ')
+                            context = context.replace(EXECUTING, LEARNING + ' ') # cxt
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, context=context)

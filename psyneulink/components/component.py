@@ -836,7 +836,7 @@ class Component(object):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
-        context = context + INITIALIZING + ": " + COMPONENT_INIT
+        context = context + INITIALIZING + ": " + COMPONENT_INIT #cxt
         self.execution_status = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
         # self.init_status = InitStatus.INITIALIZING
@@ -1588,9 +1588,9 @@ class Component(object):
         # Validate variable if parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and variable is not None:
             if context:
-                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
+                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS # cxt
             else:
-                context = FUNCTION_CHECK_ARGS
+                context = FUNCTION_CHECK_ARGS # cxt
             variable = self._update_variable(self._validate_variable(variable, context=context))
 
         # PARAMS ------------------------------------------------------------
@@ -1919,7 +1919,7 @@ class Component(object):
         Instantiate any items in request set that require it (i.e., function or states).
 
         """
-        context = context or COMMAND_LINE
+        context = context or COMMAND_LINE # cxt
 
         self._assign_params(request_set=request_set, context=context)
 
@@ -1993,7 +1993,7 @@ class Component(object):
         #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
         #    that causes name-repetition problems when it is called as part of the standard init procedure
         if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context:
-            self._instantiate_attributes_before_function(context=COMMAND_LINE)
+            self._instantiate_attributes_before_function(context=COMMAND_LINE)  # cxt
 
         # Give owner a chance to instantiate function and/or function params
         # (e.g., wrap in UserDefineFunction, as per EVCControlMechanism)
@@ -2004,7 +2004,7 @@ class Component(object):
 
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
-            self._instantiate_function(context=COMMAND_LINE)
+            self._instantiate_function(context=COMMAND_LINE) # cxt
 
         # FIX: WHY SHOULD IT BE CALLED DURING STANDRD INIT PROCEDURE?
         # # MODIFIED 5/5/17 OLD:
@@ -2012,7 +2012,7 @@ class Component(object):
         # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_states ARG OF CONSTRUCTOR]
         if OUTPUT_STATES in validated_set and COMMAND_LINE in context:
         # MODIFIED 5/5/17 END
-            self._instantiate_attributes_after_function(context=COMMAND_LINE)
+            self._instantiate_attributes_after_function(context=COMMAND_LINE) # cxt
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
         """Reset current and/or instance defaults
@@ -2733,7 +2733,7 @@ class Component(object):
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
         #    execute method, not its function
         if not context:
-            context = "DIRECT CALL"
+            context = "DIRECT CALL" # cxt
         try:
             value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:

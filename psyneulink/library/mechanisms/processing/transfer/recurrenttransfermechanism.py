@@ -1051,7 +1051,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if learning_rate:
             self.learning_rate = learning_rate
 
-        context = context or COMMAND_LINE
+        context = context or COMMAND_LINE # cxt
 
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self.output_state,
                                                                        learning_function=self.learning_function,

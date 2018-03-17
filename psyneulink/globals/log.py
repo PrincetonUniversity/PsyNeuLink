@@ -720,7 +720,7 @@ class Log:
 
             if isinstance(context, ContextStatus):
                 context_flags = context
-                context = ContextStatus._get_context_string(context)
+                context = ContextStatus._get_context_string(context) # cxt
                 if not time:
                     raise LogError("Use of ContextStatus ({}) by {} to specify context requires specification of time".
                                    format(context, self.owner.name ))
@@ -731,7 +731,7 @@ class Log:
                     # If _log_value is being called programmatically,
                     #    flag for later and set context to None to get context from the stack
                     programmatic = True
-                    context = None
+                    context = None # cxt
 
                 # Get context from the stack
                 if context is None:
@@ -741,19 +741,19 @@ class Log:
                     # Search stack for first frame (most recent call) with a context specification
                     while context is None:
                         try:
-                            context = inspect.getargvalues(prev_frame[i][0]).locals['context']
+                            context = inspect.getargvalues(prev_frame[i][0]).locals['context'] # cxt
                         except KeyError:
                             # Try earlier frame
                             i += 1
                         except IndexError:
                             # Ran out of frames, so just set context to empty string
-                            context = ""
+                            context = "" # cxt
                         else:
                             break
 
                 # If context is a Component object, it must be during its initialization, so assign accordingly:
                 if isinstance(context, Component):
-                    context = "{} of {}".format(INITIALIZING, context.name)
+                    context = "{} of {}".format(INITIALIZING, context.name) # cxt
 
                 # No context was specified in any frame
                 if context is None:
@@ -764,7 +764,7 @@ class Log:
 
                 # Context is an empty string, but called programmatically
                 if not context and programmatic:
-                    context = COMMAND_LINE
+                    context = COMMAND_LINE # cxt
                     # context = self.owner.prev_context + "FROM " + COMMAND_LINE
                     # context = self.owner.prev_context
 
@@ -1046,9 +1046,9 @@ class Log:
             for entry in entries:
                 for datum in self.logged_entries[entry]:
                     if long_context:
-                        context = datum.context
+                        context = datum.context # cxt
                     else:
-                        context = ContextStatus._get_context_string(_get_context(datum.context))
+                        context = ContextStatus._get_context_string(_get_context(datum.context)) # cxt
                     c_width = max(c_width, len(context))
             context_width = min(context_width, c_width)
 
@@ -1111,12 +1111,12 @@ class Log:
                     if options.CONTEXT & option_flags:
                         if long_context:
                             # Use context from LogEntry
-                            context = repr(context)
+                            context = repr(context) # cxt
                         else:
                             # Get names of ContextStatus flag(s) from parse of context string
-                            context = ContextStatus._get_context_string(_get_context(context))
+                            context = ContextStatus._get_context_string(_get_context(context)) # cxt
                         if len(context) > context_width:
-                            context = context[:context_width-3] + "..."
+                            context = context[:context_width-3] + "..." # cxt
                         data_str = data_str + context.ljust(context_width, spacer)
 
                     if options.VALUE & option_flags:

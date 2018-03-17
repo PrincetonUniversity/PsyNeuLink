@@ -698,7 +698,7 @@ def run(object,
                     projection.function_object.learning_rate = object.learning_rate
 
     # Class-specific validation:
-    context = context or RUN + "validating " + object.name
+    context = context or RUN + "validating " + object.name # cxt
 
     # INITIALIZATION
     if initialize:
@@ -750,7 +750,7 @@ def run(object,
 
             # MODIFIED 3/16/17 END
             if RUN in context and not EVC_SIMULATION in context:
-                context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
+                context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt
                 object.execution_status = ExecutionStatus.EXECUTING
             result = object.execute(
                 input=execution_inputs,
