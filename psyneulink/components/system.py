@@ -3640,7 +3640,7 @@ class System(System_Base):
                                                    output_fmt='struct'),
                                color=rcvr_color)
                     else:
-                        G.node(self._get_label(rcvr, show_dimensions), color=rcvr_color)
+                        G.node(self._get_label(rcvr, show_dimensions), color=rcvr_color, shape=mechanism_shape)
 
                     # Implement edges for Projections to LearningMechanism
                     #    from other LearningMechanisms and from ProcessingMechanisms if 'ALL' is set
@@ -3677,15 +3677,13 @@ class System(System_Base):
                                                                output_fmt='struct'),
                                            color=sndr_color)
                                 else:
-                                    G.node(self._get_label(sndr, show_dimensions), color=sndr_color)
+                                    G.node(self._get_label(sndr, show_dimensions),
+                                           color=sndr_color, shape=mechanism_shape)
                             else:
                                 if not show_learning is ALL:
                                     continue
 
                             if self in sndr.systems:
-                                # G.edge(self._get_label(sndr, show_dimensions),
-                                #        self._get_label(rcvr, show_dimensions), color=learning_color,
-                                #        label=proj.name)
                                 if show_mechanism_structure:
                                     G.edge(sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
                                            rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,

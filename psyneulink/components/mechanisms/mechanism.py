@@ -2474,8 +2474,8 @@ class Mechanism_Base(Mechanism):
                         close_bracket
 
         # Make node
-        m = gv.Digraph('mechanisms',
-                       filename='mechanisms_revisited.gv',
+        m = gv.Digraph(#'mechanisms',
+                       #filename='mechanisms_revisited.gv',
                        node_attr={'shape': 'record'},
                        )
         m.node(self.name, m_node_struct, shape='record')
