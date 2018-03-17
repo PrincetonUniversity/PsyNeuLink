@@ -3560,7 +3560,7 @@ class System(System_Base):
                         rcvr_color = terminal_color
                     if show_mechanism_structure:
                         G.node(rcvr_label,
-                               sndr.show_structure(show_functions=show_functions,
+                               rcvr.show_structure(show_functions=show_functions,
                                                    show_values=show_values,
                                                    output_fmt='struct'),
                                color=rcvr_color,
@@ -3596,21 +3596,22 @@ class System(System_Base):
                 else:
                     rcvr_color = learning_color
 
-                # if rcvr is projection
+                # if rcvr is projection (i.e., recipient of a LearningProjection)
                 if isinstance(rcvr, MappingProjection):
                     # for each sndr of rcvr
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
                         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
                         if show_mechanism_structure:
-                            G.edge(rcvr.sender.owner.name + ':' + OutputState.__name__ + '-' + rcvr.sender.name,
-                                   rcvr.receiver.owner.name + ':' + InputState.__name__ + '-' + proj.receiver.name,
-                                   label=proj.name,
-                                   color=learning_proj_color)
+                            G.edge(sndr.name + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                                   self._get_label(rcvr, show_dimensions),
+                                   label=edge_label,
+                                   color=rcvr_color)
                         else:
                             G.edge(self._get_label(sndr, show_dimensions),
                                    self._get_label(rcvr, show_dimensions),
-                                   color=rcvr_color, label = edge_label)
+                                   label = edge_label,
+                                   color=rcvr_color)
 
                 # rcvr is a LearningMechanism or ComparatorMechanism
                 else:
@@ -3692,22 +3693,22 @@ class System(System_Base):
                                 for input_state in sndr.input_states:
                                     for proj in input_state.path_afferents:
 
-                                        target_source = proj.sender.owner
+                                        comp_sndr = proj.sender.owner
 
                                         # Skip any Projections from ProcesInputStates
-                                        if isinstance(target_source, Process):
+                                        if isinstance(comp_sndr, Process):
                                             continue
 
                                         # Projection is from System
-                                        elif isinstance(target_source, System):
+                                        elif isinstance(comp_sndr, System):
                                             
-                                            if target_source is active_item:
-                                                target_source_color = active_color
+                                            if comp_sndr is active_item:
+                                                comp_sndr_color = active_color
                                             else:
-                                                target_source_color = system_color
+                                                comp_sndr_color = system_color
 
-                                            G.node(self._get_label(target_source, show_dimensions),
-                                                   color=target_source_color,
+                                            G.node(self._get_label(comp_sndr, show_dimensions),
+                                                   color=comp_sndr_color,
                                                    penwidth='3')
 
                                         if proj is active_item:
@@ -3716,12 +3717,14 @@ class System(System_Base):
                                             learning_proj_color = learning_color
 
                                         if show_mechanism_structure:
-                                            G.edge(self._get_label(target_source, show_dimensions),
-                                                   sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
+                                            G.edge(proj.sender.owner.name + ':'
+                                                       + OutputState.__name__ + '-' + proj.sender.name,
+                                                   proj.receiver.owner.name + ':'
+                                                       + InputState.__name__ + '-' + proj.receiver.name,
                                                    label=proj.name,
                                                    color=learning_proj_color)
                                         else:
-                                            G.edge(self._get_label(target_source, show_dimensions),
+                                            G.edge(self._get_label(comp_sndr, show_dimensions),
                                                    self._get_label(sndr, show_dimensions),
                                                    color=learning_proj_color,
                                                    label=proj.name)
