@@ -3293,16 +3293,19 @@ class System(System_Base):
 
         Displays a graph showing the structure of the System (based on the `System's graph <System.graph>`).
         By default, only the primary processing Components are shown, and Mechanisms are displayed as simple nodes.
-        However, the **show_mechanism_structure** argument can be used to display more detailed informationa about
-        each Mechanism, including its States and, optionally the `function <Component.function>` and `value
+        However, the **show_mechanism_structure** argument can be used to display more detailed information about
+        each Mechanism, including its States and, optionally, the `function <Component.function>` and `value
         <Component.value>` of the Mechanism and each of its States (using the **show_functions** and **show_values**
         arguments, respectively).  In addition, the **show_learning** and **show_control** arguments can be used to
-        also show the Components associated with `learning <LearningMechanism>` and those associated with the
-        System's `controller <System_Control>`. `Mechanisms <Mechanism>` are always displayed as (oval) nodes.
-        `ORIGIN` and `TERMINAL` Mechanisms of the System are displayed with bold ovals in specified colors.
-        `Projections <Projection>` are displayed as labelled arrows, unless **show_learning** is assigned **True**,
-        in which case MappingProjections that receive a `LearningProjection` are displayed as diamond-shaped nodes.
-        The numbers in parentheses within a Mechanism node indicate its dimensionality.
+        show the Components associated with `learning <LearningMechanism>` and those associated with the
+        System's `controller <System_Control>`. `Mechanisms <Mechanism>` are always displayed as nodes.  If
+        **show_mechanism_structure** is `True`, Mechanism nodes are subdivided into sections for its States with
+        information about each determined by the **show_values** and **show_functions** specifications.  Otherwise,
+        Mechanism nodes are simple ovals.  `ORIGIN` and  `TERMINAL` Mechanisms of the System are displayed with
+        thicker borders in a colors specified for each. `Projections <Projection>` are displayed as labelled arrows,
+        unless **show_learning** is assigned **True**, in which case MappingProjections that receive a
+        `LearningProjection` are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism
+        node indicate its dimensionality.
 
         COMMENT:
         node shapes: https://graphviz.gitlab.io/_pages/doc/info/shapes.html
@@ -3312,6 +3315,9 @@ class System(System_Base):
 
         Arguments
         ---------
+
+        active_item : Component : default None
+            specifies the item in the graph to display in the color specified by *active_color**.
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
@@ -3359,6 +3365,9 @@ class System(System_Base):
             * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
               shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
               rows (input dimension) and the second the number of columns (output dimension).
+
+        active_color : keyword : default 'yellow'
+            specifies the color in which to display the item specified in *active_item**.
 
         origin_color : keyword : default 'green',
             specifies the color in which the `ORIGIN` Mechanisms of the System are displayed.

@@ -144,7 +144,7 @@ mySystem.show()
 mySystem.controller.show()
 
 # Show graph of system (with control components)
-# mySystem.show_graph(show_control=True)
+# mySystem.show_graph(show_control=True, active_item=Decision)
 mySystem.show_graph(show_control=True, show_mechanism_structure=True, show_values=True)
 
 # configure EVC components
