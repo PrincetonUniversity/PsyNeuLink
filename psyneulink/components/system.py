@@ -3339,6 +3339,9 @@ class System(System_Base):
             specifies whether or not to show `value <Component.value>` of Mechanisms and their States in the
             graph;  this requires **show_mechanism_structure** to be specified as `True` to take effect.
 
+        show_projection_labels : bool : default False
+            specifies whether or not to show names of projections.
+
         show_learning : bool or ALL : default False
             specifies whether or not to show the learning components of the system;
             they will all be displayed in the color specified for **learning_color**.
