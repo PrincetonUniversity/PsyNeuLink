@@ -3320,12 +3320,32 @@ class System(System_Base):
         active_item : Component : default None
             specifies the item in the graph to display in the color specified by *active_color**.
 
-        show_mechanism_structure : bool : default False
+        show_mechanism_structure : bool, SIMPLE, VALUES, FUNCTIONS or ALL : default False
             specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
-            `States` and, optionally, the `function <Component.function>` and `value <Component.value>` of each
+            `States`;  can have the following settings:
+
+            * *SIMPLE* -- equivalent to `True`; shows States of Mechanism, but not information about the `value
+              <Component.value>` or `function <Component.function>` of the Mechanism or its States.
+
+            * *VALUES* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
+              <State_Base.value>` of each of its States.
+
+            * *FUNCTIONS* -- shows the `function <Mechanism_Base.function>` of the Mechanism and the `function
+              <State_Base.function>` of its InputStates and OutputStates.
+
+            * *ALL* -- shows both `value <Component.value>` and `function <Component.function>` of the Mechanism and
+              its States (see above).
+
+        COMMENT:
+             and, optionally, the `function <Component.function>` and `value <Component.value>` of each
             (these can be specified using the **show_functions** and **show_values** arguments.  If this option
             is specified, Projections are connected to and from the State that is the `sender <Projection.sender>` or
             `receiver <Projection.receiver>` of each.
+        COMMENT
+
+        show_headers : bool : default False
+            specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
+            **show_mechanism_structure** is specified (see above).
 
         show_functions : bool : default False
             specifies whether or not to show `function <Component.function>` of Mechanisms and their States in the
@@ -3354,17 +3374,18 @@ class System(System_Base):
             specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
             is `True`);  can have the following settings:
 
-            * *ALL* -- shows dimensions for both Mechanisms and Projections (see below for formats).
-
             * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
               below the name of the Mechanism; each number represents the dimension of the `variable
               <InputState.variable>` for each `InputState` of the Mechanism; Output dimensions are shown above
               the name of the Mechanism; each number represents the dimension for `value <OutputState.value>` of each
-              of `OutputState` of the Mechanism;
+              of `OutputState` of the Mechanism.
 
             * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
               shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
               rows (input dimension) and the second the number of columns (output dimension).
+
+            * *ALL* -- eqivalent to `True`; shows dimensions for both Mechanisms and Projections (see above for
+              formats).
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
