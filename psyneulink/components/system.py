@@ -3325,8 +3325,7 @@ class System(System_Base):
             `States` and, optionally, the `function <Component.function>` and `value <Component.value>` of each
             (these can be specified using the **show_functions** and **show_values** arguments.  If this option
             is specified, Projections are connected to and from the State that is the `sender <Projection.sender>` or
-            `receiver <Projection.receiver>` of each.  Note:  setting this option calls the
-            `Mechanism_Base.show_structure` method for each Mechanism in the graph.
+            `receiver <Projection.receiver>` of each.
 
         show_functions : bool : default False
             specifies whether or not to show `function <Component.function>` of Mechanisms and their States in the
@@ -3428,22 +3427,25 @@ class System(System_Base):
         # projection_shape = 'hexagon'
 
         # build graph and configure visualisation settings
-        G = gv.Digraph(engine = "dot",
-                       node_attr  = {
-                           'fontsize':'12',
-                           'fontname':'arial',
-                           # 'shape':mechanism_shape,
-                           'shape':'record',
-                           'color':default_node_color
-                       },
-                       edge_attr  = {
-                           # 'arrowhead':'halfopen',
-                           'fontsize': '10',
-                           'fontname': 'arial'
-                       },
-                       graph_attr = {
-                           "rankdir" : direction
-                       } )
+        G = gv.Digraph(
+                name = self.name,
+                engine = "dot",
+                node_attr  = {
+                    'fontsize':'12',
+                    'fontname':'arial',
+                    # 'shape':mechanism_shape,
+                    'shape':'record',
+                    'color':default_node_color
+                },
+                edge_attr  = {
+                    # 'arrowhead':'halfopen',
+                    'fontsize': '10',
+                    'fontname': 'arial'
+                },
+                graph_attr = {
+                    "rankdir" : direction
+                }
+        )
 
 
         # work with system graph

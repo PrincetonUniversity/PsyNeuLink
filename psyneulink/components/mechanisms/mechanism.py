@@ -2384,12 +2384,9 @@ class Mechanism_Base(Mechanism):
             'pdf': generate and open a pdf with the visualization;\n
             'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
             'struct': return a string that specifies the structure of the record shape,
-            that can be used in a GraphViz node specification.
+            for use in a GraphViz node specification.
 
         """
-
-
-        import graphviz as gv
 
         open_bracket = r'{'
         pipe = r' | '
@@ -2473,21 +2470,23 @@ class Mechanism_Base(Mechanism):
                         input_states + \
                         close_bracket
 
+        if output_fmt == 'struct':
+            # return m.node
+            return m_node_struct
+
         # Make node
+        import graphviz as gv
         m = gv.Digraph(#'mechanisms',
                        #filename='mechanisms_revisited.gv',
                        node_attr={'shape': 'record'},
                        )
         m.node(self.name, m_node_struct, shape='record')
 
-        # Return requested format
         if output_fmt == 'pdf':
             m.view(self.name.replace(" ", "-"), cleanup=True)
+
         elif output_fmt == 'jupyter':
             return m
-        elif output_fmt == 'struct':
-            # return m.node
-            return m_node_struct
 
     def plot(self, x_range=None):
         """Generate a plot of the Mechanism's `function <Mechanism_Base.function>` using the specified parameter values
