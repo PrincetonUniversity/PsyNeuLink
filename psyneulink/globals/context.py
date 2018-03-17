@@ -32,7 +32,7 @@ class ContextError(Exception):
 
 
 class Context():
-    def __init__(self, status, composition, execution_id:UUID, string:str=''):
+    def __init__(self, status, composition, execution_id:UUID=None, string:str=''):
 
         self.status = status
 

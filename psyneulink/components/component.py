@@ -371,6 +371,7 @@ from psyneulink.globals.registry import register_category
 # from psyneulink.globals.log import Log, ContextStatus
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
+from psyneulink.globals.context import Context, ContextStatus
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength, object_has_single_value
 
 __all__ = [
@@ -837,7 +838,7 @@ class Component(object):
         #         # del self.init_args['__class__']
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
-        self.context = ContextStatus.INITIALIZATION
+        self.context = Context(ContextStatus.INITIALIZATION)
         self.execution_status = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
         # self.init_status = InitStatus.INITIALIZING
