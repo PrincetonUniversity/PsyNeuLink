@@ -887,10 +887,8 @@ class OutputState(State_Base):
                  **kwargs):
 
         if context is None: # cxt-test
-            context = COMMAND_LINE # cxt
-        else:
-            context = self # cxt
-
+            context = COMMAND_LINE # cxt-set        else:
+            context = self # cxt-set
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:
             assign = kwargs['calculate']

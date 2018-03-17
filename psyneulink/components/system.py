@@ -858,8 +858,7 @@ class System(System_Base):
                           context=context)
 
         if not context: # cxt-test
-            context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT # cxt
-
+            context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT # cxt-set
         super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=params,
@@ -2516,8 +2515,7 @@ class System(System_Base):
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
         if not context: # cxt-test
-            context = EXECUTING + " " + SYSTEM + " " + self.name # cxt
-            self.execution_status = ExecutionStatus.EXECUTING
+            context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-set            self.execution_status = ExecutionStatus.EXECUTING
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
         from psyneulink.globals.environment import _get_unique_id

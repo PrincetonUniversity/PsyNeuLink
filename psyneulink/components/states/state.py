@@ -1067,8 +1067,7 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                context = kargs[kwStateContext] # cxt
-            except (KeyError, NameError):
+                context = kargs[kwStateContext] # cxt-set            except (KeyError, NameError):
                 pass
 
         # Enforce that only called from subclass
@@ -2471,8 +2470,7 @@ def _parse_state_spec(state_type=None,
         state_specific_args.update(state_spec)
 
     state_dict = standard_args
-    context = state_dict.pop(CONTEXT, None) # cxt
-    owner = state_dict[OWNER]
+    context = state_dict.pop(CONTEXT, None) # cxt-set    owner = state_dict[OWNER]
     state_type = state_dict[STATE_TYPE]
     reference_value = state_dict[REFERENCE_VALUE]
     variable = state_dict[VARIABLE]

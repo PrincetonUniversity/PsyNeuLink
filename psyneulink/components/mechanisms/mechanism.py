@@ -1261,10 +1261,8 @@ class Mechanism_Base(Mechanism):
 
         # Mark initialization in context
         if not context or isinstance(context, object) or inspect.isclass(context): # cxt-test
-            context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt
-        else:
-            context = context + SEPARATOR_BAR + INITIALIZING + self.name # cxt
-
+            context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt-set        else:
+            context = context + SEPARATOR_BAR + INITIALIZING + self.name # cxt-set
         super(Mechanism_Base, self).__init__(default_variable=default_variable,
                                              size=size,
                                              param_defaults=params,
@@ -1960,8 +1958,7 @@ class Mechanism_Base(Mechanism):
 
         """
         self.ignore_execution_id = ignore_execution_id
-        context = context or NO_CONTEXT # cxt
-
+        context = context or NO_CONTEXT # cxt-set
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
@@ -2063,8 +2060,7 @@ class Mechanism_Base(Mechanism):
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
             if context is NO_CONTEXT: # cxt-test
-                context = EXECUTING + ' ' + append_type_to_name(self) # cxt
-                self.execution_status = ExecutionStatus.EXECUTING
+                context = EXECUTING + ' ' + append_type_to_name(self) # cxt-set                self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
                 input = self.instance_defaults.variable
             variable = self._update_variable(self._get_variable_from_input(input))

@@ -371,10 +371,8 @@ class LearningSignal(ModulatorySignal):
                  context=None):
 
         if context is None: # cxt-test
-            context = COMMAND_LINE # cxt
-        else:
-            context = self # cxt
-
+            context = COMMAND_LINE # cxt-set        else:
+            context = self # cxt-set
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   learning_rate=learning_rate,
