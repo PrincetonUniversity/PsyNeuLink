@@ -773,9 +773,9 @@ def run(object,
         if call_after_trial:
             call_after_trial()
 
-        from psyneulink.globals.log import _log_trials_and_runs, LogCondition
+        from psyneulink.globals.log import _log_trials_and_runs, ContextStatus
         _log_trials_and_runs(composition=object,
-                             curr_condition=LogCondition.TRIAL,
+                             curr_condition=ContextStatus.TRIAL,
                              context=context)
 
     try:
@@ -796,9 +796,9 @@ def run(object,
     else:
         object._learning_enabled = learning_state_buffer
 
-    from psyneulink.globals.log import _log_trials_and_runs, LogCondition
+    from psyneulink.globals.log import _log_trials_and_runs, ContextStatus
     _log_trials_and_runs(composition=object,
-                         curr_condition=LogCondition.RUN,
+                         curr_condition=ContextStatus.RUN,
                          context=context)
 
     return object.results

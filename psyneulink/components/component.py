@@ -368,7 +368,7 @@ import typecheck as tc
 
 from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MAPPING_PROJECTION, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.globals.registry import register_category
-# from psyneulink.globals.log import Log, LogCondition
+# from psyneulink.globals.log import Log, ContextStatus
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength, object_has_single_value
@@ -2767,8 +2767,8 @@ class Component(object):
         return self.function(variable=variable, params=runtime_params, context=context)
 
     def _get_current_execution_time(self, context):
-        from psyneulink.globals.log import _get_log_context
-        return self.log._get_time(context=context ,context_flags=_get_log_context(context))
+        from psyneulink.globals.log import _get_context
+        return self.log._get_time(context=context ,context_flags=_get_context(context))
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -2976,14 +2976,14 @@ class Component(object):
 
     @property
     def loggable_items(self):
-        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `LogCondition`.
+        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `ContextStatus`.
         This is a convenience method that calls the `loggable_items <Log.loggable_items>` property of the Component's
         `log <Component.log>`.
         """
         return self.log.loggable_items
 
-    from psyneulink.globals.log import LogCondition
-    def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
+    from psyneulink.globals.log import ContextStatus
+    def set_log_conditions(self, items, log_condition=ContextStatus.EXECUTION):
         """
         set_log_conditions(          \
             items                    \
@@ -3010,7 +3010,7 @@ class Component(object):
 
     @property
     def logged_items(self):
-        """Dictionary of all items that have entries in the log, and their currently assigned `LogCondition`\\s
+        """Dictionary of all items that have entries in the log, and their currently assigned `ContextStatus`\\s
         This is a convenience method that calls the `logged_items <Log.logged_items>` property of the Component's
         `log <Component.log>`.
         """
