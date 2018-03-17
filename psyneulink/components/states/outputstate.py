@@ -887,7 +887,8 @@ class OutputState(State_Base):
                  **kwargs):
 
         if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-set        else:
+            context = COMMAND_LINE # cxt-set
+        else:
             context = self # cxt-set
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:
@@ -1029,7 +1030,7 @@ class OutputState(State_Base):
 
         # variable is passed to OutputState by _instantiate_function for OutputState
         if variable is not None:
-            assert INITIALIZING in context
+            assert INITIALIZING in context # cxt-test
             fct_var = variable
 
         # otherwise, OutputState uses specified item(s) of owner's value

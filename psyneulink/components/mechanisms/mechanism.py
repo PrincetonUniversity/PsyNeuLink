@@ -1261,7 +1261,8 @@ class Mechanism_Base(Mechanism):
 
         # Mark initialization in context
         if not context or isinstance(context, object) or inspect.isclass(context): # cxt-test
-            context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt-set        else:
+            context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt-set
+        else:
             context = context + SEPARATOR_BAR + INITIALIZING + self.name # cxt-set
         super(Mechanism_Base, self).__init__(default_variable=default_variable,
                                              size=size,
@@ -1964,7 +1965,7 @@ class Mechanism_Base(Mechanism):
         #             self.functionsDict[func]()
 
         # Limit init to scope specified by context
-        if INITIALIZING in context:
+        if INITIALIZING in context: # cxt-test
             if PROCESS_INIT in context or SYSTEM_INIT in context: # cxt-test
                 # Run full execute method for init of Process and System
                 pass
@@ -2060,7 +2061,8 @@ class Mechanism_Base(Mechanism):
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
             if context is NO_CONTEXT: # cxt-test
-                context = EXECUTING + ' ' + append_type_to_name(self) # cxt-set                self.execution_status = ExecutionStatus.EXECUTING
+                context = EXECUTING + ' ' + append_type_to_name(self) # cxt-set
+                self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
                 input = self.instance_defaults.variable
             variable = self._update_variable(self._get_variable_from_input(input))
@@ -2120,7 +2122,7 @@ class Mechanism_Base(Mechanism):
 
         #region RE-SET STATE_VALUES AFTER INITIALIZATION
         # If this is (the end of) an initialization run, restore state values to initial condition
-        if '_init_' in context:
+        if '_init_' in context: # cxt-test
             for state in self.input_states:
                 self.input_states[state].value = self.input_states[state].instance_defaults.variable
             for state in self._parameter_states:
@@ -2245,7 +2247,7 @@ class Mechanism_Base(Mechanism):
 
     def _update_params_dicts(self, context=None):
         from psyneulink.globals.keywords import NOISE
-        for state in self._parameter_states:
+        for state in self._parameter_states: # cxt-test
             if NOISE in state.name and INITIALIZING in context:
                 continue
             if state.name in self.user_params:

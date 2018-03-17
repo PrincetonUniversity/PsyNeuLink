@@ -2732,7 +2732,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS] ,WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
-            if EXECUTING in context:
+            if EXECUTING in context: # cxt-test
                 if len(target_set[WEIGHTS]) != len(
                         self.instance_defaults.variable):
                     raise FunctionError("Number of weights {} is not equal to "
@@ -3510,7 +3510,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
                                     "array of elements each of which is in the (0,1) interval".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
-            if INITIALIZING in context:
+            if INITIALIZING in context: # cxt-test
                 return
             if not np.sum(prob_dist)==1:
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
@@ -9857,7 +9857,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                                  format(self.name, self.error_signal))
 
         # Allow initialization with zero but not during a run (i.e., when called from check_args())
-        if not INITIALIZING in context:
+        if not INITIALIZING in context: # cxt-test
             if np.count_nonzero(self.activation_output) != 1:
                 raise ComponentError("Second item ({}) of variable for {} must be an array with a single non-zero value "
                                      "(if output Mechanism being trained uses softmax,"

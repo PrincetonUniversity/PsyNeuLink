@@ -1591,8 +1591,12 @@ class Component(object):
         # Validate variable if parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and variable is not None:
             if context: # cxt-test
-                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS # cxt-set            else:
-                context = FUNCTION_CHECK_ARGS # cxt-set            variable = self._update_variable(self._validate_variable(variable, context=context))
+                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS # cxt-done
+                self.context.string = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
+            else:
+                context = FUNCTION_CHECK_ARGS # cxt-done
+                self.context.string = context + FUNCTION_CHECK_ARGS
+            variable = self._update_variable(self._validate_variable(variable, context=context))
 
         # PARAMS ------------------------------------------------------------
 
@@ -1853,7 +1857,7 @@ class Component(object):
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
                 if param_name is FUNCTION:
                     try:
-                        if function_class != default_function_class and COMMAND_LINE in context:
+                        if function_class != default_function_class and COMMAND_LINE in context: # cxt-test
                             from psyneulink.components.functions.function import Function_Base
                             if isinstance(function, Function_Base):
                                 request_set[FUNCTION] = function.__class__
@@ -1920,7 +1924,10 @@ class Component(object):
         Instantiate any items in request set that require it (i.e., function or states).
 
         """
-        context = context or COMMAND_LINE # cxt-set
+        if context is None:
+            self.context.status = ContextStatus.COMMAND_LINE # cxt-push
+            self.context.string = COMMAND_LINE
+        context = context or COMMAND_LINE # cxt-done
         self._assign_params(request_set=request_set, context=context)
 
     @tc.typecheck
@@ -1987,13 +1994,17 @@ class Component(object):
 
         validated_set_param_names = list(validated_set.keys())
 
+        curr_context = self.context.status # cxt-buffer
+        curr_context_str = self.context.string
+
         # If an input_state is being added from the command line,
         #    must _instantiate_attributes_before_function to parse input_states specification
         # Otherwise, should not be run,
         #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
         #    that causes name-repetition problems when it is called as part of the standard init procedure
-        if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context:
-            self._instantiate_attributes_before_function(context=COMMAND_LINE)  # cxt-set
+        if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context: # cxt-test
+            self.context.status = ContextStatus.COMMAND_LINE # cxt-push
+            self._instantiate_attributes_before_function(context=COMMAND_LINE)  # cxt-done
         # Give owner a chance to instantiate function and/or function params
         # (e.g., wrap in UserDefineFunction, as per EVCControlMechanism)
         elif any(isinstance(param_value, (function_type, Function)) or
@@ -2003,14 +2014,20 @@ class Component(object):
 
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
-            self._instantiate_function(context=COMMAND_LINE) # cxt-set
+            self.context.status = COMMAND_LINE # cxt-push
+            self._instantiate_function(context=COMMAND_LINE) # cxt-done
         # FIX: WHY SHOULD IT BE CALLED DURING STANDRD INIT PROCEDURE?
         # # MODIFIED 5/5/17 OLD:
         # if OUTPUT_STATES in validated_set:
         # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_states ARG OF CONSTRUCTOR]
-        if OUTPUT_STATES in validated_set and COMMAND_LINE in context:
+        if OUTPUT_STATES in validated_set and COMMAND_LINE in context: # cxt-test
         # MODIFIED 5/5/17 END
-            self._instantiate_attributes_after_function(context=COMMAND_LINE) # cxt-set
+            self.context.status = COMMAND_LINE # cxt-push
+            self._instantiate_attributes_after_function(context=COMMAND_LINE) # cxt-done
+
+        self.context.status = curr_context # cxt-pop
+        self.context.string = curr_context_str
+
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
         """Reset current and/or instance defaults
 
@@ -2729,8 +2746,11 @@ class Component(object):
 
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
         #    execute method, not its function
-        if not context: # cxt-test
-            context = "DIRECT CALL" # cxt-set        try:
+        # MODIFIED 3/17/18 OLD:
+        # if not context: # cxt-test
+        #     context = "DIRECT CALL" # cxt-set
+        # MODIFIED 3/17/18 END
+        try:
             value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:
             try:

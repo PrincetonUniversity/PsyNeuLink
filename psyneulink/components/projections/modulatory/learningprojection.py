@@ -469,7 +469,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if INITIALIZING in context:
+        if INITIALIZING in context: # cxt-test
             # VALIDATE SENDER
             sender = self.sender
             if isinstance(sender, LearningMechanism):
@@ -526,7 +526,8 @@ class LearningProjection(ModulatoryProjection_Base):
                 import _instantiate_learning_components
             _instantiate_learning_components(
                 learning_projection=self,
-                context="{0} {1}".format(context, self.name) # cxt-set            )
+                context="{0} {1}".format(context, self.name)  # cxt-set
+            )
 
         if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".

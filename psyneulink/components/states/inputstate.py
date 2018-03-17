@@ -712,7 +712,8 @@ class InputState(State_Base):
                  context=None):
 
         if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-set        else:
+            context = COMMAND_LINE # cxt-set
+        else:
             context = self # cxt-set
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)

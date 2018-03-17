@@ -2515,7 +2515,8 @@ class System(System_Base):
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
         if not context: # cxt-test
-            context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-set            self.execution_status = ExecutionStatus.EXECUTING
+            context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-set
+            self.execution_status = ExecutionStatus.EXECUTING
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
         from psyneulink.globals.environment import _get_unique_id
@@ -2632,7 +2633,7 @@ class System(System_Base):
                     print("{0}: {1} executed".format(self.name, self.controller.name))
 
             except AttributeError as error_msg:
-                if not 'INIT' in context:
+                if not 'INIT' in context: # cxt-test
                     raise SystemError("PROGRAM ERROR: Problem executing controller for {}: {}".
                                       format(self.name, error_msg.args[0]))
         #endregion

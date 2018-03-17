@@ -176,7 +176,7 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         """
 
-        if INITIALIZING in context:
+        if INITIALIZING in context: # cxt-test
             return (np.array([0]), np.array([0]), np.array([0]))
 
         cost_function = controller.paramsCurrent[COST_FUNCTION]
@@ -295,7 +295,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         """
 
-        if INITIALIZING in context:
+        if INITIALIZING in context: # cxt-test
             return defaultControlAllocation
 
         # Get value of, or set default for standard args

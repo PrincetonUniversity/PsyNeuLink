@@ -426,7 +426,8 @@ class GatingSignal(ModulatorySignal):
                  context=None):
 
         if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-set        else:
+            context = COMMAND_LINE # cxt-set
+        else:
             context = self # cxt-set
         # Note: assign is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.

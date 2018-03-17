@@ -1067,7 +1067,8 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                context = kargs[kwStateContext] # cxt-set            except (KeyError, NameError):
+                context = kargs[kwStateContext] # cxt-set
+            except (KeyError, NameError):
                 pass
 
         # Enforce that only called from subclass
@@ -1920,7 +1921,7 @@ class State_Base(State):
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningProjection) and not LEARNING in context:
+            if isinstance(projection, LearningProjection) and not LEARNING in context: # cxt-test
                 projection_value = projection.value * 0.0
             else:
                 projection_value = projection.execute(runtime_params=projection_params,
@@ -2470,7 +2471,8 @@ def _parse_state_spec(state_type=None,
         state_specific_args.update(state_spec)
 
     state_dict = standard_args
-    context = state_dict.pop(CONTEXT, None) # cxt-set    owner = state_dict[OWNER]
+    context = state_dict.pop(CONTEXT, None) # cxt-set
+    owner = state_dict[OWNER]
     state_type = state_dict[STATE_TYPE]
     reference_value = state_dict[REFERENCE_VALUE]
     variable = state_dict[VARIABLE]

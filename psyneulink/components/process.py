@@ -2111,7 +2111,8 @@ class Process(Process_Base):
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
         if not context: # cxt-test
-            context = EXECUTING + " " + PROCESS + " " + self.name # cxt-set            self.execution_status = ExecutionStatus.EXECUTING
+            context = EXECUTING + " " + PROCESS + " " + self.name # cxt-set
+            self.execution_status = ExecutionStatus.EXECUTING
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
         for mech in self.mechanisms:

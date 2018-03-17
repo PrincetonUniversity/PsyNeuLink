@@ -720,7 +720,8 @@ class Log:
 
             if isinstance(context, ContextStatus):
                 context_flags = context
-                context = ContextStatus._get_context_string(context) # cxt-set                if not time:
+                context = ContextStatus._get_context_string(context) # cxt-set
+                if not time:
                     raise LogError("Use of ContextStatus ({}) by {} to specify context requires specification of time".
                                    format(context, self.owner.name ))
 
@@ -739,12 +740,14 @@ class Log:
                     # Search stack for first frame (most recent call) with a context specification
                     while context is None:
                         try:
-                            context = inspect.getargvalues(prev_frame[i][0]).locals['context'] # cxt-set                        except KeyError:
+                            context = inspect.getargvalues(prev_frame[i][0]).locals['context'] # cxt-set
+                        except KeyError:
                             # Try earlier frame
                             i += 1
                         except IndexError:
                             # Ran out of frames, so just set context to empty string
-                            context = "" # cxt-set                        else:
+                            context = "" # cxt-set
+                        else:
                             break
 
                 # If context is a Component object, it must be during its initialization, so assign accordingly:
@@ -759,7 +762,8 @@ class Log:
 
                 # Context is an empty string, but called programmatically
                 if not context and programmatic: # cxt-test
-                    context = COMMAND_LINE # cxt-set                    # context = self.owner.prev_context + "FROM " + COMMAND_LINE
+                    context = COMMAND_LINE # cxt-set
+                    #  context = self.owner.prev_context + "FROM " + COMMAND_LINE
                     # context = self.owner.prev_context
 
                 context_flags = _get_context(context)
@@ -1040,8 +1044,10 @@ class Log:
             for entry in entries:
                 for datum in self.logged_entries[entry]:
                     if long_context:
-                        context = datum.context # cxt-set                    else:
-                        context = ContextStatus._get_context_string(_get_context(datum.context)) # cxt-set                    c_width = max(c_width, len(context))
+                        context = datum.context # cxt-set
+                    else:
+                        context = ContextStatus._get_context_string(_get_context(datum.context)) # cxt-set
+                    c_width = max(c_width, len(context))
             context_width = min(context_width, c_width)
 
         # Set other widths based on options:
@@ -1103,10 +1109,13 @@ class Log:
                     if options.CONTEXT & option_flags:
                         if long_context:
                             # Use context from LogEntry
-                            context = repr(context) # cxt-set                        else:
+                            context = repr(context) # cxt-set
+                        else:
                             # Get names of ContextStatus flag(s) from parse of context string
-                            context = ContextStatus._get_context_string(_get_context(context)) # cxt-set                        if len(context) > context_width:
-                            context = context[:context_width-3] + "..." # cxt-set                        data_str = data_str + context.ljust(context_width, spacer)
+                            context = ContextStatus._get_context_string(_get_context(context)) # cxt-set
+                        if len(context) > context_width:
+                            context = context[:context_width-3] + "..." # cxt-set
+                        data_str = data_str + context.ljust(context_width, spacer)
 
                     if options.VALUE & option_flags:
                         value = str(value).replace('\n',',')
