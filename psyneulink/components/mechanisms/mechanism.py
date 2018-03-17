@@ -2464,14 +2464,25 @@ class Mechanism_Base(Mechanism):
                                           include_function=show_functions,
                                           include_value=show_values)
 
+
+        if input_states == '{}':
+            input_states = ''
+        else:
+            input_states = pipe + input_states
+
         if parameter_states == '{}':
             parameter_states = ''
         else:
             parameter_states = pipe + parameter_states
 
+        if output_states == '{}':
+            output_states = ''
+        else:
+            output_states = output_states + pipe
+
         m_node_struct = open_bracket + \
-                        output_states + pipe + \
-                        open_bracket + mech + parameter_states + close_bracket + pipe + \
+                        output_states + \
+                        open_bracket + mech + parameter_states + close_bracket + \
                         input_states + \
                         close_bracket
 
