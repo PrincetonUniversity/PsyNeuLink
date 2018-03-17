@@ -2393,9 +2393,10 @@ class Mechanism_Base(Mechanism):
         close_bracket = r'}'
         mechanism_header = r'MECHANISM:\n'
         input_states_header = r'______INPUTSTATES______\n' \
-                         r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\'
+                  r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\'
         parameter_states_header = r'PARAMETERSTATES:'
-        output_states_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ _______/\nOUTPUTSTATES'
+        output_states_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ______/' \
+                               r'\nOUTPUTSTATES'
 
         def mech_string(mech):
             '''Return string with name of mechanism possibly with function and/or value
