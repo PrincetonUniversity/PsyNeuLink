@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.4.4.4+112.gdd37fe1 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.4.4.4+113.gf5c6c54 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+112.gdd37fe1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+113.gf5c6c54 documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Compositions" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.4+112
+                0.4.4.4+113
               </div>
             
           
@@ -820,18 +820,25 @@ projections;</p>
 
 <dl class="method">
 <dt id="psyneulink.components.system.System.show_graph">
-<code class="descname">show_graph</code><span class="sig-paren">(</span><em>direction='BT'</em>, <em>show_learning=False</em>, <em>show_control=False</em>, <em>show_dimensions=False</em>, <em>origin_color='green'</em>, <em>terminal_color='red'</em>, <em>origin_and_terminal_color='brown'</em>, <em>learning_color='orange'</em>, <em>control_color='blue'</em>, <em>prediction_mechanism_color='pink'</em>, <em>system_color='purple'</em>, <em>output_fmt='pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.system.System.show_graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a display of the graph structure of mechanisms and projections in the system.</p>
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>active_item=None</em>, <em>show_learning=False</em>, <em>show_control=False</em>, <em>show_dimensions=False</em>, <em>show_mechanism_structure=False</em>, <em>show_functions=False</em>, <em>show_values=False</em>, <em>show_projection_labels=False</em>, <em>direction='BT'</em>, <em>active_color='yellow'</em>, <em>origin_color='green'</em>, <em>terminal_color='red'</em>, <em>origin_and_terminal_color='brown'</em>, <em>learning_color='orange'</em>, <em>control_color='blue'</em>, <em>prediction_mechanism_color='pink'</em>, <em>system_color='purple'</em>, <em>output_fmt='pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.system.System.show_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a display of the graph structure of Mechanisms and Projections in the System.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This method relies on <a class="reference external" href="http://www.graphviz.org">graphviz</a>, which must be installed and imported
 (standard with PsyNeuLink pip install)</p>
 </div>
 <p>Displays a graph showing the structure of the System (based on the <a class="reference internal" href="#psyneulink.components.system.System.graph" title="psyneulink.components.system.System.graph"><code class="xref any py py-attr docutils literal"><span class="pre">System's</span> <span class="pre">graph</span></code></a>).
-By default, only the primary processing Components are shown.  However,the <strong>show_learning</strong> and
-<strong>show_control</strong> arguments can be used to also show the Components associated with <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a> and those associated with the System’s <a class="reference internal" href="#system-control"><span class="std std-ref">controller</span></a>. <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> are always displayed as (oval) nodes. <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms of the System are
-displayed with bold ovals in specified colors.  <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> are displayed as labelled
-arrows, unless <strong>show_learning</strong> is assigned <strong>True</strong>, in which case MappingProjections that receive a
+By default, only the primary processing Components are shown, and Mechanisms are displayed as simple nodes.
+However, the <strong>show_mechanism_structure</strong> argument can be used to display more detailed information about
+each Mechanism, including its States and, optionally, the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and each of its States (using the <strong>show_functions</strong> and <strong>show_values</strong>
+arguments, respectively).  In addition, the <strong>show_learning</strong> and <strong>show_control</strong> arguments can be used to
+show the Components associated with <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a> and those associated with the
+System’s <a class="reference internal" href="#system-control"><span class="std std-ref">controller</span></a>. <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> are always displayed as nodes.  If
+<strong>show_mechanism_structure</strong> is <code class="xref any docutils literal"><span class="pre">True</span></code>, Mechanism nodes are subdivided into sections for its States with
+information about each determined by the <strong>show_values</strong> and <strong>show_functions</strong> specifications.  Otherwise,
+Mechanism nodes are simple ovals.  <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and  <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms of the System are displayed with
+thicker borders in a colors specified for each. <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> are displayed as labelled arrows,
+unless <strong>show_learning</strong> is assigned <strong>True</strong>, in which case MappingProjections that receive a
 <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism
 node indicate its dimensionality.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -839,7 +846,17 @@ node indicate its dimensionality.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>direction</strong> (<em>keyword : default 'BT'</em>) – ‘BT’: bottom to top; ‘TB’: top to bottom; ‘LR’: left to right; and ‘RL`: right to left.</li>
+<li><strong>active_item</strong> (<em>Component : default None</em>) – specifies the item in the graph to display in the color specified by <em>active_color*</em>.</li>
+<li><strong>show_mechanism_structure</strong> (<em>bool : default False</em>) – specifies whether or not to show a detailed representation of each <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in the graph, including its
+<code class="xref any docutils literal"><span class="pre">States</span></code> and, optionally, the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each
+(these can be specified using the <strong>show_functions</strong> and <strong>show_values</strong> arguments.  If this option
+is specified, Projections are connected to and from the State that is the <code class="xref any docutils literal"><span class="pre">sender</span></code> or
+<code class="xref any docutils literal"><span class="pre">receiver</span></code> of each.</li>
+<li><strong>show_functions</strong> (<em>bool : default False</em>) – specifies whether or not to show <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of Mechanisms and their States in the
+graph;  this requires <strong>show_mechanism_structure</strong> to be specified as <code class="xref any docutils literal"><span class="pre">True</span></code> to take effect.</li>
+<li><strong>show_values</strong> (<em>bool : default False</em>) – specifies whether or not to show <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of Mechanisms and their States in the
+graph;  this requires <strong>show_mechanism_structure</strong> to be specified as <code class="xref any docutils literal"><span class="pre">True</span></code> to take effect.</li>
+<li><strong>show_projection_labels</strong> (<em>bool : default False</em>) – specifies whether or not to show names of projections.</li>
 <li><strong>show_learning</strong> (<em>bool</em><em> or </em><em>ALL : default False</em>) – specifies whether or not to show the learning components of the system;
 they will all be displayed in the color specified for <strong>learning_color</strong>.
 Projections that receive a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> will be shown as a diamond-shaped node.
@@ -861,6 +878,8 @@ shown in (&lt;dim&gt;x&lt;dim&gt;…) format;  for standard 2x2 “weight” mat
 rows (input dimension) and the second the number of columns (output dimension).</li>
 </ul>
 </li>
+<li><strong>direction</strong> (<em>keyword : default 'BT'</em>) – ‘BT’: bottom to top; ‘TB’: top to bottom; ‘LR’: left to right; and ‘RL`: right to left.</li>
+<li><strong>active_color</strong> (<em>keyword : default 'yellow'</em>) – specifies the color in which to display the item specified in <em>active_item*</em>.</li>
 <li><strong>origin_color</strong> (<em>keyword : default 'green'</em><em>,</em>) – specifies the color in which the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms of the System are displayed.</li>
 <li><strong>terminal_color</strong> (<em>keyword : default 'red'</em><em>,</em>) – specifies the color in which the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms of the System are displayed.</li>
 <li><strong>origin_and_terminal_color</strong> (<em>keyword : default 'brown'</em>) – specifies the color in which Mechanisms that are both
@@ -952,7 +971,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+112.gdd37fe1',
+            VERSION:'0.4.4.4+113.gf5c6c54',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
