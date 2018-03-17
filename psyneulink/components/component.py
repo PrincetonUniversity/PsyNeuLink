@@ -837,6 +837,7 @@ class Component(object):
         #         # del self.init_args['__class__']
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
+        self.context = ContextStatus.INITIALIZATION
         self.execution_status = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
         # self.init_status = InitStatus.INITIALIZING
@@ -2962,8 +2963,12 @@ class Component(object):
     def context(self):
         return self._context
 
+    # from psyneulink.globals.context import Context
+    # @tc.typecheck
     @context.setter
+    # def context(self, context:type(Context)):
     def context(self, context):
+        # self._context = context
         from psyneulink.globals.context import Context
         if isinstance(context, Context):
             self._context = context
