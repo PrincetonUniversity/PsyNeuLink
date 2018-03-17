@@ -3507,7 +3507,10 @@ class System(System_Base):
                         rcvr_proj_label = '{}:{}-{}'.format(rcvr.name, InputState.__name__, proj.receiver.name)
                     else:
                         sndr_proj_label = rcvr_proj_label = rcvr_label
-                    edge_label = self._get_label(proj, show_dimensions)
+                    if show_projection_labels:
+                        edge_label = self._get_label(proj, show_dimensions)
+                    else:
+                        edge_label = ''
                     try:
                         has_learning = proj.has_learning_projection
                     except AttributeError:
