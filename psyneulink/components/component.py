@@ -2959,6 +2959,18 @@ class Component(object):
         self.prefs.runtimeParamStickyAssignmentPref = setting
 
     @property
+    def context(self):
+        return self._context
+
+    @context.setter
+    def context(self, context):
+        from psyneulink.globals.context import Context
+        if isinstance(context, Context):
+            self._context = context
+        else:
+            raise ComponentError("{} attribute of {} must be of type {}".format(CONTEXT, self.name, Context.__name__))
+
+    @property
     def log(self):
         try:
             return self._log
