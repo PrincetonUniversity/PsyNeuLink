@@ -3257,9 +3257,9 @@ class System(System_Base):
             else:
                 return item.name
 
-        elif isinstance(item, System):
+        elif isinstance(item, (System, SystemInputState)):
             if "SYSTEM" in item.name.upper():
-                return item.name
+                return item.name + ' Target Input'
             else:
                 return "{}\nSystem".format(item.name)
 
@@ -3717,22 +3717,24 @@ class System(System_Base):
                                 for input_state in sndr.input_states:
                                     for proj in input_state.path_afferents:
 
-                                        comp_sndr = proj.sender.owner
+                                        smpl_or_trgt_src = proj.sender.owner
 
                                         # Skip any Projections from ProcesInputStates
-                                        if isinstance(comp_sndr, Process):
+                                        if isinstance(smpl_or_trgt_src, Process):
                                             continue
 
                                         # Projection is from System
-                                        elif isinstance(comp_sndr, System):
+                                        # Create node for System "targets" input
+                                        # Note: Mechanism.show_structure is not called for SystemInterfaceMechanism
+                                        elif isinstance(smpl_or_trgt_src, System):
                                             
-                                            if comp_sndr is active_item:
-                                                comp_sndr_color = active_color
+                                            if smpl_or_trgt_src is active_item:
+                                                smpl_or_trgt_src_color = active_color
                                             else:
-                                                comp_sndr_color = system_color
+                                                smpl_or_trgt_src_color = system_color
 
-                                            G.node(self._get_label(comp_sndr, show_dimensions),
-                                                   color=comp_sndr_color,
+                                            G.node(self._get_label(smpl_or_trgt_src, show_dimensions),
+                                                   color=smpl_or_trgt_src_color,
                                                    penwidth='3')
 
                                         if proj is active_item:
@@ -3745,7 +3747,7 @@ class System(System_Base):
                                         else:
                                             edge_label = ''
 
-                                        if show_mechanism_structure:
+                                        if show_mechanism_structure and not isinstance(smpl_or_trgt_src, System):
                                             G.edge(proj.sender.owner.name + ':'
                                                        + OutputState.__name__ + '-' + proj.sender.name,
                                                    proj.receiver.owner.name + ':'
@@ -3753,7 +3755,7 @@ class System(System_Base):
                                                    label=edge_label,
                                                    color=learning_proj_color)
                                         else:
-                                            G.edge(self._get_label(comp_sndr, show_dimensions),
+                                            G.edge(self._get_label(smpl_or_trgt_src, show_dimensions),
                                                    self._get_label(sndr, show_dimensions),
                                                    color=learning_proj_color,
                                                    label=edge_label)
@@ -3876,7 +3878,7 @@ class System(System_Base):
                     recvr = mech.origin_mech
 
                     # IMPLEMENTATION NOTE:
-                    #     THIS IS HERE FOR FUTURE COMPATABLITY WITH FULL IMPLEMENTATION OF PredictionMechanisms
+                    #     THIS IS HERE FOR FUTURE COMPATIBILITY WITH FULL IMPLEMENTATION OF PredictionMechanisms
                     if show_mechanism_structure and False:
                         proj = mech.output_state.efferents[0]
                         if proj is active_item:
