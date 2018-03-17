@@ -727,14 +727,14 @@ class Log:
 
             # Get context
             else:
-                if context is COMMAND_LINE:
+                if context is COMMAND_LINE: # cxt-test
                     # If _log_value is being called programmatically,
                     #    flag for later and set context to None to get context from the stack
                     programmatic = True
                     context = None # cxt
 
                 # Get context from the stack
-                if context is None:
+                if context is None: # cxt-test
                     curr_frame = inspect.currentframe()
                     prev_frame = inspect.getouterframes(curr_frame, 2)
                     i = 1
@@ -756,14 +756,14 @@ class Log:
                     context = "{} of {}".format(INITIALIZING, context.name) # cxt
 
                 # No context was specified in any frame
-                if context is None:
+                if context is None: # cxt-test
                     raise LogError("PROGRAM ERROR: No context specification found in any frame")
 
                 if not isinstance(context, str):
                     raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
 
                 # Context is an empty string, but called programmatically
-                if not context and programmatic:
+                if not context and programmatic: # cxt-test
                     context = COMMAND_LINE # cxt
                     # context = self.owner.prev_context + "FROM " + COMMAND_LINE
                     # context = self.owner.prev_context
@@ -777,7 +777,7 @@ class Log:
                 time = time or self._get_time(context, context_flags)
                 self.entries[self.owner.name] = LogEntry(time, context, value)
 
-        if context is not COMMAND_LINE:
+        if context is not COMMAND_LINE: # cxt-test
             self.owner.prev_context = context
 
     def _get_time(self, context, context_flags):

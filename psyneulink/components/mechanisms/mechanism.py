@@ -1189,7 +1189,7 @@ class Mechanism_Base(Mechanism):
         # Forbid direct call to base class constructor
         # this context stuff is confusing: when do I use super().__init__(context=self)
         # and when do I use super().__init__(context=context)?
-        if context is None or (not isinstance(context, type(self)) and not VALIDATE in context):
+        if context is None or (not isinstance(context, type(self)) and not VALIDATE in context): # cxt-test
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  "use a subclass")
 
@@ -1225,7 +1225,7 @@ class Mechanism_Base(Mechanism):
         self._execution_id = None
         self._is_finished = False
         # Register with MechanismRegistry or create one
-        if not context is VALIDATE:
+        if not context is VALIDATE: # cxt-test
             register_category(entry=self,
                               base_class=Mechanism_Base,
                               name=name,
@@ -1260,7 +1260,7 @@ class Mechanism_Base(Mechanism):
             output_states = list(output_states)
 
         # Mark initialization in context
-        if not context or isinstance(context, object) or inspect.isclass(context):
+        if not context or isinstance(context, object) or inspect.isclass(context): # cxt-test
             context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt
         else:
             context = context + SEPARATOR_BAR + INITIALIZING + self.name # cxt
@@ -1624,7 +1624,7 @@ class Mechanism_Base(Mechanism):
         # INPUT_STATES is not specified
         else:
             # pass if call is from assign_params (i.e., not from an init method)
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
                 pass
             else:
                 # INPUT_STATES not specified:
@@ -1636,7 +1636,7 @@ class Mechanism_Base(Mechanism):
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
                 pass
             elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
@@ -1711,7 +1711,7 @@ class Mechanism_Base(Mechanism):
         # OUTPUT_STATES is not specified
         else:
             # pass if call is from assign_params (i.e., not from an init method)
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
                 pass
             else:
                 # OUTPUT_STATES not specified:
@@ -1968,7 +1968,7 @@ class Mechanism_Base(Mechanism):
 
         # Limit init to scope specified by context
         if INITIALIZING in context:
-            if PROCESS_INIT in context or SYSTEM_INIT in context:
+            if PROCESS_INIT in context or SYSTEM_INIT in context: # cxt-test
                 # Run full execute method for init of Process and System
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
@@ -2055,14 +2055,14 @@ class Mechanism_Base(Mechanism):
         # Executing or simulating Process or System, get input by updating input_states
 
         if (input is None
-            and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION})
+            and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION}) # cxt-test
             and (self.input_state.path_afferents != [])):
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
                                                                        context=context))
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
-            if context is NO_CONTEXT:
+            if context is NO_CONTEXT: # cxt-test
                 context = EXECUTING + ' ' + append_type_to_name(self) # cxt
                 self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
@@ -2118,7 +2118,7 @@ class Mechanism_Base(Mechanism):
 
         #region REPORT EXECUTION
         # if self.prefs.reportOutputPref and context and EXECUTING in context:
-        if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}):
+        if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}): # cxt-test
             self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
         #endregion
 

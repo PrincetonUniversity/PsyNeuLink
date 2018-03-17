@@ -857,7 +857,7 @@ class System(System_Base):
                           registry=SystemRegistry,
                           context=context)
 
-        if not context:
+        if not context: # cxt-test
             context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT # cxt
 
         super().__init__(default_variable=default_variable,
@@ -2515,7 +2515,7 @@ class System(System_Base):
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
-        if not context:
+        if not context: # cxt-test
             context = EXECUTING + " " + SYSTEM + " " + self.name # cxt
             self.execution_status = ExecutionStatus.EXECUTING
 
@@ -2536,7 +2536,7 @@ class System(System_Base):
                         projection.sender.owner._execution_id = self._execution_id
 
         self._report_system_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING,
-                                                                                                         LEARNING})
+                                                                                                         LEARNING}) # cxt-test
 
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
@@ -2548,7 +2548,7 @@ class System(System_Base):
 
         if input is None:
             if (self.prefs.verbosePref and
-                    not (not context or COMPONENT_INIT in context)):
+                    not (not context or COMPONENT_INIT in context)): # cxt-test
                 print("- No input provided;  default will be used: {0}")
             input = np.zeros_like(self.instance_defaults.variable)
             for i in range(num_origin_mechs):
@@ -2614,7 +2614,7 @@ class System(System_Base):
         # region EXECUTE LEARNING FOR EACH PROCESS
 
         # Don't execute learning for simulation runs
-        if not EVC_SIMULATION in context and self.learning:
+        if not EVC_SIMULATION in context and self.learning: # cxt-test
             self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
         # endregion
 
@@ -2624,7 +2624,7 @@ class System(System_Base):
 # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if not EVC_SIMULATION in context and self.enable_controller:
+        if not EVC_SIMULATION in context and self.enable_controller: # cxt-test
             try:
                 self.controller.execute(
                     runtime_params=None,

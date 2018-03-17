@@ -125,7 +125,7 @@ def _get_context(context):
         context_flag |= ContextStatus.CONTROL
     if LEARNING in context:
         context_flag |= ContextStatus.LEARNING
-    if context == ContextStatus.TRIAL.name:
+    if context == ContextStatus.TRIAL.name: # cxt-test
         context_flag |= ContextStatus.TRIAL
     if context == ContextStatus.RUN.name:
         context_flag |= ContextStatus.RUN

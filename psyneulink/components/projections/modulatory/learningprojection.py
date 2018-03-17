@@ -656,7 +656,7 @@ class LearningProjection(ModulatoryProjection_Base):
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate
 
-        if not INITIALIZING in context and self.reportOutputPref:
+        if not INITIALIZING in context and self.reportOutputPref: # cxt-test
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(self.weight_change_matrix)))
 
         return self.value

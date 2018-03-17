@@ -886,7 +886,7 @@ class OutputState(State_Base):
                  context=None,
                  **kwargs):
 
-        if context is None:
+        if context is None: # cxt-test
             context = COMMAND_LINE # cxt
         else:
             context = self # cxt
@@ -1395,7 +1395,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
-    if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}):
+    if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}): # cxt-test
         owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list

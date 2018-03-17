@@ -855,7 +855,7 @@ class Process(Process_Base):
                           registry=ProcessRegistry,
                           context=context)
 
-        if not context:
+        if not context: # cxt-test
             # context = self.__class__.__name__
             context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT # cxt
 
@@ -1733,7 +1733,7 @@ class Process(Process_Base):
         if input is None:
             input = self.first_mechanism.instance_defaults.variable
             if (self.prefs.verbosePref and
-                    not (not context or COMPONENT_INIT in context)):
+                    not (not context or COMPONENT_INIT in context)): # cxt-test
                 print("- No input provided;  default will be used: {0}")
 
         else:
@@ -2111,7 +2111,7 @@ class Process(Process_Base):
         """
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
-        if not context:
+        if not context: # cxt-test
             context = EXECUTING + " " + PROCESS + " " + self.name # cxt
             self.execution_status = ExecutionStatus.EXECUTING
         from psyneulink.globals.environment import _get_unique_id
@@ -2120,7 +2120,7 @@ class Process(Process_Base):
             mech._execution_id = self._execution_id
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING})
+        report_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}) # cxt-test
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input

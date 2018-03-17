@@ -425,7 +425,7 @@ class GatingSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None:
+        if context is None: # cxt-test
             context = COMMAND_LINE # cxt
         else:
             context = self # cxt

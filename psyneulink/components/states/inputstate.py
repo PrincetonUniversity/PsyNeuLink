@@ -711,7 +711,7 @@ class InputState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None:
+        if context is None: # cxt-test
             context = COMMAND_LINE # cxt
         else:
             context = self # cxt
@@ -1186,7 +1186,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
     # IMPLEMENTATION NOTE: USE OF CONTEXT STRING
-    if context and 'ADD_STATES' in context:
+    if context and 'ADD_STATES' in context: # cxt-test
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list

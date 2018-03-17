@@ -749,7 +749,7 @@ def run(object,
 
 
             # MODIFIED 3/16/17 END
-            if RUN in context and not EVC_SIMULATION in context:
+            if RUN in context and not EVC_SIMULATION in context: # cxt-test
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt
                 object.execution_status = ExecutionStatus.EXECUTING
             result = object.execute(
