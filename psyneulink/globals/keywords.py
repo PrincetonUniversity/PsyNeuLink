@@ -40,7 +40,7 @@ __all__ = [
     'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE',
     'EXECUTING', 'EXECUTION', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
     'FHN_INTEGRATOR_FUNCTION', 'FINAL', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
-    'FUNCTION', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE',
+    'FUNCTION', 'FUNCTIONS', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE',
     'FUNCTION_OUTPUT_TYPE_CONVERSION', 'FUNCTION_PARAMS', 'GAIN', 'GAMMA_DIST_FUNCTION', 'GATE', 'GATING',
     'GATING_MECHANISM', 'GATING_POLICY', 'GATING_PROJECTION', 'GATING_PROJECTION_PARAMS', 'GATING_PROJECTIONS',
     'GATING_SIGNAL', 'GATING_SIGNAL_SPECS', 'GATING_SIGNALS', 'GILZENRAT_INTEGRATOR_FUNCTION', 'HARD_CLAMP',
@@ -88,7 +88,7 @@ __all__ = [
     'SYSTEM_INIT', 'TARGET', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
     'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIAL', 'TRIALS_DIM', 'UNCHANGED', 'UNIFORM_DIST_FUNCTION',
     'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS', 'UTILITY_INTEGRATOR_FUNCTION',
-    'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE', 'VECTOR',
+    'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE', 'VECTOR',
     'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS'
 ]
 
@@ -319,7 +319,6 @@ DEFAULT = False
 # AUTO = True  # MODIFIED 7/14/17 CW
 ASSERT = True
 
-
 # Used by initDirective
 INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
 INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass _execute method'
@@ -328,6 +327,8 @@ INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 
 #region ---------------------------------------------    GENERAL    ----------------------------------------------------
 # General
+
+ALL = 'all'
 
 kwSeparator = ': '
 SEPARATOR_BAR = ' | '
@@ -573,6 +574,9 @@ CONROLLER_PHASE_SPEC = 'ControllerPhaseSpec'
 RUN = 'run'
 TRIAL = 'trial'
 
+VALUES = 'values'
+FUNCTIONS = 'functions'
+
 #endregion
 
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
@@ -809,7 +813,6 @@ STANDARD_DEVIATION = 'standard_dev'
 DIST_MEAN = 'mean'
 
 OUTPUT_TYPE = 'output'
-ALL = 'all'
 # MAX_VAL = 'max_val'
 # MAX_ABS_VAL = 'max_abs_val'
 # MAX_INDICATOR = 'max_indicator'
