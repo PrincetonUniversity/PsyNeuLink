@@ -3782,8 +3782,8 @@ class System(System_Base):
             else:
                 ctlr_label = self._get_label(controller, show_dimensions)
                 objmech_label = self._get_label(objmech, show_dimensions)
-                G.node(ctlr_label, color=ctlr_color)
-                G.node(objmech_label, color=objmech_color)
+                G.node(ctlr_label, color=ctlr_color, shape=mechanism_shape)
+                G.node(objmech_label, color=objmech_color, shape=mechanism_shape)
 
             # objmech to controller edge
             if show_mechanism_structure:
@@ -3862,7 +3862,7 @@ class System(System_Base):
                                color=pred_proj_color)
                     else:
                         G.node(self._get_label(mech, show_dimensions),
-                               color=pred_mech_color)
+                               color=pred_mech_color, shape=mechanism_shape)
                         G.edge(self._get_label(mech, show_dimensions),
                                self._get_label(recvr, show_dimensions),
                                label=' prediction assignment',
