@@ -3444,17 +3444,11 @@ class System(System_Base):
         if show_dimensions == True:
             show_dimensions = ALL
 
-        # Argument values used to call Mechanism.show_structure
-        show_values = False
-        show_functions = False
-        if show_mechanism_structure in {VALUES, ALL}:
-            show_values = True
-        if show_mechanism_structure in {FUNCTIONS, ALL}:
-            show_functions = True
-        struct_args = {'show_functions':show_functions,
-                       'show_values':show_values,
-                       'show_headers':show_headers,
-                       'output_fmt':'struct'}
+        # Argument values used to call Mechanism.show_structure()
+        mech_struct_args = {'show_functions':show_mechanism_structure in {FUNCTIONS, ALL},
+                            'show_values':show_mechanism_structure in {VALUES, ALL},
+                            'show_headers':show_headers,
+                            'output_fmt':'struct'}
 
         default_node_color = 'black'
         mechanism_shape = 'oval'
@@ -3483,7 +3477,6 @@ class System(System_Base):
                 }
         )
 
-
         # work with system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
@@ -3498,7 +3491,7 @@ class System(System_Base):
             if show_mechanism_structure:
                 rcvr_label=rcvr.name
                 G.node(rcvr_label,
-                       rcvr.show_structure(**struct_args),
+                       rcvr.show_structure(**mech_struct_args),
                        color=rcvr_color)
             else:
                 rcvr_label = self._get_label(rcvr, show_dimensions)
@@ -3600,7 +3593,7 @@ class System(System_Base):
                         sndr_color = origin_color
                     if show_mechanism_structure:
                         G.node(sndr_label,
-                               sndr.show_structure(**struct_args),
+                               sndr.show_structure(**mech_struct_args),
                                color=sndr_color,
                                penwidth='3')
                     else:
@@ -3611,7 +3604,7 @@ class System(System_Base):
                         rcvr_color = terminal_color
                     if show_mechanism_structure:
                         G.node(rcvr_label,
-                               rcvr.show_structure(**struct_args),
+                               rcvr.show_structure(**mech_struct_args),
                                color=rcvr_color,
                                penwidth='3')
                     else:
@@ -3622,7 +3615,7 @@ class System(System_Base):
                         sndr_color = origin_and_terminal_color
                     if show_mechanism_structure:
                         G.node(sndr_label,
-                               sndr.show_structure(**struct_args),
+                               sndr.show_structure(**mech_struct_args),
                                color=sndr_color,
                                penwidth='3')
                     else:
@@ -3676,7 +3669,7 @@ class System(System_Base):
 
                     if show_mechanism_structure:
                         G.node(rcvr.name,
-                               rcvr.show_structure(**struct_args),
+                               rcvr.show_structure(**mech_struct_args),
                                color=rcvr_color)
                     else:
                         G.node(self._get_label(rcvr, show_dimensions), color=rcvr_color, shape=mechanism_shape)
@@ -3711,7 +3704,7 @@ class System(System_Base):
 
                                 if show_mechanism_structure:
                                     G.node(sndr_label,
-                                           sndr.show_structure(**struct_args),
+                                           sndr.show_structure(**mech_struct_args),
                                            color=sndr_color)
                                 else:
                                     G.node(self._get_label(sndr, show_dimensions),
@@ -3818,10 +3811,10 @@ class System(System_Base):
                 ctlr_label = controller.name
                 objmech_label = objmech.name
                 G.node(ctlr_label,
-                       controller.show_structure(**struct_args),
+                       controller.show_structure(**mech_struct_args),
                        color=ctlr_color)
                 G.node(objmech_label,
-                       objmech.show_structure(**struct_args),
+                       objmech.show_structure(**mech_struct_args),
                        color=objmech_color)
             else:
                 ctlr_label = self._get_label(controller, show_dimensions)
@@ -3906,7 +3899,7 @@ class System(System_Base):
                         else:
                             pred_proj_color = prediction_mechanism_color
                         G.node(mech.name,
-                               mech.show_structure(**struct_args),
+                               mech.show_structure(**mech_struct_args),
                                color=pred_mech_color)
 
 
