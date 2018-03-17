@@ -3268,7 +3268,6 @@ class System(System_Base):
 
     def show_graph(self,
                    active_item = None,
-                   direction = 'BT',
                    show_learning = False,
                    show_control = False,
                    show_dimensions = False,
@@ -3276,6 +3275,7 @@ class System(System_Base):
                    show_functions=False,
                    show_values=False,
                    show_projection_labels=False,
+                   direction = 'BT',
                    active_color = 'yellow',
                    origin_color = 'green',
                    terminal_color = 'red',
@@ -3319,9 +3319,6 @@ class System(System_Base):
 
         active_item : Component : default None
             specifies the item in the graph to display in the color specified by *active_color**.
-
-        direction : keyword : default 'BT'
-            'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
 
         show_mechanism_structure : bool : default False
             specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
@@ -3369,6 +3366,9 @@ class System(System_Base):
             * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
               shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
               rows (input dimension) and the second the number of columns (output dimension).
+
+        direction : keyword : default 'BT'
+            'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
 
         active_color : keyword : default 'yellow'
             specifies the color in which to display the item specified in *active_item**.
