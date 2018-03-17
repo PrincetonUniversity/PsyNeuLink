@@ -836,7 +836,7 @@ class Component(object):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
-        context = context + INITIALIZING + ": " + COMPONENT_INIT #cxt
+        context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
         self.execution_status = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
         # self.init_status = InitStatus.INITIALIZING
