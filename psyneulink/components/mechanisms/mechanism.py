@@ -2436,50 +2436,57 @@ class Mechanism_Base(Mechanism):
             states += close_bracket
             return states
 
-        # Construct structure specification
+        # Construct Mechanism specification
         mech = mech_string(self)
-        if show_headers:
-            input_states = input_states_header + pipe + states_string(self.input_states,
-                                                                      InputState,
-                                                                      include_function=show_functions,
-                                                                      include_value=show_values)
-            parameter_states = parameter_states_header + pipe + states_string(self.parameter_states,
-                                                                              ParameterState,
-                                                                              include_function=show_functions,
-                                                                              include_value=show_values)
-            output_states = states_string(self.output_states,
-                                          OutputState,
-                                          include_function=show_functions,
-                                          include_value=show_values) + pipe + output_states_header
-        else:
-            input_states = states_string(self.input_states,
-                                         InputState,
-                                         include_function=show_functions,
-                                         include_value=show_values)
-            parameter_states = states_string(self.parameter_states,
-                                             ParameterState,
+
+        # Construct InputStates specification
+        if len(self.input_states):
+            if show_headers:
+                input_states = input_states_header + pipe + states_string(self.input_states,
+                                                                          InputState,
+                                                                          include_function=show_functions,
+                                                                          include_value=show_values)
+            else:
+                input_states = states_string(self.input_states,
+                                             InputState,
                                              include_function=show_functions,
                                              include_value=show_values)
-            output_states = states_string(self.output_states,
-                                          OutputState,
-                                          include_function=show_functions,
-                                          include_value=show_values)
-
-
-        if input_states == '{}':
-            input_states = ''
-        else:
             input_states = pipe + input_states
-
-        if parameter_states == '{}':
-            parameter_states = ''
         else:
+            input_states = ''
+
+        # Construct ParameterStates specification
+        if len(self.parameter_states):
+            if show_headers:
+                parameter_states = parameter_states_header + pipe + states_string(self.parameter_states,
+                                                                                  ParameterState,
+                                                                                  include_function=show_functions,
+                                                                                  include_value=show_values)
+            else:
+                parameter_states = states_string(self.parameter_states,
+                                                 ParameterState,
+                                                 include_function=show_functions,
+                                                 include_value=show_values)
             parameter_states = pipe + parameter_states
-
-        if output_states == '{}':
-            output_states = ''
         else:
+            parameter_states = ''
+
+        # Construct OutputStates specification
+        if len(self.output_states):
+            if show_headers:
+                output_states = states_string(self.output_states,
+                                              OutputState,
+                                              include_function=show_functions,
+                                              include_value=show_values) + pipe + output_states_header
+            else:
+                output_states = states_string(self.output_states,
+                                              OutputState,
+                                              include_function=show_functions,
+                                              include_value=show_values)
+
             output_states = output_states + pipe
+        else:
+            output_states = ''
 
         m_node_struct = open_bracket + \
                         output_states + \
