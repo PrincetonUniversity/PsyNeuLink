@@ -3275,6 +3275,7 @@ class System(System_Base):
                    show_mechanism_structure=False,
                    show_functions=False,
                    show_values=False,
+                   show_projection_labels=False,
                    active_color = 'yellow',
                    origin_color = 'green',
                    terminal_color = 'red',
@@ -3548,7 +3549,11 @@ class System(System_Base):
                     G.edge(edge_label, rcvr_proj_label, color=proj_color)
                 else:
                     # Render Projection normally (as edge)
-                    G.edge(sndr_proj_label, rcvr_proj_label, label = edge_label, color=proj_color)
+                    if show_projection_labels:
+                        label = edge_label
+                    else:
+                        label = ''
+                    G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
 
                 # Deal with ORIGIN and or TERMINAL Mechanisms
                 if ORIGIN in sndr.systems[self]:
@@ -3610,7 +3615,10 @@ class System(System_Base):
                     # for each sndr of rcvr
                     sndrs = learning_graph[rcvr]
                     for sndr in sndrs:
-                        edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
+                        if show_projection_labels:
+                            edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
+                        else:
+                            edge_label = ''
                         if show_mechanism_structure:
                             G.edge(sndr.name + ':' + OutputState.__name__ + '-' + 'LearningSignal',
                                    self._get_label(rcvr, show_dimensions),
@@ -3684,13 +3692,17 @@ class System(System_Base):
                                     continue
 
                             if self in sndr.systems:
+                                if show_projection_labels:
+                                    edge_label = proj.name
+                                else:
+                                    edge_label = ''
                                 if show_mechanism_structure:
                                     G.edge(sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
                                            rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
-                                           label=proj.name,
+                                           label=edge_label,
                                            color=learning_proj_color)
                                 else:
-                                    G.edge(sndr_label, rcvr_label, label=proj.name, color=learning_proj_color)
+                                    G.edge(sndr_label, rcvr_label, label=edge_label, color=learning_proj_color)
 
                             # Get Projections to ComparatorMechanism as well
                             if (isinstance(sndr, ObjectiveMechanism)
@@ -3723,18 +3735,23 @@ class System(System_Base):
                                         else:
                                             learning_proj_color = learning_color
 
+                                        if show_projection_labels:
+                                            edge_label = proj.name
+                                        else:
+                                            edge_label = ''
+
                                         if show_mechanism_structure:
                                             G.edge(proj.sender.owner.name + ':'
                                                        + OutputState.__name__ + '-' + proj.sender.name,
                                                    proj.receiver.owner.name + ':'
                                                        + InputState.__name__ + '-' + proj.receiver.name,
-                                                   label=proj.name,
+                                                   label=edge_label,
                                                    color=learning_proj_color)
                                         else:
                                             G.edge(self._get_label(comp_sndr, show_dimensions),
                                                    self._get_label(sndr, show_dimensions),
                                                    color=learning_proj_color,
-                                                   label=proj.name)
+                                                   label=edge_label)
 
 
         # add control graph if show_control
@@ -3786,15 +3803,19 @@ class System(System_Base):
                 G.node(objmech_label, color=objmech_color, shape=mechanism_shape)
 
             # objmech to controller edge
+            if show_projection_labels:
+                edge_label = objmech_ctlr_proj.name
+            else:
+                edge_label = ''
             if show_mechanism_structure:
                 G.edge(objmech.name + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name,
                        controller.name + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name,
-                       label=objmech_ctlr_proj.name, 
+                       label=edge_label,
                        color=objmech_ctlr_proj_color)
             else:
                 G.edge(objmech_label,
                        ctlr_label,
-                       label=objmech_ctlr_proj.name,
+                       label=edge_label,
                        color=objmech_ctlr_proj_color)
 
             # outgoing edges
@@ -3811,9 +3832,13 @@ class System(System_Base):
                     else:
                         ctlr_proj_label = ctlr_label
                         rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions)
+                    if show_projection_labels:
+                        edge_label = projection.name
+                    else:
+                        edge_label = ''
                     G.edge(ctlr_proj_label,
                            rcvr_proj_label,
-                           label=projection.name, 
+                           label=edge_label,
                            color=proj_color)
 
             # incoming edges
@@ -3830,7 +3855,11 @@ class System(System_Base):
                     else:
                         sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions)
                         objmech_proj_label = self._get_label(objmech, show_dimensions)
-                    G.edge(sndr_proj_label, objmech_proj_label ,color=proj_color)
+                    if show_projection_labels:
+                        edge_label = projection.name
+                    else:
+                        edge_label = ''
+                    G.edge(sndr_proj_label, objmech_proj_label ,color=proj_color, label=edge_label)
 
             # prediction mechanisms
             for mech in self.execution_list:
