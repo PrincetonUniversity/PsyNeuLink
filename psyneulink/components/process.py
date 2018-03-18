@@ -2247,16 +2247,22 @@ class Process(Process_Base):
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
-                            parameter_state.context.status &= ~ContextStatus.EXECUTING
+                            parameter_state.context.status &= ~ContextStatus.EXECUTION
                             parameter_state.context.status |= ContextStatus.LEARNING
                             parameter_state.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, context=context)
-                            parameter_state.update(context=context)
+                            parameter_state.update(context=context) # cxt-pass cxt-push
 
                     # Not all Projection subclasses instantiate ParameterStates
                     except AttributeError as e:
-                        pass
+                        if e.args[0] is '_parameter_states':
+                            pass
+                        else:
+                            raise ProcessError("PROGRAM ERROR: unrecognized attribute (\'{}\') encountered "
+                                               "while attempting to update {} {} of {}".
+                                               format(e.args[0], parameter_state.name, ParameterState.__name__,
+                                                      projection.name))
 
     def run(self,
             inputs,
