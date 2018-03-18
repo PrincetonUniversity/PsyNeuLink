@@ -1592,10 +1592,10 @@ class Component(object):
         if self.prefs.paramValidationPref and variable is not None:
             if context: # cxt-test
                 context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS # cxt-done
-                self.context.string = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
+                # self.context.string = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS # cxt-push
             else:
                 context = FUNCTION_CHECK_ARGS # cxt-done
-                self.context.string = context + FUNCTION_CHECK_ARGS
+                # self.context.string = context + FUNCTION_CHECK_ARGS # cxt-push
             variable = self._update_variable(self._validate_variable(variable, context=context))
 
         # PARAMS ------------------------------------------------------------

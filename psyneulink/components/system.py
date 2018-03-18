@@ -2914,7 +2914,7 @@ class System(System_Base):
                    call_after_time_step=call_after_time_step,
                    termination_processing=termination_processing,
                    termination_learning=termination_learning,
-                   context=context)
+                   context=context) # cxt-pass
 
     def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of Processes in System being executed

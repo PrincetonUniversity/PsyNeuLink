@@ -765,7 +765,7 @@ def run(object,
                 execution_id=execution_id,
                 termination_processing=termination_processing,
                 termination_learning=termination_learning,
-                context=context
+                context=context # cxt-pass
             )
 
             if call_after_time_step:

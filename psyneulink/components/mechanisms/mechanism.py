@@ -1972,6 +1972,8 @@ class Mechanism_Base(Mechanism):
         if self.context.status is ContextStatus.OFF:
             self.context.status = ContextStatus.COMMAND_LINE
             self.context.string = COMMAND_LINE
+        else:
+            self.context.string = context
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
