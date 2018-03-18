@@ -774,7 +774,7 @@ class Log:
 
             context_flags_string = ContextStatus._get_context_string(context_flags)
             context_status_string = ContextStatus._get_context_string(self.owner.context.status)
-            assert context_status_string == context_status_string
+            assert context_flags_string == context_status_string
 
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 

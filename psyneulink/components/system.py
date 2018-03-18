@@ -3977,6 +3977,8 @@ class SystemInputState(OutputState):
             self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
         else:
             self.name = owner.name + "_" + name
+        self.context.status = ContextStatus.INITIALIZATION
+        self.context.string = context
         self.prefs = prefs
         self.log = Log(owner=self)
         self.recording = False
