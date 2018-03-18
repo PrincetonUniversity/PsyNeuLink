@@ -795,6 +795,7 @@ from psyneulink.globals.keywords import \
     VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
@@ -1260,10 +1261,14 @@ class Mechanism_Base(Mechanism):
             output_states = list(output_states)
 
         # Mark initialization in context
+        self.context.status = ContextStatus.INITIALIZATION
         if not context or isinstance(context, object) or inspect.isclass(context): # cxt-test
-            context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt-set
+            context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt-done
+            self.context.string = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__
         else:
-            context = context + SEPARATOR_BAR + INITIALIZING + self.name # cxt-set
+            context = context + SEPARATOR_BAR + INITIALIZING + self.name # cxt-done
+            self.context.string = context + SEPARATOR_BAR + INITIALIZING + self.name # cxt-done
+
         super(Mechanism_Base, self).__init__(default_variable=default_variable,
                                              size=size,
                                              param_defaults=params,
@@ -1959,7 +1964,7 @@ class Mechanism_Base(Mechanism):
 
         """
         self.ignore_execution_id = ignore_execution_id
-        context = context or NO_CONTEXT # cxt-set
+        context = context or NO_CONTEXT # cxt-done
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()

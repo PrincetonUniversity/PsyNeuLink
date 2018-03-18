@@ -837,8 +837,9 @@ class Component(object):
         #         # del self.init_args['__class__']
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
-        self.context = Context(status=ContextStatus.INITIALIZATION,
-                               string=context)
+        self.context.status = ContextStatus.INITIALIZATION
+        self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
+
         self.execution_status = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
         # self.init_status = InitStatus.INITIALIZING
@@ -2745,10 +2746,12 @@ class Component(object):
 
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
         #    execute method, not its function
+
         # MODIFIED 3/17/18 OLD:
         # if not context: # cxt-test
-        #     context = "DIRECT CALL" # cxt-set
+        #     context = "DIRECT CALL" # cxt-done
         # MODIFIED 3/17/18 END
+
         try:
             value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:
@@ -2975,7 +2978,11 @@ class Component(object):
 
     @property
     def context(self):
-        return self._context
+        try:
+            return self._context
+        except:
+            self._context = Context(status=ContextStatus.OFF)
+            return self._context
 
     # from psyneulink.globals.context import Context
     # @tc.typecheck

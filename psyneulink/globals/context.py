@@ -85,6 +85,8 @@ class ContextStatus(IntEnum):
     """Set at the end of a `RUN`."""
     COMMAND_LINE =   1<<9  # 512
     # Component accessed by user
+    CONSTRUCTOR =    1<<10 # 1024
+    # Component being constructor (used in call to super.__init__)
     ALL_ASSIGNMENTS = \
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
     """Specifies all contexts."""
