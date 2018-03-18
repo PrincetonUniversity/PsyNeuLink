@@ -175,9 +175,12 @@ from psyneulink.components.projections.projection import Projection_Base, _is_pr
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.globals.keywords import CONTEXT, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, NAME, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.globals.keywords import CONTEXT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
+    INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, NAME, \
+    PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import iscompatible, parameter_spec
 
 __all__ = [
@@ -646,11 +649,22 @@ class LearningProjection(ModulatoryProjection_Base):
                                               format(self.sender.owner.name, learning_signal,
                                                      self.receiver.owner.name, matrix))
 
+        if EXECUTING in context: # cxt-test
+            self.context.status = ContextStatus.EXECUTION
+        elif LEARNING in context: # cxt-test
+            self.context.status = ContextStatus.LEARNING
+        # MODIFIED 3/18/18 OLD:
         self.weight_change_matrix = self.function(
             variable=learning_signal,
             params=runtime_params,
             context=context
         )
+        # # MODIFIED 3/18/18 NEW:
+        # self.weight_change_matrix = super()._execute(variable=learning_signal,
+        #                                              runtime_params=runtime_params,
+        #                                              context=context
+        #                                              )
+        # MODIFIED 3/18/18 END
 
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate
