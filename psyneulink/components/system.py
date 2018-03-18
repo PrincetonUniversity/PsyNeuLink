@@ -456,6 +456,7 @@ from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, insert_list, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -858,7 +859,9 @@ class System(System_Base):
                           context=context)
 
         if not context: # cxt-test
-            context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT # cxt-set
+            context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT # cxt-done
+            self.context.status = ContextStatus.INITIALIZATION
+            self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
         super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=params,
@@ -2515,7 +2518,9 @@ class System(System_Base):
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
         if not context: # cxt-test
-            context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-set
+            context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-done
+            self.context.status = ContextStatus.EXECUTION
+            self.context.string = EXECUTING + " " + SYSTEM + " " + self.name
             self.execution_status = ExecutionStatus.EXECUTING
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller

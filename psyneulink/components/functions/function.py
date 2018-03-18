@@ -1371,6 +1371,11 @@ class UserDefinedFunction(Function_Base):
                     params = self.cust_fct_params[PARAMS]
             del self.cust_fct_params[PARAMS]
 
+        if CONTEXT in self.cust_fct_params:
+            if self.cust_fct_params[CONTEXT]:
+                context = self.cust_fct_params[CONTEXT]
+            del self.cust_fct_params[CONTEXT]
+
         # Assign variable to default_variable if default_variable was not specified
         if default_variable is None:
             default_variable = cust_fct_variable

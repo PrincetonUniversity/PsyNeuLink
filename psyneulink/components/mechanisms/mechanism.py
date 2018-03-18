@@ -789,7 +789,7 @@ from psyneulink.components.states.state import ADD_STATES, REMOVE_STATES, _parse
 from psyneulink.globals.keywords import \
     CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_VARIABLES, \
-    INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, \
+    INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
     OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, OWNER_VARIABLE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
     PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, UNCHANGED, \
     VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
@@ -1964,7 +1964,14 @@ class Mechanism_Base(Mechanism):
 
         """
         self.ignore_execution_id = ignore_execution_id
-        context = context or NO_CONTEXT # cxt-done
+        # MODIFIED 3/17/18 OLD:
+        # context = context or NO_CONTEXT # cxt-done
+        # MODIFIED 3/17/18 NEW:
+        context = context or COMMAND_LINE # cxt-done
+        # MODIFIED 3/17/18 END
+        if not self.context.status:
+            self.context.status = COMMAND_LINE
+
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
@@ -2065,8 +2072,14 @@ class Mechanism_Base(Mechanism):
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
-            if context is NO_CONTEXT: # cxt-test
-                context = EXECUTING + ' ' + append_type_to_name(self) # cxt-set
+            # # MODIFIED 3/17/18 OLD:
+            # if context is NO_CONTEXT: # cxt-test
+            # MODIFIED 3/17/18 NEW:
+            if context is COMMAND_LINE: # cxt-test
+            # MODIFIED 3/17/18 END
+                context = EXECUTING + ' ' + append_type_to_name(self) # cxt-done
+                self.context.status = ContextStatus.EXECUTION
+                self.context.string = EXECUTING + ' ' + append_type_to_name(self)
                 self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
                 input = self.instance_defaults.variable
