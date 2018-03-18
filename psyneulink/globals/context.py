@@ -32,16 +32,17 @@ class ContextError(Exception):
 
 
 class Context():
-    def __init__(self, status, composition, execution_id:UUID=None, string:str=''):
+    def __init__(self, status, composition=None, execution_id:UUID=None, string:str=''):
 
         self.status = status
 
-        from psyneulink.composition import Composition
-        if isinstance(composition, Composition):
+        # from psyneulink.composition import Composition
+        # if isinstance(composition, Composition):
+        if composition is None or 'Composition' in composition.__class__.__name__:
             self.composition = composition
         else:
             raise ContextError("\'composition\' argument in call to {} must be a {}".
-                               format(self.__name__, Composition.__name__))
+                               format(self.__name__, 'Composition'))
 
         self.execution_id = execution_id
         self.string = string

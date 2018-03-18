@@ -838,7 +838,6 @@ class Component(object):
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
         self.context = Context(status=ContextStatus.INITIALIZATION,
-                               composition=self,
                                string=context)
         self.execution_status = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
