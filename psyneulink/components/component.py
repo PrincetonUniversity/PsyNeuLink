@@ -2786,7 +2786,11 @@ class Component(object):
 
     def _get_current_execution_time(self, context):
         from psyneulink.globals.log import _get_context
-        return self.log._get_time(context=context ,context_flags=_get_context(context))
+        # # MODIFIED 3/18/18 OLD:
+        # return self.log._get_time(context=context ,context_flags=_get_log_context(context))
+        # MODIFIED 3/18/18 NEW:
+        return self.log._get_time(context_flags=_get_context(context))
+        # MODIFIED 3/18/18 END
 
     def _update_value(self, context=None):
         """Evaluate execute method
