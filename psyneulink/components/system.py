@@ -2639,8 +2639,9 @@ class System(System_Base):
 
             except AttributeError as error_msg:
                 if not 'INIT' in context: # cxt-test
-                    raise SystemError("PROGRAM ERROR: Problem executing controller for {}: {}".
-                                      format(self.name, error_msg.args[0]))
+                    raise SystemError("PROGRAM ERROR: Problem executing controller ({}) for {}: unidentified "
+                                      "attribute (\'{}\') encountered for it or one of the methods it calls."
+                                      .format(self.controller.name, self.name, error_msg.args[0]))
         #endregion
 
         # Report completion of system execution and value of designated outputs

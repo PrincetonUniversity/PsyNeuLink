@@ -21,6 +21,7 @@ from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAlloca
 from psyneulink.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.globals.context import ContextStatus
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
@@ -309,7 +310,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller.EVC_policies = []
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        context = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION)) # cxt-set
+        context = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION)) # cxt-done cxt-pass
+        controller.context.status = ContextStatus.SIMULATION # FIX IS Controller correct for this, or System??
+        controller.context.string = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION))
         # Print progress bar
         if controller.prefs.reportOutputPref:
             progress_bar_rate_str = ""
@@ -521,7 +524,7 @@ def _compute_EVC(args):
     outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
                         allocation_vector=allocation_vector,
                         runtime_params=runtime_params,
-                        context=context)
+                        context=context) # cxt-set cxt-pass
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
                                                               # MODIFIED 5/7/17 OLD:
@@ -530,7 +533,7 @@ def _compute_EVC(args):
                                                               outcome=outcome,
                                                               # MODIFIED 5/7/17 END
                                                               costs=ctlr.control_signal_costs,
-                                                              context=context)
+                                                              context=context) # cxt-set cxt-pass
 
 
     if PY_MULTIPROCESSING:

@@ -615,6 +615,8 @@ def run(object,
         or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
 
+    from psyneulink.globals.context import ContextStatus
+
     # small version of 'sequence' format in the once case where it was still working (single origin mechanism)
     if isinstance(inputs, (list, np.ndarray)):
         if len(object.origin_mechanisms) == 1:
@@ -698,7 +700,11 @@ def run(object,
                     projection.function_object.learning_rate = object.learning_rate
 
     # Class-specific validation:
-    context = context or RUN + "validating " + object.name # cxt-set
+    context = context or RUN + "validating " + object.name # cxt-done ? cxt-pass
+    if object.context.status is ContextStatus.OFF:
+        object.context.status = ContextStatus.RUN + ContextStatus.VALIDATION
+        object.context.string = RUN + "validating " + object.name
+
     # INITIALIZATION
     if initialize:
         object.initialize()
@@ -749,7 +755,10 @@ def run(object,
 
             # MODIFIED 3/16/17 END
             if RUN in context and not EVC_SIMULATION in context: # cxt-test
-                context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-set
+                context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
+                object.context.status &= ~ContextStatus.VALIDATION
+                object.context.status |= ContextStatus.EXECUTION
+                object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
                 object.execution_status = ExecutionStatus.EXECUTING
             result = object.execute(
                 input=execution_inputs,

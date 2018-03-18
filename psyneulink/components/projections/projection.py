@@ -644,7 +644,7 @@ class Projection_Base(Projection):
         from psyneulink.components.states.parameterstate import ParameterState
         from psyneulink.components.states.state import State_Base
 
-        if not isinstance(context, Projection_Base):
+        if not isinstance(context, Projection_Base): # cxt-test
             raise ProjectionError("Direct call to abstract class Projection() is not allowed; "
                                  "use projection() or one of the following subclasses: {0}".
                                  format(", ".join("{!s}".format(key) for (key) in ProjectionRegistry.keys())))

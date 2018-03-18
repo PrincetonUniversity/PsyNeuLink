@@ -1068,6 +1068,7 @@ class State_Base(State):
                 pass
             try:
                 context = kargs[kwStateContext] # cxt-set
+                self.context.string = kargs[kwStateContext]
             except (KeyError, NameError):
                 pass
 
@@ -1091,7 +1092,7 @@ class State_Base(State):
 
         # If name is not specified, assign default name
         if name is not None and DEFERRED_INITIALIZATION in name:
-            name = self._assign_default_state_name(context=name)
+            name = self._assign_default_state_name(context=name) # cxt-set
 
 
 
@@ -1114,18 +1115,20 @@ class State_Base(State):
         for attrib, value in get_class_attributes(ModulationParam):
             self._mod_proj_values[getattr(ModulationParam,attrib)] = []
 
+        self.context.string = context.__class__.__name__
+
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(default_variable=variable,
                                          size=size,
                                          param_defaults=params,
                                          name=name,
                                          prefs=prefs,
-                                         context=context.__class__.__name__)
+                                         context=context.__class__.__name__) # cxt-done cxt-pass
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
-            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
+            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context) # cxt-pass cxt-push
         else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -1925,7 +1928,7 @@ class State_Base(State):
                 projection_value = projection.value * 0.0
             else:
                 projection_value = projection.execute(runtime_params=projection_params,
-                                                      context=context)
+                                                      context=context) # cxt-pass cxt-push
 
             # If this is initialization run and projection initialization has been deferred, pass
             if INITIALIZING in context and projection.init_status is InitStatus.DEFERRED_INITIALIZATION: # cxt-test

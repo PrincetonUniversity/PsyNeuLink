@@ -718,7 +718,7 @@ class Log:
 
         else:
 
-            if isinstance(context, ContextStatus):
+            if isinstance(context, ContextStatus): # cxt-test
                 context_flags = context
                 context = ContextStatus._get_context_string(context) # cxt-set
                 if not time:

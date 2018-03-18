@@ -32,6 +32,7 @@ class ContextError(Exception):
 
 
 class Context():
+    __name__ = 'Context'
     def __init__(self, status, composition=None, execution_id:UUID=None, string:str=''):
 
         self.status = status
@@ -53,10 +54,17 @@ class Context():
 
     @status.setter
     def status(self, status):
-        if isinstance(status, ContextStatus):
+        # if isinstance(status, ContextStatus):
+        #     self._status = status
+        # elif isinstance(status, int):
+        #     self._status = ContextStatus(status)
+        # else:
+        #     raise ContextError("{} argument in call to {} must be a {} or an int".
+        #                        format(STATUS, self.__name__, ContextStatus.__name__))
+        if isinstance(status, (ContextStatus, int)):
             self._status = status
         else:
-            raise ContextError("{} argument in call to {} must be a {}".
+            raise ContextError("{} argument in call to {} must be a {} or an int".
                                format(STATUS, self.__name__, ContextStatus.__name__))
 
 
@@ -83,9 +91,11 @@ class ContextStatus(IntEnum):
     """Set at the end of a `TRIAL`."""
     RUN =            1<<8  # 256
     """Set at the end of a `RUN`."""
-    COMMAND_LINE =   1<<9  # 512
+    SIMULATION =     1<<9  # 512
+    # Set during simulation by Composition.controller
+    COMMAND_LINE =   1<<10 # 1024
     # Component accessed by user
-    CONSTRUCTOR =    1<<10 # 1024
+    CONSTRUCTOR =    1<<11 # 2048
     # Component being constructor (used in call to super.__init__)
     ALL_ASSIGNMENTS = \
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL

@@ -468,6 +468,7 @@ from psyneulink.components.states.state import ADD_STATES, StateError, State_Bas
 from psyneulink.globals.keywords import COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import append_type_to_name, is_numeric, iscompatible
 
 __all__ = [
@@ -712,9 +713,13 @@ class InputState(State_Base):
                  context=None):
 
         if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-set
+            context = COMMAND_LINE # cxt-done
+            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.string = COMMAND_LINE
         else:
-            context = self # cxt-set
+            context = self # cxt-done
+            self.context.status = ContextStatus.CONSTRUCTOR
+
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
 

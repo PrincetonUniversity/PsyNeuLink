@@ -1964,13 +1964,14 @@ class Mechanism_Base(Mechanism):
 
         """
         self.ignore_execution_id = ignore_execution_id
-        # MODIFIED 3/17/18 OLD:
+        # # MODIFIED 3/17/18 OLD:
         # context = context or NO_CONTEXT # cxt-done
         # MODIFIED 3/17/18 NEW:
         context = context or COMMAND_LINE # cxt-done
         # MODIFIED 3/17/18 END
-        if not self.context.status:
-            self.context.status = COMMAND_LINE
+        if self.context.status is ContextStatus.OFF:
+            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.string = COMMAND_LINE
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
@@ -2088,7 +2089,7 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE PARAMETER STATE(S)
-        self._update_parameter_states(runtime_params=runtime_params, context=context)
+        self._update_parameter_states(runtime_params=runtime_params, context=context) # cxt-pass ? cxt-push
         #endregion
 
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
@@ -2098,7 +2099,7 @@ class Mechanism_Base(Mechanism):
         value = self._execute(
             variable=variable,
             runtime_params=runtime_params,
-            context=context,
+            context=context # cxt-pass cxt-push
         )
 
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
@@ -2129,7 +2130,7 @@ class Mechanism_Base(Mechanism):
         self.value = value
 
         #region UPDATE OUTPUT STATE(S)
-        self._update_output_states(runtime_params=runtime_params, context=context)
+        self._update_output_states(runtime_params=runtime_params, context=context) # cxt-pass cxt-push
         #endregion
 
         #region REPORT EXECUTION
@@ -2154,7 +2155,7 @@ class Mechanism_Base(Mechanism):
 
         #endregion
 
-        self.current_execution_time = self._get_current_execution_time(context=context)
+        self.current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
         return self.value
 
     def run(
