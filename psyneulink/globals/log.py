@@ -768,6 +768,10 @@ class Log:
 
                 context_flags = _get_context(context)
 
+            context_flags_string = ContextStatus._get_context_string(context_flags)
+            context_status_string = ContextStatus._get_context_string(self.owner.context.status)
+            assert context_status_string == context_status_string
+
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 
             # Get time and log value if logging condition is satisfied or called for programmatically
