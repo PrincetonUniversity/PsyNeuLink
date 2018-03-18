@@ -725,6 +725,10 @@ class Log:
                     raise LogError("Use of ContextStatus ({}) by {} to specify context requires specification of time".
                                    format(context, self.owner.name ))
 
+            elif self.owner.context.status: # cxt-test
+                context_flags = self.owner.context.status
+                context = ContextStatus._get_context_string(context_flags)
+
             # Get context
             else:
                 if context is COMMAND_LINE: # cxt-test

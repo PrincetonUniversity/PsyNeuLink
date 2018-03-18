@@ -756,7 +756,7 @@ def run(object,
             # MODIFIED 3/16/17 END
             if RUN in context and not EVC_SIMULATION in context: # cxt-test
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
-                object.context.status &= ~ContextStatus.VALIDATION
+                object.context.status &= ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION)
                 object.context.status |= ContextStatus.EXECUTION
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
                 object.execution_status = ExecutionStatus.EXECUTING

@@ -2619,7 +2619,15 @@ class System(System_Base):
 
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context and self.learning: # cxt-test
+            self.context.status &= ~ContextStatus.EXECUTION
+            self.context.status |= ContextStatus.LEARNING
+            self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
+
             self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
+
+            self.context.status &= ~ContextStatus.LEARNING
+            self.context.status |= ContextStatus.EXECUTION
+            self.context.string = self.context.string.replace(LEARNING, EXECUTING)
         # endregion
 
 

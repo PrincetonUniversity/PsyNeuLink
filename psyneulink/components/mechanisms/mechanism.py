@@ -2259,7 +2259,7 @@ class Mechanism_Base(Mechanism):
     def _update_parameter_states(self, runtime_params=None, context=None):
 
         for state in self._parameter_states:
-            state.update(params=runtime_params, context=context)
+            state.update(params=runtime_params, context=context) # cxt-pass
             # if state.name in self.user_params:
             #     self.user_params.__additem__(state.name, state.value)
             # if state.name in self.function_params:
