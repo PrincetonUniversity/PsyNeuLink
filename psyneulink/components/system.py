@@ -2619,14 +2619,14 @@ class System(System_Base):
 
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context and self.learning: # cxt-test
-            self.context.status &= ~ContextStatus.EXECUTION
+            # self.context.status &= ~ContextStatus.EXECUTION
             self.context.status |= ContextStatus.LEARNING
             self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
             self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
 
             self.context.status &= ~ContextStatus.LEARNING
-            self.context.status |= ContextStatus.EXECUTION
+            # self.context.status |= ContextStatus.EXECUTION
             self.context.string = self.context.string.replace(LEARNING, EXECUTING)
         # endregion
 
@@ -2682,10 +2682,10 @@ class System(System_Base):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                mechanism.execute(
-                    runtime_params=rt_params,
-                    context=context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
-                )
+                context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]" #
+                mechanism.context.string = context # cxt-push ?
+
+                mechanism.execute(runtime_params=rt_params, context=context) # cxt-pass
 
 
                 if self._report_system_output and  self._report_process_output:
