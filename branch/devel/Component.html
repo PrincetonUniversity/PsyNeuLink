@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Components &mdash; PsyNeuLink 0.4.4.4+115.g3807511 documentation</title>
+  <title>Components &mdash; PsyNeuLink 0.4.4.4+116.g4c13255 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+115.g3807511 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+116.g4c13255 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Core" href="Core.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.4+115
+                0.4.4.4+116
               </div>
             
           
@@ -545,15 +545,16 @@ Instantiate any items in request set that require it (i.e., function or states).
 </dd></dl>
 
 <dl class="class">
-<dt id="psyneulink.components.component.Component.LogCondition">
-<em class="property">class </em><code class="descname">LogCondition</code><a class="headerlink" href="#psyneulink.components.component.Component.LogCondition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Specifies levels of logging, as descrdibed below.</p>
+<dt id="psyneulink.components.component.Component.ContextStatus">
+<em class="property">class </em><code class="descname">ContextStatus</code><a class="headerlink" href="#psyneulink.components.component.Component.ContextStatus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to identify the status of a <a class="reference internal" href="#"><span class="doc">Components</span></a> when its value or one of its attributes is being accessed.
+Also used to specify the context in which a value of the Component or its attribute is <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">logged</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.components.component.Component.loggable_items">
 <code class="descname">loggable_items</code><a class="headerlink" href="#psyneulink.components.component.Component.loggable_items" title="Permalink to this definition">¶</a></dt>
-<dd><p>Diciontary of items that can be logged in the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> and their current <a class="reference internal" href="#psyneulink.components.component.Component.LogCondition" title="psyneulink.components.component.Component.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a>.
+<dd><p>Diciontary of items that can be logged in the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> and their current <a class="reference internal" href="#psyneulink.components.component.Component.ContextStatus" title="psyneulink.components.component.Component.ContextStatus"><code class="xref any py py-class docutils literal"><span class="pre">ContextStatus</span></code></a>.
 This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> property of the Component’s
 <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
 </dd></dl>
@@ -577,7 +578,7 @@ of the Component’s <a class="reference internal" href="#psyneulink.components.
 <dl class="attribute">
 <dt id="psyneulink.components.component.Component.logged_items">
 <code class="descname">logged_items</code><a class="headerlink" href="#psyneulink.components.component.Component.logged_items" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dictionary of all items that have entries in the log, and their currently assigned <a class="reference internal" href="#psyneulink.components.component.Component.LogCondition" title="psyneulink.components.component.Component.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a>s
+<dd><p>Dictionary of all items that have entries in the log, and their currently assigned <a class="reference internal" href="#psyneulink.components.component.Component.ContextStatus" title="psyneulink.components.component.Component.ContextStatus"><code class="xref any py py-class docutils literal"><span class="pre">ContextStatus</span></code></a>s
 This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> property of the Component’s
 <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
 </dd></dl>
@@ -631,7 +632,7 @@ This is a convenience method that calls the <a class="reference internal" href="
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+115.g3807511',
+            VERSION:'0.4.4.4+116.g4c13255',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

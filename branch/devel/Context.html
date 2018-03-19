@@ -1,0 +1,289 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Context &mdash; PsyNeuLink 0.4.4.4+116.g4c13255 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+116.g4c13255 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.4.4.4+116
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Context</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Context.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-psyneulink.globals.context">
+<span id="context"></span><h1>Context<a class="headerlink" href="#module-psyneulink.globals.context" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="psyneulink.globals.context.ContextStatus">
+<em class="property">class </em><code class="descclassname">psyneulink.globals.context.</code><code class="descname">ContextStatus</code><a class="headerlink" href="#psyneulink.globals.context.ContextStatus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to identify the status of a <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> when its value or one of its attributes is being accessed.
+Also used to specify the context in which a value of the Component or its attribute is <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">logged</span></a>.</p>
+<dl class="attribute">
+<dt id="psyneulink.globals.context.ContextStatus.INITIALIZATION">
+<code class="descname">INITIALIZATION</code><em class="property"> = 2</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.INITIALIZATION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set during execution of the Component’s constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.context.ContextStatus.VALIDATION">
+<code class="descname">VALIDATION</code><em class="property"> = 4</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.VALIDATION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set during validation of the value of a Component or its attribute.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.context.ContextStatus.EXECUTION">
+<code class="descname">EXECUTION</code><em class="property"> = 8</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.EXECUTION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set during any execution of the Component.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.context.ContextStatus.PROCESSING">
+<code class="descname">PROCESSING</code><em class="property"> = 16</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.PROCESSING" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set during the <a class="reference internal" href="System.html#system-execution-processing"><span class="std std-ref">processing phase</span></a> of execution of a Composition.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.context.ContextStatus.LEARNING">
+<code class="descname">LEARNING</code><em class="property"> = 32</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.LEARNING" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set during the <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">learning phase</span></a> of execution of a Composition.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.context.ContextStatus.CONTROL">
+<code class="descname">CONTROL</code><em class="property"> = 64</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.CONTROL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set during the <code class="xref any docutils literal"><span class="pre">control</span> <span class="pre">phase</span> <span class="pre">System_Execution_Control&gt;</span></code> of execution of a Composition.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.context.ContextStatus.TRIAL">
+<code class="descname">TRIAL</code><em class="property"> = 128</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.TRIAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set at the end of a <a class="reference internal" href="#psyneulink.globals.context.ContextStatus.TRIAL" title="psyneulink.globals.context.ContextStatus.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.context.ContextStatus.RUN">
+<code class="descname">RUN</code><em class="property"> = 256</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.RUN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set at the end of a <a class="reference internal" href="#psyneulink.globals.context.ContextStatus.RUN" title="psyneulink.globals.context.ContextStatus.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.context.ContextStatus.ALL_ASSIGNMENTS">
+<code class="descname">ALL_ASSIGNMENTS</code><em class="property"> = 126</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies all contexts.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.4.4.4+116.g4c13255',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
