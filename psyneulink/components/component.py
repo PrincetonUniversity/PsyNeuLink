@@ -368,9 +368,9 @@ import typecheck as tc
 
 from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MAPPING_PROJECTION, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.globals.registry import register_category
-# from psyneulink.globals.log import Log, LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
+from psyneulink.globals.context import Context, ContextStatus
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength, object_has_single_value
 
 __all__ = [
@@ -836,7 +836,10 @@ class Component(object):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
-        context = context + INITIALIZING + ": " + COMPONENT_INIT
+        context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
+        self.context.status = ContextStatus.INITIALIZATION
+        self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
+
         self.execution_status = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
         # self.init_status = InitStatus.INITIALIZING
@@ -1587,10 +1590,12 @@ class Component(object):
 
         # Validate variable if parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and variable is not None:
-            if context:
-                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
+            if context: # cxt-test
+                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS # cxt-done
+                # self.context.string = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS # cxt-push
             else:
-                context = FUNCTION_CHECK_ARGS
+                context = FUNCTION_CHECK_ARGS # cxt-done
+                # self.context.string = context + FUNCTION_CHECK_ARGS # cxt-push
             variable = self._update_variable(self._validate_variable(variable, context=context))
 
         # PARAMS ------------------------------------------------------------
@@ -1747,7 +1752,7 @@ class Component(object):
 
         # VALIDATE VARIABLE (if not called from assign_params)
 
-        if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+        if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
             # if variable has been passed then validate and, if OK, assign as self.instance_defaults.variable
             variable = self._update_variable(self._validate_variable(variable, context=context))
 
@@ -1764,7 +1769,7 @@ class Component(object):
             raise ComponentError("Altering paramClassDefaults not permitted")
 
         if default_set is None:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
                 default_set = {}
                 for param_name in request_set:
                     default_set[param_name] = self.paramInstanceDefaults[param_name]
@@ -1852,7 +1857,7 @@ class Component(object):
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
                 if param_name is FUNCTION:
                     try:
-                        if function_class != default_function_class and COMMAND_LINE in context:
+                        if function_class != default_function_class and COMMAND_LINE in context: # cxt-test
                             from psyneulink.components.functions.function import Function_Base
                             if isinstance(function, Function_Base):
                                 request_set[FUNCTION] = function.__class__
@@ -1919,8 +1924,10 @@ class Component(object):
         Instantiate any items in request set that require it (i.e., function or states).
 
         """
-        context = context or COMMAND_LINE
-
+        if context is None:
+            self.context.status = ContextStatus.COMMAND_LINE # cxt-push
+            self.context.string = COMMAND_LINE
+        context = context or COMMAND_LINE # cxt-done
         self._assign_params(request_set=request_set, context=context)
 
     @tc.typecheck
@@ -1987,14 +1994,17 @@ class Component(object):
 
         validated_set_param_names = list(validated_set.keys())
 
+        curr_context = self.context.status # cxt-buffer
+        curr_context_str = self.context.string
+
         # If an input_state is being added from the command line,
         #    must _instantiate_attributes_before_function to parse input_states specification
         # Otherwise, should not be run,
         #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
         #    that causes name-repetition problems when it is called as part of the standard init procedure
-        if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context:
-            self._instantiate_attributes_before_function(context=COMMAND_LINE)
-
+        if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context: # cxt-test
+            self.context.status = ContextStatus.COMMAND_LINE # cxt-push
+            self._instantiate_attributes_before_function(context=COMMAND_LINE)  # cxt-done
         # Give owner a chance to instantiate function and/or function params
         # (e.g., wrap in UserDefineFunction, as per EVCControlMechanism)
         elif any(isinstance(param_value, (function_type, Function)) or
@@ -2004,15 +2014,19 @@ class Component(object):
 
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
-            self._instantiate_function(context=COMMAND_LINE)
-
+            self.context.status = COMMAND_LINE # cxt-push
+            self._instantiate_function(context=COMMAND_LINE) # cxt-done
         # FIX: WHY SHOULD IT BE CALLED DURING STANDRD INIT PROCEDURE?
         # # MODIFIED 5/5/17 OLD:
         # if OUTPUT_STATES in validated_set:
         # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_states ARG OF CONSTRUCTOR]
-        if OUTPUT_STATES in validated_set and COMMAND_LINE in context:
+        if OUTPUT_STATES in validated_set and COMMAND_LINE in context: # cxt-test
         # MODIFIED 5/5/17 END
-            self._instantiate_attributes_after_function(context=COMMAND_LINE)
+            self.context.status = COMMAND_LINE # cxt-push
+            self._instantiate_attributes_after_function(context=COMMAND_LINE) # cxt-done
+
+        self.context.status = curr_context # cxt-pop
+        self.context.string = curr_context_str
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
         """Reset current and/or instance defaults
@@ -2732,8 +2746,12 @@ class Component(object):
 
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
         #    execute method, not its function
-        if not context:
-            context = "DIRECT CALL"
+
+        # MODIFIED 3/17/18 OLD:
+        # if not context: # cxt-test
+        #     context = "DIRECT CALL" # cxt-done
+        # MODIFIED 3/17/18 END
+
         try:
             value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:
@@ -2767,8 +2785,12 @@ class Component(object):
         return self.function(variable=variable, params=runtime_params, context=context)
 
     def _get_current_execution_time(self, context):
-        from psyneulink.globals.log import _get_log_context
-        return self.log._get_time(context=context ,context_flags=_get_log_context(context))
+        from psyneulink.globals.log import _get_context
+        # # MODIFIED 3/18/18 OLD:
+        # return self.log._get_time(context=context ,context_flags=_get_log_context(context))
+        # MODIFIED 3/18/18 NEW:
+        return self.log._get_time(context_flags=_get_context(context))
+        # MODIFIED 3/18/18 END
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -2959,6 +2981,26 @@ class Component(object):
         self.prefs.runtimeParamStickyAssignmentPref = setting
 
     @property
+    def context(self):
+        try:
+            return self._context
+        except:
+            self._context = Context(status=ContextStatus.OFF)
+            return self._context
+
+    # from psyneulink.globals.context import Context
+    # @tc.typecheck
+    @context.setter
+    # def context(self, context:type(Context)):
+    def context(self, context):
+        # self._context = context
+        from psyneulink.globals.context import Context
+        if isinstance(context, Context):
+            self._context = context
+        else:
+            raise ComponentError("{} attribute of {} must be of type {}".format(CONTEXT, self.name, Context.__name__))
+
+    @property
     def log(self):
         try:
             return self._log
@@ -2976,14 +3018,14 @@ class Component(object):
 
     @property
     def loggable_items(self):
-        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `LogCondition`.
+        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `ContextStatus`.
         This is a convenience method that calls the `loggable_items <Log.loggable_items>` property of the Component's
         `log <Component.log>`.
         """
         return self.log.loggable_items
 
-    from psyneulink.globals.log import LogCondition
-    def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
+    from psyneulink.globals.log import ContextStatus
+    def set_log_conditions(self, items, log_condition=ContextStatus.EXECUTION):
         """
         set_log_conditions(          \
             items                    \
@@ -3010,7 +3052,7 @@ class Component(object):
 
     @property
     def logged_items(self):
-        """Dictionary of all items that have entries in the log, and their currently assigned `LogCondition`\\s
+        """Dictionary of all items that have entries in the log, and their currently assigned `ContextStatus`\\s
         This is a convenience method that calls the `logged_items <Log.logged_items>` property of the Component's
         `log <Component.log>`.
         """

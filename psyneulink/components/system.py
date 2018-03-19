@@ -456,6 +456,7 @@ from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, insert_list, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -857,9 +858,10 @@ class System(System_Base):
                           registry=SystemRegistry,
                           context=context)
 
-        if not context:
-            context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
-
+        if not context: # cxt-test
+            context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT # cxt-done
+            self.context.status = ContextStatus.INITIALIZATION
+            self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
         super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=params,
@@ -2515,8 +2517,10 @@ class System(System_Base):
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
-        if not context:
-            context = EXECUTING + " " + SYSTEM + " " + self.name
+        if not context: # cxt-test
+            context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-done
+            self.context.status = ContextStatus.EXECUTION
+            self.context.string = EXECUTING + " " + SYSTEM + " " + self.name
             self.execution_status = ExecutionStatus.EXECUTING
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
@@ -2536,7 +2540,7 @@ class System(System_Base):
                         projection.sender.owner._execution_id = self._execution_id
 
         self._report_system_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING,
-                                                                                                         LEARNING})
+                                                                                                         LEARNING}) # cxt-test
 
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
@@ -2548,7 +2552,7 @@ class System(System_Base):
 
         if input is None:
             if (self.prefs.verbosePref and
-                    not (not context or COMPONENT_INIT in context)):
+                    not (not context or COMPONENT_INIT in context)): # cxt-test
                 print("- No input provided;  default will be used: {0}")
             input = np.zeros_like(self.instance_defaults.variable)
             for i in range(num_origin_mechs):
@@ -2614,8 +2618,16 @@ class System(System_Base):
         # region EXECUTE LEARNING FOR EACH PROCESS
 
         # Don't execute learning for simulation runs
-        if not EVC_SIMULATION in context and self.learning:
+        if not EVC_SIMULATION in context and self.learning: # cxt-test
+            # self.context.status &= ~ContextStatus.EXECUTION
+            self.context.status |= ContextStatus.LEARNING
+            self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
+
             self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
+
+            self.context.status &= ~ContextStatus.LEARNING
+            # self.context.status |= ContextStatus.EXECUTION
+            self.context.string = self.context.string.replace(LEARNING, EXECUTING)
         # endregion
 
 
@@ -2624,7 +2636,7 @@ class System(System_Base):
 # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if not EVC_SIMULATION in context and self.enable_controller:
+        if not EVC_SIMULATION in context and self.enable_controller: # cxt-test
             try:
                 self.controller.execute(
                     runtime_params=None,
@@ -2634,9 +2646,10 @@ class System(System_Base):
                     print("{0}: {1} executed".format(self.name, self.controller.name))
 
             except AttributeError as error_msg:
-                if not 'INIT' in context:
-                    raise SystemError("PROGRAM ERROR: Problem executing controller for {}: {}".
-                                      format(self.name, error_msg.args[0]))
+                if not 'INIT' in context: # cxt-test
+                    raise SystemError("PROGRAM ERROR: Problem executing controller ({}) for {}: unidentified "
+                                      "attribute (\'{}\') encountered for it or one of the methods it calls."
+                                      .format(self.controller.name, self.name, error_msg.args[0]))
         #endregion
 
         # Report completion of system execution and value of designated outputs
@@ -2669,10 +2682,10 @@ class System(System_Base):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                mechanism.execute(
-                    runtime_params=rt_params,
-                    context=context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
-                )
+                context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]" #
+                mechanism.context.string = context # cxt-push ?
+
+                mechanism.execute(runtime_params=rt_params, context=context) # cxt-pass
 
 
                 if self._report_system_output and  self._report_process_output:
@@ -2759,12 +2772,24 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names))))
+                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
+
+                # MODIFIED 3/18/18 NEW:
+                component.context.status &= ~ContextStatus.EXECUTION
+                component.context.status |= ContextStatus.LEARNING
+                component.context.string = context_str
+                # MODIFIED 3/18/18 END
 
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                 component.execute(runtime_params=params, context=context_str)
                 # # TEST PRINT:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
+
+                # MODIFIED 3/18/18 NEW:
+                component.context.status &= ~ContextStatus.LEARNING
+                component.context.status |= ContextStatus.EXECUTION
+                # MODIFIED 3/18/18 END
+
 
         # THEN update all MappingProjections
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
@@ -2789,9 +2814,19 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names))))
+                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
+                # MODIFIED 3/18/18 NEW:
+                component.context.status &= ~ContextStatus.EXECUTION
+                component.context.status |= ContextStatus.LEARNING
+                component.context.string = context_str
+                # MODIFIED 3/18/18 END
 
                 component._parameter_states[MATRIX].update(context=context_str)
+
+                # MODIFIED 3/18/18 NEW:
+                component.context.status &= ~ContextStatus.LEARNING
+                component.context.status |= ContextStatus.EXECUTION
+                # MODIFIED 3/18/18 END
 
                 # TEST PRINT:
                 # print ("EXECUTING WEIGHT UPDATES: ", component.name)
@@ -2909,7 +2944,7 @@ class System(System_Base):
                    call_after_time_step=call_after_time_step,
                    termination_processing=termination_processing,
                    termination_learning=termination_learning,
-                   context=context)
+                   context=context) # cxt-pass
 
     def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of Processes in System being executed
@@ -3456,6 +3491,9 @@ class System(System_Base):
         # projection_shape = 'Mdiamond'
         # projection_shape = 'hexagon'
 
+        bold_width = '3'
+        default_width = '1'
+
         # build graph and configure visualisation settings
         G = gv.Digraph(
                 name = self.name,
@@ -3465,7 +3503,8 @@ class System(System_Base):
                     'fontname':'arial',
                     # 'shape':mechanism_shape,
                     'shape':'record',
-                    'color':default_node_color
+                    'color':default_node_color,
+                    'penwidth':default_width
                 },
                 edge_attr  = {
                     # 'arrowhead':'halfopen',
@@ -3482,20 +3521,33 @@ class System(System_Base):
         # loop through receivers
         for rcvr in rcvrs:
 
-            # Set rcvr info
-            # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
+            # Set rcvr color and penwidth info
             if rcvr is active_item:
                 rcvr_color = active_color
+                rcvr_penwidth = bold_width
+            elif ORIGIN in rcvr.systems[self] and TERMINAL in rcvr.systems[self]:
+                rcvr_color = origin_and_terminal_color
+                rcvr_penwidth = bold_width
+            elif ORIGIN in rcvr.systems[self]:
+                rcvr_color = origin_color
+                rcvr_penwidth = bold_width
+            elif TERMINAL in rcvr.systems[self]:
+                rcvr_color = terminal_color
+                rcvr_penwidth = bold_width
             else:
                 rcvr_color = default_node_color
+                rcvr_penwidth = default_width
+
+            # Implement rcvr node
             if show_mechanism_structure:
                 rcvr_label=rcvr.name
                 G.node(rcvr_label,
                        rcvr.show_structure(**mech_struct_args),
-                       color=rcvr_color)
+                       color=rcvr_color,
+                       penwidth=rcvr_penwidth)
             else:
                 rcvr_label = self._get_label(rcvr, show_dimensions)
-                G.node(rcvr_label, shape=mechanism_shape, color=rcvr_color)
+                G.node(rcvr_label, shape=mechanism_shape, color=rcvr_color, penwidth=rcvr_penwidth)
 
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
@@ -3528,7 +3580,7 @@ class System(System_Base):
                         # show projection as edge
                         G.edge(sndr_proj_label, rcvr_proj_label, label=edge_label)
 
-            # loop through senders
+            # loop through senders to implment edges
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
 
@@ -3589,40 +3641,6 @@ class System(System_Base):
                     else:
                         label = ''
                     G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
-
-                # Deal with ORIGIN and or TERMINAL Mechanisms
-                if ORIGIN in sndr.systems[self]:
-                    if not sndr is active_item:
-                        sndr_color = origin_color
-                    if show_mechanism_structure:
-                        G.node(sndr_label,
-                               sndr.show_structure(**mech_struct_args),
-                               color=sndr_color,
-                               penwidth='3')
-                    else:
-                        G.node(sndr_label, color=sndr_color, penwidth='3')
-
-                if TERMINAL in rcvr.systems[self]:
-                    if not rcvr is active_item:
-                        rcvr_color = terminal_color
-                    if show_mechanism_structure:
-                        G.node(rcvr_label,
-                               rcvr.show_structure(**mech_struct_args),
-                               color=rcvr_color,
-                               penwidth='3')
-                    else:
-                        G.node(rcvr_label, color=rcvr_color, penwidth='3')
-
-                if ORIGIN in sndr.systems[self] and TERMINAL in sndr.systems[self]:
-                    if not sndr is active_item:
-                        sndr_color = origin_and_terminal_color
-                    if show_mechanism_structure:
-                        G.node(sndr_label,
-                               sndr.show_structure(**mech_struct_args),
-                               color=sndr_color,
-                               penwidth='3')
-                    else:
-                        G.node(sndr_label, color=sndr_color, penwidth='3')
 
         # Add learning-related Components to graph if show_learning
         if show_learning:
@@ -3964,6 +3982,8 @@ class SystemInputState(OutputState):
             self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
         else:
             self.name = owner.name + "_" + name
+        self.context.status = ContextStatus.INITIALIZATION
+        self.context.string = context
         self.prefs = prefs
         self.log = Log(owner=self)
         self.recording = False

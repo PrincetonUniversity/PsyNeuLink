@@ -400,9 +400,3 @@ Function.classPreferences = ComponentPreferenceSet(owner=Function,
 
 # Initialize ShellClass registries with subclasses listed above, and set their default values
 #endregion
-
-
-# # # MODIFIED 6/28/16: -- COMMENT OUT TO RUN
-# from Components.System import System
-# # Use as default System (by EVC)
-# DefaultSystem = System(name = DEFAULT_SYSTEM)

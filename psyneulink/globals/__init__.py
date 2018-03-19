@@ -6,6 +6,7 @@ from . import log
 from . import preferences
 from . import registry
 from . import utilities
+from . import context
 
 from .defaults import *
 from .environment import *
@@ -15,6 +16,7 @@ from .log import *
 from .preferences import *
 from .registry import *
 from .utilities import *
+from .context import *
 
 __all__ = list(defaults.__all__)
 __all__.extend(keywords.__all__)
@@ -24,3 +26,4 @@ __all__.extend(preferences.__all__)
 __all__.extend(registry.__all__)
 __all__.extend(environment.__all__)
 __all__.extend(utilities.__all__)
+__all__.extend(context.__all__)
