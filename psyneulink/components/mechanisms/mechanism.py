@@ -2554,7 +2554,7 @@ class Mechanism_Base(Mechanism):
         """
         add_states(states)
 
-        Add one or more `States <State>` to the Mechanism.  Only `InputStates <InputState> and `OutputStates
+        Add one or more `States <State>` to the Mechanism.  Only `InputStates <InputState>` and `OutputStates
         <OutputState>` can be added; `ParameterStates <ParameterState>` cannot be added to a Mechanism after it has
         been constructed.
 

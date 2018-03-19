@@ -1186,7 +1186,7 @@ class UserDefinedFunction(Function_Base):
     of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
 
         >>> my_wave_mech = pnl.ProcessingMechanism(size=3,
-        ...                                        function=Logistic,
+        ...                                        function=pnl.Logistic,
         ...                                        output_states={pnl.NAME: 'SINUSOIDAL OUTPUT',
         ...                                                       pnl.FUNCTION: my_sinusoidal_fct})
 
@@ -1636,8 +1636,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
               (i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
               a parameter may be re-assigned before variable assigned during is known
         """
-
-        # FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,

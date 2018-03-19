@@ -1580,7 +1580,7 @@ class StandardOutputStates():
     #     return [item[INDEX] for item in self.data]
 
 
-def  _parse_output_state_variable(owner, variable, output_state_name=None):
+def _parse_output_state_variable(owner, variable, output_state_name=None):
     """Return variable for OutputState based on VARIABLE entry of owner's params dict
 
     The format of the VARIABLE entry determines the format returned:
