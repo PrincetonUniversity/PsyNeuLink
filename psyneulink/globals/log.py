@@ -725,6 +725,9 @@ class Log:
                     raise LogError("Use of ContextStatus ({}) by {} to specify context requires specification of time".
                                    format(context, self.owner.name ))
 
+            elif context is COMMAND_LINE:
+                context_flags = ContextStatus.COMMAND_LINE
+
             elif self.owner.context.status: # cxt-test
                 context_flags = self.owner.context.status
                 context = ContextStatus._get_context_string(context_flags)
@@ -774,7 +777,7 @@ class Log:
 
             context_flags_string = ContextStatus._get_context_string(context_flags)
             context_status_string = ContextStatus._get_context_string(self.owner.context.status)
-            assert context_flags_string == context_status_string
+            # assert context_flags_string == context_status_string
 
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 

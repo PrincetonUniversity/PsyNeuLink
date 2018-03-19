@@ -625,6 +625,11 @@ class MappingProjection(PathwayProjection_Base):
 
         """
 
+        if EXECUTING in context: # cxt-test
+            self.context.status &= ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION)
+            self.context.status |= ContextStatus.EXECUTION
+            self.context.string = context
+
         # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
         # minor bug with execution ID): maybe we should just fix this bug instead, if it's useful to do so
         if "System" not in str(self.sender.owner):

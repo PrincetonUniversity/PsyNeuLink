@@ -890,9 +890,11 @@ class Projection_Base(Projection):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
     def _execute(self, variable, runtime_params=None, context=None):
-        if EXECUTING in context: # cxt-test
-            self.context.status &= ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION)
-            self.context.status |= ContextStatus.EXECUTION
+        # # MODIFIED 3/18/18 NEW:
+        # if EXECUTING in context: # cxt-test
+        #     self.context.status &= ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION)
+        #     self.context.status |= ContextStatus.EXECUTION
+        # MODIFIED 3/18/18 END:
         self.value = self.function(variable=self.sender.value, params=runtime_params, context=context)
         return self.value
 

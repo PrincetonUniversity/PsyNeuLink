@@ -2254,9 +2254,9 @@ class Process(Process_Base):
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
                             # MODIFIED 3/18/18 NEW:
-                            # parameter_state.context.status &= ~ContextStatus.EXECUTION
-                            # parameter_state.context.status |= ContextStatus.LEARNING
-                            # parameter_state.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
+                            parameter_state.context.status &= ~ContextStatus.EXECUTION
+                            parameter_state.context.status |= ContextStatus.LEARNING
+                            parameter_state.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
                             # MODIFIED 3/18/18 END
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
@@ -2264,9 +2264,9 @@ class Process(Process_Base):
                             parameter_state.update(context=context) # cxt-pass cxt-push
 
                             # MODIFIED 3/18/18 NEW:
-                            # parameter_state.context.status &= ~ContextStatus.LEARNING
-                            # parameter_state.context.status |= ContextStatus.EXECUTION
-                            # parameter_state.context.string = self.context.string.replace(LEARNING, EXECUTING)
+                            parameter_state.context.status &= ~ContextStatus.LEARNING
+                            parameter_state.context.status |= ContextStatus.EXECUTION
+                            parameter_state.context.string = self.context.string.replace(LEARNING, EXECUTING)
                             # MODIFIED 3/18/18 END
 
                     # Not all Projection subclasses instantiate ParameterStates
