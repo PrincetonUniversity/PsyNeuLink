@@ -69,6 +69,7 @@ class TestReduce:
 SIZE=5
 #This gives us the correct 2d array
 test_var = np.random.rand(1, SIZE)
+test_var2 = np.random.rand(2, SIZE)
 
 RAND1_V = np.random.rand(1, SIZE)
 RAND2_V = np.random.rand(1, SIZE)
@@ -88,24 +89,37 @@ test_linear_combination_data = [
     (Function.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var * RAND1_S + RAND2_V),
     (Function.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, test_var * RAND1_V + RAND2_S),
     (Function.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var * RAND1_V + RAND2_V),
+
+    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_S + RAND2_S),
+# TODO: enable vector scale/offset when the validation is fixed
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_S + RAND2_V),
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_V + RAND2_S),
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_V + RAND2_V),
+
+    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_S + RAND2_S),
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_S + RAND2_V),
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_S),
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_V),
 ]
 
-# use list, naming function produces ugly names
-linear_combination_names = [
-    "COMBINE-1 SUM",
-    "COMBINE-1 SUM VECTOR OFFSET",
-    "COMBINE-1 SUM VECTOR SCALE",
-    "COMBINE-1 SUM VECTOR OFFSET SCALE",
+# pytest naming function produces ugly names
+def _naming_function(config):
+    _, var, params, _ = config
+    inputs = var.shape[0]
+    op = params['operation']
+    vector_string = ""
+    if not np.isscalar(params['scale']):
+        vector_string += " SCALE"
+    if not np.isscalar(params['offset']):
+        vector_string += " OFFSET"
+    if vector_string != "":
+        vector_string = " VECTOR" + vector_string
+    return "COMBINE-{} {}{}".format(inputs, op, vector_string)
 
-    "COMBINE-1 PRODUCT",
-    "COMBINE-1 PRODUCT VECTOR OFFSET",
-    "COMBINE-1 PRODUCT VECTOR SCALE",
-    "COMBINE-1 PRODUCT VECTOR OFFSET SCALE",
-]
 
 @pytest.mark.function
 @pytest.mark.combination_function
-@pytest.mark.parametrize("func, variable, params, expected", test_linear_combination_data, ids=linear_combination_names)
+@pytest.mark.parametrize("func, variable, params, expected", test_linear_combination_data, ids=list(map(_naming_function, test_linear_combination_data)))
 @pytest.mark.benchmark
 def test_linear_combination_function(func, variable, params, expected, benchmark):
     f = func(default_variable=variable, **params)

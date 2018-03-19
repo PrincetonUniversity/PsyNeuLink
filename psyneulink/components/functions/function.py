@@ -2138,62 +2138,49 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
         if exponents is not None:
+            try:
+                variable = self._update_variable(variable ** exponents)
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            # Allow during initialization because 0s are common in default_variable argument
-            if context is not None and INITIALIZING in context: # cxt-test
-                try:
-                    variable = self._update_variable(variable ** exponents)
-                except ZeroDivisionError:
+            except ZeroDivisionError:
+                # Allow during initialization because 0s are common in
+                # default_variable argument
+                if context is not None and INITIALIZING in context: # cxt-test
                     variable = self._update_variable(np.ones_like(variable))
-            else:
-                # if this fails with ZeroDivisionError it should not be caught outside of initialization
-                variable = self._update_variable(variable ** exponents)
+                else:
+                # if this fails with ZeroDivisionError it should not be caught
+                # outside of initialization
+                    raise
 
         # Apply weights if they were specified
         if weights is not None:
             variable = self._update_variable(variable * weights)
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
-
         if operation is SUM:
-            if isinstance(scale, numbers.Number):
-                # Scalar scale and offset
-                if isinstance(offset, numbers.Number):
-                    result = np.sum(variable, axis=0) * scale + offset
-                # Scalar scale and Hadamard offset
-                else:
-                    result = np.sum(np.append([variable * scale], [offset], axis=0), axis=0)
-            else:
-                # Hadamard scale, scalar offset
-                if isinstance(offset, numbers.Number):
-                    result = np.product([np.sum([variable], axis=0), scale], axis=0) + offset
-                # Hadamard scale and offset
-                else:
-                    hadamard_product = np.product([np.sum([variable], axis=0), scale], axis=0)
-                    result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
-
+            combination = np.sum(variable, axis=0)
         elif operation is PRODUCT:
-            product = np.product([variable], axis=0)
-            if isinstance(scale, numbers.Number):
-                # Scalar scale and offset
-                if isinstance(offset, numbers.Number):
-                    result = product * scale + offset
-                # Scalar scale and Hadamard offset
-                else:
-                    result = np.sum(np.append([product * scale], [offset], axis=0), axis=0)
-            else:
-                # Hadamard scale, scalar offset
-                if isinstance(offset, numbers.Number):
-                    result = np.product([product, scale], axis=0) + offset
-                # Hadamard scale and offset
-                else:
-                    hadamard_product = np.product(np.append([product], [scale], axis=0), axis=0)
-                    result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
-
+            combination = np.product(variable, axis=0)
         else:
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                 format(operation.self.Operation.SUM))
+        if isinstance(scale, numbers.Number):
+            product = combination * scale
+            # Scalar scale and offset
+            if isinstance(offset, numbers.Number):
+                result = product + offset
+            # Scalar scale and Hadamard offset
+            else:
+                result = np.sum([product, offset], axis=0)
+        else:
+            hadamard_product = np.product([combination, scale], axis=0)
+            # Hadamard scale, scalar offset
+            if isinstance(offset, numbers.Number):
+                result = hadamard_product + offset
+            # Hadamard scale and offset
+            else:
+                result = np.sum([hadamard_product, offset], axis=0)
+
         return result
 
     @property
