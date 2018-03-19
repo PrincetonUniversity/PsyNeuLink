@@ -1017,7 +1017,7 @@ class DDM(ProcessingMechanism_Base):
 
             result = self.function(variable, context=context)
 
-            if INITIALIZING not in context:
+            if INITIALIZING not in context: # cxt-test
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
             return np.array([result, [self.function_object.previous_time]])

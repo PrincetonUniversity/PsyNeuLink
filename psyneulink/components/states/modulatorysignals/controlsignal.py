@@ -310,6 +310,7 @@ from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, COMMAND_LINE, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SEPARATOR_BAR, SLOPE, SUM, kwAssign
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 
 __all__ = [
@@ -681,10 +682,13 @@ class ControlSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None:
-            context = COMMAND_LINE
+        if context is None: # cxt-test
+            context = COMMAND_LINE # cxt-done
+            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.string = COMMAND_LINE
         else:
-            context = self
+            context = self # cxt-done
+            self.context.status = ContextStatus.CONSTRUCTOR
 
         # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:

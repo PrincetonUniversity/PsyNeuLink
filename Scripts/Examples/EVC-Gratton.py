@@ -144,7 +144,9 @@ mySystem.show()
 mySystem.controller.show()
 
 # Show graph of system (with control components)
-mySystem.show_graph(show_control=True)
+# mySystem.show_graph(show_dimensions=pnl.ALL, show_projection_labels=True)
+# mySystem.show_graph(show_control=True, show_projection_labels=True)
+mySystem.show_graph(show_control=True, show_mechanism_structure=True, show_headers=False)
 
 # configure EVC components
 mySystem.controller.control_signals[0].intensity_cost_function = pnl.Exponential(rate=0.8046).function
@@ -191,7 +193,7 @@ stim_list_dict = {
 
 mySystem.controller.reportOutputPref = True
 
-Flanker_Rep.set_log_conditions((pnl.SLOPE, pnl.LogCondition.CONTROL))
+Flanker_Rep.set_log_conditions((pnl.SLOPE, pnl.ContextStatus.CONTROL))
 
 mySystem.run(
     num_trials=nTrials,

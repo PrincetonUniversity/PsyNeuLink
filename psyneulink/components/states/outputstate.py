@@ -603,6 +603,7 @@ from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FU
     VALUE, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match, recursive_update
 
 __all__ = [
@@ -886,10 +887,13 @@ class OutputState(State_Base):
                  context=None,
                  **kwargs):
 
-        if context is None:
-            context = COMMAND_LINE
+        if context is None: # cxt-test
+            context = COMMAND_LINE # cxt-done
+            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.string = COMMAND_LINE
         else:
-            context = self
+            context = self # cxt-done
+            self.context.status = ContextStatus.CONSTRUCTOR
 
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:
@@ -1031,7 +1035,7 @@ class OutputState(State_Base):
 
         # variable is passed to OutputState by _instantiate_function for OutputState
         if variable is not None:
-            assert INITIALIZING in context
+            assert INITIALIZING in context # cxt-test
             fct_var = variable
 
         # otherwise, OutputState uses specified item(s) of owner's value
@@ -1395,7 +1399,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
-    if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}):
+    if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}): # cxt-test
         owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list

@@ -789,12 +789,13 @@ from psyneulink.components.states.state import ADD_STATES, REMOVE_STATES, _parse
 from psyneulink.globals.keywords import \
     CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_VARIABLES, \
-    INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, \
+    INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
     OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, OWNER_VARIABLE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
     PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, UNCHANGED, \
     VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 import ctypes
@@ -1192,7 +1193,7 @@ class Mechanism_Base(Mechanism):
         # Forbid direct call to base class constructor
         # this context stuff is confusing: when do I use super().__init__(context=self)
         # and when do I use super().__init__(context=context)?
-        if context is None or (not isinstance(context, type(self)) and not VALIDATE in context):
+        if context is None or (not isinstance(context, type(self)) and not VALIDATE in context): # cxt-test
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  "use a subclass")
 
@@ -1228,7 +1229,7 @@ class Mechanism_Base(Mechanism):
         self._execution_id = None
         self._is_finished = False
         # Register with MechanismRegistry or create one
-        if not context is VALIDATE:
+        if not context is VALIDATE: # cxt-test
             register_category(entry=self,
                               base_class=Mechanism_Base,
                               name=name,
@@ -1263,10 +1264,13 @@ class Mechanism_Base(Mechanism):
             output_states = list(output_states)
 
         # Mark initialization in context
-        if not context or isinstance(context, object) or inspect.isclass(context):
-            context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__
+        self.context.status = ContextStatus.INITIALIZATION
+        if not context or isinstance(context, object) or inspect.isclass(context): # cxt-test
+            context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt-done
+            self.context.string = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__
         else:
-            context = context + SEPARATOR_BAR + INITIALIZING + self.name
+            context = context + SEPARATOR_BAR + INITIALIZING + self.name # cxt-done
+            self.context.string = context + SEPARATOR_BAR + INITIALIZING + self.name # cxt-done
 
         super(Mechanism_Base, self).__init__(default_variable=default_variable,
                                              size=size,
@@ -1627,7 +1631,7 @@ class Mechanism_Base(Mechanism):
         # INPUT_STATES is not specified
         else:
             # pass if call is from assign_params (i.e., not from an init method)
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
                 pass
             else:
                 # INPUT_STATES not specified:
@@ -1639,7 +1643,7 @@ class Mechanism_Base(Mechanism):
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
                 pass
             elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
@@ -1714,7 +1718,7 @@ class Mechanism_Base(Mechanism):
         # OUTPUT_STATES is not specified
         else:
             # pass if call is from assign_params (i.e., not from an init method)
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
+            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
                 pass
             else:
                 # OUTPUT_STATES not specified:
@@ -1964,15 +1968,28 @@ class Mechanism_Base(Mechanism):
 
         """
         self.ignore_execution_id = ignore_execution_id
-        context = context or NO_CONTEXT
+        context = context or COMMAND_LINE # cxt-done
+        if self.context.status is ContextStatus.OFF or context is COMMAND_LINE:
+            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.string = COMMAND_LINE
+        else:
+            # These need to be set for states to use as context
+            if not INITIALIZING in context:
+                self.context.status &= ~ContextStatus.INITIALIZATION
+                if EXECUTING in context:
+                    self.context.status |= ContextStatus.EXECUTION
+                if EVC_SIMULATION in context:
+                    self.context.status |= ContextStatus.SIMULATION
+                if LEARNING in context:
+                    self.context.status |= ContextStatus.LEARNING
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
 
         # Limit init to scope specified by context
-        if INITIALIZING in context:
-            if PROCESS_INIT in context or SYSTEM_INIT in context:
+        if INITIALIZING in context: # cxt-test
+            if PROCESS_INIT in context or SYSTEM_INIT in context: # cxt-test
                 # Run full execute method for init of Process and System
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
@@ -1983,11 +2000,6 @@ class Mechanism_Base(Mechanism):
                     context=context,
                 )
 
-                # # # MODIFIED 3/3/17 OLD:
-                # # return np.atleast_2d(return_value)
-                # # MODIFIED 3/3/17 NEW:
-                # converted_to_2d = np.atleast_2d(return_value)
-                # MODIFIED 3/7/17 NEWER:
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
                 #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
                 #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
@@ -2008,7 +2020,6 @@ class Mechanism_Base(Mechanism):
                 # Otherwise, return value converted to 2d np.array
                 else:
                     return converted_to_2d
-                # MODIFIED 3/3/17 END
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
@@ -2020,7 +2031,7 @@ class Mechanism_Base(Mechanism):
                 return np.atleast_2d(return_value)
 
 
-        #region VALIDATE RUNTIME PARAMETER SETS
+        # VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
         if self.prefs.paramValidationPref:
             if runtime_params:
@@ -2044,42 +2055,42 @@ class Mechanism_Base(Mechanism):
                                                  "contains an unrecognized parameter: {}".
                                                  format(state_key, self.name, param_name))
 
-        #endregion
 
         # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
-        #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
+        # VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
         self._check_args(
             params=runtime_params,
             target_set=runtime_params,
         )
-        #endregion
 
-        #region UPDATE INPUT STATE(S)
+        # UPDATE VARIABLE and INPUT STATE(S)
 
         # Executing or simulating Process or System, get input by updating input_states
-
         if (input is None
-            and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION})
+            and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION}) # cxt-test
             and (self.input_state.path_afferents != [])):
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
                                                                        context=context))
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
-            if context is NO_CONTEXT:
-                context = EXECUTING + ' ' + append_type_to_name(self)
+            # # MODIFIED 3/17/18 OLD:
+            # if context is NO_CONTEXT: # cxt-test
+            # MODIFIED 3/17/18 NEW:
+            if context is COMMAND_LINE: # cxt-test
+            # MODIFIED 3/17/18 END
+                context = EXECUTING + ' ' + append_type_to_name(self) # cxt-done
+                self.context.status = ContextStatus.EXECUTION
+                self.context.string = EXECUTING + ' ' + append_type_to_name(self)
                 self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
                 input = self.instance_defaults.variable
             variable = self._update_variable(self._get_variable_from_input(input))
 
-        #endregion
+        # UPDATE PARAMETER STATE(S)
+        self._update_parameter_states(runtime_params=runtime_params, context=context) # cxt-pass ? cxt-push
 
-        #region UPDATE PARAMETER STATE(S)
-        self._update_parameter_states(runtime_params=runtime_params, context=context)
-        #endregion
-
-        #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
+        # CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
         if bin_execute:
             value = self._bin_execute(
@@ -2093,7 +2104,7 @@ class Mechanism_Base(Mechanism):
             value = self._execute(
                 variable=variable,
                 runtime_params=runtime_params,
-                context=context,
+                context=context, # cxt-pass cxt-push
             )
 
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
@@ -2124,18 +2135,18 @@ class Mechanism_Base(Mechanism):
         self.value = value
 
         #region UPDATE OUTPUT STATE(S)
-        self._update_output_states(runtime_params=runtime_params, context=context)
+        self._update_output_states(runtime_params=runtime_params, context=context) # cxt-pass cxt-push
         #endregion
 
         #region REPORT EXECUTION
         # if self.prefs.reportOutputPref and context and EXECUTING in context:
-        if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}):
+        if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}): # cxt-test
             self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
         #endregion
 
         #region RE-SET STATE_VALUES AFTER INITIALIZATION
         # If this is (the end of) an initialization run, restore state values to initial condition
-        if '_init_' in context:
+        if '_init_' in context: # cxt-test
             for state in self.input_states:
                 self.input_states[state].value = self.input_states[state].instance_defaults.variable
             for state in self._parameter_states:
@@ -2149,7 +2160,7 @@ class Mechanism_Base(Mechanism):
 
         #endregion
 
-        self.current_execution_time = self._get_current_execution_time(context=context)
+        self.current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
         return self.value
 
     def run(
@@ -2251,7 +2262,7 @@ class Mechanism_Base(Mechanism):
     def _update_parameter_states(self, runtime_params=None, context=None):
 
         for state in self._parameter_states:
-            state.update(params=runtime_params, context=context)
+            state.update(params=runtime_params, context=context) # cxt-pass
             # if state.name in self.user_params:
             #     self.user_params.__additem__(state.name, state.value)
             # if state.name in self.function_params:
@@ -2260,7 +2271,7 @@ class Mechanism_Base(Mechanism):
 
     def _update_params_dicts(self, context=None):
         from psyneulink.globals.keywords import NOISE
-        for state in self._parameter_states:
+        for state in self._parameter_states: # cxt-test
             if NOISE in state.name and INITIALIZING in context:
                 continue
             if state.name in self.user_params:
@@ -2420,32 +2431,75 @@ class Mechanism_Base(Mechanism):
 
         print("- output: {}".format(output_string))
 
-    def show_struture(self,
-                      direction = 'BT',
-                      show_function = False,
-                      show_value = False,
-                      output_fmt='pdf'
-                      ):
+    def show_structure(self,
+                       # direction = 'BT',
+                       show_functions = False,
+                       show_values = False,
+                       show_headers = False,
+                       output_fmt='pdf'
+                       ):
+        """Generate a detailed display of a the structure of a Mechanism.
 
-        import graphviz as gv
+        .. note::
+           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
+           (standard with PsyNeuLink pip install)
+
+        Displays the structure of a Mechanism using the GraphViz `record
+        <http://graphviz.readthedocs.io/en/stable/examples.html#structs-revisited-py>`_ shape.  This method is called
+        by `System.show_graph` if its **show_mechanism_structure** argument is specified as `True` when it is called.
+
+        Arguments
+        ---------
+
+        show_functions : bool : default False
+            specifies whether or not to show the `function <Component.function>` of the Mechanism and each of its
+            States in the record.
+
+        show_values : bool : default False
+            specifies whether or not to show the `value <Component.value>` of the Mechanism and each of its States
+            in the record.
+
+        show_headers : bool : default False
+            specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers.
+
+        output_fmt : keyword : default 'pdf'
+            'pdf': generate and open a pdf with the visualization;\n
+            'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
+            'struct': return a string that specifies the structure of the record shape,
+            for use in a GraphViz node specification.
+
+        """
 
         open_bracket = r'{'
         pipe = r' | '
         close_bracket = r'}'
+        mechanism_header = r'MECHANISM:\n'
+        input_states_header = r'______INPUTSTATES______\n' \
+                  r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \\'
+        parameter_states_header = r'PARAMETERSTATES:'
+        output_states_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ______/' \
+                               r'\nOUTPUTSTATES'
 
         def mech_string(mech):
             '''Return string with name of mechanism possibly with function and/or value
             Inclusion of function and value is determined by arguments of call to show_structure '''
-            mech_name = r'MECHANISM:\n{}'.format(mech.name)
+            if show_headers:
+                mech_header = mechanism_header
+            else:
+                mech_header = ''
+            mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
             mech_function = ''
-            if show_function:
+            if show_functions:
                 mech_function = r'\n({})'.format(mech.function_object.__class__.__name__)
             mech_value = ''
-            if show_value:
+            if show_values:
                 mech_value = r'\n={}'.format(mech.value)
             return mech_name + mech_function + mech_value
 
-        def states_string(state_list:ContentAddressableList, include_function:bool=False, include_value:bool=False):
+        def states_string(state_list:ContentAddressableList,
+                          state_type,
+                          include_function:bool=False,
+                          include_value:bool=False):
             '''Return string with name of states in ContentAddressableList with functions and/or values as specified'''
             states = open_bracket
             for i, state in enumerate(state_list):
@@ -2457,41 +2511,88 @@ class Mechanism_Base(Mechanism):
                 value = ''
                 if include_value:
                     value = r'\n={}'.format(state.value)
-                states += r'{}{}{}'.format(state.name, function, value)
+                states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
+                                                        state.name,
+                                                        function,
+                                                        value)
             states += close_bracket
             return states
 
-        # Get Component strings
+        # Construct Mechanism specification
         mech = mech_string(self)
-        input_states = r'______InputStates______\n\|' \
-                       r'\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \|' + \
-                       pipe + states_string(self.input_states,
-                                            include_function=show_function,
-                                            include_value=show_value)
-        parameter_states = r'PameterStates:' + pipe + states_string(self.parameter_states,
-                                                                    include_function=show_function,
-                                                                    include_value=show_value)
-        output_states = states_string(self.output_states,
-                                      include_function=show_function,
-                                      include_value=show_value) + pipe + r'\|______OutputStates______\|'
+
+        # Construct InputStates specification
+        if len(self.input_states):
+            if show_headers:
+                input_states = input_states_header + pipe + states_string(self.input_states,
+                                                                          InputState,
+                                                                          include_function=show_functions,
+                                                                          include_value=show_values)
+            else:
+                input_states = states_string(self.input_states,
+                                             InputState,
+                                             include_function=show_functions,
+                                             include_value=show_values)
+            input_states = pipe + input_states
+        else:
+            input_states = ''
+
+        # Construct ParameterStates specification
+        if len(self.parameter_states):
+            if show_headers:
+                parameter_states = parameter_states_header + pipe + states_string(self.parameter_states,
+                                                                                  ParameterState,
+                                                                                  include_function=show_functions,
+                                                                                  include_value=show_values)
+            else:
+                parameter_states = states_string(self.parameter_states,
+                                                 ParameterState,
+                                                 include_function=show_functions,
+                                                 include_value=show_values)
+            parameter_states = pipe + parameter_states
+        else:
+            parameter_states = ''
+
+        # Construct OutputStates specification
+        if len(self.output_states):
+            if show_headers:
+                output_states = states_string(self.output_states,
+                                              OutputState,
+                                              include_function=show_functions,
+                                              include_value=show_values) + pipe + output_states_header
+            else:
+                output_states = states_string(self.output_states,
+                                              OutputState,
+                                              include_function=show_functions,
+                                              include_value=show_values)
+
+            output_states = output_states + pipe
+        else:
+            output_states = ''
+
+        m_node_struct = open_bracket + \
+                        output_states + \
+                        open_bracket + mech + parameter_states + close_bracket + \
+                        input_states + \
+                        close_bracket
+
+        if output_fmt == 'struct':
+            # return m.node
+            return m_node_struct
+
         # Make node
-        default_color = 'black'
-        shape = 'oval'
-        m = gv.Digraph('mechanisms',
-                       filename='mechanisms_revisited.gv',
+        import graphviz as gv
+        m = gv.Digraph(#'mechanisms',
+                       #filename='mechanisms_revisited.gv',
                        node_attr={'shape': 'record'},
-                       # graph_attr={"rankdir" : direction}
                        )
+        m.node(self.name, m_node_struct, shape='record')
 
-        m_node_spec = open_bracket + \
-                      output_states + pipe + \
-                      open_bracket + mech + pipe + \
-                      parameter_states + close_bracket + pipe +\
-                      input_states + \
-                      close_bracket
+        if output_fmt == 'pdf':
+            m.view(self.name.replace(" ", "-"), cleanup=True)
 
-        m.node('mechanism', m_node_spec)
-        m.view()
+        elif output_fmt == 'jupyter':
+            return m
 
     def plot(self, x_range=None):
         """Generate a plot of the Mechanism's `function <Mechanism_Base.function>` using the specified parameter values
