@@ -69,6 +69,7 @@ class TestReduce:
 SIZE=5
 #This gives us the correct 2d array
 test_var = np.random.rand(1, SIZE)
+test_var2 = np.random.rand(2, SIZE)
 
 RAND1_V = np.random.rand(1, SIZE)
 RAND2_V = np.random.rand(1, SIZE)
@@ -88,6 +89,17 @@ test_linear_combination_data = [
     (Function.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var * RAND1_S + RAND2_V),
     (Function.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, test_var * RAND1_V + RAND2_S),
     (Function.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var * RAND1_V + RAND2_V),
+
+    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_S + RAND2_S),
+# TODO: enable vector scale/offset when the validation is fixed
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_S + RAND2_V),
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_V + RAND2_S),
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_V + RAND2_V),
+
+    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_S + RAND2_S),
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_S + RAND2_V),
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_S),
+#    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_V),
 ]
 
 # pytest naming function produces ugly names
