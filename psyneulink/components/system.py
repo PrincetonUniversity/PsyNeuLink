@@ -3516,14 +3516,12 @@ class System(System_Base):
                 }
         )
 
-        # FIX: Should be re-written to do actual system graph traversal rather than use list derived from graph
         # work with system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
 
-            # Set rcvr info
-            # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
+            # Set rcvr color and penwidth info
             if rcvr is active_item:
                 rcvr_color = active_color
                 rcvr_penwidth = bold_width
@@ -3540,6 +3538,7 @@ class System(System_Base):
                 rcvr_color = default_node_color
                 rcvr_penwidth = default_width
 
+            # Implement rcvr node
             if show_mechanism_structure:
                 rcvr_label=rcvr.name
                 G.node(rcvr_label,
@@ -3581,7 +3580,7 @@ class System(System_Base):
                         # show projection as edge
                         G.edge(sndr_proj_label, rcvr_proj_label, label=edge_label)
 
-            # loop through senders
+            # loop through senders to implment edges
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
 
