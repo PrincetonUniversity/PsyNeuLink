@@ -2816,7 +2816,7 @@ class System(System_Base):
                                          component.name,
                                          re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
                 # MODIFIED 3/18/18 NEW:
-                # component.context.status &= ~ContextStatus.EXECUTION
+                component.context.status &= ~ContextStatus.EXECUTION
                 component.context.status |= ContextStatus.LEARNING
                 component.context.string = context_str
                 # MODIFIED 3/18/18 END
@@ -2825,7 +2825,7 @@ class System(System_Base):
 
                 # MODIFIED 3/18/18 NEW:
                 component.context.status &= ~ContextStatus.LEARNING
-                # component.context.status |= ContextStatus.EXECUTION
+                component.context.status |= ContextStatus.EXECUTION
                 # MODIFIED 3/18/18 END
 
                 # TEST PRINT:
