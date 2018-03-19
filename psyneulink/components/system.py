@@ -3643,40 +3643,6 @@ class System(System_Base):
                         label = ''
                     G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
 
-                # # Deal with ORIGIN and or TERMINAL Mechanisms
-                # if ORIGIN in sndr.systems[self]:
-                #     if not sndr is active_item:
-                #         sndr_color = origin_color
-                #     if show_mechanism_structure:
-                #         G.node(sndr_label,
-                #                sndr.show_structure(**mech_struct_args),
-                #                color=sndr_color,
-                #                penwidth='3')
-                #     else:
-                #         G.node(sndr_label, color=sndr_color, penwidth='3')
-                #
-                # if TERMINAL in rcvr.systems[self]:
-                #     if not rcvr is active_item:
-                #         rcvr_color = terminal_color
-                #     if show_mechanism_structure:
-                #         G.node(rcvr_label,
-                #                rcvr.show_structure(**mech_struct_args),
-                #                color=rcvr_color,
-                #                penwidth='3')
-                #     else:
-                #         G.node(rcvr_label, color=rcvr_color, penwidth='3')
-                #
-                # if ORIGIN in sndr.systems[self] and TERMINAL in sndr.systems[self]:
-                #     if not sndr is active_item:
-                #         sndr_color = origin_and_terminal_color
-                #     if show_mechanism_structure:
-                #         G.node(sndr_label,
-                #                sndr.show_structure(**mech_struct_args),
-                #                color=sndr_color,
-                #                penwidth='3')
-                #     else:
-                #         G.node(sndr_label, color=sndr_color, penwidth='3')
-
         # Add learning-related Components to graph if show_learning
         if show_learning:
             rcvrs = list(learning_graph.keys())
