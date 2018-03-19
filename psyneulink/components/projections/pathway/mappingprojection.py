@@ -265,7 +265,7 @@ from psyneulink.components.projections.pathway.pathwayprojection import PathwayP
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, EXECUTING, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZING, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE, kwAssign
-from psyneulink.globals.log import LogCondition, LogEntry
+from psyneulink.globals.log import ContextStatus, LogEntry
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -625,12 +625,21 @@ class MappingProjection(PathwayProjection_Base):
 
         """
 
+        if EXECUTING in context: # cxt-test
+            self.context.status &= ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION)
+            self.context.status |= ContextStatus.EXECUTION
+            self.context.string = context
+
         # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
         # minor bug with execution ID): maybe we should just fix this bug instead, if it's useful to do so
         if "System" not in str(self.sender.owner):
             self._update_parameter_states(runtime_params=runtime_params, context=context)
 
-        return self.function(self.sender.value, params=runtime_params, context=context)
+        # MODIFIED 3/18/18 OLD:
+        # return self.function(self.sender.value, params=runtime_params, context=context)
+        # MODIFIED 3/18/18 NEW:
+        return super()._execute(self.sender.value, runtime_params, context)
+        # MODIFIED 3/18/18 END
 
     @property
     def matrix(self):

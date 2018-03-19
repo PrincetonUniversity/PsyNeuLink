@@ -1371,6 +1371,11 @@ class UserDefinedFunction(Function_Base):
                     params = self.cust_fct_params[PARAMS]
             del self.cust_fct_params[PARAMS]
 
+        if CONTEXT in self.cust_fct_params:
+            if self.cust_fct_params[CONTEXT]:
+                context = self.cust_fct_params[CONTEXT]
+            del self.cust_fct_params[CONTEXT]
+
         # Assign variable to default_variable if default_variable was not specified
         if default_variable is None:
             default_variable = cust_fct_variable
@@ -1644,7 +1649,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_1d(target_set[WEIGHTS])
-            if any(c in context for c in {EXECUTING, LEARNING}):
+            if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of elements in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
@@ -1652,7 +1657,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
             target_set[EXPONENTS] = np.atleast_1d(target_set[EXPONENTS])
-            if any(c in context for c in {EXECUTING, LEARNING}):
+            if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of elements in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
@@ -1714,7 +1719,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if context is not None and INITIALIZING in context:
+            if context is not None and INITIALIZING in context: # cxt-test
                 try:
                     variable = self._update_variable(variable ** exponents)
                 except ZeroDivisionError:
@@ -2011,7 +2016,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            if any(c in context for c in {EXECUTING, LEARNING}):
+            if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
@@ -2019,7 +2024,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
-            if any(c in context for c in {EXECUTING, LEARNING}):
+            if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
@@ -2033,7 +2038,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
-            if (c in context for c in {EXECUTING, LEARNING}):
+            if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
                 if (isinstance(scale, np.ndarray) and
                         (scale.size != self.instance_defaults.variable.size or
                          scale.shape != self.instance_defaults.variable.shape)):
@@ -2052,7 +2057,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
-            if (c in context for c in {EXECUTING, LEARNING}):
+            if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
                 if (isinstance(offset, np.ndarray) and
                         (offset.size != self.instance_defaults.variable.size or
                          offset.shape != self.instance_defaults.variable.shape)):
@@ -2134,7 +2139,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if context is not None and INITIALIZING in context:
+            if context is not None and INITIALIZING in context: # cxt-test
                 try:
                     variable = self._update_variable(variable ** exponents)
                 except ZeroDivisionError:
@@ -2455,14 +2460,14 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            if (c in context for c in {EXECUTING, LEARNING}):
+            if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
-            if (c in context for c in {EXECUTING, LEARNING}):
+            if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable.shape)))
@@ -2476,7 +2481,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
-            if (c in context for c in {EXECUTING, LEARNING}):
+            if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
                 if (isinstance(scale, np.ndarray) and
                         (scale.size != self.instance_defaults.variable.size or
                          scale.shape != self.instance_defaults.variable.shape)):
@@ -2494,7 +2499,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
-            if (c in context for c in {EXECUTING, LEARNING}):
+            if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
                 if (isinstance(offset, np.ndarray) and
                         (offset.size != self.instance_defaults.variable.size or
                          offset.shape != self.instance_defaults.variable.shape)):
@@ -2577,7 +2582,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         if exponents is not None:
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            if INITIALIZING in context and any(not any(i) and j < 0 for i, j in zip(variable, exponents)):
+            if INITIALIZING in context and any(not any(i) and j < 0 for i, j in zip(variable, exponents)): # cxt-test
                 means = np.ones_like(means)
             else:
                 means = means ** exponents
@@ -2730,7 +2735,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS] ,WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
-            if EXECUTING in context:
+            if EXECUTING in context: # cxt-test
                 if len(target_set[WEIGHTS]) != len(
                         self.instance_defaults.variable):
                     raise FunctionError("Number of weights {} is not equal to "
@@ -3508,7 +3513,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
                                     "array of elements each of which is in the (0,1) interval".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
-            if INITIALIZING in context:
+            if INITIALIZING in context: # cxt-test
                 return
             if not np.sum(prob_dist)==1:
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
@@ -4961,7 +4966,7 @@ class SimpleIntegrator(
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context:
+        if not context or not INITIALIZING in context: # cxt-test
             self.previous_value = adjusted_value
 
         return adjusted_value
@@ -5174,7 +5179,7 @@ class LCAIntegrator(
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context:
+        if not context or not INITIALIZING in context: # cxt-test
             self.previous_value = adjusted_value
 
         return adjusted_value
@@ -5381,7 +5386,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context:
+        if not context or not INITIALIZING in context: # cxt-test
             self.previous_value = adjusted_value
 
         return adjusted_value
@@ -5653,7 +5658,7 @@ class AdaptiveIntegrator(
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context:
+        if not context or not INITIALIZING in context: # cxt-test
             self.previous_value = adjusted_value
         return adjusted_value
 
@@ -5906,7 +5911,7 @@ class DriftDiffusionIntegrator(
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context:
+        if not context or not INITIALIZING in context: # cxt-test
             self.previous_value = adjusted_value
             self.previous_time += time_step_size
 
@@ -6162,7 +6167,7 @@ class OrnsteinUhlenbeckIntegrator(
         #    (don't want to count it as an execution step)
         adjusted_value = value + offset
 
-        if not context or not INITIALIZING in context:
+        if not context or not INITIALIZING in context: # cxt-test
             self.previous_value = adjusted_value
             self.previous_time += time_step_size
 
@@ -6933,7 +6938,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}".
                                 format(integration_method, self.name))
 
-        if not context or INITIALIZING not in context:
+        if not context or INITIALIZING not in context: # cxt-test
             self.previous_v = approximate_values[0]
             self.previous_w = approximate_values[1]
             self.previous_time += time_step_size
@@ -7272,7 +7277,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context:
+        if not context or not INITIALIZING in context: # cxt-test
             self.previous_value = value
         return value
 
@@ -7609,7 +7614,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
         value = self.combine_utilities(short_term_utility, long_term_utility)
 
-        if not context or not INITIALIZING in context:
+        if not context or not INITIALIZING in context: # cxt-test
             self.previous_short_term_utility = short_term_utility
             self.previous_long_term_utility = long_term_utility
 
@@ -9346,7 +9351,7 @@ class Distance(ObjectiveFunction):
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
             # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
-            if context is None or INITIALIZING in context:
+            if context is None or INITIALIZING in context: # cxt-test
                 v1 = np.where(v1==0, EPSILON, v1)
                 v2 = np.where(v2==0, EPSILON, v2)
             result = -np.sum(v1*np.log(v2))
@@ -9855,7 +9860,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                                  format(self.name, self.error_signal))
 
         # Allow initialization with zero but not during a run (i.e., when called from check_args())
-        if not INITIALIZING in context:
+        if not INITIALIZING in context: # cxt-test
             if np.count_nonzero(self.activation_output) != 1:
                 raise ComponentError("Second item ({}) of variable for {} must be an array with a single non-zero value "
                                      "(if output Mechanism being trained uses softmax,"
@@ -10288,7 +10293,7 @@ class BackPropagation(LearningFunction):
         # Manage error_matrix param
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
-        if INITIALIZING in context and error_matrix is None:
+        if INITIALIZING in context and error_matrix is None: # cxt-test
             self.error_matrix = np.zeros((len(variable[LEARNING_ACTIVATION_OUTPUT]),
                                           len(variable[LEARNING_ERROR_OUTPUT])))
         # If error_matrix is specified, assign to self.error_matrix attribute for validation

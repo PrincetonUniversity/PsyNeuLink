@@ -885,7 +885,7 @@ class EVCControlMechanism(ControlMechanism):
         Return an allocation_policy
         """
 
-        if not 'System.controller setter' in context:
+        if not 'System.controller setter' in context: # cxt-test
             self._update_predicted_input()
         # self.system._cache_state()
 

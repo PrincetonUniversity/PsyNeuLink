@@ -1067,13 +1067,14 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                context = kargs[kwStateContext]
+                context = kargs[kwStateContext] # cxt-set
+                self.context.string = kargs[kwStateContext]
             except (KeyError, NameError):
                 pass
 
         # Enforce that only called from subclass
         if (not isinstance(context, State_Base) and
-                not any(key in context for key in {INITIALIZING, ADD_STATES, COMMAND_LINE})):
+                not any(key in context for key in {INITIALIZING, ADD_STATES, COMMAND_LINE})): # cxt-test
             raise StateError("Direct call to abstract class State() is not allowed; "
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
@@ -1091,7 +1092,7 @@ class State_Base(State):
 
         # If name is not specified, assign default name
         if name is not None and DEFERRED_INITIALIZATION in name:
-            name = self._assign_default_state_name(context=name)
+            name = self._assign_default_state_name(context=name) # cxt-set
 
 
 
@@ -1114,18 +1115,20 @@ class State_Base(State):
         for attrib, value in get_class_attributes(ModulationParam):
             self._mod_proj_values[getattr(ModulationParam,attrib)] = []
 
+        self.context.string = context.__class__.__name__
+
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(default_variable=variable,
                                          size=size,
                                          param_defaults=params,
                                          name=name,
                                          prefs=prefs,
-                                         context=context.__class__.__name__)
+                                         context=context.__class__.__name__) # cxt-done cxt-pass
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
-            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
+            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context) # cxt-pass cxt-push
         else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -1134,7 +1137,7 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
-        if context is COMMAND_LINE:
+        if context is COMMAND_LINE: # cxt-test
             state_list = getattr(owner, owner.stateListAttr[self.__class__])
             if state_list and not self in state_list:
                 owner.add_states(self)
@@ -1825,6 +1828,12 @@ class State_Base(State):
         Returns combined values of projections, modulated by any mod_afferents
     """
 
+        # MODIFIED 3/18/18 NEW:
+        # Set context to owner's context
+        self.context.status = self.owner.context.status
+        self.context.string = self.owner.context.string
+        # MODIFIED 3/18/18 END
+
         # SET UP ------------------------------------------------------------------------------------------------
 
         # Get State-specific param_specs
@@ -1921,14 +1930,14 @@ class State_Base(State):
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningProjection) and not LEARNING in context:
+            if isinstance(projection, LearningProjection) and not LEARNING in context: # cxt-test
                 projection_value = projection.value * 0.0
             else:
                 projection_value = projection.execute(runtime_params=projection_params,
-                                                      context=context)
+                                                      context=context) # cxt-pass cxt-push
 
             # If this is initialization run and projection initialization has been deferred, pass
-            if INITIALIZING in context and projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            if INITIALIZING in context and projection.init_status is InitStatus.DEFERRED_INITIALIZATION: # cxt-test
                 continue
 
             if isinstance(projection, PathwayProjection_Base):
@@ -2471,7 +2480,7 @@ def _parse_state_spec(state_type=None,
         state_specific_args.update(state_spec)
 
     state_dict = standard_args
-    context = state_dict.pop(CONTEXT, None)
+    context = state_dict.pop(CONTEXT, None) # cxt-set
     owner = state_dict[OWNER]
     state_type = state_dict[STATE_TYPE]
     reference_value = state_dict[REFERENCE_VALUE]

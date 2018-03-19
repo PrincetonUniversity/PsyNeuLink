@@ -1192,7 +1192,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         self.learning_signal = summed_learning_signal
         self.error_signal = summed_error_signal
 
-        if INITIALIZING not in context and self.reportOutputPref:
+        if INITIALIZING not in context and self.reportOutputPref: # cxt-test
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal, self.error_signal]
