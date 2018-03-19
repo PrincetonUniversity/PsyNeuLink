@@ -3491,6 +3491,9 @@ class System(System_Base):
         # projection_shape = 'Mdiamond'
         # projection_shape = 'hexagon'
 
+        bold_width = '3'
+        default_width = '1'
+
         # build graph and configure visualisation settings
         G = gv.Digraph(
                 name = self.name,
@@ -3500,7 +3503,8 @@ class System(System_Base):
                     'fontname':'arial',
                     # 'shape':mechanism_shape,
                     'shape':'record',
-                    'color':default_node_color
+                    'color':default_node_color,
+                    'penwidth':default_width
                 },
                 edge_attr  = {
                     # 'arrowhead':'halfopen',
@@ -3512,6 +3516,7 @@ class System(System_Base):
                 }
         )
 
+        # FIX: Should be re-written to do actual system graph traversal rather than use list derived from graph
         # work with system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
@@ -3521,16 +3526,29 @@ class System(System_Base):
             # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
             if rcvr is active_item:
                 rcvr_color = active_color
+                rcvr_penwidth = bold_width
+            elif ORIGIN in rcvr.systems[self] and TERMINAL in rcvr.systems[self]:
+                rcvr_color = origin_and_terminal_color
+                rcvr_penwidth = bold_width
+            elif ORIGIN in rcvr.systems[self]:
+                rcvr_color = origin_color
+                rcvr_penwidth = bold_width
+            elif TERMINAL in rcvr.systems[self]:
+                rcvr_color = terminal_color
+                rcvr_penwidth = bold_width
             else:
                 rcvr_color = default_node_color
+                rcvr_penwidth = default_width
+
             if show_mechanism_structure:
                 rcvr_label=rcvr.name
                 G.node(rcvr_label,
                        rcvr.show_structure(**mech_struct_args),
-                       color=rcvr_color)
+                       color=rcvr_color,
+                       penwidth=rcvr_penwidth)
             else:
                 rcvr_label = self._get_label(rcvr, show_dimensions)
-                G.node(rcvr_label, shape=mechanism_shape, color=rcvr_color)
+                G.node(rcvr_label, shape=mechanism_shape, color=rcvr_color, penwidth=rcvr_penwidth)
 
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
@@ -3625,39 +3643,39 @@ class System(System_Base):
                         label = ''
                     G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
 
-                # Deal with ORIGIN and or TERMINAL Mechanisms
-                if ORIGIN in sndr.systems[self]:
-                    if not sndr is active_item:
-                        sndr_color = origin_color
-                    if show_mechanism_structure:
-                        G.node(sndr_label,
-                               sndr.show_structure(**mech_struct_args),
-                               color=sndr_color,
-                               penwidth='3')
-                    else:
-                        G.node(sndr_label, color=sndr_color, penwidth='3')
-
-                if TERMINAL in rcvr.systems[self]:
-                    if not rcvr is active_item:
-                        rcvr_color = terminal_color
-                    if show_mechanism_structure:
-                        G.node(rcvr_label,
-                               rcvr.show_structure(**mech_struct_args),
-                               color=rcvr_color,
-                               penwidth='3')
-                    else:
-                        G.node(rcvr_label, color=rcvr_color, penwidth='3')
-
-                if ORIGIN in sndr.systems[self] and TERMINAL in sndr.systems[self]:
-                    if not sndr is active_item:
-                        sndr_color = origin_and_terminal_color
-                    if show_mechanism_structure:
-                        G.node(sndr_label,
-                               sndr.show_structure(**mech_struct_args),
-                               color=sndr_color,
-                               penwidth='3')
-                    else:
-                        G.node(sndr_label, color=sndr_color, penwidth='3')
+                # # Deal with ORIGIN and or TERMINAL Mechanisms
+                # if ORIGIN in sndr.systems[self]:
+                #     if not sndr is active_item:
+                #         sndr_color = origin_color
+                #     if show_mechanism_structure:
+                #         G.node(sndr_label,
+                #                sndr.show_structure(**mech_struct_args),
+                #                color=sndr_color,
+                #                penwidth='3')
+                #     else:
+                #         G.node(sndr_label, color=sndr_color, penwidth='3')
+                #
+                # if TERMINAL in rcvr.systems[self]:
+                #     if not rcvr is active_item:
+                #         rcvr_color = terminal_color
+                #     if show_mechanism_structure:
+                #         G.node(rcvr_label,
+                #                rcvr.show_structure(**mech_struct_args),
+                #                color=rcvr_color,
+                #                penwidth='3')
+                #     else:
+                #         G.node(rcvr_label, color=rcvr_color, penwidth='3')
+                #
+                # if ORIGIN in sndr.systems[self] and TERMINAL in sndr.systems[self]:
+                #     if not sndr is active_item:
+                #         sndr_color = origin_and_terminal_color
+                #     if show_mechanism_structure:
+                #         G.node(sndr_label,
+                #                sndr.show_structure(**mech_struct_args),
+                #                color=sndr_color,
+                #                penwidth='3')
+                #     else:
+                #         G.node(sndr_label, color=sndr_color, penwidth='3')
 
         # Add learning-related Components to graph if show_learning
         if show_learning:

@@ -1965,7 +1965,7 @@ class Mechanism_Base(Mechanism):
         """
         self.ignore_execution_id = ignore_execution_id
         context = context or COMMAND_LINE # cxt-done
-        if self.context.status is ContextStatus.OFF:
+        if self.context.status is ContextStatus.OFF or context is COMMAND_LINE:
             self.context.status = ContextStatus.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
