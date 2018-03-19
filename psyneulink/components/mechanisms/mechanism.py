@@ -1964,16 +1964,20 @@ class Mechanism_Base(Mechanism):
 
         """
         self.ignore_execution_id = ignore_execution_id
-        # # MODIFIED 3/17/18 OLD:
-        # context = context or NO_CONTEXT # cxt-done
-        # MODIFIED 3/17/18 NEW:
         context = context or COMMAND_LINE # cxt-done
-        # MODIFIED 3/17/18 END
         if self.context.status is ContextStatus.OFF:
             self.context.status = ContextStatus.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
-            self.context.string = context
+            # These need to be set for states to use as context
+            if not INITIALIZING in context:
+                self.context.status &= ~ContextStatus.INITIALIZATION
+                if EXECUTING in context:
+                    self.context.status |= ContextStatus.EXECUTION
+                if EVC_SIMULATION in context:
+                    self.context.status |= ContextStatus.SIMULATION
+                if LEARNING in context:
+                    self.context.status |= ContextStatus.LEARNING
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
@@ -1992,11 +1996,6 @@ class Mechanism_Base(Mechanism):
                     context=context,
                 )
 
-                # # # MODIFIED 3/3/17 OLD:
-                # # return np.atleast_2d(return_value)
-                # # MODIFIED 3/3/17 NEW:
-                # converted_to_2d = np.atleast_2d(return_value)
-                # MODIFIED 3/7/17 NEWER:
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
                 #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
                 #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
@@ -2017,7 +2016,6 @@ class Mechanism_Base(Mechanism):
                 # Otherwise, return value converted to 2d np.array
                 else:
                     return converted_to_2d
-                # MODIFIED 3/3/17 END
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
@@ -2029,7 +2027,7 @@ class Mechanism_Base(Mechanism):
                 return np.atleast_2d(return_value)
 
 
-        #region VALIDATE RUNTIME PARAMETER SETS
+        # VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
         if self.prefs.paramValidationPref:
             if runtime_params:
@@ -2053,20 +2051,17 @@ class Mechanism_Base(Mechanism):
                                                  "contains an unrecognized parameter: {}".
                                                  format(state_key, self.name, param_name))
 
-        #endregion
 
         # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
-        #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
+        # VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
         self._check_args(
             params=runtime_params,
             target_set=runtime_params,
         )
-        #endregion
 
-        #region UPDATE INPUT STATE(S)
+        # UPDATE VARIABLE and INPUT STATE(S)
 
         # Executing or simulating Process or System, get input by updating input_states
-
         if (input is None
             and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION}) # cxt-test
             and (self.input_state.path_afferents != [])):
@@ -2088,13 +2083,10 @@ class Mechanism_Base(Mechanism):
                 input = self.instance_defaults.variable
             variable = self._update_variable(self._get_variable_from_input(input))
 
-        #endregion
-
-        #region UPDATE PARAMETER STATE(S)
+        # UPDATE PARAMETER STATE(S)
         self._update_parameter_states(runtime_params=runtime_params, context=context) # cxt-pass ? cxt-push
-        #endregion
 
-        #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
+        # CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
         # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
         #                      to avoid multiple calls to (and potential log entries for) self.value property

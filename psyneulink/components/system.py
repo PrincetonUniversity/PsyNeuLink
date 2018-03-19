@@ -2772,12 +2772,24 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names))))
+                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
+
+                # MODIFIED 3/18/18 NEW:
+                component.context.status &= ~ContextStatus.EXECUTION
+                component.context.status |= ContextStatus.LEARNING
+                component.context.string = context_str
+                # MODIFIED 3/18/18 END
 
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                 component.execute(runtime_params=params, context=context_str)
                 # # TEST PRINT:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
+
+                # MODIFIED 3/18/18 NEW:
+                component.context.status &= ~ContextStatus.LEARNING
+                component.context.status |= ContextStatus.EXECUTION
+                # MODIFIED 3/18/18 END
+
 
         # THEN update all MappingProjections
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
@@ -2802,9 +2814,19 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names))))
+                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
+                # MODIFIED 3/18/18 NEW:
+                # component.context.status &= ~ContextStatus.EXECUTION
+                component.context.status |= ContextStatus.LEARNING
+                component.context.string = context_str
+                # MODIFIED 3/18/18 END
 
                 component._parameter_states[MATRIX].update(context=context_str)
+
+                # MODIFIED 3/18/18 NEW:
+                component.context.status &= ~ContextStatus.LEARNING
+                # component.context.status |= ContextStatus.EXECUTION
+                # MODIFIED 3/18/18 END
 
                 # TEST PRINT:
                 # print ("EXECUTING WEIGHT UPDATES: ", component.name)
