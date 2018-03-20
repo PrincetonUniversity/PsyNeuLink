@@ -895,11 +895,12 @@ class Projection_Base(Projection):
         #     self.context.status &= ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION)
         #     self.context.status |= ContextStatus.EXECUTION
         # MODIFIED 3/18/18 END:
-        self.value = self.function(variable=self.sender.value, params=runtime_params, context=context)
 
-        if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
-            self._increment_execution_count()
-        self.current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
+        # MODIFIED 3/20/18 OLD:
+        # self.value = self.function(variable=self.sender.value, params=runtime_params, context=context)
+        # MODIFIED 3/20/18 NEW:
+        self.value = super()._execute(variable=self.sender.value, runtime_params=runtime_params, context=context)
+        # MODIFIED 3/20/18 END
 
         return self.value
 

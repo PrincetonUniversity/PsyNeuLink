@@ -2782,6 +2782,16 @@ class Component(object):
         return self._execute(variable=variable, runtime_params=runtime_params, context=context)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
+
+        # MODIFIED 3/20/18 NEW:
+        from psyneulink.components.functions.function import Function
+        if isinstance(self, Function):
+            pass # Functions don't have a Logs or maintain execution_counts or time
+        else:
+            if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
+                self._increment_execution_count()
+            self.current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
+        # MODIFIED 3/20/18 END
         return self.function(variable=variable, params=runtime_params, context=context)
 
     def _get_current_execution_time(self, context):

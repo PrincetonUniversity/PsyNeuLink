@@ -2090,11 +2090,20 @@ class Mechanism_Base(Mechanism):
 
         # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
         #                      to avoid multiple calls to (and potential log entries for) self.value property
+
+        # MODIFIED 3/20/18 OLD:
         value = self._execute(
             variable=variable,
             runtime_params=runtime_params,
             context=context # cxt-pass cxt-push
         )
+        # # MODIFIED 3/20/18 NEW:
+        # value = super()._execute(
+        #     variable=variable,
+        #     runtime_params=runtime_params,
+        #     context=context # cxt-pass cxt-push
+        # )
+        # MODIFIED 3/20/18 END
 
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
         #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2142,10 +2151,6 @@ class Mechanism_Base(Mechanism):
                 #    don't want any non-zero values as a residuum of initialization runs to be
                 #    transmittted back via recurrent Projections as initial inputs
                 self.output_states[state].value = self.output_states[state].value * 0.0
-
-        if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
-            self._increment_execution_count()
-        self.current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
 
         return self.value
 

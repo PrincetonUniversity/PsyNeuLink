@@ -1058,13 +1058,16 @@ class OutputState(State_Base):
                 except AttributeError:
                     raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
                                            format(self.name, self.owner.name))
-
-        # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
-        #                      so there is no need to use their value (as do InputStates)
-        value = self.function(variable=fct_var,
-                             params=runtime_params,
-                             context=context)
-        return value
+        # # MODIFIED 3/20/18 OLD:
+        # value = self.function(variable=fct_var,
+        #                      params=runtime_params,
+        #                      context=context)
+        # return value
+        # MODIFIED 3/20/18 NEW:
+        return super()._execute(variable=fct_var,
+                                runtime_params=runtime_params,
+                                context=context)
+        # MODIFIED 3/20/18 END
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
