@@ -1970,6 +1970,7 @@ class Mechanism_Base(Mechanism):
             self.context.string = COMMAND_LINE
         else:
             # These need to be set for states to use as context
+            self.context.string = context
             if not INITIALIZING in context:
                 self.context.status &= ~ContextStatus.INITIALIZATION
                 if EXECUTING in context:

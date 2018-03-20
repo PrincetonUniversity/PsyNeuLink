@@ -2683,8 +2683,8 @@ class System(System_Base):
                 process_names = list(p.name for p in process_keys_sorted)
 
                 context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]" #
-                mechanism.context.string = context # cxt-push ?
-
+                mechanism.context.string = context # cxt-push ? (note:  currently also assigned in Mechanism.execute())
+                mechanism.context.composition = self
                 mechanism.execute(runtime_params=rt_params, context=context) # cxt-pass
 
 

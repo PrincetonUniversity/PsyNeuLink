@@ -72,7 +72,7 @@ class Context():
     def composition(self, composition):
         # from psyneulink.composition import Composition
         # if isinstance(composition, Composition):
-        if composition is None or 'Composition' in composition.__class__.__name__:
+        if composition is None or composition.__class__.__name__ in {'Composition', 'System'}:
             self._composition = composition
         else:
             raise ContextError("Assignment to context.composition for {} ({}) "
