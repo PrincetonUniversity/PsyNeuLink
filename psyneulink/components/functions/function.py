@@ -2038,15 +2038,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
+            scale_is_a_scalar = isinstance(scale, numbers.Number) or (len(scale) == 1) and isinstance(scale[0], numbers.Number)
             if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
-                if (isinstance(scale, np.ndarray) and
-                        (scale.size != self.instance_defaults.variable.size or
-                         scale.shape != self.instance_defaults.variable.shape)):
-                    raise FunctionError("Scale is using Hadamard modulation "
-                                        "but its shape and/or size (shape: {}, size:{}) "
-                                        "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(scale.shape, scale.size, self.instance_defaults.variable.shape,
-                                               self.instance_defaults.variable.size))
+                if not scale_is_a_scalar:
+                    err_msg = "Scale is using Hadamard modulation but its shape and/or size (scale shape: {}, size:{})" \
+                              " do not match the variable being modulated (variable shape: {}, size: {})".\
+                        format(scale.shape, scale.size, self.instance_defaults.variable.shape,
+                               self.instance_defaults.variable.size)
+                    if len(self.instance_defaults.variable.shape) == 0:
+                        raise FunctionError(err_msg)
+                    if (scale.shape != self.instance_defaults.variable.shape) and \
+                        (scale.shape != self.instance_defaults.variable.shape[1:]):
+                        raise FunctionError(err_msg)
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
@@ -2057,15 +2060,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
+            offset_is_a_scalar = isinstance(offset, numbers.Number) or (len(offset) == 1) and isinstance(offset[0], numbers.Number)
             if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
-                if (isinstance(offset, np.ndarray) and
-                        (offset.size != self.instance_defaults.variable.size or
-                         offset.shape != self.instance_defaults.variable.shape)):
-                    raise FunctionError("Offset is using Hadamard modulation "
-                                        "but its shape and/or size (shape: {}, size:{}) "
-                                        "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(offset.shape, offset.size, self.instance_defaults.variable.shape,
-                                               self.instance_defaults.variable.size))
+                if not offset_is_a_scalar:
+                    err_msg = "Offset is using Hadamard modulation but its shape and/or size (offset shape: {}, size:{})" \
+                              " do not match the variable being modulated (variable shape: {}, size: {})".\
+                        format(offset.shape, offset.size, self.instance_defaults.variable.shape,
+                               self.instance_defaults.variable.size)
+                    if len(self.instance_defaults.variable.shape) == 0:
+                        raise FunctionError(err_msg)
+                    if (offset.shape != self.instance_defaults.variable.shape) and \
+                        (offset.shape != self.instance_defaults.variable.shape[1:]):
+                        raise FunctionError(err_msg)
 
             # if not operation:
             #     raise FunctionError("Operation param missing")
@@ -2152,6 +2158,15 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         if weights is not None:
             variable = self._update_variable(variable * weights)
 
+        # CW 3/19/18: a total hack, e.g. to make scale=[4.] turn into scale=4. Used b/c the `scale` ParameterState
+        # changes scale's format: e.g. if you write c = pnl.LinearCombination(scale = 4), print(c.scale) returns [4.]
+        if isinstance(scale, (list, np.ndarray)):
+            if len(scale) == 1 and isinstance(scale[0], numbers.Number):
+                scale = scale[0]
+        if isinstance(offset, (list, np.ndarray)):
+            if len(offset) == 1 and isinstance(offset[0], numbers.Number):
+                offset = offset[0]
+
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
 
         if operation is SUM:
@@ -2161,18 +2176,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                     result = np.sum(variable, axis=0) * scale + offset
                 # Scalar scale and Hadamard offset
                 else:
-                    result = np.sum(np.append([variable * scale], [offset], axis=0), axis=0)
+                    result = np.sum(np.append(variable * scale, [offset], axis=0), axis=0)
             else:
                 # Hadamard scale, scalar offset
                 if isinstance(offset, numbers.Number):
-                    result = np.product([np.sum([variable], axis=0), scale], axis=0) + offset
+                    result = np.product([np.sum(variable, axis=0), scale], axis=0) + offset
                 # Hadamard scale and offset
                 else:
-                    hadamard_product = np.product([np.sum([variable], axis=0), scale], axis=0)
+                    hadamard_product = np.product([np.sum(variable, axis=0), scale], axis=0)
                     result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
 
         elif operation is PRODUCT:
-            product = np.product([variable], axis=0)
+            product = np.product(variable, axis=0)
             if isinstance(scale, numbers.Number):
                 # Scalar scale and offset
                 if isinstance(offset, numbers.Number):
