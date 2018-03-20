@@ -123,6 +123,97 @@ def _naming_function(config):
 @pytest.mark.benchmark
 def test_linear_combination_function(func, variable, params, expected, benchmark):
     f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName;
+    benchmark.group = "CombinationFunction " + func.componentName
     res = benchmark(f.function, variable)
+    assert np.allclose(res, expected)
+
+# ------------------------------------
+
+# testing within a mechanism using various input states
+input_1 = np.array([[1, 2, 3, 4]])
+
+test_linear_comb_data_2 = [
+    (pnl.SUM, [[1, 2, 3, 4]], 4, ['hi'], None, None, [[1, 2, 3, 4]]),
+    (pnl.SUM, [[1, 2, 3, 4]], 4, ['hi'], 2, None, [[2, 4, 6, 8]]),
+    (pnl.SUM, [[1, 2, 3, 4]], 4, ['hi'], [1, 2, -1, 0], None, [1, 4, -3, 0]),
+    (pnl.SUM, [[1, 2, 3, 4]], 4, ['hi'], None, 2, [3, 4, 5, 6]),
+    (pnl.SUM, [[1, 2, 3, 4]], 4, ['hi'], -2, 3, None),
+    (pnl.SUM, [[1, 2, 3, 4]], 4, ['hi'], [1, 2.5, 0, 0], 1.5, [2.5, 6.5, 1.5, 1.5]),
+    (pnl.SUM, [[1, 2, 3, 4]], 4, ['hi'], None, [1, 0, -1, 0], [2, 2, 2, 4]),
+    (pnl.SUM, [[1, 2, 3, 4]], 4, ['hi'], -2, [1, 0, -1, 0], None),
+    (pnl.SUM, [[1, 2, 3, 4]], 4, ['hi'], [1, 2.5, 0, 0], [1, 0, -1, 0], None),
+
+    (pnl.PRODUCT, [[1, 2, 3, 4]], 4, ['hi'], [1, 2.5, 0, 0], [1, 0, -1, 0], None),
+
+    (pnl.SUM, [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]], 4, ['1', '2', '3'], None, None, [[15, 18, 21, 24]]),
+    (pnl.SUM, [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]], 4, ['1', '2', '3'], 2, None, [[30, 36, 42, 48]]),
+    (pnl.SUM, [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]], 4, ['1', '2', '3'], [1, 2, -1, 0], None, [[15, 36, -21, 0]]),
+    (pnl.SUM, [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]], 4, ['1', '2', '3'], None, 2, [[17, 20, 23, 26]]),
+    (pnl.SUM, [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]], 4, ['1', '2', '3'], -2, 3, None),
+    (pnl.SUM, [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]], 4, ['1', '2', '3'], [1, 2.5, 0, 0], 1.5, None),
+    (pnl.SUM, [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]], 4, ['1', '2', '3'], None, [1, 0, -1, 0], [[16, 18, 20, 24]]),
+    (pnl.SUM, [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]], 4, ['1', '2', '3'], -2, [1, 0, -1, 0], None),
+    (pnl.SUM, [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]], 4, ['1', '2', '3'], [1, 2.5, 0, 0], [1, 0, -1, 0], None),
+
+    (pnl.PRODUCT, [[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], 4, ['1', '2', '3'], None, None, [[0, 0, 21, 64]]),
+    (pnl.PRODUCT, [[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], 4, ['1', '2', '3'], 2, None, [[0, 0, 42, 128]]),
+    (pnl.PRODUCT, [[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], 4, ['1', '2', '3'], [1, 2, -1, 0], None, [[0, 0, -21, 0]]),
+    (pnl.PRODUCT, [[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], 4, ['1', '2', '3'], None, 2, [[2, 2, 23, 66]]),
+    (pnl.PRODUCT, [[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], 4, ['1', '2', '3'], -2, 3, None),
+    (pnl.PRODUCT, [[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], 4, ['1', '2', '3'], [1, 2.5, 0, 0], 1.5, None),
+    (pnl.PRODUCT, [[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], 4, ['1', '2', '3'], None, [1, 0, -1, 0], [[1, 0, 20, 64]]),
+    (pnl.PRODUCT, [[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], 4, ['1', '2', '3'], -2, [1, 0, -1, 0], None),
+    (pnl.PRODUCT, [[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], 4, ['1', '2', '3'], [1, 2.5, 0, 0], [1, 0, -1, 0], None),
+
+]
+
+linear_comb_names_2 = [
+    'sum_one_input_no_scale_no_offset',
+    'sum_one_input_scalar_scale_no_offset',
+    'sum_one_input_hadamard_scale_no_offset',
+    'sum_one_input_no_scale_scalar_offset',
+    'sum_one_input_scalar_scale_scalar_offset',
+    'sum_one_input_hadamard_scale_scalar_offset',
+    'sum_one_input_no_scale_hadamard_offset',
+    'sum_one_input_scalar_scale_hadamard_offset',
+    'sum_one_input_hadamard_scale_hadamard_offset',
+
+    'product_one_input_hadamard_scale_hadamard_offset',
+
+    'sum_3_input_no_scale_no_offset',
+    'sum_3_input_scalar_scale_no_offset',
+    'sum_3_input_hadamard_scale_no_offset',
+    'sum_3_input_no_scale_scalar_offset',
+    'sum_3_input_scalar_scale_scalar_offset',
+    'sum_3_input_hadamard_scale_scalar_offset',
+    'sum_3_input_no_scale_hadamard_offset',
+    'sum_3_input_scalar_scale_hadamard_offset',
+    'sum_3_input_hadamard_scale_hadamard_offset',
+
+    'product_3_input_no_scale_no_offset',
+    'product_3_input_scalar_scale_no_offset',
+    'product_3_input_hadamard_scale_no_offset',
+    'product_3_input_no_scale_scalar_offset',
+    'product_3_input_scalar_scale_scalar_offset',
+    'product_3_input_hadamard_scale_scalar_offset',
+    'product_3_input_no_scale_hadamard_offset',
+    'product_3_input_scalar_scale_hadamard_offset',
+    'product_3_input_hadamard_scale_hadamard_offset',
+]
+
+@pytest.mark.function
+@pytest.mark.combination_function
+@pytest.mark.parametrize("operation, input, size, input_states, scale, offset, expected", test_linear_comb_data_2, ids=linear_comb_names_2)
+@pytest.mark.benchmark
+def test_linear_combination_function(operation, input, size, input_states, scale, offset, expected, benchmark):
+    f = pnl.LinearCombination(default_variable=np.zeros(size), operation=operation, scale=scale, offset=offset)
+    p = pnl.ProcessingMechanism(size=[size] * len(input_states), function=f, input_states=input_states)
+    benchmark.group = "CombinationFunction " + pnl.LinearCombination.componentName + "in Mechanism"
+    res = benchmark(f.execute, input)
+    if expected is None:
+        if operation == pnl.SUM:
+            expected = np.sum(input, axis=0) * scale + offset
+        if operation == pnl.PRODUCT:
+            expected = np.product(input, axis=0) * scale + offset
+
     assert np.allclose(res, expected)

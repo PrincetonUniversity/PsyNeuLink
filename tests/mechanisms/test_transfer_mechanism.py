@@ -58,16 +58,16 @@ class TestTransferMechanismInputs:
     #     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()])
     #     assert np.allclose(val, [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    def test_transfer_mech_variable_3D_array(self):
-
-        T = TransferMechanism(
-            name='T',
-            default_variable=[[[0, 0, 0, 0]], [[1, 1, 1, 1]]],
-            integrator_mode=True
-        )
-        np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[[0, 0, 0, 0]], [[1, 1, 1, 1]]]))
+    # @pytest.mark.mechanism
+    # @pytest.mark.transfer_mechanism
+    # def test_transfer_mech_variable_3D_array(self):
+    #
+    #     T = TransferMechanism(
+    #         name='T',
+    #         default_variable=[[[0, 0, 0, 0]], [[1, 1, 1, 1]]],
+    #         integrator_mode=True
+    #     )
+    #     np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[[0, 0, 0, 0]], [[1, 1, 1, 1]]]))
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -887,19 +887,19 @@ class TestTransferMechanismMultipleInputStates:
         assert len(T.output_states)==3
         assert all(a==b for a,b in zip(T.output_values,val))
 
-    @pytest.mark.mechanism
-    @pytest.mark.transfer_mechanism
-    @pytest.mark.mimo
-    def test_OWNER_VALUE_standard_output_state(self):
-        from psyneulink.globals.keywords import OWNER_VALUE
-        T = TransferMechanism(input_states=[[[0],[0]],'b','c'],
-                                  output_states=OWNER_VALUE)
-        print(T.value)
-        val = T.execute([[[1],[4]],[2],[3]])
-        expected_val = [[[1],[4]],[2],[3]]
-        assert len(T.output_states)==1
-        assert len(T.output_states[OWNER_VALUE].value)==3
-        assert all(all(a==b for a,b in zip(x,y)) for x,y in zip(val, expected_val))
+    # @pytest.mark.mechanism
+    # @pytest.mark.transfer_mechanism
+    # @pytest.mark.mimo
+    # def test_OWNER_VALUE_standard_output_state(self):
+    #     from psyneulink.globals.keywords import OWNER_VALUE
+    #     T = TransferMechanism(input_states=[[[0],[0]],'b','c'],
+    #                               output_states=OWNER_VALUE)
+    #     print(T.value)
+    #     val = T.execute([[[1],[4]],[2],[3]])
+    #     expected_val = [[[1],[4]],[2],[3]]
+    #     assert len(T.output_states)==1
+    #     assert len(T.output_states[OWNER_VALUE].value)==3
+    #     assert all(all(a==b for a,b in zip(x,y)) for x,y in zip(val, expected_val))
 
 class TestIntegratorMode:
     def test_previous_value_persistence_execute(self):

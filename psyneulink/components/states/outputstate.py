@@ -447,11 +447,12 @@ COMMENT
     ...                   output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
-    ...                                   pnl.VARIABLE: (OWNER_VALUE, 2),
+    ...                                   pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
     ...                                   pnl.FUNCTION: pnl.Stability(metric=pnl.ENTROPY).function }])
 
 COMMENT:
    ADD VERSION IN WHICH INDEX IS SPECIFIED USING DDM_standard_output_states
+   CW 3/20/18: TODO: this example is flawed: if you try to execute() it, it gives divide by zero error.
 COMMENT
 
 The first two are `Standard OutputStates <OutputState_Standard>` that represent the decision variable of the DDM and
@@ -1584,7 +1585,7 @@ class StandardOutputStates():
     #     return [item[INDEX] for item in self.data]
 
 
-def  _parse_output_state_variable(owner, variable, output_state_name=None):
+def _parse_output_state_variable(owner, variable, output_state_name=None):
     """Return variable for OutputState based on VARIABLE entry of owner's params dict
 
     The format of the VARIABLE entry determines the format returned:
