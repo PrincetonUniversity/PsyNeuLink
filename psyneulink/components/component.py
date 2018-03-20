@@ -2981,11 +2981,32 @@ class Component(object):
         self.prefs.runtimeParamStickyAssignmentPref = setting
 
     @property
+    def execution_count(self):
+        """Maintains a simple count of executions over the life of the Component,
+        Incremented in the Component's execute method by call to self._increment_execution_count"""
+        try:
+            return self._execution_count
+        except:
+            self._execution_count = 0
+            return self._execution_count
+
+    @execution_count.setter
+    def execution_count(self, count:int):
+        self._execution_count = count
+
+    def _increment_execution_count(self, count=1):
+        try:
+            self._execution_count +=count
+        except:
+            self._execution_count = 1
+        return self._execution_count
+
+    @property
     def context(self):
         try:
             return self._context
         except:
-            self._context = Context(status=ContextStatus.OFF)
+            self._context = Context(owner=self, status=ContextStatus.OFF)
             return self._context
 
     # from psyneulink.globals.context import Context

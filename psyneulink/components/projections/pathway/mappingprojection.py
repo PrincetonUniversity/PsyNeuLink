@@ -635,11 +635,7 @@ class MappingProjection(PathwayProjection_Base):
         if "System" not in str(self.sender.owner):
             self._update_parameter_states(runtime_params=runtime_params, context=context)
 
-        # MODIFIED 3/18/18 OLD:
-        # return self.function(self.sender.value, params=runtime_params, context=context)
-        # MODIFIED 3/18/18 NEW:
         return super()._execute(self.sender.value, runtime_params, context)
-        # MODIFIED 3/18/18 END
 
     @property
     def matrix(self):
