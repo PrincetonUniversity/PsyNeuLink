@@ -1186,9 +1186,12 @@ class UserDefinedFunction(Function_Base):
     of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
 
         >>> my_wave_mech = pnl.ProcessingMechanism(size=3,
-        ...                                        function=Logistic,
-        ...                                        output_states={pnl.NAME: 'SINUSOIDAL OUTPUT',
-        ...                                                       pnl.FUNCTION: my_sinusoidal_fct})
+        ...                                        function=pnl.Logistic,
+        ...                                        output_states=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
+        ...                                                       pnl.VARIABLE: [pnl.GAIN,pnl.EXECUTION_COUNT],
+        ...                                                       pnl.FUNCTION: my_sinusoidal_fct}])
+
+    For details on how to specify a function of an OutputState, see `OutputState Customization <OutputState_Customization>`
 
     .. _UDF_Modulatory_Params_Examples:
 
@@ -1642,8 +1645,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
               a parameter may be re-assigned before variable assigned during is known
         """
 
-        # FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
-
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
@@ -2040,15 +2041,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
+            scale_is_a_scalar = isinstance(scale, numbers.Number) or (len(scale) == 1) and isinstance(scale[0], numbers.Number)
             if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
-                if (isinstance(scale, np.ndarray) and
-                        (scale.size != self.instance_defaults.variable.size or
-                         scale.shape != self.instance_defaults.variable.shape)):
-                    raise FunctionError("Scale is using Hadamard modulation "
-                                        "but its shape and/or size (shape: {}, size:{}) "
-                                        "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(scale.shape, scale.size, self.instance_defaults.variable.shape,
-                                               self.instance_defaults.variable.size))
+                if not scale_is_a_scalar:
+                    err_msg = "Scale is using Hadamard modulation but its shape and/or size (scale shape: {}, size:{})" \
+                              " do not match the variable being modulated (variable shape: {}, size: {})".\
+                        format(scale.shape, scale.size, self.instance_defaults.variable.shape,
+                               self.instance_defaults.variable.size)
+                    if len(self.instance_defaults.variable.shape) == 0:
+                        raise FunctionError(err_msg)
+                    if (scale.shape != self.instance_defaults.variable.shape) and \
+                        (scale.shape != self.instance_defaults.variable.shape[1:]):
+                        raise FunctionError(err_msg)
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
@@ -2059,15 +2063,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
+            offset_is_a_scalar = isinstance(offset, numbers.Number) or (len(offset) == 1) and isinstance(offset[0], numbers.Number)
             if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
-                if (isinstance(offset, np.ndarray) and
-                        (offset.size != self.instance_defaults.variable.size or
-                         offset.shape != self.instance_defaults.variable.shape)):
-                    raise FunctionError("Offset is using Hadamard modulation "
-                                        "but its shape and/or size (shape: {}, size:{}) "
-                                        "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(offset.shape, offset.size, self.instance_defaults.variable.shape,
-                                               self.instance_defaults.variable.size))
+                if not offset_is_a_scalar:
+                    err_msg = "Offset is using Hadamard modulation but its shape and/or size (offset shape: {}, size:{})" \
+                              " do not match the variable being modulated (variable shape: {}, size: {})".\
+                        format(offset.shape, offset.size, self.instance_defaults.variable.shape,
+                               self.instance_defaults.variable.size)
+                    if len(self.instance_defaults.variable.shape) == 0:
+                        raise FunctionError(err_msg)
+                    if (offset.shape != self.instance_defaults.variable.shape) and \
+                        (offset.shape != self.instance_defaults.variable.shape[1:]):
+                        raise FunctionError(err_msg)
 
             # if not operation:
             #     raise FunctionError("Operation param missing")
@@ -2155,6 +2162,15 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         # Apply weights if they were specified
         if weights is not None:
             variable = self._update_variable(variable * weights)
+
+        # CW 3/19/18: a total hack, e.g. to make scale=[4.] turn into scale=4. Used b/c the `scale` ParameterState
+        # changes scale's format: e.g. if you write c = pnl.LinearCombination(scale = 4), print(c.scale) returns [4.]
+        if isinstance(scale, (list, np.ndarray)):
+            if len(scale) == 1 and isinstance(scale[0], numbers.Number):
+                scale = scale[0]
+        if isinstance(offset, (list, np.ndarray)):
+            if len(offset) == 1 and isinstance(offset[0], numbers.Number):
+                offset = offset[0]
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
         if operation is SUM:
@@ -9343,7 +9359,9 @@ class Distance(ObjectiveFunction):
             if context is None or INITIALIZING in context: # cxt-test
                 v1 = np.where(v1==0, EPSILON, v1)
                 v2 = np.where(v2==0, EPSILON, v2)
-            result = -np.sum(v1*np.log(v2))
+            # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
+            # FIX: unsure about desired behavior when v2 = 0 and v1 != 0
+            result = np.where(np.logical_and(v1==0, v2==0), 0, -np.sum(v1*np.log(v2)))
 
         # Energy
         elif self.metric is ENERGY:
