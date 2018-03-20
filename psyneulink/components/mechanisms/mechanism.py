@@ -1097,7 +1097,7 @@ class Mechanism_Base(Mechanism):
 
     """
 
-    #region CLASS ATTRIBUTES
+    # CLASS ATTRIBUTES
     componentCategory = kwMechanismComponentCategory
     className = componentCategory
     suffix = " " + className
@@ -1161,7 +1161,6 @@ class Mechanism_Base(Mechanism):
 
     # def __new__(cls, *args, **kwargs):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
-    #endregion
 
     @tc.typecheck
     def __init__(self,
@@ -2120,21 +2119,18 @@ class Mechanism_Base(Mechanism):
 
         # Set status based on whether self.value has changed
         self.status = value
-        #endregion
 
         self.value = value
 
-        #region UPDATE OUTPUT STATE(S)
+        # UPDATE OUTPUT STATE(S)
         self._update_output_states(runtime_params=runtime_params, context=context) # cxt-pass cxt-push
-        #endregion
 
-        #region REPORT EXECUTION
+        # REPORT EXECUTION
         # if self.prefs.reportOutputPref and context and EXECUTING in context:
         if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}): # cxt-test
             self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
-        #endregion
 
-        #region RE-SET STATE_VALUES AFTER INITIALIZATION
+        #RE-SET STATE_VALUES AFTER INITIALIZATION
         # If this is (the end of) an initialization run, restore state values to initial condition
         if '_init_' in context: # cxt-test
             for state in self.input_states:
@@ -2146,9 +2142,7 @@ class Mechanism_Base(Mechanism):
                 #    don't want any non-zero values as a residuum of initialization runs to be
                 #    transmittted back via recurrent Projections as initial inputs
                 self.output_states[state].value = self.output_states[state].value * 0.0
-        #endregion
 
-        #endregion
         if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
             self._increment_execution_count()
         self.current_execution_time = self._get_current_execution_time(context=context) # cxt-pass

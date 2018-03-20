@@ -896,6 +896,11 @@ class Projection_Base(Projection):
         #     self.context.status |= ContextStatus.EXECUTION
         # MODIFIED 3/18/18 END:
         self.value = self.function(variable=self.sender.value, params=runtime_params, context=context)
+
+        if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
+            self._increment_execution_count()
+        self.current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
+
         return self.value
 
     # FIX: 10/3/17 - replace with @property on Projection for receiver and sender
