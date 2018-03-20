@@ -2215,6 +2215,100 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         return result
 
     @property
+    def _result_length(self):
+        return self.get_current_function_param(VARIABLE).shape[1]
+
+    def get_param_initializer(self):
+        scale = self.get_current_function_param(SCALE)
+        offset = self.get_current_function_param(OFFSET)
+        return (scale if np.isscalar(scale) else tuple(scale.flatten().tolist()),
+                offset if np.isscalar(offset) else tuple(offset.flatten().tolist()))
+
+    def get_param_struct_type(self):
+        # work aroudn 2d structure of params
+        scale_param = self.get_current_function_param(SCALE)
+        if not np.isscalar(scale_param):
+            scale_param =  scale_param.flatten()
+
+        offset_param = self.get_current_function_param(OFFSET)
+        if not np.isscalar(offset_param):
+            offset_param =  offset_param.flatten()
+
+        with pnlvm.LLVMBuilderContext() as ctx:
+            params_ty = [pnlvm._convert_python_struct_to_llvm_ir(ctx, p) for p in [scale_param, offset_param]]
+            param_type = ir.LiteralStructType(params_ty)
+        return param_type
+
+    def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
+        scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        if params.type.pointee.elements[0] != ctx.float_ty:
+            scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), index])
+
+        offset_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        if params.type.pointee.elements[1] != ctx.float_ty:
+            offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), index])
+
+        scale = builder.load(scale_ptr)
+        offset = builder.load(offset_ptr)
+
+        # assume operation does not change dynamically
+        operation = self.get_current_function_param(OPERATION)
+        if operation is SUM:
+            val = ctx.float_ty(0.0)
+        else:
+            val = ctx.float_ty(1.0)
+
+        input_count = ctx.int32_ty(vi.type.pointee.count)
+        for i in range(vi.type.pointee.count):
+            ptri = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(i), index])
+            in_val = builder.load(ptri)
+
+            if operation is SUM:
+                val = builder.fadd(val, in_val)
+            else:
+                val = builder.fmul(val, in_val)
+
+        val = builder.fmul(val, scale)
+        val = builder.fadd(val, offset)
+
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(val, ptro)
+
+
+    def _gen_llvm_function(self):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_name = ctx.module.get_unique_name("linear_combination")
+            func_ty = ir.FunctionType(ir.VoidType(),
+                (self.get_param_struct_type().as_pointer(),
+                 self.get_context_struct_type().as_pointer(),
+                 self.get_input_struct_type().as_pointer(),
+                 self.get_output_struct_type().as_pointer()))
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            llvm_func.attributes.add('argmemonly')
+            llvm_func.attributes.add('alwaysinline')
+            for a in llvm_func.args:
+                a.attributes.add('nonnull')
+                a.attributes.add('noalias')
+            params, state, vi, vo = llvm_func.args
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+
+            # Cast input to an array
+            vector_length = ctx.int32_ty(self._result_length)
+
+            kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
+            inner = functools.partial(self.__gen_llvm_combine, **kwargs)
+
+            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
+
+            builder.ret_void()
+        return func_name
+
+    @property
     def offset(self):
         if not hasattr(self, '_offset'):
             return None
