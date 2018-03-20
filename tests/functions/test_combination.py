@@ -4,6 +4,8 @@ import psyneulink.globals.keywords as kw
 import numpy as np
 import pytest
 
+from itertools import product
+
 class TestReduce:
 
     @pytest.mark.function
@@ -97,6 +99,7 @@ test_linear_combination_data = [
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.SUM}, np.sum(test_var2, axis=0) * RAND1_V + RAND2_V),
 
     (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_S + RAND2_S),
+# TODO: enable vector scale/offset when the validation is fixed
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_S + RAND2_V),
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_S),
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_V),
@@ -104,7 +107,7 @@ test_linear_combination_data = [
 
 # pytest naming function produces ugly names
 def _naming_function(config):
-    _, var, params, _ = config
+    _, var, params, _, form = config
     inputs = var.shape[0]
     op = params['operation']
     vector_string = ""
@@ -114,15 +117,19 @@ def _naming_function(config):
         vector_string += " OFFSET"
     if vector_string != "":
         vector_string = " VECTOR" + vector_string
-    return "COMBINE-{} {}{}".format(inputs, op, vector_string)
+    return "COMBINE-{} {}{} {}".format(inputs, op, vector_string, form)
 
+_data =[a + (b,) for a, b in  product(test_linear_combination_data, ['Python', 'LLVM'])]
 
 @pytest.mark.function
 @pytest.mark.combination_function
-@pytest.mark.parametrize("func, variable, params, expected", test_linear_combination_data, ids=list(map(_naming_function, test_linear_combination_data)))
+@pytest.mark.parametrize("func, variable, params, expected, bin_execute", _data, ids=list(map(_naming_function, _data)))
 @pytest.mark.benchmark
-def test_linear_combination_function(func, variable, params, expected, benchmark):
+def test_linear_combination_function(func, variable, params, expected, bin_execute, benchmark):
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName;
-    res = benchmark(f.function, variable)
+    if (bin_execute == 'LLVM'):
+        res = benchmark(f.bin_function, variable)
+    else:
+        res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
