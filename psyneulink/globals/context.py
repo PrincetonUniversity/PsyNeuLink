@@ -33,19 +33,13 @@ class ContextError(Exception):
 
 class Context():
     __name__ = 'Context'
-    def __init__(self, status, composition=None, execution_id:UUID=None, string:str=''):
+    def __init__(self, owner, status, composition=None, execution_id:UUID=None, string:str='', time=None):
 
+        self.owner = owner
         self.status = status
-
-        # from psyneulink.composition import Composition
-        # if isinstance(composition, Composition):
-        if composition is None or 'Composition' in composition.__class__.__name__:
-            self.composition = composition
-        else:
-            raise ContextError("\'composition\' argument in call to {} must be a {}".
-                               format(self.__name__, 'Composition'))
-
+        self.composition = composition
         self.execution_id = execution_id
+        self.execution_time = None
         self.string = string
 
     @property
@@ -66,6 +60,41 @@ class Context():
         else:
             raise ContextError("{} argument in call to {} must be a {} or an int".
                                format(STATUS, self.__name__, ContextStatus.__name__))
+
+    @property
+    def composition(self):
+        try:
+            return self._composition
+        except AttributeError:
+            self._composition = None
+
+    @composition.setter
+    def composition(self, composition):
+        # from psyneulink.composition import Composition
+        # if isinstance(composition, Composition):
+        if composition is None or 'Composition' in composition.__class__.__name__:
+            self._composition = composition
+        else:
+            raise ContextError("Assignment to context.composition for {} ({}) "
+                               "must be a Composition (or \'None\').".format(self.owner.name, composition))
+
+    @property
+    def execution_time(self):
+        try:
+            return self._execution_time
+        except:
+            return None
+
+    @execution_time.setter
+    def execution_time(self, time):
+        self._execution_time = time
+
+    def update_execution_time(self):
+        if self.status & ContextStatus.EXECUTION:
+            self.execution_time = self.owner.log._get_time(self.context.status)
+        else:
+            raise ContextError("PROGRAM ERROR: attempt to call update_execution_time for {} "
+                               "when 'EXECUTION' was not in its context".format(self.owner.name))
 
 
 # FIX: REPLACE IntEnum WITH Flags and auto IF/WHEN MOVE TO Python 3.6
