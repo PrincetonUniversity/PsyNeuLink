@@ -1187,8 +1187,9 @@ class UserDefinedFunction(Function_Base):
 
         >>> my_wave_mech = pnl.ProcessingMechanism(size=3,
         ...                                        function=pnl.Logistic,
-        ...                                        output_states={pnl.NAME: 'SINUSOIDAL OUTPUT',
-        ...                                                       pnl.FUNCTION: my_sinusoidal_fct})
+        ...                                        output_states=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
+        ...                                                       pnl.VARIABLE: [,],
+        ...                                                       pnl.FUNCTION: my_sinusoidal_fct}])
 
     .. _UDF_Modulatory_Params_Examples:
 
@@ -9369,7 +9370,7 @@ class Distance(ObjectiveFunction):
             if context is None or INITIALIZING in context: # cxt-test
                 v1 = np.where(v1==0, EPSILON, v1)
                 v2 = np.where(v2==0, EPSILON, v2)
-            result = -np.sum(v1*np.log(v2))
+            result = -np.sum(v1*np.log(v2))  # CW 3/20/18 TODO: fix divide by zero error here
 
         # Energy
         elif self.metric is ENERGY:
