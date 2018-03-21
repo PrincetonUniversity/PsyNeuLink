@@ -2796,13 +2796,44 @@ class Component(object):
         else:
             if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
                 self._increment_execution_count()
-            self.current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
+            self._update_current_execution_time(context=context) # cxt-pass
         # MODIFIED 3/20/18 END
         return self.function(variable=variable, params=runtime_params, context=context)
+
+    @property
+    def execution_count(self):
+        """Maintains a simple count of executions over the life of the Component,
+        Incremented in the Component's execute method by call to self._increment_execution_count"""
+        try:
+            return self._execution_count
+        except:
+            self._execution_count = 0
+            return self._execution_count
+
+    @execution_count.setter
+    def execution_count(self, count:int):
+        self._execution_count = count
+
+    def _increment_execution_count(self, count=1):
+        try:
+            self._execution_count +=count
+        except:
+            self._execution_count = 1
+        return self._execution_count
+
+    @property
+    def current_execution_time(self):
+        try:
+            return self._current_execution_time
+        except AttributeError:
+            self._update_current_execution_time(self.context.status)
 
     def _get_current_execution_time(self, context):
         from psyneulink.globals.log import _get_context
         return self.log._get_time(context_flags=_get_context(context))
+
+    def _update_current_execution_time(self, context):
+        self._current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -2991,27 +3022,6 @@ class Component(object):
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
-
-    @property
-    def execution_count(self):
-        """Maintains a simple count of executions over the life of the Component,
-        Incremented in the Component's execute method by call to self._increment_execution_count"""
-        try:
-            return self._execution_count
-        except:
-            self._execution_count = 0
-            return self._execution_count
-
-    @execution_count.setter
-    def execution_count(self, count:int):
-        self._execution_count = count
-
-    def _increment_execution_count(self, count=1):
-        try:
-            self._execution_count +=count
-        except:
-            self._execution_count = 1
-        return self._execution_count
 
     @property
     def context(self):

@@ -2150,7 +2150,7 @@ class Mechanism_Base(Mechanism):
 
         if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
             self._increment_execution_count()
-        self.current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
+            self._update_current_execution_time(context=context) # cxt-pass
 
         return self.value
 
@@ -2840,7 +2840,7 @@ class Mechanism_Base(Mechanism):
                 OWNER_VARIABLE = self.variable,
                 OWNER_VALUE = self.value,
                 EXECUTION_COUNT = self.execution_count, # FIX: move to assignment to user_params in Component
-                # EXECUTION_TIME = self.current_execution_time,
+                EXECUTION_TIME = self.current_execution_time,
                 INPUT_STATE_VARIABLES = [input_state.variable for input_state in self.input_states]
         )
         params_dict.update(self.user_params)
