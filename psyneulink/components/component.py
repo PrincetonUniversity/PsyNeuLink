@@ -240,20 +240,21 @@ In addition to its `user-modifiable parameters <Component_User_Params>`, a Compo
 information about its contents and/or state, but do not directly affect its operation.  Every Component has the
 following two informational attributes:
 
-* `execution_count <Component_execution_count>` -- this maintains a record of the number of times a Component has
+.. _Component_Execution_Count:
+
+* **execution_count** -- this maintains a record of the number of times a Component has
   executed; this *excludes* the executions carried out during initialization and validation, but includes all other
   executions, whether they are of the Component on its own are as part of a `Composition` (e.g., `Process` or
   `System`). The value can be changed "manually" or programmatically by assigning an integer value directly to the
   attribute.
 
-* `current_execution_time <Component_current_execution_time>` -- this maintains the `Time` of the last execution
+.. _Component_Current_Execution_Time:
+
+* **current_execution_time** -- this maintains the `Time` of the last execution
   of the Component in the context of a `System`'s `scheduler <System_Scheduler>`, and is stored as a tuple of values
   indicating the `TimeScale.TRIAL`, `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the last execution.  Note that a
   a System has two schedulers -- `scheduler_processing <System.scheduler_processing>` and `scheduler_learning`;
   `current_execution_time` stores the time of whichever of these was the last to execute the Component.
-
-* `log <Component.log>` -- this maintains a record of the value of attributes of a Component that have been
-  `specified for logging <Log>`.
 
 
 COMMENT:
@@ -713,6 +714,12 @@ class Component(object):
 
     log : Log
         see `log <Component_Log>`
+
+    execution_count : int
+        see `execution_count <Component_Execution_Count>`
+
+    current_execution_time : tuple(`Time.RUN`, `Time.TRIAL`, `Time.PASS`, `Time.TIME_STEP`)
+        see `current_execution_time <Component_Current_Execution_Time>`
 
     name : str
         see `name <Component_Name>`

@@ -292,14 +292,14 @@ delta_sig_epochs=np.sum(delta_sig_array_trunc,axis=1)/24
 
 ######################## DO THE PLOTTING #######################################
 
-# plt.plot(delta_bin_epochs)
-# plt.title('Label error as a function of epochs')
-# plt.ylabel('Error')
-# plt.xlabel('Epoch')
-# plt.show()
-#
-# plt.plot(delta_sig_epochs)
-# plt.title('sigmoid error as a function of epochs')
-# plt.ylabel('Error')
-# plt.xlabel('Epoch')
-# plt.show()
+plt.plot(delta_bin_epochs)
+plt.title('Label error as a function of epochs')
+plt.ylabel('Error')
+plt.xlabel('Epoch')
+plt.show()
+
+plt.plot(delta_sig_epochs)
+plt.title('sigmoid error as a function of epochs')
+plt.ylabel('Error')
+plt.xlabel('Epoch')
+plt.show()

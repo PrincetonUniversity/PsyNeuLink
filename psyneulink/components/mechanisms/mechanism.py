@@ -636,7 +636,7 @@ attributes are listed below by their argument names / keywords, along with a des
     * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for
       learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
 
-A Mechanism also has several convenience properties, listed brelow, that list its `Projections <Projection>` and the
+A Mechanism also has several convenience properties, listed below, that list its `Projections <Projection>` and the
 Mechanisms that send/receive these:
 
     * `projections <Mechanism_Base.projections>` -- all of the Projections sent or received by the Mechanism;
@@ -652,6 +652,12 @@ Mechanisms that send/receive these:
 Each of these is a `ContentAddressableList`, which means that the names of the Components in each list can be listed by
 appending ``.names`` to the property.  For examples, the names of all of the Mechanisms that receive a Projection from
 ``my_mech`` can be accessed by ``my_mech.receivers.names``.
+
+Finally, a Mechanism has an attribute that contains a dictionary of its attributes that can be used to specify the
+`variable <OutputState.variable>` of its OutputState (see `OutputState_Customization`):
+
+    * `attributes_dict` -- a dictionary of that contains the value of its attributes that can be used as the
+      `variable <OutputState.variable>` of its OutputState.
 
 
 .. _Mechanism_Role_In_Processes_And_Systems:
@@ -1077,6 +1083,10 @@ class Mechanism_Base(Mechanism):
         a dictionary of the `Systems <System>` to which the Mechanism belongs, that designates its `role
         <Mechanism_Role_In_Processes_And_Systems>` in each. The key of each entry is a System to which the Mechanism
         belongs, and its value is the Mechanism's `role in that System <System_Mechanisms>`.
+
+    attributes_dict : Dict[keyword, value]
+        a dictionary containing the attributes (and their current values) that can be used to specify the
+        `variable <OutputState.variable>` of the Mechanism's `OutputState` (see `OutputState_Customization`).
 
     name : str
         the name of the Mechanism; if it is not specified in the **name** argument of the constructor, a default is
@@ -1807,7 +1817,7 @@ class Mechanism_Base(Mechanism):
         """
         from psyneulink.components.states.outputstate import _instantiate_output_states
         # self._update_parameter_states(context=context)
-        self._update_params_dicts(context=context)
+        self._update_attribs_dicts(context=context)
         _instantiate_output_states(owner=self, output_states=self.output_states, context=context)
 
     def _add_projection_to_mechanism(self, state, projection, context=None):
@@ -2258,9 +2268,9 @@ class Mechanism_Base(Mechanism):
             #     self.user_params.__additem__(state.name, state.value)
             # if state.name in self.function_params:
             #     self.function_params.__additem__(state.name, state.value)
-        self._update_params_dicts(context=context)
+        self._update_attribs_dicts(context=context)
 
-    def _update_params_dicts(self, context=None):
+    def _update_attribs_dicts(self, context=None):
         from psyneulink.globals.keywords import NOISE
         for state in self._parameter_states: # cxt-test
             if NOISE in state.name and INITIALIZING in context:
@@ -2836,20 +2846,20 @@ class Mechanism_Base(Mechanism):
 
     @property
     def attributes_dict(self):
-        params_dict = MechParamsDict(
+        attribs_dict = MechParamsDict(
                 OWNER_VARIABLE = self.variable,
                 OWNER_VALUE = self.value,
                 EXECUTION_COUNT = self.execution_count, # FIX: move to assignment to user_params in Component
                 EXECUTION_TIME = self.current_execution_time,
                 INPUT_STATE_VARIABLES = [input_state.variable for input_state in self.input_states]
         )
-        params_dict.update(self.user_params)
-        del params_dict[FUNCTION]
-        del params_dict[FUNCTION_PARAMS]
-        del params_dict[INPUT_STATES]
-        del params_dict[OUTPUT_STATES]
-        params_dict.update(self.function_params)
-        return params_dict
+        attribs_dict.update(self.user_params)
+        del attribs_dict[FUNCTION]
+        del attribs_dict[FUNCTION_PARAMS]
+        del attribs_dict[INPUT_STATES]
+        del attribs_dict[OUTPUT_STATES]
+        attribs_dict.update(self.function_params)
+        return attribs_dict
 
 
 def _is_mechanism_spec(spec):
