@@ -1104,7 +1104,6 @@ class Mechanism_Base(Mechanism):
                      allows the same name to be used for instances of a State type belonging to different Mechanisms
                      without adding index suffixes for that name across Mechanisms
                      while still indexing multiple uses of the same base name within a Mechanism.
-
     """
 
     # CLASS ATTRIBUTES
