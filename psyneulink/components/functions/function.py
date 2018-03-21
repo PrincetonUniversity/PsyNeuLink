@@ -1195,9 +1195,9 @@ class UserDefinedFunction(Function_Base):
     Below is an example plot of the output of the 'SINUSOIDAL OUTPUT' `OutputState` from my_wave_mech above, as the
     execution count increments, when the input to the mechanism is 0.005 for 1000 runs::
 
-    .. figure:: _static/sinusoid_005.png
-       :alt: Sinusoid function
-       :scale: 50 %
+.. figure:: _static/sinusoid_005.png
+   :alt: Sinusoid function
+   :scale: 50 %
 
     .. _UDF_Modulatory_Params_Examples:
 
