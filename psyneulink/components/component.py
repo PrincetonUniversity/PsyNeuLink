@@ -2861,7 +2861,7 @@ class Component(object):
         try:
             return self._current_execution_time
         except AttributeError:
-            self._update_current_execution_time(self.context.status)
+            self._update_current_execution_time(self.context.string)
 
     def _get_current_execution_time(self, context):
         from psyneulink.globals.log import _get_context
