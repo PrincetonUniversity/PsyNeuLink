@@ -366,7 +366,13 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MAPPING_PROJECTION, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, \
+    DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, EXECUTION_COUNT, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, \
+    INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, \
+    MAPPING_PROJECTION, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
+    PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, \
+    SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, \
+    kwComponentCategory
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
@@ -2796,11 +2802,7 @@ class Component(object):
 
     def _get_current_execution_time(self, context):
         from psyneulink.globals.log import _get_context
-        # # MODIFIED 3/18/18 OLD:
-        # return self.log._get_time(context=context ,context_flags=_get_log_context(context))
-        # MODIFIED 3/18/18 NEW:
         return self.log._get_time(context_flags=_get_context(context))
-        # MODIFIED 3/18/18 END
 
     def _update_value(self, context=None):
         """Evaluate execute method

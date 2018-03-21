@@ -783,27 +783,13 @@ class Log:
 
             # Get time and log value if logging condition is satisfied or called for programmatically
             if (log_pref and log_pref & context_flags) or context_flags & ContextStatus.COMMAND_LINE:
-                # # MODIFIED 3/18/18 OLD:
-                # time = time or self._get_time(context, context_flags)
-                # self.entries[self.owner.name] = LogEntry(time, context, value)
-                # MODIFIED 3/18/18 NEW:
                 time = time or self._get_time(context_flags)
                 self.entries[self.owner.name] = LogEntry(time, context_flags_string, value)
-                # MODIFIED 3/18/18 END
 
-        # # MODIFIED 3/18/18 OLD:
-        # if context is not COMMAND_LINE: # cxt-test
-        #     self.owner.prev_context = context
-        # MODIFIED 3/18/18 NEW:
         if not context_flags & ContextStatus.COMMAND_LINE: # cxt-test
             self.owner.prev_context = self.owner.context
-        # MODIFIED 3/18/18 END
 
-    # # MODIFIED 3/18/18 OLD:
-    # def _get_time(self, context, context_flags):
-    # MODIFIED 3/18/18 NEW:
     def _get_time(self, context_flags):
-    # MODIFIED 3/18/18 END
 
         """Get time from Scheduler of System in which Component is being executed.
 

@@ -2215,11 +2215,9 @@ class Process(Process_Base):
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
 
-            # MODIFIED 3/18/18 NEW:
             mech.context.status &= ~ContextStatus.EXECUTION
             mech.context.status |= ContextStatus.LEARNING
             mech.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
-            # MODIFIED 3/18/18 END
 
             # IMPLEMENTATION NOTE:
             #    This implementation restricts learning to ParameterStates of projections to input_states
@@ -2242,32 +2240,26 @@ class Process(Process_Base):
                     try:
                         for parameter_state in projection._parameter_states:
 
-                            # MODIFIED 9/23/17 NEW:
                             # Skip learning if the LearningMechanism to which the LearningProjection belongs is disabled
                             if all(projection.sender.owner.learning_enabled is False
                                    for projection in parameter_state.mod_afferents):
                                 continue
-                            # MODIFIED 9/23/17 END:
 
                             # Call parameter_state.update with LEARNING in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
-                            # MODIFIED 3/18/18 NEW:
                             parameter_state.context.status &= ~ContextStatus.EXECUTION
                             parameter_state.context.status |= ContextStatus.LEARNING
                             parameter_state.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
-                            # MODIFIED 3/18/18 END
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, context=context)
                             parameter_state.update(context=context) # cxt-pass cxt-push
 
-                            # MODIFIED 3/18/18 NEW:
                             parameter_state.context.status &= ~ContextStatus.LEARNING
                             parameter_state.context.status |= ContextStatus.EXECUTION
                             parameter_state.context.string = self.context.string.replace(LEARNING, EXECUTING)
-                            # MODIFIED 3/18/18 END
 
                     # Not all Projection subclasses instantiate ParameterStates
                     except AttributeError as e:
@@ -2278,11 +2270,9 @@ class Process(Process_Base):
                                                "while attempting to update {} {} of {}".
                                                format(e.args[0], parameter_state.name, ParameterState.__name__,
                                                       projection.name))
-            # MODIFIED 3/18/18 NEW:
             mech.context.status &= ~ContextStatus.LEARNING
             mech.context.status |= ContextStatus.EXECUTION
             mech.context.string = self.context.string.replace(LEARNING, EXECUTING)
-            # MODIFIED 3/18/18 END
 
 
     def run(self,

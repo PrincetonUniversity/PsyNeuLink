@@ -2070,11 +2070,7 @@ class Mechanism_Base(Mechanism):
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
-            # # MODIFIED 3/17/18 OLD:
-            # if context is NO_CONTEXT: # cxt-test
-            # MODIFIED 3/17/18 NEW:
             if context is COMMAND_LINE: # cxt-test
-            # MODIFIED 3/17/18 END
                 context = EXECUTING + ' ' + append_type_to_name(self) # cxt-done
                 self.context.status = ContextStatus.EXECUTION
                 self.context.string = EXECUTING + ' ' + append_type_to_name(self)
@@ -2151,6 +2147,10 @@ class Mechanism_Base(Mechanism):
                 #    don't want any non-zero values as a residuum of initialization runs to be
                 #    transmittted back via recurrent Projections as initial inputs
                 self.output_states[state].value = self.output_states[state].value * 0.0
+
+        if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
+            self._increment_execution_count()
+        self.current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
 
         return self.value
 
@@ -2835,11 +2835,12 @@ class Mechanism_Base(Mechanism):
                                             if isinstance(p.sender.owner, Mechanism_Base)])
 
     @property
-    def _params_dict(self):
+    def attributes_dict(self):
         params_dict = MechParamsDict(
                 OWNER_VARIABLE = self.variable,
                 OWNER_VALUE = self.value,
-                EXECUTION_COUNT = self.execution_count,
+                EXECUTION_COUNT = self.execution_count, # FIX: move to assignment to user_params in Component
+                # EXECUTION_TIME = self.current_execution_time,
                 INPUT_STATE_VARIABLES = [input_state.variable for input_state in self.input_states]
         )
         params_dict.update(self.user_params)
