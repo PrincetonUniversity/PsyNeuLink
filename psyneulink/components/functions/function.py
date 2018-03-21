@@ -1185,13 +1185,19 @@ class UserDefinedFunction(Function_Base):
     For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputState.function>` of an OutputState
     of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
 
-        >>> my_wave_mech = pnl.ProcessingMechanism(size=3,
-        ...                                        function=pnl.Logistic,
+        >>> my_wave_mech = pnl.ProcessingMechanism(size=1,
+        ...                                        function=pnl.Linear,
         ...                                        output_states=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
-        ...                                                       pnl.VARIABLE: [pnl.GAIN,pnl.EXECUTION_COUNT],
+        ...                                                       pnl.VARIABLE: [(pnl.OWNER_VALUE, 0),pnl.EXECUTION_COUNT],
         ...                                                       pnl.FUNCTION: my_sinusoidal_fct}])
 
-    For details on how to specify a function of an OutputState, see `OutputState Customization <OutputState_Customization>`
+    For details on how to specify a function of an OutputState, see `OutputState Customization <OutputState_Customization>`.
+    Below is an example plot of the output of the 'SINUSOIDAL OUTPUT' `OutputState` from my_wave_mech above, as the
+    execution count increments, when the input to the mechanism is 0.005 for 1000 runs::
+
+    .. figure:: _static/sinusoid_005.png
+       :alt: Sinusoid function
+       :scale: 50 %
 
     .. _UDF_Modulatory_Params_Examples:
 
