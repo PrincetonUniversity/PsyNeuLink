@@ -395,7 +395,7 @@ from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.utilities import ContentAddressableList, AutoNumber, is_component
 from psyneulink.globals.keywords \
     import INITIALIZING, EXECUTING, VALIDATE, CONTROL, LEARNING, TRIAL, RUN, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
-from psyneulink.globals.context import ContextStatus, _get_context
+from psyneulink.globals.context import ContextStatus, _get_context, _get_time
 
 
 __all__ = [
@@ -783,94 +783,11 @@ class Log:
 
             # Get time and log value if logging condition is satisfied or called for programmatically
             if (log_pref and log_pref & context_flags) or context_flags & ContextStatus.COMMAND_LINE:
-                time = time or self._get_time(context_flags)
+                time = time or _get_time(self.owner, context_flags)
                 self.entries[self.owner.name] = LogEntry(time, context_flags_string, value)
 
         if not context_flags & ContextStatus.COMMAND_LINE: # cxt-test
             self.owner.prev_context = self.owner.context
-
-    def _get_time(self, context_flags):
-
-        """Get time from Scheduler of System in which Component is being executed.
-
-        Returns tuple with (run, trial, time_step) if being executed during Processing or Learning
-        Otherwise, returns (None, None, None)
-
-        """
-
-        from psyneulink.components.mechanisms.mechanism import Mechanism
-        from psyneulink.components.states.state import State
-        from psyneulink.components.projections.projection import Projection
-
-        no_time = (None, None, None)
-
-        # Get mechanism to which Component being logged belongs
-        if isinstance(self.owner, Mechanism):
-            ref_mech = self.owner
-        elif isinstance(self.owner, State):
-            if isinstance(self.owner.owner, Mechanism):
-                ref_mech = self.owner.owner
-            elif isinstance(self.owner.owner, Projection):
-                ref_mech = self.owner.owner.receiver.owner
-            else:
-                raise LogError("Logging currently does not support {} (only {}s, {}s, and {}s).".
-                               format(self.owner.__class__.__name__,
-                                      Mechanism.__name__, State.__name__, Projection.__name__))
-        elif isinstance(self.owner, Projection):
-            ref_mech = self.owner.receiver.owner
-        else:
-            raise LogError("Logging currently does not support {} (only {}s, {}s, and {}s).".
-                           format(self.owner.__class__.__name__,
-                                  Mechanism.__name__, State.__name__, Projection.__name__))
-
-        # FIX: Modify to use self.owner.context.composition once that is implemented
-        # Get System in which it is being (or was last) executed (if any):
-
-        # If called from COMMAND_LINE, get context for last time value was assigned:
-        # if context_flags & ContextStatus.COMMAND_LINE:
-        if context_flags & (ContextStatus.COMMAND_LINE | ContextStatus.RUN | ContextStatus.TRIAL):
-            context_flags = self.owner.prev_context.status
-            execution_context = self.owner.prev_context.string
-        else:
-            execution_context = self.owner.context.string
-
-        system = ref_mech.context.composition
-
-        if system:
-            # FIX: Add ContextStatus.VALIDATE?
-            if context_flags == ContextStatus.EXECUTION:
-                time = system.scheduler_processing.clock.time
-                time = (time.run, time.trial, time.pass_, time.time_step)
-            elif context_flags == ContextStatus.CONTROL:
-                time = system.scheduler_processing.clock.time
-                time = (time.run, time.trial, time.pass_, time.time_step)
-            elif context_flags == ContextStatus.LEARNING:
-                time = system.scheduler_learning.clock.time
-                time = (time.run, time.trial, time.pass_, time.time_step)
-            else:
-                time = None
-
-        # GETS TIME OF LAST RUN OF SYSTEM, BUT NOT NECESSARILY THE COMPONENT (E.G., MECHANISM AND LEARNING)
-        # elif systems and (context_flags & ContextStatus.COMMAND_LINE):
-        #     # # Search for the most recently run Scheduler within any of the Systems to which the ref_mech belongs
-        #     # # and get its time
-        #     # run_times = []
-        #     # for s in systems:
-        #     #     run_times.append((s.scheduler_processing.date_last_run_end, s.scheduler_processing.clock.time))
-        #     #     run_times.append((s.scheduler_learning.date_last_run_end, s.scheduler_learning.clock.time))
-        #     # gmt, time = max(run_times, key=lambda x : x[0])
-        #     # time = (time.run, time.trial, time.time_step)
-
-        else:
-            if self.owner.verbosePref:
-                offender = "\'{}\'".format(self.owner.name)
-                if ref_mech is not self.owner:
-                    offender += " [{} of {}]".format(self.owner.__class__.__name__, ref_mech.name)
-                warnings.warn("Attempt to log {} which is not in a System (logging is currently supported only "
-                              "when running Components within a System".format(offender))
-            time = None
-
-        return time or no_time
 
     @tc.typecheck
     def log_values(self, entries):
