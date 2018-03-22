@@ -849,7 +849,7 @@ class Log:
                 t = system.scheduler_learning.clock.time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             else:
-                time = None
+                t = None
 
         # GETS TIME OF LAST RUN OF SYSTEM, BUT NOT NECESSARILY THE COMPONENT (E.G., MECHANISM AND LEARNING)
         # elif systems and (context_flags & ContextStatus.COMMAND_LINE):
