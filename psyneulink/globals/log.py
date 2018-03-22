@@ -783,27 +783,13 @@ class Log:
 
             # Get time and log value if logging condition is satisfied or called for programmatically
             if (log_pref and log_pref & context_flags) or context_flags & ContextStatus.COMMAND_LINE:
-                # # MODIFIED 3/18/18 OLD:
-                # time = time or self._get_time(context, context_flags)
-                # self.entries[self.owner.name] = LogEntry(time, context, value)
-                # MODIFIED 3/18/18 NEW:
                 time = time or self._get_time(context_flags)
                 self.entries[self.owner.name] = LogEntry(time, context_flags_string, value)
-                # MODIFIED 3/18/18 END
 
-        # # MODIFIED 3/18/18 OLD:
-        # if context is not COMMAND_LINE: # cxt-test
-        #     self.owner.prev_context = context
-        # MODIFIED 3/18/18 NEW:
         if not context_flags & ContextStatus.COMMAND_LINE: # cxt-test
             self.owner.prev_context = self.owner.context
-        # MODIFIED 3/18/18 END
 
-    # # MODIFIED 3/18/18 OLD:
-    # def _get_time(self, context, context_flags):
-    # MODIFIED 3/18/18 NEW:
     def _get_time(self, context_flags):
-    # MODIFIED 3/18/18 END
 
         """Get time from Scheduler of System in which Component is being executed.
 
@@ -843,32 +829,15 @@ class Log:
         # If called from COMMAND_LINE, get context for last time value was assigned:
         # if context_flags & ContextStatus.COMMAND_LINE:
         if context_flags & (ContextStatus.COMMAND_LINE | ContextStatus.RUN | ContextStatus.TRIAL):
-            # # MODIFIED 3/18/18 OLD:
-            # execution_context = self.owner.prev_context
-            # context_flags = _get_context(execution_context)
-            # MODIFIED 3/18/18 NEW:
             context_flags = self.owner.prev_context.status
             execution_context = self.owner.prev_context.string
-            # MODIFIED 3/18/18 END
         else:
-            # # MODIFIED 3/18/18 OLD:
-            # execution_context = context
-            # MODIFIED 3/18/18 NEW:
             execution_context = self.owner.context.string
-            # MODIFIED 3/18/18 END
-        try:
-            systems = list(ref_mech.systems.keys())
-            system = next(s for s in systems if s.name in execution_context)
-        except AttributeError:
-            # ref_mech has not been assigned to a System
-            systems = None
-            system = None
-        except StopIteration:
-            # ref_mech is assigned to one or more Systems, but not currently being executed within one of them
-            system = None
+
+        system = ref_mech.context.composition
 
         if system:
-            # FIX: Add VALIDATE?
+            # FIX: Add ContextStatus.VALIDATE?
             if context_flags == ContextStatus.EXECUTION:
                 time = system.scheduler_processing.clock.time
                 time = (time.run, time.trial, time.pass_, time.time_step)

@@ -1828,11 +1828,9 @@ class State_Base(State):
         Returns combined values of projections, modulated by any mod_afferents
     """
 
-        # MODIFIED 3/18/18 NEW:
         # Set context to owner's context
         self.context.status = self.owner.context.status
         self.context.string = self.owner.context.string
-        # MODIFIED 3/18/18 END
 
         # SET UP ------------------------------------------------------------------------------------------------
 

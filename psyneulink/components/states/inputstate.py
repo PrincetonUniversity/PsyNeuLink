@@ -460,7 +460,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus
+from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.outputstate import OutputState
@@ -879,9 +879,15 @@ class InputState(State_Base):
             #       maybe safe when self.value is only passed or stateful
             variable = np.asarray(self._path_proj_values)
             self._update_variable(variable[0])
-            combined_values = self.function(variable=variable,
-                                            params=runtime_params,
-                                            context=context)
+            # # MODIFIED 3/20/18 OLD:
+            # combined_values = self.function(variable=variable,
+            #                                 params=runtime_params,
+            #                                 context=context)
+            # MODIFIED 3/20/18 NEW:
+            combined_values = super()._execute(variable=variable,
+                                                    runtime_params=runtime_params,
+                                                    context=context)
+            # MODIFIED 3/20/18 END
             return combined_values
         # There were no Projections
         else:

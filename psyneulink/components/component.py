@@ -28,8 +28,9 @@ A Component is never created by calling the constructor for the Component base c
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
 (listed `below <Component_Methods>`) as part of the initialization procedure.  Every Component has a core set of
 `configurable parameters <Component_User_Params>` that can be specified in the arguments of the constructor, as well
-as additional attributes that provide information about its contents and/or state (see
-`Component_Informational_Attributes` below).
+as additional parameters and attributes that may be specific to particular Components, many of which can be modified
+by the user, and some of which provide useful information about the Component (see `User_Modifiable_Parameters`
+and `Informational Attributes` below).
 
 .. _Component_Deferred_Init:
 
@@ -157,39 +158,35 @@ user once the component is constructed, with the one exception of `prefs <Compon
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
   preference (see `PreferenceSet <LINK>` for details).
 
-.. _Component_Informational_Attributes:
+.. _User_Modifiable_Parameters:
 
-Core Informational Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+User-modifiable Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _Component_User_Params:
 
-* **user_params** - a dictionary intended to provide a simple reference to all of the relevant features of a component.
-  The dictionary contains two main types of parameters:
-
-   (1) configurable parameters, meaning component-specific parameters that may or may not have a parameter state. A user
-   can change the value of a configurable parameter at any time. For example, on the TransferMechanism, clip,
-   initial_value, and integrator_mode are all available in user_params and do not have ParameterStates; noise and
-   smooothing_factor are also available in user_params and do have ParameterStates.
-
-   (2) informational parameters. For example, on the TransferMechanism, input_states, output_states, function, and
-   function_params are all available in user_params.
-
-  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
+* `user_params <Component.user_params>` - a dictionary that provides reference to all of the user-modifiable parameters
+  of a Component. The dictionary is a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
   <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
   as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
-  it cannot be used to make assignments.  Rather, changes to the value of a parameter, if allowed,
-  must be made by assigning a value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``),
-  or using the Component's `assign_params <Component.assign_params>` method.
+  it cannot be used to make assignments.  Rather, changes to the value of a parameter must be made by assigning a
+  value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``), but using a dedicated
+  methods if one exists (e.g., `Mechanism.add_states>`), or by using the Component's `assign_params
+  <Component.assign_params>` method.
 
-..
-COMMENT:
-  INCLUDE IN DEVELOPERS' MANUAL
-    * **paramClassDefaults**
-
-    * **paramInstanceDefaults**
-COMMENT
+  All of the parameters listed in the *user_params* dictionary can be modified by the user (as described above).  Some
+  can also be modified by `ControlSignals <ControlSignal>` when a `System executes <System_Execution_Control>`. In
+  general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
+  or format of the values associated with a Component can be subject to modulation.  For example, for a
+  `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
+  `integrator_mode <TransferMecanism.integrator_mode>`, `input_states <TransferMechanism.input_states>`, `output_states,
+  and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
+  but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `smooothing_factor
+  <TransferMechanism.smooth_factor>`, as well as the parameters of the TrasnferMechanism's `function
+  <TransferMechanism.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
+  Parameters that are subject to modulation are associated with a `ParameterState` to which the ControlSignals
+  can project (by way of a `ControlProjection`).
 
 .. _Component_Function_Object:
 
@@ -234,11 +231,43 @@ COMMENT
   `ParameterState_Specification` for details concerning different ways in which the value of a
   parameter can be specified).
 
+.. _Informational_Attributes:
 
+Informational Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to its `user-modifiable parameters <Component_User_Params>`, a Component has attributes that provide
+information about its contents and/or state, but do not directly affect its operation.  Every Component has the
+following two informational attributes:
+
+.. _Component_Execution_Count:
+
+* **execution_count** -- this maintains a record of the number of times a Component has
+  executed; this *excludes* the executions carried out during initialization and validation, but includes all other
+  executions, whether they are of the Component on its own are as part of a `Composition` (e.g., `Process` or
+  `System`). The value can be changed "manually" or programmatically by assigning an integer value directly to the
+  attribute.
+
+.. _Component_Current_Execution_Time:
+
+* **current_execution_time** -- this maintains the `Time` of the last execution
+  of the Component in the context of a `System`'s `scheduler <System_Scheduler>`, and is stored as a tuple of values
+  indicating the `TimeScale.TRIAL`, `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the last execution.  Note that a
+  a System has two schedulers -- `scheduler_processing <System.scheduler_processing>` and `scheduler_learning`;
+  `current_execution_time` stores the time of whichever of these was the last to execute the Component.
 
 
 COMMENT:
-* **log**
+  * parameters are things that govern the operation of the Mechanism (including its function) and/or can be modified/modulated
+  * attributes include parameters, but also read-only attributes that reflect but do not determine the operation (e.g., EXECUTION_COUNT)
+COMMENT
+
+..
+COMMENT:
+  INCLUDE IN DEVELOPERS' MANUAL
+    * **paramClassDefaults**
+
+    * **paramInstanceDefaults**
 COMMENT
 
 
@@ -366,7 +395,13 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MAPPING_PROJECTION, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, \
+    DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, EXECUTION_COUNT, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, \
+    INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, \
+    MAPPING_PROJECTION, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
+    PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, \
+    SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, \
+    kwComponentCategory
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
@@ -679,6 +714,12 @@ class Component(object):
 
     log : Log
         see `log <Component_Log>`
+
+    execution_count : int
+        see `execution_count <Component_Execution_Count>`
+
+    current_execution_time : tuple(`Time.RUN`, `Time.TRIAL`, `Time.PASS`, `Time.TIME_STEP`)
+        see `current_execution_time <Component_Current_Execution_Time>`
 
     name : str
         see `name <Component_Name>`
@@ -2782,15 +2823,52 @@ class Component(object):
         return self._execute(variable=variable, runtime_params=runtime_params, context=context)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
+
+        # MODIFIED 3/20/18 NEW:
+        from psyneulink.components.functions.function import Function
+        if isinstance(self, Function):
+            pass # Functions don't have a Logs or maintain execution_counts or time
+        else:
+            if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
+                self._increment_execution_count()
+            self._update_current_execution_time(context=context) # cxt-pass
+        # MODIFIED 3/20/18 END
         return self.function(variable=variable, params=runtime_params, context=context)
+
+    @property
+    def execution_count(self):
+        """Maintains a simple count of executions over the life of the Component,
+        Incremented in the Component's execute method by call to self._increment_execution_count"""
+        try:
+            return self._execution_count
+        except:
+            self._execution_count = 0
+            return self._execution_count
+
+    @execution_count.setter
+    def execution_count(self, count:int):
+        self._execution_count = count
+
+    def _increment_execution_count(self, count=1):
+        try:
+            self._execution_count +=count
+        except:
+            self._execution_count = 1
+        return self._execution_count
+
+    @property
+    def current_execution_time(self):
+        try:
+            return self._current_execution_time
+        except AttributeError:
+            self._update_current_execution_time(self.context.string)
 
     def _get_current_execution_time(self, context):
         from psyneulink.globals.log import _get_context
-        # # MODIFIED 3/18/18 OLD:
-        # return self.log._get_time(context=context ,context_flags=_get_log_context(context))
-        # MODIFIED 3/18/18 NEW:
         return self.log._get_time(context_flags=_get_context(context))
-        # MODIFIED 3/18/18 END
+
+    def _update_current_execution_time(self, context):
+        self._current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -2979,27 +3057,6 @@ class Component(object):
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
-
-    @property
-    def execution_count(self):
-        """Maintains a simple count of executions over the life of the Component,
-        Incremented in the Component's execute method by call to self._increment_execution_count"""
-        try:
-            return self._execution_count
-        except:
-            self._execution_count = 0
-            return self._execution_count
-
-    @execution_count.setter
-    def execution_count(self, count:int):
-        self._execution_count = count
-
-    def _increment_execution_count(self, count=1):
-        try:
-            self._execution_count +=count
-        except:
-            self._execution_count = 1
-        return self._execution_count
 
     @property
     def context(self):

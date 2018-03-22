@@ -166,6 +166,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.shellclasses import ShellClass
 from psyneulink.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -653,18 +654,21 @@ class LearningProjection(ModulatoryProjection_Base):
             self.context.status = ContextStatus.EXECUTION
         elif LEARNING in context: # cxt-test
             self.context.status = ContextStatus.LEARNING
-        # MODIFIED 3/18/18 OLD:
-        self.weight_change_matrix = self.function(
-            variable=learning_signal,
-            params=runtime_params,
-            context=context
-        )
-        # # MODIFIED 3/18/18 NEW:
-        # self.weight_change_matrix = super()._execute(variable=learning_signal,
-        #                                              runtime_params=runtime_params,
-        #                                              context=context
-        #                                              )
-        # MODIFIED 3/18/18 END
+
+        # # MODIFIED 3/20/18 OLD:
+        # self.weight_change_matrix = self.function(
+        #     variable=learning_signal,
+        #     params=runtime_params,
+        #     context=context
+        # )
+        # MODIFIED 3/20/18 NEW:
+        # IMPLEMENTATION NOTE:  skip Projection._execute, as that uses self.sender.value as variable,
+        #                       which undermines formatting of it (as learning_signal) above
+        self.weight_change_matrix = super(ShellClass, self)._execute(variable=learning_signal,
+                                                                     runtime_params=runtime_params,
+                                                                     context=context
+                                                                     )
+        # MODIFIED 3/20/18 END
 
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate

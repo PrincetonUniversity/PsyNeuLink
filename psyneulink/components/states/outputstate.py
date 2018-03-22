@@ -402,14 +402,14 @@ using the following keywords:
     <Mechanism_Base.value>` indexed by the int;  indexing begins with 0 (e.g.; 1 references the 2nd item).
 
     *<attribute name>* -- the name of an attribute of the OutputState's `owner <OutputState.owner>` (must be one
-    in the `owner <OutputState.owner>`\\'s `params_dict <Mechanism._params_dict>` dictionary); returns the value
+    in the `owner <OutputState.owner>`\\'s `params_dict <Mechanism.attributes_dict>` dictionary); returns the value
     of the named attribute for use in the OutputState's `variable <OutputState.variable>`.
 
-    *PARAMS_DICT* -- the `owner <OutputState.owner>` Mechanism's entire `params_dict <Mechanism._params_dict>`
+    *PARAMS_DICT* -- the `owner <OutputState.owner>` Mechanism's entire `params_dict <Mechanism.attributes_dict>`
     dictionary, that contains entries for all of it accessible attributes.  The OutputState's `function
     <OutputState.function>` must be able to parse the dictionary.
     COMMENT
-    ??WHERE CAN THE USER GET THE LIST OF ALLOWABLE ATTRIBUTES?  USER_PARAMS?? _PARAMS_DICT?? USER ACCESSIBLE PARAMS??
+    ??WHERE CAN THE USER GET THE LIST OF ALLOWABLE ATTRIBUTES?  USER_PARAMS?? aTTRIBUTES_DICT?? USER ACCESSIBLE PARAMS??
     COMMENT
 
     *List[<any of the above items>]* -- this assigns the value of each item in the list to the corresponding item of
@@ -1058,13 +1058,16 @@ class OutputState(State_Base):
                 except AttributeError:
                     raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
                                            format(self.name, self.owner.name))
-
-        # IMPLEMENTATION NOTE: OutputStates don't currently receive PathwayProjections,
-        #                      so there is no need to use their value (as do InputStates)
-        value = self.function(variable=fct_var,
-                             params=runtime_params,
-                             context=context)
-        return value
+        # # MODIFIED 3/20/18 OLD:
+        # value = self.function(variable=fct_var,
+        #                      params=runtime_params,
+        #                      context=context)
+        # return value
+        # MODIFIED 3/20/18 NEW:
+        return super()._execute(variable=fct_var,
+                                runtime_params=runtime_params,
+                                context=context)
+        # MODIFIED 3/20/18 END
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
@@ -1601,19 +1604,19 @@ def _parse_output_state_variable(owner, variable, output_state_name=None):
         elif isinstance(spec, tuple):
             # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))
             try:
-                return owner._params_dict[spec[0]][spec[1]]
+                return owner.attributes_dict[spec[0]][spec[1]]
             except TypeError:
-                if owner._params_dict[spec[0]] is None:
+                if owner.attributes_dict[spec[0]] is None:
                     return None
                 else:
                     raise OutputStateError("Can't parse variable ({}) for {} of {}".
                                            format(spec, output_state_name or OutputState.__name__, owner.name))
         elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
-            return owner._params_dict
+            return owner.attributes_dict
         elif isinstance(spec, str):
             # Owner's full value or attribute other than its value
-            return owner._params_dict[spec]
+            return owner.attributes_dict[spec]
         else:
             raise OutputStateError("\'{}\' entry for {} specification dictionary of {} ({}) must be "
                                    "numeric or a list of {} attribute names".
