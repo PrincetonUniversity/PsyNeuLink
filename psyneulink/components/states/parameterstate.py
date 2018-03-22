@@ -856,10 +856,16 @@ class ParameterState(State_Base):
                 # param_value = self.owner.params[self.name]
                 param_value = getattr(self.owner, '_'+ self.name)
 
-            value = self.function(variable=param_value,
-                                  params=runtime_params,
-                                  context=context)
-            return value
+            # # MODIFIED 3/20/18 OLD:
+            # value = self.function(variable=param_value,
+            #                       params=runtime_params,
+            #                       context=context)
+            # return value
+            # MODIFIED 3/20/18 NEW:
+            return super()._execute(variable=param_value,
+                                    runtime_params=runtime_params,
+                                    context=context)
+            # MODIFIED 3/20/18 END
 
     @property
     def pathway_projections(self):

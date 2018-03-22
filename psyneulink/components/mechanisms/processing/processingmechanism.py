@@ -271,6 +271,8 @@ class ProcessingMechanism(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
+                                                  input_states=input_states,
+                                                  output_states=output_states,
                                                   params=params)
 
         super(ProcessingMechanism, self).__init__(default_variable=default_variable,
