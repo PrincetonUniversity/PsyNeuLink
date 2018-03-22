@@ -12,6 +12,7 @@
 from uuid import UUID
 from enum import IntEnum
 from collections import namedtuple
+import warnings
 
 
 from psyneulink.globals.keywords import INITIALIZING, VALIDATE, EXECUTING, CONTROL, LEARNING
@@ -93,7 +94,7 @@ class Context():
 
     def update_execution_time(self):
         if self.status & ContextStatus.EXECUTION:
-            self.execution_time = self.owner.log._get_time(self.context.status)
+            self.execution_time = _get_time(self.owner, self.context.status)
         else:
             raise ContextError("PROGRAM ERROR: attempt to call update_execution_time for {} "
                                "when 'EXECUTION' was not in its context".format(self.owner.name))
@@ -177,3 +178,75 @@ def _get_context(context):
         context_flag |= ContextStatus.COMMAND_LINE
     return context_flag
 
+def _get_time(component, context_flags):
+
+    """Get time from Scheduler of System in which Component is being executed.
+
+    Returns tuple with (run, trial, time_step) if being executed during Processing or Learning
+    Otherwise, returns (None, None, None)
+
+    """
+
+    from psyneulink.globals.context import time
+    from psyneulink.components.mechanisms.mechanism import Mechanism
+    from psyneulink.components.states.state import State
+    from psyneulink.components.projections.projection import Projection
+
+    no_time = time(None, None, None, None)
+
+    # Get mechanism to which Component being logged belongs
+    if isinstance(component, Mechanism):
+        ref_mech = component
+    elif isinstance(component, State):
+        if isinstance(component.owner, Mechanism):
+            ref_mech = component.owner
+        elif isinstance(component.owner, Projection):
+            ref_mech = component.owner.receiver.owner
+        else:
+            raise ContextError("Logging currently does not support {} (only {}s, {}s, and {}s).".
+                           format(component.__class__.__name__,
+                                  Mechanism.__name__, State.__name__, Projection.__name__))
+    elif isinstance(component, Projection):
+        ref_mech = component.receiver.owner
+    else:
+        raise ContextError("Logging currently does not support {} (only {}s, {}s, and {}s).".
+                       format(component.__class__.__name__,
+                              Mechanism.__name__, State.__name__, Projection.__name__))
+
+    # FIX: Modify to use component.owner.context.composition once that is implemented
+    # Get System in which it is being (or was last) executed (if any):
+
+    # If called from COMMAND_LINE, get context for last time value was assigned:
+    # if context_flags & ContextStatus.COMMAND_LINE:
+    if context_flags & (ContextStatus.COMMAND_LINE | ContextStatus.RUN | ContextStatus.TRIAL):
+        context_flags = component.prev_context.status
+        execution_context = component.prev_context.string
+    else:
+        execution_context = component.context.string
+
+    system = ref_mech.context.composition
+
+    if system:
+        # FIX: Add ContextStatus.VALIDATE?
+        if context_flags == ContextStatus.EXECUTION:
+            t = system.scheduler_processing.clock.time
+            t = time(t.run, t.trial, t.pass_, t.time_step)
+        elif context_flags == ContextStatus.CONTROL:
+            t = system.scheduler_processing.clock.time
+            t = time(t.run, t.trial, t.pass_, t.time_step)
+        elif context_flags == ContextStatus.LEARNING:
+            t = system.scheduler_learning.clock.time
+            t = time(t.run, t.trial, t.pass_, t.time_step)
+        else:
+            t = None
+
+    else:
+        if component.verbosePref:
+            offender = "\'{}\'".format(component.name)
+            if ref_mech is not component:
+                offender += " [{} of {}]".format(component.__class__.__name__, ref_mech.name)
+            warnings.warn("Attempt to log {} which is not in a System (logging is currently supported only "
+                          "when running Components within a System".format(offender))
+        t = None
+
+    return t or no_time
