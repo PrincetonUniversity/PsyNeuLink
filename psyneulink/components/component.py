@@ -172,7 +172,7 @@ User-modifiable Parameters
   as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
   it cannot be used to make assignments.  Rather, changes to the value of a parameter must be made by assigning a
   value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``), but using a dedicated
-  methods if one exists (e.g., `Mechanism.add_states>`), or by using the Component's `assign_params
+  method if one exists (e.g., `Mechanism_Base.add_states`), or by using the Component's `assign_params
   <Component.assign_params>` method.
 
   All of the parameters listed in the *user_params* dictionary can be modified by the user (as described above).  Some
@@ -180,10 +180,10 @@ User-modifiable Parameters
   general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
   or format of the values associated with a Component can be subject to modulation.  For example, for a
   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
-  `integrator_mode <TransferMecanism.integrator_mode>`, `input_states <TransferMechanism.input_states>`, `output_states,
-  and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
-  but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `smooothing_factor
-  <TransferMechanism.smooth_factor>`, as well as the parameters of the TrasnferMechanism's `function
+  `integrator_mode <TransferMechanism.integrator_mode>`, `input_states <TransferMechanism.input_states>`,
+  `output_states`, and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
+  but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `smoothing_factor
+  <TransferMechanism.smoothing_factor>`, as well as the parameters of the TransferMechanism's `function
   <TransferMechanism.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
   Parameters that are subject to modulation are associated with a `ParameterState` to which the ControlSignals
   can project (by way of a `ControlProjection`).
@@ -242,19 +242,19 @@ following two informational attributes:
 
 .. _Component_Execution_Count:
 
-* **execution_count** -- this maintains a record of the number of times a Component has
-  executed; this *excludes* the executions carried out during initialization and validation, but includes all other
-  executions, whether they are of the Component on its own are as part of a `Composition` (e.g., `Process` or
-  `System`). The value can be changed "manually" or programmatically by assigning an integer value directly to the
-  attribute.
+* **execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
+  executions carried out during initialization and validation, but includes all other executions, whether they are of
+  the Component on its own are as part of a `Composition` (e.g., `Process` or `System`). The value can be changed
+  "manually" or programmatically by assigning an integer value directly to the attribute.
 
 .. _Component_Current_Execution_Time:
 
-* **current_execution_time** -- this maintains the `Time` of the last execution
-  of the Component in the context of a `System`'s `scheduler <System_Scheduler>`, and is stored as a tuple of values
-  indicating the `TimeScale.TRIAL`, `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the last execution.  Note that a
-  a System has two schedulers -- `scheduler_processing <System.scheduler_processing>` and `scheduler_learning`;
-  `current_execution_time` stores the time of whichever of these was the last to execute the Component.
+* **current_execution_time** -- maintains the `Time` of the last execution of the Component in the context of a
+  `System`'s `scheduler <System_Scheduler>`, and is stored as a `time <Context.time>` tuple of values indicating the
+  `TimeScale.TRIAL`,  `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the last execution.  Note that a System has two
+  schedulers -- `scheduler_processing <Composition.scheduler_processing>` and `scheduler_learning
+  <Composition.scheduler_learning>`; `current_execution_time` stores the time of whichever of these was the last to
+  execute the Component.
 
 
 COMMENT:

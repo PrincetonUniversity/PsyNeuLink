@@ -798,11 +798,12 @@ class Log:
 
         """
 
+        from psyneulink.globals.context import time
         from psyneulink.components.mechanisms.mechanism import Mechanism
         from psyneulink.components.states.state import State
         from psyneulink.components.projections.projection import Projection
 
-        no_time = (None, None, None)
+        no_time = time(None, None, None, None)
 
         # Get mechanism to which Component being logged belongs
         if isinstance(self.owner, Mechanism):
@@ -839,14 +840,14 @@ class Log:
         if system:
             # FIX: Add ContextStatus.VALIDATE?
             if context_flags == ContextStatus.EXECUTION:
-                time = system.scheduler_processing.clock.time
-                time = (time.run, time.trial, time.pass_, time.time_step)
+                t = system.scheduler_processing.clock.time
+                t = time(t.run, t.trial, t.pass_, t.time_step)
             elif context_flags == ContextStatus.CONTROL:
-                time = system.scheduler_processing.clock.time
-                time = (time.run, time.trial, time.pass_, time.time_step)
+                t = system.scheduler_processing.clock.time
+                t = time(t.run, t.trial, t.pass_, t.time_step)
             elif context_flags == ContextStatus.LEARNING:
-                time = system.scheduler_learning.clock.time
-                time = (time.run, time.trial, time.pass_, time.time_step)
+                t = system.scheduler_learning.clock.time
+                t = time(t.run, t.trial, t.pass_, t.time_step)
             else:
                 time = None
 
@@ -868,9 +869,9 @@ class Log:
                     offender += " [{} of {}]".format(self.owner.__class__.__name__, ref_mech.name)
                 warnings.warn("Attempt to log {} which is not in a System (logging is currently supported only "
                               "when running Components within a System".format(offender))
-            time = None
+            t = None
 
-        return time or no_time
+        return t or no_time
 
     @tc.typecheck
     def log_values(self, entries):

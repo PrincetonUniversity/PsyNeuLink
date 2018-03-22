@@ -11,6 +11,7 @@
 
 from uuid import UUID
 from enum import IntEnum
+from collections import namedtuple
 
 
 from psyneulink.globals.keywords import INITIALIZING, VALIDATE, EXECUTING, CONTROL, LEARNING
@@ -25,6 +26,7 @@ __all__ = [
 
 STATUS = 'status'
 
+time = namedtuple('time', 'run trial pass_ time_step')
 
 class ContextError(Exception):
     def __init__(self, error_value):
@@ -174,3 +176,4 @@ def _get_context(context):
     if context == ContextStatus.COMMAND_LINE.name:
         context_flag |= ContextStatus.COMMAND_LINE
     return context_flag
+
