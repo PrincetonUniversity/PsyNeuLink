@@ -96,10 +96,10 @@ These packages are good for elaborate and detailed models of a particular form.
 In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
 possible, with the ability to integrate components constructed in other packages (including some of the ones listed
 above) into a single functioning system.  These are characteristics that are often (at least in the initial
-stages of development) in tension with efficiency (think:  interpreted vs. compiled).  Two priorities for continued
+stages of development) in tension with efficiency (think:  interpreted vs. compiled).  Three priorities for continued
 development are the acceleration of PsyNeuLink, using just-in-time compilation methods, parallelization and adaptation
-to FPGA hardware; and the implementation of a graphic interface for the construction of models and realtime display
-of their execution.
+to FPGA hardware; integration of tools for model analysis (such as those implemented in HDDM); and the implementation
+ of a graphic interface for the construction of models and realtime display of their execution.
 
 .. _Overview:
 
