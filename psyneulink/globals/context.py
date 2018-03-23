@@ -38,88 +38,94 @@ class ContextFlags(IntEnum):
     """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
     Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
     """
+
+    # INITIALIZATION = 1<<1  # 2
+    # """Set during execution of the Component's constructor."""
+    # VALIDATION =     1<<2  # 4
+    # """Set during validation of the value of a Component or its attribute."""
+    # EXECUTION =      1<<3  # 8
+    # """Set during any execution of the Component."""
+    # PROCESSING =     1<<4  # 16
+    # """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
+    # LEARNING =       1<<5  # 32
+    # """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
+    # CONTROL =        1<<6  # 64
+    # """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
+    # TRIAL =          1<<7  # 128
+    # """Set at the end of a `TRIAL`."""
+    # RUN =            1<<8  # 256
+    # """Set at the end of a `RUN`."""
+    # SIMULATION =     1<<9  # 512
+    # # Set during simulation by Composition.controller
+    # COMMAND_LINE =   1<<10 # 1024
+    # # Component accessed by user
+    # CONSTRUCTOR =    1<<11 # 2048
+
+    # Status flags
     UNINITIALIZED = 0
     """Not Initialized."""
-    DEFERRED_INIT = 1
+    DEFERRED_INIT = 1<<1  # 2
     """Set if flagged for deferred initialization."""
-    INITIALIZING =  2
+    INITIALIZING =  1<<2  # 4
     """Set during initialization of the Component."""
-    VALIDATING =    3
+    VALIDATING =    1<<3  # 8
     """Set during validation of the value of a Component or its attribute."""
-    INITIALIZED =   4
+    INITIALIZED =   1<<4  # 16
     """Set after completion of initialization of the Component."""
 
-
-# FIX: REPLACE IntEnum WITH Flags and auto IF/WHEN MOVE TO Python 3.6
-class Status(IntEnum):
-    """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
-    Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
-    """
-    UNINITIALIZED = 0
-    """Not Initialized."""
-    DEFERRED_INIT = 1
-    """Set if flagged for deferred initialization."""
-    INITIALIZING =  2
-    """Set during initialization of the Component."""
-    VALIDATING =    3
-    """Set during validation of the value of a Component or its attribute."""
-    INITIALIZED =   4
-    """Set after completion of initialization of the Component."""
-
-class Source(IntEnum):
-    CONSTRUCTOR =  0
+    # Source-of-call flags
+    CONSTRUCTOR =   1<<5  # 32
     """Call to method from Component's constructor."""
-    COMMAND_LINE = 1
+    COMMAND_LINE =  1<<6  # 64
     """Direct call to method by user (either interactively from the command line, or in a script)."""
-    COMPONENT =    2
+    COMPONENT =     1<<7  # 128
     """Call to method by the Component."""
-    COMPOSITION =  3
+    COMPOSITION =   1<<8  # 256
     """Call to method by a/the Composition to which the Component belongs."""
 
-    # @classmethod
-    # def _get_context_string(cls, condition, string=None):
-    #     """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
-    #     if string:
-    #         string += ": "
-    #     else:
-    #         string = ""
-    #     flagged_items = []
-    #     # If OFF or ALL_ASSIGNMENTS, just return that
-    #     if condition in (ContextFlags.ALL_ASSIGNMENTS, ContextFlags.OFF):
-    #         return condition.name
-    #     # Otherwise, append each flag's name to the string
-    #     for c in list(cls.__members__):
-    #         # Skip ALL_ASSIGNMENTS (handled above)
-    #         if c is ContextFlags.ALL_ASSIGNMENTS.name:
-    #             continue
-    #         if ContextFlags[c] & condition:
-    #            flagged_items.append(c)
-    #     string += ", ".join(flagged_items)
-    #     return string
-
-class ExecutionPhase(IntEnum):
-    """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
-    Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
-    """
-    IDLE =         0
-    """Not currently executin."""
-    PROCESSING =   1
+    # #Execution phase flags
+    IDLE =          1<<9  #512
+    """Not currently executing."""
+    PROCESSING =    1<<10 #1024
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
-    LEARNING =     2
+    LEARNING =      1<<11 #2048
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    CONTROL =      3
+    CONTROL =       1<<12 #4096
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    SIMULATION =   4
+    SIMULATION =    1<<13 #8192
     """Set during simulation by Composition.controller"""
+
+
+    @classmethod
+    def _get_context_string(cls, condition, string=None):
+        """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
+        if string:
+            string += ": "
+        else:
+            string = ""
+        flagged_items = []
+        # If OFF or ALL_ASSIGNMENTS, just return that
+        if condition in (ContextFlags.ALL_ASSIGNMENTS, ContextFlags.OFF):
+            return condition.name
+        # Otherwise, append each flag's name to the string
+        for c in list(cls.__members__):
+            # Skip ALL_ASSIGNMENTS (handled above)
+            if c is ContextFlags.ALL_ASSIGNMENTS.name:
+                continue
+            if ContextFlags[c] & condition:
+               flagged_items.append(c)
+        string += ", ".join(flagged_items)
+        return string
 
 
 class Context():
     __name__ = 'Context'
     def __init__(self,
                  owner,
-                 status=Status.UNINITIALIZED,
-                 execution_phase=Status.IDLE,
-                 source=Source.COMPONENT,
+                 flags=None,
+                 status=ContextFlags.UNINITIALIZED,
+                 execution_phase=ContextFlags.IDLE,
+                 source=ContextFlags.COMPONENT,
                  composition=None,
                  execution_id:UUID=None,
                  string:str='', time=None):
@@ -128,29 +134,22 @@ class Context():
         self.status = status
         self.execution_phase = execution_phase
         self.source = source
+        if flags:
+            if (status != ContextFlags.UNINITIALIZED) and not (flags & status_mask & status):
+                raise ContextError("Conflict in assignment to flags ({}) and status ({}) arguments of Context for {}".
+                                   format(_get_context_string(flags), _get_context_string(status), self.owner.name))
+            if (execution_phase != ContextFlags.UNINITIALIZED) and not (flags & execution_phase_mask & execution_phase):
+                raise ContextError("Conflict in assignment to flags ({}) and execution_phase ({}) arguments "
+                                   "of Context for {}".format(_get_context_string(flags),
+                                                              _get_context_string(execution_phase), self.owner.name))
+            if (source != ContextFlags.UNINITIALIZED) and not (flags & source_mask & source):
+                raise ContextError("Conflict in assignment to flags ({}) and source ({}) arguments of Context for {}".
+                                   format(_get_context_string(flags), _get_context_string(source), self.owner.name))
+
         self.composition = composition
         self.execution_id = execution_id
         self.execution_time = None
         self.string = string
-
-    @property
-    def status(self):
-        return self._status
-
-    @status.setter
-    def status(self, status):
-        # if isinstance(status, ContextFlags):
-        #     self._status = status
-        # elif isinstance(status, int):
-        #     self._status = ContextFlags(status)
-        # else:
-        #     raise ContextError("{} argument in call to {} must be a {} or an int".
-        #                        format(STATUS, self.__name__, ContextFlags.__name__))
-        if isinstance(status, (ContextFlags, int)):
-            self._status = status
-        else:
-            raise ContextError("{} argument in call to {} must be a {} or an int".
-                               format(STATUS, self.__name__, ContextFlags.__name__))
 
     @property
     def composition(self):
@@ -168,6 +167,50 @@ class Context():
         else:
             raise ContextError("Assignment to context.composition for {} ({}) "
                                "must be a Composition (or \'None\').".format(self.owner.name, composition))
+
+    @property
+    def flags(self):
+        return self._flags
+
+    @
+
+    @property
+    def status(self):
+        return self._flags
+
+    @status.setter
+    def status(self, status):
+        # if isinstance(status, ContextFlags):
+        #     self._status = status
+        # elif isinstance(status, int):
+        #     self._status = ContextFlags(status)
+        # else:
+        #     raise ContextError("{} argument in call to {} must be a {} or an int".
+        #                        format(STATUS, self.__name__, ContextFlags.__name__))
+        if isinstance(status, (ContextFlags, int)):
+            self._status = status
+        else:
+            raise ContextError("{} argument in call to {} must be a {} or an int".
+                               format(STATUS, self.__name__, ContextFlags.__name__))
+
+    @property
+    def status(self):
+        return self.
+
+    @status.setter
+    def status(self, flag):
+
+    @property
+    def execution_phase(self):
+
+    @execution_phase.setter
+    def execution_phase(self, flag):
+
+    @property
+    def source(self):
+
+    @source.setter
+    def source(self, flag):
 
     @property
     def execution_time(self):
