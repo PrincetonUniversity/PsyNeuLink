@@ -2,6 +2,7 @@ import pytest
 
 import psyneulink as pnl
 import numpy as np
+from collections import OrderedDict
 
 class TestLog:
 
@@ -99,7 +100,7 @@ class TestLog:
 
     def test_log_initialization(self):
         T = pnl.TransferMechanism(
-                prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
+                prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.ContextStatus.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)}
         )
         assert T.logged_items == {'value': 'INITIALIZATION'}
 
@@ -485,3 +486,82 @@ class TestLog:
         assert np.allclose(log_dict_T1["Time_step"][30], 0)
         assert abs(log_dict_T1["value"][58]) >= 0.95
         assert abs(log_dict_T1["value"][57]) < 0.95
+
+class TestClearLog:
+
+    def test_clear_log(self):
+
+        # Create System
+        T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
+        T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
+        PS = pnl.Process(name='log_test_PS', pathway=[T_1, T_2])
+        PJ = T_2.path_afferents[0]
+        SYS = pnl.System(name="log_test_SYS", processes=[PS])
+
+        # Set log conditions on each component
+        T_1.set_log_conditions(pnl.NOISE)
+        T_1.set_log_conditions(pnl.RESULTS)
+        T_2.set_log_conditions(pnl.SLOPE)
+        T_2.set_log_conditions(pnl.RESULTS)
+        PJ.set_log_conditions(pnl.MATRIX)
+
+        # Run system
+        SYS.run(inputs={T_1: [1.0, 1.0]})
+
+        # Create log dict for each component
+        log_dict_T_1 = T_1.log.nparray_dictionary()
+        log_dict_T_2 = T_2.log.nparray_dictionary()
+        log_dict_PJ = PJ.log.nparray_dictionary()
+
+        # Confirm that values were logged correctly
+        assert np.allclose(log_dict_T_1['RESULTS'], np.array([[1.0, 1.0]])) and \
+               np.allclose(log_dict_T_1['noise'], np.array([[0.0]]))
+
+        assert np.allclose(log_dict_T_2['RESULTS'], np.array([[1.0, 1.0]])) and \
+               np.allclose(log_dict_T_2['slope'], np.array([[1.0]]))
+
+        assert np.allclose(log_dict_PJ['matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
+
+        # Clear T_1s log and delete entries
+        T_1.log.clear_entries(delete_entry=False)
+
+        # Clear T_2s log and DO NOT delete entries
+        T_2.log.clear_entries(delete_entry=True)
+
+        # Create new log dict for each component
+        log_dict_T_1 = T_1.log.nparray_dictionary()
+        log_dict_T_2 = T_2.log.nparray_dictionary()
+        log_dict_PJ = PJ.log.nparray_dictionary()
+
+        # Confirm that T_1 log values were removed
+        assert np.allclose(log_dict_T_1['RESULTS'], np.array([])) and \
+               np.allclose(log_dict_T_1['noise'], np.array([]))
+
+        # Confirm that T_2 log values were removed and dictionary entries were destroyed
+        assert log_dict_T_2 == OrderedDict()
+
+        # Confirm that PJ log values were not affected by changes to T_1 and T_2's logs
+        assert np.allclose(log_dict_PJ['matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
+
+        # Run system again
+        SYS.run(inputs={T_1: [2.0, 2.0]})
+
+        # Create new log dict for each component
+        log_dict_T_1 = T_1.log.nparray_dictionary()
+        log_dict_T_2 = T_2.log.nparray_dictionary()
+        log_dict_PJ = PJ.log.nparray_dictionary()
+
+        # Confirm that T_1 log values only include most recent run
+        assert np.allclose(log_dict_T_1['RESULTS'], np.array([[2.0, 2.0]])) and \
+               np.allclose(log_dict_T_1['noise'], np.array([[0.0]]))
+        # NOTE: "Run" value still incremented, but only the most recent one is returned (# runs does not reset to zero)
+        assert np.allclose(log_dict_T_1['Run'], np.array([[1]]))
+
+        # Confirm that T_2 log values only include most recent run
+        assert np.allclose(log_dict_T_2['RESULTS'], np.array([[2.0, 2.0]])) and \
+               np.allclose(log_dict_T_2['slope'], np.array([[1.0]]))
+        assert np.allclose(log_dict_T_2['Run'], np.array([[1]]))
+
+        # Confirm that PJ log values include all runs
+        assert np.allclose(log_dict_PJ['matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]])) and \
+               np.allclose(log_dict_PJ['Run'], np.array([[0], [1]]))

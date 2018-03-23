@@ -93,8 +93,10 @@ __all__ = [
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
-    'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'parameter_spec',
-    'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'TEST_CONDTION', 'type_match', 'underscore_to_camelCase', 'UtilitiesError',
+    'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d',
+    'object_has_single_value', 'optional_parameter_spec',
+    'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'TEST_CONDTION', 'type_match',
+    'underscore_to_camelCase', 'UtilitiesError',
 ]
 
 
@@ -510,8 +512,7 @@ def get_args(frame):
 
 
 from collections import Mapping
-
-def recursive_update(d, u):
+def recursive_update(d, u, non_destructive=False):
     """Recursively update entries of dictionary d with dictionary u
     From: https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
     """
@@ -520,6 +521,8 @@ def recursive_update(d, u):
             r = recursive_update(d.get(k, {}), v)
             d[k] = r
         else:
+            if non_destructive and k in d and d[k] is not None:
+                continue
             d[k] = u[k]
     return d
 
@@ -578,6 +581,7 @@ def merge_param_dicts(source, specific, general):
 #     return general.update(source)
     # MODIFIED 7/16/16 NEW:
     return general.update(specific)
+
 
 def multi_getattr(obj, attr, default = None):
     """
@@ -1057,11 +1061,13 @@ def is_same_function_spec(fct_spec_1, fct_spec_2):
     else:
         return False
 
+
 def is_component(val):
     """This allows type-checking for Component definitions where Component module can't be imported
     """
     from psyneulink.components.component import Component
     return isinstance(val, Component)
+
 
 def make_readonly_property(val):
     """Return property that provides read-only access to its value

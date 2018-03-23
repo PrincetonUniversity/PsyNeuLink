@@ -218,7 +218,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     #                               APPROPRIATE ObjectiveMechanism, etc.
     from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
-    if not learning_projection.name in context:
+    if not learning_projection.name in context: # cxt-test
         raise LearningAuxilliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "
                                                              "calls from a LearningProjection._instantiate_sender()"))
 
@@ -386,6 +386,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     # FIXME: learning_function is deprecated
     learning_function = learning_projection.learning_function
     learning_rate = learning_projection.learning_rate
+    error_function = learning_projection.error_function
 
     # HEBBIAN LEARNING FUNCTION
     if learning_function.componentName is HEBBIAN_FUNCTION:
@@ -397,7 +398,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
         learning_function = Hebbian(default_variable=activation,
-                                    activation_function=lc.activation_mech_fct,
+                                    # activation_function=lc.activation_mech_fct,
                                     learning_rate=learning_rate)
 
         objective_mechanism = lc.activation_mech
@@ -416,7 +417,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
         learning_function = Reinforcement(default_variable=[activation_input, activation_output, error_signal],
-                                          activation_function=lc.activation_mech_fct,
+                                          # activation_function=lc.activation_mech_fct,
                                           learning_rate=learning_rate)
 
     elif learning_function.componentName is TDLEARNING_FUNCTION:
@@ -430,7 +431,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         learning_function = TDLearning(default_variable=[activation_input,
                                                          activation_output,
                                                          error_signal],
-                                       activation_function=lc.activation_mech_fct,
+                                       # activation_function=lc.activation_mech_fct,
                                        learning_rate=learning_rate)
 
     # BACKPROPAGATION LEARNING FUNCTION
@@ -543,6 +544,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                   WEIGHT: -1},
                                                           target={NAME: TARGET,
                                                                   VARIABLE: target_input},
+                                                          function=error_function,
                                                           name="{} {}".format(lc.activation_mech.name,
                                                                               COMPARATOR_MECHANISM),
                                                           context=context)

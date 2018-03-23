@@ -17,9 +17,9 @@ A GatingMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modulates t
 OutputState(s) of one or more `Mechanisms <Mechanism>`.   Its `function <GatingMechanism.function>` takes the
 GatingMechanism's `variable <GatingMechanism.variable>` and uses that generate a `gating_policy`:  a list of values,
 one for each of its `GatingSignals <GatingSignal>`.  Each of those, in turn, generates a `gating_signal
-<GatingSignal.gating_signal>` used by its `GatingProjections <GatingProjection>` to modulate the value of the State(
-s) to which they project.   A GatingMechanism can regulate only the parameters of Mechanisms in the `System` to which
-it belongs.  The InputStates and/or OutputStates gated by a GatingMechanism can be list using its `show
+<GatingSignal.gating_signal>` used by its `GatingProjections <GatingProjection>` to modulate the value of the
+State(s) to which they project.   A GatingMechanism can regulate only the parameters of Mechanisms in the `System`
+to which it belongs.  The InputStates and/or OutputStates gated by a GatingMechanism can be list using its `show
 <GatingMehanism.show>` method.
 
 COMMENT: TBI
@@ -63,7 +63,11 @@ GatingSignals
 A `GatingSignal` is created for each item listed in the **gating_signals** argument of the constructor, and all of the
 GatingSignals for a GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.
 Each GatingSignal is assigned one or more `GatingProjections <GatingProjection>` to the InputState(s) and/or
-OutputState(s) it gates.
+OutputState(s) it gates. By default, the `function <GatingMechanism.function>` of GatingMechanism generates a
+a `value <GatingMechanism.value>` -- its `gating_policy <GatingSignal.gating_policy>` -- with a single item, that is
+used by all of the GatingMechanism's GatingSignals.  However,  if a custom `function <GatingMechanism.function>` is
+specified that generates a `gating_policy <GatingSignal.gating_policy>` with more than one item, different
+GatingSignals can be assigned to the different items (see `GatingMechanism_Function` below).
 
 .. _GatingMechanism_Modulation:
 
@@ -101,7 +105,7 @@ the `value <InputState.value>` of its `primary InputState <InputState_Primary>` 
 of its `gating_policy <GatingMechanism.gating_policy>`.  This can be replaced by a `Function` that generates
 a `gating_policy <GatingMechanism.gating_policy>` with multiple values, which may be useful if the GatingMechanism
 is assigned more than one `GatingSignal`.
-\
+
 .. _GatingMechanism_Output:
 
 Output
@@ -168,7 +172,9 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.components.states.state import State_Base, _parse_state_spec
 from psyneulink.globals.defaults import defaultGatingPolicy
-from psyneulink.globals.keywords import GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, PROJECTION_TYPE
+from psyneulink.globals.keywords import \
+    GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, \
+    INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, OWNER_VALUE, PROJECTION_TYPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -483,18 +489,19 @@ class GatingMechanism(AdaptiveMechanism_Base):
         # Parse gating_signal specifications (in call to State._parse_state_spec)
         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
         gating_signal = _instantiate_state(state_type=GatingSignal,
-                                            owner=self,
-                                            reference_value=defaultGatingPolicy,
-                                            modulation=self.modulation,
-                                            state_spec=gating_signal)
+                                           variable=(OWNER_VALUE,0),
+                                           owner=self,
+                                           reference_value=defaultGatingPolicy,
+                                           modulation=self.modulation,
+                                           state_spec=gating_signal)
 
         # Validate index
         try:
-            self.gating_policy[gating_signal.index]
+            self.gating_policy[gating_signal.owner_value_index]
         except IndexError:
             raise GatingMechanismError("Index specified for {} of {} ({}) "
                                        "exceeds the number of items of its {} ({})".
-                                       format(GatingSignal.__name__, self.name, gating_signal.index,
+                                       format(GatingSignal.__name__, self.name, gating_signal.owner_value_index,
                                               GATING_POLICY, len(self.gating_policy)))
 
         # Add GatingSignal TO output_states LIST

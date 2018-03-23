@@ -729,7 +729,8 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, function_type
+from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, \
+    function_type, method_type
 from psyneulink.components.functions.function import Function, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXECUTING, EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
@@ -1066,13 +1067,14 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                context = kargs[kwStateContext]
+                context = kargs[kwStateContext] # cxt-set
+                self.context.string = kargs[kwStateContext]
             except (KeyError, NameError):
                 pass
 
         # Enforce that only called from subclass
         if (not isinstance(context, State_Base) and
-                not any(key in context for key in {INITIALIZING, ADD_STATES, COMMAND_LINE})):
+                not any(key in context for key in {INITIALIZING, ADD_STATES, COMMAND_LINE})): # cxt-test
             raise StateError("Direct call to abstract class State() is not allowed; "
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
@@ -1090,7 +1092,7 @@ class State_Base(State):
 
         # If name is not specified, assign default name
         if name is not None and DEFERRED_INITIALIZATION in name:
-            name = self._assign_default_state_name(context=name)
+            name = self._assign_default_state_name(context=name) # cxt-set
 
 
 
@@ -1113,18 +1115,20 @@ class State_Base(State):
         for attrib, value in get_class_attributes(ModulationParam):
             self._mod_proj_values[getattr(ModulationParam,attrib)] = []
 
+        self.context.string = context.__class__.__name__
+
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(default_variable=variable,
                                          size=size,
                                          param_defaults=params,
                                          name=name,
                                          prefs=prefs,
-                                         context=context.__class__.__name__)
+                                         context=context.__class__.__name__) # cxt-done cxt-pass
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
-            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
+            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context) # cxt-pass cxt-push
         else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -1133,7 +1137,7 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
-        if context is COMMAND_LINE:
+        if context is COMMAND_LINE: # cxt-test
             state_list = getattr(owner, owner.stateListAttr[self.__class__])
             if state_list and not self in state_list:
                 owner.add_states(self)
@@ -1255,15 +1259,9 @@ class State_Base(State):
                                        self.owner.name))
 
     def _instantiate_function(self, context=None):
-        """Insure that output of function (self.value) is compatible with its input (self.instance_defaults.variable)
-
-        This constraint reflects the role of State functions:
-            they simply update the value of the State;
-            accordingly, their variable and value must be compatible
-        """
 
         var_is_matrix = False
-        # If variable is a matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
+        # If variable is a 2d array or matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
         #     it needs to be embedded in a list so that it is properly handled by LinearCombination
         #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
         # Notes:
@@ -1830,6 +1828,10 @@ class State_Base(State):
         Returns combined values of projections, modulated by any mod_afferents
     """
 
+        # Set context to owner's context
+        self.context.status = self.owner.context.status
+        self.context.string = self.owner.context.string
+
         # SET UP ------------------------------------------------------------------------------------------------
 
         # Get State-specific param_specs
@@ -1926,14 +1928,14 @@ class State_Base(State):
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningProjection) and not LEARNING in context:
+            if isinstance(projection, LearningProjection) and not LEARNING in context: # cxt-test
                 projection_value = projection.value * 0.0
             else:
                 projection_value = projection.execute(runtime_params=projection_params,
-                                                      context=context)
+                                                      context=context) # cxt-pass cxt-push
 
             # If this is initialization run and projection initialization has been deferred, pass
-            if INITIALIZING in context and projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            if INITIALIZING in context and projection.init_status is InitStatus.DEFERRED_INITIALIZATION: # cxt-test
                 continue
 
             if isinstance(projection, PathwayProjection_Base):
@@ -2018,7 +2020,7 @@ class State_Base(State):
         return False
 
     @staticmethod
-    def _get_state_function_value(function, variable):
+    def _get_state_function_value(owner, function, variable):
         """Execute the function of a State and return its value
 
         This is a stub, that a State subclass can override to treat execution of its function in a State-specific manner
@@ -2268,7 +2270,7 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
         # # variable:
         # #   InputState: set of projections it receives
         # #   ParameterState: value of its sender
-        # #   OutputState: value[INDEX] of its owner
+        # #   OutputState: _parse_output_state_variable()
         # # FIX: ----------------------------------------------------------
 
         # FIX: THIS SHOULD ONLY APPLY TO InputState AND ParameterState; WHAT ABOUT OutputState?
@@ -2291,9 +2293,14 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
     state_spec_dict.pop(VALUE, None)
 
-    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
+    # FIX: 2/25/18  GET REFERENCE_VALUE FROM REFERENCE_DICT?
+    # Get reference_value
     if state_spec_dict[REFERENCE_VALUE] is None:
-        state_spec_dict[REFERENCE_VALUE] = state_spec_dict[VARIABLE]
+        state_spec_dict[REFERENCE_VALUE] = reference_value
+        if reference_value is None:
+            state_spec_dict[REFERENCE_VALUE] = state_spec_dict[VARIABLE]
+
+    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
     state_spec_dict[REFERENCE_VALUE] = convert_to_np_array(state_spec_dict[REFERENCE_VALUE],1)
 
     # INSTANTIATE STATE:
@@ -2471,7 +2478,7 @@ def _parse_state_spec(state_type=None,
         state_specific_args.update(state_spec)
 
     state_dict = standard_args
-    context = state_dict.pop(CONTEXT, None)
+    context = state_dict.pop(CONTEXT, None) # cxt-set
     owner = state_dict[OWNER]
     state_type = state_dict[STATE_TYPE]
     reference_value = state_dict[REFERENCE_VALUE]
@@ -2811,7 +2818,7 @@ def _parse_state_spec(state_type=None,
         else:
             state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
 
-    # get the value spec value from the spec function if it exists,
+    # get the State's value from the spec function if it exists,
     # otherwise we can assume there is a default function that does not
     # affect the shape, so it matches variable
     # FIX: JDC 2/21/18 PROBLEM IS THAT, IF IT IS AN InputState, THEN EITHER update MUST BE CALLED
@@ -2819,11 +2826,12 @@ def _parse_state_spec(state_type=None,
     # FIX:    AS TWO ITEMS TO BE COMBINED RATHER THAN AS A 2D ARRAY
     try:
         spec_function = state_dict[PARAMS][FUNCTION]
-        if isinstance(spec_function, Function):
+        # if isinstance(spec_function, Function):
+        if isinstance(spec_function, (Function, function_type, method_type)):
             # # MODIFIED 2/21/18 OLD [KM]:
             # spec_function_value = spec_function.execute(state_dict[VARIABLE])
             # MODIFIED 2/21/18 NEW [JDC]:
-            spec_function_value = state_type._get_state_function_value(spec_function, state_dict[VARIABLE])
+            spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
             # MODIFIED 2/21/18 END
         elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
             try:
@@ -2833,10 +2841,11 @@ def _parse_state_spec(state_type=None,
             # # MODIFIED 2/21/18 OLD [KM]:
             # spec_function_value = spec_function.execute(state_dict[VARIABLE])
             # MODIFIED 2/21/18 NEW [JDC]:
-            spec_function_value = state_type._get_state_function_value(spec_function, state_dict[VARIABLE])
+            spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
             # MODIFIED 2/21/18 END
         else:
-            raise StateError('state_spec value for FUNCTION ({0}) must be a Function class or instance'.
+            raise StateError('state_spec value for FUNCTION ({0}) must be a function, method, '
+                             'Function class or instance of one'.
                              format(spec_function))
     except (KeyError, TypeError):
         spec_function_value = state_dict[VARIABLE]
@@ -2844,6 +2853,7 @@ def _parse_state_spec(state_type=None,
     # Assign value based on variable if not specified
     if state_dict[VALUE] is None:
         state_dict[VALUE] = spec_function_value
+    # Otherwise, make sure value returned by spec function is same as one specified for State's value
     else:
         if not np.asarray(state_dict[VALUE]).shape == np.asarray(spec_function_value).shape:
             raise StateError(

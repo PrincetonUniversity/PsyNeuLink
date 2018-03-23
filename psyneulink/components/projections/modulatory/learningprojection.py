@@ -166,7 +166,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import InitStatus, parameter_keywords
-from psyneulink.components.functions.function import BackPropagation, Linear, is_function_type
+from psyneulink.components.shellclasses import ShellClass
+from psyneulink.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -175,9 +176,12 @@ from psyneulink.components.projections.projection import Projection_Base, _is_pr
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.globals.keywords import CONTEXT, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, NAME, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.globals.keywords import CONTEXT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
+    INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, NAME, \
+    PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import iscompatible, parameter_spec
 
 __all__ = [
@@ -207,6 +211,7 @@ class LearningProjection(ModulatoryProjection_Base):
     LearningProjection(               \
                  sender=None,         \
                  receiver=None,       \
+                 error_function,      \
                  learning_function,   \
                  learning_rate=None,  \
                  weight=None,         \
@@ -261,6 +266,12 @@ class LearningProjection(ModulatoryProjection_Base):
         specifies the function used to convert the `learning_signal` to the `weight_change_matrix
         <LearningProjection.weight_change_matrix>`, prior to applying the `learning_rate
         <LearningProjection.learning_rate>`.
+
+    error_function : Optional[Function or function] : default LinearCombination(weights=[[-1], [1]])
+        specifies a function to be used by the `TARGET Mechanism <LearningMechanism_Targets>` to compute the error
+        used for learning.  Since the `TARGET` Mechanism is a `ComparatorMechanism`, its function must have a `variable
+        <Function.variable>` with two items, that receives its values from the *SAMPLE* and *TARGET* InputStates of the
+        ComparatorMechanism.
 
     learning_function : Optional[LearningFunction or function] : default BackPropagation
         specifies a function to be used for learning by the `LearningMechanism` to which the
@@ -408,6 +419,7 @@ class LearningProjection(ModulatoryProjection_Base):
     def __init__(self,
                  sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
+                 error_function:tc.optional(is_function_type)=LinearCombination(weights=[[-1], [1]]),
                  learning_function:tc.optional(is_function_type)=BackPropagation,
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                  # learning_signal_params:tc.optional(dict)=None,
@@ -420,12 +432,14 @@ class LearningProjection(ModulatoryProjection_Base):
                  context=None):
 
         # IMPLEMENTATION NOTE:
-        #     the learning_function argument is implemented to preserve the ability to pass a learning function
-        #     specification from the specification of a LearningProjection (used to implement learning for a
-        #     MappingProjection, e.g., in a tuple) to the LearningMechanism responsible for implementing the function
+        #     the error_function and learning_function arguments are implemented to preserve the ability to pass
+        #     error function and learning function specifications from the specification of a LearningProjection (used
+        #     to implement learning for a MappingProjection, e.g., in a tuple) to the LearningMechanism responsible
+        #     for implementing the function; and for specifying the default LearningProjection for a Process.
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(learning_function=learning_function,
+        params = self._assign_args_to_param_dicts(error_function=error_function,
+                                                  learning_function=learning_function,
                                                   learning_rate=learning_rate,
                                                   # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                                                   # learning_signal_params=learning_signal_params,
@@ -459,7 +473,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if INITIALIZING in context:
+        if INITIALIZING in context: # cxt-test
             # VALIDATE SENDER
             sender = self.sender
             if isinstance(sender, LearningMechanism):
@@ -514,10 +528,9 @@ class LearningProjection(ModulatoryProjection_Base):
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
             from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary \
                 import _instantiate_learning_components
-            _instantiate_learning_components(
-                learning_projection=self,
-                context="{0} {1}".format(context, self.name)
-            )
+            _instantiate_learning_components(learning_projection=self,
+                                             context="{0} {1}".format(context, self.name))  # cxt-done cxt-pass cxt-push
+
 
         if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
@@ -637,16 +650,30 @@ class LearningProjection(ModulatoryProjection_Base):
                                               format(self.sender.owner.name, learning_signal,
                                                      self.receiver.owner.name, matrix))
 
-        self.weight_change_matrix = self.function(
-            variable=learning_signal,
-            params=runtime_params,
-            context=context
-        )
+        if EXECUTING in context: # cxt-test
+            self.context.status = ContextStatus.EXECUTION
+        elif LEARNING in context: # cxt-test
+            self.context.status = ContextStatus.LEARNING
+
+        # # MODIFIED 3/20/18 OLD:
+        # self.weight_change_matrix = self.function(
+        #     variable=learning_signal,
+        #     params=runtime_params,
+        #     context=context
+        # )
+        # MODIFIED 3/20/18 NEW:
+        # IMPLEMENTATION NOTE:  skip Projection._execute, as that uses self.sender.value as variable,
+        #                       which undermines formatting of it (as learning_signal) above
+        self.weight_change_matrix = super(ShellClass, self)._execute(variable=learning_signal,
+                                                                     runtime_params=runtime_params,
+                                                                     context=context
+                                                                     )
+        # MODIFIED 3/20/18 END
 
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate
 
-        if not INITIALIZING in context and self.reportOutputPref:
+        if not INITIALIZING in context and self.reportOutputPref: # cxt-test
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(self.weight_change_matrix)))
 
         return self.value

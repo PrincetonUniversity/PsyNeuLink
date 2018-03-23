@@ -84,7 +84,7 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
 from psyneulink.components.shellclasses import Projection
-from psyneulink.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, FUNCTION_PARAMS, INDEX, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PROJECTION
+from psyneulink.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, FUNCTION_PARAMS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, OWNER_VALUE, PROJECTION, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
@@ -285,7 +285,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         CONTROL_PROJECTIONS: None,
         INPUT_STATES:input_state_names,
         OUTPUT_STATES:[{NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        INDEX:0}
+                        VARIABLE: (OWNER_VALUE,0)}
                        ]})
 
     @tc.typecheck
@@ -356,7 +356,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                                              params=runtime_params,
                                              context=context)
 
-        if not INITIALIZING in context and self.reportOutputPref:
+        if not INITIALIZING in context and self.reportOutputPref: # cxt-test
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal]

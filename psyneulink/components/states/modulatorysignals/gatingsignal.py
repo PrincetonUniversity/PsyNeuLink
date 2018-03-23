@@ -66,9 +66,9 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
 
     The dictionary can also contain entries for any other GatingSignal attributes to be specified
     (e.g., a *MODULATION* entry, the value of which determines how the GatingSignal modulates the
-    `value <State_Base.value>` of the State(s) that it gates; or an *INDEX* entry specifying which item
+    `value <State_Base.value>` of the State(s) that it gates; or a *VARIABLE* entry specifying which item
     of the GatingMechanism's `gating_policy <GatingMechanism.gating_policy>` it should use as its `value
-    <GatingSignal,value>`).
+    <GatingSignal,value>`;  see `OutputState_Customization`).
   ..
   * **2-item tuple** -- the 1st item must be the name of the State (or list of State names), and the 2nd item the
     Mechanism to which it (they) belong(s); this is a convenience format, which is simpler to use than a specification
@@ -237,6 +237,7 @@ from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUE
 from psyneulink.components.states.state import State_Base, _get_state_for_socket, _parse_state_type
 from psyneulink.globals.keywords import COMMAND_LINE, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -416,7 +417,7 @@ class GatingSignal(ModulatorySignal):
                  variable=None,
                  size=None,
                  index=None,
-                 assign=Linear,
+                 assign=None,
                  function=Linear(),
                  modulation:tc.optional(_is_modulation_param)=None,
                  projections=None,
@@ -425,10 +426,13 @@ class GatingSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None:
-            context = COMMAND_LINE
+        if context is None: # cxt-test
+            context = COMMAND_LINE # cxt-done
+            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.string = COMMAND_LINE
         else:
-            context = self
+            context = self # cxt-done
+            self.context.status = ContextStatus.CONSTRUCTOR
 
         # Note: assign is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.

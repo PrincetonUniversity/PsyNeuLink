@@ -179,6 +179,7 @@ from psyneulink.globals.keywords import \
     PROJECTION_TYPE, RECEIVER, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import parameter_spec
 
 __all__ = [
@@ -360,7 +361,7 @@ class LearningSignal(ModulatorySignal):
                  variable=None,
                  size=None,
                  index=PRIMARY,
-                 assign=Linear,
+                 assign=None,
                  function=Linear(),
                  learning_rate: tc.optional(parameter_spec) = None,
                  modulation:tc.optional(_is_modulation_param)=None,
@@ -370,10 +371,13 @@ class LearningSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None:
-            context = COMMAND_LINE
+        if context is None: # cxt-test
+            context = COMMAND_LINE # cxt-done
+            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.string = COMMAND_LINE
         else:
-            context = self
+            context = self # cxt-done
+            self.context.status = ContextStatus.CONSTRUCTOR
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -392,7 +396,7 @@ class LearningSignal(ModulatorySignal):
                          size=size,
                          modulation=modulation,
                          index=index,
-                         assign=assign,
+                         assign=None,
                          projections=projections,
                          params=params,
                          name=name,

@@ -460,7 +460,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus
+from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.outputstate import OutputState
@@ -468,6 +468,7 @@ from psyneulink.components.states.state import ADD_STATES, StateError, State_Bas
 from psyneulink.globals.keywords import COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import append_type_to_name, is_numeric, iscompatible
 
 __all__ = [
@@ -711,10 +712,13 @@ class InputState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None:
-            context = COMMAND_LINE
+        if context is None: # cxt-test
+            context = COMMAND_LINE # cxt-done
+            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.string = COMMAND_LINE
         else:
-            context = self
+            context = self # cxt-done
+            self.context.status = ContextStatus.CONSTRUCTOR
 
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
@@ -871,10 +875,19 @@ class InputState(State_Base):
         # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
-            # TODO: stateful - this seems dangerous with statefulness, maybe safe when self.value is only passed or stateful
-            combined_values = self.function(variable=np.asarray(self._path_proj_values),
-                                            params=runtime_params,
-                                            context=context)
+            # TODO: stateful - this seems dangerous with statefulness,
+            #       maybe safe when self.value is only passed or stateful
+            variable = np.asarray(self._path_proj_values)
+            self._update_variable(variable[0])
+            # # MODIFIED 3/20/18 OLD:
+            # combined_values = self.function(variable=variable,
+            #                                 params=runtime_params,
+            #                                 context=context)
+            # MODIFIED 3/20/18 NEW:
+            combined_values = super()._execute(variable=variable,
+                                                    runtime_params=runtime_params,
+                                                    context=context)
+            # MODIFIED 3/20/18 END
             return combined_values
         # There were no Projections
         else:
@@ -1114,7 +1127,7 @@ class InputState(State_Base):
         self.path_afferents = assignment
 
     @staticmethod
-    def _get_state_function_value(function, variable):
+    def _get_state_function_value(owner, function, variable):
         """Overrided State method
 
         InputState variable must be embedded in a list (see InputState._get_state_function_value()).
@@ -1183,7 +1196,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
     # IMPLEMENTATION NOTE: USE OF CONTEXT STRING
-    if context and 'ADD_STATES' in context:
+    if context and 'ADD_STATES' in context: # cxt-test
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list

@@ -90,6 +90,7 @@ belongs is run. A ProcessingMechanism always executes before any `AdaptiveMechan
 """
 
 import typecheck as tc
+from collections import Iterable
 
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -261,6 +262,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
+                 output_states:tc.optional(tc.any(str, Iterable))=None,
                  function=Linear,
                  params=None,
                  name=None,
@@ -269,11 +271,14 @@ class ProcessingMechanism(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
+                                                  input_states=input_states,
+                                                  output_states=output_states,
                                                   params=params)
 
         super(ProcessingMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   input_states=input_states,
+                                                  output_states=output_states,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,

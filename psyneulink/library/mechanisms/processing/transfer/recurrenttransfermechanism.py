@@ -178,6 +178,7 @@ from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
 from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, HOLLOW_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.scheduling.time import TimeScale
@@ -594,8 +595,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     standard_output_states = TransferMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:ENERGY}, {NAME:ENTROPY}])
-    # FIX: 11/19/17 ??SHOULD THE ABOVE BE:
-    # standard_output_states.extend([{NAME:ENERGY, INDEX:PRIMARY}, {NAME:ENTROPY, INDEX:PRIMARY}])
 
     @tc.typecheck
     def __init__(self,
@@ -1053,7 +1052,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         if learning_rate:
             self.learning_rate = learning_rate
 
-        context = context or COMMAND_LINE
+        context = context or COMMAND_LINE # cxt-done cxt-pass ? cxt-push
+        if self.context.status is ContextStatus.OFF:
+            self.context.status = ContextStatus.COMMAND_LINE
 
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self.output_state,
                                                                        learning_function=self.learning_function,

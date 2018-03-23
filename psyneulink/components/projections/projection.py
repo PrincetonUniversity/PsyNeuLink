@@ -392,11 +392,15 @@ from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.components.states.state import StateError
-from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
-from psyneulink.globals.log import LogCondition, LogEntry, _get_log_context
-from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, EXECUTING, \
+    GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
+    MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, \
+    PARAMETER_STATE_PARAMS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, \
+    RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, \
+    kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
+from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
 
 __all__ = [
@@ -646,7 +650,7 @@ class Projection_Base(Projection):
         from psyneulink.components.states.parameterstate import ParameterState
         from psyneulink.components.states.state import State_Base
 
-        if not isinstance(context, Projection_Base):
+        if not isinstance(context, Projection_Base): # cxt-test
             raise ProjectionError("Direct call to abstract class Projection() is not allowed; "
                                  "use projection() or one of the following subclasses: {0}".
                                  format(", ".join("{!s}".format(key) for (key) in ProjectionRegistry.keys())))
@@ -886,7 +890,13 @@ class Projection_Base(Projection):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
     def _execute(self, variable, runtime_params=None, context=None):
-        self.value = self.function(variable=self.sender.value, params=runtime_params, context=context)
+
+        # MODIFIED 3/20/18 OLD:
+        # self.value = self.function(variable=self.sender.value, params=runtime_params, context=context)
+        # MODIFIED 3/20/18 NEW:
+        self.value = super()._execute(variable=self.sender.value, runtime_params=runtime_params, context=context)
+        # MODIFIED 3/20/18 END
+
         return self.value
 
     # FIX: 10/3/17 - replace with @property on Projection for receiver and sender

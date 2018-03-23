@@ -549,9 +549,10 @@ from psyneulink.components.states.state import ADD_STATES
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INDEX, INITIALIZING, \
+from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INITIALIZING, \
     INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, TARGET
+    MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, \
+    PROJECTIONS, SAMPLE, STATE_TYPE, TARGET, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
@@ -892,9 +893,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         INPUT_STATES:input_state_names,
         OUTPUT_STATES:[{NAME:ERROR_SIGNAL,
                         STATE_TYPE:OUTPUT_STATE,
-                        INDEX:1},
+                        VARIABLE: (OWNER_VALUE, 1)},
                        {NAME:LEARNING_SIGNAL,  # NOTE: This is the default, but is overridden by any LearningSignal arg
-                        INDEX:0}
+                        VARIABLE: (OWNER_VALUE, 0)}
                        ]})
 
     @tc.typecheck
@@ -1016,17 +1017,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
             for spec in target_set[LEARNING_SIGNALS]:
                 learning_signal = _parse_state_spec(state_type=LearningSignal, owner=self, state_spec=spec)
 
-
                 # Validate that the receiver of the LearningProjection (if specified)
                 #     is a MappingProjection and in the same System as self (if specified)
-                try:
+                if learning_signal[PARAMS] and PROJECTIONS in learning_signal[PARAMS]:
                     for learning_projection in  learning_signal[PARAMS][PROJECTIONS]:
                         _validate_receiver(sender_mech=self,
                                            projection=learning_projection,
                                            expected_owner_type=MappingProjection,
                                            spec_type=LEARNING_SIGNAL,
                                            context=context)
-                except KeyError:
+                else:
                     pass
 
     def _instantiate_attributes_before_function(self, context=None):
@@ -1073,35 +1073,48 @@ class LearningMechanism(AdaptiveMechanism_Base):
                           context=context)
 
         # Instantiate LearningSignals if they are specified, and assign to self._output_states
-        # Note: if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputState
-        #          in the OUTPUT_STATES entry of paramClassDefaults;
-        #       the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
-        if self.learning_signals:
+        # Notes:
+        #    - if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputState
+        #        in the OUTPUT_STATES entry of paramClassDefaults;
+        #    - the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
 
-            # Delete default LEARNING_SIGNAL item in output_states
-            del self._output_states[1]
-            for learning_signal in self.learning_signals:
-                # Instantiate LearningSignal
+        # Get default LearningSignal
+        default_learning_signal = next((item for item in self._output_states
+                                        if NAME in item and item[NAME] is LEARNING_SIGNAL),None)
+        if default_learning_signal is None:
+            raise LearningMechanismError("PROGRAM ERROR: Can't find default {} for {}".
+                                         format(LearningSignal.__name__, self.name))
 
-                params = {LEARNED_PARAM: MATRIX}
+        # Assign default if user didn't specify any
+        if self.learning_signals is None:
+            self.learning_signals = [default_learning_signal]
 
-                # Parses learning_signal specifications (in call to State._parse_state_spec)
-                #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
-                learning_signal = _instantiate_state(state_type=LearningSignal,
-                                                     owner=self,
-                                                     params=params,
-                                                     reference_value=self.learning_signal,
-                                                     modulation=self.modulation,
-                                                     # state_spec=self.learning_signal)
-                                                     state_spec=learning_signal)
-                # Add LearningSignal to output_states list
-                self._output_states.append(learning_signal)
+        # Either way, delete default LearningSignal
+        del self._output_states[self._output_states.index(default_learning_signal)]
 
-            # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
-            first_learning_signal = next(state for state in self.output_states if isinstance(state, LearningSignal))
-            first_learning_signal.name = LEARNING_SIGNAL
+        # Instantiate LearningSignals and assign to self._output_states
+        for learning_signal in self.learning_signals:
+            # Instantiate LearningSignal
 
-        # FIX: 2/12/18 - NEED TO INSTANTIATE ERROR_SIGNAL AS A REGULAR OUTPUTSTATE, AND LEANRING_SIGNAL AS SUCH
+            params = {LEARNED_PARAM: MATRIX}
+
+            # Parses learning_signal specifications (in call to State._parse_state_spec)
+            #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+            learning_signal = _instantiate_state(state_type=LearningSignal,
+                                                 owner=self,
+                                                 variable=(OWNER_VALUE,0),
+                                                 params=params,
+                                                 reference_value=self.learning_signal,
+                                                 modulation=self.modulation,
+                                                 # state_spec=self.learning_signal)
+                                                 state_spec=learning_signal)
+            # Add LearningSignal to output_states list
+            self._output_states.append(learning_signal)
+
+        # Assign LEARNING_SIGNAL as the name of the 1st LearningSignal; the names of any others can be user-defined
+        first_learning_signal = next(state for state in self.output_states if isinstance(state, LearningSignal))
+        first_learning_signal.name = LEARNING_SIGNAL
+
         super()._instantiate_output_states(context=context)
 
         # Reassign learning_signals to capture any user_defined LearningSignals instantiated in call to super
@@ -1179,7 +1192,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         self.learning_signal = summed_learning_signal
         self.error_signal = summed_error_signal
 
-        if INITIALIZING not in context and self.reportOutputPref:
+        if INITIALIZING not in context and self.reportOutputPref: # cxt-test
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal, self.error_signal]
