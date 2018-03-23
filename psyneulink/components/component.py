@@ -405,7 +405,7 @@ from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, C
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.context import Context, ContextStatus, _get_time
+from psyneulink.globals.context import Context, ContextStatus
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength, object_has_single_value
 
 __all__ = [
@@ -881,7 +881,7 @@ class Component(object):
         self.context.status = ContextStatus.INITIALIZATION
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
 
-        self.execution_status = ExecutionStatus.INITIALIZING
+        self.context.execution_phase = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
         # self.init_status = InitStatus.INITIALIZING
 
@@ -2865,7 +2865,7 @@ class Component(object):
 
     def _get_current_execution_time(self, context):
         from psyneulink.globals.log import _get_context
-        return _get_time(self, context_flags=_get_context(context))
+        return self.log._get_time(selfcontext_flags=_get_context(context))
 
     def _update_current_execution_time(self, context):
         self._current_execution_time = self._get_current_execution_time(context=context) # cxt-pass

@@ -36,10 +36,16 @@ class ContextError(Exception):
 
 class Context():
     __name__ = 'Context'
-    def __init__(self, owner, status, composition=None, execution_id:UUID=None, string:str='', time=None):
+    def __init__(self,
+                 owner,
+                 status=,
+                 composition=None,
+                 execution_id:UUID=None,
+                 string:str='', time=None):
 
         self.owner = owner
         self.status = status
+        self.execution_phase
         self.composition = composition
         self.execution_id = execution_id
         self.execution_time = None
@@ -101,23 +107,30 @@ class Context():
 
 
 # FIX: REPLACE IntEnum WITH Flags and auto IF/WHEN MOVE TO Python 3.6
-class ContextStatus(IntEnum):
+class Status(IntEnum):
     """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
     Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
     """
-    OFF = 0
+    UNINITIALIZED = 0
     """Not Initialized."""
-    DEFERRED_INIT = 0
-    """Not Initialized."""
-    INITIALIZING = 1<<1  # 2
-    """Set during execution of the Component's constructor."""
-    VALIDATING =     1<<2  # 4
+    DEFERRED_INIT = 1
+    """Set if flagged for deferred initialization."""
+    INITIALIZING =  2
+    """Set during initialization of the Component."""
+    VALIDATING =    3
     """Set during validation of the value of a Component or its attribute."""
-    INITIALIZED =      1<<3  # 8
-    """Set during any execution of the Component."""
-    CONSTRUCTOR =    1<<11 # 2048
-    # Component being constructed (used in call by subclass __init__ to super.__init__)
-    """Specifies all contexts."""
+    INITIALIZED =   4
+    """Set after completion of initialization of the Component."""
+
+class Source(IntEnum):
+    CONSTRUCTOR =  0
+    """Call to method from Component's constructor."""
+    COMMAND_LINE = 1
+    """Direct call to method by user (either interactively from the command line, or in a script)."""
+    COMPONENT =    2
+    """Call to method by the Component."""
+    COMPOSITION =  3
+    """Call to method by a/the Composition to which the Component belongs."""
 
     # @classmethod
     # def _get_context_string(cls, condition, string=None):
@@ -140,7 +153,7 @@ class ContextStatus(IntEnum):
     #     string += ", ".join(flagged_items)
     #     return string
 
-class ContextExecutionPhase(IntEnum):
+class ExecutionPhase(IntEnum):
     """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
     Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
     """
@@ -154,9 +167,6 @@ class ContextExecutionPhase(IntEnum):
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
     SIMULATION =   4
     """Set during simulation by Composition.controller"""
-    COMMAND_LINE = 5
-    """Set when executed "manually" by user"""
-
 
 def _get_context(context):
 
