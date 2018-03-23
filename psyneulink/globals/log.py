@@ -625,7 +625,7 @@ class Log:
         if entries is None:
             return
 
-    def set_log_conditions(self, items, log_condition=ContextFlags.EXECUTION):
+    def set_log_conditions(self, items, log_condition=ContextFlags.EXECUTING):
         """Specifies items to be logged at the specified `ContextFlags`\\(s).
 
         Arguments
