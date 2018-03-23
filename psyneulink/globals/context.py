@@ -106,53 +106,56 @@ class ContextStatus(IntEnum):
     Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
     """
     OFF = 0
-    # """No recording."""
-    INITIALIZATION = 1<<1  # 2
+    """Not Initialized."""
+    DEFERRED_INIT = 0
+    """Not Initialized."""
+    INITIALIZING = 1<<1  # 2
     """Set during execution of the Component's constructor."""
-    VALIDATION =     1<<2  # 4
+    VALIDATING =     1<<2  # 4
     """Set during validation of the value of a Component or its attribute."""
-    EXECUTION =      1<<3  # 8
+    INITIALIZED =      1<<3  # 8
     """Set during any execution of the Component."""
-    PROCESSING =     1<<4  # 16
-    """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
-    LEARNING =       1<<5  # 32
-    """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    CONTROL =        1<<6  # 64
-    """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    TRIAL =          1<<7  # 128
-    """Set at the end of a `TRIAL`."""
-    RUN =            1<<8  # 256
-    """Set at the end of a `RUN`."""
-    SIMULATION =     1<<9  # 512
-    # Set during simulation by Composition.controller
-    COMMAND_LINE =   1<<10 # 1024
-    # Component accessed by user
     CONSTRUCTOR =    1<<11 # 2048
-    # Component being constructor (used in call to super.__init__)
-    ALL_ASSIGNMENTS = \
-        INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
+    # Component being constructed (used in call by subclass __init__ to super.__init__)
     """Specifies all contexts."""
 
-    @classmethod
-    def _get_context_string(cls, condition, string=None):
-        """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
-        if string:
-            string += ": "
-        else:
-            string = ""
-        flagged_items = []
-        # If OFF or ALL_ASSIGNMENTS, just return that
-        if condition in (ContextStatus.ALL_ASSIGNMENTS, ContextStatus.OFF):
-            return condition.name
-        # Otherwise, append each flag's name to the string
-        for c in list(cls.__members__):
-            # Skip ALL_ASSIGNMENTS (handled above)
-            if c is ContextStatus.ALL_ASSIGNMENTS.name:
-                continue
-            if ContextStatus[c] & condition:
-               flagged_items.append(c)
-        string += ", ".join(flagged_items)
-        return string
+    # @classmethod
+    # def _get_context_string(cls, condition, string=None):
+    #     """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
+    #     if string:
+    #         string += ": "
+    #     else:
+    #         string = ""
+    #     flagged_items = []
+    #     # If OFF or ALL_ASSIGNMENTS, just return that
+    #     if condition in (ContextStatus.ALL_ASSIGNMENTS, ContextStatus.OFF):
+    #         return condition.name
+    #     # Otherwise, append each flag's name to the string
+    #     for c in list(cls.__members__):
+    #         # Skip ALL_ASSIGNMENTS (handled above)
+    #         if c is ContextStatus.ALL_ASSIGNMENTS.name:
+    #             continue
+    #         if ContextStatus[c] & condition:
+    #            flagged_items.append(c)
+    #     string += ", ".join(flagged_items)
+    #     return string
+
+class ContextExecutionPhase(IntEnum):
+    """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
+    Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
+    """
+    IDLE =         0
+    """Not currently executin."""
+    PROCESSING =   1
+    """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
+    LEARNING =     2
+    """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
+    CONTROL =      3
+    """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
+    SIMULATION =   4
+    """Set during simulation by Composition.controller"""
+    COMMAND_LINE = 5
+    """Set when executed "manually" by user"""
 
 
 def _get_context(context):
