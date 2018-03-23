@@ -759,7 +759,6 @@ def run(object,
                 object.context.status &= ~(ContextFlags.VALIDATION | ContextFlags.INITIALIZATION)
                 object.context.status |= ContextFlags.EXECUTION
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
-                object.execution_status = ExecutionStatus.EXECUTING
             result = object.execute(
                 input=execution_inputs,
                 execution_id=execution_id,

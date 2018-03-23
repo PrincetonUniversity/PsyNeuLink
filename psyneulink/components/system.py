@@ -2521,7 +2521,6 @@ class System(System_Base):
             context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-done
             self.context.status = ContextFlags.EXECUTION
             self.context.string = EXECUTING + " " + SYSTEM + " " + self.name
-            self.execution_status = ExecutionStatus.EXECUTING
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
         from psyneulink.globals.environment import _get_unique_id

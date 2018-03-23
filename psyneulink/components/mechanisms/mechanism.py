@@ -1982,11 +1982,11 @@ class Mechanism_Base(Mechanism):
             if not INITIALIZING in context:
                 self.context.status &= ~ContextFlags.INITIALIZATION
                 if EXECUTING in context:
-                    self.context.status |= ContextFlags.EXECUTION
-                if EVC_SIMULATION in context:
-                    self.context.status |= ContextFlags.SIMULATION
+                    self.context.status |= ContextFlags.PROCESSING
                 if LEARNING in context:
                     self.context.status |= ContextFlags.LEARNING
+                if EVC_SIMULATION in context:
+                    self.context.status |= ContextFlags.SIMULATION
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
@@ -2081,9 +2081,8 @@ class Mechanism_Base(Mechanism):
         else:
             if context is COMMAND_LINE: # cxt-test
                 context = EXECUTING + ' ' + append_type_to_name(self) # cxt-done
-                self.context.status = ContextFlags.EXECUTION
+                self.context.status = ContextFlags.PROCESSING
                 self.context.string = EXECUTING + ' ' + append_type_to_name(self)
-                self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
                 input = self.instance_defaults.variable
             variable = self._update_variable(self._get_variable_from_input(input))

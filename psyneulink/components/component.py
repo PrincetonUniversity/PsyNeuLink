@@ -3111,8 +3111,8 @@ class Component(object):
         )
 
         Specifies items to be logged; these must be be `loggable_items <Component.loggable_items>` of the Component's
-        `log <Component.log>`. This is a convenience method that calls the `set_log_conditions <Log.set_log_conditions>` method
-        of the Component's `log <Component.log>`.
+        `log <Component.log>`. This is a convenience method that calls the `set_log_conditions <Log.set_log_conditions>`
+        method of the Component's `log <Component.log>`.
         """
         self.log.set_log_conditions(items=items, log_condition=log_condition)
 

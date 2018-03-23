@@ -2117,7 +2117,6 @@ class Process(Process_Base):
             context = EXECUTING + " " + PROCESS + " " + self.name # cxt-done
             self.context.status = ContextFlags.EXECUTION
             self.context.string = EXECUTING + " " + PROCESS + " " + self.name
-            self.execution_status = ExecutionStatus.EXECUTING
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
         for mech in self.mechanisms:
