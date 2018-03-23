@@ -127,7 +127,7 @@ _data =[a + (b,) for a, b in  product(test_linear_combination_data, ['Python', '
 @pytest.mark.benchmark
 def test_linear_combination_function(func, variable, params, expected, bin_execute, benchmark):
     f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName;
+    benchmark.group = "LinearCombinationFunction " + func.componentName;
     if (bin_execute == 'LLVM'):
         res = benchmark(f.bin_function, variable)
     else:
