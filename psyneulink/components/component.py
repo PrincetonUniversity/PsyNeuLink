@@ -405,7 +405,7 @@ from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, C
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.context import Context, ContextStatus
+from psyneulink.globals.context import Context, ContextFlags
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength, object_has_single_value
 
 __all__ = [
@@ -878,7 +878,7 @@ class Component(object):
         #         # del self.init_args['__class__']
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
-        self.context.status = ContextStatus.INITIALIZATION
+        self.context.status = ContextFlags.INITIALIZATION
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
 
         self.context.execution_phase = ExecutionStatus.INITIALIZING
@@ -1966,7 +1966,7 @@ class Component(object):
 
         """
         if context is None:
-            self.context.status = ContextStatus.COMMAND_LINE # cxt-push
+            self.context.status = ContextFlags.COMMAND_LINE # cxt-push
             self.context.string = COMMAND_LINE
         context = context or COMMAND_LINE # cxt-done
         self._assign_params(request_set=request_set, context=context)
@@ -2044,7 +2044,7 @@ class Component(object):
         #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
         #    that causes name-repetition problems when it is called as part of the standard init procedure
         if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context: # cxt-test
-            self.context.status = ContextStatus.COMMAND_LINE # cxt-push
+            self.context.status = ContextFlags.COMMAND_LINE # cxt-push
             self._instantiate_attributes_before_function(context=COMMAND_LINE)  # cxt-done
         # Give owner a chance to instantiate function and/or function params
         # (e.g., wrap in UserDefineFunction, as per EVCControlMechanism)
@@ -2829,7 +2829,7 @@ class Component(object):
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
         else:
-            if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
+            if self.context.status & ~(ContextFlags.VALIDATION | ContextFlags.INITIALIZATION):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context) # cxt-pass
         # MODIFIED 3/20/18 END
@@ -3063,7 +3063,7 @@ class Component(object):
         try:
             return self._context
         except:
-            self._context = Context(owner=self, status=ContextStatus.OFF)
+            self._context = Context(owner=self, status=ContextFlags.OFF)
             return self._context
 
     # from psyneulink.globals.context import Context
@@ -3096,14 +3096,14 @@ class Component(object):
 
     @property
     def loggable_items(self):
-        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `ContextStatus`.
+        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `ContextFlags`.
         This is a convenience method that calls the `loggable_items <Log.loggable_items>` property of the Component's
         `log <Component.log>`.
         """
         return self.log.loggable_items
 
-    from psyneulink.globals.log import ContextStatus
-    def set_log_conditions(self, items, log_condition=ContextStatus.EXECUTION):
+    from psyneulink.globals.log import ContextFlags
+    def set_log_conditions(self, items, log_condition=ContextFlags.EXECUTION):
         """
         set_log_conditions(          \
             items                    \
@@ -3130,7 +3130,7 @@ class Component(object):
 
     @property
     def logged_items(self):
-        """Dictionary of all items that have entries in the log, and their currently assigned `ContextStatus`\\s
+        """Dictionary of all items that have entries in the log, and their currently assigned `ContextFlags`\\s
         This is a convenience method that calls the `logged_items <Log.logged_items>` property of the Component's
         `log <Component.log>`.
         """

@@ -112,38 +112,38 @@ the Logs of their `States <State>`.  Specifically the Logs of these Components c
 Logging Conditions
 ~~~~~~~~~~~~~~~~~~
 
-Configuring a Component to be logged is done using a condition, that specifies a `ContextStatus` under which its
+Configuring a Component to be logged is done using a condition, that specifies a `ContextFlags` under which its
 `value <Component.value>` should be entered in its Log.  These can be specified in the `set_log_conditions
-<Log.set_log_conditions>` method of a Log, or directly by specifying a `ContextStatus` for the value a Component's
+<Log.set_log_conditions>` method of a Log, or directly by specifying a `ContextFlags` for the value a Component's
 `logPref  <Compnent.logPref>` item of its `prefs <Component.prefs>` attribute.  The former is easier, and allows
 multiple Components to be specied at once, while the latter affords more control over the specification (see
-`Preferences`).  `ContextStates <ContextStatus>` are treated as binary "flags", and can be combined to permit logging
-under more than one condition using bitwise operators on the `ContextStates <ContextStatus>`.  For convenience, they
+`Preferences`).  `ContextStates <ContextFlags>` are treated as binary "flags", and can be combined to permit logging
+under more than one condition using bitwise operators on the `ContextStates <ContextFlags>`.  For convenience, they
 can also be referred to by their names, and combined by specifying a list.  For example, all of the following specify
 that the `value <Mechanism_Base.value>` of ``my_mech`` be logged both during execution and learning::
 
     >>> import psyneulink as pnl
     >>> my_mech = pnl.TransferMechanism()
-    >>> my_mech.set_log_conditions('value', pnl.ContextStatus.EXECUTION | pnl.ContextStatus.LEARNING)
-    >>> my_mech.set_log_conditions('value', pnl.ContextStatus.EXECUTION + pnl.ContextStatus.LEARNING)
+    >>> my_mech.set_log_conditions('value', pnl.ContextFlags.EXECUTION | pnl.ContextFlags.LEARNING)
+    >>> my_mech.set_log_conditions('value', pnl.ContextFlags.EXECUTION + pnl.ContextFlags.LEARNING)
     >>> my_mech.set_log_conditions('value', [pnl.EXECUTION, LEARNING])
 
 
 .. note::
-   Currently, the `VALIDATION` `ContextStatus` is not implemented.
+   Currently, the `VALIDATION` `ContextFlags` is not implemented.
 
 .. note::
-   Using `ContextStatus.INITIALIZATION` to log the `value <Component.value>` of a Component during its initialization
+   Using `ContextFlags.INITIALIZATION` to log the `value <Component.value>` of a Component during its initialization
    requires that it be assigned in the **prefs** argument of the Component's constructor.  For example::
 
    COMMENT:
    FIX: THIS EXAMPLE CAN'T CURRENTLY BE EXECUTED AS IT PERMANENTLY SETS THE LogPref FOR ALL TransferMechanism
    COMMENT
     >>> my_mech = pnl.TransferMechanism(
-    ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.ContextStatus.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
+    ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.ContextFlags.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
 .. hint::
-   `ContextStatus.TRIAL` logs the `value <Component.value>` of a Component at the end of a `TRIAL`.  To log its
+   `ContextFlags.TRIAL` logs the `value <Component.value>` of a Component at the end of a `TRIAL`.  To log its
    `value <Component.value>` at the start of a `TRIAL`, use its `log_values <Component.log_values>` method in the
    **call_before_trial** argument of the System's `run <System.run>` method.
 
@@ -153,7 +153,7 @@ Execution
 ---------
 
 The value of a Component is recorded to a Log when the condition assigned to its `logPref <Component.logPref>` is met.
-This is specified as a `ContextStatus` or a boolean combination of them (see `Log_Conditions`).  The default ContextStatus
+This is specified as a `ContextFlags` or a boolean combination of them (see `Log_Conditions`).  The default ContextFlags
 is `OFF`.
 
 .. _Log_Examples:
@@ -187,7 +187,7 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     >>> my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULTS])
     >>> proj_A_to_B.set_log_conditions(pnl.MATRIX)
 
-Note that since no `condition <Log_Conditions>` was specified, the default (ContextStatus.EXECUTION) is used.
+Note that since no `condition <Log_Conditions>` was specified, the default (ContextFlags.EXECUTION) is used.
 Executing the Process generates entries in the Logs, that can then be displayed in several ways::
 
     COMMENT:
@@ -307,7 +307,7 @@ COMMENT:
 IMPLEMENTATION NOTE: Name of owner Component is aliases to VALUE in loggable_items and logged_items,
 but is the Component's actual name in log_entries
 
-Entries are made to the Log based on the `ContextStatus` specified in the
+Entries are made to the Log based on the `ContextFlags` specified in the
 `logPref` item of the component's `prefs <Component.prefs>` attribute.
 
 Adding an item to prefs.logPref will validate and add an entry for that attribute to the Log dict
@@ -319,7 +319,7 @@ An attribute is logged if:
 * it is included in the *LOG_ENTRIES* entry of a `parameter specification dictionary <ParameterState_Specification>`
   assigned to the **params** argument of the constructor for the Component;
 ..
-* the current `ContextStatus` is one specified in the logPref setting of the owner Component
+* the current `ContextFlags` is one specified in the logPref setting of the owner Component
 
 Entry values are added by the setter method for the attribute being logged.
 
@@ -331,7 +331,7 @@ The following entries are automatically included in the `loggable_items` of a `M
     - any variables listed in the params[LOG_ENTRIES] of a Mechanism
 
 
-DEFAULT ContextStatus FOR ALL COMPONENTS IS *OFF*
+DEFAULT ContextFlags FOR ALL COMPONENTS IS *OFF*
 
 
 Structure
@@ -345,12 +345,12 @@ Each entry of `entries <Log.entries>` has:
         - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
         - value (value): the value assigned to the attribute
 
-The ContextStatus class (see declaration above) defines six levels of logging:
+The ContextFlags class (see declaration above) defines six levels of logging:
     + OFF: No logging for attributes of the owner object
     + EXECUTION: Log values for all assignments during execution (e.g., including aggregation of projections)
     + VALIDATION: Log value assignments during validation as well as execution and initialization
     + ALL_ASSIGNMENTS:  Log all value assignments (e.g., including initialization)
-    Note: ContextStatus is an IntEnum, and thus its values can be used directly in numerical comparisons
+    Note: ContextFlags is an IntEnum, and thus its values can be used directly in numerical comparisons
 
 Entries can also be added programmatically by:
     - including them in the logPref of a PreferenceSet
@@ -395,7 +395,7 @@ from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.utilities import ContentAddressableList, AutoNumber, is_component
 from psyneulink.globals.keywords \
     import INITIALIZING, EXECUTING, VALIDATE, CONTROL, LEARNING, TRIAL, RUN, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
-from psyneulink.globals.context import ContextStatus, _get_context, _get_time
+from psyneulink.globals.context import ContextFlags, _get_context, _get_time
 
 
 __all__ = [
@@ -527,19 +527,19 @@ class Log:
         An attribute is recorded if:
             - it is one automatically included in logging (see below)
             - it is included in params[LOG_ENTRIES] of the owner object
-            - the context of the assignment is above the ContextStatus specified in the logPref setting of the owner object
+            - the context of the assignment is above the ContextFlags specified in the logPref setting of the owner object
         Entry values are added by the setter method for the attribute being logged
         The following entries are automatically included in self.entries for a Mechanism object:
             - the value attribute of every State for which the Mechanism is an owner
             [TBI: - value of every projection that sends to those States]
             - the system variables defined in SystemLogEntries (see declaration above)
             - any variables listed in the params[LOG_ENTRIES] of a Mechanism
-        The ContextStatus class (see declaration above) defines five levels of logging:
+        The ContextFlags class (see declaration above) defines five levels of logging:
             + OFF: No logging for attributes of the owner object
             + EXECUTION: Log values for all assignments during exeuction (e.g., including aggregation of projections)
             + VALIDATION: Log value assignments during validation as well as execution
             + ALL_ASSIGNMENTS:  Log all value assignments (e.g., including initialization)
-            Note: ContextStatus is an IntEnum, and thus its values can be used directly in numerical comparisons
+            Note: ContextFlags is an IntEnum, and thus its values can be used directly in numerical comparisons
 
         # Entries can also be added programmtically by:
         #     - including them in the logPref of a PreferenceSet
@@ -596,7 +596,7 @@ class Log:
 
     loggable_items : Dict[Component.name: List[LogEntry]]
         identifies Components that can be logged by the owner; the key of each entry is the name of a Component,
-        and the value is its currently assigned `ContextStatus`.
+        and the value is its currently assigned `ContextFlags`.
 
     entries : Dict[Component.name: List[LogEntry]]
         contains the logged information for `loggable_components <Log.loggable_components>`; the key of each entry
@@ -605,7 +605,7 @@ class Log:
 
     logged_items : Dict[Component.name: List[LogEntry]]
         identifies Components that currently have entries in the Log; the key for each entry is the name
-        of a Component, and the value is its currently assigned `ContextStatus`.
+        of a Component, and the value is its currently assigned `ContextFlags`.
 
     """
 
@@ -625,8 +625,8 @@ class Log:
         if entries is None:
             return
 
-    def set_log_conditions(self, items, log_condition=ContextStatus.EXECUTION):
-        """Specifies items to be logged at the specified `ContextStatus`\\(s).
+    def set_log_conditions(self, items, log_condition=ContextFlags.EXECUTION):
+        """Specifies items to be logged at the specified `ContextFlags`\\(s).
 
         Arguments
         ---------
@@ -636,12 +636,12 @@ class Log:
             Each item must be a:
             * string that is the name of a `loggable_item` <Log.loggable_item>` of the Log's `owner <Log.owner>`;
             * a reference to a Component;
-            * tuple, the first item of which is one of the above, and the second a `ContextStatus` to use for the item.
+            * tuple, the first item of which is one of the above, and the second a `ContextFlags` to use for the item.
 
-        log_condition : ContextStatus : default ContextStatus.EXECUTION
-            specifies `ContextStatus` to use as the default for items not specified in tuples (see above).
-            For convenience, the name of a ContextStatus can be used in place of its full specification
-            (e.g., *EXECUTION* instead of `ContextStatus.EXECUTION`).
+        log_condition : ContextFlags : default ContextFlags.EXECUTION
+            specifies `ContextFlags` to use as the default for items not specified in tuples (see above).
+            For convenience, the name of a ContextFlags can be used in place of its full specification
+            (e.g., *EXECUTION* instead of `ContextFlags.EXECUTION`).
 
         params_set : list : default None
             list of parameters to include as loggable items;  these must be attributes of the `owner <Log.owner>`
@@ -657,13 +657,13 @@ class Log:
             # Handle multiple level assignments (as ContextStates or strings in a list)
             if not isinstance(level, list):
                 level = [level]
-            levels = ContextStatus.OFF
+            levels = ContextFlags.OFF
             for l in level:
                 try:
-                    l = ContextStatus[l.upper()] if isinstance(l, str) else l
+                    l = ContextFlags[l.upper()] if isinstance(l, str) else l
                 except KeyError:
                     raise LogError("\'{}\' is not a value of {}".
-                                   format(l, ContextStatus.__name__))
+                                   format(l, ContextFlags.__name__))
                 levels |= l
             level = levels
 
@@ -674,7 +674,7 @@ class Log:
                 component = next(c for c in self.loggable_components if self._alias_owner_name(c.name) == item)
                 component.logPref=PreferenceEntry(level, PreferenceLevel.INSTANCE)
             except AttributeError:
-                raise LogError("PROGRAM ERROR: Unable to set ContextStatus for {} of {}".format(item, self.owner.name))
+                raise LogError("PROGRAM ERROR: Unable to set ContextFlags for {} of {}".format(item, self.owner.name))
 
         if items is ALL:
             for component in self.loggable_components:
@@ -697,8 +697,8 @@ class Log:
         """Add LogEntry to an entry in the Log
 
         If **value** is a LogEntry, it is assigned to the entry
-        If **context** is a ContextStatus, it is used to determine whether the entry should be made;
-           **time** must be passed;  the name of the ContextStatus(s) specified are assigned to the context of LogEntry
+        If **context** is a ContextFlags, it is used to determine whether the entry should be made;
+           **time** must be passed;  the name of the ContextFlags(s) specified are assigned to the context of LogEntry
         Otherwise, uses string (or Component) passed in **context**, or searches stack (see note) to determine the
         context, and uses that to determine the scheduler and, from that, the time;
         If value is None, uses owner's `value <Component.value>` attribute.
@@ -718,19 +718,19 @@ class Log:
 
         else:
 
-            if isinstance(context, ContextStatus): # cxt-test
+            if isinstance(context, ContextFlags): # cxt-test
                 context_flags = context
-                context = ContextStatus._get_context_string(context) # cxt-set
+                context = ContextFlags._get_context_string(context) # cxt-set
                 if not time:
-                    raise LogError("Use of ContextStatus ({}) by {} to specify context requires specification of time".
+                    raise LogError("Use of ContextFlags ({}) by {} to specify context requires specification of time".
                                    format(context, self.owner.name ))
 
             elif context is COMMAND_LINE:
-                context_flags = ContextStatus.COMMAND_LINE
+                context_flags = ContextFlags.COMMAND_LINE
 
             elif self.owner.context.status: # cxt-test
                 context_flags = self.owner.context.status
-                context = ContextStatus._get_context_string(context_flags)
+                context = ContextFlags._get_context_string(context_flags)
 
             # Get context
             else:
@@ -775,18 +775,18 @@ class Log:
 
                 context_flags = _get_context(context)
 
-            context_flags_string = ContextStatus._get_context_string(context_flags)
-            context_status_string = ContextStatus._get_context_string(self.owner.context.status)
+            context_flags_string = ContextFlags._get_context_string(context_flags)
+            context_status_string = ContextFlags._get_context_string(self.owner.context.status)
             # assert context_flags_string == context_status_string
 
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 
             # Get time and log value if logging condition is satisfied or called for programmatically
-            if (log_pref and log_pref & context_flags) or context_flags & ContextStatus.COMMAND_LINE:
+            if (log_pref and log_pref & context_flags) or context_flags & ContextFlags.COMMAND_LINE:
                 time = time or _get_time(self.owner, context_flags)
                 self.entries[self.owner.name] = LogEntry(time, context_flags_string, value)
 
-        if not context_flags & ContextStatus.COMMAND_LINE: # cxt-test
+        if not context_flags & ContextFlags.COMMAND_LINE: # cxt-test
             self.owner.prev_context = self.owner.context
 
     @tc.typecheck
@@ -954,7 +954,7 @@ class Log:
                     if long_context:
                         context = datum.context # cxt-set
                     else:
-                        context = ContextStatus._get_context_string(_get_context(datum.context)) # cxt-set
+                        context = ContextFlags._get_context_string(_get_context(datum.context)) # cxt-set
                     c_width = max(c_width, len(context))
             context_width = min(context_width, c_width)
 
@@ -1019,8 +1019,8 @@ class Log:
                             # Use context from LogEntry
                             context = repr(context) # cxt-set
                         else:
-                            # Get names of ContextStatus flag(s) from parse of context string
-                            context = ContextStatus._get_context_string(_get_context(context)) # cxt-set
+                            # Get names of ContextFlags flag(s) from parse of context string
+                            context = ContextFlags._get_context_string(_get_context(context)) # cxt-set
                         if len(context) > context_width:
                             context = context[:context_width-3] + "..." # cxt-set
                         data_str = data_str + context.ljust(context_width, spacer)
@@ -1447,10 +1447,10 @@ class Log:
             name = self._alias_owner_name(c.name)
             try:
                 # log_pref_names = c.logPref.name
-                log_pref_names = ContextStatus._get_context_string(c.logPref)
+                log_pref_names = ContextFlags._get_context_string(c.logPref)
             except:
                 log_pref_names = None
-                # log_pref_names = ContextStatus._get_condition_string(c.logPref)
+                # log_pref_names = ContextFlags._get_condition_string(c.logPref)
             loggable_items[name] = log_pref_names
         return loggable_items
 
@@ -1472,10 +1472,10 @@ class Log:
 
     @property
     def logged_items(self):
-        """Dict of items that have logged `entries <Log.entries>`, indicating their specified `ContextStatus`.
+        """Dict of items that have logged `entries <Log.entries>`, indicating their specified `ContextFlags`.
         """
-        log_condition = 'ContextStatus.'
-        # Return ContextStatus for items in log.entries
+        log_condition = 'ContextFlags.'
+        # Return ContextFlags for items in log.entries
 
         logged_items = {key: value for (key, value) in
                         # [(l, self.loggable_components[l].logPref.name)
@@ -1494,7 +1494,7 @@ class Log:
     # def save_log(self):
     #     print("Saved")
 
-def _log_trials_and_runs(composition, curr_condition:tc.enum(ContextStatus.TRIAL, ContextStatus.RUN), context):
+def _log_trials_and_runs(composition, curr_condition:tc.enum(ContextFlags.TRIAL, ContextFlags.RUN), context):
     # FIX: ALSO CHECK TIME FOR scheduler_learning, AND CHECK DATE FOR BOTH, AND USE WHICHEVER IS LATEST
     # FIX:  BUT WHAT IF THIS PARTICULAR COMPONENT WAS RUN IN THE LAST TIME_STEP??
     for mech in composition.mechanisms:

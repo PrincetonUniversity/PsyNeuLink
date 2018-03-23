@@ -181,7 +181,7 @@ from psyneulink.globals.keywords import CONTEXT, ENABLED, EXECUTING, FUNCTION, F
     PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextStatus
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import iscompatible, parameter_spec
 
 __all__ = [
@@ -651,9 +651,9 @@ class LearningProjection(ModulatoryProjection_Base):
                                                      self.receiver.owner.name, matrix))
 
         if EXECUTING in context: # cxt-test
-            self.context.status = ContextStatus.EXECUTION
+            self.context.status = ContextFlags.EXECUTION
         elif LEARNING in context: # cxt-test
-            self.context.status = ContextStatus.LEARNING
+            self.context.status = ContextFlags.LEARNING
 
         # # MODIFIED 3/20/18 OLD:
         # self.weight_change_matrix = self.function(

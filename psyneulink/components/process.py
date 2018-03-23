@@ -466,7 +466,7 @@ from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENAB
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.context import ContextStatus
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.time import TimeScale
 
@@ -859,7 +859,7 @@ class Process(Process_Base):
         if not context: # cxt-test
             # context = self.__class__.__name__
             context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT # cxt-done
-            self.context.status = ContextStatus.INITIALIZATION
+            self.context.status = ContextFlags.INITIALIZATION
             self.context.string = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
         if default_variable is None and len(pathway) > 0:
@@ -2115,7 +2115,7 @@ class Process(Process_Base):
 
         if not context: # cxt-test
             context = EXECUTING + " " + PROCESS + " " + self.name # cxt-done
-            self.context.status = ContextStatus.EXECUTION
+            self.context.status = ContextFlags.EXECUTION
             self.context.string = EXECUTING + " " + PROCESS + " " + self.name
             self.execution_status = ExecutionStatus.EXECUTING
         from psyneulink.globals.environment import _get_unique_id
@@ -2215,8 +2215,8 @@ class Process(Process_Base):
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
 
-            mech.context.status &= ~ContextStatus.EXECUTION
-            mech.context.status |= ContextStatus.LEARNING
+            mech.context.status &= ~ContextFlags.EXECUTION
+            mech.context.status |= ContextFlags.LEARNING
             mech.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
             # IMPLEMENTATION NOTE:
@@ -2249,16 +2249,16 @@ class Process(Process_Base):
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
-                            parameter_state.context.status &= ~ContextStatus.EXECUTION
-                            parameter_state.context.status |= ContextStatus.LEARNING
+                            parameter_state.context.status &= ~ContextFlags.EXECUTION
+                            parameter_state.context.status |= ContextFlags.LEARNING
                             parameter_state.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, context=context)
                             parameter_state.update(context=context) # cxt-pass cxt-push
 
-                            parameter_state.context.status &= ~ContextStatus.LEARNING
-                            parameter_state.context.status |= ContextStatus.EXECUTION
+                            parameter_state.context.status &= ~ContextFlags.LEARNING
+                            parameter_state.context.status |= ContextFlags.EXECUTION
                             parameter_state.context.string = self.context.string.replace(LEARNING, EXECUTING)
 
                     # Not all Projection subclasses instantiate ParameterStates
@@ -2270,8 +2270,8 @@ class Process(Process_Base):
                                                "while attempting to update {} {} of {}".
                                                format(e.args[0], parameter_state.name, ParameterState.__name__,
                                                       projection.name))
-            mech.context.status &= ~ContextStatus.LEARNING
-            mech.context.status |= ContextStatus.EXECUTION
+            mech.context.status &= ~ContextFlags.LEARNING
+            mech.context.status |= ContextFlags.EXECUTION
             mech.context.string = self.context.string.replace(LEARNING, EXECUTING)
 
 

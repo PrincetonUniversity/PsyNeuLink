@@ -21,7 +21,7 @@ from psyneulink.globals.keywords import INITIALIZING, VALIDATE, EXECUTING, CONTR
 
 __all__ = [
     'Context',
-    'ContextStatus',
+    'ContextFlags',
     '_get_context'
 ]
 
@@ -34,76 +34,20 @@ class ContextError(Exception):
         self.error_value = error_value
 
 
-class Context():
-    __name__ = 'Context'
-    def __init__(self,
-                 owner,
-                 status=,
-                 composition=None,
-                 execution_id:UUID=None,
-                 string:str='', time=None):
-
-        self.owner = owner
-        self.status = status
-        self.execution_phase
-        self.composition = composition
-        self.execution_id = execution_id
-        self.execution_time = None
-        self.string = string
-
-    @property
-    def status(self):
-        return self._status
-
-    @status.setter
-    def status(self, status):
-        # if isinstance(status, ContextStatus):
-        #     self._status = status
-        # elif isinstance(status, int):
-        #     self._status = ContextStatus(status)
-        # else:
-        #     raise ContextError("{} argument in call to {} must be a {} or an int".
-        #                        format(STATUS, self.__name__, ContextStatus.__name__))
-        if isinstance(status, (ContextStatus, int)):
-            self._status = status
-        else:
-            raise ContextError("{} argument in call to {} must be a {} or an int".
-                               format(STATUS, self.__name__, ContextStatus.__name__))
-
-    @property
-    def composition(self):
-        try:
-            return self._composition
-        except AttributeError:
-            self._composition = None
-
-    @composition.setter
-    def composition(self, composition):
-        # from psyneulink.composition import Composition
-        # if isinstance(composition, Composition):
-        if composition is None or composition.__class__.__name__ in {'Composition', 'System'}:
-            self._composition = composition
-        else:
-            raise ContextError("Assignment to context.composition for {} ({}) "
-                               "must be a Composition (or \'None\').".format(self.owner.name, composition))
-
-    @property
-    def execution_time(self):
-        try:
-            return self._execution_time
-        except:
-            return None
-
-    @execution_time.setter
-    def execution_time(self, time):
-        self._execution_time = time
-
-    def update_execution_time(self):
-        if self.status & ContextStatus.EXECUTION:
-            self.execution_time = _get_time(self.owner, self.context.status)
-        else:
-            raise ContextError("PROGRAM ERROR: attempt to call update_execution_time for {} "
-                               "when 'EXECUTION' was not in its context".format(self.owner.name))
+class ContextFlags(IntEnum):
+    """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
+    Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
+    """
+    UNINITIALIZED = 0
+    """Not Initialized."""
+    DEFERRED_INIT = 1
+    """Set if flagged for deferred initialization."""
+    INITIALIZING =  2
+    """Set during initialization of the Component."""
+    VALIDATING =    3
+    """Set during validation of the value of a Component or its attribute."""
+    INITIALIZED =   4
+    """Set after completion of initialization of the Component."""
 
 
 # FIX: REPLACE IntEnum WITH Flags and auto IF/WHEN MOVE TO Python 3.6
@@ -141,14 +85,14 @@ class Source(IntEnum):
     #         string = ""
     #     flagged_items = []
     #     # If OFF or ALL_ASSIGNMENTS, just return that
-    #     if condition in (ContextStatus.ALL_ASSIGNMENTS, ContextStatus.OFF):
+    #     if condition in (ContextFlags.ALL_ASSIGNMENTS, ContextFlags.OFF):
     #         return condition.name
     #     # Otherwise, append each flag's name to the string
     #     for c in list(cls.__members__):
     #         # Skip ALL_ASSIGNMENTS (handled above)
-    #         if c is ContextStatus.ALL_ASSIGNMENTS.name:
+    #         if c is ContextFlags.ALL_ASSIGNMENTS.name:
     #             continue
-    #         if ContextStatus[c] & condition:
+    #         if ContextFlags[c] & condition:
     #            flagged_items.append(c)
     #     string += ", ".join(flagged_items)
     #     return string
@@ -168,27 +112,103 @@ class ExecutionPhase(IntEnum):
     SIMULATION =   4
     """Set during simulation by Composition.controller"""
 
+
+class Context():
+    __name__ = 'Context'
+    def __init__(self,
+                 owner,
+                 status=Status.UNINITIALIZED,
+                 execution_phase=Status.IDLE,
+                 source=Source.COMPONENT,
+                 composition=None,
+                 execution_id:UUID=None,
+                 string:str='', time=None):
+
+        self.owner = owner
+        self.status = status
+        self.execution_phase = execution_phase
+        self.source = source
+        self.composition = composition
+        self.execution_id = execution_id
+        self.execution_time = None
+        self.string = string
+
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, status):
+        # if isinstance(status, ContextFlags):
+        #     self._status = status
+        # elif isinstance(status, int):
+        #     self._status = ContextFlags(status)
+        # else:
+        #     raise ContextError("{} argument in call to {} must be a {} or an int".
+        #                        format(STATUS, self.__name__, ContextFlags.__name__))
+        if isinstance(status, (ContextFlags, int)):
+            self._status = status
+        else:
+            raise ContextError("{} argument in call to {} must be a {} or an int".
+                               format(STATUS, self.__name__, ContextFlags.__name__))
+
+    @property
+    def composition(self):
+        try:
+            return self._composition
+        except AttributeError:
+            self._composition = None
+
+    @composition.setter
+    def composition(self, composition):
+        # from psyneulink.composition import Composition
+        # if isinstance(composition, Composition):
+        if composition is None or composition.__class__.__name__ in {'Composition', 'System'}:
+            self._composition = composition
+        else:
+            raise ContextError("Assignment to context.composition for {} ({}) "
+                               "must be a Composition (or \'None\').".format(self.owner.name, composition))
+
+    @property
+    def execution_time(self):
+        try:
+            return self._execution_time
+        except:
+            return None
+
+    @execution_time.setter
+    def execution_time(self, time):
+        self._execution_time = time
+
+    def update_execution_time(self):
+        if self.status & ContextFlags.EXECUTION:
+            self.execution_time = _get_time(self.owner, self.context.status)
+        else:
+            raise ContextError("PROGRAM ERROR: attempt to call update_execution_time for {} "
+                               "when 'EXECUTION' was not in its context".format(self.owner.name))
+
+
 def _get_context(context):
 
-    if isinstance(context, ContextStatus):
+    if isinstance(context, ContextFlags):
         return context
-    context_flag = ContextStatus.OFF
+    context_flag = ContextFlags.OFF
     if INITIALIZING in context:
-        context_flag |= ContextStatus.INITIALIZATION
+        context_flag |= ContextFlags.INITIALIZATION
     if VALIDATE in context:
-        context_flag |= ContextStatus.VALIDATION
+        context_flag |= ContextFlags.VALIDATION
     if EXECUTING in context:
-        context_flag |= ContextStatus.EXECUTION
+        context_flag |= ContextFlags.EXECUTION
     if CONTROL in context:
-        context_flag |= ContextStatus.CONTROL
+        context_flag |= ContextFlags.CONTROL
     if LEARNING in context:
-        context_flag |= ContextStatus.LEARNING
-    if context == ContextStatus.TRIAL.name: # cxt-test
-        context_flag |= ContextStatus.TRIAL
-    if context == ContextStatus.RUN.name:
-        context_flag |= ContextStatus.RUN
-    if context == ContextStatus.COMMAND_LINE.name:
-        context_flag |= ContextStatus.COMMAND_LINE
+        context_flag |= ContextFlags.LEARNING
+    if context == ContextFlags.TRIAL.name: # cxt-test
+        context_flag |= ContextFlags.TRIAL
+    if context == ContextFlags.RUN.name:
+        context_flag |= ContextFlags.RUN
+    if context == ContextFlags.COMMAND_LINE.name:
+        context_flag |= ContextFlags.COMMAND_LINE
     return context_flag
 
 def _get_time(component, context_flags):
@@ -230,8 +250,8 @@ def _get_time(component, context_flags):
     # Get System in which it is being (or was last) executed (if any):
 
     # If called from COMMAND_LINE, get context for last time value was assigned:
-    # if context_flags & ContextStatus.COMMAND_LINE:
-    if context_flags & (ContextStatus.COMMAND_LINE | ContextStatus.RUN | ContextStatus.TRIAL):
+    # if context_flags & ContextFlags.COMMAND_LINE:
+    if context_flags & (ContextFlags.COMMAND_LINE | ContextFlags.RUN | ContextFlags.TRIAL):
         context_flags = component.prev_context.status
         execution_context = component.prev_context.string
     else:
@@ -240,14 +260,14 @@ def _get_time(component, context_flags):
     system = ref_mech.context.composition
 
     if system:
-        # FIX: Add ContextStatus.VALIDATE?
-        if context_flags == ContextStatus.EXECUTION:
+        # FIX: Add ContextFlags.VALIDATE?
+        if context_flags == ContextFlags.EXECUTION:
             t = system.scheduler_processing.clock.time
             t = time(t.run, t.trial, t.pass_, t.time_step)
-        elif context_flags == ContextStatus.CONTROL:
+        elif context_flags == ContextFlags.CONTROL:
             t = system.scheduler_processing.clock.time
             t = time(t.run, t.trial, t.pass_, t.time_step)
-        elif context_flags == ContextStatus.LEARNING:
+        elif context_flags == ContextFlags.LEARNING:
             t = system.scheduler_learning.clock.time
             t = time(t.run, t.trial, t.pass_, t.time_step)
         else:

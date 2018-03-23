@@ -400,7 +400,7 @@ from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CO
     kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextStatus
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
 
 __all__ = [

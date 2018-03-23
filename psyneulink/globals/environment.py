@@ -615,7 +615,7 @@ def run(object,
         or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
 
-    from psyneulink.globals.context import ContextStatus
+    from psyneulink.globals.context import ContextFlags
 
     # small version of 'sequence' format in the once case where it was still working (single origin mechanism)
     if isinstance(inputs, (list, np.ndarray)):
@@ -701,8 +701,8 @@ def run(object,
 
     # Class-specific validation:
     context = context or RUN + "validating " + object.name # cxt-done ? cxt-pass
-    if object.context.status is ContextStatus.OFF:
-        object.context.status = ContextStatus.RUN + ContextStatus.VALIDATION
+    if object.context.status is ContextFlags.OFF:
+        object.context.status = ContextFlags.RUN + ContextFlags.VALIDATION
         object.context.string = RUN + "validating " + object.name
 
     # INITIALIZATION
@@ -756,8 +756,8 @@ def run(object,
             # MODIFIED 3/16/17 END
             if RUN in context and not EVC_SIMULATION in context: # cxt-test
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
-                object.context.status &= ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION)
-                object.context.status |= ContextStatus.EXECUTION
+                object.context.status &= ~(ContextFlags.VALIDATION | ContextFlags.INITIALIZATION)
+                object.context.status |= ContextFlags.EXECUTION
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
                 object.execution_status = ExecutionStatus.EXECUTING
             result = object.execute(
@@ -781,9 +781,9 @@ def run(object,
         if call_after_trial:
             call_after_trial()
 
-        from psyneulink.globals.log import _log_trials_and_runs, ContextStatus
+        from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
         _log_trials_and_runs(composition=object,
-                             curr_condition=ContextStatus.TRIAL,
+                             curr_condition=ContextFlags.TRIAL,
                              context=context)
 
     try:
@@ -804,9 +804,9 @@ def run(object,
     else:
         object._learning_enabled = learning_state_buffer
 
-    from psyneulink.globals.log import _log_trials_and_runs, ContextStatus
+    from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
     _log_trials_and_runs(composition=object,
-                         curr_condition=ContextStatus.RUN,
+                         curr_condition=ContextFlags.RUN,
                          context=context)
 
     return object.results
