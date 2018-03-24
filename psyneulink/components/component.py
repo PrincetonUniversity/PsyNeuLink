@@ -873,7 +873,7 @@ class Component(object):
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
         self.context.status = ContextFlags.INITIALIZING
-        self.context.execution_phase = ContextFlags.IDLE
+        self.context.execution_phase = None
         self.context.source = ContextFlags.COMPONENT
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
 

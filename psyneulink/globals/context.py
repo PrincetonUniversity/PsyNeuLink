@@ -142,8 +142,7 @@ class ContextStatus(IntEnum):
     """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
     Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
     """
-    from psyneulink.globals.log import LogCondition
-    OFF = LogCondition.OFF
+    OFF = 0
     # """No recording."""
     INITIALIZATION = ContextFlags.INITIALIZING
     """Set during execution of the Component's constructor."""
@@ -157,10 +156,6 @@ class ContextStatus(IntEnum):
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
     CONTROL = ContextFlags.LEARNING
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    TRIAL = LogCondition.TRIAL
-    """Set at the end of a `TRIAL`."""
-    RUN = LogCondition.RUN
-    """Set at the end of a `RUN`."""
     SIMULATION = ContextFlags.SIMULATION
     # Set during simulation by Composition.controller
     COMMAND_LINE = ContextFlags.COMMAND_LINE
@@ -179,7 +174,7 @@ class Context():
                  composition=None,
                  flags=None,
                  status=ContextFlags.UNINITIALIZED,
-                 execution_phase=ContextFlags.IDLE,
+                 execution_phase=None,
                  source=ContextFlags.COMPONENT,
                  execution_id:UUID=None,
                  string:str='', time=None):
@@ -195,8 +190,7 @@ class Context():
                                    format(ContextFlags._get_context_string(flags & ContextFlags.INITIALIZATION_MASK),
                                           ContextFlags._get_context_string(status),
                                           self.owner.name))
-            if ((execution_phase != ContextFlags.IDLE) and
-                    not (flags & ContextFlags.EXECUTION_PHASE_MASK & execution_phase)):
+            if (execution_phase and not (flags & ContextFlags.EXECUTION_PHASE_MASK & execution_phase)):
                 raise ContextError("Conflict in assignment to flags ({}) and execution_phase ({}) arguments "
                                    "of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.EXECUTION_PHASE_MASK),
@@ -266,6 +260,8 @@ class Context():
         """Check that a flag is one and only one execution_phase flag """
         if flag in EXECUTION_PHASE_FLAGS:
             self._flags |= flag
+        elif flag is None:
+            self._flags &= ~ContextFlags.EXECUTING
         elif not flag & ContextFlags.EXECUTION_PHASE_MASK:
             raise ContextError("Attempt to assign a flag ({}) to {}.context.execution_phase "
                                "that is not an execution phase flag".
@@ -376,8 +372,8 @@ def _get_time(component, context_flags):
     # Get System in which it is being (or was last) executed (if any):
 
     # If called from COMMAND_LINE, get context for last time value was assigned:
-    # if context_flags & ContextFlags.COMMAND_LINE:
-    if context_flags & (ContextFlags.COMMAND_LINE | ContextFlags.RUN | ContextFlags.TRIAL):
+    if context_flags & ContextFlags.COMMAND_LINE:
+    # if context_flags & (ContextFlags.COMMAND_LINE | ContextFlags.RUN | ContextFlags.TRIAL):
         context_flags = component.prev_context.status
         execution_context = component.prev_context.string
     else:

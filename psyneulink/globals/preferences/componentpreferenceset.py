@@ -13,7 +13,7 @@
 import inspect
 
 from psyneulink.globals.keywords import NAME, kwDefaultPreferenceSetOwner, kwPrefLevel, kwPreferenceSetName, kwPrefs, kwPrefsOwner
-from psyneulink.globals.log import ContextFlags
+from psyneulink.globals.log import LogCondition
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.utilities import Modulation
 
@@ -66,7 +66,7 @@ CategoryDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
-    kpLogPref: PreferenceEntry(ContextFlags.OFF, PreferenceLevel.CATEGORY),
+    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.CATEGORY),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.CATEGORY)}
 
@@ -84,7 +84,7 @@ SubtypeDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
-    kpLogPref: PreferenceEntry(ContextFlags.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.SUBTYPE),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE)}
 
@@ -131,7 +131,7 @@ class ComponentPreferenceSet(PreferenceSet):
             - verbose (bool): enables/disables reporting of (non-exception) warnings and system function
             - paramValidation (bool):  enables/disables run-time validation of the execute method of a Function object
             - reportOutput (bool): enables/disables reporting of execution of execute method
-            - log (bool): sets ContextFlags for a given Component
+            - log (bool): sets LogCondition for a given Component
             - functionRunTimeParams (Modulation): uses run-time params to modulate execute method params
         Implement the following preference levels:
             - SYSTEM: System level default settings (Function.classPreferences)
@@ -230,7 +230,7 @@ class ComponentPreferenceSet(PreferenceSet):
             kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
             kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
             kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
-            kpLogPref: PreferenceEntry(ContextFlags.OFF, PreferenceLevel.CATEGORY),
+            kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
             kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM),
             kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SYSTEM)
 
