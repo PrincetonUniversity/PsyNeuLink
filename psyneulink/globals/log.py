@@ -439,7 +439,7 @@ class LogCondition(IntEnum):
     # CONSTRUCTOR = ContextFlags.CONSTRUCTOR
     # # Component being constructor (used in call to super.__init__)
     ALL_ASSIGNMENTS = \
-        INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
+        INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL | SIMULATION | TRIAL | RUN
     """Specifies all contexts."""
 
 
