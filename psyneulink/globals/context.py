@@ -88,6 +88,10 @@ class ContextFlags(IntEnum):
     EXECUTION_PHASE_MASK = EXECUTING 
 
     # Run flags
+    TRIAL =          1<<7  # 128
+    """Set at the end of a `TRIAL`."""
+    RUN =            1<<8  # 256
+    """Set at the end of a `RUN`."""
 
     # Source-of-call flags
     CONSTRUCTOR =   1<<13 # 8192
