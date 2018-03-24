@@ -437,7 +437,7 @@ import typecheck as tc
 
 from toposort import toposort, toposort_flatten
 
-from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type
+from psyneulink.components.component import Component, InitStatus
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary import _assign_error_signal_projections, _get_learning_mechanisms
 from psyneulink.components.mechanisms.mechanism import MechanismList

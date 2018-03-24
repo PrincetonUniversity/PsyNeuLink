@@ -409,7 +409,7 @@ from psyneulink.globals.context import Context, ContextFlags
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength, object_has_single_value
 
 __all__ = [
-    'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
+    'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
     'InitStatus', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
 ]
 # Testing pull request
@@ -449,12 +449,6 @@ class ResetMode(Enum):
 #     def __init__(self, **kwargs):
 #         for arg in kwargs:
 #             self.__setattr__(arg, kwargs[arg])
-
-
-class ExecutionStatus(Enum):
-    INITIALIZING = 1
-    EXECUTING = 2
-    VALIDATING = 3
 
 
 class InitStatus(Enum):
@@ -878,10 +872,11 @@ class Component(object):
         #         # del self.init_args['__class__']
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
-        self.context.status = ContextFlags.INITIALIZATION
+        self.context.status = ContextFlags.INITIALIZING
+        self.context.execution_phase = ContextFlags.IDLE
+        self.context.source = ContextFlags.COMPONENT
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
 
-        self.context.execution_phase = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
         # self.init_status = InitStatus.INITIALIZING
 

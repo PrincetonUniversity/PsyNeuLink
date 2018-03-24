@@ -283,7 +283,7 @@ def _get_context(context:tc.any(ContextFlags, str)):
     If context is already a ContextFlags mask, return that
     Otherwise, return mask with flags set corresponding to keywords in context
     """
-
+    # FIX: 3/23/18 UPDATE WITH NEW FLAGS
     if isinstance(context, ContextFlags):
         return context
     context_flag = ContextFlags.UNINITIALIZED
