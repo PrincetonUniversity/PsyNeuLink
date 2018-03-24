@@ -307,7 +307,7 @@ COMMENT:
 IMPLEMENTATION NOTE: Name of owner Component is aliases to VALUE in loggable_items and logged_items,
 but is the Component's actual name in log_entries
 
-Entries are made to the Log based on the `ContextFlags` specified in the
+Entries are made to the Log based on the `LogCondition` specified in the
 `logPref` item of the component's `prefs <Component.prefs>` attribute.
 
 Adding an item to prefs.logPref will validate and add an entry for that attribute to the Log dict
@@ -319,7 +319,7 @@ An attribute is logged if:
 * it is included in the *LOG_ENTRIES* entry of a `parameter specification dictionary <ParameterState_Specification>`
   assigned to the **params** argument of the constructor for the Component;
 ..
-* the current `ContextFlags` is one specified in the logPref setting of the owner Component
+* the current `LogCondition` is one specified in the logPref setting of the owner Component
 
 Entry values are added by the setter method for the attribute being logged.
 
@@ -331,7 +331,7 @@ The following entries are automatically included in the `loggable_items` of a `M
     - any variables listed in the params[LOG_ENTRIES] of a Mechanism
 
 
-DEFAULT ContextFlags FOR ALL COMPONENTS IS *OFF*
+DEFAULT LogCondition FOR ALL COMPONENTS IS *OFF*
 
 
 Structure
@@ -345,10 +345,14 @@ Each entry of `entries <Log.entries>` has:
         - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
         - value (value): the value assigned to the attribute
 
-The ContextFlags class (see declaration above) defines six levels of logging:
+The LogCondition class (see declaration above) defines the conditions under which a value can be logged:
     + OFF: No logging for attributes of the owner object
-    + EXECUTION: Log values for all assignments during execution (e.g., including aggregation of projections)
+    + INITIALIZATION: Log value when the Component is initialized
     + VALIDATION: Log value assignments during validation as well as execution and initialization
+    + EXECUTION: Log value of Component during all phases of execution (processing, learning and control)
+    + PROCESSING
+
+
     + ALL_ASSIGNMENTS:  Log all value assignments (e.g., including initialization)
     Note: ContextFlags is an IntEnum, and thus its values can be used directly in numerical comparisons
 
@@ -404,6 +408,41 @@ __all__ = [
 
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
+
+
+class LogCondition(IntEnum):
+    """Used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
+    """
+    OFF = 0
+    # """No recording."""
+    INITIALIZATION = ContextFlags.INITIALIZING
+    """Set during execution of the Component's constructor."""
+    VALIDATION =  ContextFlags.VALIDATING
+    """Set during validation of the value of a Component or its attribute."""
+    EXECUTION =  ContextFlags.EXECUTING
+    """Set during all `phases of execution <System_Execution>` of the Component."""
+    PROCESSING = ContextFlags.PROCESSING
+    """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
+    LEARNING = ContextFlags.LEARNING
+    """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
+    CONTROL = ContextFlags.CONTROL
+    """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
+    SIMULATION = ContextFlags.SIMULATION
+    # Set during simulation by Composition.controller
+    TRIAL = ContextFlags.SIMULAION<<1
+    """Set at the end of a `TRIAL`."""
+    RUN = ContextFlags.SIMULATION<<2
+    """Set at the end of a `RUN`."""
+
+    # COMMAND_LINE = ContextFlags.COMMAND_LINE
+    # # Component accessed by user
+    # CONSTRUCTOR = ContextFlags.CONSTRUCTOR
+    # # Component being constructor (used in call to super.__init__)
+    ALL_ASSIGNMENTS = \
+        INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
+    """Specifies all contexts."""
+
+
 
 TIME_NOT_SPECIFIED = 'Time Not Specified'
 
@@ -699,8 +738,7 @@ class Log:
         If **value** is a LogEntry, it is assigned to the entry
         If **context** is a ContextFlags, it is used to determine whether the entry should be made;
            **time** must be passed;  the name of the ContextFlags(s) specified are assigned to the context of LogEntry
-        Otherwise, uses string (or Component) passed in **context**, or searches stack (see note) to determine the
-        context, and uses that to determine the scheduler and, from that, the time;
+        Otherwise, uses string (or Component) passed in **context**;
         If value is None, uses owner's `value <Component.value>` attribute.
 
         .. note::

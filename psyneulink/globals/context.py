@@ -76,34 +76,27 @@ class ContextFlags(IntEnum):
     INITIALIZATION_MASK = UNINITIALIZED | DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED
 
     # Execution phase flags
-    PROCESSING =    1<<9  # 512
+    PROCESSING =    1<<5  # 32
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
-    LEARNING =      1<<10 # 1024
+    LEARNING =      1<<6 # 64
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    CONTROL =       1<<11 # 2048
+    CONTROL =       1<<7 # 128
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    SIMULATION =    1<<12 # 4096
+    SIMULATION =    1<<8  # 256
     """Set during simulation by Composition.controller"""
-    EXECUTING = PROCESSING | LEARNING | CONTROL | SIMULATION
-    EXECUTION_PHASE_MASK = EXECUTING 
-
-    # Run flags
-    TRIAL =          1<<7  # 128
-    """Set at the end of a `TRIAL`."""
-    RUN =            1<<8  # 256
-    """Set at the end of a `RUN`."""
+    EXECUTION_PHASE_MASK = PROCESSING | LEARNING | CONTROL | SIMULATION
+    EXECUTING = EXECUTION_PHASE_MASK
 
     # Source-of-call flags
-    CONSTRUCTOR =   1<<13 # 8192
+    CONSTRUCTOR =   1<<9  # 512
     """Call to method from Component's constructor."""
-    COMMAND_LINE =  1<<14 # 16384
+    COMMAND_LINE =  1<<10 # 1024
     """Direct call to method by user (either interactively from the command line, or in a script)."""
-    COMPONENT =     1<<15 # 32768
+    COMPONENT =     1<<11 # 2048
     """Call to method by the Component."""
-    COMPOSITION =   1<<16 # 65536
+    COMPOSITION =   1<<12 # 4096
     """Call to method by a/the Composition to which the Component belongs."""
     SOURCE_MASK = CONSTRUCTOR | COMMAND_LINE | COMPONENT | COMPOSITION
-
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK
 
@@ -134,11 +127,6 @@ INITIALIZATION_STATUS_FLAGS = {ContextFlags.UNINITIALIZED,
                                ContextFlags.VALIDATING,
                                ContextFlags.INITIALIZED}
 
-EXECUTION_STATUS_FLAGS = {ContextFlags.IDLE,
-                          ContextFlags.EXECUTING,
-                          ContextFlags.TRIAL,
-                          ContextFlags.RUN}
-
 EXECUTION_PHASE_FLAGS = {ContextFlags.PROCESSING,
                          ContextFlags.LEARNING,
                          ContextFlags.CONTROL,
@@ -154,7 +142,7 @@ class ContextStatus(IntEnum):
     """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
     Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
     """
-    OFF = 0
+    OFF = LogCondition.OFF
     # """No recording."""
     INITIALIZATION = ContextFlags.INITIALIZING
     """Set during execution of the Component's constructor."""
@@ -168,9 +156,9 @@ class ContextStatus(IntEnum):
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
     CONTROL = ContextFlags.LEARNING
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    TRIAL = ContextFlags.TRIAL
+    TRIAL = LogCondition.TRIAL
     """Set at the end of a `TRIAL`."""
-    RUN = ContextFlags.RUN
+    RUN = LogCondition.RUN
     """Set at the end of a `RUN`."""
     SIMULATION = ContextFlags.SIMULATION
     # Set during simulation by Composition.controller
