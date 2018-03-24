@@ -75,7 +75,7 @@ class ContextFlags(IntEnum):
     """Set after completion of initialization of the Component."""
     INITIALIZATION_MASK = UNINITIALIZED | DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED
 
-    # #Execution phase flags
+    # Execution phase flags
     PROCESSING =    1<<9  # 512
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
     LEARNING =      1<<10 # 1024
@@ -86,6 +86,8 @@ class ContextFlags(IntEnum):
     """Set during simulation by Composition.controller"""
     EXECUTING = PROCESSING | LEARNING | CONTROL | SIMULATION
     EXECUTION_PHASE_MASK = EXECUTING 
+
+    # Run flags
 
     # Source-of-call flags
     CONSTRUCTOR =   1<<13 # 8192
@@ -150,27 +152,27 @@ class ContextStatus(IntEnum):
     """
     OFF = 0
     # """No recording."""
-    INITIALIZATION = LogCondition.INITIALIZING
+    INITIALIZATION = ContextFlags.INITIALIZING
     """Set during execution of the Component's constructor."""
-    VALIDATION =  LogCondition.VALIDATING
+    VALIDATION =  ContextFlags.VALIDATING
     """Set during validation of the value of a Component or its attribute."""
-    EXECUTION =  LogCondition.EXECUTING
+    EXECUTION =  ContextFlags.EXECUTING
     """Set during any execution of the Component."""
-    PROCESSING = LogCondition.PROCESSING
+    PROCESSING = ContextFlags.PROCESSING
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
-    LEARNING = LogCondition.LEARNING
+    LEARNING = ContextFlags.LEARNING
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    CONTROL = LogCondition.LEARNING
+    CONTROL = ContextFlags.LEARNING
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    TRIAL = LogCondition.TRIAL
+    TRIAL = ContextFlags.TRIAL
     """Set at the end of a `TRIAL`."""
-    RUN = LogCondition.RUN
+    RUN = ContextFlags.RUN
     """Set at the end of a `RUN`."""
-    SIMULATION = LogCondition.SIMULATION
+    SIMULATION = ContextFlags.SIMULATION
     # Set during simulation by Composition.controller
-    COMMAND_LINE = LogCondition.COMMAND_LINE
+    COMMAND_LINE = ContextFlags.COMMAND_LINE
     # Component accessed by user
-    CONSTRUCTOR = LogCondition.CONSTRUCTOR
+    CONSTRUCTOR = ContextFlags.CONSTRUCTOR
     # Component being constructor (used in call to super.__init__)
     ALL_ASSIGNMENTS = \
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
