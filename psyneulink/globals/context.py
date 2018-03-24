@@ -75,17 +75,6 @@ class ContextFlags(IntEnum):
     """Set after completion of initialization of the Component."""
     INITIALIZATION_MASK = UNINITIALIZED | DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED
 
-    # Execution status flags
-    IDLE =          1<<5  # 32
-    """Set if Component is initialized but not currently executing."""
-    EXECUTING =     1<<6  # 64
-    """Set while Component is executing"""
-    TRIAL =         1<<7  # 128
-    """Set at the end of a `TRIAL`."""
-    RUN =           1<<8  # 256
-    """Set at the end of a `RUN`."""
-    EXECUTION_MASK = IDLE | EXECUTING | TRIAL | RUN
-
     # #Execution phase flags
     PROCESSING =    1<<9  # 512
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
@@ -95,7 +84,8 @@ class ContextFlags(IntEnum):
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
     SIMULATION =    1<<12 # 4096
     """Set during simulation by Composition.controller"""
-    EXECUTION_PHASE_MASK = PROCESSING | LEARNING | CONTROL | SIMULATION
+    EXECUTING = PROCESSING | LEARNING | CONTROL | SIMULATION
+    EXECUTION_PHASE_MASK = EXECUTING 
 
     # Source-of-call flags
     CONSTRUCTOR =   1<<13 # 8192
@@ -109,7 +99,7 @@ class ContextFlags(IntEnum):
     SOURCE_MASK = CONSTRUCTOR | COMMAND_LINE | COMPONENT | COMPOSITION
 
 
-    ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK
+    ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK
 
     @classmethod
     def _get_context_string(cls, condition, string=None):
@@ -160,27 +150,27 @@ class ContextStatus(IntEnum):
     """
     OFF = 0
     # """No recording."""
-    INITIALIZATION = ContextFlags.INITIALIZING
+    INITIALIZATION = LogCondition.INITIALIZING
     """Set during execution of the Component's constructor."""
-    VALIDATION =  ContextFlags.VALIDATING
+    VALIDATION =  LogCondition.VALIDATING
     """Set during validation of the value of a Component or its attribute."""
-    EXECUTION =  ContextFlags.EXECUTING
+    EXECUTION =  LogCondition.EXECUTING
     """Set during any execution of the Component."""
-    PROCESSING = ContextFlags.PROCESSING
+    PROCESSING = LogCondition.PROCESSING
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
-    LEARNING = ContextFlags.LEARNING
+    LEARNING = LogCondition.LEARNING
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    CONTROL = ContextFlags.LEARNING
+    CONTROL = LogCondition.LEARNING
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    TRIAL = ContextFlags.TRIAL
+    TRIAL = LogCondition.TRIAL
     """Set at the end of a `TRIAL`."""
-    RUN = ContextFlags.RUN
+    RUN = LogCondition.RUN
     """Set at the end of a `RUN`."""
-    SIMULATION = ContextFlags.SIMULATION
+    SIMULATION = LogCondition.SIMULATION
     # Set during simulation by Composition.controller
-    COMMAND_LINE = ContextFlags.COMMAND_LINE
+    COMMAND_LINE = LogCondition.COMMAND_LINE
     # Component accessed by user
-    CONSTRUCTOR = ContextFlags.CONSTRUCTOR
+    CONSTRUCTOR = LogCondition.CONSTRUCTOR
     # Component being constructor (used in call to super.__init__)
     ALL_ASSIGNMENTS = \
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
@@ -270,23 +260,6 @@ class Context():
                                format(ContextFlags._get_context_string(flag), self.owner.name))
         else:
             raise ContextError("Attempt to assign more than one flag ({}) to {}.context.initialization_status".
-                               format(ContextFlags._get_context_string(flag), self.owner.name))
-
-    @property
-    def execution_status(self):
-        return self.flags & ContextFlags.EXECUTION_STATUS_MASK
-
-    @execution_status.setter
-    def execution_status(self, flag):
-        """Check that a flag is one and only one execution_phase flag """
-        if flag in EXECUTION_STATUS_FLAGS:
-            self._flags |= flag
-        elif not flag & ContextFlags.EXECUTION_STATUS_MASK:
-            raise ContextError("Attempt to assign a flag ({}) to {}.context.execution_status "
-                               "that is not an execution status flag".
-                               format(ContextFlags._get_context_string(flag), self.owner.name))
-        else:
-            raise ContextError("Attempt to assign more than one flag ({}) to {}.context.execution_status".
                                format(ContextFlags._get_context_string(flag), self.owner.name))
 
     @property
