@@ -406,6 +406,7 @@ from psyneulink.globals.registry import register_category
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.context import Context, ContextFlags
+from psyneulink.globals.log import LogCondition
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength, object_has_single_value
 
 __all__ = [
@@ -3058,7 +3059,7 @@ class Component(object):
         try:
             return self._context
         except:
-            self._context = Context(owner=self, status=ContextFlags.OFF)
+            self._context = Context(owner=self)
             return self._context
 
     # from psyneulink.globals.context import Context
@@ -3098,7 +3099,7 @@ class Component(object):
         return self.log.loggable_items
 
     from psyneulink.globals.log import ContextFlags
-    def set_log_conditions(self, items, log_condition=ContextFlags.EXECUTION):
+    def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
         """
         set_log_conditions(          \
             items                    \
