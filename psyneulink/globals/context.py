@@ -109,7 +109,7 @@ class ContextFlags(IntEnum):
             string = ""
         flagged_items = []
         # If OFF or ALL_FLAGS, just return that
-        if condition in (ContextFlags.ALL_FLAGS, ContextFlags.OFF):
+        if condition in (ContextFlags.ALL_FLAGS, ContextFlags.UNINITIALIZED):
             return condition.name
         # Otherwise, append each flag's name to the string
         for c in list(cls.__members__):
@@ -142,6 +142,7 @@ class ContextStatus(IntEnum):
     """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
     Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
     """
+    from psyneulink.globals.log import LogCondition
     OFF = LogCondition.OFF
     # """No recording."""
     INITIALIZATION = ContextFlags.INITIALIZING

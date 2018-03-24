@@ -57,7 +57,7 @@ SystemDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
-    kpLogPref: PreferenceEntry(ContextFlags.OFF, PreferenceLevel.CATEGORY),
+    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.SYSTEM)}
 
@@ -75,7 +75,7 @@ TypeDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.TYPE),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.TYPE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.TYPE),
-    kpLogPref: PreferenceEntry(ContextFlags.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.ADD,PreferenceLevel.TYPE),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.TYPE)}
 
@@ -93,7 +93,7 @@ InstanceDefaultPreferencesDict = {
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     kpParamValidationPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    kpLogPref: PreferenceEntry(ContextFlags.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    kpLogPref: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
     kpRuntimeParamModulationPref: PreferenceEntry(Modulation.OVERRIDE, PreferenceLevel.INSTANCE),
     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
