@@ -87,16 +87,20 @@ class ContextFlags(IntEnum):
     SOURCE_MASK = CONSTRUCTOR | COMMAND_LINE | COMPONENT | COMPOSITION
 
     # #Execution phase flags
-    IDLE =          1<<9  #512
+    IDLE =          1<<9  # 512
     """Not currently executing."""
-    PROCESSING =    1<<10 #1024
+    PROCESSING =    1<<10 # 1024
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
-    LEARNING =      1<<11 #2048
+    LEARNING =      1<<11 # 2048
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    CONTROL =       1<<12 #4096
+    CONTROL =       1<<12 # 4096
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    SIMULATION =    1<<13 #8192
+    SIMULATION =    1<<13 # 8192
     """Set during simulation by Composition.controller"""
+    TRIAL =         1<<14 # 16384
+    """Set at the end of a `TRIAL`."""
+    RUN =           1<<15 # 32768
+    """Set at the end of a `RUN`."""
     EXECUTION_PHASE_MASK = IDLE | PROCESSING | LEARNING | CONTROL | SIMULATION
 
 
@@ -139,6 +143,39 @@ EXECUTION_PHASE_FLAGS = {ContextFlags.IDLE,
                          ContextFlags.LEARNING,
                          ContextFlags.CONTROL,
                          ContextFlags.SIMULATION}
+
+# For backward compatibility
+class ContextStatus(IntEnum):
+    """Used to identify the status of a `Component` when its value or one of its attributes is being accessed.
+    Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
+    """
+    OFF = 0
+    # """No recording."""
+    INITIALIZATION = ContextFlags.INITIALIZING
+    """Set during execution of the Component's constructor."""
+    VALIDATION =  ContextFlags.VALIDATING
+    """Set during validation of the value of a Component or its attribute."""
+    EXECUTION =  XXX
+    """Set during any execution of the Component."""
+    PROCESSING = ContextFlags.PROCESSING
+    """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
+    LEARNING = ContextFlags.LEARNING
+    """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
+    CONTROL = ContextFlags.LEARNING
+    """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
+    TRIAL = ContextFlags.TRIAL
+    """Set at the end of a `TRIAL`."""
+    RUN = ContextFlags.RUN
+    """Set at the end of a `RUN`."""
+    SIMULATION = ContextFlags.SIMULATION
+    # Set during simulation by Composition.controller
+    COMMAND_LINE = ContextFlags.COMMAND_LINE
+    # Component accessed by user
+    CONSTRUCTOR = ContextFlags.CONSTRUCTOR
+    # Component being constructor (used in call to super.__init__)
+    ALL_ASSIGNMENTS = \
+        INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
+    """Specifies all contexts."""
 
 
 class Context():
