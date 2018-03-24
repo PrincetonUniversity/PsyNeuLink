@@ -1541,7 +1541,7 @@ class Log:
     # def save_log(self):
     #     print("Saved")
 
-def _log_trials_and_runs(composition, curr_condition:tc.enum(ContextFlags.TRIAL, ContextFlags.RUN), context):
+def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL, LogCondition.RUN), context):
     # FIX: ALSO CHECK TIME FOR scheduler_learning, AND CHECK DATE FOR BOTH, AND USE WHICHEVER IS LATEST
     # FIX:  BUT WHAT IF THIS PARTICULAR COMPONENT WAS RUN IN THE LAST TIME_STEP??
     for mech in composition.mechanisms:

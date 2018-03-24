@@ -329,10 +329,10 @@ def _get_context(context:tc.any(ContextFlags, str)):
         context_flag |= ContextFlags.CONTROL
     if LEARNING in context:
         context_flag |= ContextFlags.LEARNING
-    if context == ContextFlags.TRIAL.name: # cxt-test
-        context_flag |= ContextFlags.TRIAL
-    if context == ContextFlags.RUN.name:
-        context_flag |= ContextFlags.RUN
+    # if context == ContextFlags.TRIAL.name: # cxt-test
+    #     context_flag |= ContextFlags.TRIAL
+    # if context == ContextFlags.RUN.name:
+    #     context_flag |= ContextFlags.RUN
     if context == ContextFlags.COMMAND_LINE.name:
         context_flag |= ContextFlags.COMMAND_LINE
     return context_flag
