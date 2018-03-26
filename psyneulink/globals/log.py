@@ -416,7 +416,7 @@ class LogCondition(IntEnum):
     """Set during execution of the Component's constructor."""
     VALIDATION =  ContextFlags.VALIDATING
     """Set during validation of the value of a Component or its attribute."""
-    EXECUTION =  ContextFlags.EXECUTING
+    EXECUTION =  ContextFlags.PROCESSING
     """Set during all `phases of execution <System_Execution>` of the Component."""
     PROCESSING = ContextFlags.PROCESSING
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
