@@ -651,9 +651,9 @@ class LearningProjection(ModulatoryProjection_Base):
                                                      self.receiver.owner.name, matrix))
 
         if EXECUTING in context: # cxt-test
-            self.context.status = ContextFlags.EXECUTION
+            self.context.execution_status = ContextFlags.EXECUTING
         elif LEARNING in context: # cxt-test
-            self.context.status = ContextFlags.LEARNING
+            self.context.execution_status = ContextFlags.LEARNING
 
         # # MODIFIED 3/20/18 OLD:
         # self.weight_change_matrix = self.function(

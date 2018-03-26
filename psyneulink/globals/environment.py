@@ -493,6 +493,7 @@ from psyneulink.components.component import function_type
 from psyneulink.components.process import ProcessInputState
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.globals.keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
+from psyneulink.globals.log import LogCondition
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.time import TimeScale
 
@@ -701,9 +702,9 @@ def run(object,
 
     # Class-specific validation:
     context = context or RUN + "validating " + object.name # cxt-done ? cxt-pass
-    if object.context.status is ContextFlags.OFF:
-        # object.context.status = ContextFlags.RUN + ContextFlags.VALIDATION
-        object.context.status = ContextFlags.VALIDATION
+    if not object.context.status:
+        # object.context.status = ContextFlags.RUN + ContextFlags.VALIDATING
+        object.context.status = ContextFlags.VALIDATING
         object.context.string = RUN + "validating " + object.name
 
     # INITIALIZATION
@@ -757,8 +758,8 @@ def run(object,
             # MODIFIED 3/16/17 END
             if RUN in context and not EVC_SIMULATION in context: # cxt-test
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
-                object.context.status &= ~(ContextFlags.VALIDATION | ContextFlags.INITIALIZATION)
-                object.context.status |= ContextFlags.EXECUTION
+                object.context.status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
+                object.context.status |= ContextFlags.EXECUTING
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
             result = object.execute(
                 input=execution_inputs,
@@ -783,7 +784,7 @@ def run(object,
 
         from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
         _log_trials_and_runs(composition=object,
-                             curr_condition=ContextFlags.TRIAL,
+                             curr_condition=LogCondition.TRIAL,
                              context=context)
 
     try:
@@ -806,7 +807,7 @@ def run(object,
 
     from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
     _log_trials_and_runs(composition=object,
-                         curr_condition=ContextFlags.RUN,
+                         curr_condition=LogCondition.RUN,
                          context=context)
 
     return object.results

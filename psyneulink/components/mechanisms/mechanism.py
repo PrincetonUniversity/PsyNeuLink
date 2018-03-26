@@ -1269,7 +1269,7 @@ class Mechanism_Base(Mechanism):
             output_states = list(output_states)
 
         # Mark initialization in context
-        self.context.status = ContextFlags.INITIALIZATION
+        self.context.status = ContextFlags.INITIALIZING
         if not context or isinstance(context, object) or inspect.isclass(context): # cxt-test
             context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt-done
             self.context.string = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__
@@ -1973,14 +1973,14 @@ class Mechanism_Base(Mechanism):
         """
         self.ignore_execution_id = ignore_execution_id
         context = context or COMMAND_LINE # cxt-done
-        if self.context.status is ContextFlags.OFF or context is COMMAND_LINE:
+        if not self.context.status or context is COMMAND_LINE:
             self.context.status = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
             # These need to be set for states to use as context
             self.context.string = context
-            if not INITIALIZING in context:
-                self.context.status &= ~ContextFlags.INITIALIZATION
+            if not INITIALIZING in context: # cxt-set
+                self.context.status &= ~ContextFlags.INITIALIZING
                 if EXECUTING in context:
                     self.context.status |= ContextFlags.PROCESSING
                 if LEARNING in context:
@@ -2156,7 +2156,7 @@ class Mechanism_Base(Mechanism):
                 #    transmittted back via recurrent Projections as initial inputs
                 self.output_states[state].value = self.output_states[state].value * 0.0
 
-        if self.context.status & ~(ContextFlags.VALIDATION | ContextFlags.INITIALIZATION):
+        if self.context.status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
             self._increment_execution_count()
             self._update_current_execution_time(context=context) # cxt-pass
 

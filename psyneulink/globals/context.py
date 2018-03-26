@@ -86,6 +86,7 @@ class ContextFlags(IntEnum):
     """Set during simulation by Composition.controller"""
     EXECUTION_PHASE_MASK = PROCESSING | LEARNING | CONTROL | SIMULATION
     EXECUTING = EXECUTION_PHASE_MASK
+    IDLE = ~EXECUTION_PHASE_MASK
 
     # Source-of-call flags
     CONSTRUCTOR =   1<<9  # 512
@@ -109,8 +110,10 @@ class ContextFlags(IntEnum):
             string = ""
         flagged_items = []
         # If OFF or ALL_FLAGS, just return that
-        if condition in (ContextFlags.ALL_FLAGS, ContextFlags.UNINITIALIZED):
-            return condition.name
+        if condition == ContextFlags.ALL_FLAGS:
+            return ContextFlags.ALL_FLAGS.name
+        if condition == ContextFlags.UNINITIALIZED:
+            return ContextFlags.UNINITIALIZED.name
         # Otherwise, append each flag's name to the string
         for c in list(cls.__members__):
             # Skip ALL_FLAGS (handled above)
@@ -223,7 +226,11 @@ class Context():
 
     @property
     def flags(self):
-        return self._flags
+        try:
+            return self._flags
+        except:
+            self._flags = ContextFlags.UNINITIALIZED |ContextFlags.COMPONENT
+            return self._flags
 
     @flags.setter
     def flags(self, flags):
@@ -242,7 +249,7 @@ class Context():
         """Check that a flag is one and only one status flag """
         flag &= ContextFlags.INITIALIZATION_MASK
         if flag in INITIALIZATION_STATUS_FLAGS:
-            self._flags |= flag
+            self.flags |= flag
         elif not flag:
             raise ContextError("Attempt to assign a flag ({}) to {}.context.status "
                                "that is not an initialization status flag".
@@ -259,9 +266,9 @@ class Context():
     def execution_phase(self, flag):
         """Check that a flag is one and only one execution_phase flag """
         if flag in EXECUTION_PHASE_FLAGS:
-            self._flags |= flag
-        elif flag is None:
-            self._flags &= ~ContextFlags.EXECUTING
+            self.flags |= flag
+        elif flag is None or flag is ContextFlags.IDLE:
+            self.flags &= ContextFlags.IDLE
         elif not flag & ContextFlags.EXECUTION_PHASE_MASK:
             raise ContextError("Attempt to assign a flag ({}) to {}.context.execution_phase "
                                "that is not an execution phase flag".
@@ -278,7 +285,7 @@ class Context():
     def source(self, flag):
         """Check that a flag is one and only one source flag """
         if flag in SOURCE_FLAGS:
-            self._flags |= flag
+            self.flags |= flag
         elif not flag & ContextFlags.SOURCE_MASK:
             raise ContextError("Attempt to assign a flag ({}) to {}.context.source that is not a source flag".
                                format(ContextFlags._get_context_string(flag), self.owner.name))
@@ -298,11 +305,11 @@ class Context():
         self._execution_time = time
 
     def update_execution_time(self):
-        if self.status & ContextFlags.EXECUTION:
+        if self.status & ContextFlags.EXECUTING:
             self.execution_time = _get_time(self.owner, self.context.status)
         else:
             raise ContextError("PROGRAM ERROR: attempt to call update_execution_time for {} "
-                               "when 'EXECUTION' was not in its context".format(self.owner.name))
+                               "when 'EXECUTING' was not in its context".format(self.owner.name))
 
 
 @tc.typecheck
@@ -383,7 +390,7 @@ def _get_time(component, context_flags):
 
     if system:
         # FIX: Add ContextFlags.VALIDATE?
-        if context_flags == ContextFlags.EXECUTION:
+        if context_flags == ContextFlags.PROCESSING:
             t = system.scheduler_processing.clock.time
             t = time(t.run, t.trial, t.pass_, t.time_step)
         elif context_flags == ContextFlags.CONTROL:

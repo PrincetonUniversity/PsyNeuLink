@@ -860,7 +860,7 @@ class System(System_Base):
 
         if not context: # cxt-test
             context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT # cxt-done
-            self.context.status = ContextFlags.INITIALIZATION
+            self.context.status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
         super().__init__(default_variable=default_variable,
                          size=size,
@@ -2519,7 +2519,7 @@ class System(System_Base):
 
         if not context: # cxt-test
             context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-done
-            self.context.status = ContextFlags.EXECUTION
+            self.context.status = ContextFlags.PROCESSING
             self.context.string = EXECUTING + " " + SYSTEM + " " + self.name
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
@@ -2616,9 +2616,10 @@ class System(System_Base):
 
         # region EXECUTE LEARNING FOR EACH PROCESS
 
-        # Don't execute learning for simulation runs
+        # Execute learning except for simulation runs
         if not EVC_SIMULATION in context and self.learning: # cxt-test
             # self.context.status &= ~ContextFlags.EXECUTION
+            # self.context.status &= ~ContextFlags.PROCESSING
             self.context.status |= ContextFlags.LEARNING
             self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
@@ -2684,7 +2685,10 @@ class System(System_Base):
                 context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]" #
                 mechanism.context.string = context # cxt-push ? (note:  currently also assigned in Mechanism.execute())
                 mechanism.context.composition = self
+
+                mechanism.context.status |= ContextFlags.PROCESSING
                 mechanism.execute(runtime_params=rt_params, context=context) # cxt-pass
+                mechanism.context.status &= ~ContextFlags.PROCESSING
 
 
                 if self._report_system_output and  self._report_process_output:
@@ -2774,7 +2778,7 @@ class System(System_Base):
                                          re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
 
                 component.context.composition = self
-                component.context.status &= ~ContextFlags.EXECUTION
+                component.context.status &= ~ContextFlags.PROCESSING
                 component.context.status |= ContextFlags.LEARNING
                 component.context.string = context_str
 
@@ -2784,7 +2788,7 @@ class System(System_Base):
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
                 component.context.status &= ~ContextFlags.LEARNING
-                component.context.status |= ContextFlags.EXECUTION
+                component.context.status |= ContextFlags.PROCESSING
 
 
         # THEN update all MappingProjections
@@ -2811,14 +2815,14 @@ class System(System_Base):
                                          component_type,
                                          component.name,
                                          re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
-                component.context.status &= ~ContextFlags.EXECUTION
+                component.context.status &= ~ContextFlags.PROCESSING
                 component.context.status |= ContextFlags.LEARNING
                 component.context.string = context_str
 
                 component._parameter_states[MATRIX].update(context=context_str)
 
                 component.context.status &= ~ContextFlags.LEARNING
-                component.context.status |= ContextFlags.EXECUTION
+                component.context.status |= ContextFlags.PROCESSING
 
                 # TEST PRINT:
                 # print ("EXECUTING WEIGHT UPDATES: ", component.name)
@@ -3974,7 +3978,7 @@ class SystemInputState(OutputState):
             self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
         else:
             self.name = owner.name + "_" + name
-        self.context.status = ContextFlags.INITIALIZATION
+        self.context.status = ContextFlags.INITIALIZING
         self.context.string = context
         self.prefs = prefs
         self.log = Log(owner=self)

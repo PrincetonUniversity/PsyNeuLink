@@ -626,8 +626,8 @@ class MappingProjection(PathwayProjection_Base):
         """
 
         if EXECUTING in context: # cxt-test
-            self.context.status &= ~(ContextFlags.VALIDATION | ContextFlags.INITIALIZATION)
-            self.context.status |= ContextFlags.EXECUTION
+            self.context.status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
+            self.context.execution_status = ContextFlags.PROCESSING
             self.context.string = context
 
         # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a

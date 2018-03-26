@@ -676,7 +676,7 @@ class Log:
         if entries is None:
             return
 
-    def set_log_conditions(self, items, log_condition=ContextFlags.EXECUTING):
+    def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
         """Specifies items to be logged at the specified `LogCondition`\\(s).
 
         Arguments
@@ -708,13 +708,13 @@ class Log:
             # Handle multiple level assignments (as LogCondition or strings in a list)
             if not isinstance(level, list):
                 level = [level]
-            levels = ContextFlags.OFF
+            levels = LogCondition.OFF
             for l in level:
                 try:
-                    l = ContextFlags[l.upper()] if isinstance(l, str) else l
+                    l = LogCondition[l.upper()] if isinstance(l, str) else l
                 except KeyError:
                     raise LogError("\'{}\' is not a value of {}".
-                                   format(l, ContextFlags.__name__))
+                                   format(l, LogCondition.__name__))
                 levels |= l
             level = levels
 

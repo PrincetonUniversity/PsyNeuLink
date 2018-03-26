@@ -859,7 +859,7 @@ class Process(Process_Base):
         if not context: # cxt-test
             # context = self.__class__.__name__
             context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT # cxt-done
-            self.context.status = ContextFlags.INITIALIZATION
+            self.context.status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
         if default_variable is None and len(pathway) > 0:
@@ -2115,7 +2115,7 @@ class Process(Process_Base):
 
         if not context: # cxt-test
             context = EXECUTING + " " + PROCESS + " " + self.name # cxt-done
-            self.context.status = ContextFlags.EXECUTION
+            self.context.status = ContextFlags.PROCESSING
             self.context.string = EXECUTING + " " + PROCESS + " " + self.name
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
@@ -2145,8 +2145,12 @@ class Process(Process_Base):
                     (isinstance(mechanism, ObjectiveMechanism) and mechanism._role is LEARNING)):
                 continue
 
+            # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+            mechanism.context.execution_status = ContextFlags.PROCESSING
             mechanism.execute(context=context) # cxt-pass ? cxt-push
+            mechanism.context.execution_status = ContextFlags.IDLE
+
             if report_output:
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
                 self._report_mechanism_execution(mechanism)
@@ -2156,7 +2160,7 @@ class Process(Process_Base):
                 #     in case it is repeated in the pathway or receives a recurrent Projection
                 variable = self._update_variable(variable * 0)
 
-        # Execute LearningMechanism
+        # Execute LearningMechanisms
         if self._learning_enabled:
             self._execute_learning(target=target, context=context)
 
@@ -2214,8 +2218,7 @@ class Process(Process_Base):
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
 
-            mech.context.status &= ~ContextFlags.EXECUTION
-            mech.context.status |= ContextFlags.LEARNING
+            mech.context.execution_status = ContextFlags.LEARNING
             mech.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
             # IMPLEMENTATION NOTE:
@@ -2248,16 +2251,14 @@ class Process(Process_Base):
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
-                            parameter_state.context.status &= ~ContextFlags.EXECUTION
-                            parameter_state.context.status |= ContextFlags.LEARNING
+                            parameter_state.context.execution_status = ContextFlags.LEARNING
                             parameter_state.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, context=context)
                             parameter_state.update(context=context) # cxt-pass cxt-push
 
-                            parameter_state.context.status &= ~ContextFlags.LEARNING
-                            parameter_state.context.status |= ContextFlags.EXECUTION
+                            parameter_state.context.status = ContextFlags.IDLE
                             parameter_state.context.string = self.context.string.replace(LEARNING, EXECUTING)
 
                     # Not all Projection subclasses instantiate ParameterStates
