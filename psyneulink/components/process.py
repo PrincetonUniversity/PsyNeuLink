@@ -2147,9 +2147,9 @@ class Process(Process_Base):
 
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.context.execution_status = ContextFlags.PROCESSING
+            mechanism.context.execution_phase = ContextFlags.PROCESSING
             mechanism.execute(context=context) # cxt-pass ? cxt-push
-            mechanism.context.execution_status = ContextFlags.IDLE
+            mechanism.context.execution_phase = ContextFlags.IDLE
 
             if report_output:
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
@@ -2218,7 +2218,7 @@ class Process(Process_Base):
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
 
-            mech.context.execution_status = ContextFlags.LEARNING
+            mech.context.execution_phase = ContextFlags.LEARNING
             mech.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
             # IMPLEMENTATION NOTE:
@@ -2251,7 +2251,7 @@ class Process(Process_Base):
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
-                            parameter_state.context.execution_status = ContextFlags.LEARNING
+                            parameter_state.context.execution_phase = ContextFlags.LEARNING
                             parameter_state.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
