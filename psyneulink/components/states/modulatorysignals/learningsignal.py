@@ -373,11 +373,11 @@ class LearningSignal(ModulatorySignal):
 
         if context is None: # cxt-test
             context = COMMAND_LINE # cxt-done
-            self.context.status = ContextFlags.COMMAND_LINE
+            self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
             context = self # cxt-done
-            self.context.status = ContextFlags.CONSTRUCTOR
+            self.context.source = ContextFlags.CONSTRUCTOR
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,

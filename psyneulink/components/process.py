@@ -859,7 +859,7 @@ class Process(Process_Base):
         if not context: # cxt-test
             # context = self.__class__.__name__
             context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT # cxt-done
-            self.context.status = ContextFlags.INITIALIZING
+            self.context.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
         if default_variable is None and len(pathway) > 0:
@@ -2115,7 +2115,7 @@ class Process(Process_Base):
 
         if not context: # cxt-test
             context = EXECUTING + " " + PROCESS + " " + self.name # cxt-done
-            self.context.status = ContextFlags.PROCESSING
+            self.context.execution_phase = ContextFlags.PROCESSING
             self.context.string = EXECUTING + " " + PROCESS + " " + self.name
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
@@ -2258,7 +2258,7 @@ class Process(Process_Base):
                             # parameter_state.update(params=params, context=context)
                             parameter_state.update(context=context) # cxt-pass cxt-push
 
-                            parameter_state.context.status = ContextFlags.IDLE
+                            parameter_state.context.execution_phase = ContextFlags.IDLE
                             parameter_state.context.string = self.context.string.replace(LEARNING, EXECUTING)
 
                     # Not all Projection subclasses instantiate ParameterStates
@@ -2270,8 +2270,7 @@ class Process(Process_Base):
                                                "while attempting to update {} {} of {}".
                                                format(e.args[0], parameter_state.name, ParameterState.__name__,
                                                       projection.name))
-            mech.context.status &= ~ContextFlags.LEARNING
-            mech.context.status |= ContextFlags.EXECUTION
+            mech.context.execution_phase = ContextFlags.IDLE
             mech.context.string = self.context.string.replace(LEARNING, EXECUTING)
 
 

@@ -428,11 +428,11 @@ class GatingSignal(ModulatorySignal):
 
         if context is None: # cxt-test
             context = COMMAND_LINE # cxt-done
-            self.context.status = ContextFlags.COMMAND_LINE
+            self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
             context = self # cxt-done
-            self.context.status = ContextFlags.CONSTRUCTOR
+            self.context.source = ContextFlags.CONSTRUCTOR
 
         # Note: assign is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.

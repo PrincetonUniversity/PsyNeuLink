@@ -702,9 +702,9 @@ def run(object,
 
     # Class-specific validation:
     context = context or RUN + "validating " + object.name # cxt-done ? cxt-pass
-    if not object.context.status:
+    if not object.context.flags:
         # object.context.status = ContextFlags.RUN + ContextFlags.VALIDATING
-        object.context.status = ContextFlags.VALIDATING
+        object.context.initialization_status = ContextFlags.VALIDATING
         object.context.string = RUN + "validating " + object.name
 
     # INITIALIZATION
@@ -758,8 +758,8 @@ def run(object,
             # MODIFIED 3/16/17 END
             if RUN in context and not EVC_SIMULATION in context: # cxt-test
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
-                object.context.status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
-                object.context.status |= ContextFlags.EXECUTING
+                object.context.initialization_status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
+                object.context.execution_phase = ContextFlags.EXECUTING
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
             result = object.execute(
                 input=execution_inputs,

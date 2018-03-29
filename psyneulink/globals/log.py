@@ -778,8 +778,8 @@ class Log:
             elif context is COMMAND_LINE:
                 context_flags = ContextFlags.COMMAND_LINE
 
-            elif self.owner.context.status: # cxt-test
-                context_flags = self.owner.context.status
+            elif self.owner.context.flags: # cxt-test
+                context_flags = self.owner.context.flags
                 context = ContextFlags._get_context_string(context_flags)
 
             # Get context
@@ -826,7 +826,7 @@ class Log:
                 context_flags = _get_context(context)
 
             context_flags_string = ContextFlags._get_context_string(context_flags)
-            context_status_string = ContextFlags._get_context_string(self.owner.context.status)
+            context_status_string = ContextFlags._get_context_string(self.owner.context.flags)
             # assert context_flags_string == context_status_string
 
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None

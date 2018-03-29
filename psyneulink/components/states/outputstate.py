@@ -890,11 +890,11 @@ class OutputState(State_Base):
 
         if context is None: # cxt-test
             context = COMMAND_LINE # cxt-done
-            self.context.status = ContextFlags.COMMAND_LINE
+            self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
             context = self # cxt-done
-            self.context.status = ContextFlags.CONSTRUCTOR
+            self.context.source = ContextFlags.CONSTRUCTOR
 
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:

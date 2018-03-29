@@ -62,7 +62,7 @@ class ContextFlags(IntEnum):
     # # Component accessed by user
     # CONSTRUCTOR =    1<<11 # 2048
 
-    # Initialization status flags
+    # initialization_status flags
     UNINITIALIZED = 0
     """Not Initialized."""
     DEFERRED_INIT = 1<<1  # 2
@@ -73,9 +73,12 @@ class ContextFlags(IntEnum):
     """Set during validation of the value of a Component or its attribute."""
     INITIALIZED =   1<<4  # 16
     """Set after completion of initialization of the Component."""
-    INITIALIZATION_MASK = UNINITIALIZED | DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED
+    REINITIALIZED =   1<<4  # 16
+    """Set on stateful Components when they are re-initialized."""
 
-    # Execution phase flags
+    INITIALIZATION_MASK = UNINITIALIZED | DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | REINITIALIZED
+
+    # execution_phase flags
     PROCESSING =    1<<5  # 32
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
     LEARNING =      1<<6 # 64
@@ -88,7 +91,7 @@ class ContextFlags(IntEnum):
     EXECUTING = EXECUTION_PHASE_MASK
     IDLE = ~EXECUTION_PHASE_MASK
 
-    # Source-of-call flags
+    # source (source-of-call) flags
     CONSTRUCTOR =   1<<9  # 512
     """Call to method from Component's constructor."""
     COMMAND_LINE =  1<<10 # 1024
@@ -128,7 +131,8 @@ INITIALIZATION_STATUS_FLAGS = {ContextFlags.UNINITIALIZED,
                                ContextFlags.DEFERRED_INIT,
                                ContextFlags.INITIALIZING,
                                ContextFlags.VALIDATING,
-                               ContextFlags.INITIALIZED}
+                               ContextFlags.INITIALIZED,
+                               ContextFlags.REINITIALIZED}
 
 EXECUTION_PHASE_FLAGS = {ContextFlags.PROCESSING,
                          ContextFlags.LEARNING,
@@ -176,7 +180,7 @@ class Context():
                  owner,
                  composition=None,
                  flags=None,
-                 status=ContextFlags.UNINITIALIZED,
+                 initialization_status=ContextFlags.UNINITIALIZED,
                  execution_phase=None,
                  source=ContextFlags.COMPONENT,
                  execution_id:UUID=None,
@@ -184,14 +188,15 @@ class Context():
 
         self.owner = owner
         self.composition = composition
-        self.status = status
+        self.initialization_status = initialization_status
         self.execution_phase = execution_phase
         self.source = source
         if flags:
-            if (status != ContextFlags.UNINITIALIZED) and not (flags & ContextFlags.INITIALIZATION_MASK & status):
+            if (initialization_status != (ContextFlags.UNINITIALIZED) and
+                    not (flags & ContextFlags.INITIALIZATION_MASK & initialization_status)):
                 raise ContextError("Conflict in assignment to flags ({}) and status ({}) arguments of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.INITIALIZATION_MASK),
-                                          ContextFlags._get_context_string(status),
+                                          ContextFlags._get_context_string(initialization_status),
                                           self.owner.name))
             if (execution_phase and not (flags & ContextFlags.EXECUTION_PHASE_MASK & execution_phase)):
                 raise ContextError("Conflict in assignment to flags ({}) and execution_phase ({}) arguments "
@@ -305,8 +310,8 @@ class Context():
         self._execution_time = time
 
     def update_execution_time(self):
-        if self.status & ContextFlags.EXECUTING:
-            self.execution_time = _get_time(self.owner, self.context.status)
+        if self.execution & ContextFlags.EXECUTING:
+            self.execution_time = _get_time(self.owner, self.context.flags)
         else:
             raise ContextError("PROGRAM ERROR: attempt to call update_execution_time for {} "
                                "when 'EXECUTING' was not in its context".format(self.owner.name))
@@ -381,7 +386,7 @@ def _get_time(component, context_flags):
     # If called from COMMAND_LINE, get context for last time value was assigned:
     if context_flags & ContextFlags.COMMAND_LINE:
     # if context_flags & (ContextFlags.COMMAND_LINE | ContextFlags.RUN | ContextFlags.TRIAL):
-        context_flags = component.prev_context.status
+        context_flags = component.prev_context.flags
         execution_context = component.prev_context.string
     else:
         execution_context = component.context.string

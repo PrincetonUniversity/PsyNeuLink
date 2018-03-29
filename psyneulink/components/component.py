@@ -873,7 +873,7 @@ class Component(object):
         #         # del self.init_args['__class__']
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
-        self.context.status = ContextFlags.INITIALIZING
+        self.context.initialization_status = ContextFlags.INITIALIZING
         self.context.execution_phase = None
         self.context.source = ContextFlags.COMPONENT
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
@@ -1962,7 +1962,7 @@ class Component(object):
 
         """
         if context is None:
-            self.context.status = ContextFlags.COMMAND_LINE # cxt-push
+            self.context.source = ContextFlags.COMMAND_LINE # cxt-push
             self.context.string = COMMAND_LINE
         context = context or COMMAND_LINE # cxt-done
         self._assign_params(request_set=request_set, context=context)
@@ -2031,7 +2031,7 @@ class Component(object):
 
         validated_set_param_names = list(validated_set.keys())
 
-        curr_context = self.context.status # cxt-buffer
+        curr_context = self.context.flags # cxt-buffer
         curr_context_str = self.context.string
 
         # If an input_state is being added from the command line,
@@ -2040,7 +2040,7 @@ class Component(object):
         #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
         #    that causes name-repetition problems when it is called as part of the standard init procedure
         if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context: # cxt-test
-            self.context.status = ContextFlags.COMMAND_LINE # cxt-push
+            self.context.source = ContextFlags.COMMAND_LINE # cxt-push
             self._instantiate_attributes_before_function(context=COMMAND_LINE)  # cxt-done
         # Give owner a chance to instantiate function and/or function params
         # (e.g., wrap in UserDefineFunction, as per EVCControlMechanism)
@@ -2051,7 +2051,7 @@ class Component(object):
 
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
-            self.context.status = COMMAND_LINE # cxt-push
+            self.context.source = COMMAND_LINE # cxt-push
             self._instantiate_function(context=COMMAND_LINE) # cxt-done
         # FIX: WHY SHOULD IT BE CALLED DURING STANDRD INIT PROCEDURE?
         # # MODIFIED 5/5/17 OLD:
@@ -2059,10 +2059,10 @@ class Component(object):
         # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_states ARG OF CONSTRUCTOR]
         if OUTPUT_STATES in validated_set and COMMAND_LINE in context: # cxt-test
         # MODIFIED 5/5/17 END
-            self.context.status = COMMAND_LINE # cxt-push
+            self.context.source = COMMAND_LINE # cxt-push
             self._instantiate_attributes_after_function(context=COMMAND_LINE) # cxt-done
 
-        self.context.status = curr_context # cxt-pop
+        self.context.flags = curr_context # cxt-pop
         self.context.string = curr_context_str
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
@@ -2825,7 +2825,7 @@ class Component(object):
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
         else:
-            if self.context.status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+            if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context) # cxt-pass
         # MODIFIED 3/20/18 END

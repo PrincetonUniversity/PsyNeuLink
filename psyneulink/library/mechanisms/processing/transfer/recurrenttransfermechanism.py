@@ -1053,8 +1053,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.learning_rate = learning_rate
 
         context = context or COMMAND_LINE # cxt-done cxt-pass ? cxt-push
-        if self.context.status is ContextFlags.OFF:
-            self.context.status = ContextFlags.COMMAND_LINE
+        self.context.source = self.context.source or ContextFlags.COMMAND_LINE
 
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self.output_state,
                                                                        learning_function=self.learning_function,

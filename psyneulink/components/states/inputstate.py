@@ -714,11 +714,11 @@ class InputState(State_Base):
 
         if context is None: # cxt-test
             context = COMMAND_LINE # cxt-done
-            self.context.status = ContextFlags.COMMAND_LINE
+            self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
             context = self # cxt-done
-            self.context.status = ContextFlags.CONSTRUCTOR
+            self.context.source = ContextFlags.CONSTRUCTOR
 
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)

@@ -828,7 +828,7 @@ class System(System_Base):
 
         # Required to defer assignment of self.controller by setter
         #     until the rest of the System has been instantiated
-        self.status = INITIALIZING
+        self.initialization_status = INITIALIZING
         processes = processes or []
         if not isinstance(processes, list):
             processes = [processes]
@@ -860,7 +860,7 @@ class System(System_Base):
 
         if not context: # cxt-test
             context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT # cxt-done
-            self.context.status = ContextFlags.INITIALIZING
+            self.context.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
         super().__init__(default_variable=default_variable,
                          size=size,
@@ -869,7 +869,7 @@ class System(System_Base):
                          prefs=prefs,
                          context=context)
 
-        self.status = INITIALIZED
+        self.initialization_status = INITIALIZED
         self._execution_id = None
 
         # Assign controller
@@ -2519,7 +2519,7 @@ class System(System_Base):
 
         if not context: # cxt-test
             context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-done
-            self.context.status = ContextFlags.PROCESSING
+            self.context.execution_phase = ContextFlags.PROCESSING
             self.context.string = EXECUTING + " " + SYSTEM + " " + self.name
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
@@ -2620,12 +2620,12 @@ class System(System_Base):
         if not EVC_SIMULATION in context and self.learning: # cxt-test
             # self.context.status &= ~ContextFlags.EXECUTION
             # self.context.status &= ~ContextFlags.PROCESSING
-            self.context.status |= ContextFlags.LEARNING
+            self.context.execution_phase = ContextFlags.LEARNING
             self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
             self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
 
-            self.context.status &= ~ContextFlags.LEARNING
+            self.context.execution_phase = ContextFlags.IDLE
             # self.context.status |= ContextFlags.EXECUTION
             self.context.string = self.context.string.replace(LEARNING, EXECUTING)
         # endregion
@@ -2686,10 +2686,9 @@ class System(System_Base):
                 mechanism.context.string = context # cxt-push ? (note:  currently also assigned in Mechanism.execute())
                 mechanism.context.composition = self
 
-                mechanism.context.status |= ContextFlags.PROCESSING
+                mechanism.context.execution_phase = ContextFlags.PROCESSING
                 mechanism.execute(runtime_params=rt_params, context=context) # cxt-pass
-                mechanism.context.status &= ~ContextFlags.PROCESSING
-
+                mechanism.context.execution_phase = ContextFlags.IDLE
 
                 if self._report_system_output and  self._report_process_output:
 
@@ -2778,8 +2777,7 @@ class System(System_Base):
                                          re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
 
                 component.context.composition = self
-                component.context.status &= ~ContextFlags.PROCESSING
-                component.context.status |= ContextFlags.LEARNING
+                component.context.execution_phase = ContextFlags.LEARNING
                 component.context.string = context_str
 
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
@@ -2787,8 +2785,7 @@ class System(System_Base):
                 # # TEST PRINT:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
-                component.context.status &= ~ContextFlags.LEARNING
-                component.context.status |= ContextFlags.PROCESSING
+                component.context.execution_phase = ContextFlags.IDLE
 
 
         # THEN update all MappingProjections
@@ -2815,14 +2812,12 @@ class System(System_Base):
                                          component_type,
                                          component.name,
                                          re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
-                component.context.status &= ~ContextFlags.PROCESSING
-                component.context.status |= ContextFlags.LEARNING
+                component.context.execution_phase = ContextFlags.LEARNING
                 component.context.string = context_str
 
                 component._parameter_states[MATRIX].update(context=context_str)
 
-                component.context.status &= ~ContextFlags.LEARNING
-                component.context.status |= ContextFlags.PROCESSING
+                component.context.execution_phase = ContextFlags.IDLE
 
                 # TEST PRINT:
                 # print ("EXECUTING WEIGHT UPDATES: ", component.name)
@@ -3978,7 +3973,7 @@ class SystemInputState(OutputState):
             self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
         else:
             self.name = owner.name + "_" + name
-        self.context.status = ContextFlags.INITIALIZING
+        self.context.initialization_status = ContextFlags.INITIALIZING
         self.context.string = context
         self.prefs = prefs
         self.log = Log(owner=self)

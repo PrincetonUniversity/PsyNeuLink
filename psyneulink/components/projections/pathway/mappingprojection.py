@@ -627,7 +627,7 @@ class MappingProjection(PathwayProjection_Base):
 
         # FIX: MOVE THIS TO SUPER
         if EXECUTING in context: # cxt-test
-            self.context.status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
+            self.context.initialization_status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
             self.context.execution_phase = ContextFlags.PROCESSING
             self.context.string = context
 
