@@ -68,9 +68,11 @@ Class Reference
 
 """
 import typecheck as tc
+from collections import Iterable
 
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.globals.keywords import INTEGRATOR_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
+from psyneulink.globals.keywords import INTEGRATOR_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, RESULTS, \
+    kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.scheduling.time import TimeScale
@@ -181,10 +183,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
-
-    })
+    # paramClassDefaults.update({
+    #     OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
+    # })
 
     from psyneulink.components.functions.function import AdaptiveIntegrator
 
@@ -194,6 +195,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                  size=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  function=AdaptiveIntegrator(rate=0.5),
+                 output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -202,7 +204,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(input_states=input_states,
+                                                  output_states=output_states,
+                                                  function=function,
                                                   params=params)
 
         # if default_variable is NotImplemented:
@@ -212,7 +216,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         super(IntegratorMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
-                                                  input_states=input_states,
+                                                  # input_states=input_states,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,

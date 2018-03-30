@@ -4342,8 +4342,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         cols = None
         # use of variable attribute here should be ok because it's using it as a format/type
         if isinstance(self, MappingProjection):
-            rows = len(self.sender.value)
-            cols = len(self.receiver.instance_defaults.variable)
+            if isinstance(self.sender.value, numbers.Number):
+                rows = 1
+            else:
+                rows = len(self.sender.value)
+            if isinstance(self.receiver.instance_defaults.variable, numbers.Number):
+                cols = 1
+            else:
+                cols = len(self.receiver.instance_defaults.variable)
         matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:
