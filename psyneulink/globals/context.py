@@ -256,7 +256,7 @@ class Context():
         if flag in INITIALIZATION_STATUS_FLAGS:
             self.flags |= flag
         elif not flag:
-            raise ContextError("Attempt to assign a flag ({}) to {}.context.status "
+            raise ContextError("Attempt to assign a flag ({}) to {}.context.flags "
                                "that is not an initialization status flag".
                                format(ContextFlags._get_context_string(flag), self.owner.name))
         else:
