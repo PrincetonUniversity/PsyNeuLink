@@ -272,9 +272,11 @@ class Context():
         """Check that a flag is one and only one execution_phase flag """
         if flag in EXECUTION_PHASE_FLAGS:
             self.flags |= flag
-        elif flag is None or flag is ContextFlags.IDLE:
+        elif not flag or flag is ContextFlags.IDLE:
             self.flags &= ContextFlags.IDLE
-        elif not flag & ContextFlags.EXECUTION_PHASE_MASK:
+        elif flag is ContextFlags.EXECUTING:
+            self.flags |= flag
+        elif not (flag & ContextFlags.EXECUTION_PHASE_MASK):
             raise ContextError("Attempt to assign a flag ({}) to {}.context.execution_phase "
                                "that is not an execution phase flag".
                                format(ContextFlags._get_context_string(flag), self.owner.name))
@@ -386,8 +388,11 @@ def _get_time(component, context_flags):
     # If called from COMMAND_LINE, get context for last time value was assigned:
     if context_flags & ContextFlags.COMMAND_LINE:
     # if context_flags & (ContextFlags.COMMAND_LINE | ContextFlags.RUN | ContextFlags.TRIAL):
-        context_flags = component.prev_context.flags
-        execution_context = component.prev_context.string
+        if component.prev_context:
+            context_flags = component.prev_context.flags
+            execution_context = component.prev_context.string
+        else:
+            context_flags = ContextFlags.UNINITIALIZED
     else:
         execution_context = component.context.string
 
