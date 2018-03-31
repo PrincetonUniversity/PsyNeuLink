@@ -62,9 +62,8 @@ class ContextFlags(IntEnum):
     # # Component accessed by user
     # CONSTRUCTOR =    1<<11 # 2048
 
-    # initialization_status flags
-    UNINITIALIZED = 0
-    """Not Initialized."""
+    UNSET = 0
+
     DEFERRED_INIT = 1<<1  # 2
     """Set if flagged for deferred initialization."""
     INITIALIZING =  1<<2  # 4
@@ -76,7 +75,8 @@ class ContextFlags(IntEnum):
     REINITIALIZED =   1<<4  # 16
     """Set on stateful Components when they are re-initialized."""
 
-    INITIALIZATION_MASK = UNINITIALIZED | DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | REINITIALIZED
+    INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | REINITIALIZED
+    UNINITIALIZED = ~INITIALIZATION_MASK
 
     # execution_phase flags
     PROCESSING =    1<<5  # 32
@@ -87,6 +87,7 @@ class ContextFlags(IntEnum):
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
     SIMULATION =    1<<8  # 256
     """Set during simulation by Composition.controller"""
+
     EXECUTION_PHASE_MASK = PROCESSING | LEARNING | CONTROL | SIMULATION
     EXECUTING = EXECUTION_PHASE_MASK
     IDLE = ~EXECUTION_PHASE_MASK
@@ -100,7 +101,9 @@ class ContextFlags(IntEnum):
     """Call to method by the Component."""
     COMPOSITION =   1<<12 # 4096
     """Call to method by a/the Composition to which the Component belongs."""
+
     SOURCE_MASK = CONSTRUCTOR | COMMAND_LINE | COMPONENT | COMPOSITION
+    NONE = ~SOURCE_MASK
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK
 
@@ -115,8 +118,8 @@ class ContextFlags(IntEnum):
         # If OFF or ALL_FLAGS, just return that
         if condition == ContextFlags.ALL_FLAGS:
             return ContextFlags.ALL_FLAGS.name
-        if condition == ContextFlags.UNINITIALIZED:
-            return ContextFlags.UNINITIALIZED.name
+        if condition == ContextFlags.UNSET:
+            return ContextFlags.UNSET.name
         # Otherwise, append each flag's name to the string
         for c in list(cls.__members__):
             # Skip ALL_FLAGS (handled above)
@@ -127,8 +130,7 @@ class ContextFlags(IntEnum):
         string += ", ".join(flagged_items)
         return string
 
-INITIALIZATION_STATUS_FLAGS = {ContextFlags.UNINITIALIZED,
-                               ContextFlags.DEFERRED_INIT,
+INITIALIZATION_STATUS_FLAGS = {ContextFlags.DEFERRED_INIT,
                                ContextFlags.INITIALIZING,
                                ContextFlags.VALIDATING,
                                ContextFlags.INITIALIZED,
@@ -254,8 +256,11 @@ class Context():
         """Check that a flag is one and only one status flag """
         flag &= ContextFlags.INITIALIZATION_MASK
         if flag in INITIALIZATION_STATUS_FLAGS:
+            self.flags &= ContextFlags.UNINITIALIZED
             self.flags |= flag
-        elif not flag:
+        elif not flag or flag is ContextFlags.UNINITIALIZED:
+            self.flags &= ContextFlags.UNINITIALIZED
+        elif not (flag & ContextFlags.INITIALIZATION_MASK):
             raise ContextError("Attempt to assign a flag ({}) to {}.context.flags "
                                "that is not an initialization status flag".
                                format(ContextFlags._get_context_string(flag), self.owner.name))
@@ -271,6 +276,8 @@ class Context():
     def execution_phase(self, flag):
         """Check that a flag is one and only one execution_phase flag """
         if flag in EXECUTION_PHASE_FLAGS:
+            # self.flags |= flag
+            self.flags &= ContextFlags.IDLE
             self.flags |= flag
         elif not flag or flag is ContextFlags.IDLE:
             self.flags &= ContextFlags.IDLE
@@ -292,7 +299,10 @@ class Context():
     def source(self, flag):
         """Check that a flag is one and only one source flag """
         if flag in SOURCE_FLAGS:
+            self.flags &= ContextFlags.NONE
             self.flags |= flag
+        elif not flag or flag is ContextFlags.NONE:
+            self.flags &= ContextFlags.NONE
         elif not flag & ContextFlags.SOURCE_MASK:
             raise ContextError("Attempt to assign a flag ({}) to {}.context.source that is not a source flag".
                                format(ContextFlags._get_context_string(flag), self.owner.name))
