@@ -424,14 +424,14 @@ def _get_time(component, context_flags):
     system = ref_mech.context.composition
 
     if system:
-        # FIX: Add ContextFlags.VALIDATE?
-        if context_flags == ContextFlags.PROCESSING:
+        execution_flags = context_flags & ContextFlags.EXECUTION_PHASE_MASK
+        if execution_flags == ContextFlags.PROCESSING:
             t = system.scheduler_processing.clock.time
             t = time(t.run, t.trial, t.pass_, t.time_step)
-        elif context_flags == ContextFlags.CONTROL:
+        elif execution_flags == ContextFlags.CONTROL:
             t = system.scheduler_processing.clock.time
             t = time(t.run, t.trial, t.pass_, t.time_step)
-        elif context_flags == ContextFlags.LEARNING:
+        elif execution_flags == ContextFlags.LEARNING:
             t = system.scheduler_learning.clock.time
             t = time(t.run, t.trial, t.pass_, t.time_step)
         else:
