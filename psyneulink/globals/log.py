@@ -397,7 +397,7 @@ from psyneulink.globals.context import ContextFlags, _get_context, _get_time
 
 
 __all__ = [
-    'EntriesDict', 'Log', 'LogEntry', 'LogError'
+    'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogCondition'
 ]
 
 
