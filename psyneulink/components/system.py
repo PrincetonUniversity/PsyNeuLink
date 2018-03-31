@@ -2637,6 +2637,9 @@ class System(System_Base):
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if not EVC_SIMULATION in context and self.enable_controller: # cxt-test
+
+            # FIX: 3/30/18 - SET SIMULATION CONTEXT HERE (OR WILL controller INHERIT IT FROM SYSTEM IN ITS _EXECUTE?)
+            # FIX:           CONTEXT FOR SYSTEM IS NOT PROPERLY SET HERE... HAS ALL FLAGS SET (FIX IN run ??)
             try:
                 self.controller.execute(
                     runtime_params=None,
