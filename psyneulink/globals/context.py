@@ -121,12 +121,27 @@ class ContextFlags(IntEnum):
         if condition == ContextFlags.UNSET:
             return ContextFlags.UNSET.name
         # Otherwise, append each flag's name to the string
-        for c in list(cls.__members__):
-            # Skip ALL_FLAGS (handled above)
-            if c is ContextFlags.ALL_FLAGS.name:
-                continue
-            if ContextFlags[c] & condition:
-               flagged_items.append(c)
+        # for c in (INITIALIZATION_STATUS_FLAGS | EXECUTION_PHASE_FLAGS | SOURCE_FLAGS):
+        #     if c & condition:
+        #        flagged_items.append(c.name)
+        for c in INITIALIZATION_STATUS_FLAGS:
+            if not condition & ContextFlags.INITIALIZATION_MASK:
+                flagged_items.append(ContextFlags.UNINITIALIZED.name)
+                break
+            if c & condition:
+               flagged_items.append(c.name)
+        for c in EXECUTION_PHASE_FLAGS:
+            if not condition & ContextFlags.EXECUTION_PHASE_MASK:
+                flagged_items.append(ContextFlags.IDLE.name)
+                break
+            if c & condition:
+               flagged_items.append(c.name)
+        for c in SOURCE_FLAGS:
+            if not condition & ContextFlags.SOURCE_MASK:
+                flagged_items.append(ContextFlags.NONE.name)
+                break
+            if c & condition:
+               flagged_items.append(c.name)
         string += ", ".join(flagged_items)
         return string
 
@@ -163,7 +178,7 @@ class ContextStatus(IntEnum):
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
     LEARNING = ContextFlags.LEARNING
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    CONTROL = ContextFlags.LEARNING
+    CONTROL = ContextFlags.CONTROL
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
     SIMULATION = ContextFlags.SIMULATION
     # Set during simulation by Composition.controller
@@ -409,14 +424,14 @@ def _get_time(component, context_flags):
     system = ref_mech.context.composition
 
     if system:
-        # FIX: Add ContextFlags.VALIDATE?
-        if context_flags == ContextFlags.PROCESSING:
+        execution_flags = context_flags & ContextFlags.EXECUTION_PHASE_MASK
+        if execution_flags == ContextFlags.PROCESSING:
             t = system.scheduler_processing.clock.time
             t = time(t.run, t.trial, t.pass_, t.time_step)
-        elif context_flags == ContextFlags.CONTROL:
+        elif execution_flags == ContextFlags.CONTROL:
             t = system.scheduler_processing.clock.time
             t = time(t.run, t.trial, t.pass_, t.time_step)
-        elif context_flags == ContextFlags.LEARNING:
+        elif execution_flags == ContextFlags.LEARNING:
             t = system.scheduler_learning.clock.time
             t = time(t.run, t.trial, t.pass_, t.time_step)
         else:
