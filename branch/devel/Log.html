@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.4.4.4+128.gc021994 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.4.4.4+129.g7817392 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+128.gc021994 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+129.g7817392 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Library" href="Library.html"/>
         <link rel="prev" title="Run" href="Run.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.4+128
+                0.4.4.4+129
               </div>
             
           
@@ -204,7 +204,7 @@ values of a Component.  The key for each entry is a string that is the name of t
 of <code class="xref any docutils literal"><span class="pre">LogEntry</span></code> tuples recording its values.  Each <code class="xref any docutils literal"><span class="pre">LogEntry</span></code> tuple has three items:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>time</em> – the <a class="reference internal" href="#psyneulink.globals.log.LogCondition.RUN" title="psyneulink.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.PASS" title="psyneulink.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>, and <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> in which the value of the item was recorded;</li>
+<li><em>time</em> – the <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.RUN" title="psyneulink.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>, <a class="reference internal" href="#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.PASS" title="psyneulink.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>, and <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> in which the value of the item was recorded;</li>
 <li><em>context</em> – a string indicating the context in which the value was recorded;</li>
 <li><em>value</em> – the value of the item.</li>
 </ul>
@@ -435,7 +435,7 @@ reported.</p>
 </div>
 <dl class="attribute">
 <dt id="psyneulink.globals.log.LogCondition.INITIALIZATION">
-<code class="descname">INITIALIZATION</code><em class="property"> = 4</em><a class="headerlink" href="#psyneulink.globals.log.LogCondition.INITIALIZATION" title="Permalink to this definition">¶</a></dt>
+<code class="descname">INITIALIZATION</code><em class="property"> = 16</em><a class="headerlink" href="#psyneulink.globals.log.LogCondition.INITIALIZATION" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set during execution of the Component’s constructor.</p>
 </dd></dl>
 
@@ -483,7 +483,7 @@ reported.</p>
 
 <dl class="attribute">
 <dt id="psyneulink.globals.log.LogCondition.ALL_ASSIGNMENTS">
-<code class="descname">ALL_ASSIGNMENTS</code><em class="property"> = 492</em><a class="headerlink" href="#psyneulink.globals.log.LogCondition.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
+<code class="descname">ALL_ASSIGNMENTS</code><em class="property"> = 504</em><a class="headerlink" href="#psyneulink.globals.log.LogCondition.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Specifies all contexts.</p>
 </dd></dl>
 
@@ -540,7 +540,7 @@ of a Component, and the value is its currently assigned <a class="reference inte
 Each item must be a:
 * string that is the name of a <code class="xref any docutils literal"><span class="pre">loggable_item</span></code> &lt;Log.loggable_item&gt;` of the Log’s <a class="reference internal" href="#psyneulink.globals.log.Log.owner" title="psyneulink.globals.log.Log.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>;
 * a reference to a Component;
-* tuple, the first item of which is one of the above, and the second a <a class="reference internal" href="Component.html#psyneulink.components.component.Component.ContextFlags" title="psyneulink.components.component.Component.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a> to use for the item.</li>
+* tuple, the first item of which is one of the above, and the second a <a class="reference internal" href="Context.html#psyneulink.globals.context.ContextFlags" title="psyneulink.globals.context.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a> to use for the item.</li>
 <li><strong>log_condition</strong> (<em>LogCondition : default LogCondition.EXECUTION</em>) – specifies <a class="reference internal" href="#psyneulink.globals.log.LogCondition" title="psyneulink.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a> to use as the default for items not specified in tuples (see above).
 For convenience, the name of a LogCondition can be used in place of its full specification
 (e.g., <em>EXECUTION</em> instead of <a class="reference internal" href="#psyneulink.globals.log.LogCondition.EXECUTION" title="psyneulink.globals.log.LogCondition.EXECUTION"><code class="xref any py py-attr docutils literal"><span class="pre">LogCondition.EXECUTION</span></code></a>).</li>
@@ -781,7 +781,7 @@ property of its class, and its own <a class="reference internal" href="Component
 <dl class="attribute">
 <dt>
 <code class="descname">logged_items</code></dt>
-<dd><p>Dict of items that have logged <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a>, indicating their specified <a class="reference internal" href="Component.html#psyneulink.components.component.Component.ContextFlags" title="psyneulink.components.component.Component.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a>.</p>
+<dd><p>Dict of items that have logged <a class="reference internal" href="#psyneulink.globals.log.Log.entries" title="psyneulink.globals.log.Log.entries"><code class="xref any py py-attr docutils literal"><span class="pre">entries</span></code></a>, indicating their specified <a class="reference internal" href="Context.html#psyneulink.globals.context.ContextFlags" title="psyneulink.globals.context.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -833,7 +833,7 @@ property of its class, and its own <a class="reference internal" href="Component
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+128.gc021994',
+            VERSION:'0.4.4.4+129.g7817392',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
