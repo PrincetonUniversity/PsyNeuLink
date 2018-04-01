@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Components &mdash; PsyNeuLink 0.4.4.4+127.g755d35c documentation</title>
+  <title>Components &mdash; PsyNeuLink 0.4.4.4+128.gc021994 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+127.g755d35c documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+128.gc021994 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Core" href="Core.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.4+127
+                0.4.4.4+128
               </div>
             
           
@@ -331,7 +331,7 @@ general, only parameters that take numerical values and/or do not affect the str
 or format of the values associated with a Component can be subject to modulation.  For example, for a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal"><span class="pre">clip</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a>,
 <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>,
-<a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.output_states" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>, and <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in user_params, and are user-modifiable,
+<a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states" title="psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>, and <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in user_params, and are user-modifiable,
 but are not subject to modulation; whereas <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.smoothing_factor" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.smoothing_factor"><code class="xref any py py-attr docutils literal"><span class="pre">smoothing_factor</span></code></a>, as well as the parameters of the TransferMechanism’s <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (listed in the <em>function_params</em> subdictionary) can all be subject to modulation.
 Parameters that are subject to modulation are associated with a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which the ControlSignals
 can project (by way of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>).</p>
@@ -448,12 +448,6 @@ argument, using a value of <a class="reference internal" href="#component-resetm
 </ul>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="class">
-<dt id="psyneulink.components.component.ExecutionStatus">
-<em class="property">class </em><code class="descclassname">psyneulink.components.component.</code><code class="descname">ExecutionStatus</code><a class="headerlink" href="#psyneulink.components.component.ExecutionStatus" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
 </dd></dl>
 
 <dl class="class">
@@ -585,8 +579,8 @@ Incremented in the Component’s execute method by call to self._increment_execu
 </dd></dl>
 
 <dl class="class">
-<dt id="psyneulink.components.component.Component.ContextStatus">
-<em class="property">class </em><code class="descname">ContextStatus</code><a class="headerlink" href="#psyneulink.components.component.Component.ContextStatus" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.components.component.Component.ContextFlags">
+<em class="property">class </em><code class="descname">ContextFlags</code><a class="headerlink" href="#psyneulink.components.component.Component.ContextFlags" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to identify the status of a <a class="reference internal" href="#"><span class="doc">Components</span></a> when its value or one of its attributes is being accessed.
 Also used to specify the context in which a value of the Component or its attribute is <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">logged</span></a>.</p>
 </dd></dl>
@@ -594,7 +588,7 @@ Also used to specify the context in which a value of the Component or its attrib
 <dl class="attribute">
 <dt id="psyneulink.components.component.Component.loggable_items">
 <code class="descname">loggable_items</code><a class="headerlink" href="#psyneulink.components.component.Component.loggable_items" title="Permalink to this definition">¶</a></dt>
-<dd><p>Diciontary of items that can be logged in the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> and their current <a class="reference internal" href="#psyneulink.components.component.Component.ContextStatus" title="psyneulink.components.component.Component.ContextStatus"><code class="xref any py py-class docutils literal"><span class="pre">ContextStatus</span></code></a>.
+<dd><p>Diciontary of items that can be logged in the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> and their current <a class="reference internal" href="#psyneulink.components.component.Component.ContextFlags" title="psyneulink.components.component.Component.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a>.
 This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> property of the Component’s
 <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
 </dd></dl>
@@ -603,8 +597,8 @@ This is a convenience method that calls the <a class="reference internal" href="
 <dt id="psyneulink.components.component.Component.set_log_conditions">
 <code class="descname">set_log_conditions</code><span class="sig-paren">(</span><em>items                                log_condition=EXECUTION</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.component.Component.set_log_conditions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Specifies items to be logged; these must be be <a class="reference internal" href="#psyneulink.components.component.Component.loggable_items" title="psyneulink.components.component.Component.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Component’s
-<a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>. This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.set_log_conditions" title="psyneulink.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal"><span class="pre">set_log_conditions</span></code></a> method
-of the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
+<a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>. This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.set_log_conditions" title="psyneulink.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal"><span class="pre">set_log_conditions</span></code></a>
+method of the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -618,7 +612,7 @@ of the Component’s <a class="reference internal" href="#psyneulink.components.
 <dl class="attribute">
 <dt id="psyneulink.components.component.Component.logged_items">
 <code class="descname">logged_items</code><a class="headerlink" href="#psyneulink.components.component.Component.logged_items" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dictionary of all items that have entries in the log, and their currently assigned <a class="reference internal" href="#psyneulink.components.component.Component.ContextStatus" title="psyneulink.components.component.Component.ContextStatus"><code class="xref any py py-class docutils literal"><span class="pre">ContextStatus</span></code></a>s
+<dd><p>Dictionary of all items that have entries in the log, and their currently assigned <a class="reference internal" href="#psyneulink.components.component.Component.ContextFlags" title="psyneulink.components.component.Component.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a>s
 This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> property of the Component’s
 <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
 </dd></dl>
@@ -672,7 +666,7 @@ This is a convenience method that calls the <a class="reference internal" href="
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+127.g755d35c',
+            VERSION:'0.4.4.4+128.gc021994',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
