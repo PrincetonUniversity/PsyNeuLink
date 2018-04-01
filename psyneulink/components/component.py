@@ -1044,20 +1044,6 @@ class Component(object):
         with pnlvm.LLVMBuilderContext() as ctx:
             return ir.ArrayType(ctx.float_ty, self._result_length)
 
-    def get_context_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ir.LiteralStructType([])
-
-    def get_context_initializer(self):
-        return tuple([])
-
-    def get_param_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ir.LiteralStructType([])
-
-    def get_param_initializer(self):
-        return tuple([])
-
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)

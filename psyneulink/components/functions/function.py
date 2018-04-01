@@ -736,6 +736,21 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
+    def get_context_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ir.LiteralStructType([])
+
+    def get_context_initializer(self):
+        return tuple([])
+
+    def get_param_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ir.LiteralStructType([])
+
+    def get_param_initializer(self):
+        return tuple([])
+
+
     def bin_function(self,
                  variable=None,
                  params=None,
