@@ -636,7 +636,7 @@ attributes are listed below by their argument names / keywords, along with a des
     * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for
       learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
 
-A Mechanism also has several convenience properties, listed brelow, that list its `Projections <Projection>` and the
+A Mechanism also has several convenience properties, listed below, that list its `Projections <Projection>` and the
 Mechanisms that send/receive these:
 
     * `projections <Mechanism_Base.projections>` -- all of the Projections sent or received by the Mechanism;
@@ -652,6 +652,12 @@ Mechanisms that send/receive these:
 Each of these is a `ContentAddressableList`, which means that the names of the Components in each list can be listed by
 appending ``.names`` to the property.  For examples, the names of all of the Mechanisms that receive a Projection from
 ``my_mech`` can be accessed by ``my_mech.receivers.names``.
+
+Finally, a Mechanism has an attribute that contains a dictionary of its attributes that can be used to specify the
+`variable <OutputState.variable>` of its OutputState (see `OutputState_Customization`):
+
+    * `attributes_dict` -- a dictionary of that contains the value of its attributes that can be used as the
+      `variable <OutputState.variable>` of its OutputState.
 
 
 .. _Mechanism_Role_In_Processes_And_Systems:
@@ -779,7 +785,7 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type, method_type
+from psyneulink.components.component import Component, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
@@ -795,7 +801,7 @@ from psyneulink.globals.keywords import \
     VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.globals.context import ContextStatus
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 import ctypes
@@ -1081,6 +1087,10 @@ class Mechanism_Base(Mechanism):
         <Mechanism_Role_In_Processes_And_Systems>` in each. The key of each entry is a System to which the Mechanism
         belongs, and its value is the Mechanism's `role in that System <System_Mechanisms>`.
 
+    attributes_dict : Dict[keyword, value]
+        a dictionary containing the attributes (and their current values) that can be used to specify the
+        `variable <OutputState.variable>` of the Mechanism's `OutputState` (see `OutputState_Customization`).
+
     name : str
         the name of the Mechanism; if it is not specified in the **name** argument of the constructor, a default is
         assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
@@ -1097,10 +1107,9 @@ class Mechanism_Base(Mechanism):
                      allows the same name to be used for instances of a State type belonging to different Mechanisms
                      without adding index suffixes for that name across Mechanisms
                      while still indexing multiple uses of the same base name within a Mechanism.
-
     """
 
-    #region CLASS ATTRIBUTES
+    # CLASS ATTRIBUTES
     componentCategory = kwMechanismComponentCategory
     className = componentCategory
     suffix = " " + className
@@ -1164,7 +1173,6 @@ class Mechanism_Base(Mechanism):
 
     # def __new__(cls, *args, **kwargs):
     # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
-    #endregion
 
     @tc.typecheck
     def __init__(self,
@@ -1204,7 +1212,7 @@ class Mechanism_Base(Mechanism):
         #    have been included in user_params and implemented as properties
         #    (in case the subclass did not include one and/or the other as an argument in its constructor)
 
-        kwargs = {}
+        # kwargs = {}
 
         # input_states = []
         # if INPUT_STATES in self.paramClassDefaults and self.paramClassDefaults[INPUT_STATES]:
@@ -1264,7 +1272,7 @@ class Mechanism_Base(Mechanism):
             output_states = list(output_states)
 
         # Mark initialization in context
-        self.context.status = ContextStatus.INITIALIZATION
+        self.context.initialization_status = ContextFlags.INITIALIZING
         if not context or isinstance(context, object) or inspect.isclass(context): # cxt-test
             context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt-done
             self.context.string = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__
@@ -1428,7 +1436,7 @@ class Mechanism_Base(Mechanism):
                 except KeyError:
                     pass
             elif isinstance(parsed_spec, (Projection, Mechanism, State)):
-                if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                if parsed_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
                     args = parsed_spec.init_args
                     # MODIFIED 2/21/18 OLD:
                     if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
@@ -1811,7 +1819,7 @@ class Mechanism_Base(Mechanism):
         """
         from psyneulink.components.states.outputstate import _instantiate_output_states
         # self._update_parameter_states(context=context)
-        self._update_params_dicts(context=context)
+        self._update_attribs_dicts(context=context)
         _instantiate_output_states(owner=self, output_states=self.output_states, context=context)
 
     def _add_projection_to_mechanism(self, state, projection, context=None):
@@ -1969,19 +1977,23 @@ class Mechanism_Base(Mechanism):
         """
         self.ignore_execution_id = ignore_execution_id
         context = context or COMMAND_LINE # cxt-done
-        if self.context.status is ContextStatus.OFF or context is COMMAND_LINE:
-            self.context.status = ContextStatus.COMMAND_LINE
+        if not self.context.source or context is COMMAND_LINE:
+            self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
             # These need to be set for states to use as context
-            if not INITIALIZING in context:
-                self.context.status &= ~ContextStatus.INITIALIZATION
+            self.context.string = context
+            if not INITIALIZING in context: # cxt-set
+                # FIX: 3/31/18 - THIS SHOULD BE MOVED TO END OF __init__ METHOD(S)
+                # self.context.initialization_status &= ~ContextFlags.INITIALIZING
+                # self.context.initialization_status = ContextFlags.INITIALIZED
+
                 if EXECUTING in context:
-                    self.context.status |= ContextStatus.EXECUTION
-                if EVC_SIMULATION in context:
-                    self.context.status |= ContextStatus.SIMULATION
+                    self.context.execution_phase = ContextFlags.PROCESSING
                 if LEARNING in context:
-                    self.context.status |= ContextStatus.LEARNING
+                    self.context.execution_phase = ContextFlags.LEARNING
+                if EVC_SIMULATION in context:
+                    self.context.execution_phase = ContextFlags.SIMULATION
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
@@ -2074,15 +2086,10 @@ class Mechanism_Base(Mechanism):
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
-            # # MODIFIED 3/17/18 OLD:
-            # if context is NO_CONTEXT: # cxt-test
-            # MODIFIED 3/17/18 NEW:
             if context is COMMAND_LINE: # cxt-test
-            # MODIFIED 3/17/18 END
                 context = EXECUTING + ' ' + append_type_to_name(self) # cxt-done
-                self.context.status = ContextStatus.EXECUTION
+                self.context.execution_phase = ContextFlags.PROCESSING
                 self.context.string = EXECUTING + ' ' + append_type_to_name(self)
-                self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
                 input = self.instance_defaults.variable
             variable = self._update_variable(self._get_variable_from_input(input))
@@ -2101,11 +2108,19 @@ class Mechanism_Base(Mechanism):
         else:
         # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
         #                      to avoid multiple calls to (and potential log entries for) self.value property
+            # MODIFIED 3/20/18 OLD:
             value = self._execute(
                 variable=variable,
                 runtime_params=runtime_params,
-                context=context, # cxt-pass cxt-push
+                context=context # cxt-pass cxt-push
             )
+            # # MODIFIED 3/20/18 NEW:
+            # value = super()._execute(
+            #     variable=variable,
+            #     runtime_params=runtime_params,
+            #     context=context # cxt-pass cxt-push
+            # )
+            # MODIFIED 3/20/18 END
 
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
         #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2130,21 +2145,18 @@ class Mechanism_Base(Mechanism):
 
         # Set status based on whether self.value has changed
         self.status = value
-        #endregion
 
         self.value = value
 
-        #region UPDATE OUTPUT STATE(S)
+        # UPDATE OUTPUT STATE(S)
         self._update_output_states(runtime_params=runtime_params, context=context) # cxt-pass cxt-push
-        #endregion
 
-        #region REPORT EXECUTION
+        # REPORT EXECUTION
         # if self.prefs.reportOutputPref and context and EXECUTING in context:
         if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}): # cxt-test
             self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
-        #endregion
 
-        #region RE-SET STATE_VALUES AFTER INITIALIZATION
+        #RE-SET STATE_VALUES AFTER INITIALIZATION
         # If this is (the end of) an initialization run, restore state values to initial condition
         if '_init_' in context: # cxt-test
             for state in self.input_states:
@@ -2156,11 +2168,11 @@ class Mechanism_Base(Mechanism):
                 #    don't want any non-zero values as a residuum of initialization runs to be
                 #    transmittted back via recurrent Projections as initial inputs
                 self.output_states[state].value = self.output_states[state].value * 0.0
-        #endregion
 
-        #endregion
+        if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+            self._increment_execution_count()
+            self._update_current_execution_time(context=context) # cxt-pass
 
-        self.current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
         return self.value
 
     def run(
@@ -2267,9 +2279,9 @@ class Mechanism_Base(Mechanism):
             #     self.user_params.__additem__(state.name, state.value)
             # if state.name in self.function_params:
             #     self.function_params.__additem__(state.name, state.value)
-        self._update_params_dicts(context=context)
+        self._update_attribs_dicts(context=context)
 
-    def _update_params_dicts(self, context=None):
+    def _update_attribs_dicts(self, context=None):
         from psyneulink.globals.keywords import NOISE
         for state in self._parameter_states: # cxt-test
             if NOISE in state.name and INITIALIZING in context:
@@ -2636,7 +2648,7 @@ class Mechanism_Base(Mechanism):
         """
         add_states(states)
 
-        Add one or more `States <State>` to the Mechanism.  Only `InputStates <InputState> and `OutputStates
+        Add one or more `States <State>` to the Mechanism.  Only `InputStates <InputState>` and `OutputStates
         <OutputState>` can be added; `ParameterStates <ParameterState>` cannot be added to a Mechanism after it has
         been constructed.
 
@@ -2776,6 +2788,7 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.parameterstate import ParameterState
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
+
     @property
     def is_finished(self):
         return self._is_finished
@@ -2903,19 +2916,21 @@ class Mechanism_Base(Mechanism):
                                             if isinstance(p.sender.owner, Mechanism_Base)])
 
     @property
-    def _params_dict(self):
-        params_dict = MechParamsDict(
+    def attributes_dict(self):
+        attribs_dict = MechParamsDict(
                 OWNER_VARIABLE = self.variable,
                 OWNER_VALUE = self.value,
+                EXECUTION_COUNT = self.execution_count, # FIX: move to assignment to user_params in Component
+                EXECUTION_TIME = self.current_execution_time,
                 INPUT_STATE_VARIABLES = [input_state.variable for input_state in self.input_states]
         )
-        params_dict.update(self.user_params)
-        del params_dict[FUNCTION]
-        del params_dict[FUNCTION_PARAMS]
-        del params_dict[INPUT_STATES]
-        del params_dict[OUTPUT_STATES]
-        params_dict.update(self.function_params)
-        return params_dict
+        attribs_dict.update(self.user_params)
+        del attribs_dict[FUNCTION]
+        del attribs_dict[FUNCTION_PARAMS]
+        del attribs_dict[INPUT_STATES]
+        del attribs_dict[OUTPUT_STATES]
+        attribs_dict.update(self.function_params)
+        return attribs_dict
 
 
 def _is_mechanism_spec(spec):

@@ -489,10 +489,11 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import ExecutionStatus, function_type
+from psyneulink.components.component import function_type
 from psyneulink.components.process import ProcessInputState
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.globals.keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
+from psyneulink.globals.log import LogCondition
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.time import TimeScale
 
@@ -615,7 +616,7 @@ def run(object,
         or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
 
-    from psyneulink.globals.context import ContextStatus
+    from psyneulink.globals.context import ContextFlags
 
     # small version of 'sequence' format in the once case where it was still working (single origin mechanism)
     if isinstance(inputs, (list, np.ndarray)):
@@ -701,8 +702,9 @@ def run(object,
 
     # Class-specific validation:
     context = context or RUN + "validating " + object.name # cxt-done ? cxt-pass
-    if object.context.status is ContextStatus.OFF:
-        object.context.status = ContextStatus.RUN + ContextStatus.VALIDATION
+    if not object.context.flags:
+        # object.context.status = ContextFlags.RUN + ContextFlags.VALIDATING
+        object.context.initialization_status = ContextFlags.VALIDATING
         object.context.string = RUN + "validating " + object.name
 
     # INITIALIZATION
@@ -753,13 +755,13 @@ def run(object,
                         object.current_targets = execution_targets
 
 
-            # MODIFIED 3/16/17 END
             if RUN in context and not EVC_SIMULATION in context: # cxt-test
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
-                object.context.status &= ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION)
-                object.context.status |= ContextStatus.EXECUTION
+                # FIX: 3/30/18:  SHOULDN'T NEED THIS IF ContextFlags.INITIALIZED GETS SET AT END OF INITIALIZATION
+                # object.context.initialization_status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
+                # object.context.initialization_status = ContextFlags.INITIALIZED
+                object.context.execution_phase = ContextFlags.EXECUTING
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
-                object.execution_status = ExecutionStatus.EXECUTING
             result = object.execute(
                 input=execution_inputs,
                 execution_id=execution_id,
@@ -781,9 +783,9 @@ def run(object,
         if call_after_trial:
             call_after_trial()
 
-        from psyneulink.globals.log import _log_trials_and_runs, ContextStatus
+        from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
         _log_trials_and_runs(composition=object,
-                             curr_condition=ContextStatus.TRIAL,
+                             curr_condition=LogCondition.TRIAL,
                              context=context)
 
     try:
@@ -804,9 +806,9 @@ def run(object,
     else:
         object._learning_enabled = learning_state_buffer
 
-    from psyneulink.globals.log import _log_trials_and_runs, ContextStatus
+    from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
     _log_trials_and_runs(composition=object,
-                         curr_condition=ContextStatus.RUN,
+                         curr_condition=LogCondition.RUN,
                          context=context)
 
     return object.results

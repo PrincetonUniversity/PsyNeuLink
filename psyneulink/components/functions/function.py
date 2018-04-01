@@ -206,7 +206,8 @@ from psyneulink.globals.keywords import \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
     ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMS, PARAMETER_STATE_PARAMS, PEARSON, \
-    PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
+    PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
     RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, \
     STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, \
     USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, \
@@ -1216,12 +1217,21 @@ class UserDefinedFunction(Function_Base):
     For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputState.function>` of an OutputState
     of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
 
-        >>> my_wave_mech = pnl.ProcessingMechanism(size=3,
-        ...                                        function=Logistic,
-        ...                                        output_states={pnl.NAME: 'SINUSOIDAL OUTPUT',
-        ...                                                       pnl.FUNCTION: my_sinusoidal_fct})
+        >>> my_wave_mech = pnl.ProcessingMechanism(size=1,
+        ...                                        function=pnl.Linear,
+        ...                                        output_states=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
+        ...                                                       pnl.VARIABLE: [(pnl.OWNER_VALUE, 0),pnl.EXECUTION_COUNT],
+        ...                                                       pnl.FUNCTION: my_sinusoidal_fct}])
 
-    .. _UDF_Modulatory_Params_Examples:
+    For details on how to specify a function of an OutputState, see `OutputState Customization <OutputState_Customization>`.
+    Below is an example plot of the output of the 'SINUSOIDAL OUTPUT' `OutputState` from my_wave_mech above, as the
+    execution count increments, when the input to the mechanism is 0.005 for 1000 runs::
+
+.. figure:: _static/sinusoid_005.png
+   :alt: Sinusoid function
+   :scale: 50 %
+
+.. _UDF_Modulatory_Params_Examples:
 
     The parameters of a custom function assigned to an InputState or OutputState can also be used for `gating
     <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be specified
@@ -1673,8 +1683,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
               a parameter may be re-assigned before variable assigned during is known
         """
 
-        # FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
-
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
@@ -2071,15 +2079,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(SCALE, self.name, scale))
+            scale_is_a_scalar = isinstance(scale, numbers.Number) or (len(scale) == 1) and isinstance(scale[0], numbers.Number)
             if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
-                if (isinstance(scale, np.ndarray) and
-                        (scale.size != self.instance_defaults.variable.size or
-                         scale.shape != self.instance_defaults.variable.shape)):
-                    raise FunctionError("Scale is using Hadamard modulation "
-                                        "but its shape and/or size (shape: {}, size:{}) "
-                                        "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(scale.shape, scale.size, self.instance_defaults.variable.shape,
-                                               self.instance_defaults.variable.size))
+                if not scale_is_a_scalar:
+                    err_msg = "Scale is using Hadamard modulation but its shape and/or size (scale shape: {}, size:{})" \
+                              " do not match the variable being modulated (variable shape: {}, size: {})".\
+                        format(scale.shape, scale.size, self.instance_defaults.variable.shape,
+                               self.instance_defaults.variable.size)
+                    if len(self.instance_defaults.variable.shape) == 0:
+                        raise FunctionError(err_msg)
+                    if (scale.shape != self.instance_defaults.variable.shape) and \
+                        (scale.shape != self.instance_defaults.variable.shape[1:]):
+                        raise FunctionError(err_msg)
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
@@ -2090,15 +2101,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             else:
                 raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
                                     format(OFFSET, self.name, offset))
+            offset_is_a_scalar = isinstance(offset, numbers.Number) or (len(offset) == 1) and isinstance(offset[0], numbers.Number)
             if (c in context for c in {EXECUTING, LEARNING}): # cxt-test
-                if (isinstance(offset, np.ndarray) and
-                        (offset.size != self.instance_defaults.variable.size or
-                         offset.shape != self.instance_defaults.variable.shape)):
-                    raise FunctionError("Offset is using Hadamard modulation "
-                                        "but its shape and/or size (shape: {}, size:{}) "
-                                        "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(offset.shape, offset.size, self.instance_defaults.variable.shape,
-                                               self.instance_defaults.variable.size))
+                if not offset_is_a_scalar:
+                    err_msg = "Offset is using Hadamard modulation but its shape and/or size (offset shape: {}, size:{})" \
+                              " do not match the variable being modulated (variable shape: {}, size: {})".\
+                        format(offset.shape, offset.size, self.instance_defaults.variable.shape,
+                               self.instance_defaults.variable.size)
+                    if len(self.instance_defaults.variable.shape) == 0:
+                        raise FunctionError(err_msg)
+                    if (offset.shape != self.instance_defaults.variable.shape) and \
+                        (offset.shape != self.instance_defaults.variable.shape[1:]):
+                        raise FunctionError(err_msg)
 
             # if not operation:
             #     raise FunctionError("Operation param missing")
@@ -2186,6 +2200,15 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         # Apply weights if they were specified
         if weights is not None:
             variable = self._update_variable(variable * weights)
+
+        # CW 3/19/18: a total hack, e.g. to make scale=[4.] turn into scale=4. Used b/c the `scale` ParameterState
+        # changes scale's format: e.g. if you write c = pnl.LinearCombination(scale = 4), print(c.scale) returns [4.]
+        if isinstance(scale, (list, np.ndarray)):
+            if len(scale) == 1 and isinstance(scale[0], numbers.Number):
+                scale = scale[0]
+        if isinstance(offset, (list, np.ndarray)):
+            if len(offset) == 1 and isinstance(offset[0], numbers.Number):
+                offset = offset[0]
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
         if operation is SUM:
@@ -3736,7 +3759,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
             * **MAX_INDICATOR**: 1 in place of the element with the maximum signed value;
             * **MAX_ABS_INDICATOR**: 1 in place of the element with the maximum absolute value;
             * **PROB**: probabilistically chosen element based on probabilities passed in second item of
-              `variable <OneHot.variable>`.
+            * **PROB_INDICATOR**: same as *PROB* but chosen item is assigned a value of 1.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3772,7 +3795,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB)=MAX_VAL,
+                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR)=MAX_VAL,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -3782,7 +3805,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
         params = self._assign_args_to_param_dicts(mode=mode,
                                                   params=params)
 
-        if mode is PROB and default_variable is None:
+        if mode in {PROB, PROB_INDICATOR} and default_variable is None:
             default_variable = [[0],[0]]
 
         super().__init__(default_variable=default_variable,
@@ -3795,7 +3818,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
-        if request_set[MODE] is PROB:
+        if request_set[MODE] in {PROB, PROB_INDICATOR}:
             if not self.variable.ndim == 2:
                 raise FunctionError("If {} for {} {} is set to {}, variable must be 2d array".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB))
@@ -3862,7 +3885,8 @@ class OneHot(TransferFunction):  # ---------------------------------------------
             max_value = np.max(np.absolute(variable))
             return np.where(variable == max_value, 1, 0)
 
-        elif self.mode is PROB: # 1st item of variable should be data, and 2nd a probability distribution for choosing
+        elif self.mode in {PROB, PROB_INDICATOR}:
+            # 1st item of variable should be data, and 2nd a probability distribution for choosing
             v = variable[0]
             prob_dist = variable[1]
             # if not prob_dist.any() and INITIALIZING in context:
@@ -3872,7 +3896,11 @@ class OneHot(TransferFunction):  # ---------------------------------------------
             random_value = np.random.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-            return v * chosen_in_cum_sum
+            if self.mode is PROB:
+                result = v * chosen_in_cum_sum
+            else:
+                result = np.ones_like(v) * chosen_in_cum_sum
+            return result
             # chosen_item = np.random.choice(v, 1, p=prob_dist)
             # one_hot_indicator = np.where(v == chosen_item, 1, 0)
             # return v * one_hot_indicator
@@ -4204,7 +4232,7 @@ class SoftMax(NormalizingFunction):
 
         if output_type in {MAX_VAL, MAX_INDICATOR}:
             return self.one_hot_function(sm)
-        elif output_type is PROB:
+        elif output_type in {PROB, PROB_INDICATOR}:
             return self.one_hot_function([variable, sm])
         else:
             return sm
@@ -4792,8 +4820,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         cols = None
         # use of variable attribute here should be ok because it's using it as a format/type
         if isinstance(self, MappingProjection):
-            rows = len(self.sender.value)
-            cols = len(self.receiver.instance_defaults.variable)
+            if isinstance(self.sender.value, numbers.Number):
+                rows = 1
+            else:
+                rows = len(self.sender.value)
+            if isinstance(self.receiver.instance_defaults.variable, numbers.Number):
+                cols = 1
+            else:
+                cols = len(self.receiver.instance_defaults.variable)
         matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:
@@ -9588,7 +9622,7 @@ COMMENT
             raise FunctionError("Variable for {} must contain a single array or list of numbers".format(self.name))
         return variable
 
-    def _validate_params(self, request_set, target_set=None, context=None):
+    def _validate_params(self, variable, request_set, target_set=None, context=None):
         """Validate matrix param
 
         `matrix <Stability.matrix>` argument must be one of the following
@@ -9600,8 +9634,6 @@ COMMENT
         (but leave in the form in which it was specified so that, if it is a ParameterState or MappingProjection,
          its current value can be accessed at runtime (i.e., it can be used as a "pointer")
         """
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Validate matrix specification
         if MATRIX in target_set:
@@ -9657,6 +9689,12 @@ COMMENT
                 raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
                                     "must be a square matrix".
                                     format(param_type_string, MATRIX, self.name, matrix))
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+
 
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate matrix
@@ -10149,7 +10187,10 @@ class Distance(ObjectiveFunction):
             if context is None or INITIALIZING in context: # cxt-test
                 v1 = np.where(v1==0, EPSILON, v1)
                 v2 = np.where(v2==0, EPSILON, v2)
-            result = -np.sum(v1*np.log(v2))
+            # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
+            # FIX: unsure about desired behavior when v2 = 0 and v1 != 0
+            # JDC: returns [inf]; leave, and let it generate a warning or error message for user
+            result = np.where(np.logical_and(v1==0, v2==0), 0, -np.sum(v1*np.log(v2)))
 
         # Energy
         elif self.metric is ENERGY:

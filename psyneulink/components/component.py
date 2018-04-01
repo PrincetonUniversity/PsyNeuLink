@@ -28,8 +28,9 @@ A Component is never created by calling the constructor for the Component base c
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
 (listed `below <Component_Methods>`) as part of the initialization procedure.  Every Component has a core set of
 `configurable parameters <Component_User_Params>` that can be specified in the arguments of the constructor, as well
-as additional attributes that provide information about its contents and/or state (see
-`Component_Informational_Attributes` below).
+as additional parameters and attributes that may be specific to particular Components, many of which can be modified
+by the user, and some of which provide useful information about the Component (see `User_Modifiable_Parameters`
+and `Informational Attributes` below).
 
 .. _Component_Deferred_Init:
 
@@ -157,39 +158,35 @@ user once the component is constructed, with the one exception of `prefs <Compon
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
   preference (see `PreferenceSet <LINK>` for details).
 
-.. _Component_Informational_Attributes:
+.. _User_Modifiable_Parameters:
 
-Core Informational Attributes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+User-modifiable Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _Component_User_Params:
 
-* **user_params** - a dictionary intended to provide a simple reference to all of the relevant features of a component.
-  The dictionary contains two main types of parameters:
-
-   (1) configurable parameters, meaning component-specific parameters that may or may not have a parameter state. A user
-   can change the value of a configurable parameter at any time. For example, on the TransferMechanism, clip,
-   initial_value, and integrator_mode are all available in user_params and do not have ParameterStates; noise and
-   smooothing_factor are also available in user_params and do have ParameterStates.
-
-   (2) informational parameters. For example, on the TransferMechanism, input_states, output_states, function, and
-   function_params are all available in user_params.
-
-  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
+* `user_params <Component.user_params>` - a dictionary that provides reference to all of the user-modifiable parameters
+  of a Component. The dictionary is a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
   <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
   as can its full list of entries (e.g., ``my_component.user_params``).  However, because it is read-only,
-  it cannot be used to make assignments.  Rather, changes to the value of a parameter, if allowed,
-  must be made by assigning a value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``),
-  or using the Component's `assign_params <Component.assign_params>` method.
+  it cannot be used to make assignments.  Rather, changes to the value of a parameter must be made by assigning a
+  value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``), but using a dedicated
+  method if one exists (e.g., `Mechanism_Base.add_states`), or by using the Component's `assign_params
+  <Component.assign_params>` method.
 
-..
-COMMENT:
-  INCLUDE IN DEVELOPERS' MANUAL
-    * **paramClassDefaults**
-
-    * **paramInstanceDefaults**
-COMMENT
+  All of the parameters listed in the *user_params* dictionary can be modified by the user (as described above).  Some
+  can also be modified by `ControlSignals <ControlSignal>` when a `System executes <System_Execution_Control>`. In
+  general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
+  or format of the values associated with a Component can be subject to modulation.  For example, for a
+  `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
+  `integrator_mode <TransferMechanism.integrator_mode>`, `input_states <TransferMechanism.input_states>`,
+  `output_states`, and `function <TransferMechanism.function>`, are all listed in user_params, and are user-modifiable,
+  but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `smoothing_factor
+  <TransferMechanism.smoothing_factor>`, as well as the parameters of the TransferMechanism's `function
+  <TransferMechanism.function>` (listed in the *function_params* subdictionary) can all be subject to modulation.
+  Parameters that are subject to modulation are associated with a `ParameterState` to which the ControlSignals
+  can project (by way of a `ControlProjection`).
 
 .. _Component_Function_Object:
 
@@ -234,11 +231,43 @@ COMMENT
   `ParameterState_Specification` for details concerning different ways in which the value of a
   parameter can be specified).
 
+.. _Informational_Attributes:
 
+Informational Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to its `user-modifiable parameters <Component_User_Params>`, a Component has attributes that provide
+information about its contents and/or state, but do not directly affect its operation.  Every Component has the
+following two informational attributes:
+
+.. _Component_Execution_Count:
+
+* **execution_count** -- maintains a record of the number of times a Component has executed; it *excludes* the
+  executions carried out during initialization and validation, but includes all other executions, whether they are of
+  the Component on its own are as part of a `Composition` (e.g., `Process` or `System`). The value can be changed
+  "manually" or programmatically by assigning an integer value directly to the attribute.
+
+.. _Component_Current_Execution_Time:
+
+* **current_execution_time** -- maintains the `Time` of the last execution of the Component in the context of a
+  `System`'s `scheduler <System_Scheduler>`, and is stored as a `time <Context.time>` tuple of values indicating the
+  `TimeScale.TRIAL`,  `TimeScale.PASS`, and `TimeScale.TIME_STEP` of the last execution.  Note that a System has two
+  schedulers -- `scheduler_processing <Composition.scheduler_processing>` and `scheduler_learning
+  <Composition.scheduler_learning>`; `current_execution_time` stores the time of whichever of these was the last to
+  execute the Component.
 
 
 COMMENT:
-* **log**
+  * parameters are things that govern the operation of the Mechanism (including its function) and/or can be modified/modulated
+  * attributes include parameters, but also read-only attributes that reflect but do not determine the operation (e.g., EXECUTION_COUNT)
+COMMENT
+
+..
+COMMENT:
+  INCLUDE IN DEVELOPERS' MANUAL
+    * **paramClassDefaults**
+
+    * **paramInstanceDefaults**
 COMMENT
 
 
@@ -366,19 +395,26 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MAPPING_PROJECTION, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, \
+    DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, EXECUTION_COUNT, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, \
+    INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, \
+    MAPPING_PROJECTION, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, \
+    PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, \
+    SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, \
+    kwComponentCategory
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.context import Context, ContextStatus
+from psyneulink.globals.context import Context, ContextFlags, _get_time
+from psyneulink.globals.log import LogCondition
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength, object_has_single_value
 
 import psyneulink.llvm as pnlvm
 from llvmlite import ir
 
 __all__ = [
-    'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
-    'InitStatus', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
+    'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
+    'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
 ]
 # Testing pull request
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
@@ -418,18 +454,6 @@ class ResetMode(Enum):
 #         for arg in kwargs:
 #             self.__setattr__(arg, kwargs[arg])
 
-
-class ExecutionStatus(Enum):
-    INITIALIZING = 1
-    EXECUTING = 2
-    VALIDATING = 3
-
-
-class InitStatus(Enum):
-    UNSET = 1
-    INITIALIZING = 2
-    DEFERRED_INITIALIZATION = 3
-    INITIALIZED = 4
 
 # Transitional type:
 #    for implementing params as attributes that are accessible via current paramsDicts
@@ -683,6 +707,12 @@ class Component(object):
     log : Log
         see `log <Component_Log>`
 
+    execution_count : int
+        see `execution_count <Component_Execution_Count>`
+
+    current_execution_time : tuple(`Time.RUN`, `Time.TRIAL`, `Time.PASS`, `Time.TIME_STEP`)
+        see `current_execution_time <Component_Current_Execution_Time>`
+
     name : str
         see `name <Component_Name>`
 
@@ -829,7 +859,7 @@ class Component(object):
         # # MODIFIED 8/14/16 NEW:
         # # PROBLEM: variable has different name for different classes;  need to standardize name across classes
         # try:
-        #     if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        #     if self.initialization_status is ContextFlags.DEFERRED_INITIALIZATION:
         #         defer_init = True
         # except AttributeError:
         #     pass
@@ -840,12 +870,13 @@ class Component(object):
         #         # del self.init_args['__class__']
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
-        self.context.status = ContextStatus.INITIALIZATION
+        self.context.initialization_status = ContextFlags.INITIALIZING
+        self.context.execution_phase = None
+        self.context.source = ContextFlags.COMPONENT
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
 
-        self.execution_status = ExecutionStatus.INITIALIZING
-        self.init_status = InitStatus.UNSET
-        # self.init_status = InitStatus.INITIALIZING
+        self.context.initialization_status = ContextFlags.INITIALIZING
+        # self.context.initialization_status = ContextFlags.UNSET
 
         defaults = self.ClassDefaults.values().copy()
         if param_defaults is not None:
@@ -967,7 +998,7 @@ class Component(object):
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
 
-        self.init_status = InitStatus.INITIALIZED
+        self.context.initialization_status = ContextFlags.INITIALIZED
 
         self.__llvm_function_name = None
         self.__llvm_bin_function = None
@@ -1192,12 +1223,12 @@ class Component(object):
     def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
-        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
 
             # Flag that object is now being initialized
             # Note: self.value will be resolved to the object's value as part of initialization
             #       (usually in _instantiate_function)
-            self.init_status = InitStatus.INITIALIZING
+            self.context.initialization_status = ContextFlags.INITIALIZING
 
             del self.init_args['self']
 
@@ -1230,7 +1261,7 @@ class Component(object):
             else:
                 self._assign_default_name()
 
-            self.init_status = InitStatus.INITIALIZED
+            self.context.initialization_status = ContextFlags.INITIALIZED
 
     def _assign_deferred_init_name(self, name, context):
 
@@ -1960,7 +1991,6 @@ class Component(object):
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
                 elif isinstance(param_value, (str, Component, type)):
-                    old_param_value = request_set[param_name]
                     param_value = self._get_param_value_for_modulatory_spec(param_name, param_value)
                 else:
                     continue
@@ -1986,7 +2016,7 @@ class Component(object):
 
         """
         if context is None:
-            self.context.status = ContextStatus.COMMAND_LINE # cxt-push
+            self.context.source = ContextFlags.COMMAND_LINE # cxt-push
             self.context.string = COMMAND_LINE
         context = context or COMMAND_LINE # cxt-done
         self._assign_params(request_set=request_set, context=context)
@@ -2055,7 +2085,7 @@ class Component(object):
 
         validated_set_param_names = list(validated_set.keys())
 
-        curr_context = self.context.status # cxt-buffer
+        curr_context = self.context.flags # cxt-buffer
         curr_context_str = self.context.string
 
         # If an input_state is being added from the command line,
@@ -2064,7 +2094,7 @@ class Component(object):
         #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
         #    that causes name-repetition problems when it is called as part of the standard init procedure
         if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context: # cxt-test
-            self.context.status = ContextStatus.COMMAND_LINE # cxt-push
+            self.context.source = ContextFlags.COMMAND_LINE # cxt-push
             self._instantiate_attributes_before_function(context=COMMAND_LINE)  # cxt-done
         # Give owner a chance to instantiate function and/or function params
         # (e.g., wrap in UserDefineFunction, as per EVCControlMechanism)
@@ -2075,7 +2105,7 @@ class Component(object):
 
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
-            self.context.status = COMMAND_LINE # cxt-push
+            self.context.source = COMMAND_LINE # cxt-push
             self._instantiate_function(context=COMMAND_LINE) # cxt-done
         # FIX: WHY SHOULD IT BE CALLED DURING STANDRD INIT PROCEDURE?
         # # MODIFIED 5/5/17 OLD:
@@ -2083,10 +2113,10 @@ class Component(object):
         # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_states ARG OF CONSTRUCTOR]
         if OUTPUT_STATES in validated_set and COMMAND_LINE in context: # cxt-test
         # MODIFIED 5/5/17 END
-            self.context.status = COMMAND_LINE # cxt-push
+            self.context.source = COMMAND_LINE # cxt-push
             self._instantiate_attributes_after_function(context=COMMAND_LINE) # cxt-done
 
-        self.context.status = curr_context # cxt-pop
+        self.context.flags = curr_context # cxt-pop
         self.context.string = curr_context_str
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
@@ -2843,15 +2873,52 @@ class Component(object):
         return self._execute(variable=variable, runtime_params=runtime_params, context=context)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
+
+        # MODIFIED 3/20/18 NEW:
+        from psyneulink.components.functions.function import Function
+        if isinstance(self, Function):
+            pass # Functions don't have a Logs or maintain execution_counts or time
+        else:
+            if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+                self._increment_execution_count()
+            self._update_current_execution_time(context=context) # cxt-pass
+        # MODIFIED 3/20/18 END
         return self.function(variable=variable, params=runtime_params, context=context)
+
+    @property
+    def execution_count(self):
+        """Maintains a simple count of executions over the life of the Component,
+        Incremented in the Component's execute method by call to self._increment_execution_count"""
+        try:
+            return self._execution_count
+        except:
+            self._execution_count = 0
+            return self._execution_count
+
+    @execution_count.setter
+    def execution_count(self, count:int):
+        self._execution_count = count
+
+    def _increment_execution_count(self, count=1):
+        try:
+            self._execution_count +=count
+        except:
+            self._execution_count = 1
+        return self._execution_count
+
+    @property
+    def current_execution_time(self):
+        try:
+            return self._current_execution_time
+        except AttributeError:
+            self._update_current_execution_time(self.context.string)
 
     def _get_current_execution_time(self, context):
         from psyneulink.globals.log import _get_context
-        # # MODIFIED 3/18/18 OLD:
-        # return self.log._get_time(context=context ,context_flags=_get_log_context(context))
-        # MODIFIED 3/18/18 NEW:
-        return self.log._get_time(context_flags=_get_context(context))
-        # MODIFIED 3/18/18 END
+        return _get_time(self, context_flags=_get_context(context))
+
+    def _update_current_execution_time(self, context):
+        self._current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -2900,20 +2967,6 @@ class Component(object):
         for i in range(len(v)):
             s.append(len(v[i]))
         return np.array(s)
-
-    # @property
-    # def init_status(self):
-    #     try:
-    #         return self._init_status
-    #     except AttributeError:
-    #         return InitStatus.UNSET
-    #
-    # @init_status.setter
-    # def init_status(self, value):
-    #     if not isinstance(value, InitStatus):
-    #         raise ComponentError("PROGRAM ERROR:  Attempt to assign \'init_status\' attribute of {} "
-    #                              "a value ({}) other than one of InitStatus".format(self.name, value))
-    #     self._init_status = value
 
     @property
     def prefs(self):
@@ -3046,7 +3099,7 @@ class Component(object):
         try:
             return self._context
         except:
-            self._context = Context(status=ContextStatus.OFF)
+            self._context = Context(owner=self)
             return self._context
 
     # from psyneulink.globals.context import Context
@@ -3066,7 +3119,7 @@ class Component(object):
         try:
             return self._log
         except AttributeError:
-            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
                 raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete "
                                      "or appropriately configuring a system to which it belongs".
                                      format(self.name, 'log'))
@@ -3079,14 +3132,14 @@ class Component(object):
 
     @property
     def loggable_items(self):
-        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `ContextStatus`.
+        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `ContextFlags`.
         This is a convenience method that calls the `loggable_items <Log.loggable_items>` property of the Component's
         `log <Component.log>`.
         """
         return self.log.loggable_items
 
-    from psyneulink.globals.log import ContextStatus
-    def set_log_conditions(self, items, log_condition=ContextStatus.EXECUTION):
+    from psyneulink.globals.log import ContextFlags
+    def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
         """
         set_log_conditions(          \
             items                    \
@@ -3094,8 +3147,8 @@ class Component(object):
         )
 
         Specifies items to be logged; these must be be `loggable_items <Component.loggable_items>` of the Component's
-        `log <Component.log>`. This is a convenience method that calls the `set_log_conditions <Log.set_log_conditions>` method
-        of the Component's `log <Component.log>`.
+        `log <Component.log>`. This is a convenience method that calls the `set_log_conditions <Log.set_log_conditions>`
+        method of the Component's `log <Component.log>`.
         """
         self.log.set_log_conditions(items=items, log_condition=log_condition)
 
@@ -3113,7 +3166,7 @@ class Component(object):
 
     @property
     def logged_items(self):
-        """Dictionary of all items that have entries in the log, and their currently assigned `ContextStatus`\\s
+        """Dictionary of all items that have entries in the log, and their currently assigned `ContextFlags`\\s
         This is a convenience method that calls the `logged_items <Log.logged_items>` property of the Component's
         `log <Component.log>`.
         """

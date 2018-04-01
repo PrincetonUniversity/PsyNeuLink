@@ -165,12 +165,12 @@ import typecheck as tc
 
 import warnings
 
-from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.components.states.state import State_Base, _parse_state_spec
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultGatingPolicy
 from psyneulink.globals.keywords import \
     GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, \
@@ -547,7 +547,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             for state in mech._input_states + mech._output_states:
                 for projection in state.mod_afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
-                    if (projection.init_status is InitStatus.DEFERRED_INITIALIZATION
+                    if (projection.context.initialization_status == ContextFlags.DEFERRED_INIT
                         and projection.init_args['sender'] is None):
                         # FIX 5/23/17: MODIFY THIS WHEN (param, GatingProjection) tuple
                         # FIX:         IS REPLACED WITH (param, GatingSignal) tuple
