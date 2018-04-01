@@ -2318,12 +2318,22 @@ class Mechanism_Base(Mechanism):
 
 
     def get_param_struct_type(self):
-        param_type_list = [self.function_object.get_param_struct_type()]
+        input_param_list = []
+        for state in self.input_states:
+            input_param_list.append(state.get_param_struct_type())
+        input_param_struct = ir.LiteralStructType(input_param_list)
+
+        param_type_list = [input_param_struct, self.function_object.get_param_struct_type()]
         return ir.LiteralStructType(param_type_list)
 
 
     def get_context_struct_type(self):
-        context_type_list = [self.function_object.get_context_struct_type()]
+        input_context_list = []
+        for state in self.input_states:
+            input_context_list.append(state.get_context_struct_type())
+        input_context_struct = ir.LiteralStructType(input_context_list)
+
+        context_type_list = [input_context_struct, self.function_object.get_context_struct_type()]
         return ir.LiteralStructType(context_type_list)
 
 
@@ -2338,11 +2348,23 @@ class Mechanism_Base(Mechanism):
 
 
     def get_param_initializer(self):
-        return tuple([self.function_object.get_param_initializer()]);
+        input_param_init_list = []
+        for state in self.input_states:
+            input_param_init_list.append(state.get_param_initializer())
+        input_param_init = tuple(input_param_init_list)
+        function_param_init = self.function_object.get_param_initializer()
+
+        return tuple([input_param_init, function_param_init])
 
 
     def get_context_initializer(self):
-        return tuple([self.function_object.get_context_initializer()]);
+        input_context_init_list = []
+        for state in self.input_states:
+            input_context_init_list.append(state.get_context_initializer())
+        input_context_init = tuple(input_context_init_list)
+        function_context_init = self.function_object.get_context_initializer()
+
+        return tuple([input_context_init, function_context_init])
 
 
     def _bin_execute(self,
