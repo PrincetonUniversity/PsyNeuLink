@@ -403,7 +403,7 @@ class ModulatorySignal(OutputState):
 
         # Deferred initialization
         try:
-            if self.context.initialization_status in {ContextFlags.DEFERRED_INIT, ContextFlags.INITIALIZING}:
+            if self.context.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
                 # If init was deferred, it may have been because owner was not yet known (see OutputState.__init__),
                 #   and so modulation hasn't had a chance to be assigned to the owner's value
                 #   (i.e., if it was not specified in the constructor), so do it now;

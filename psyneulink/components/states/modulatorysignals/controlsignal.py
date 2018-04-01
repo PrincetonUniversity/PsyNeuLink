@@ -1186,7 +1186,7 @@ class ControlSignal(ModulatorySignal):
     @property
     def value(self):
         # In case the ControlSignal has not yet been assigned (and its value is INITIALIZING or DEFERRED_INITIALIZATION
-        if self.context.initialization_status in {ContextFlags.DEFERRED_INIT, ContextFlags.INITIALIZING}:
+        if self.context.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
             return None
         else:
             return self._value

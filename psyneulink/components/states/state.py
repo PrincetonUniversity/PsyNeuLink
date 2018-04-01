@@ -1737,13 +1737,12 @@ class State_Base(State):
             # VALIDATE (if initialized or being initialized (UNSET))
 
             # if projection.init_status in {InitStatus.INITIALIZED, InitStatus.INITIALIZING, InitStatus.UNSET}: cxt-init
-            if projection.context.initialization_status in \
-                    {ContextFlags.INITIALIZED, ContextFlags.INITIALIZING, ContextFlags.UNSET}:
+            if projection.context.initialization_status & \
+                    (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING | ContextFlags.UNSET):
 
                 # If still being initialized, then assign sender and receiver as necessary
                 # if projection.init_status in {InitStatus.INITIALIZING, InitStatus.UNSET}: cxt-init
-                if projection.context.initialization_status in \
-                        {ContextFlags.INITIALIZING, ContextFlags.UNSET}:
+                if projection.context.initialization_status & (ContextFlags.INITIALIZING | ContextFlags.UNSET):
                     if not isinstance(projection.sender, State):
                         projection.sender = self
 
