@@ -2437,7 +2437,6 @@ class System(System_Base):
             for parameter_state in mech._parameter_states:
                 for projection in parameter_state.mod_afferents:
                     # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
-                    # if projection.init_status is InitStatus.DEFERRED_INITIALIZATION: cxt-init
                     if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                         proj_control_signal_specs = projection.control_signal_params or {}
                         proj_control_signal_specs.update({PROJECTIONS: [projection]})

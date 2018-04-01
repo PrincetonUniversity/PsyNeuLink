@@ -114,7 +114,6 @@ class PathwayProjection_Base(Projection_Base):
         elif not self.className + '-' in self.name:
             return self.name
 
-        # elif self.init_status is InitStatus.INITIALIZED:  cxt-init
         elif self.context.initialization_status == ContextFlags.INITIALIZED:
             if self.sender.owner:
                 sender_name = name_template.format(self.sender.owner.name, self.sender.name)

@@ -428,7 +428,6 @@ class ModulatorySignal(OutputState):
                          prefs=prefs,
                          context=context)
 
-        # if self.init_status is InitStatus.INITIALIZED: cxt-init
         if self.context.initialization_status == ContextFlags.INITIALIZED:
             self._assign_default_state_name(context=context)
 

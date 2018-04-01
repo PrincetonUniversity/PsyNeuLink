@@ -659,22 +659,16 @@ class Projection_Base(Projection):
                                                   exponent=exponent,
                                                   params=params)
 
-        try:
-            if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
-                self._assign_deferred_init_name(name, context)
-                self.init_args = locals().copy()
-                self.init_args[CONTEXT] = self
-                self.init_args[NAME] = name
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            self._assign_deferred_init_name(name, context)
+            self.init_args = locals().copy()
+            self.init_args[CONTEXT] = self
+            self.init_args[NAME] = name
 
-                # remove local imports
-                del self.init_args['ParameterState']
-                del self.init_args['State_Base']
-                return
-        except AttributeError:
-            # if this Projection does not have an init_status attribute, we can guarantee that it's not in
-            # deferred init state. It's tricky to ensure this attribute always exists due to the nature
-            # of deferred init
-            pass
+            # remove local imports
+            del self.init_args['ParameterState']
+            del self.init_args['State_Base']
+            return
 
         self.receiver = receiver
 

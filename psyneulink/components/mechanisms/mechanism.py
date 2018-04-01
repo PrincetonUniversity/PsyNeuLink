@@ -1433,7 +1433,6 @@ class Mechanism_Base(Mechanism):
                 except KeyError:
                     pass
             elif isinstance(parsed_spec, (Projection, Mechanism, State)):
-                # if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION: cxt-init
                 if parsed_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
                     args = parsed_spec.init_args
                     # MODIFIED 2/21/18 OLD:

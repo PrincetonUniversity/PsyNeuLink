@@ -1458,14 +1458,12 @@ class State_Base(State):
 
                 # If sender has been instantiated, try to complete initialization
                 # If not, assume it will be handled later (by Mechanism or Composition)
-                # if isinstance(sender, State) and sender.init_status is InitStatus.INITIALIZED: cxt-init
                 if isinstance(sender, State) and sender.context.initialization_status == ContextFlags.INITIALIZED:
                     projection._deferred_init()
 
 
             # VALIDATE (if initialized)
 
-            # if projection.init_status is InitStatus.INITIALIZED: cxt-init
             if projection.context.initialization_status == ContextFlags.INITIALIZED:
 
                 # FIX: 10/3/17 - VERIFY THE FOLLOWING:
@@ -1730,18 +1728,15 @@ class State_Base(State):
 
                 # If receiver has been instantiated, try to complete initialization
                 # If not, assume it will be handled later (by Mechanism or Composition)
-                # if isinstance(receiver, State) and receiver.init_status is InitStatus.INITIALIZED: cxt-init
                 if isinstance(receiver, State) and receiver.context.initialization_status == ContextFlags.INITIALIZED:
                     projection._deferred_init()
 
             # VALIDATE (if initialized or being initialized (UNSET))
 
-            # if projection.init_status in {InitStatus.INITIALIZED, InitStatus.INITIALIZING, InitStatus.UNSET}: cxt-init
             if projection.context.initialization_status & \
                     (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING | ContextFlags.UNSET):
 
                 # If still being initialized, then assign sender and receiver as necessary
-                # if projection.init_status in {InitStatus.INITIALIZING, InitStatus.UNSET}: cxt-init
                 if projection.context.initialization_status & (ContextFlags.INITIALIZING | ContextFlags.UNSET):
                     if not isinstance(projection.sender, State):
                         projection.sender = self
@@ -2160,7 +2155,7 @@ def _instantiate_state_list(owner,
         # default_name = state._assign_default_state_name()
         # if default_name:
         #      state_name = default_name
-        # elif state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        # elif state.initialization_status is ContextFlags.DEFERRED_INIT
         #     state_name = state.init_args[NAME]
         # else:
         #     state_name = state.name
@@ -2608,7 +2603,6 @@ def _parse_state_spec(state_type=None,
 
         # Projection has been instantiated
         if isinstance(projection_spec, Projection):
-            # if projection_spec.init_status is InitStatus.INITIALIZED: cxt-init
             if projection_spec.context.initialization_status == ContextFlags.INITIALIZED:
                 projection_value = projection_spec.value
             # If deferred_init, need to get sender and matrix to determine value

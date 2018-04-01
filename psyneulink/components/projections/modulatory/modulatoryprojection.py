@@ -229,7 +229,6 @@ class ModulatoryProjection_Base(Projection_Base):
 
         template = "{} for {}[{}]"
 
-        # if self.init_status in {InitStatus.INITIALIZED, InitStatus.INITIALIZING, InitStatus.UNSET}: cxt-init
         if self.context.initialization_status &  \
                 (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING | ContextFlags.UNSET):
             # If the name is not a default name for the class, return

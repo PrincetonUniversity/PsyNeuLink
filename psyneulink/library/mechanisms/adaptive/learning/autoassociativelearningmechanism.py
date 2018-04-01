@@ -313,7 +313,8 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # self.init_args['name'] = name
 
         # # Flag for deferred initialization
-        # self.init_status = InitStatus.DEFERRED_INITIALIZATION
+        # self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # self._learning_rate = learning_rate
 
