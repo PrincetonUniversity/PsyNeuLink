@@ -460,7 +460,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, InitStatus
+from psyneulink.components.component import Component
 from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
 from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.outputstate import OutputState

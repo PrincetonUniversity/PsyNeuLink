@@ -538,7 +538,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import \
     BackPropagation, ModulationParam, _is_modulation_param, is_function_type, ERROR_MATRIX
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base

@@ -297,7 +297,7 @@ from enum import IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, function_type, method_type
+from psyneulink.components.component import function_type, method_type
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??

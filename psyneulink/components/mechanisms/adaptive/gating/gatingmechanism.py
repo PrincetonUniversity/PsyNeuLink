@@ -165,7 +165,6 @@ import typecheck as tc
 
 import warnings
 
-from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base

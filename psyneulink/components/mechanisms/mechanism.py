@@ -785,7 +785,7 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, InitStatus, function_type, method_type
+from psyneulink.components.component import Component, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec

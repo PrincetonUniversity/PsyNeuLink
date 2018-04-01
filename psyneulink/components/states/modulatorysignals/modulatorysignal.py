@@ -205,7 +205,7 @@ Class Reference
 ---------------
 """
 
-from psyneulink.components.component import InitStatus, component_keywords
+from psyneulink.components.component import component_keywords
 from psyneulink.components.shellclasses import Mechanism, State
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base

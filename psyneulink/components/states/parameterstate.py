@@ -357,7 +357,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, InitStatus, function_type, method_type, parameter_keywords
+from psyneulink.components.component import Component, function_type, method_type, parameter_keywords
 from psyneulink.components.functions.function import Linear, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
