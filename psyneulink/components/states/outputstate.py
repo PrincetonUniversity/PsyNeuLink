@@ -1345,7 +1345,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
             # OutputState object
             if isinstance(output_state, OutputState):
-                if output_state.context.initialization_status is ContextFlags.DEFERRED_INIT:
+                if output_state.context.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
                         output_state_value = OutputState._get_state_function_value(owner,
                                                                                    output_state.function,

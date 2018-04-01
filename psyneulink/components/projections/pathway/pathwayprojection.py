@@ -95,7 +95,7 @@ class PathwayProjection_Base(Projection_Base):
         name_template = "{}[{}]"
         projection_name_template = "{} from {} to {}"
 
-        if self.context.initialization_status is ContextFlags.DEFERRED_INIT:
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
             if self.init_args[SENDER]:
                 sender = self.init_args[SENDER]
                 if isinstance(sender, type):
@@ -115,7 +115,7 @@ class PathwayProjection_Base(Projection_Base):
             return self.name
 
         # elif self.init_status is InitStatus.INITIALIZED:  cxt-init
-        elif self.context.initialization_status is ContextFlags.INITIALIZED:
+        elif self.context.initialization_status == ContextFlags.INITIALIZED:
             if self.sender.owner:
                 sender_name = name_template.format(self.sender.owner.name, self.sender.name)
             if self.receiver.owner:

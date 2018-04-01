@@ -429,7 +429,7 @@ class ModulatorySignal(OutputState):
                          context=context)
 
         # if self.init_status is InitStatus.INITIALIZED: cxt-init
-        if self.context.initialization_status is ContextFlags.INITIALIZED:
+        if self.context.initialization_status == ContextFlags.INITIALIZED:
             self._assign_default_state_name(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):

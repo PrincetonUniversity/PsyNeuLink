@@ -237,7 +237,7 @@ class ModulatoryProjection_Base(Projection_Base):
                 return self.name
             self.name = template.format(self.className, self.receiver.owner.name, self.receiver.name)
 
-        elif self.context.initialization_status is ContextFlags.DEFERRED_INIT:
+        elif self.context.initialization_status == ContextFlags.DEFERRED_INIT:
             projection_name = template.format(self.className, state.owner.name, state.name)
             # self.init_args[NAME] = self.init_args[NAME] or projection_name
             self.name = self.init_args[NAME] or projection_name

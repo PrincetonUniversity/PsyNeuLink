@@ -306,11 +306,11 @@ from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.components.states.outputstate import SEQUENTIAL
 from psyneulink.components.states.state import State_Base
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, COMMAND_LINE, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SEPARATOR_BAR, SLOPE, SUM, kwAssign
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 
 __all__ = [
@@ -729,7 +729,7 @@ class ControlSignal(ModulatorySignal):
                          context=context)
 
         # Default cost params
-        if self.context.initialization_status is not ContextFlags.DEFERRED_INIT:
+        if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
             self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
         else:
             self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)

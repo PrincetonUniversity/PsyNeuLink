@@ -617,7 +617,7 @@ class LearningProjection(ModulatoryProjection_Base):
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
-        if self.context.initialization_status is ContextFlags.DEFERRED_INIT:
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
             return self.context.initialization_status
 
         # if self.learning_rate:

@@ -1450,7 +1450,7 @@ class Process(Process_Base):
                         # If initialization of MappingProjection has been deferred,
                         #    check sender and receiver, assign them if they have not been assigned, and initialize it
                         # if item.init_status is InitStatus.DEFERRED_INITIALIZATION: cxt-init
-                        if item.context.initialization_status is ContextFlags.DEFERRED_INIT:
+                        if item.context.initialization_status == ContextFlags.DEFERRED_INIT:
                             # Check sender arg
                             try:
                                 sender_arg = item.init_args[SENDER]

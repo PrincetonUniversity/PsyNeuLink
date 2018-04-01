@@ -1172,7 +1172,7 @@ class Component(object):
         """Use in subclasses that require deferred initialization
         """
         # if self.init_status is InitStatus.DEFERRED_INITIALIZATION: cxt-init
-        if self.context.initialization_status is ContextFlags.DEFERRED_INIT:
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
 
             # Flag that object is now being initialized
             # Note: self.value will be resolved to the object's value as part of initialization
@@ -3086,7 +3086,7 @@ class Component(object):
             return self._log
         except AttributeError:
             # if self.init_status is InitStatus.DEFERRED_INITIALIZATION: cxt-init
-            if self.context.initialization_status is ContextFlags.DEFERRED_INIT:
+            if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
                 raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete "
                                      "or appropriately configuring a system to which it belongs".
                                      format(self.name, 'log'))

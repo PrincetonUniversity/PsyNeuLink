@@ -1000,7 +1000,7 @@ class InputState(State_Base):
                             try:
                                 sender_dim = projection_spec.state.value.ndim
                             except AttributeError:
-                                if projection_spec.state.context.initialization_status is ContextFlags.DEFERRED_INIT:
+                                if projection_spec.state.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
                                 else:
                                     raise StateError("PROGRAM ERROR: indeterminate value for {} "
@@ -1021,7 +1021,7 @@ class InputState(State_Base):
                                     matrix = None
                                 # MODIFIED 11/25/17 END
                             elif isinstance(projection, Projection):
-                                if projection.context.initialization_status is ContextFlags.DEFERRED_INIT:
+                                if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
                                 matrix = projection.matrix
                             else:
