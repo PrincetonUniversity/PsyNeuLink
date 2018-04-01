@@ -177,6 +177,8 @@ def _convert_python_struct_to_llvm_ir(ctx, t):
         return ctx.float_ty
     elif isinstance(t, np.ndarray):
         return _convert_python_struct_to_llvm_ir(ctx, t.tolist())
+    elif t is None:
+        return ir.LiteralStructType([])
 
     print(type(t))
     assert(False)
