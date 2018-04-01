@@ -288,7 +288,7 @@ class GatingProjection(ModulatoryProjection_Base):
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
-            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)

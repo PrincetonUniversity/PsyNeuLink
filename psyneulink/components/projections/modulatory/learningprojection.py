@@ -450,7 +450,7 @@ class LearningProjection(ModulatoryProjection_Base):
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
-            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
         super().__init__(sender=sender,
                          receiver=receiver,
                          weight=weight,
@@ -617,8 +617,8 @@ class LearningProjection(ModulatoryProjection_Base):
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
-        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
-            return self.init_status
+        if self.context.initialization_status is ContextFlags.DEFERRED_INIT:
+            return self.context.initialization_status
 
         # if self.learning_rate:
         #     runtime_params.update({SLOPE:self.learning_rate})

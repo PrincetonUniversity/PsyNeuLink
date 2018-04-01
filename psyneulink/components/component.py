@@ -878,7 +878,9 @@ class Component(object):
         self.context.source = ContextFlags.COMPONENT
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
 
-        self.init_status = InitStatus.UNSET
+        # self.init_status = InitStatus.UNSET cxt-init
+        self.context.initialization_status = ContextFlags.UNSET
+
         # self.init_status = InitStatus.INITIALIZING
 
         defaults = self.ClassDefaults.values().copy()
@@ -1001,7 +1003,8 @@ class Component(object):
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
 
-        self.init_status = InitStatus.INITIALIZED
+        # self.init_status = InitStatus.INITIALIZED cxt-init
+        self.context.initialization_status = ContextFlags.INITIALIZED
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -1168,12 +1171,14 @@ class Component(object):
     def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
-        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        # if self.init_status is InitStatus.DEFERRED_INITIALIZATION: cxt-init
+        if self.context.initialization_status is ContextFlags.DEFERRED_INIT:
 
             # Flag that object is now being initialized
             # Note: self.value will be resolved to the object's value as part of initialization
             #       (usually in _instantiate_function)
-            self.init_status = InitStatus.INITIALIZING
+            # self.init_status = InitStatus.INITIALIZING cxt-init
+            self.context.initialization_status = ContextFlags.INITIALIZING
 
             del self.init_args['self']
 
@@ -1206,7 +1211,8 @@ class Component(object):
             else:
                 self._assign_default_name()
 
-            self.init_status = InitStatus.INITIALIZED
+            # self.init_status = InitStatus.INITIALIZED cxt-init
+            self.context.initialization_status = ContextFlags.INITIALIZED
 
     def _assign_deferred_init_name(self, name, context):
 
@@ -3079,7 +3085,8 @@ class Component(object):
         try:
             return self._log
         except AttributeError:
-            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            # if self.init_status is InitStatus.DEFERRED_INITIALIZATION: cxt-init
+            if self.context.initialization_status is ContextFlags.DEFERRED_INIT:
                 raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete "
                                      "or appropriately configuring a system to which it belongs".
                                      format(self.name, 'log'))

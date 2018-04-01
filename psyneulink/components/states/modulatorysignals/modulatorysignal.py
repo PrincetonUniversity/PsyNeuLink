@@ -209,6 +209,7 @@ from psyneulink.components.component import InitStatus, component_keywords
 from psyneulink.components.shellclasses import Mechanism, State
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL, PROJECTIONS
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -402,7 +403,7 @@ class ModulatorySignal(OutputState):
 
         # Deferred initialization
         try:
-            if self.init_status in {InitStatus.DEFERRED_INITIALIZATION, InitStatus.INITIALIZING}:
+            if self.context.initialization_status in {ContextFlags.DEFERRED_INIT, ContextFlags.INITIALIZING}:
                 # If init was deferred, it may have been because owner was not yet known (see OutputState.__init__),
                 #   and so modulation hasn't had a chance to be assigned to the owner's value
                 #   (i.e., if it was not specified in the constructor), so do it now;
@@ -427,7 +428,8 @@ class ModulatorySignal(OutputState):
                          prefs=prefs,
                          context=context)
 
-        if self.init_status is InitStatus.INITIALIZED:
+        # if self.init_status is InitStatus.INITIALIZED: cxt-init
+        if self.context.initialization_status is ContextFlags.INITIALIZED:
             self._assign_default_state_name(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):

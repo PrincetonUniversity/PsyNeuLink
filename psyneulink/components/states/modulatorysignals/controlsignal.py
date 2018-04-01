@@ -729,7 +729,7 @@ class ControlSignal(ModulatorySignal):
                          context=context)
 
         # Default cost params
-        if self.init_status is not InitStatus.DEFERRED_INITIALIZATION:
+        if self.context.initialization_status is not ContextFlags.DEFERRED_INIT:
             self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
         else:
             self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
@@ -1186,7 +1186,7 @@ class ControlSignal(ModulatorySignal):
     @property
     def value(self):
         # In case the ControlSignal has not yet been assigned (and its value is INITIALIZING or DEFERRED_INITIALIZATION
-        if self.init_status in {InitStatus.DEFERRED_INITIALIZATION, InitStatus.INITIALIZING}:
+        if self.context.initialization_status in {ContextFlags.DEFERRED_INIT, ContextFlags.INITIALIZING}:
             return None
         else:
             return self._value

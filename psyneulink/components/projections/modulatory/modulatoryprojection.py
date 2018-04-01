@@ -229,17 +229,19 @@ class ModulatoryProjection_Base(Projection_Base):
 
         template = "{} for {}[{}]"
 
-        if self.init_status in {InitStatus.INITIALIZED, InitStatus.INITIALIZING, InitStatus.UNSET}:
+        # if self.init_status in {InitStatus.INITIALIZED, InitStatus.INITIALIZING, InitStatus.UNSET}: cxt-init
+        if self.context.initialization_status in \
+                {ContextFlags.INITIALIZED, ContextFlags.INITIALIZING, ContextFlags.UNSET}:
             # If the name is not a default name for the class, return
             if not self.className + '-' in self.name:
                 return self.name
             self.name = template.format(self.className, self.receiver.owner.name, self.receiver.name)
 
-        elif self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        elif self.context.initialization_status is ContextFlags.DEFERRED_INIT:
             projection_name = template.format(self.className, state.owner.name, state.name)
             # self.init_args[NAME] = self.init_args[NAME] or projection_name
             self.name = self.init_args[NAME] or projection_name
 
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".
-                                            format(self, self.init_status))
+                                            format(self, ContextFlags._get_context_string(self.context.initialization_status)))

@@ -794,7 +794,7 @@ class ParameterState(State_Base):
                                                                      ControlProjection.__name__,
                                                                      LearningProjection.__name__,
                                                                      mod_projection, state_dict[NAME], owner.name))
-                                elif mod_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                elif mod_projection.context.initialization_status is ContextFlags.DEFERRED_INIT:
                                     continue
                                 mod_proj_value = mod_projection.value
                             else:
