@@ -902,22 +902,32 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_output_states(context=context)
 
     def get_param_struct_type(self):
-         param_type_list = [self.function_object.get_param_struct_type()]
-         if self.integrator_mode:
-             assert self.integrator_function is not None
-             param_type_list.append(self.integrator_function.get_param_struct_type())
+        input_param_list = []
+        for state in self.input_states:
+            input_param_list.append(state.get_param_struct_type())
+        input_param_struct = ir.LiteralStructType(input_param_list)
 
-         return ir.LiteralStructType(param_type_list)
+        param_type_list = [self.function_object.get_param_struct_type()]
+        if self.integrator_mode:
+            assert self.integrator_function is not None
+            param_type_list.append(self.integrator_function.get_param_struct_type())
+
+        function_param_struct = ir.LiteralStructType(param_type_list)
+        return ir.LiteralStructType([input_param_struct, function_param_struct])
 
 
     def get_context_struct_type(self):
+        input_context_list = []
+        for state in self.input_states:
+            input_context_list.append(state.get_context_struct_type())
+        input_context_struct = ir.LiteralStructType(input_context_list)
         context_type_list = [self.function_object.get_context_struct_type()]
         if self.integrator_mode:
            assert self.integrator_function is not None
            context_type_list.append(self.integrator_function.get_context_struct_type())
 
-        context_type = ir.LiteralStructType(context_type_list)
-        return context_type
+        function_context_struct = ir.LiteralStructType(context_type_list)
+        return ir.LiteralStructType([input_context_struct, function_context_struct])
 
 
     def get_input_struct_type(self):
@@ -929,21 +939,33 @@ class TransferMechanism(ProcessingMechanism_Base):
 
 
     def get_param_initializer(self):
-         param_list = [self.function_object.get_param_initializer()]
-         if self.integrator_mode:
-             assert self.integrator_function is not None
-             param_list.append(self.integrator_function.get_param_initializer())
+        input_param_init_list = []
+        for state in self.input_states:
+            input_param_init_list.append(state.get_param_initializer())
+        input_param_init = tuple(input_param_init_list)
 
-         return tuple(param_list)
+        function_param_list = [self.function_object.get_param_initializer()]
+        if self.integrator_mode:
+            assert self.integrator_function is not None
+            function_param_list.append(self.integrator_function.get_param_initializer())
+        function_param_init = tuple(function_param_list)
+
+        return tuple([input_param_init, function_param_init])
 
 
     def get_context_initializer(self):
-         context_list = [self.function_object.get_context_initializer()]
-         if self.integrator_mode:
-             assert self.integrator_function is not None
-             context_list.append(self.integrator_function.get_context_initializer())
+        input_context_init_list = []
+        for state in self.input_states:
+            input_context_init_list.append(state.get_context_initializer())
+        input_context_init = tuple(input_context_init_list)
 
-         return tuple(context_list)
+        context_list = [self.function_object.get_context_initializer()]
+        if self.integrator_mode:
+            assert self.integrator_function is not None
+            context_list.append(self.integrator_function.get_context_initializer())
+        function_context_init = tuple(context_list)
+
+        return tuple([input_context_init, function_context_init])
 
 
     def __gen_llvm_clamp(self, builder, index, ctx, vo, min_val, max_val):
@@ -978,18 +1000,20 @@ class TransferMechanism(ProcessingMechanism_Base):
             builder = ir.IRBuilder(block)
             vi = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(0)])
             vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            f_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
             main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-            mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            mf_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            mf_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            mf_state = builder.gep(f_state, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
             if self.integrator_mode:
                 assert self.integrator_function is not None
                 integrator_function = ctx.get_llvm_function(self.integrator_function.llvmSymbolName)
                 output_param = integrator_function.args[3]
                 vtmp = builder.alloca(output_param.type.gep(ctx.int32_ty(0)), 1)
-                if_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-                if_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+                if_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+                if_state = builder.gep(f_state, [ctx.int32_ty(0), ctx.int32_ty(1)])
                 builder.call(integrator_function, [if_params, if_state, vi, vtmp])
                 # Cast output array to input type
                 vi_type = main_function.args[2].type
