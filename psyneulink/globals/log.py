@@ -410,7 +410,7 @@ class LogCondition(IntEnum):
       This is meant to be a subset of (and therefore references) ContextFlags bitwise enum, with the exception of
       TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION value.
     """
-    OFF = 0
+    OFF = ContextFlags.UNSET
     # """No recording."""
     INITIALIZATION = ContextFlags.INITIALIZING
     """Set during execution of the Component's constructor."""
@@ -451,12 +451,19 @@ class LogCondition(IntEnum):
             if c is LogCondition.ALL_ASSIGNMENTS.name:
                 continue
             if LogCondition[c] & condition:
-               flagged_items.append(c)
+                if c in EXECUTION_CONDITION_NAMES:
+                    if condition & LogCondition.EXECUTION == ContextFlags.EXECUTION_PHASE_MASK:
+                        continue
+                flagged_items.append(c)
         string += ", ".join(flagged_items)
         return string
 
 
 TIME_NOT_SPECIFIED = 'Time Not Specified'
+EXECUTION_CONDITION_NAMES = {LogCondition.PROCESSING.name,
+                             LogCondition.LEARNING.name,
+                             LogCondition.CONTROL.name,
+                             LogCondition.SIMULATION.name}
 
 
 class LogTimeScaleIndices(AutoNumber):
@@ -921,14 +928,13 @@ class Log:
                       entries:tc.optional(tc.any(str, list, is_component))=ALL,
                       width:int=120,
                       display:tc.any(tc.enum(TIME, CONTEXT, VALUE, ALL), list)=ALL,
-                      long_context=False
+                      # long_context=False
                       ):
         """
         print_entries(          \
               entries=ALL,      \
               width=120,        \
               display=None      \
-              long_context=Full \
             )
 
         Print summary of the Log's entries in a (human-readable) table format.
@@ -951,10 +957,11 @@ class Log:
             specified items;  the widths of the columns for the items is dynamically adjusted, based on how many
             are specified, allowing more information about one to be shown by omitting others (this is useful 
             if the context strings are long and/or the values are arrays).
-
+        COMMENT:
         long_context : bool : default False
             specifies the use of the full context string in the display;  this can be informative, but can also take up
             more space in each line of the display.
+        COMMENT
             
         """
 
@@ -1001,11 +1008,15 @@ class Log:
             c_width = 0
             for entry in entries:
                 for datum in self.logged_entries[entry]:
-                    if long_context:
-                        context = datum.context # cxt-set
-                    else:
-                        context = ContextFlags._get_context_string(_get_context(datum.context)) # cxt-set
-                    c_width = max(c_width, len(context))
+                    # MODIFIED 3/31/18 OLD:
+                    # if long_context:
+                    #     context = datum.context # cxt-set
+                    # else:
+                    #     context = ContextFlags._get_context_string(_get_context(datum.context)) # cxt-set
+                    # c_width = max(c_width, len(context))
+                    # MODIFIED 3/31/18 NEW:
+                    c_width = max(c_width, len(datum.context))
+                    # MODIFIED 3/31/18 END
             context_width = min(context_width, c_width)
 
         # Set other widths based on options:
@@ -1065,12 +1076,16 @@ class Log:
                         data_str = data_str + time_str.ljust(time_width)
 
                     if options.CONTEXT & option_flags:
-                        if long_context:
-                            # Use context from LogEntry
-                            context = repr(context) # cxt-set
-                        else:
-                            # Get names of ContextFlags flag(s) from parse of context string
-                            context = ContextFlags._get_context_string(_get_context(context)) # cxt-set
+                        # MODIFIED 3/31/18 OLD:
+                        # if long_context:
+                        #     # Use context from LogEntry
+                        #     context = repr(context) # cxt-set
+                        # else:
+                        #     # Get names of ContextFlags flag(s) from parse of context string
+                        #     context = ContextFlags._get_context_string(_get_context(context)) # cxt-set
+                        # MODIFIED 3/31/18 NEW:
+                        context = repr(context) # cxt-set
+                        # MODIFIED 3/31/18 END
                         if len(context) > context_width:
                             context = context[:context_width-3] + "..." # cxt-set
                         data_str = data_str + context.ljust(context_width, spacer)
@@ -1496,7 +1511,7 @@ class Log:
         for c in self.loggable_components:
             name = self._alias_owner_name(c.name)
             try:
-                log_pref_names = ContextFlags._get_context_string(c.logPref)
+                log_pref_names = LogCondition._get_context_string(c.logPref)
             except:
                 log_pref_names = None
             loggable_items[name] = log_pref_names
