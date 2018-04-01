@@ -604,7 +604,7 @@ from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FU
     VALUE, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextStatus
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match, recursive_update
 
 __all__ = [
@@ -890,11 +890,11 @@ class OutputState(State_Base):
 
         if context is None: # cxt-test
             context = COMMAND_LINE # cxt-done
-            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
             context = self # cxt-done
-            self.context.status = ContextStatus.CONSTRUCTOR
+            self.context.source = ContextFlags.CONSTRUCTOR
 
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:

@@ -400,7 +400,7 @@ from psyneulink.globals.keywords import CONTEXT, CONTROL, CONTROL_PROJECTION, CO
     kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextStatus
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import ContentAddressableList, is_matrix, is_numeric, iscompatible, type_match
 
 __all__ = [
@@ -896,7 +896,7 @@ class Projection_Base(Projection):
         # MODIFIED 3/20/18 NEW:
         self.value = super()._execute(variable=self.sender.value, runtime_params=runtime_params, context=context)
         # MODIFIED 3/20/18 END
-
+        self.context.execution_phase = ContextFlags.IDLE
         return self.value
 
     # FIX: 10/3/17 - replace with @property on Projection for receiver and sender

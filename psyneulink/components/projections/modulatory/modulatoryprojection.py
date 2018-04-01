@@ -86,7 +86,7 @@ import inspect
 from psyneulink.components.component import InitStatus
 from psyneulink.components.projections.projection import Projection_Base
 from psyneulink.globals.keywords import EXECUTING, INITIALIZING, MODULATORY_PROJECTION, NAME, kwAssign
-from psyneulink.globals.log import LogEntry, ContextStatus
+from psyneulink.globals.log import LogEntry, ContextFlags
 
 
 __all__ = [

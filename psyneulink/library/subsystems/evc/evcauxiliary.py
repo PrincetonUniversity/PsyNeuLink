@@ -21,7 +21,7 @@ from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAlloca
 from psyneulink.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.context import ContextStatus
+from psyneulink.globals.context import ContextFlags
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
@@ -311,7 +311,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
         context = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION)) # cxt-done cxt-pass
-        controller.context.status = ContextStatus.SIMULATION # FIX IS Controller correct for this, or System??
+        # FIX 3/30/18 - IS controller CORRECT FOR THIS, OR SHOULD IT BE System (controller.system)??
+        controller.context.execution_phase = ContextFlags.SIMULATION
         controller.context.string = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION))
         # Print progress bar
         if controller.prefs.reportOutputPref:

@@ -1829,7 +1829,7 @@ class State_Base(State):
     """
 
         # Set context to owner's context
-        self.context.status = self.owner.context.status
+        self.context.execution_phase = self.owner.context.execution_phase
         self.context.string = self.owner.context.string
 
         # SET UP ------------------------------------------------------------------------------------------------
