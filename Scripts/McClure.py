@@ -37,15 +37,19 @@ action_selection = pnl.TransferMechanism(size=2,
                                          output_states=[{pnl.NAME: 'SELECTED ACTION',
                                                          pnl.VARIABLE: [(pnl.INPUT_STATE_VARIABLES, 0),
                                                                         (pnl.OWNER_VALUE, 0)],
-                                                         pnl.FUNCTION: pnl.OneHot(mode=pnl.PROB).function},
+                                                         # pnl.VARIABLE: [(pnl.OWNER_VALUE, 0)],
+                                                         pnl.FUNCTION: pnl.OneHot(mode=pnl.PROB_INDICATOR).function},
                                                         {pnl.NAME: 'REWARD RATE',
-                                                         pnl.VARIABLE: [pnl.OWNER_VALUE],
+                                                         # pnl.VARIABLE: [pnl.OWNER_VALUE],
+                                                         pnl.VARIABLE: [(pnl.OWNER_VALUE,0)],
                                                          pnl.FUNCTION: pnl.AdaptiveIntegrator(rate=0.2)},
                                                         {pnl.NAME: 'CONFLICT K',
-                                                         pnl.VARIABLE: [pnl.OWNER_VALUE],
+                                                         # pnl.VARIABLE: [pnl.OWNER_VALUE],
+                                                         pnl.VARIABLE: [(pnl.OWNER_VALUE,0)],
                                           #Jon said this should also work and would be safer: [(pnl.OWNER_VALUE, 0),
                                           #(pnl.OWNER_VALUE, 1)], but it doesn't work (maybe I did sth wrong)
-                                                         pnl.FUNCTION: pnl.Stability(metric=pnl.ENERGY,
+                                                         pnl.FUNCTION: pnl.Stability(default_variable=[0,0],
+                                                                                     metric=pnl.ENERGY,
                                                                                      normalize=True)},
                                                         ],
                                                             #as stated in the paper 'Response conflict was calculated as a normalized                                                                   measure of the energy in the response units during the trial'
@@ -211,7 +215,8 @@ DA_sys = pnl.System(
 
 DA_sys.show_graph(show_learning=pnl.ALL,
                   show_control=pnl.ALL,
-                  show_dimensions=True)
+                  show_dimensions=True,
+                  show_mechanism_structure=pnl.ALL)
 
 DA_sys.run(
     num_trials=10,

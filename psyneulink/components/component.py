@@ -1936,7 +1936,6 @@ class Component(object):
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
                 elif isinstance(param_value, (str, Component, type)):
-                    old_param_value = request_set[param_name]
                     param_value = self._get_param_value_for_modulatory_spec(param_name, param_value)
                 else:
                     continue
