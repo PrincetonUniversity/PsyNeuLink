@@ -100,7 +100,7 @@ Class Reference
 import inspect
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base

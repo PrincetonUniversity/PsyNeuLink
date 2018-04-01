@@ -89,7 +89,7 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import FunctionOutputType, Linear
 from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base

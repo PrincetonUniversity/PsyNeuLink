@@ -165,7 +165,7 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.shellclasses import ShellClass
 from psyneulink.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism

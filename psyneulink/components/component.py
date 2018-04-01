@@ -411,7 +411,7 @@ from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrdered
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
-    'InitStatus', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
+    'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
 ]
 # Testing pull request
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
@@ -451,12 +451,6 @@ class ResetMode(Enum):
 #         for arg in kwargs:
 #             self.__setattr__(arg, kwargs[arg])
 
-
-class InitStatus(Enum):
-    UNSET = 1
-    INITIALIZING = 2
-    DEFERRED_INITIALIZATION = 3
-    INITIALIZED = 4
 
 # Transitional type:
 #    for implementing params as attributes that are accessible via current paramsDicts
@@ -878,8 +872,8 @@ class Component(object):
         self.context.source = ContextFlags.COMPONENT
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
 
-        # self.context.initialization_status = ContextFlags.INITIALIZING
-        self.context.initialization_status = ContextFlags.UNSET
+        self.context.initialization_status = ContextFlags.INITIALIZING
+        # self.context.initialization_status = ContextFlags.UNSET
 
         defaults = self.ClassDefaults.values().copy()
         if param_defaults is not None:

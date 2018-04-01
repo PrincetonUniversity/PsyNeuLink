@@ -590,7 +590,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, InitStatus
+from psyneulink.components.component import Component
 from psyneulink.components.functions.function import Function, \
     Linear, OneHot, function_type, method_type, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection

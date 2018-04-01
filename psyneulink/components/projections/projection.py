@@ -388,7 +388,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, InitStatus
+from psyneulink.components.component import Component
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.components.states.state import StateError

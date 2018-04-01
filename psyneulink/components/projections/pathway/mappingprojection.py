@@ -259,7 +259,7 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import AccumulatorIntegrator, LinearMatrix, get_matrix
 from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords

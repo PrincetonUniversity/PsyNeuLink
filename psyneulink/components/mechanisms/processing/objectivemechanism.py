@@ -326,7 +326,6 @@ from collections import Iterable
 
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base

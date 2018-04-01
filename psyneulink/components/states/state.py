@@ -729,7 +729,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ComponentError, InitStatus, component_keywords, \
+from psyneulink.components.component import Component, ComponentError, component_keywords, \
     function_type, method_type
 from psyneulink.components.functions.function import Function, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
@@ -1731,13 +1731,15 @@ class State_Base(State):
                 if isinstance(receiver, State) and receiver.context.initialization_status == ContextFlags.INITIALIZED:
                     projection._deferred_init()
 
-            # VALIDATE (if initialized or being initialized (UNSET))
+            # VALIDATE (if initialized or being initialized (INITIALIZA))
 
-            if projection.context.initialization_status & \
-                    (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING | ContextFlags.UNSET):
+            # if projection.context.initialization_status & \
+            #         (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING | ContextFlags.UNSET):
+            if projection.context.initialization_status & (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
 
                 # If still being initialized, then assign sender and receiver as necessary
-                if projection.context.initialization_status & (ContextFlags.INITIALIZING | ContextFlags.UNSET):
+                # if projection.context.initialization_status & (ContextFlags.INITIALIZING | ContextFlags.UNSET):
+                if projection.context.initialization_status & ContextFlags.INITIALIZING:
                     if not isinstance(projection.sender, State):
                         projection.sender = self
 
