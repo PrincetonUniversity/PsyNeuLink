@@ -2257,19 +2257,25 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         return self.get_current_function_param(VARIABLE).shape[1]
 
     def get_param_initializer(self):
-        scale = self.get_current_function_param(SCALE)
-        offset = self.get_current_function_param(OFFSET)
-        return (scale if np.isscalar(scale) else tuple(scale.flatten().tolist()),
-                offset if np.isscalar(offset) else tuple(offset.flatten().tolist()))
+        param_init = {}
+        for p in SCALE, OFFSET:
+            param = self.get_current_function_param(p)
+            if param is None:
+                param = tuple()
+            elif not np.isscalar(param):
+                param = tuple(param.flatten().tolist())
+            param_init[p] = param
+
+        return (param_init[SCALE], param_init[OFFSET])
 
     def get_param_struct_type(self):
         # work aroudn 2d structure of params
         scale_param = self.get_current_function_param(SCALE)
-        if not np.isscalar(scale_param):
+        if scale_param is not None and not np.isscalar(scale_param):
             scale_param =  scale_param.flatten()
 
         offset_param = self.get_current_function_param(OFFSET)
-        if not np.isscalar(offset_param):
+        if offset_param is not None and not np.isscalar(offset_param):
             offset_param =  offset_param.flatten()
 
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -2279,15 +2285,19 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
     def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
         scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        if params.type.pointee.elements[0] != ctx.float_ty:
+        scale_type = params.type.pointee.elements[0];
+        if isinstance(scale_type, ir.ArrayType):
             scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), index])
 
         offset_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        if params.type.pointee.elements[1] != ctx.float_ty:
+        offset_type = params.type.pointee.elements[1]
+        if isinstance(offset_type, ir.ArrayType):
             offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), index])
 
-        scale = builder.load(scale_ptr)
-        offset = builder.load(offset_ptr)
+        scale = ctx.float_ty(1.0) if isinstance(scale_type, ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
+
+
+        offset = ctx.float_ty(0.0) if isinstance(offset_type, ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
 
         # assume operation does not change dynamically
         operation = self.get_current_function_param(OPERATION)
