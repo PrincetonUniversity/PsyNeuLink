@@ -1153,19 +1153,20 @@ class Composition(object):
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
-            context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
             vo = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vo_idx)])
 
             if not is_input_mechanism:
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(proj_idx)])
+                proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
                 mech_vi = builder.alloca(mech.get_input_struct_type())
                 proj_vo = builder.bitcast(mech_vi, proj_function.args[3].type)
-                builder.call(proj_function, [proj_params, context, vi, proj_vo])
+                builder.call(proj_function, [proj_params, proj_context, vi, proj_vo])
                 vi = mech_vi
 
             params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(idx)])
             mech_function = ctx.get_llvm_function(mech.llvmSymbolName)
             builder.call(mech_function, [params, context, vi, vo])
             builder.ret_void()
