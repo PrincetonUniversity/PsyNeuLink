@@ -1209,7 +1209,7 @@ class Mechanism_Base(Mechanism):
         #    have been included in user_params and implemented as properties
         #    (in case the subclass did not include one and/or the other as an argument in its constructor)
 
-        kwargs = {}
+        # kwargs = {}
 
         # input_states = []
         # if INPUT_STATES in self.paramClassDefaults and self.paramClassDefaults[INPUT_STATES]:

@@ -1640,10 +1640,8 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     """ Parse specification of function as Function, Function class, Function.function, function_type or method_type.
 
     If params_dict_as_variable is True, and function is a Function, check whether it allows params_dict as variable;
-    if it is and does, leave as is, other
-    wrap in lambda function that provides first item of OutputState's
-    value
-    as the functions argument.
+    if it is and does, leave as is,
+    otherwise, wrap in lambda function that provides first item of OutputState's value as the functions argument.
     """
 
     if isinstance(function, (function_type, method_type)):
