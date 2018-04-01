@@ -262,7 +262,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
             mf_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-            # We know that TransferFunction is not stateful, but a consistent interface would be nicer
             builder.call(main_function, [mf_params, mf_state, vi, vo])
 
             builder.ret_void()
