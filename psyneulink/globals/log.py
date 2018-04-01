@@ -412,7 +412,8 @@ class LogCondition(IntEnum):
     """
     OFF = ContextFlags.UNSET
     # """No recording."""
-    INITIALIZATION = ContextFlags.INITIALIZING
+    # INITIALIZATION = ContextFlags.INITIALIZING
+    INITIALIZATION = ContextFlags.INITIALIZED
     """Set during execution of the Component's constructor."""
     VALIDATION =  ContextFlags.VALIDATING
     """Set during validation of the value of a Component or its attribute."""
