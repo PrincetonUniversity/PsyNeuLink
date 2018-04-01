@@ -1449,17 +1449,18 @@ class Process(Process_Base):
 
                         # If initialization of MappingProjection has been deferred,
                         #    check sender and receiver, assign them if they have not been assigned, and initialize it
-                        if item.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                        if item.context.initialization_status == ContextFlags.DEFERRED_INIT:
                             # Check sender arg
                             try:
                                 sender_arg = item.init_args[SENDER]
                             except AttributeError:
-                                raise ProcessError("PROGRAM ERROR: init_status of {} is {} but it does not have init_args".
-                                                   format(item, InitStatus.DEFERRED_INITIALIZATION))
+                                raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
+                                                   "but it does not have init_args".
+                                                   format(item, ContextFlags.DEFERRED_INIT.name))
                             except KeyError:
-                                raise ProcessError("PROGRAM ERROR: Value of {} is {} "
-                                                   "but init_args does not have entry for {}".
-                                                   format(item.init_args[NAME], InitStatus.DEFERRED_INITIALIZATION, SENDER))
+                                raise ProcessError("PROGRAM ERROR: Value of {} is {} but "
+                                                   "init_args does not have entry for {}".
+                                                   format(item.init_args[NAME],ContextFlags.DEFERRED_INIT.name, SENDER))
                             else:
                                 # If sender is not specified for the Projection,
                                 #    assign mechanism that precedes in pathway
@@ -1475,12 +1476,15 @@ class Process(Process_Base):
                             try:
                                 receiver_arg = item.init_args[kwReceiverArg]
                             except AttributeError:
-                                raise ProcessError("PROGRAM ERROR: init_status of {} is {} but it does not have init_args".
-                                                   format(item, InitStatus.DEFERRED_INITIALIZATION))
+                                raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
+                                                   "but it does not have init_args".
+                                                   format(item, ContextFlags.DEFERRED_INIT))
                             except KeyError:
-                                raise ProcessError("PROGRAM ERROR: init_status of {} is {} "
+                                raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
                                                    "but init_args does not have entry for {}".
-                                                   format(item.init_args[NAME], InitStatus.DEFERRED_INITIALIZATION, kwReceiverArg))
+                                                   format(item.init_args[NAME],
+                                                          ContextFlags.DEFERRED_INIT,
+                                                          kwReceiverArg))
                             else:
                                 # If receiver is not specified for the Projection,
                                 #    assign mechanism that follows it in the pathway

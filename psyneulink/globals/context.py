@@ -40,28 +40,6 @@ class ContextFlags(IntEnum):
     Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
     """
 
-    # INITIALIZATION = 1<<1  # 2
-    # """Set during execution of the Component's constructor."""
-    # VALIDATION =     1<<2  # 4
-    # """Set during validation of the value of a Component or its attribute."""
-    # EXECUTION =      1<<3  # 8
-    # """Set during any execution of the Component."""
-    # PROCESSING =     1<<4  # 16
-    # """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
-    # LEARNING =       1<<5  # 32
-    # """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    # CONTROL =        1<<6  # 64
-    # """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    # TRIAL =          1<<7  # 128
-    # """Set at the end of a `TRIAL`."""
-    # RUN =            1<<8  # 256
-    # """Set at the end of a `RUN`."""
-    # SIMULATION =     1<<9  # 512
-    # # Set during simulation by Composition.controller
-    # COMMAND_LINE =   1<<10 # 1024
-    # # Component accessed by user
-    # CONSTRUCTOR =    1<<11 # 2048
-
     UNSET = 0
 
     DEFERRED_INIT = 1<<1  # 2

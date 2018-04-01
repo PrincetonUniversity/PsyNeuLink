@@ -659,22 +659,16 @@ class Projection_Base(Projection):
                                                   exponent=exponent,
                                                   params=params)
 
-        try:
-            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                self._assign_deferred_init_name(name, context)
-                self.init_args = locals().copy()
-                self.init_args[CONTEXT] = self
-                self.init_args[NAME] = name
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            self._assign_deferred_init_name(name, context)
+            self.init_args = locals().copy()
+            self.init_args[CONTEXT] = self
+            self.init_args[NAME] = name
 
-                # remove local imports
-                del self.init_args['ParameterState']
-                del self.init_args['State_Base']
-                return
-        except AttributeError:
-            # if this Projection does not have an init_status attribute, we can guarantee that it's not in
-            # deferred init state. It's tricky to ensure this attribute always exists due to the nature
-            # of deferred init
-            pass
+            # remove local imports
+            del self.init_args['ParameterState']
+            del self.init_args['State_Base']
+            return
 
         self.receiver = receiver
 
@@ -903,7 +897,7 @@ class Projection_Base(Projection):
     @property
     def socket_assignments(self):
 
-        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
             sender = self.init_args[SENDER]
             receiver = self.init_args[RECEIVER]
         else:
@@ -1074,7 +1068,7 @@ def _parse_projection_spec(projection_spec,
                                   "between Projection and ProjectionTuple")
         projection._weight = proj_spec_dict[WEIGHT] or projection.weight
         projection._exponent = proj_spec_dict[EXPONENT] or projection.exponent
-        if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
             projection.init_args[NAME] = proj_spec_dict[NAME] or projection.init_args[NAME]
         else:
             projection.name = proj_spec_dict[NAME] or projection.name
@@ -1648,7 +1642,7 @@ def _validate_connection_request(
     if isinstance(projection_spec, Projection):
 
         # It is in deferred_init status
-        if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        if projection_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
 
             # Try to get the State to which the Projection will be connected when fully initialized
             #     as confirmation that it is the correct type for state_type
@@ -1769,7 +1763,7 @@ def _validate_receiver(sender_mech:Mechanism,
     """
     spec_type = " in the {} arg ".format(spec_type) or ""
 
-    if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+    if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
         # receiver = projection.init_args['receiver'].owner
         state = projection.init_args['receiver']
         receiver = state.owner

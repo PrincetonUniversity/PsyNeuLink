@@ -1433,7 +1433,7 @@ class Mechanism_Base(Mechanism):
                 except KeyError:
                     pass
             elif isinstance(parsed_spec, (Projection, Mechanism, State)):
-                if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                if parsed_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
                     args = parsed_spec.init_args
                     # MODIFIED 2/21/18 OLD:
                     if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
@@ -1980,7 +1980,10 @@ class Mechanism_Base(Mechanism):
             # These need to be set for states to use as context
             self.context.string = context
             if not INITIALIZING in context: # cxt-set
-                self.context.initialization_status &= ~ContextFlags.INITIALIZING
+                # FIX: 3/31/18 - THIS SHOULD BE MOVED TO END OF __init__ METHOD(S)
+                # self.context.initialization_status &= ~ContextFlags.INITIALIZING
+                # self.context.initialization_status = ContextFlags.INITIALIZED
+
                 if EXECUTING in context:
                     self.context.execution_phase = ContextFlags.PROCESSING
                 if LEARNING in context:

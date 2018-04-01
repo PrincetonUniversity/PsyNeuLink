@@ -741,7 +741,7 @@ class InputState(State_Base):
             self.init_args['projections'] = projections
 
             # Flag for deferred initialization
-            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
             return
 
         self.reference_value = reference_value
@@ -1000,7 +1000,7 @@ class InputState(State_Base):
                             try:
                                 sender_dim = projection_spec.state.value.ndim
                             except AttributeError:
-                                if projection_spec.state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                if projection_spec.state.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
                                 else:
                                     raise StateError("PROGRAM ERROR: indeterminate value for {} "
@@ -1021,7 +1021,7 @@ class InputState(State_Base):
                                     matrix = None
                                 # MODIFIED 11/25/17 END
                             elif isinstance(projection, Projection):
-                                if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
                                 matrix = projection.matrix
                             else:

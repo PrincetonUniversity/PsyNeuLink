@@ -862,7 +862,7 @@ class Component(object):
         # # MODIFIED 8/14/16 NEW:
         # # PROBLEM: variable has different name for different classes;  need to standardize name across classes
         # try:
-        #     if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        #     if self.initialization_status is ContextFlags.DEFERRED_INITIALIZATION:
         #         defer_init = True
         # except AttributeError:
         #     pass
@@ -878,8 +878,8 @@ class Component(object):
         self.context.source = ContextFlags.COMPONENT
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
 
-        self.init_status = InitStatus.UNSET
-        # self.init_status = InitStatus.INITIALIZING
+        # self.context.initialization_status = ContextFlags.INITIALIZING
+        self.context.initialization_status = ContextFlags.UNSET
 
         defaults = self.ClassDefaults.values().copy()
         if param_defaults is not None:
@@ -1001,7 +1001,7 @@ class Component(object):
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
 
-        self.init_status = InitStatus.INITIALIZED
+        self.context.initialization_status = ContextFlags.INITIALIZED
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -1168,12 +1168,12 @@ class Component(object):
     def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
-        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
 
             # Flag that object is now being initialized
             # Note: self.value will be resolved to the object's value as part of initialization
             #       (usually in _instantiate_function)
-            self.init_status = InitStatus.INITIALIZING
+            self.context.initialization_status = ContextFlags.INITIALIZING
 
             del self.init_args['self']
 
@@ -1206,7 +1206,7 @@ class Component(object):
             else:
                 self._assign_default_name()
 
-            self.init_status = InitStatus.INITIALIZED
+            self.context.initialization_status = ContextFlags.INITIALIZED
 
     def _assign_deferred_init_name(self, name, context):
 
@@ -2913,20 +2913,6 @@ class Component(object):
             s.append(len(v[i]))
         return np.array(s)
 
-    # @property
-    # def init_status(self):
-    #     try:
-    #         return self._init_status
-    #     except AttributeError:
-    #         return InitStatus.UNSET
-    #
-    # @init_status.setter
-    # def init_status(self, value):
-    #     if not isinstance(value, InitStatus):
-    #         raise ComponentError("PROGRAM ERROR:  Attempt to assign \'init_status\' attribute of {} "
-    #                              "a value ({}) other than one of InitStatus".format(self.name, value))
-    #     self._init_status = value
-
     @property
     def prefs(self):
         # Whenever pref is accessed, use current owner as context (for level checking)
@@ -3078,7 +3064,7 @@ class Component(object):
         try:
             return self._log
         except AttributeError:
-            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
                 raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete "
                                      "or appropriately configuring a system to which it belongs".
                                      format(self.name, 'log'))

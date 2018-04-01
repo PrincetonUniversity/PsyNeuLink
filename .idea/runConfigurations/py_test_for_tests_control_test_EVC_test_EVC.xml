@@ -1,12 +1,13 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" factoryName="py.test" name="py.test for tests.control.test_EVC.test_EVC" nameIsGenerated="true" singleton="true" type="tests">
+  <configuration default="false" name="py.test for tests.control.test_EVC.test_EVC" type="tests" factoryName="py.test" singleton="true" nameIsGenerated="true">
+    <module name="PsyNeuLink (Dropbox)" />
     <module name="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
-    <option name="SDK_HOME" value="" />
+    <option name="SDK_HOME" value="$USER_HOME$/anaconda/envs/python35/bin/python" />
     <option name="WORKING_DIRECTORY" value="" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />

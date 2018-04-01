@@ -758,7 +758,8 @@ def run(object,
             if RUN in context and not EVC_SIMULATION in context: # cxt-test
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
                 # FIX: 3/30/18:  SHOULDN'T NEED THIS IF ContextFlags.INITIALIZED GETS SET AT END OF INITIALIZATION
-                object.context.initialization_status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
+                # object.context.initialization_status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
+                # object.context.initialization_status = ContextFlags.INITIALIZED
                 object.context.execution_phase = ContextFlags.EXECUTING
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
             result = object.execute(
