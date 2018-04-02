@@ -2343,8 +2343,10 @@ class Mechanism_Base(Mechanism):
 
 
     def get_input_struct_type(self):
-        vec_tys = [self.function_object.get_input_struct_type()]
-        return ir.LiteralStructType(vec_tys)
+        input_type_list = []
+        for state in self.input_states:
+            input_type_list.append(state.get_input_struct_type())
+        return ir.LiteralStructType(input_type_list)
 
 
     def get_param_initializer(self):

@@ -247,22 +247,38 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
             func_name = ctx.module.get_unique_name("integrator_machanism")
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            params, state, si, so = llvm_func.args
-            for p in params, state, si, so:
+            params, context, si, so = llvm_func.args
+            for p in params, context, si, so:
                 p.attributes.add('nonnull')
                 p.attributes.add('noalias')
 
             # Create entry block
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
-            vi = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            is_output_type_list = []
+            for state in self.input_states:
+                is_output_type_list.append(state.get_output_struct_type())
+            is_output_type =  ir.LiteralStructType(is_output_type_list)
+
+            tmp_out = builder.alloca(is_output_type, 1)
+
+            for i, state in enumerate(self.input_states):
+                is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+                is_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+                is_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                is_output = builder.gep(tmp_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                is_function = ctx.get_llvm_function(state.llvmSymbolName)
+                builder.call(is_function, [is_params, is_context, is_input, is_output])
+
 
             main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+            vi = builder.bitcast(tmp_out, main_function.args[2].type)
+            vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
             mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            mf_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            mf_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
-            builder.call(main_function, [mf_params, mf_state, vi, vo])
+            builder.call(main_function, [mf_params, mf_context, vi, vo])
 
             builder.ret_void()
         return func_name
