@@ -2254,7 +2254,13 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
     @property
     def _result_length(self):
-        return self.get_current_function_param(VARIABLE).shape[1]
+        # Input variable should be at least 2d
+        return np.atleast_2d(self.get_current_function_param(VARIABLE)).shape[1]
+
+    def get_input_struct_type(self):
+        default_var = np.atleast_2d(self.get_current_function_param(VARIABLE))
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
 
     def get_param_initializer(self):
         param_init = {}
