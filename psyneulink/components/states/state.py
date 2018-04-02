@@ -2023,6 +2023,16 @@ class State_Base(State):
     def _assign_default_state_name(self, context=None):
         return False
 
+    @property
+    def llvmSymbolName(self):
+        return self.function_object.llvmSymbolName
+
+    def get_input_struct_type(self):
+        return self.function_object.get_input_struct_type()
+
+    def get_output_struct_type(self):
+        return self.function_object.get_output_struct_type()
+
     def get_param_struct_type(self):
         return self.function_object.get_param_struct_type()
 
