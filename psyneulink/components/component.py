@@ -1038,7 +1038,7 @@ class Component(object):
     def get_input_struct_type(self):
         default_var = self.get_current_function_param(VARIABLE)
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var);
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
 
     def get_output_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
