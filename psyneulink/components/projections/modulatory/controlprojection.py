@@ -100,12 +100,13 @@ Class Reference
 import inspect
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Process_Base
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, PARAMETER_STATE, PROJECTION_SENDER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -298,10 +299,10 @@ class ControlProjection(ModulatoryProjection_Base):
                                                   params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if (sender is None or sender.init_status is InitStatus.DEFERRED_INITIALIZATION or
+        if (sender is None or sender.context.initialization_status == ContextFlags.DEFERRED_INIT or
                 inspect.isclass(receiver) or receiver is None or
-                    receiver.init_status is InitStatus.DEFERRED_INITIALIZATION):
-            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+                    receiver.context.initialization_status == ContextFlags.DEFERRED_INIT):
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)

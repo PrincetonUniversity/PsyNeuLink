@@ -590,7 +590,7 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, InitStatus
+from psyneulink.components.component import Component
 from psyneulink.components.functions.function import Function, \
     Linear, OneHot, function_type, method_type, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
@@ -604,7 +604,7 @@ from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FU
     VALUE, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextStatus
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match, recursive_update
 
 __all__ = [
@@ -890,11 +890,11 @@ class OutputState(State_Base):
 
         if context is None: # cxt-test
             context = COMMAND_LINE # cxt-done
-            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
             context = self # cxt-done
-            self.context.status = ContextStatus.CONSTRUCTOR
+            self.context.source = ContextFlags.CONSTRUCTOR
 
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
         if 'calculate' in kwargs:
@@ -920,7 +920,7 @@ class OutputState(State_Base):
             self.init_args['projections'] = projections
 
             # Flag for deferred initialization
-            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
             return
 
         self.reference_value = reference_value
@@ -1345,7 +1345,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
             # OutputState object
             if isinstance(output_state, OutputState):
-                if output_state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                if output_state.context.initialization_status == ContextFlags.DEFERRED_INIT:
                     try:
                         output_state_value = OutputState._get_state_function_value(owner,
                                                                                    output_state.function,
@@ -1640,10 +1640,8 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     """ Parse specification of function as Function, Function class, Function.function, function_type or method_type.
 
     If params_dict_as_variable is True, and function is a Function, check whether it allows params_dict as variable;
-    if it is and does, leave as is, other
-    wrap in lambda function that provides first item of OutputState's
-    value
-    as the functions argument.
+    if it is and does, leave as is,
+    otherwise, wrap in lambda function that provides first item of OutputState's value as the functions argument.
     """
 
     if isinstance(function, (function_type, method_type)):

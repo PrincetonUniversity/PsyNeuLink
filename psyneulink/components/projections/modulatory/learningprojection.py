@@ -165,7 +165,7 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.shellclasses import ShellClass
 from psyneulink.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
@@ -181,7 +181,7 @@ from psyneulink.globals.keywords import CONTEXT, ENABLED, EXECUTING, FUNCTION, F
     PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextStatus
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import iscompatible, parameter_spec
 
 __all__ = [
@@ -450,7 +450,7 @@ class LearningProjection(ModulatoryProjection_Base):
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
-            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
         super().__init__(sender=sender,
                          receiver=receiver,
                          weight=weight,
@@ -617,8 +617,8 @@ class LearningProjection(ModulatoryProjection_Base):
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
-        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
-            return self.init_status
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            return self.context.initialization_status
 
         # if self.learning_rate:
         #     runtime_params.update({SLOPE:self.learning_rate})
@@ -651,9 +651,9 @@ class LearningProjection(ModulatoryProjection_Base):
                                                      self.receiver.owner.name, matrix))
 
         if EXECUTING in context: # cxt-test
-            self.context.status = ContextStatus.EXECUTION
+            self.context.execution_phase = ContextFlags.EXECUTING
         elif LEARNING in context: # cxt-test
-            self.context.status = ContextStatus.LEARNING
+            self.context.execution_phase = ContextFlags.LEARNING
 
         # # MODIFIED 3/20/18 OLD:
         # self.weight_change_matrix = self.function(

@@ -785,7 +785,7 @@ from inspect import isclass
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type, method_type
+from psyneulink.components.component import Component, function_type, method_type
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
@@ -801,7 +801,7 @@ from psyneulink.globals.keywords import \
     VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.globals.context import ContextStatus
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
@@ -1209,7 +1209,7 @@ class Mechanism_Base(Mechanism):
         #    have been included in user_params and implemented as properties
         #    (in case the subclass did not include one and/or the other as an argument in its constructor)
 
-        kwargs = {}
+        # kwargs = {}
 
         # input_states = []
         # if INPUT_STATES in self.paramClassDefaults and self.paramClassDefaults[INPUT_STATES]:
@@ -1269,7 +1269,7 @@ class Mechanism_Base(Mechanism):
             output_states = list(output_states)
 
         # Mark initialization in context
-        self.context.status = ContextStatus.INITIALIZATION
+        self.context.initialization_status = ContextFlags.INITIALIZING
         if not context or isinstance(context, object) or inspect.isclass(context): # cxt-test
             context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt-done
             self.context.string = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__
@@ -1433,7 +1433,7 @@ class Mechanism_Base(Mechanism):
                 except KeyError:
                     pass
             elif isinstance(parsed_spec, (Projection, Mechanism, State)):
-                if parsed_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                if parsed_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
                     args = parsed_spec.init_args
                     # MODIFIED 2/21/18 OLD:
                     if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
@@ -1973,20 +1973,23 @@ class Mechanism_Base(Mechanism):
         """
         self.ignore_execution_id = ignore_execution_id
         context = context or COMMAND_LINE # cxt-done
-        if self.context.status is ContextStatus.OFF or context is COMMAND_LINE:
-            self.context.status = ContextStatus.COMMAND_LINE
+        if not self.context.source or context is COMMAND_LINE:
+            self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
             # These need to be set for states to use as context
             self.context.string = context
-            if not INITIALIZING in context:
-                self.context.status &= ~ContextStatus.INITIALIZATION
+            if not INITIALIZING in context: # cxt-set
+                # FIX: 3/31/18 - THIS SHOULD BE MOVED TO END OF __init__ METHOD(S)
+                # self.context.initialization_status &= ~ContextFlags.INITIALIZING
+                # self.context.initialization_status = ContextFlags.INITIALIZED
+
                 if EXECUTING in context:
-                    self.context.status |= ContextStatus.EXECUTION
-                if EVC_SIMULATION in context:
-                    self.context.status |= ContextStatus.SIMULATION
+                    self.context.execution_phase = ContextFlags.PROCESSING
                 if LEARNING in context:
-                    self.context.status |= ContextStatus.LEARNING
+                    self.context.execution_phase = ContextFlags.LEARNING
+                if EVC_SIMULATION in context:
+                    self.context.execution_phase = ContextFlags.SIMULATION
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
@@ -2081,9 +2084,8 @@ class Mechanism_Base(Mechanism):
         else:
             if context is COMMAND_LINE: # cxt-test
                 context = EXECUTING + ' ' + append_type_to_name(self) # cxt-done
-                self.context.status = ContextStatus.EXECUTION
+                self.context.execution_phase = ContextFlags.PROCESSING
                 self.context.string = EXECUTING + ' ' + append_type_to_name(self)
-                self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
                 input = self.instance_defaults.variable
             variable = self._update_variable(self._get_variable_from_input(input))
@@ -2157,7 +2159,7 @@ class Mechanism_Base(Mechanism):
                 #    transmittted back via recurrent Projections as initial inputs
                 self.output_states[state].value = self.output_states[state].value * 0.0
 
-        if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
+        if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
             self._increment_execution_count()
             self._update_current_execution_time(context=context) # cxt-pass
 

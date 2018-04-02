@@ -538,7 +538,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import \
     BackPropagation, ModulationParam, _is_modulation_param, is_function_type, ERROR_MATRIX
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
@@ -930,7 +930,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # delete self.init_args[ERROR_SOURCES]
 
         # # Flag for deferred initialization
-        # self.init_status = InitStatus.DEFERRED_INITIALIZATION
+        # self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         self._learning_rate = learning_rate
 

@@ -259,13 +259,13 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import AccumulatorIntegrator, LinearMatrix, get_matrix
 from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, EXECUTING, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZING, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE, kwAssign
-from psyneulink.globals.log import ContextStatus, LogEntry
+from psyneulink.globals.log import ContextFlags, LogEntry
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -483,7 +483,7 @@ class MappingProjection(PathwayProjection_Base):
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
-            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(sender=sender,
@@ -625,9 +625,11 @@ class MappingProjection(PathwayProjection_Base):
 
         """
 
+        # FIX: MOVE THIS TO SUPER
         if EXECUTING in context: # cxt-test
-            self.context.status &= ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION)
-            self.context.status |= ContextStatus.EXECUTION
+            # self.context.initialization_status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
+            # self.context.initialization_status = ContextFlags.INITIALIZED
+            self.context.execution_phase = ContextFlags.PROCESSING
             self.context.string = context
 
         # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
