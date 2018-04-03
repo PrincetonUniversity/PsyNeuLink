@@ -834,6 +834,8 @@ def _target_matches_input_state_variable(target, input_state_variable):
 
 def _adjust_stimulus_dict(obj, stimuli):
 
+    # STEP 0:  # FIX 4/3/18 - ADD _parse_input_labels HERE
+
     # STEP 1: validate that there is a one-to-one mapping of input entries to origin mechanisms
 
     # Check that all of the mechanisms listed in the inputs dict are ORIGIN mechanisms in the object
@@ -911,6 +913,8 @@ def _adjust_stimulus_dict(obj, stimuli):
     return adjusted_stimuli, num_input_sets
 
 def _adjust_target_dict(component, target_dict):
+
+    # STEP 0:  # FIX 4/3/18 - ADD _parse_target_labels HERE
 
     # STEP 1: validate that there is a one-to-one mapping of target entries and target mechanisms
     for target_mechanism in component.target_mechanisms:
