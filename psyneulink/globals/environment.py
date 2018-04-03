@@ -492,7 +492,8 @@ import typecheck as tc
 from psyneulink.components.component import function_type
 from psyneulink.components.process import ProcessInputState
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
-from psyneulink.globals.keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
+from psyneulink.globals.keywords import EVC_SIMULATION, INPUT_LABELS_DICT, MECHANISM, \
+    OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET, TARGET_LABELS_DICT
 from psyneulink.globals.log import LogCondition
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.time import TimeScale
@@ -834,7 +835,10 @@ def _target_matches_input_state_variable(target, input_state_variable):
 
 def _adjust_stimulus_dict(obj, stimuli):
 
-    # STEP 0:  # FIX 4/3/18 - ADD _parse_input_labels HERE
+    # FIX 4/3/18 - ADD _parse_input_labels HERE
+    #  STEP 0:  parse any labels into array entries
+    if any(mech.input_labels_dict for mech in obj.origin_mechanisms):
+        _parse_input_labels(obj, stimuli)
 
     # STEP 1: validate that there is a one-to-one mapping of input entries to origin mechanisms
 
@@ -982,6 +986,37 @@ def _adjust_target_dict(component, target_dict):
             _validate_target_function(target_list, mech.output_state.efferents[0].receiver.owner, mech)
             adjusted_targets[mech] = target_list
     return adjusted_targets, num_targets
+
+
+@tc.typecheck
+def _parse_input_labels(obj, stimuli:dict):
+    for mech, inputs in stimuli.items():
+        if any(isinstance(input, str) for input in inputs) and not obj.input_labels_dict:
+            raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
+                           format(obj.name, INPUT_LABELS_DICT))
+        for i, input in enumerate(inputs):
+            if isinstance(input,str):
+                try:
+                    inputs[i] = mech.input_labels_dict[input]
+                except KeyError:
+                    raise RunError("No entry \'{}\' found for input to {} in its {}".
+                                   format(input, obj.name, INPUT_LABELS_DICT))
+
+
+@tc.typecheck
+def _parse_target_labels(obj, targets:dict):
+    for mech, targets in targets.items():
+        if any(isinstance(target, str) for target in targets) and not obj.TARGET_LABELS_DICT:
+            raise RunError("Labels can not be used to specify the targets to {} since it does not have an {}".
+                           format(obj.name, TARGET_LABELS_DICT))
+        for i, target in enumerate(targets):
+            if isinstance(target,str):
+                try:
+                    targets[i] = mech.TARGET_LABELS_DICT[target]
+                except KeyError:
+                    raise RunError("No entry \'{}\' found for target of {} in its {}".
+                                   format(target, obj.name, TARGET_LABELS_DICT))
+
 
 def _validate_target_function(target_function, target_mechanism, sample_mechanism):
 

@@ -1739,10 +1739,31 @@ class Mechanism_Base(Mechanism):
                 params[OUTPUT_STATES] = None
 
         if INPUT_LABELS_DICT in params and params[INPUT_LABELS_DICT]:
-            if not all(isinstance(label,str) for label in params[INPUT_LABELS_DICT]):
-                raise MechanismError("All of the key in the {} for {} ({}) must be strings".
-                                     format(INPUT_LABELS_DICT, self.name))
+            for label, value in params[INPUT_LABELS_DICT].items():
+                if not isinstance(label,str):
+                    raise MechanismError("Key ({}) in the {} for {} must be a string".
+                                         format(label, INPUT_LABELS_DICT, self.name))
+                if not isinstance(value,(list, np.ndarray)):
+                    raise MechanismError("The value of {} ({}) in the {} for {} must be a list or array".
+                                         format(label, value, INPUT_LABELS_DICT, self.name))
 
+        if OUTPUT_LABELS_DICT in params and params[OUTPUT_LABELS_DICT]:
+            for label, value in params[OUTPUT_LABELS_DICT].items():
+                if not isinstance(label,str):
+                    raise MechanismError("Key ({}) in the {} for {} must be a string".
+                                         format(label, OUTPUT_LABELS_DICT, self.name))
+                if not isinstance(value,(list, np.ndarray)):
+                    raise MechanismError("The value of {} ({}) in the {} for {} must be a list or array".
+                                         format(label, value, OUTPUT_LABELS_DICT, self.name))
+
+        if TARGET_LABELS_DICT in params and params[TARGET_LABELS_DICT]:
+            for label, value in params[TARGET_LABELS_DICT].items():
+                if not isinstance(label,str):
+                    raise MechanismError("Key ({}) in the {} for {} must be a string".
+                                         format(label, TARGET_LABELS_DICT, self.name))
+                if not isinstance(value,(list, np.ndarray)):
+                    raise MechanismError("The value of {} ({}) in the {} for {} must be a list or array".
+                                         format(label, value, TARGET_LABELS_DICT, self.name))
 
     def _validate_inputs(self, inputs=None):
         # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and LearningMechanism do not
