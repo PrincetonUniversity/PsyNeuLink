@@ -2593,10 +2593,8 @@ class System(System_Base):
                         # raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
         self.input = input
-        if termination_processing is not None:
-            self.termination_processing = termination_processing
-        if termination_learning is not None:
-            self.termination_learning = termination_learning
+        self.termination_processing = termination_processing
+        self.termination_learning = termination_learning
         #endregion
 
         if self._report_system_output:
