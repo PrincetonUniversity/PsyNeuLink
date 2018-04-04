@@ -1738,23 +1738,39 @@ class Mechanism_Base(Mechanism):
                 #     in instantiate_output_state, where an OutputState is assigned to each item (value) of the EMO
                 params[OUTPUT_STATES] = None
 
-        if INPUT_LABELS_DICT in params and params[INPUT_LABELS_DICT]:
-            for label, value in params[INPUT_LABELS_DICT].items():
+        def validate_labels_dict(lablel_dict, type):
+            for label, value in labels_dict.items():
                 if not isinstance(label,str):
                     raise MechanismError("Key ({}) in the {} for {} must be a string".
-                                         format(label, INPUT_LABELS_DICT, self.name))
+                                         format(label, type, self.name))
                 if not isinstance(value,(list, np.ndarray)):
                     raise MechanismError("The value of {} ({}) in the {} for {} must be a list or array".
-                                         format(label, value, INPUT_LABELS_DICT, self.name))
+                                         format(label, value, type, self.name))
+        def validate_subdict_key(state_type, key, dict_type):
+            # IMPLEMENTATION NOTE:
+            #    can't yet validate that string is a legit InputState name or that index is within
+            #    bounds of the number of InputStates;  that is done in _get_state_value_labels()
+            if not isinstance(key, (int, str)):
+                raise MechanismError("Key ({}) for {} of {} must the name of an {} or the index for one".
+                                     format(key, dict_type, self.name, state_type.__name__))
+
+        if INPUT_LABELS_DICT in params and params[INPUT_LABELS_DICT]:
+            labels_dict = params[INPUT_LABELS_DICT]
+            if isinstance(list(labels_dict.values())[0], dict):
+                for key, ld in labels_dict.values():
+                    validate_subdict_key(InputState, key, INPUT_LABELS_DICT)
+                    validate_labels_dict(ld, INPUT_LABELS_DICT)
+            else:
+                validate_labels_dict(labels_dict, INPUT_LABELS_DICT)
 
         if OUTPUT_LABELS_DICT in params and params[OUTPUT_LABELS_DICT]:
-            for label, value in params[OUTPUT_LABELS_DICT].items():
-                if not isinstance(label,str):
-                    raise MechanismError("Key ({}) in the {} for {} must be a string".
-                                         format(label, OUTPUT_LABELS_DICT, self.name))
-                if not isinstance(value,(list, np.ndarray)):
-                    raise MechanismError("The value of {} ({}) in the {} for {} must be a list or array".
-                                         format(label, value, OUTPUT_LABELS_DICT, self.name))
+            labels_dict = params[OUTPUT_LABELS_DICT]
+            if isinstance(list(labels_dict.values())[0], dict):
+                for key, ld in labels_dict.values():
+                    validate_subdict_key(OutputState, key, OUTPUT_LABELS_DICT)
+                    validate_labels_dict(ld, OUTPUT_LABELS_DICT)
+            else:
+                validate_labels_dict(labels_dict, INPUT_LABELS_DICT)
 
         if TARGET_LABELS_DICT in params and params[TARGET_LABELS_DICT]:
             for label, value in params[TARGET_LABELS_DICT].items():
@@ -2765,6 +2781,48 @@ class Mechanism_Base(Mechanism):
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
 
+    @tc.typecheck
+    def _get_state_value_labels(self, state_type:tc.any(InputState, OutputState)):
+        """Return list of labels for the value of each State of specified state_type.
+        If the labels_dict has subdicts (one for each State), get label for the value of each State from its subdict.
+        If the labels dict does not have subdicts, then use the same dict for the only (or all) State(s)
+        """
+        if state_type is InputState:
+            states = self.input_states
+            labels_dict = self.input_labels
+        elif state_type is OutputState:
+            states = self.output_states
+            labels_dict = self.output_labels
+        subdicts = False
+        if isinstance(list(labels_dict.values())[0], dict):
+            subdicts = True
+        labels = []
+
+        for i, item in enumerate(states):
+            # There is a subdict for each state, so use that
+            if subdicts:
+                try:
+                    state_label_dict = labels_dict[item.name]
+                except KeyError:
+                    try:
+                        state_label_dict = labels_dict[i]
+                    except:
+                        label = item.value
+                except:
+                    raise MechanismError("Unidentified key () in labels_dict for {} of {}".
+                                         format(state_type.__name__, self.name))
+                for label, value in state_label_dict.items():
+                    if item.value == value:
+                        labels.append(label)
+                    labels.append(item.value)
+            # There are no subdicts, so use same dict for only (or all) State(s)
+            else:
+                for label, value in labels_dict.items():
+                    if item.value == value:
+                        labels.append(label)
+                    labels.append(item.value)
+            return labels
+
     @property
     def is_finished(self):
         return self._is_finished
@@ -2786,14 +2844,11 @@ class Mechanism_Base(Mechanism):
 
     @property
     def input_labels(self):
-        """If Mechanism has an input_labels_dict, return label for each value in the dict; otherwise return value.
+        """If Mechanism has an input_labels_dict, return list of labels for each value in input_values;
+        For items of input_values that have no label, use its valiue.
         """
         if self.input_labels_dict:
-            for item in self.input_values:
-                for label, value in self.input_labels_dict.items():
-                    if item == value:
-                        return label
-                return value
+            return self._get_state_value_labels(InputState)
         else:
             return None
 
@@ -2817,14 +2872,11 @@ class Mechanism_Base(Mechanism):
 
     @property
     def output_labels(self):
-        """If Mechanism has an output_labels_dict, return label for each value in the dict; otherwise return value.
+        """If Mechanism has an output_labels_dict, return list of labels for each value in output_values;
+        For items of input_values that have no label, use its valiue.
         """
         if self.output_labels_dict:
-            for item in self.output_values:
-                for label, value in self.output_labels_dict.items():
-                    if item == value:
-                        return label
-                return value
+            return self._get_state_value_labels(OutputState)
         else:
             return None
 
