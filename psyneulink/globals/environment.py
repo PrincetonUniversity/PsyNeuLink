@@ -991,9 +991,9 @@ def _adjust_target_dict(component, target_dict):
 @tc.typecheck
 def _parse_input_labels(obj, stimuli:dict):
     for mech, inputs in stimuli.items():
-        if any(isinstance(input, str) for input in inputs) and not obj.input_labels_dict:
+        if any(isinstance(input, str) for input in inputs) and not mech.input_labels_dict:
             raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
-                           format(obj.name, INPUT_LABELS_DICT))
+                           format(mech.name, INPUT_LABELS_DICT))
         for i, input in enumerate(inputs):
             if isinstance(input,str):
                 try:

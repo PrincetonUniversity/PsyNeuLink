@@ -2406,9 +2406,10 @@ class Mechanism_Base(Mechanism):
 
     def show_structure(self,
                        # direction = 'BT',
-                       show_functions = False,
-                       show_values = False,
-                       show_headers = False,
+                       show_functions=False,
+                       show_values=False,
+                       use_labels=False,
+                       show_headers=False,
                        output_fmt='pdf'
                        ):
         """Generate a detailed display of a the structure of a Mechanism.
@@ -2431,6 +2432,11 @@ class Mechanism_Base(Mechanism):
         show_values : bool : default False
             specifies whether or not to show the `value <Component.value>` of the Mechanism and each of its States
             in the record.
+
+        use_labels : bool : default False
+            specifies whether or not to use labels for values if **show_values** is `True`; labels must be specified
+            in the `input_labels_dict <Mechanism.input_labels_dict>` (for InputState values) and
+            `output_labels_dict <Mechanism.output_labels_dict>` (for OutputState values), otherwise the value is used.
 
         show_headers : bool : default False
             specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers.
@@ -2472,7 +2478,8 @@ class Mechanism_Base(Mechanism):
         def states_string(state_list:ContentAddressableList,
                           state_type,
                           include_function:bool=False,
-                          include_value:bool=False):
+                          include_value:bool=False,
+                          use_label:bool=False):
             '''Return string with name of states in ContentAddressableList with functions and/or values as specified'''
             states = open_bracket
             for i, state in enumerate(state_list):
@@ -2482,8 +2489,12 @@ class Mechanism_Base(Mechanism):
                 if include_function:
                     function = r'\n({})'.format(state.function_object.__class__.__name__)
                 value = ''
+                # FIX: SHOW LABELS HERE
                 if include_value:
-                    value = r'\n={}'.format(state.value)
+                    if use_label:
+                        value = self.input_labels[i]
+                    else:
+                        value = r'\n={}'.format(state.value)
                 states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
                                                         state.name,
                                                         function,
@@ -2500,12 +2511,14 @@ class Mechanism_Base(Mechanism):
                 input_states = input_states_header + pipe + states_string(self.input_states,
                                                                           InputState,
                                                                           include_function=show_functions,
-                                                                          include_value=show_values)
+                                                                          include_value=show_values,
+                                                                          use_label=use_labels)
             else:
                 input_states = states_string(self.input_states,
                                              InputState,
                                              include_function=show_functions,
-                                             include_value=show_values)
+                                             include_value=show_values,
+                                             use_label=use_labels)
             input_states = pipe + input_states
         else:
             input_states = ''
@@ -2532,12 +2545,14 @@ class Mechanism_Base(Mechanism):
                 output_states = states_string(self.output_states,
                                               OutputState,
                                               include_function=show_functions,
-                                              include_value=show_values) + pipe + output_states_header
+                                              include_value=show_values,
+                                              use_label=use_labels) + pipe + output_states_header
             else:
                 output_states = states_string(self.output_states,
                                               OutputState,
                                               include_function=show_functions,
-                                              include_value=show_values)
+                                              include_value=show_values,
+                                              use_label=use_labels)
 
             output_states = output_states + pipe
         else:
@@ -2770,6 +2785,19 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
+    def input_labels(self):
+        """If Mechanism has an input_labels_dict, return label for each value in the dict; otherwise return value.
+        """
+        if self.input_labels_dict:
+            for item in self.input_values:
+                for label, value in self.input_labels_dict.items():
+                    if item == value:
+                        return label
+                return value
+        else:
+            return None
+
+    @property
     def parameter_states(self):
         return self._parameter_states
 
@@ -2786,6 +2814,19 @@ class Mechanism_Base(Mechanism):
     @property
     def output_values(self):
         return self.output_states.values
+
+    @property
+    def output_labels(self):
+        """If Mechanism has an output_labels_dict, return label for each value in the dict; otherwise return value.
+        """
+        if self.output_labels_dict:
+            for item in self.output_values:
+                for label, value in self.output_labels_dict.items():
+                    if item == value:
+                        return label
+                return value
+        else:
+            return None
 
     @property
     def status(self):

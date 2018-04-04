@@ -62,7 +62,7 @@ __all__ = [
     'kwPrefsOwner', 'kwProcessComponentCategory', 'kwProcessDefaultMechanism', 'kwProcessDefaultProjectionFunction',
     'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
     'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory', 'kwStateContext', 'kwStateName', 'kwStatePrefs',
-    'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'LCA', 'LEARNED_PARAM', 'LEARNING',
+    'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'LABELS', 'LCA', 'LEARNED_PARAM', 'LEARNING',
     'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE',
     'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION',
     'LINEAR_FUNCTION', 'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'LOW',
@@ -404,6 +404,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 VARIABLE = "variable"
 DEFAULT_VARIABLE = "default_variable"
 VALUE = "value"
+LABELS = 'labels'
 PARAMS = "params"
 NAME = "name"
 PREFS_ARG = "prefs"

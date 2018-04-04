@@ -2297,24 +2297,53 @@ class Component(object):
                     #     compatible but different from the one in paramClassDefaults;
                     #     therefore, FUNCTION_PARAMS will not match paramClassDefaults;
                     #     instead, check that functionParams are compatible with the function's default params
-                    if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
-                        # Get function:
-                        try:
-                            function = request_set[FUNCTION]
-                        except KeyError:
-                            # If no function is specified, self.assign_default_FUNCTION_PARAMS should be True
-                            # (see _instantiate_defaults above)
-                            raise ComponentError("PROGRAM ERROR: No function params for {} so should be able to "
-                                                "validate {}".format(self.name, FUNCTION_PARAMS))
+                    if param_name is FUNCTION_PARAMS:
+                        if not self.assign_default_FUNCTION_PARAMS:
+                            # Get function:
+                            try:
+                                function = request_set[FUNCTION]
+                            except KeyError:
+                                # If no function is specified, self.assign_default_FUNCTION_PARAMS should be True
+                                # (see _instantiate_defaults above)
+                                raise ComponentError("PROGRAM ERROR: No function params for {} so should be able to "
+                                                    "validate {}".format(self.name, FUNCTION_PARAMS))
+                            else:
+                                for entry_name, entry_value in param_value.items():
+                                    try:
+                                        function.paramClassDefaults[entry_name]
+                                    except KeyError:
+                                        raise ComponentError("{0} is not a valid entry in {1} for {2} ".
+                                                            format(entry_name, param_name, self.name))
+                                    # add [entry_name] entry to [param_name] dict
+                                    else:
+                                        try:
+                                            target_set[param_name][entry_name] = entry_value
+                                        # [param_name] dict not yet created, so create it
+                                        except KeyError:
+                                            target_set[param_name] = {}
+                                            target_set[param_name][entry_name] = entry_value
+                                        # target_set None
+                                        except TypeError:
+                                            pass
                         else:
+                            # if param_name != FUNCTION_PARAMS:
+                            #     assert True
                             for entry_name, entry_value in param_value.items():
+                                # Make sure [entry_name] entry is in [param_name] dict in paramClassDefaults
                                 try:
-                                    function.paramClassDefaults[entry_name]
+                                    self.paramClassDefaults[param_name][entry_name]
                                 except KeyError:
                                     raise ComponentError("{0} is not a valid entry in {1} for {2} ".
                                                         format(entry_name, param_name, self.name))
-                                # add [entry_name] entry to [param_name] dict
+                                # TBI: (see above)
+                                # if not iscompatible(entry_value,
+                                #                     self.paramClassDefaults[param_name][entry_name],
+                                #                     **{kwCompatibilityLength:0}):
+                                #     raise ComponentError("{0} ({1}) in {2} of {3} must be a {4}".
+                                #         format(entry_name, entry_value, param_name, self.name,
+                                #                type(self.paramClassDefaults[param_name][entry_name]).__name__))
                                 else:
+                                    # add [entry_name] entry to [param_name] dict
                                     try:
                                         target_set[param_name][entry_name] = entry_value
                                     # [param_name] dict not yet created, so create it
@@ -2324,32 +2353,6 @@ class Component(object):
                                     # target_set None
                                     except TypeError:
                                         pass
-                    else:
-                        for entry_name, entry_value in param_value.items():
-                            # Make sure [entry_name] entry is in [param_name] dict in paramClassDefaults
-                            try:
-                                self.paramClassDefaults[param_name][entry_name]
-                            except KeyError:
-                                raise ComponentError("{0} is not a valid entry in {1} for {2} ".
-                                                    format(entry_name, param_name, self.name))
-                            # TBI: (see above)
-                            # if not iscompatible(entry_value,
-                            #                     self.paramClassDefaults[param_name][entry_name],
-                            #                     **{kwCompatibilityLength:0}):
-                            #     raise ComponentError("{0} ({1}) in {2} of {3} must be a {4}".
-                            #         format(entry_name, entry_value, param_name, self.name,
-                            #                type(self.paramClassDefaults[param_name][entry_name]).__name__))
-                            else:
-                                # add [entry_name] entry to [param_name] dict
-                                try:
-                                    target_set[param_name][entry_name] = entry_value
-                                # [param_name] dict not yet created, so create it
-                                except KeyError:
-                                    target_set[param_name] = {}
-                                    target_set[param_name][entry_name] = entry_value
-                                # target_set None
-                                except TypeError:
-                                    pass
 
                 elif target_set is not None:
                     # Copy any iterables so that deletions can be made to assignments belonging to the instance
