@@ -2303,12 +2303,12 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         scale = ctx.float_ty(1.0) if isinstance(scale_type, ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
 
 
-        offset = ctx.float_ty(0.0) if isinstance(offset_type, ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
+        offset = ctx.float_ty(-0.0) if isinstance(offset_type, ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
 
         # assume operation does not change dynamically
         operation = self.get_current_function_param(OPERATION)
         if operation is SUM:
-            val = ctx.float_ty(0.0)
+            val = ctx.float_ty(-0.0)
         else:
             val = ctx.float_ty(1.0)
 
