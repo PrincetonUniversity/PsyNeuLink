@@ -273,12 +273,20 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
 
             main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-            vi = builder.bitcast(tmp_out, main_function.args[2].type)
-            vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            mf_in = builder.bitcast(tmp_out, main_function.args[2].type)
+            mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
             mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             mf_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
-            builder.call(main_function, [mf_params, mf_context, vi, vo])
+            builder.call(main_function, [mf_params, mf_context, mf_in, mf_out])
+
+            os_input = mf_out
+            for i, state in enumerate(self.output_states):
+                os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+                os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+                os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                os_function = ctx.get_llvm_function(state.llvmSymbolName)
+                builder.call(os_function, [os_params, os_context, os_input, os_output])
 
             builder.ret_void()
         return func_name
