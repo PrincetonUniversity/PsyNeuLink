@@ -2323,8 +2323,12 @@ class Mechanism_Base(Mechanism):
             input_param_list.append(state.get_param_struct_type())
         input_param_struct = ir.LiteralStructType(input_param_list)
 
-        param_type_list = [input_param_struct, self.function_object.get_param_struct_type()]
-        return ir.LiteralStructType(param_type_list)
+        output_param_list = []
+        for state in self.output_states:
+            output_param_list.append(state.get_param_struct_type())
+        output_param_struct = ir.LiteralStructType(output_param_list)
+
+        return ir.LiteralStructType([input_param_struct, self.function_object.get_param_struct_type(), output_param_struct])
 
 
     def get_context_struct_type(self):
@@ -2333,8 +2337,12 @@ class Mechanism_Base(Mechanism):
             input_context_list.append(state.get_context_struct_type())
         input_context_struct = ir.LiteralStructType(input_context_list)
 
-        context_type_list = [input_context_struct, self.function_object.get_context_struct_type()]
-        return ir.LiteralStructType(context_type_list)
+        output_context_list = []
+        for state in self.output_states:
+            output_context_list.append(state.get_context_struct_type())
+        output_context_struct = ir.LiteralStructType(output_context_list)
+
+        return ir.LiteralStructType([input_context_struct, self.function_object.get_context_struct_type(), output_context_struct])
 
 
     def get_output_struct_type(self):
@@ -2354,9 +2362,15 @@ class Mechanism_Base(Mechanism):
         for state in self.input_states:
             input_param_init_list.append(state.get_param_initializer())
         input_param_init = tuple(input_param_init_list)
+
         function_param_init = self.function_object.get_param_initializer()
 
-        return tuple([input_param_init, function_param_init])
+        output_param_init_list = []
+        for state in self.output_states:
+            output_param_init_list.append(state.get_param_initializer())
+        output_param_init = tuple(output_param_init_list)
+
+        return tuple([input_param_init, function_param_init, output_param_init])
 
 
     def get_context_initializer(self):
@@ -2364,9 +2378,15 @@ class Mechanism_Base(Mechanism):
         for state in self.input_states:
             input_context_init_list.append(state.get_context_initializer())
         input_context_init = tuple(input_context_init_list)
+
         function_context_init = self.function_object.get_context_initializer()
 
-        return tuple([input_context_init, function_context_init])
+        output_context_init_list = []
+        for state in self.output_states:
+            output_context_init_list.append(state.get_context_initializer())
+        output_context_init = tuple(output_context_init_list)
+
+        return tuple([input_context_init, function_context_init, output_context_init])
 
 
     def _bin_execute(self,
