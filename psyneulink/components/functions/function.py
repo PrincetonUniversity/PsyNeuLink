@@ -762,6 +762,9 @@ class Function_Base(Function):
 
         bf = self._llvmBinFunction
 
+        # Covnert input to doubles
+        variable = np.asarray(variable, dtype=np.float64)
+
         ret = np.zeros(self._result_length)
 
         par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
