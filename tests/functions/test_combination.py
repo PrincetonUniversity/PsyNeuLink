@@ -237,3 +237,20 @@ def test_linear_combination_function_in_mechanism(operation, input, size, input_
             expected = np.product(input, axis=0) * scale + offset
 
     assert np.allclose(res, expected)
+
+@pytest.mark.function
+@pytest.mark.combination_function
+@pytest.mark.parametrize("operation, input, size, input_states, scale, offset, expected", test_linear_comb_data_2, ids=linear_comb_names_2)
+@pytest.mark.benchmark
+def test_linear_combination_function_in_mechanism_llvm(operation, input, size, input_states, scale, offset, expected, benchmark):
+    f = pnl.LinearCombination(default_variable=np.zeros(size), operation=operation, scale=scale, offset=offset)
+    p = pnl.ProcessingMechanism(size=[size] * len(input_states), function=f, input_states=input_states)
+    benchmark.group = "CombinationFunction " + pnl.LinearCombination.componentName + "in Mechanism"
+    res = benchmark(f.bin_function, input)
+    if expected is None:
+        if operation == pnl.SUM:
+            expected = np.sum(input, axis=0) * scale + offset
+        if operation == pnl.PRODUCT:
+            expected = np.product(input, axis=0) * scale + offset
+
+    assert np.allclose(res, expected)
