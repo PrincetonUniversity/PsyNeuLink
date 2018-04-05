@@ -989,27 +989,17 @@ def _adjust_target_dict(component, target_dict):
     return adjusted_targets, num_targets
 
 
-# FIX: 4/4/18 PSEUDOCODE:
-# first determine whether entries in labels_dict are labels (no subdicts) or subdicts (for states) -- do this in Mech
-#     if subdicts, validate that number equals number of states (should really be done where labels dict is assigned)
-# check for each item, "burrowing" as far down as possible
-# if number is encountered, just pass it along
-# if string is encountered:
-#   if no subdicts, look up value and use that
-#   if subdicts, look exhaustively for any instances of the label in keys of all subdicts
-#        if only one found, use its value
-#        if more than one is found, now know that "convenience notation" has not been used
-#            check that number of items == number of states
-#            use index of item in outer array and key (int or name of state) to determine which subdict to use
-
-
 @tc.typecheck
 def _parse_input_labels(obj, stimuli:dict):
     from psyneulink.components.states.inputstate import InputState
 
+    # def get_input_for_label(mech, key, input_array=None):
     def get_input_for_label(mech, key, subdicts, input_array=None):
-        """check mech.input_labels_dict for item
-        If input_array is passed, need to check for subdicts (one for each InputState of mech)"""
+        """check mech.input_labels_dict for key
+        If input_array is passed, need to check for subdicts (should be one for each InputState of mech)"""
+
+        # FIX: FOR SOME REASON dict BELOW IS TREATED AS AN UNBOUND LOCAL VARIABLE
+        # subdicts = isinstance(list(mech.input_labels_dict.keys())[0], dict)
 
         if input_array is None:
             if subdicts:
@@ -1039,7 +1029,7 @@ def _parse_input_labels(obj, stimuli:dict):
                     return name_value_pairs[0][1]
                 else:
                     # if more than one is found, now know that "convenience notation" has not been used
-                    #     check that number of items == number of states
+                    #     check that number of items in input_array == number of states
                     if len(input_array) != len(mech.input_states):
                         raise RunError("Number of items in input for {} of {} ({}) "
                                        "does not match the number of its {}s ({})".
@@ -1078,11 +1068,13 @@ def _parse_input_labels(obj, stimuli:dict):
                         continue # leave input item as is
                     elif isinstance(item, str): # format of stimuli dict is [[label]...]
                         # FIX: NEEDS TO CHECK FOR SUBDICTS (SEE ABOVE):
+                        # inputs[i][j] = get_input_for_label(mech, item, stim)
                         inputs[i][j] = get_input_for_label(mech, item, subdicts, stim)
                     else:
                         pass # FIX: ERROR MESSAGE HERE
             elif isinstance(stim, str):
                 # Don't pass input_array as no need to check for subdicts
+                # inputs[i] = get_input_for_label(mech, stim)
                 inputs[i] = get_input_for_label(mech, stim, subdicts)
             else:
                 pass # FIX: ERROR MESSAGE HERE
