@@ -911,9 +911,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         if self.integrator_mode:
             assert self.integrator_function is not None
             param_type_list.append(self.integrator_function.get_param_struct_type())
-
         function_param_struct = ir.LiteralStructType(param_type_list)
-        return ir.LiteralStructType([input_param_struct, function_param_struct])
+
+        output_param_list = []
+        for state in self.output_states:
+            output_param_list.append(state.get_param_struct_type())
+        output_param_struct = ir.LiteralStructType(output_param_list)
+
+        return ir.LiteralStructType([input_param_struct, function_param_struct, output_param_struct])
 
 
     def get_context_struct_type(self):
@@ -921,13 +926,20 @@ class TransferMechanism(ProcessingMechanism_Base):
         for state in self.input_states:
             input_context_list.append(state.get_context_struct_type())
         input_context_struct = ir.LiteralStructType(input_context_list)
+
         context_type_list = [self.function_object.get_context_struct_type()]
         if self.integrator_mode:
            assert self.integrator_function is not None
            context_type_list.append(self.integrator_function.get_context_struct_type())
 
         function_context_struct = ir.LiteralStructType(context_type_list)
-        return ir.LiteralStructType([input_context_struct, function_context_struct])
+
+        output_context_list = []
+        for state in self.output_states:
+            output_context_list.append(state.get_context_struct_type())
+        output_context_struct = ir.LiteralStructType(output_context_list)
+
+        return ir.LiteralStructType([input_context_struct, function_context_struct, output_context_struct])
 
 
     def get_param_initializer(self):
@@ -942,7 +954,12 @@ class TransferMechanism(ProcessingMechanism_Base):
             function_param_list.append(self.integrator_function.get_param_initializer())
         function_param_init = tuple(function_param_list)
 
-        return tuple([input_param_init, function_param_init])
+        output_param_init_list = []
+        for state in self.output_states:
+            output_param_init_list.append(state.get_param_initializer())
+        output_param_init = tuple(output_param_init_list)
+
+        return tuple([input_param_init, function_param_init, output_param_init])
 
 
     def get_context_initializer(self):
@@ -957,7 +974,12 @@ class TransferMechanism(ProcessingMechanism_Base):
             context_list.append(self.integrator_function.get_context_initializer())
         function_context_init = tuple(context_list)
 
-        return tuple([input_context_init, function_context_init])
+        output_context_init_list = []
+        for state in self.output_states:
+            output_context_init_list.append(state.get_context_initializer())
+        output_context_init = tuple(output_context_init_list)
+
+        return tuple([input_context_init, function_context_init, output_context_init])
 
 
     def __gen_llvm_clamp(self, builder, index, ctx, vo, min_val, max_val):
