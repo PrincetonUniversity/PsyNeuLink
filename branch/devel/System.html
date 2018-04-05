@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.4.4.4+133.g4bca3e3 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.4.4.4+134.g1a165bc documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+133.g4bca3e3 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+134.g1a165bc documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Compositions" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.4+133
+                0.4.4.4+134
               </div>
             
           
@@ -852,17 +852,16 @@ node indicate its dimensionality.</p>
 <ul>
 <li><code class="xref any docutils literal"><span class="pre">True</span></code> – shows States of Mechanism, but not information about the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism or its States.</li>
 <li><em>VALUES</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.components.states.state.State_Base.value" title="psyneulink.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its States.</li>
+<li><em>LABELS</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.components.states.state.State_Base.value" title="psyneulink.components.states.state.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its States, using any labels for the values of InputStates and
+OutputStates specified in the Mechanism’s <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code> and
+<code class="xref any docutils literal"><span class="pre">output_labels_dict</span></code>, respectively.</li>
 <li><em>FUNCTIONS</em> – shows the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and the <a class="reference internal" href="State.html#psyneulink.components.states.state.State_Base.function" title="psyneulink.components.states.state.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of its InputStates and OutputStates.</li>
 <li><em>ALL</em> – shows both <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and
-its States (see above).</li>
+its States (using labels for the values, if specified;  see above).</li>
 </ul>
 </li>
 <li><strong>show_headers</strong> (<em>bool : default False</em>) – specifies whether or not to show headers in the subfields of a Mechanism’s node;  only takes effect if
 <strong>show_mechanism_structure</strong> is specified (see above).</li>
-<li><strong>show_functions</strong> (<em>bool : default False</em>) – specifies whether or not to show <a class="reference internal" href="Component.html#psyneulink.components.component.Component.function" title="psyneulink.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of Mechanisms and their States in the
-graph;  this requires <strong>show_mechanism_structure</strong> to be specified as <code class="xref any docutils literal"><span class="pre">True</span></code> to take effect.</li>
-<li><strong>show_values</strong> (<em>bool : default False</em>) – specifies whether or not to show <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of Mechanisms and their States in the
-graph;  this requires <strong>show_mechanism_structure</strong> to be specified as <code class="xref any docutils literal"><span class="pre">True</span></code> to take effect.</li>
 <li><strong>show_projection_labels</strong> (<em>bool : default False</em>) – specifies whether or not to show names of projections.</li>
 <li><strong>show_learning</strong> (<em>bool</em><em> or </em><em>ALL : default False</em>) – specifies whether or not to show the learning components of the system;
 they will all be displayed in the color specified for <strong>learning_color</strong>.
@@ -979,7 +978,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+133.g4bca3e3',
+            VERSION:'0.4.4.4+134.g1a165bc',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
