@@ -1031,7 +1031,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
-#            vi = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(0)])
             vtmp = is_out
 
             if self.integrator_mode:
@@ -1051,17 +1050,24 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             mf_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
             mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.call(main_function, [mf_params, mf_context, vi, vo])
+            mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
+            builder.call(main_function, [mf_params, mf_context, vi, mf_out])
 
             clip = self.get_current_mechanism_param("clip")
             if clip is not None:
-                kwargs = {"ctx":ctx, "vo":vo, "min_val":clip[0], "max_val":clip[1]}
+                kwargs = {"ctx":ctx, "vo":mf_out, "min_val":clip[0], "max_val":clip[1]}
                 inner = functools.partial(self.__gen_llvm_clamp, **kwargs)
 
                 vector_length = ctx.int32_ty(self.get_output_struct_type().elements[0].count)
                 builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
 
+            os_input = mf_out
+            for i, state in enumerate(self.output_states):
+                os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+                os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+                os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                os_function = ctx.get_llvm_function(state.llvmSymbolName)
+                builder.call(os_function, [os_params, os_context, os_input, os_output])
             builder.ret_void()
         return func_name
 
