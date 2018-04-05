@@ -794,10 +794,11 @@ from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import ADD_STATES, REMOVE_STATES, _parse_state_spec
 from psyneulink.globals.keywords import \
     CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
-    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_VARIABLES, \
+    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
+    INPUT_LABELS_DICT, INPUT_STATES, \
     INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, OWNER_VARIABLE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
-    PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, UNCHANGED, \
+    OUTPUT_LABELS_DICT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
+    PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TARGET_LABELS_DICT, UNCHANGED, \
     VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
@@ -1162,6 +1163,9 @@ class Mechanism_Base(Mechanism):
                                               # assigned;  setting it to None actively disallows assignment
                                               # (see EVCControlMechanism_instantiate_input_states for more details)
         MONITOR_FOR_LEARNING: None,
+        INPUT_LABELS_DICT: {},
+        TARGET_LABELS_DICT: {},
+        OUTPUT_LABELS_DICT: {}
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Components.States.InputState.InputState,
         #     Components.States.ParameterState.ParameterState,
@@ -1733,6 +1737,49 @@ class Mechanism_Base(Mechanism):
                 # * number of OutputStates is validated against length of owner Mechanism's execute method output (EMO)
                 #     in instantiate_output_state, where an OutputState is assigned to each item (value) of the EMO
                 params[OUTPUT_STATES] = None
+
+        def validate_labels_dict(lablel_dict, type):
+            for label, value in labels_dict.items():
+                if not isinstance(label,str):
+                    raise MechanismError("Key ({}) in the {} for {} must be a string".
+                                         format(label, type, self.name))
+                if not isinstance(value,(list, np.ndarray)):
+                    raise MechanismError("The value of {} ({}) in the {} for {} must be a list or array".
+                                         format(label, value, type, self.name))
+        def validate_subdict_key(state_type, key, dict_type):
+            # IMPLEMENTATION NOTE:
+            #    can't yet validate that string is a legit InputState name or that index is within
+            #    bounds of the number of InputStates;  that is done in _get_state_value_labels()
+            if not isinstance(key, (int, str)):
+                raise MechanismError("Key ({}) for {} of {} must the name of an {} or the index for one".
+                                     format(key, dict_type, self.name, state_type.__name__))
+
+        if INPUT_LABELS_DICT in params and params[INPUT_LABELS_DICT]:
+            labels_dict = params[INPUT_LABELS_DICT]
+            if isinstance(list(labels_dict.values())[0], dict):
+                for key, ld in labels_dict.values():
+                    validate_subdict_key(InputState, key, INPUT_LABELS_DICT)
+                    validate_labels_dict(ld, INPUT_LABELS_DICT)
+            else:
+                validate_labels_dict(labels_dict, INPUT_LABELS_DICT)
+
+        if OUTPUT_LABELS_DICT in params and params[OUTPUT_LABELS_DICT]:
+            labels_dict = params[OUTPUT_LABELS_DICT]
+            if isinstance(list(labels_dict.values())[0], dict):
+                for key, ld in labels_dict.values():
+                    validate_subdict_key(OutputState, key, OUTPUT_LABELS_DICT)
+                    validate_labels_dict(ld, OUTPUT_LABELS_DICT)
+            else:
+                validate_labels_dict(labels_dict, INPUT_LABELS_DICT)
+
+        if TARGET_LABELS_DICT in params and params[TARGET_LABELS_DICT]:
+            for label, value in params[TARGET_LABELS_DICT].items():
+                if not isinstance(label,str):
+                    raise MechanismError("Key ({}) in the {} for {} must be a string".
+                                         format(label, TARGET_LABELS_DICT, self.name))
+                if not isinstance(value,(list, np.ndarray)):
+                    raise MechanismError("The value of {} ({}) in the {} for {} must be a list or array".
+                                         format(label, value, TARGET_LABELS_DICT, self.name))
 
     def _validate_inputs(self, inputs=None):
         # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and LearningMechanism do not
@@ -2375,9 +2422,10 @@ class Mechanism_Base(Mechanism):
 
     def show_structure(self,
                        # direction = 'BT',
-                       show_functions = False,
-                       show_values = False,
-                       show_headers = False,
+                       show_functions=False,
+                       show_values=False,
+                       use_labels=False,
+                       show_headers=False,
                        output_fmt='pdf'
                        ):
         """Generate a detailed display of a the structure of a Mechanism.
@@ -2400,6 +2448,11 @@ class Mechanism_Base(Mechanism):
         show_values : bool : default False
             specifies whether or not to show the `value <Component.value>` of the Mechanism and each of its States
             in the record.
+
+        use_labels : bool : default False
+            specifies whether or not to use labels for values if **show_values** is `True`; labels must be specified
+            in the `input_labels_dict <Mechanism.input_labels_dict>` (for InputState values) and
+            `output_labels_dict <Mechanism.output_labels_dict>` (for OutputState values), otherwise the value is used.
 
         show_headers : bool : default False
             specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers.
@@ -2441,7 +2494,8 @@ class Mechanism_Base(Mechanism):
         def states_string(state_list:ContentAddressableList,
                           state_type,
                           include_function:bool=False,
-                          include_value:bool=False):
+                          include_value:bool=False,
+                          use_label:bool=False):
             '''Return string with name of states in ContentAddressableList with functions and/or values as specified'''
             states = open_bracket
             for i, state in enumerate(state_list):
@@ -2451,8 +2505,12 @@ class Mechanism_Base(Mechanism):
                 if include_function:
                     function = r'\n({})'.format(state.function_object.__class__.__name__)
                 value = ''
+                # FIX: SHOW LABELS HERE
                 if include_value:
-                    value = r'\n={}'.format(state.value)
+                    if use_label:
+                        value = self.input_labels[i]
+                    else:
+                        value = r'\n={}'.format(state.value)
                 states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
                                                         state.name,
                                                         function,
@@ -2469,12 +2527,14 @@ class Mechanism_Base(Mechanism):
                 input_states = input_states_header + pipe + states_string(self.input_states,
                                                                           InputState,
                                                                           include_function=show_functions,
-                                                                          include_value=show_values)
+                                                                          include_value=show_values,
+                                                                          use_label=use_labels)
             else:
                 input_states = states_string(self.input_states,
                                              InputState,
                                              include_function=show_functions,
-                                             include_value=show_values)
+                                             include_value=show_values,
+                                             use_label=use_labels)
             input_states = pipe + input_states
         else:
             input_states = ''
@@ -2501,12 +2561,14 @@ class Mechanism_Base(Mechanism):
                 output_states = states_string(self.output_states,
                                               OutputState,
                                               include_function=show_functions,
-                                              include_value=show_values) + pipe + output_states_header
+                                              include_value=show_values,
+                                              use_label=use_labels) + pipe + output_states_header
             else:
                 output_states = states_string(self.output_states,
                                               OutputState,
                                               include_function=show_functions,
-                                              include_value=show_values)
+                                              include_value=show_values,
+                                              use_label=use_labels)
 
             output_states = output_states + pipe
         else:
@@ -2719,6 +2781,49 @@ class Mechanism_Base(Mechanism):
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
 
+    # @tc.typecheck
+    # def _get_state_value_labels(self, state_type:tc.any(InputState, OutputState)):
+    def _get_state_value_labels(self, state_type):
+        """Return list of labels for the value of each State of specified state_type.
+        If the labels_dict has subdicts (one for each State), get label for the value of each State from its subdict.
+        If the labels dict does not have subdicts, then use the same dict for the only (or all) State(s)
+        """
+        if state_type is InputState:
+            states = self.input_states
+            labels_dict = self.input_labels_dict
+        elif state_type is OutputState:
+            states = self.output_states
+            labels_dict = self.output_labels_dict
+        subdicts = False
+        if isinstance(list(labels_dict.values())[0], dict):
+            subdicts = True
+        labels = []
+
+        for i, item in enumerate(states):
+            # There is a subdict for each state, so use that
+            if subdicts:
+                try:
+                    state_label_dict = labels_dict[item.name]
+                except KeyError:
+                    try:
+                        state_label_dict = labels_dict[i]
+                    except:
+                        label = item.value
+                except:
+                    raise MechanismError("Unidentified key () in labels_dict for {} of {}".
+                                         format(state_type.__name__, self.name))
+                for label, value in state_label_dict.items():
+                    if np.array_equal(np.array(item.value), np.array(value)):
+                        labels.append(label)
+                    labels.append(item.value)
+            # There are no subdicts, so use same dict for only (or all) State(s)
+            else:
+                for label, value in labels_dict.items():
+                    if np.array_equal(np.array(item.value), np.array(value)):
+                        labels.append(label)
+                    labels.append(item.value)
+            return labels
+
     @property
     def is_finished(self):
         return self._is_finished
@@ -2739,6 +2844,16 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
+    def input_labels(self):
+        """If Mechanism has an input_labels_dict, return list of labels for each value in input_values;
+        For items of input_values that have no label, use its valiue.
+        """
+        if self.input_labels_dict:
+            return self._get_state_value_labels(InputState)
+        else:
+            return None
+
+    @property
     def parameter_states(self):
         return self._parameter_states
 
@@ -2755,6 +2870,16 @@ class Mechanism_Base(Mechanism):
     @property
     def output_values(self):
         return self.output_states.values
+
+    @property
+    def output_labels(self):
+        """If Mechanism has an output_labels_dict, return list of labels for each value in output_values;
+        For items of input_values that have no label, use its valiue.
+        """
+        if self.output_labels_dict:
+            return self._get_state_value_labels(OutputState)
+        else:
+            return None
 
     @property
     def status(self):

@@ -449,9 +449,9 @@ from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
     EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, FUNCTIONS, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, \
-    INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, \
-    PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, WEIGHT, kwSeparator, \
-    kwSystemComponentCategory
+    INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, \
+    PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, WEIGHT, \
+    kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -3360,11 +3360,16 @@ class System(System_Base):
             * *VALUES* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
               <State_Base.value>` of each of its States.
 
+            * *LABELS* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
+              <State_Base.value>` of each of its States, using any labels for the values of InputStates and
+              OutputStates specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
+              `output_labels_dict <Mechanism.output_labels_dict>`, respectively.
+
             * *FUNCTIONS* -- shows the `function <Mechanism_Base.function>` of the Mechanism and the `function
               <State_Base.function>` of its InputStates and OutputStates.
 
             * *ALL* -- shows both `value <Component.value>` and `function <Component.function>` of the Mechanism and
-              its States (see above).
+              its States (using labels for the values, if specified;  see above).
 
         COMMENT:
              and, optionally, the `function <Component.function>` and `value <Component.value>` of each
@@ -3377,6 +3382,7 @@ class System(System_Base):
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
             **show_mechanism_structure** is specified (see above).
 
+        COMMENT:
         show_functions : bool : default False
             specifies whether or not to show `function <Component.function>` of Mechanisms and their States in the
             graph;  this requires **show_mechanism_structure** to be specified as `True` to take effect.
@@ -3384,6 +3390,7 @@ class System(System_Base):
         show_values : bool : default False
             specifies whether or not to show `value <Component.value>` of Mechanisms and their States in the
             graph;  this requires **show_mechanism_structure** to be specified as `True` to take effect.
+        COMMENT
 
         show_projection_labels : bool : default False
             specifies whether or not to show names of projections.
@@ -3473,7 +3480,8 @@ class System(System_Base):
 
         # Argument values used to call Mechanism.show_structure()
         mech_struct_args = {'show_functions':show_mechanism_structure in {FUNCTIONS, ALL},
-                            'show_values':show_mechanism_structure in {VALUES, ALL},
+                            'show_values':show_mechanism_structure in {VALUES, LABELS, ALL},
+                            'use_labels':show_mechanism_structure in {LABELS, ALL},
                             'show_headers':show_headers,
                             'output_fmt':'struct'}
 

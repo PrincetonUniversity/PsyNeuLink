@@ -1093,6 +1093,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         if state:
             owner._parameter_states[param_name] = state
 
+
 def _is_legal_param_value(owner, value):
 
     from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
