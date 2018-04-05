@@ -998,7 +998,7 @@ def _parse_input_labels(obj, stimuli:dict):
         """check mech.input_labels_dict for key
         If input_array is passed, need to check for subdicts (should be one for each InputState of mech)"""
 
-        # FIX: FOR SOME REASON dict BELOW IS TREATED AS AN UNBOUND LOCAL VARIABLE
+        # FIX: FOR SOME REASON dict IN TEST BELOW IS TREATED AS AN UNBOUND LOCAL VARIABLE
         # subdicts = isinstance(list(mech.input_labels_dict.keys())[0], dict)
 
         if input_array is None:
@@ -1051,7 +1051,6 @@ def _parse_input_labels(obj, stimuli:dict):
                             raise RunError("Unable to find value for label ({}) in {} for {} of {}".
                                            format(key, INPUT_LABELS_DICT, mech.name, obj.name))
 
-
     for mech, inputs in stimuli.items():
 
         subdicts = isinstance(list(mech.input_labels_dict.keys())[0], dict)
@@ -1067,32 +1066,21 @@ def _parse_input_labels(obj, stimuli:dict):
                     if isinstance(item, (Number, list, np.ndarray)): # format of stimuli dict is [[int or []...?]]
                         continue # leave input item as is
                     elif isinstance(item, str): # format of stimuli dict is [[label]...]
-                        # FIX: NEEDS TO CHECK FOR SUBDICTS (SEE ABOVE):
                         # inputs[i][j] = get_input_for_label(mech, item, stim)
                         inputs[i][j] = get_input_for_label(mech, item, subdicts, stim)
                     else:
-                        pass # FIX: ERROR MESSAGE HERE
+                        raise RunError("Unrecognized specification ({}) in stimulus {} of entry "
+                                       "for {} in inputs dictionary specified for {}".
+                                       format(item, i, mech.name, obj.name))
             elif isinstance(stim, str):
                 # Don't pass input_array as no need to check for subdicts
                 # inputs[i] = get_input_for_label(mech, stim)
                 inputs[i] = get_input_for_label(mech, stim, subdicts)
             else:
-                pass # FIX: ERROR MESSAGE HERE
+                raise RunError("Unrecognized specification ({}) for stimulus {} in entry "
+                               "for {} of inputs dictionary specified for {}".
+                               format(stim, i, mech.name, obj.name))
 
-
-# @tc.typecheck
-# def _parse_input_labels(obj, inputs:dict):
-#     for mech, inputs in inputs.items():
-#         if any(isinstance(input, str) for input in inputs) and not obj.input_LABELS_DICT:
-#             raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
-#                            format(obj.name, INPUT_LABELS_DICT))
-#         for i, input in enumerate(inputs):
-#             if isinstance(input,str):
-#                 try:
-#                     inputs[i] = mech.input_labels_dict[input]
-#                 except KeyError:
-#                     raise RunError("No entry \'{}\' found for input of {} in its {}".
-#                                    format(input, obj.name, INPUT_LABELS_DICT))
 
 @tc.typecheck
 def _parse_target_labels(obj, targets:dict):
