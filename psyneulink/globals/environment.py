@@ -485,6 +485,7 @@ import datetime
 import warnings
 
 from collections import Iterable
+from numbers import Number
 
 import numpy as np
 import typecheck as tc
@@ -989,7 +990,7 @@ def _adjust_target_dict(component, target_dict):
 
 
 # FIX: 4/4/18 PSEUDOCODE:
-# first determine whether entries in labels_dict are labels (no subdicts) or subdicts (for states)
+# first determine whether entries in labels_dict are labels (no subdicts) or subdicts (for states) -- do this in Mech
 #     if subdicts, validate that number equals number of states (should really be done where labels dict is assigned)
 # check for each item, "burrowing" as far down as possible
 # if number is encountered, just pass it along
@@ -1004,22 +1005,53 @@ def _adjust_target_dict(component, target_dict):
 
 @tc.typecheck
 def _parse_input_labels(obj, stimuli:dict):
+
+    def get_input_for_label(mech, key, input_array=None):
+        """check mech.input_labels_dict for item
+        If input_array is passed, need to check for subdicts (one for each InputState of mech)"""
+        if input_array is None:
+            try:
+                return mech.input_labels_dict[key]
+            except KeyError:
+                raise RunError("No entry \'{}\' found for input of {} in its {}".
+                               format(key, mech.name, INPUT_LABELS_DICT))
+
+
     for mech, inputs in stimuli.items():
         if any(isinstance(input, str) for input in inputs) and not mech.input_labels_dict:
             raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
                            format(mech.name, INPUT_LABELS_DICT))
-        for i, input in enumerate(inputs):
-            # "Burrow" down as far down as possible to see if there's a number at the "bottom";
-            #     if so, return input as value
-            if isinstance(input, (list, np.ndarray)):
-                pass # FIX 4/4/18
-            if isinstance(input,str):
-                try:
-                    inputs[i] = mech.input_labels_dict[input]
-                except KeyError:
-                    raise RunError("No entry \'{}\' found for input to {} in its {}".
-                                   format(input, obj.name, INPUT_LABELS_DICT))
+        for i, stim in enumerate(inputs):
+            # "Burrow" down to determine whether there's a number at the "bottom";
+            #     if so, leave as is; otherwise, check if its a string and, if so, get value for label
+            if isinstance(stim, (list, np.ndarray)): # format of stimuli dict is at least: [[???]...?]
+                for j, item in enumerate(stim):
+                    if isinstance(item, (Number, list, np.ndarray)): # format of stimuli dict is [[int or []...?]]
+                        continue # leave input item as is
+                    elif isinstance(item, str): # format of stimuli dict is [[label]...]
+                        # FIX: NEEDS TO CHECK FOR SUBDICTS (SEE ABOVE):
+                        inputs[i][j] = get_input_for_label(mech, item, stim)
+                    else:
+                        pass # FIX: ERROR MESSAGE HERE
+            elif isinstance(stim, str):
+                inputs[i] = get_input_for_label(mech, stim) # Don't pass input_array as no need to check for subdicts
+            else:
+                pass # FIX: ERROR MESSAGE HERE
 
+
+# @tc.typecheck
+# def _parse_input_labels(obj, inputs:dict):
+#     for mech, inputs in inputs.items():
+#         if any(isinstance(input, str) for input in inputs) and not obj.input_LABELS_DICT:
+#             raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
+#                            format(obj.name, INPUT_LABELS_DICT))
+#         for i, input in enumerate(inputs):
+#             if isinstance(input,str):
+#                 try:
+#                     inputs[i] = mech.input_labels_dict[input]
+#                 except KeyError:
+#                     raise RunError("No entry \'{}\' found for input of {} in its {}".
+#                                    format(input, obj.name, INPUT_LABELS_DICT))
 
 @tc.typecheck
 def _parse_target_labels(obj, targets:dict):
