@@ -988,6 +988,20 @@ def _adjust_target_dict(component, target_dict):
     return adjusted_targets, num_targets
 
 
+# FIX: 4/4/18 PSEUDOCODE:
+# first determine whether entries in labels_dict are labels (no subdicts) or subdicts (for states)
+#     if subdicts, validate that number equals number of states (should really be done where labels dict is assigned)
+# check for each item, "burrowing" as far down as possible
+# if number is encountered, just pass it along
+# if string is encountered:
+#   if no subdicts, look up value and use that
+#   if subdicts, look exhaustively for any instances of the label in keys of all subdicts
+#        if only one found, use its value
+#        if more than one is found, now know that "convenience notation" has not been used
+#            check that number of items == number of states
+#            use index of item in outer array and key (int or name of state) to determine which subdict to use
+
+
 @tc.typecheck
 def _parse_input_labels(obj, stimuli:dict):
     for mech, inputs in stimuli.items():
@@ -995,6 +1009,10 @@ def _parse_input_labels(obj, stimuli:dict):
             raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
                            format(mech.name, INPUT_LABELS_DICT))
         for i, input in enumerate(inputs):
+            # "Burrow" down as far down as possible to see if there's a number at the "bottom";
+            #     if so, return input as value
+            if isinstance(input, (list, np.ndarray)):
+                XXXX
             if isinstance(input,str):
                 try:
                     inputs[i] = mech.input_labels_dict[input]
