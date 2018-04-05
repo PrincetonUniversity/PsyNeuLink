@@ -80,13 +80,23 @@ RAND2_S = np.random.rand()
 RAND3_S = np.random.rand()
 
 test_linear_combination_data = [
+    (Function.LinearCombination, test_var, {'scale':None, 'offset':None, 'operation':pnl.SUM}, test_var),
+    (Function.LinearCombination, test_var, {'scale':None, 'offset':RAND2_S, 'operation':pnl.SUM}, test_var + RAND2_S),
+    (Function.LinearCombination, test_var, {'scale':None, 'offset':RAND2_V, 'operation':pnl.SUM}, test_var + RAND2_V),
+    (Function.LinearCombination, test_var, {'scale':RAND1_S, 'offset':None, 'operation':pnl.SUM}, test_var * RAND1_S),
     (Function.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.SUM}, test_var * RAND1_S + RAND2_S),
     (Function.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.SUM}, test_var * RAND1_S + RAND2_V),
+    (Function.LinearCombination, test_var, {'scale':RAND1_V, 'offset':None, 'operation':pnl.SUM}, test_var * RAND1_V),
     (Function.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.SUM}, test_var * RAND1_V + RAND2_S),
     (Function.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.SUM}, test_var * RAND1_V + RAND2_V),
 
+    (Function.LinearCombination, test_var, {'scale':None, 'offset':None, 'operation':pnl.PRODUCT}, test_var),
+    (Function.LinearCombination, test_var, {'scale':None, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, test_var + RAND2_S),
+    (Function.LinearCombination, test_var, {'scale':None, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var + RAND2_V),
+    (Function.LinearCombination, test_var, {'scale':RAND1_S, 'offset':None, 'operation':pnl.PRODUCT}, test_var * RAND1_S),
     (Function.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, test_var * RAND1_S + RAND2_S),
     (Function.LinearCombination, test_var, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var * RAND1_S + RAND2_V),
+    (Function.LinearCombination, test_var, {'scale':RAND1_V, 'offset':None, 'operation':pnl.PRODUCT}, test_var * RAND1_V),
     (Function.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, test_var * RAND1_V + RAND2_S),
     (Function.LinearCombination, test_var, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, test_var * RAND1_V + RAND2_V),
 
@@ -107,14 +117,17 @@ def _naming_function(config):
     _, var, params, _ = config
     inputs = var.shape[0]
     op = params['operation']
-    vector_string = ""
-    if not np.isscalar(params['scale']):
-        vector_string += " SCALE"
-    if not np.isscalar(params['offset']):
-        vector_string += " OFFSET"
-    if vector_string != "":
-        vector_string = " VECTOR" + vector_string
-    return "COMBINE-{} {}{}".format(inputs, op, vector_string)
+    param_string = ""
+    for p in 'scale','offset':
+        if p not in params or params[p] is None:
+            param_string += " NO "
+        elif np.isscalar(params[p]):
+            param_string += " SCALAR "
+        else:
+            param_string += " VECTOR "
+        param_string += p.upper()
+
+    return "COMBINE-{} {}{}".format(inputs, op, param_string)
 
 
 @pytest.mark.function
@@ -205,7 +218,7 @@ linear_comb_names_2 = [
 @pytest.mark.combination_function
 @pytest.mark.parametrize("operation, input, size, input_states, scale, offset, expected", test_linear_comb_data_2, ids=linear_comb_names_2)
 @pytest.mark.benchmark
-def test_linear_combination_function(operation, input, size, input_states, scale, offset, expected, benchmark):
+def test_linear_combination_function_in_mechanism(operation, input, size, input_states, scale, offset, expected, benchmark):
     f = pnl.LinearCombination(default_variable=np.zeros(size), operation=operation, scale=scale, offset=offset)
     p = pnl.ProcessingMechanism(size=[size] * len(input_states), function=f, input_states=input_states)
     benchmark.group = "CombinationFunction " + pnl.LinearCombination.componentName + "in Mechanism"
