@@ -1039,7 +1039,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 integrator_function = ctx.get_llvm_function(self.integrator_function.llvmSymbolName)
                 vi = builder.bitcast(is_out, integrator_function.args[2].type)
                 output_param = integrator_function.args[3]
-                vtmp = builder.alloca(output_param.type.gep(ctx.int32_ty(0)), 1)
+                vtmp = builder.alloca(output_param.type.pointee, 1)
                 if_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
                 if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
                 builder.call(integrator_function, [if_params, if_context, vi, vtmp])
