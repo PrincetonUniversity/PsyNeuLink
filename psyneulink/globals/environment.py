@@ -485,6 +485,7 @@ import datetime
 import warnings
 
 from collections import Iterable
+from numbers import Number
 
 import numpy as np
 import typecheck as tc
@@ -492,7 +493,8 @@ import typecheck as tc
 from psyneulink.components.component import function_type
 from psyneulink.components.process import ProcessInputState
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
-from psyneulink.globals.keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
+from psyneulink.globals.keywords import EVC_SIMULATION, INPUT_LABELS_DICT, MECHANISM, \
+    OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET, TARGET_LABELS_DICT
 from psyneulink.globals.log import LogCondition
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.time import TimeScale
@@ -834,6 +836,11 @@ def _target_matches_input_state_variable(target, input_state_variable):
 
 def _adjust_stimulus_dict(obj, stimuli):
 
+    # FIX 4/3/18 - ADD _parse_input_labels HERE
+    #  STEP 0:  parse any labels into array entries
+    if any(mech.input_labels_dict for mech in obj.origin_mechanisms):
+        _parse_input_labels(obj, stimuli)
+
     # STEP 1: validate that there is a one-to-one mapping of input entries to origin mechanisms
 
     # Check that all of the mechanisms listed in the inputs dict are ORIGIN mechanisms in the object
@@ -912,6 +919,8 @@ def _adjust_stimulus_dict(obj, stimuli):
 
 def _adjust_target_dict(component, target_dict):
 
+    # STEP 0:  # FIX 4/3/18 - ADD _parse_target_labels HERE
+
     # STEP 1: validate that there is a one-to-one mapping of target entries and target mechanisms
     for target_mechanism in component.target_mechanisms:
         # If any projection to a target does not have a sender in the stimulus dict, raise an exception
@@ -978,6 +987,127 @@ def _adjust_target_dict(component, target_dict):
             _validate_target_function(target_list, mech.output_state.efferents[0].receiver.owner, mech)
             adjusted_targets[mech] = target_list
     return adjusted_targets, num_targets
+
+
+@tc.typecheck
+def _parse_input_labels(obj, stimuli:dict):
+    from psyneulink.components.states.inputstate import InputState
+
+    # def get_input_for_label(mech, key, input_array=None):
+    def get_input_for_label(mech, key, subdicts, input_array=None):
+        """check mech.input_labels_dict for key
+        If input_array is passed, need to check for subdicts (should be one for each InputState of mech)"""
+
+        # FIX: FOR SOME REASON dict BELOW IS TREATED AS AN UNBOUND LOCAL VARIABLE
+        # subdicts = isinstance(list(mech.input_labels_dict.keys())[0], dict)
+
+        if input_array is None:
+            if subdicts:
+                raise RunError("Attempt to reference a label for a stimulus at top level of {} for {},"
+                               "which contains subdictionaries for each of its {}s".
+                               format(INPUT_LABELS_DICT, mech.name, InputState))
+            try:
+                return mech.input_labels_dict[key]
+            except KeyError:
+                raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
+                               format(key, obj.name, INPUT_LABELS_DICT, mech.name))
+        else:
+            if not subdicts:
+                try:
+                    return mech.input_labels_dict[key]
+                except KeyError:
+                    raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
+                                   format(key, obj.name, INPUT_LABELS_DICT, mech.name))
+            else:
+                # if subdicts, look exhaustively for any instances of the label in keys of all subdicts
+                name_value_pairs = []
+                for name, dict in mech.input_labels.items():
+                    if key in dict:
+                        name_value_pairs.append((name,dict[key]))
+                if len(name_value_pairs)==1:
+                    # if only one found, use its value
+                    return name_value_pairs[0][1]
+                else:
+                    # if more than one is found, now know that "convenience notation" has not been used
+                    #     check that number of items in input_array == number of states
+                    if len(input_array) != len(mech.input_states):
+                        raise RunError("Number of items in input for {} of {} ({}) "
+                                       "does not match the number of its {}s ({})".
+                                       format(mech.name, obj.name, len(input_array), 
+                                              InputState, len(mech.input_states)))
+                    # use index of item in outer array and key (int or name of state) to determine which subdict to use
+                    input_index = input_array.index(key)
+
+                    # try to match input_index against index in name_value_pairs[0];
+                    value = [item[1] for item in name_value_pairs if item[0]==input_index]
+                    if value:
+                        return value[0]
+                    else:
+                        # otherwise, match against index associated with name of state in name_value_pairs
+                        value = [item[1] for item in name_value_pairs if mech.input_states.index(item[0])==input_index]
+                        if value:
+                            return value[0]
+                        else:
+                            raise RunError("Unable to find value for label ({}) in {} for {} of {}".
+                                           format(key, INPUT_LABELS_DICT, mech.name, obj.name))
+
+
+    for mech, inputs in stimuli.items():
+
+        subdicts = isinstance(list(mech.input_labels_dict.keys())[0], dict)
+
+        if any(isinstance(input, str) for input in inputs) and not mech.input_labels_dict:
+            raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
+                           format(mech.name, INPUT_LABELS_DICT))
+        for i, stim in enumerate(inputs):
+            # "Burrow" down to determine whether there's a number at the "bottom";
+            #     if so, leave as is; otherwise, check if its a string and, if so, get value for label
+            if isinstance(stim, (list, np.ndarray)): # format of stimuli dict is at least: [[???]...?]
+                for j, item in enumerate(stim):
+                    if isinstance(item, (Number, list, np.ndarray)): # format of stimuli dict is [[int or []...?]]
+                        continue # leave input item as is
+                    elif isinstance(item, str): # format of stimuli dict is [[label]...]
+                        # FIX: NEEDS TO CHECK FOR SUBDICTS (SEE ABOVE):
+                        # inputs[i][j] = get_input_for_label(mech, item, stim)
+                        inputs[i][j] = get_input_for_label(mech, item, subdicts, stim)
+                    else:
+                        pass # FIX: ERROR MESSAGE HERE
+            elif isinstance(stim, str):
+                # Don't pass input_array as no need to check for subdicts
+                # inputs[i] = get_input_for_label(mech, stim)
+                inputs[i] = get_input_for_label(mech, stim, subdicts)
+            else:
+                pass # FIX: ERROR MESSAGE HERE
+
+
+# @tc.typecheck
+# def _parse_input_labels(obj, inputs:dict):
+#     for mech, inputs in inputs.items():
+#         if any(isinstance(input, str) for input in inputs) and not obj.input_LABELS_DICT:
+#             raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
+#                            format(obj.name, INPUT_LABELS_DICT))
+#         for i, input in enumerate(inputs):
+#             if isinstance(input,str):
+#                 try:
+#                     inputs[i] = mech.input_labels_dict[input]
+#                 except KeyError:
+#                     raise RunError("No entry \'{}\' found for input of {} in its {}".
+#                                    format(input, obj.name, INPUT_LABELS_DICT))
+
+@tc.typecheck
+def _parse_target_labels(obj, targets:dict):
+    for mech, targets in targets.items():
+        if any(isinstance(target, str) for target in targets) and not obj.TARGET_LABELS_DICT:
+            raise RunError("Labels can not be used to specify the targets to {} since it does not have an {}".
+                           format(obj.name, TARGET_LABELS_DICT))
+        for i, target in enumerate(targets):
+            if isinstance(target,str):
+                try:
+                    targets[i] = mech.TARGET_LABELS_DICT[target]
+                except KeyError:
+                    raise RunError("No entry \'{}\' found for target of {} in its {}".
+                                   format(target, obj.name, TARGET_LABELS_DICT))
+
 
 def _validate_target_function(target_function, target_mechanism, sample_mechanism):
 
