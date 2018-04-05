@@ -763,7 +763,7 @@ class Function_Base(Function):
         bf = self._llvmBinFunction
 
         # Covnert input to doubles
-        variable = np.asarray(variable, dtype=np.float64)
+        variable = np.asfarray(variable)
 
         ret = np.zeros(self._result_length)
 
@@ -6156,7 +6156,7 @@ class AdaptiveIntegrator(
         noise = self.get_current_function_param(NOISE)
         # Arrays need to be initialized using tuple
         if hasattr(noise, "__len__") and len(noise) > 1:
-            noise = tuple(np.asarray(noise, dtype=np.float64).flatten().tolist())
+            noise = tuple(np.asfarray(noise).flatten().tolist())
         return (self.get_current_function_param(RATE),
                 self.get_current_function_param(OFFSET), noise)
 
@@ -6170,7 +6170,7 @@ class AdaptiveIntegrator(
 
     def get_context_initializer(self, data=None):
         if data is None:
-            data = np.asarray(self.previous_value, dtype=np.float64).flatten().tolist()
+            data = np.asfarray(self.previous_value).flatten().tolist()
         return (tuple(data),)
 
 
