@@ -1012,7 +1012,7 @@ def _parse_input_labels(obj, stimuli:dict):
             # "Burrow" down as far down as possible to see if there's a number at the "bottom";
             #     if so, return input as value
             if isinstance(input, (list, np.ndarray)):
-                XXXX
+                pass # FIX 4/4/18
             if isinstance(input,str):
                 try:
                     inputs[i] = mech.input_labels_dict[input]
