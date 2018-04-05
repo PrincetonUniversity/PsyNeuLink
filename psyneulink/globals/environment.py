@@ -1009,12 +1009,58 @@ def _parse_input_labels(obj, stimuli:dict):
     def get_input_for_label(mech, key, input_array=None):
         """check mech.input_labels_dict for item
         If input_array is passed, need to check for subdicts (one for each InputState of mech)"""
+        subdicts = isinstance(list(mech.input_labels.keys())[0], dict)
+
         if input_array is None:
+            if subdicts:
+                raise RunError("Attempt to reference a label for a stimulus at top level of {} for {},"
+                               "which contains subdictionaries for each of its {}s".
+                               format(INPUT_LABELS_DICT, mech.name, InputState))
             try:
                 return mech.input_labels_dict[key]
             except KeyError:
-                raise RunError("No entry \'{}\' found for input of {} in its {}".
-                               format(key, mech.name, INPUT_LABELS_DICT))
+                raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
+                               format(key, obj.name, INPUT_LABELS_DICT, mech.name))
+        else:
+            if not subdicts:
+                try:
+                    return mech.input_labels_dict[key]
+                except KeyError:
+                    raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
+                                   format(key, obj.name, INPUT_LABELS_DICT, mech.name))
+            else:
+                # if subdicts, look exhaustively for any instances of the label in keys of all subdicts
+                name_value_pairs = []
+                for name, dict in mech.input_labels.items():
+                    if key in dict:
+                        name_value_pairs.append((name,dict[key]))
+                if len(name_value_pairs)==1:
+                    # if only one found, use its value
+                    return name_value_pairs[0][1]
+                else:
+                    # if more than one is found, now know that "convenience notation" has not been used
+                    #     check that number of items == number of states
+                    if len(input_array) != len(mech.input_states):
+                        raise RunError("Number of items in input for {} of {} ({}) "
+                                       "does not match the number of its {}s ({})".
+                                       format(mech.name, obj.name, len(input_array), 
+                                              InputState, len(mech.input_states)))
+                    #     use index of item in outer array and key (int or name of state) 
+                    #          to determine which subdict to use
+                    input_index = input_array.index(key)
+                    # try to match input_index against index in name_value_pairs[0];
+                    state_index = [item[1] for item in name_value_pairs if item[0]==input_index]
+                    if state_index:
+                        return mech.input_states[state_index[0]].value
+                    else:
+                        # FIX:  ??CORRECT:
+3                        # otherwise, match against index associated with name in name_value_pairs[n][0];
+                        state_value = [mech.input_states.index(item[1]) for item in name_value_pairs if item[0]==key]
+                        return state_value[0]
+                        
+                    
+                    
+                    
 
 
     for mech, inputs in stimuli.items():
