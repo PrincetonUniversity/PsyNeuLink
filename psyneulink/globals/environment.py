@@ -1005,11 +1005,11 @@ def _adjust_target_dict(component, target_dict):
 
 @tc.typecheck
 def _parse_input_labels(obj, stimuli:dict):
+    from psyneulink.components.states.inputstate import InputState
 
-    def get_input_for_label(mech, key, input_array=None):
+    def get_input_for_label(mech, key, subdicts, input_array=None):
         """check mech.input_labels_dict for item
         If input_array is passed, need to check for subdicts (one for each InputState of mech)"""
-        subdicts = isinstance(list(mech.input_labels.keys())[0], dict)
 
         if input_array is None:
             if subdicts:
@@ -1045,25 +1045,27 @@ def _parse_input_labels(obj, stimuli:dict):
                                        "does not match the number of its {}s ({})".
                                        format(mech.name, obj.name, len(input_array), 
                                               InputState, len(mech.input_states)))
-                    #     use index of item in outer array and key (int or name of state) 
-                    #          to determine which subdict to use
+                    # use index of item in outer array and key (int or name of state) to determine which subdict to use
                     input_index = input_array.index(key)
+
                     # try to match input_index against index in name_value_pairs[0];
-                    state_index = [item[1] for item in name_value_pairs if item[0]==input_index]
-                    if state_index:
-                        return mech.input_states[state_index[0]].value
+                    value = [item[1] for item in name_value_pairs if item[0]==input_index]
+                    if value:
+                        return value[0]
                     else:
-                        # FIX:  ??CORRECT:
-3                        # otherwise, match against index associated with name in name_value_pairs[n][0];
-                        state_value = [mech.input_states.index(item[1]) for item in name_value_pairs if item[0]==key]
-                        return state_value[0]
-                        
-                    
-                    
-                    
+                        # otherwise, match against index associated with name of state in name_value_pairs
+                        value = [item[1] for item in name_value_pairs if mech.input_states.index(item[0])==input_index]
+                        if value:
+                            return value[0]
+                        else:
+                            raise RunError("Unable to find value for label ({}) in {} for {} of {}".
+                                           format(key, INPUT_LABELS_DICT, mech.name, obj.name))
 
 
     for mech, inputs in stimuli.items():
+
+        subdicts = isinstance(list(mech.input_labels_dict.keys())[0], dict)
+
         if any(isinstance(input, str) for input in inputs) and not mech.input_labels_dict:
             raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
                            format(mech.name, INPUT_LABELS_DICT))
@@ -1076,11 +1078,12 @@ def _parse_input_labels(obj, stimuli:dict):
                         continue # leave input item as is
                     elif isinstance(item, str): # format of stimuli dict is [[label]...]
                         # FIX: NEEDS TO CHECK FOR SUBDICTS (SEE ABOVE):
-                        inputs[i][j] = get_input_for_label(mech, item, stim)
+                        inputs[i][j] = get_input_for_label(mech, item, subdicts, stim)
                     else:
                         pass # FIX: ERROR MESSAGE HERE
             elif isinstance(stim, str):
-                inputs[i] = get_input_for_label(mech, stim) # Don't pass input_array as no need to check for subdicts
+                # Don't pass input_array as no need to check for subdicts
+                inputs[i] = get_input_for_label(mech, stim, subdicts)
             else:
                 pass # FIX: ERROR MESSAGE HERE
 

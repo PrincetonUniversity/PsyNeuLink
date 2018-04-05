@@ -2781,18 +2781,19 @@ class Mechanism_Base(Mechanism):
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, ParameterState) )
 
-    @tc.typecheck
-    def _get_state_value_labels(self, state_type:tc.any(InputState, OutputState)):
+    # @tc.typecheck
+    # def _get_state_value_labels(self, state_type:tc.any(InputState, OutputState)):
+    def _get_state_value_labels(self, state_type):
         """Return list of labels for the value of each State of specified state_type.
         If the labels_dict has subdicts (one for each State), get label for the value of each State from its subdict.
         If the labels dict does not have subdicts, then use the same dict for the only (or all) State(s)
         """
         if state_type is InputState:
             states = self.input_states
-            labels_dict = self.input_labels
+            labels_dict = self.input_labels_dict
         elif state_type is OutputState:
             states = self.output_states
-            labels_dict = self.output_labels
+            labels_dict = self.output_labels_dict
         subdicts = False
         if isinstance(list(labels_dict.values())[0], dict):
             subdicts = True
@@ -2812,13 +2813,13 @@ class Mechanism_Base(Mechanism):
                     raise MechanismError("Unidentified key () in labels_dict for {} of {}".
                                          format(state_type.__name__, self.name))
                 for label, value in state_label_dict.items():
-                    if item.value == value:
+                    if np.array_equal(np.array(item.value), np.array(value)):
                         labels.append(label)
                     labels.append(item.value)
             # There are no subdicts, so use same dict for only (or all) State(s)
             else:
                 for label, value in labels_dict.items():
-                    if item.value == value:
+                    if np.array_equal(np.array(item.value), np.array(value)):
                         labels.append(label)
                     labels.append(item.value)
             return labels
