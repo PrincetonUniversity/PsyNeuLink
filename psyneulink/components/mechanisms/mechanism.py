@@ -18,7 +18,7 @@
         * :ref:`Mechanism_InputStates`
         * :ref:`Mechanism_ParameterStates`
         * :ref:`Mechanism_OutputStates`
-     * :ref:`Mechanism_Attributes`
+     * :ref:`Mechanism_Additional_Attributes`
      * :ref:`Mechanism_Role_In_Processes_And_Systems`
     * :ref:`Mechanism_Execution`
      * :ref:`Mechanism_Runtime_Parameters`
@@ -100,9 +100,9 @@ mentioned above, or using one of the following:
           same type for which a default name has been assigned.
 
       * <name of parameter>:<value>
-          this can contain any of the `standard parameters <Mechanism_Attributes>` for instantiating a Mechanism
-          or ones specific to a particular type of Mechanism (see documentation for the type).  The key must be
-          the name of the argument used to specify the parameter in the Mechanism's constructor, and the value must
+          this can contain any of the `standard parameters <Mechanism_Additional_Attributes>` for instantiating a
+          Mechanism or ones specific to a particular type of Mechanism (see documentation for the type).  The key must
+          be the name of the argument used to specify the parameter in the Mechanism's constructor, and the value must
           be a legal value for that parameter, using any of the ways allowed for `specifying a parameter
           <ParameterState_Specification>`. The parameter values specified will be used to instantiate the Mechanism.
           These can be overridden during execution by specifying `Mechanism_Runtime_Parameters`, either when calling
@@ -611,10 +611,15 @@ unmodified results of its `function <Mechanism_Base.function>` (this is because 
 the Mechanism`s `value <Mechanism_Base.value>` to which they refer -- see `OutputStates <OutputState_Customization>`).
 
 
-.. _Mechanism_Attributes:
+.. _Mechanism_Additional_Attributes:
 
 Additional Attributes
 ~~~~~~~~~~~~~~~~~~~~~
+
+.. _Mechanism_Constructor_Arguments:
+
+Additional Constructor Arguments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In addition to the `standard attributes <Component_Structure>` of any `Component <Component>`, Mechanisms have a set of
 Mechanism-specific attributes (listed below). These can be specified in arguments of the Mechanism's constructor,
@@ -636,6 +641,11 @@ attributes are listed below by their argument names / keywords, along with a des
     * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for
       learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
 
+.. _Mechanism_Convenience_Properties:
+
+Projection Convenience Properties
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 A Mechanism also has several convenience properties, listed below, that list its `Projections <Projection>` and the
 Mechanisms that send/receive these:
 
@@ -652,6 +662,64 @@ Mechanisms that send/receive these:
 Each of these is a `ContentAddressableList`, which means that the names of the Components in each list can be listed by
 appending ``.names`` to the property.  For examples, the names of all of the Mechanisms that receive a Projection from
 ``my_mech`` can be accessed by ``my_mech.receivers.names``.
+
+
+.. Mechanism_Labels_Dicts:
+
+Value Label Dictionaries
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Mechanisms also have two attributes that can be used to specify labels for the values of its InputState(s) and
+OutputState(s):
+
+    * *INPUT_LABELS_DICT* -- used to specify labels for values of the InputState(s) of the Mechanism;  if specified,
+      the dictionary is contained in the Mechanism's `input_labels_dict <Mechanism_Base.input_labels_dict>` attribute.
+
+    COMMENT:
+    * *TARGET_LABELS_DICT* -- used to specify labels for values of the InputState(s) of the Mechanism if it is a
+      `TARGET` Mechanism used in `learning <LearningMechanism_Targets>`;  if specified, the dictionary is contained in
+      the Mechanism's `target_labels_dict <Mechanism_Base.target_labels_dict>` attribute.
+    COMMENT
+
+    * *OUTPUT_LABELS_DICT* -- used to specify labels for values of the OutputState(s) of the Mechanism;  if specified,
+      the dictionary is contained in the Mechanism's `output_labels_dict <Mechanism_Base.output_labels_dict>` attribute.
+
+The labels specified in these dictionaries can be used to specify items in the `inputs <Run_Inputs>` and `targets
+<Run_Targets>` arguments of the `run <System.run>` method of a `System`, and to report the values of the InputState(s)
+and OutputState(s) of a Mechanism in a System's `show_graph <System.show_graph>` method (using its **use_values**
+option).  The labels for the current value(s) of the Mechanism's InputState(s) and OutputState(s) are listed in its
+`input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>`, respectively.
+
+Label dictionaries can only be specified in a parameters dictionary assigned to the **params** argument of the
+Mechanism's constructor, using the keywords listed above.  A given label dictionary must contain entries *all* of which
+use *only one* of the two following formats for the *key:value* pairs:
+
+    * *label:value* -- the label must be a string to be associated with the specified value of the State. If the
+      Mechanism has more than one State of the type corresponding to the dictionary, then the label will be used for
+      the specified value of any State of that type.  For example, if input_labels_dict has *label_value*
+      entries, and the Mechanism has more than one InputState, then a specified label will be associated with the
+      corresponding value for any of the Mechanism's InputStates.
+      COMMENT:
+          ADD EXAMPLE HERE
+      COMMENT
+    ..
+    * *<state name or index>:<sub-dictionary>* -- this is used to specify labels that are specific to individual States
+      of the type corresponding to the dictionary;  the key of each entry must be either the name of a State of that
+      type, or its index in the list of States of that type (i.e, `input_states <Mechanism_Base.input_states>` or
+      `output_states <Mechanism_Base.output_states>`, and the value a subdictionary containing *label:value* entries
+      to be used for that State.  For example, if a Mechanism has two InputStates, named *SAMPLE* and *TARGET*, then
+      *INPUT_LABELS_DICT* could be assigned two entries, *SAMPLE*:<dict> and *TARGET*:<dict> or, correspondingly,
+      0:<dict> and 1:<dict>, in which each dict contained separate *label:value* entries for each of the two
+      InputStates.
+      COMMENT:
+          ADD EXAMPLE HERE
+      COMMENT
+
+
+.. Mechanism_Attribs_Dicts:
+
+Attribute Dictionary
+^^^^^^^^^^^^^^^^^^^^
 
 Finally, a Mechanism has an attribute that contains a dictionary of its attributes that can be used to specify the
 `variable <OutputState.variable>` of its OutputState (see `OutputState_Customization`):
@@ -941,6 +1009,26 @@ class Mechanism_Base(Mechanism):
         attribute.  The latter is a 2d np.array; the `input_values <Mechanism_Base.input_values>` attribute provides
         this information in a simpler list format.
 
+    input_labels_dict : dict
+        contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
+        in which each label (key) specifies a string associated with a value for the InputState(s) of the
+        Mechanism; see `Mechanism_Labels_Dicts` for additional details.
+        
+    input_labels : list
+        contains the labels corresponding to the value(s) of the InputState(s) of the Mechanism listed in 
+        `input_values <Mechanism_Base.input_values>` if `input_labels_dict <Mechanism_Base.input_labels>` has been 
+        assigned, otherwise returns `None`.  If `input_labels_dict <Mechanism_Base.input_labels>` has been 
+        assigned, but does not contain a label for the current `value <InputState.value>` of an InputState, 
+        then its value assigned as the corresponding entry in the list in place of a label. 
+
+    COMMENT:
+    target_labels_dict : dict
+        contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
+        in which each label (key) specifies a string associated with a value for the InputState(s) of the
+        Mechanism if it is the `TARGET` Mechanism for a System; see `Mechanism_Labels_Dicts` and
+        `target mechanism <LearningMechanism_Targets>` for additional details.
+    COMMENT
+
     parameter_states : ContentAddressableList[str, ParameterState]
         a read-only list of the Mechanism's `ParameterStates <Mechanism_ParameterStates>`, one for each of its
         `configurable parameters <ParameterState_Configurable_Parameters>`, including those of its `function
@@ -1015,6 +1103,18 @@ class Mechanism_Base(Mechanism):
                TBI: if the function of a Mechanism is specified only by params[FUNCTION]
                    (i.e., it does not implement self.execute) and it returns a value with len > 1
                    it MUST also specify kwFunctionOutputStateValueMapping.
+
+    output_labels_dict : dict
+        contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
+        in which each label (key) specifies a string associated with a value for the OutputState(s) of the
+        Mechanism; see `Mechanism_Labels_Dicts` for additional details.
+
+    output_labels : list
+        contains the labels corresponding to the value(s) of the OutputState(s) of the Mechanism listed in 
+        `output_values <Mechanism_Base.output_values>` if `output_labels_dict <Mechanism_Base.output_labels>` has been 
+        assigned, otherwise returns `None`.  If `output_labels_dict <Mechanism_Base.output_labels>` has been 
+        assigned, but does not contain a label for the current `value <OutputState.value>` of an OutputState, 
+        then its value assigned as the corresponding entry in the list in place of a label. 
 
     is_finished : bool : default False
         set by a Mechanism to signal completion of its `execution <Mechanism_Execution>`; used by `Component-based
@@ -1770,7 +1870,7 @@ class Mechanism_Base(Mechanism):
                     validate_subdict_key(OutputState, key, OUTPUT_LABELS_DICT)
                     validate_labels_dict(ld, OUTPUT_LABELS_DICT)
             else:
-                validate_labels_dict(labels_dict, INPUT_LABELS_DICT)
+                validate_labels_dict(labels_dict, OUTPUT_LABELS_DICT)
 
         if TARGET_LABELS_DICT in params and params[TARGET_LABELS_DICT]:
             for label, value in params[TARGET_LABELS_DICT].items():
