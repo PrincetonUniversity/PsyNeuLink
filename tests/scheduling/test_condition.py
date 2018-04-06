@@ -6,8 +6,7 @@ from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.composition import Composition
-from psyneulink.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforePass, BeforeTrial, EveryNCalls, EveryNPasses, NWhen, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny, WhileNot
-from psyneulink.scheduling.condition import ConditionError, ConditionSet
+from psyneulink.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforePass, BeforeTrial, Condition, ConditionError, ConditionSet, EveryNCalls, EveryNPasses, NWhen, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny, WhileNot
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -36,6 +35,44 @@ class TestCondition:
     def test_invalid_input_WhenFinishedAll_2(self):
         with pytest.raises(ConditionError):
             WhenFinished({None}).is_satisfied()
+
+    def test_additional_args(self):
+        class OneSatisfied(Condition):
+            def __init__(self, a):
+                def func(a, b):
+                    return a or b
+                super().__init__(func, a)
+
+        cond = OneSatisfied(True)
+        assert cond.is_satisfied(True)
+        assert cond.is_satisfied(False)
+
+        cond = OneSatisfied(False)
+        assert cond.is_satisfied(True)
+        assert not cond.is_satisfied(False)
+
+    def test_additional_kwargs(self):
+        class OneSatisfied(Condition):
+            def __init__(self, a, c=True):
+                def func(a, b, c=True):
+                    return a or b or c
+                super().__init__(func, a, c=True)
+
+        cond = OneSatisfied(True)
+        assert cond.is_satisfied(True)
+        assert cond.is_satisfied(False, c=True)
+        assert cond.is_satisfied(False, c=False)
+
+        cond = OneSatisfied(True, c=False)
+        assert cond.is_satisfied(True)
+        assert cond.is_satisfied(False, c=True)
+        assert cond.is_satisfied(False, c=False)
+
+        cond = OneSatisfied(False)
+        assert cond.is_satisfied(True)
+        assert cond.is_satisfied(False, c=True)
+        assert not cond.is_satisfied(False, c=False)
+        assert not cond.is_satisfied(False, c=False, extra_arg=True)
 
     class TestGeneric:
         def test_WhileNot_AtPass(self):
@@ -317,7 +354,7 @@ class TestCondition:
                 scheduler_processing=sched,
                 termination_processing=termination_conds
             )
-            output = sched.execution_list
+            output = sched.execution_list[comp._execution_id]
 
             expected_output = [A, A, A, A, set()]
             assert output == pytest.helpers.setify_expected_output(expected_output)
@@ -338,7 +375,7 @@ class TestCondition:
                 scheduler_processing=sched,
                 termination_processing=termination_conds
             )
-            output = sched.execution_list
+            output = sched.execution_list[comp._execution_id]
 
             expected_output = [A, A, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
@@ -359,7 +396,7 @@ class TestCondition:
                 scheduler_processing=sched,
                 termination_processing=termination_conds
             )
-            output = sched.execution_list
+            output = sched.execution_list[comp._execution_id]
 
             expected_output = [A, A, A, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
@@ -738,30 +775,3 @@ class TestCondition:
             A, A, B, A, A, B, C
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)
-
-
-class TestConditionSet:
-
-    def test_change_scheduler(self):
-        comp = Composition()
-        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-        B = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='B')
-        for m in [A, B]:
-            comp.add_mechanism(m)
-
-        s1 = Scheduler(composition=comp)
-        s2 = Scheduler(composition=comp)
-
-        cs = ConditionSet(s1)
-        cs.add_condition(A, Always())
-        cs.add_condition(B, Always())
-
-        assert cs.scheduler is s1
-        for owner, cond in cs.conditions.items():
-            assert cond.scheduler is s1
-
-        cs.scheduler = s2
-
-        assert cs.scheduler is s2
-        for owner, cond in cs.conditions.items():
-            assert cond.scheduler is s2
