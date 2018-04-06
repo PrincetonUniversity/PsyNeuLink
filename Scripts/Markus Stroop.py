@@ -67,7 +67,7 @@ response_layer = pnl.RecurrentTransferMechanism(size=2,  #Recurrent
                          name='RESPONSE',
                          output_states = [pnl.RECURRENT_OUTPUT.RESULT,
                                           {pnl.NAME: 'DECISION_ENERGY',
-                                           pnl.VARIABLE: (pnl.OWNER_VALUE,0),
+                                          pnl.VARIABLE: (pnl.OWNER_VALUE,0),
                                            pnl.FUNCTION: pnl.Stability(default_variable=np.array([0.0, -1.0]),
                                                                        metric=pnl.ENERGY,
                                                                        matrix=np.array([[0.0, -1.0], [-1.0, 0.0]]))}],
