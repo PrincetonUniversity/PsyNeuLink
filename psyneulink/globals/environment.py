@@ -836,7 +836,6 @@ def _target_matches_input_state_variable(target, input_state_variable):
 
 def _adjust_stimulus_dict(obj, stimuli):
 
-    # FIX 4/3/18 - ADD _parse_input_labels HERE
     #  STEP 0:  parse any labels into array entries
     if any(mech.input_labels_dict for mech in obj.origin_mechanisms):
         _parse_input_labels(obj, stimuli)
@@ -919,7 +918,9 @@ def _adjust_stimulus_dict(obj, stimuli):
 
 def _adjust_target_dict(component, target_dict):
 
-    # STEP 0:  # FIX 4/3/18 - ADD _parse_target_labels HERE
+    #  STEP 0:  parse any labels into array entries
+    if any(mech.input_labels_dict for mech in component.target_mechanisms):
+        _parse_input_labels(component, target_dict)
 
     # STEP 1: validate that there is a one-to-one mapping of target entries and target mechanisms
     for target_mechanism in component.target_mechanisms:
@@ -1080,22 +1081,6 @@ def _parse_input_labels(obj, stimuli:dict):
                 raise RunError("Unrecognized specification ({}) for stimulus {} in entry "
                                "for {} of inputs dictionary specified for {}".
                                format(stim, i, mech.name, obj.name))
-
-
-@tc.typecheck
-def _parse_target_labels(obj, targets:dict):
-    for mech, targets in targets.items():
-        if any(isinstance(target, str) for target in targets) and not obj.TARGET_LABELS_DICT:
-            raise RunError("Labels can not be used to specify the targets to {} since it does not have an {}".
-                           format(obj.name, TARGET_LABELS_DICT))
-        for i, target in enumerate(targets):
-            if isinstance(target,str):
-                try:
-                    targets[i] = mech.TARGET_LABELS_DICT[target]
-                except KeyError:
-                    raise RunError("No entry \'{}\' found for target of {} in its {}".
-                                   format(target, obj.name, TARGET_LABELS_DICT))
-
 
 def _validate_target_function(target_function, target_mechanism, sample_mechanism):
 
