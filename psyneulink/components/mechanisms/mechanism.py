@@ -680,7 +680,7 @@ OutputState(s):
       `TARGET` Mechanism used in `learning <LearningMechanism_Targets>`;  if specified, the dictionary is contained in
       the Mechanism's `target_labels_dict <Mechanism_Base.target_labels_dict>` attribute.
     COMMENT
-
+    ..
     * *OUTPUT_LABELS_DICT* -- used to specify labels for values of the OutputState(s) of the Mechanism;  if specified,
       the dictionary is contained in the Mechanism's `output_labels_dict <Mechanism_Base.output_labels_dict>` attribute.
 
