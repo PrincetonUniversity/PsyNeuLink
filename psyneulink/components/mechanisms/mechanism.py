@@ -664,7 +664,7 @@ appending ``.names`` to the property.  For examples, the names of all of the Mec
 ``my_mech`` can be accessed by ``my_mech.receivers.names``.
 
 
-.. Mechanism_Labels_Dicts:
+.. _Mechanism_Labels_Dicts:
 
 Value Label Dictionaries
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -692,13 +692,14 @@ option).  The labels for the current value(s) of the Mechanism's InputState(s) a
 
 Label dictionaries can only be specified in a parameters dictionary assigned to the **params** argument of the
 Mechanism's constructor, using the keywords listed above.  A given label dictionary must contain entries *all* of which
-use *only one* of the two following formats for the *key:value* pairs:
+use *only one* of the two following formats for the *key:value* pair of each entry:
 
-    * *label:value* -- the label must be a string to be associated with the specified value of the State. If the
+    * *label:value* -- the *label* is a string to be associated with the specified value of the State. If the
       Mechanism has more than one State of the type corresponding to the dictionary, then the label will be used for
-      the specified value of any State of that type.  For example, if input_labels_dict has *label_value*
-      entries, and the Mechanism has more than one InputState, then a specified label will be associated with the
-      corresponding value for any of the Mechanism's InputStates.
+      the specified value of any State of that type.  For example, if `input_labels_dict
+      <Mechanism_Base.input_labels_dict>` has *label_value* entries, and the Mechanism has more than one InputState,
+      then a specified label will be associated with the corresponding `value <InputState.value>` for any of the
+      Mechanism's InputStates.
       COMMENT:
           ADD EXAMPLE HERE
       COMMENT
@@ -706,7 +707,7 @@ use *only one* of the two following formats for the *key:value* pairs:
     * *<state name or index>:<sub-dictionary>* -- this is used to specify labels that are specific to individual States
       of the type corresponding to the dictionary;  the key of each entry must be either the name of a State of that
       type, or its index in the list of States of that type (i.e, `input_states <Mechanism_Base.input_states>` or
-      `output_states <Mechanism_Base.output_states>`, and the value a subdictionary containing *label:value* entries
+      `output_states <Mechanism_Base.output_states>`), and the value a subdictionary containing *label:value* entries
       to be used for that State.  For example, if a Mechanism has two InputStates, named *SAMPLE* and *TARGET*, then
       *INPUT_LABELS_DICT* could be assigned two entries, *SAMPLE*:<dict> and *TARGET*:<dict> or, correspondingly,
       0:<dict> and 1:<dict>, in which each dict contained separate *label:value* entries for each of the two
