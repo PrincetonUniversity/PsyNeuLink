@@ -47,6 +47,19 @@ class TestMechanismInputLabels:
         S.run(inputs=['red', 'green', 'blue'])
         assert np.allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
 
+    def test_dict_of_dicts_1_input_state(self):
+        input_labels_dict = {0: {"red": [1, 0],
+                                 "green": [0, 1]}}
+
+        M = TransferMechanism(default_variable=[[0, 0]],
+                              params={INPUT_LABELS_DICT: input_labels_dict})
+        P = Process(pathway=[M])
+        S = System(processes=[P])
+
+        S.run(inputs=[['red'], ['green'], ['green']])
+        assert np.allclose(S.results, [[[1, 0]], [[0, 1]], [[0, 1]]])
+
+    # class TestMechanismOutputLabels:
     def test_dict_of_dicts(self):
         input_labels_dict = {0: {"red": [1, 0],
                                  "green": [0, 1]},
