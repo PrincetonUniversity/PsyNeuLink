@@ -1,13 +1,13 @@
 import logging
 
 import pytest
+import uuid
 
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.composition import Composition
-from psyneulink.scheduling.condition import AfterNCalls, AfterNTrials, AfterPass, All, Always, Any, AtPass, \
-    BeforePass, EveryNCalls, EveryNPasses, JustRan, WhenFinished
+from psyneulink.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, Always, Any, AtPass, BeforeNCalls, BeforePass, ConditionSet, EveryNCalls, EveryNPasses, JustRan, WhenFinished
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -22,6 +22,123 @@ class TestScheduler:
 
     def test_deepcopy(self):
         pass
+
+    def test_create_multiple_contexts(self):
+        comp = Composition()
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        comp.add_mechanism(A)
+
+        comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
+
+        eid2 = uuid.uuid4()
+        eid3 = uuid.uuid4()
+        comp.scheduler_processing._init_counts(execution_id=eid2)
+
+        assert comp.scheduler_processing.clocks[eid2].time.trial == 0
+
+        comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
+
+        assert comp.scheduler_processing.clocks[eid2].time.trial == 0
+
+        comp.scheduler_processing._init_counts(execution_id=eid3, base_execution_id=comp.scheduler_processing.default_execution_id)
+
+        assert comp.scheduler_processing.clocks[eid3].time.trial == 2
+
+    def test_two_compositions_one_scheduler(self):
+        comp1 = Composition()
+        comp2 = Composition()
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        comp1.add_mechanism(A)
+        comp2.add_mechanism(A)
+
+        sched = Scheduler(composition=comp1)
+
+        sched.add_condition(A, BeforeNCalls(A, 5, time_scale=TimeScale.LIFE))
+
+        termination_conds = {}
+        termination_conds[TimeScale.RUN] = AfterNTrials(6)
+        termination_conds[TimeScale.TRIAL] = AfterNPasses(1)
+        comp1.run(
+            inputs={A: [[0], [1], [2], [3], [4], [5]]},
+            scheduler_processing=sched,
+            termination_processing=termination_conds
+        )
+        output = sched.execution_list[comp1._execution_id]
+
+        expected_output = [
+            A, A, A, A, A, set()
+        ]
+        # pprint.pprint(output)
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+        comp2.run(
+            inputs={A: [[0], [1], [2], [3], [4], [5]]},
+            scheduler_processing=sched,
+            termination_processing=termination_conds
+        )
+        output = sched.execution_list[comp2._execution_id]
+
+        expected_output = [
+            A, A, A, A, A, set()
+        ]
+        # pprint.pprint(output)
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_one_composition_two_contexts(self):
+        comp = Composition()
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        comp.add_mechanism(A)
+
+        sched = Scheduler(composition=comp)
+
+        sched.add_condition(A, BeforeNCalls(A, 5, time_scale=TimeScale.LIFE))
+
+        termination_conds = {}
+        termination_conds[TimeScale.RUN] = AfterNTrials(6)
+        termination_conds[TimeScale.TRIAL] = AfterNPasses(1)
+        eid = uuid.uuid4()
+        comp.run(
+            inputs={A: [[0], [1], [2], [3], [4], [5]]},
+            scheduler_processing=sched,
+            termination_processing=termination_conds,
+            execution_id=eid,
+        )
+        output = sched.execution_list[eid]
+
+        expected_output = [
+            A, A, A, A, A, set()
+        ]
+        # pprint.pprint(output)
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+        comp.run(
+            inputs={A: [[0], [1], [2], [3], [4], [5]]},
+            scheduler_processing=sched,
+            termination_processing=termination_conds,
+            execution_id=eid,
+        )
+        output = sched.execution_list[eid]
+
+        expected_output = [
+            A, A, A, A, A, set(), set(), set(), set(), set(), set(), set()
+        ]
+        # pprint.pprint(output)
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+        eid2 = uuid.uuid4()
+        comp.run(
+            inputs={A: [[0], [1], [2], [3], [4], [5]]},
+            scheduler_processing=sched,
+            termination_processing=termination_conds,
+            execution_id=eid2,
+        )
+        output = sched.execution_list[eid2]
+
+        expected_output = [
+            A, A, A, A, A, set()
+        ]
+        # pprint.pprint(output)
+        assert output == pytest.helpers.setify_expected_output(expected_output)
 
 
 class TestLinear:
@@ -209,11 +326,11 @@ class TestLinear:
         termination_conds[TimeScale.RUN] = AfterNTrials(2)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 3)
         comp.run(
-                inputs={A: range(6)},
+                inputs={A: [[0], [1], [2], [3], [4], [5]]},
                 scheduler_processing=sched,
                 termination_processing=termination_conds
         )
-        output = sched.execution_list
+        output = sched.execution_list[comp._execution_id]
 
         expected_output = [
             A, A, A, A, A, B, C, B, C, B, C,
