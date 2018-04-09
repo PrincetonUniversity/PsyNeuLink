@@ -406,9 +406,10 @@ LogEntry = namedtuple('LogEntry', 'time, context, value')
 
 class LogCondition(IntEnum):
     """Used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
+
     .. note::
-      This is meant to be a subset of (and therefore references) ContextFlags bitwise enum, with the exception of
-      TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION value.
+      The values of LogCondition are subset of (and directly reference) the ContextFlags bitwise enum,
+      with the exception of TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION value.
     """
     OFF = ContextFlags.UNSET
     # """No recording."""
