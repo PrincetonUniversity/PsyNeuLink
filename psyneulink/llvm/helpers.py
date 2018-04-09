@@ -54,3 +54,23 @@ def fclamp_const(builder, val, min_val, max_val):
     minval = val.type(min_val)
     maxval = val.type(max_val)
     return fclamp(builder, val, minval, maxval)
+
+def llvm_function_head(pnl_object, ctx, name=None):
+    name = name if name is not None else pnl_object.name
+    func_name = ctx.module.get_unique_name(name)
+    func_ty = ir.FunctionType(ir.VoidType(),
+        (pnl_object.get_param_struct_type().as_pointer(),
+         pnl_object.get_context_struct_type().as_pointer(),
+         pnl_object.get_input_struct_type().as_pointer(),
+         pnl_object.get_output_struct_type().as_pointer()))
+
+    llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+    llvm_func.attributes.add('argmemonly')
+    llvm_func.attributes.add('alwaysinline')
+    for p in llvm_func.args:
+        p.attributes.add('nonnull')
+        p.attributes.add('noalias')
+
+    # Create entry block
+    block = llvm_func.append_basic_block(name="entry")
+    return ir.IRBuilder(block)

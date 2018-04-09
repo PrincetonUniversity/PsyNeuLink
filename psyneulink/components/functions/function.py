@@ -2342,26 +2342,9 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
 
     def _gen_llvm_function(self):
-        func_name = None
-        llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("linear_combination")
-            func_ty = ir.FunctionType(ir.VoidType(),
-                (self.get_param_struct_type().as_pointer(),
-                 self.get_context_struct_type().as_pointer(),
-                 self.get_input_struct_type().as_pointer(),
-                 self.get_output_struct_type().as_pointer()))
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            llvm_func.attributes.add('alwaysinline')
-            for a in llvm_func.args:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-            params, state, vi, vo = llvm_func.args
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+            builder = helpers.llvm_function_head(self, ctx)
+            params, _, vi, vo = builder.function.args
 
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
             inner = functools.partial(self.__gen_llvm_combine, **kwargs)
@@ -2370,7 +2353,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
 
             builder.ret_void()
-        return func_name
+            return builder.function.name
 
     @property
     def offset(self):
@@ -3165,26 +3148,9 @@ class Linear(TransferFunction):  # ---------------------------------------------
         builder.store(val, ptro)
 
     def _gen_llvm_function(self):
-        func_name = None
-        llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("linear")
-            func_ty = ir.FunctionType(ir.VoidType(),
-                (self.get_param_struct_type().as_pointer(),
-                 self.get_context_struct_type().as_pointer(),
-                 self.get_input_struct_type().as_pointer(),
-                 self.get_output_struct_type().as_pointer()))
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            llvm_func.attributes.add('alwaysinline')
-            params, state, vi, vo = llvm_func.args
-            for a in params, vi, vo:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+            builder = helpers.llvm_function_head(self, ctx)
+            params, _, vi, vo = builder.function.args
 
             # Cast input to an array
             vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
@@ -3196,7 +3162,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
 
             builder.ret_void()
-        return func_name
+            return builder.function.name
 
 
     def function(self,
@@ -3427,26 +3393,9 @@ class Exponential(TransferFunction):  # ----------------------------------------
         builder.store(val, ptro)
 
     def _gen_llvm_function(self):
-        func_name = None
-        llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("exponential")
-            func_ty = ir.FunctionType(ir.VoidType(),
-                (self.get_param_struct_type().as_pointer(),
-                 self.get_context_struct_type().as_pointer(),
-                 self.get_input_struct_type().as_pointer(),
-                 self.get_output_struct_type().as_pointer()))
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            llvm_func.attributes.add('alwaysinline')
-            params, state, vi, vo = llvm_func.args
-            for a in params, vi, vo:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+            builder = helpers.llvm_function_head(self, ctx)
+            params, _, vi, vo = builder.function.args
 
             # Cast input to an array
             vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
@@ -3463,7 +3412,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exponential")
 
             builder.ret_void()
-        return func_name
+            return builder.function.name
 
     def function(self,
                  variable=None,
@@ -3655,26 +3604,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
 
     def _gen_llvm_function(self):
-        func_name = None
-        llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("logistic")
-            func_ty = ir.FunctionType(ir.VoidType(),
-                (self.get_param_struct_type().as_pointer(),
-                 self.get_context_struct_type().as_pointer(),
-                 self.get_input_struct_type().as_pointer(),
-                 self.get_output_struct_type().as_pointer()))
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            llvm_func.attributes.add('alwaysinline')
-            params, state, vi, vo = llvm_func.args
-            for a in params, vi, vo:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+            builder = helpers.llvm_function_head(self, ctx)
+            params, _, vi, vo = builder.function.args
 
             # Cast input to an array
             vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
@@ -3686,7 +3618,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "logistic")
 
             builder.ret_void()
-        return func_name
+            return builder.function.name
+
+
     def function(self,
                  variable=None,
                  params=None,
@@ -4161,31 +4095,12 @@ class SoftMax(NormalizingFunction):
 
 
     def _gen_llvm_function(self):
-        func_name = None
-        llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("softmax")
-            func_ty = ir.FunctionType(ir.VoidType(), (
-                self.get_param_struct_type().as_pointer(),
-                self.get_context_struct_type().as_pointer(),
-                self.get_input_struct_type().as_pointer(),
-                self.get_output_struct_type().as_pointer()))
-
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            llvm_func.attributes.add('alwaysinline')
-            params, state, vi, vo = llvm_func.args
-            for a in params, vi, vo:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+            builder = helpers.llvm_function_head(self, ctx)
+            params, _, vi, vo = builder.function.args
 
             # Cast input to an array
             vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
-
 
             exp_sum_ptr = builder.alloca(ctx.float_ty)
             builder.store(ctx.float_ty(0), exp_sum_ptr)
@@ -4223,7 +4138,7 @@ class SoftMax(NormalizingFunction):
 
 
             builder.ret_void()
-        return func_name
+            return builder.function.name
 
     def function(self,
                  variable=None,
@@ -4786,28 +4701,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         return (tuple(np.array(self.matrix).flatten().tolist()),)
 
     def _gen_llvm_function(self):
-        func_name = None
-        llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("linear_matrix")
-            func_ty = ir.FunctionType(ir.VoidType(),
-                (self.get_param_struct_type().as_pointer(),
-                 self.get_context_struct_type().as_pointer(),
-                 self.get_input_struct_type().as_pointer(),
-                 self.get_output_struct_type().as_pointer()))
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            llvm_func.attributes.add('alwaysinline')
-            params, state, vi, vo = llvm_func.args
-            for a in params, vi, vo:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
-
-            builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+            builder = helpers.llvm_function_head(self, ctx)
+            params, _, vi, vo = builder.function.args
 
             # Cast input to an array
             vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
@@ -4818,9 +4714,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
             input_length = ctx.int32_ty(vi.type.pointee.count)
             output_length = ctx.int32_ty(vo.type.pointee.count)
+            builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
             builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
             builder.ret_void()
-        return func_name
+            return builder.function.name
 
     def function(self,
                  variable=None,
@@ -6186,7 +6083,7 @@ class AdaptiveIntegrator(
         rate = builder.load(rate_p)
         offset = builder.load(offset_p)
         if hasattr(self.noise, "__len__") and len(self.noise) != 1:
-            assert len(self.noise) == self.get_input_struct_type().count
+            assert len(self.noise) == vi.type.pointee.count
             noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), index])
         else:
             noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -6213,27 +6110,9 @@ class AdaptiveIntegrator(
 
 
     def _gen_llvm_function(self):
-        func_name = None
-        llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("adaptiveintegrator")
-            func_ty = ir.FunctionType(ir.VoidType(),
-                (self.get_param_struct_type().as_pointer(),
-                 self.get_context_struct_type().as_pointer(),
-                 self.get_input_struct_type().as_pointer(),
-                 self.get_output_struct_type().as_pointer()))
-
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            llvm_func.attributes.add('alwaysinline')
-            params, state, vi, vo = llvm_func.args
-            for p in vi, vo:
-                p.attributes.add('nonnull')
-                p.attributes.add('noalias')
-
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+            builder = helpers.llvm_function_head(self, ctx)
+            params, state, vi, vo = builder.function.args
 
             # Cast input to an array
             vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
@@ -6247,7 +6126,8 @@ class AdaptiveIntegrator(
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "integrate")
 
             builder.ret_void()
-        return func_name
+            return builder.function.name
+
 
     def bin_function(self,
                      variable=None,
@@ -10065,26 +9945,10 @@ class Distance(ObjectiveFunction):
 
 
     def _gen_llvm_function(self):
-        func_name = None
-        llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            func_name = ctx.module.get_unique_name("distance")
-            func_ty = ir.FunctionType(ir.VoidType(), [
-                self.get_param_struct_type().as_pointer(),
-                self.get_context_struct_type().as_pointer(),
-                self.get_input_struct_type().as_pointer(),
-                self.get_output_struct_type().as_pointer()])
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            llvm_func.attributes.add('argmemonly')
-            llvm_func.attributes.add('alwaysinline')
-            _, _, vi, vo = llvm_func.args
-            for a in vi, vo:
-                a.attributes.add('nonnull')
-                a.attributes.add('noalias')
+            builder = helpers.llvm_function_head(self, ctx)
+            params, _, vi, vo = builder.function.args
 
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
             v1 = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
             v2 = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
 
@@ -10162,7 +10026,8 @@ class Distance(ObjectiveFunction):
             vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
             builder.store(ret, vo)
             builder.ret_void()
-        return func_name
+            return builder.function.name
+
 
     def bin_function(self,
                  variable=None,
