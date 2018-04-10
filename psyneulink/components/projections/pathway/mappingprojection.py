@@ -738,34 +738,17 @@ class MappingProjection(PathwayProjection_Base):
         return tuple([self.function_object.get_param_initializer()])
 
 
-    def _gen_llvm_function(self):
-        func_name = None
-        llvm_func = None
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_ty = ir.FunctionType(ir.VoidType(),
-                (self.get_param_struct_type().as_pointer(),
-                 self.get_context_struct_type().as_pointer(),
-                 self.get_input_struct_type().as_pointer(),
-                 self.get_output_struct_type().as_pointer()))
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, state, si, so = builder.function.args
 
-            func_name = ctx.module.get_unique_name("mapping projection")
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            params, state, si, so = llvm_func.args
-            for p in params, state, si, so:
-                p.attributes.add('nonnull')
-                p.attributes.add('noalias')
+        # Get rid of the extra struct wrapper
+        vi = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
-            vi = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        f_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-            main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-            f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            f_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        builder.call(main_function, [f_params, f_state, vi, vo])
 
-            builder.call(main_function, [f_params, f_state, vi, vo])
-
-            builder.ret_void()
-        return func_name
+        return builder
