@@ -2034,7 +2034,8 @@ class Mechanism_Base(Mechanism):
                 new_input = self.integrator_function.reinitialize(*args)
                 if hasattr(self, "initial_value"):
                     self.initial_value = np.atleast_2d(*args)
-                self.value = self.function(new_input, context="REINITIALIZING")
+                # self.value = self.function(new_input, context="REINITIALIZING")  # _mech_execute
+                self.value = super()._execute(variable=new_input, context="REINITIALIZING")
                 self._update_output_states(context="REINITIALIZING")
 
             elif self.integrator_function is None:
@@ -2179,9 +2180,14 @@ class Mechanism_Base(Mechanism):
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
-                return_value = self.function(
+                # return_value = self.function(                  # _mech_execute
+                #     variable=self.instance_defaults.variable,
+                #     params=runtime_params,
+                #     context=context,
+                # )
+                return_value = super()._execute(
                     variable=self.instance_defaults.variable,
-                    params=runtime_params,
+                    runtime_params=runtime_params,
                     context=context,
                 )
                 return np.atleast_2d(return_value)
