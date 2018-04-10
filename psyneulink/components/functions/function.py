@@ -3385,27 +3385,25 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         builder.store(val, ptro)
 
-    def _gen_llvm_function(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            builder = helpers.llvm_function_head(self, ctx)
-            params, _, vi, vo = builder.function.args
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, _, vi, vo = builder.function.args
 
-            # Cast input to an array
-            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+        # Cast input to an array
+        vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
 
-            rate_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            rate = builder.load(rate_ptr)
-            scale = builder.load(scale_ptr)
+        rate_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        rate = builder.load(rate_ptr)
+        scale = builder.load(scale_ptr)
 
-            kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "rate":rate, "scale":scale}
-            inner = functools.partial(self.__gen_llvm_exponential, **kwargs)
+        kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "rate":rate, "scale":scale}
+        inner = functools.partial(self.__gen_llvm_exponential, **kwargs)
 
-            vector_length = ctx.int32_ty(vi.type.pointee.count)
-            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exponential")
+        vector_length = ctx.int32_ty(vi.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exponential")
 
-            builder.ret_void()
-            return builder.function.name
+        return builder
+
 
     def function(self,
                  variable=None,
