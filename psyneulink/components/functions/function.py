@@ -3143,22 +3143,19 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         builder.store(val, ptro)
 
-    def _gen_llvm_function(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            builder = helpers.llvm_function_head(self, ctx)
-            params, _, vi, vo = builder.function.args
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, _, vi, vo = builder.function.args
 
-            # Cast input to an array
-            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+        # Cast input to an array
+        vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
 
-            kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
-            inner = functools.partial(self.__gen_llvm_linear, **kwargs)
+        kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
+        inner = functools.partial(self.__gen_llvm_linear, **kwargs)
 
-            vector_length = ctx.int32_ty(vi.type.pointee.count)
-            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
+        vector_length = ctx.int32_ty(vi.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
 
-            builder.ret_void()
-            return builder.function.name
+        return builder
 
 
     def function(self,
