@@ -1035,6 +1035,33 @@ class Component(object):
             self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self.llvmSymbolName)
         return self.__llvm_bin_function
 
+    def _gen_llvm_function(self):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_ty = ir.FunctionType(ir.VoidType(),
+                (self.get_param_struct_type().as_pointer(),
+                 self.get_context_struct_type().as_pointer(),
+                 self.get_input_struct_type().as_pointer(),
+                 self.get_output_struct_type().as_pointer()))
+
+            func_name = ctx.module.get_unique_name(self.name)
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            params, context, si, so = llvm_func.args
+            for p in params, context, si, so:
+                p.attributes.add('nonnull')
+                p.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+
+            builder = self._gen_llvm_function_body(ctx, builder)
+
+            builder.ret_void()
+        return func_name
+
+
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
