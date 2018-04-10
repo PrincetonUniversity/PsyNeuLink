@@ -238,24 +238,20 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     def _gen_llvm_function_body(self, ctx, builder):
         params, context, si, so = builder.function.args
 
-        is_output_type_list = []
-        for state in self.input_states:
-            is_output_type_list.append(state.get_output_struct_type())
-        is_output_type =  ir.LiteralStructType(is_output_type_list)
-
-        tmp_out = builder.alloca(is_output_type, 1)
+        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        # Allocate temporary storage. We rely on the fact that series
+        # of input state results should match the main function input.
+        is_output = builder.alloca(main_function.args[2].type.pointee, 1)
 
         for i, state in enumerate(self.input_states):
             is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
             is_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_output = builder.gep(tmp_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_in = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_out = builder.gep(is_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
             is_function = ctx.get_llvm_function(state.llvmSymbolName)
-            builder.call(is_function, [is_params, is_context, is_input, is_output])
+            builder.call(is_function, [is_params, is_context, is_in, is_out])
 
-
-        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-        mf_in = builder.bitcast(tmp_out, main_function.args[2].type)
+        mf_in = is_output
         mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
         mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
