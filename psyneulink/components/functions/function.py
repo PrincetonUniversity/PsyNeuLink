@@ -9922,89 +9922,87 @@ class Distance(ObjectiveFunction):
         builder.store(acc_y2_val, acc_y2)
 
 
-    def _gen_llvm_function(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            builder = helpers.llvm_function_head(self, ctx)
-            params, _, vi, vo = builder.function.args
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, _, vi, vo = builder.function.args
 
-            v1 = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
-            v2 = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
+        v1 = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+        v2 = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
 
-            acc_ptr = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty(0), acc_ptr)
+        acc_ptr = builder.alloca(ctx.float_ty)
+        builder.store(ctx.float_ty(0), acc_ptr)
 
-            kwargs = {"ctx":ctx, "v1":v1, "v2":v2, "acc": acc_ptr}
-            if (self.metric == DIFFERENCE):
-                inner = functools.partial(self.__gen_llvm_difference, **kwargs)
-            elif (self.metric == EUCLIDEAN):
-                inner = functools.partial(self.__gen_llvm_euclidean, **kwargs)
-            elif (self.metric == CROSS_ENTROPY):
-                inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
-            elif (self.metric == ENERGY):
-                inner = functools.partial(self.__gen_llvm_energy, **kwargs)
-            elif (self.metric == CORRELATION):
-                inner = functools.partial(self.__gen_llvm_correlate, **kwargs)
-            elif (self.metric == PEARSON):
-                acc_x_ptr = builder.alloca(ctx.float_ty)
-                acc_y_ptr = builder.alloca(ctx.float_ty)
-                acc_xy_ptr = builder.alloca(ctx.float_ty)
-                acc_x2_ptr = builder.alloca(ctx.float_ty)
-                acc_y2_ptr = builder.alloca(ctx.float_ty)
-                for loc in [acc_x_ptr, acc_y_ptr, acc_xy_ptr, acc_x2_ptr, acc_y2_ptr]:
-                    builder.store(ctx.float_ty(0), loc)
-                del kwargs['acc']
-                kwargs['acc_x'] = acc_x_ptr
-                kwargs['acc_y'] = acc_y_ptr
-                kwargs['acc_xy'] = acc_xy_ptr
-                kwargs['acc_x2'] = acc_x2_ptr
-                kwargs['acc_y2'] = acc_y2_ptr
-                inner = functools.partial(self.__gen_llvm_pearson, **kwargs)
-            else:
-                raise RuntimeError('Unsupported metric')
+        kwargs = {"ctx":ctx, "v1":v1, "v2":v2, "acc": acc_ptr}
+        if (self.metric == DIFFERENCE):
+            inner = functools.partial(self.__gen_llvm_difference, **kwargs)
+        elif (self.metric == EUCLIDEAN):
+            inner = functools.partial(self.__gen_llvm_euclidean, **kwargs)
+        elif (self.metric == CROSS_ENTROPY):
+            inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
+        elif (self.metric == ENERGY):
+            inner = functools.partial(self.__gen_llvm_energy, **kwargs)
+        elif (self.metric == CORRELATION):
+            inner = functools.partial(self.__gen_llvm_correlate, **kwargs)
+        elif (self.metric == PEARSON):
+            acc_x_ptr = builder.alloca(ctx.float_ty)
+            acc_y_ptr = builder.alloca(ctx.float_ty)
+            acc_xy_ptr = builder.alloca(ctx.float_ty)
+            acc_x2_ptr = builder.alloca(ctx.float_ty)
+            acc_y2_ptr = builder.alloca(ctx.float_ty)
+            for loc in [acc_x_ptr, acc_y_ptr, acc_xy_ptr, acc_x2_ptr, acc_y2_ptr]:
+                builder.store(ctx.float_ty(0), loc)
+            del kwargs['acc']
+            kwargs['acc_x'] = acc_x_ptr
+            kwargs['acc_y'] = acc_y_ptr
+            kwargs['acc_xy'] = acc_xy_ptr
+            kwargs['acc_x2'] = acc_x2_ptr
+            kwargs['acc_y2'] = acc_y2_ptr
+            inner = functools.partial(self.__gen_llvm_pearson, **kwargs)
+        else:
+            raise RuntimeError('Unsupported metric')
 
 
-            vector_length = ctx.int32_ty(self._variable_length // 2)
-            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, self.metric)
-            sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
-            ret = builder.load(acc_ptr)
-            if (self.metric == EUCLIDEAN):
-                ret = builder.call(sqrt, [ret])
-            elif (self.metric == PEARSON):
-                # (n * acc_xy - acc_x * acc_y) /
-                # sqrt((n * acc_x2 - acc_x^2)*(n * acc_y2 - acc_y^2))
-                fn = ctx.float_ty(self._variable_length // 2)
-                acc_xy = builder.load(acc_xy_ptr)
-                acc_x = builder.load(acc_x_ptr)
-                acc_y = builder.load(acc_y_ptr)
-                acc_x2 = builder.load(acc_x2_ptr)
-                acc_y2 = builder.load(acc_y2_ptr)
+        vector_length = ctx.int32_ty(self._variable_length // 2)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, self.metric)
+        sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
+        ret = builder.load(acc_ptr)
+        if (self.metric == EUCLIDEAN):
+            ret = builder.call(sqrt, [ret])
+        elif (self.metric == PEARSON):
+            # (n * acc_xy - acc_x * acc_y) /
+            # sqrt((n * acc_x2 - acc_x^2)*(n * acc_y2 - acc_y^2))
+            fn = ctx.float_ty(self._variable_length // 2)
+            acc_xy = builder.load(acc_xy_ptr)
+            acc_x = builder.load(acc_x_ptr)
+            acc_y = builder.load(acc_y_ptr)
+            acc_x2 = builder.load(acc_x2_ptr)
+            acc_y2 = builder.load(acc_y2_ptr)
 
-                nxy = builder.fmul(fn, acc_xy)
-                axay = builder.fmul(acc_x, acc_y)
-                numerator = builder.fsub(nxy, axay)
+            nxy = builder.fmul(fn, acc_xy)
+            axay = builder.fmul(acc_x, acc_y)
+            numerator = builder.fsub(nxy, axay)
 
-                nx2 = builder.fmul(fn, acc_x2)
-                sx2 = builder.fmul(acc_x, acc_x)
-                rx = builder.fsub(nx2, sx2)
+            nx2 = builder.fmul(fn, acc_x2)
+            sx2 = builder.fmul(acc_x, acc_x)
+            rx = builder.fsub(nx2, sx2)
 
-                ny2 = builder.fmul(fn, acc_y2)
-                sy2 = builder.fmul(acc_y, acc_y)
-                ry = builder.fsub(ny2, sy2)
+            ny2 = builder.fmul(fn, acc_y2)
+            sy2 = builder.fmul(acc_y, acc_y)
+            ry = builder.fsub(ny2, sy2)
 
-                denominator = builder.fmul(rx, ry)
-                denominator = builder.call(sqrt, [denominator])
+            denominator = builder.fmul(rx, ry)
+            denominator = builder.call(sqrt, [denominator])
 
-                ret = builder.fdiv(numerator, denominator)
+            ret = builder.fdiv(numerator, denominator)
 
-            if self.normalize:
-                norm_factor = self._variable_length // 2
-                if self.metric == ENERGY:
-                    norm_factor = norm_factor ** 2
-                ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
-            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.store(ret, vo)
-            builder.ret_void()
-            return builder.function.name
+        if self.normalize:
+            norm_factor = self._variable_length // 2
+            if self.metric == ENERGY:
+                norm_factor = norm_factor ** 2
+            ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
+        vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        builder.store(ret, vo)
+
+        return builder
 
 
     def bin_function(self,
