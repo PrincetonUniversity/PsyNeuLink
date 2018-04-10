@@ -991,84 +991,66 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         builder.store(val, ptro)
 
-    def _gen_llvm_function(self):
-        func_name = None
-        llvm_func = None
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_ty = ir.FunctionType(ir.VoidType(),
-                (self.get_param_struct_type().as_pointer(),
-                 self.get_context_struct_type().as_pointer(),
-                 self.get_input_struct_type().as_pointer(),
-                 self.get_output_struct_type().as_pointer()))
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, context, si, so = builder.function.args
 
-            func_name = ctx.module.get_unique_name("transfer_machanism")
-            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            params, context, si, so = llvm_func.args
-            for p in params, context, si, so:
-                p.attributes.add('nonnull')
-                p.attributes.add('noalias')
+        # Call input states
+        is_output_type_list = []
+        for state in self.input_states:
+            is_output_type_list.append(state.get_output_struct_type())
+        is_output_type =  ir.LiteralStructType(is_output_type_list)
+        is_out = builder.alloca(is_output_type, 1)
 
-            # Create entry block
-            block = llvm_func.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
+        for i, state in enumerate(self.input_states):
+            is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_output = builder.gep(is_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_function = ctx.get_llvm_function(state.llvmSymbolName)
+            builder.call(is_function, [is_params, is_context, is_input, is_output])
 
-            # Call input states
-            is_output_type_list = []
-            for state in self.input_states:
-                is_output_type_list.append(state.get_output_struct_type())
-            is_output_type =  ir.LiteralStructType(is_output_type_list)
-            is_out = builder.alloca(is_output_type, 1)
+        f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
-            for i, state in enumerate(self.input_states):
-                is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-                is_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-                is_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                is_output = builder.gep(is_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                is_function = ctx.get_llvm_function(state.llvmSymbolName)
-                builder.call(is_function, [is_params, is_context, is_input, is_output])
+        vtmp = is_out
 
-            f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        if self.integrator_mode:
+            assert self.integrator_function is not None
+            integrator_function = ctx.get_llvm_function(self.integrator_function.llvmSymbolName)
+            vi = builder.bitcast(is_out, integrator_function.args[2].type)
+            output_param = integrator_function.args[3]
+            vtmp = builder.alloca(output_param.type.pointee, 1)
+            if_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            builder.call(integrator_function, [if_params, if_context, vi, vtmp])
 
-            vtmp = is_out
+        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        # Cast output array to input type
+        vi_type = main_function.args[2].type
+        vi = builder.bitcast(vtmp, vi_type)
 
-            if self.integrator_mode:
-                assert self.integrator_function is not None
-                integrator_function = ctx.get_llvm_function(self.integrator_function.llvmSymbolName)
-                vi = builder.bitcast(is_out, integrator_function.args[2].type)
-                output_param = integrator_function.args[3]
-                vtmp = builder.alloca(output_param.type.pointee, 1)
-                if_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-                if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
-                builder.call(integrator_function, [if_params, if_context, vi, vtmp])
+        mf_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
+        builder.call(main_function, [mf_params, mf_context, vi, mf_out])
 
-            main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-            # Cast output array to input type
-            vi_type = main_function.args[2].type
-            vi = builder.bitcast(vtmp, vi_type)
+        clip = self.get_current_mechanism_param("clip")
+        if clip is not None:
+            kwargs = {"ctx":ctx, "vo":mf_out, "min_val":clip[0], "max_val":clip[1]}
+            inner = functools.partial(self.__gen_llvm_clamp, **kwargs)
 
-            mf_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
-            builder.call(main_function, [mf_params, mf_context, vi, mf_out])
+            vector_length = ctx.int32_ty(self.get_output_struct_type().elements[0].count)
+            builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
 
-            clip = self.get_current_mechanism_param("clip")
-            if clip is not None:
-                kwargs = {"ctx":ctx, "vo":mf_out, "min_val":clip[0], "max_val":clip[1]}
-                inner = functools.partial(self.__gen_llvm_clamp, **kwargs)
+        os_input = mf_out
+        for i, state in enumerate(self.output_states):
+            os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            os_function = ctx.get_llvm_function(state.llvmSymbolName)
+            builder.call(os_function, [os_params, os_context, os_input, os_output])
 
-                vector_length = ctx.int32_ty(self.get_output_struct_type().elements[0].count)
-                builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
-
-            os_input = mf_out
-            for i, state in enumerate(self.output_states):
-                os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
-                os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
-                os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                os_function = ctx.get_llvm_function(state.llvmSymbolName)
-                builder.call(os_function, [os_params, os_context, os_input, os_output])
-            builder.ret_void()
-        return func_name
+        return builder
 
 
     def _execute(self,
