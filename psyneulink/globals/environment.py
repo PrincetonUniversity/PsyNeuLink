@@ -627,7 +627,7 @@ def run(object,
         else:
             raise RunError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
                            "mechanisms.".format(object.name, len(object.origin_mechanisms)))
-    elif not isinstance(inputs, dict):
+    elif not isinstance(inputs, dict) and not isinstance(inputs, str):
         if len(object.origin_mechanisms) == 1:
             raise RunError("Inputs to {} must be specified in a list or in a dictionary with the origin mechanism({}) "
                            "as its only key".format(object.name, object.origin_mechanisms[0].name))
@@ -837,8 +837,13 @@ def _target_matches_input_state_variable(target, input_state_variable):
 def _adjust_stimulus_dict(obj, stimuli):
 
     #  STEP 0:  parse any labels into array entries
-    if any(hasattr(mech, "input_labels_dict") for mech in obj.origin_mechanisms):
-        _parse_input_labels(obj, stimuli)
+    need_parse_input_labels = []
+    for mech in obj.origin_mechanisms:
+        if hasattr(mech, "input_labels_dict"):
+            if mech.input_labels_dict is not None and mech.input_labels_dict != {}:
+                need_parse_input_labels.append(mech)
+    if len(need_parse_input_labels) > 0:
+        stimuli = _parse_input_labels(obj, stimuli, need_parse_input_labels)
 
     # STEP 1: validate that there is a one-to-one mapping of input entries to origin mechanisms
 
@@ -919,8 +924,13 @@ def _adjust_stimulus_dict(obj, stimuli):
 def _adjust_target_dict(component, target_dict):
 
     #  STEP 0:  parse any labels into array entries
-    if any(mech.input_labels_dict for mech in component.target_mechanisms):
-        _parse_input_labels(component, target_dict)
+    need_parse_input_labels = []
+    for mech in component.target_mechanisms:
+        if hasattr(mech, "input_labels_dict"):
+            if mech.input_labels_dict is not None and mech.input_labels_dict != {}:
+                need_parse_input_labels.append(mech)
+    if len(need_parse_input_labels) > 0:
+        _parse_input_labels(component, target_dict, need_parse_input_labels)
 
     # STEP 1: validate that there is a one-to-one mapping of target entries and target mechanisms
     for target_mechanism in component.target_mechanisms:
@@ -990,7 +1000,7 @@ def _adjust_target_dict(component, target_dict):
     return adjusted_targets, num_targets
 
 @tc.typecheck
-def _parse_input_labels(obj, stimuli:dict):
+def _parse_input_labels(obj, stimuli, mechanisms_to_parse):
 
     def get_input_for_label(mech, key):
         """check mech.input_labels_dict for key"""
@@ -1000,79 +1010,83 @@ def _parse_input_labels(obj, stimuli:dict):
         except KeyError:
             raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
                            format(key, obj.name, INPUT_LABELS_DICT, mech.name))
+    if len(mechanisms_to_parse) == 1:
+        if isinstance(stimuli, float):
+            return stimuli
+        elif isinstance(stimuli, str):
+            stimuli = {mechanisms_to_parse[0]: [stimuli]}
+    # for mech, inputs in stimuli.items():
+    for mech in mechanisms_to_parse:
+        inputs = stimuli[mech]
+        # Check for subdicts
+        subdicts = False
+        for k in mech.input_labels_dict:
+            value = mech.input_labels_dict[k]
+            if isinstance(value, dict):
+                subdicts = True
+                break
 
-    for mech, inputs in stimuli.items():
-        if hasattr(mech, "input_labels_dict"):
-            # Check for subdicts
-            subdicts = False
+        if subdicts:    # If there are subdicts, validate
+            if len(mech.input_labels_dict) != len(mech.input_states):
+                raise RunError("If input labels are specified at the level of input states, then one input state label "
+                               "sub-dictionary must be provided for each input state. {} has {} input state label "
+                               "sub-dictionaries, but {} input states.".format(mech.name,
+                                                                               len(mech.input_labels_dict),
+                                                                               len(mech.input_states)))
             for k in mech.input_labels_dict:
                 value = mech.input_labels_dict[k]
-                if isinstance(value, dict):
-                    subdicts = True
-                    break
+                if not isinstance(value, dict):
+                    raise RunError("If input labels are specified at the level of input states, then one input state "
+                                   "label sub-dictionary must be provided for each input state. A sub-dictionary was "
+                                   "not specified for the input state {} of {}".format(k, mech.name))
 
-            if subdicts:    # If there are subdicts, validate
-                if len(mech.input_labels_dict) != len(mech.input_states):
-                    raise RunError("If input labels are specified at the level of input states, then one input state label "
-                                   "sub-dictionary must be provided for each input state. {} has {} input state label "
-                                   "sub-dictionaries, but {} input states.".format(mech.name,
-                                                                                   len(mech.input_labels_dict),
-                                                                                   len(mech.input_states)))
+            # If there is only one subdict, then we already know that we are in the correct input state
+            num_input_labels = len(mech.input_labels_dict)
+            if num_input_labels == 1:
+                # there is only one key, but we don't know what it is
                 for k in mech.input_labels_dict:
-                    value = mech.input_labels_dict[k]
-                    if not isinstance(value, dict):
-                        raise RunError("If input labels are specified at the level of input states, then one input state "
-                                       "label sub-dictionary must be provided for each input state. A sub-dictionary was "
-                                       "not specified for the input state {} of {}".format(k, mech.name))
-
-                # If there is only one subdict, then we already know that we are in the correct input state
-                num_input_labels = len(mech.input_labels_dict)
-                if num_input_labels == 1:
-                    # there is only one key, but we don't know what it is
-                    for k in mech.input_labels_dict:
-                        for i in range(len(inputs)):
-                            # we can use [0] because we know that there is only one input state
-                            if isinstance(inputs[i][0], str):
-                                inputs[i][0] = mech.input_labels_dict[k][inputs[i][0]]
-
-                else:
-                    for trial_stimulus in inputs:
-                        for input_state_index in range(len(trial_stimulus)):
-                            if isinstance(trial_stimulus[input_state_index], str):
-                                label_to_parse = trial_stimulus[input_state_index]
-                                input_state_name = mech.input_states[input_state_index].name
-                                if input_state_index in mech.input_labels_dict:
-                                    trial_stimulus[input_state_index] = \
-                                        mech.input_labels_dict[input_state_index][label_to_parse]
-                                elif input_state_name in mech.input_labels_dict:
-                                    trial_stimulus[input_state_index] = \
-                                        mech.input_labels_dict[input_state_name][label_to_parse]
+                    for i in range(len(inputs)):
+                        if isinstance(inputs[i], str):
+                            inputs[i] = mech.input_labels_dict[k][inputs[i]]
+                        # we can use [0] because we know that there is only one input state
+                        elif isinstance(inputs[i][0], str):
+                            inputs[i][0] = mech.input_labels_dict[k][inputs[i][0]]
 
             else:
-                for i, stim in enumerate(inputs):
-                    # "Burrow" down to determine whether there's a number at the "bottom";
-                    #     if so, leave as is; otherwise, check if its a string and, if so, get value for label
-                    if isinstance(stim, (list, np.ndarray)): # format of stimuli dict is at least: [[???]...?]
-                        for j, item in enumerate(stim):
-                            if isinstance(item, (Number, list, np.ndarray)): # format of stimuli dict is [[int or []...?]]
-                                continue # leave input item as is
-                            elif isinstance(item, str): # format of stimuli dict is [[label]...]
-                                # inputs[i][j] = get_input_for_label(mech, item, stim)
-                                inputs[i][j] = get_input_for_label(mech, item)
-                            else:
-                                raise RunError("Unrecognized specification ({}) in stimulus {} of entry "
-                                               "for {} in inputs dictionary specified for {}".
-                                               format(item, i, mech.name, obj.name))
-                    elif isinstance(stim, str):
-                        inputs[i] = get_input_for_label(mech, stim)
-                    else:
-                        raise RunError("Unrecognized specification ({}) for stimulus {} in entry "
-                                       "for {} of inputs dictionary specified for {}".
-                                       format(stim, i, mech.name, obj.name))
+                for trial_stimulus in inputs:
+                    for input_state_index in range(len(trial_stimulus)):
+                        if isinstance(trial_stimulus[input_state_index], str):
+                            label_to_parse = trial_stimulus[input_state_index]
+                            input_state_name = mech.input_states[input_state_index].name
+                            if input_state_index in mech.input_labels_dict:
+                                trial_stimulus[input_state_index] = \
+                                    mech.input_labels_dict[input_state_index][label_to_parse]
+                            elif input_state_name in mech.input_labels_dict:
+                                trial_stimulus[input_state_index] = \
+                                    mech.input_labels_dict[input_state_name][label_to_parse]
+
         else:
-            if any(isinstance(input, str) for input in inputs) and not mech.input_labels_dict:
-                raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
-                               format(mech.name, INPUT_LABELS_DICT))
+            for i, stim in enumerate(inputs):
+                # "Burrow" down to determine whether there's a number at the "bottom";
+                #     if so, leave as is; otherwise, check if its a string and, if so, get value for label
+                if isinstance(stim, (list, np.ndarray)): # format of stimuli dict is at least: [[???]...?]
+                    for j, item in enumerate(stim):
+                        if isinstance(item, (Number, list, np.ndarray)): # format of stimuli dict is [[int or []...?]]
+                            continue # leave input item as is
+                        elif isinstance(item, str): # format of stimuli dict is [[label]...]
+                            # inputs[i][j] = get_input_for_label(mech, item, stim)
+                            inputs[i][j] = get_input_for_label(mech, item)
+                        else:
+                            raise RunError("Unrecognized specification ({}) in stimulus {} of entry "
+                                           "for {} in inputs dictionary specified for {}".
+                                           format(item, i, mech.name, obj.name))
+                elif isinstance(stim, str):
+                    inputs[i] = get_input_for_label(mech, stim)
+                else:
+                    raise RunError("Unrecognized specification ({}) for stimulus {} in entry "
+                                   "for {} of inputs dictionary specified for {}".
+                                   format(stim, i, mech.name, obj.name))
+        return stimuli
 def _validate_target_function(target_function, target_mechanism, sample_mechanism):
 
     generated_targets = np.atleast_1d(target_function())
