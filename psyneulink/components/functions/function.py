@@ -4320,26 +4320,27 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         matrix = self.get_current_function_param(MATRIX)
         return np.dot(variable, matrix)
 
-    def keyword(self, keyword):
+    @staticmethod
+    def keyword(obj, keyword):
 
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         rows = None
         cols = None
         # use of variable attribute here should be ok because it's using it as a format/type
-        if isinstance(self, MappingProjection):
-            if isinstance(self.sender.value, numbers.Number):
+        if isinstance(obj, MappingProjection):
+            if isinstance(obj.sender.value, numbers.Number):
                 rows = 1
             else:
-                rows = len(self.sender.value)
-            if isinstance(self.receiver.instance_defaults.variable, numbers.Number):
+                rows = len(obj.sender.value)
+            if isinstance(obj.receiver.instance_defaults.variable, numbers.Number):
                 cols = 1
             else:
-                cols = len(self.receiver.instance_defaults.variable)
+                cols = len(obj.receiver.instance_defaults.variable)
         matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:
             raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
-                                format(keyword, self.name, self.owner_name))
+                                format(keyword, obj.name, obj.owner_name))
         else:
             return matrix
 
