@@ -2341,19 +2341,15 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         builder.store(val, ptro)
 
 
-    def _gen_llvm_function(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            builder = helpers.llvm_function_head(self, ctx)
-            params, _, vi, vo = builder.function.args
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, _, vi, vo = builder.function.args
 
-            kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
-            inner = functools.partial(self.__gen_llvm_combine, **kwargs)
+        kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
+        inner = functools.partial(self.__gen_llvm_combine, **kwargs)
 
-            vector_length = ctx.int32_ty(vo.type.pointee.count)
-            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
-
-            builder.ret_void()
-            return builder.function.name
+        vector_length = ctx.int32_ty(vo.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
+        return builder
 
     @property
     def offset(self):
