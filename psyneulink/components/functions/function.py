@@ -4082,51 +4082,48 @@ class SoftMax(NormalizingFunction):
         builder.store(val, ptro)
 
 
-    def _gen_llvm_function(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            builder = helpers.llvm_function_head(self, ctx)
-            params, _, vi, vo = builder.function.args
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, _, vi, vo = builder.function.args
 
-            # Cast input to an array
-            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+        # Cast input to an array
+        vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
 
-            exp_sum_ptr = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty(0), exp_sum_ptr)
-            max_ptr = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty(float('-inf')), max_ptr)
-            max_ind_ptr = builder.alloca(ctx.int32_ty)
-            gain_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            gain = builder.load(gain_ptr)
+        exp_sum_ptr = builder.alloca(ctx.float_ty)
+        builder.store(ctx.float_ty(0), exp_sum_ptr)
+        max_ptr = builder.alloca(ctx.float_ty)
+        builder.store(ctx.float_ty(float('-inf')), max_ptr)
+        max_ind_ptr = builder.alloca(ctx.int32_ty)
+        gain_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        gain = builder.load(gain_ptr)
 
-            kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "max_ptr": max_ptr, "gain":gain, "max_ind_ptr":max_ind_ptr, "exp_sum_ptr":exp_sum_ptr}
-            inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
+        kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "max_ptr": max_ptr, "gain":gain, "max_ind_ptr":max_ind_ptr, "exp_sum_ptr":exp_sum_ptr}
+        inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
 
-            vector_length = ctx.int32_ty(vi.type.pointee.count)
-            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
+        vector_length = ctx.int32_ty(vi.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
 
-            output_type = self.params[OUTPUT_TYPE]
-            exp_sum = builder.load(exp_sum_ptr)
-            index = builder.load(max_ind_ptr)
-            ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        output_type = self.params[OUTPUT_TYPE]
+        exp_sum = builder.load(exp_sum_ptr)
+        index = builder.load(max_ind_ptr)
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-            if output_type == ALL:
-                kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "gain":gain, "exp_sum":exp_sum}
-                inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
-                builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_div")
-            elif output_type == MAX_VAL:
-                ptri = builder.gep(vi, [ctx.int32_ty(0), index])
-                exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
-                orig_val = builder.load(ptri)
-                val = builder.fmul(orig_val, gain)
-                val = builder.call(exp_f, [val])
-                val = builder.fdiv(val, exp_sum)
-                builder.store(val, ptro)
-            elif output_type == MAX_INDICATOR:
-                builder.store(ctx.float_ty(1), ptro)
+        if output_type == ALL:
+            kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "gain":gain, "exp_sum":exp_sum}
+            inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
+            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_div")
+        elif output_type == MAX_VAL:
+            ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+            exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+            orig_val = builder.load(ptri)
+            val = builder.fmul(orig_val, gain)
+            val = builder.call(exp_f, [val])
+            val = builder.fdiv(val, exp_sum)
+            builder.store(val, ptro)
+        elif output_type == MAX_INDICATOR:
+            builder.store(ctx.float_ty(1), ptro)
 
+        return builder
 
-            builder.ret_void()
-            return builder.function.name
 
     def function(self,
                  variable=None,
