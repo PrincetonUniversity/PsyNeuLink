@@ -4685,24 +4685,23 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def get_param_initializer(self):
         return (tuple(np.array(self.matrix).flatten().tolist()),)
 
-    def _gen_llvm_function(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            builder = helpers.llvm_function_head(self, ctx)
-            params, _, vi, vo = builder.function.args
 
-            # Cast input to an array
-            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, _, vi, vo = builder.function.args
 
-            vec_in = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            matrix = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
-            vec_out = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # Cast input to an array
+        vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
 
-            input_length = ctx.int32_ty(vi.type.pointee.count)
-            output_length = ctx.int32_ty(vo.type.pointee.count)
-            builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
-            builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
-            builder.ret_void()
-            return builder.function.name
+        vec_in = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        matrix = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+        vec_out = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        input_length = ctx.int32_ty(vi.type.pointee.count)
+        output_length = ctx.int32_ty(vo.type.pointee.count)
+        builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
+        builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
+        return builder
+
 
     def function(self,
                  variable=None,
