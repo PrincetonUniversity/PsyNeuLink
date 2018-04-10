@@ -6093,24 +6093,18 @@ class AdaptiveIntegrator(
         builder.store(res, prev_ptr)
 
 
-    def _gen_llvm_function(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            builder = helpers.llvm_function_head(self, ctx)
-            params, state, vi, vo = builder.function.args
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, state, vi, vo = builder.function.args
 
-            # Cast input to an array
-            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+        # Cast input to an array
+        vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
 
-            vi = builder.gep(vi, [ctx.int32_ty(0)])
-            vo = builder.gep(vo, [ctx.int32_ty(0)])
+        kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params": params, "state":state}
+        inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
+        vector_length = ctx.int32_ty(vi.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "integrate")
 
-            kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params": params, "state":state}
-            inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
-            vector_length = ctx.int32_ty(vi.type.pointee.count)
-            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "integrate")
-
-            builder.ret_void()
-            return builder.function.name
+        return builder
 
 
     def bin_function(self,
