@@ -9807,12 +9807,6 @@ class Distance(ObjectiveFunction):
 
         self.functionOutputType = None
 
-    # Override defaults. We only output single value
-    @property
-    def _result_length(self):
-        return 1;
-
-
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
         """Validate that variable had two items of equal length
 
@@ -9845,6 +9839,16 @@ class Distance(ObjectiveFunction):
                         variable[1]
                     )
                 )
+
+    @property
+    def _result_length(self):
+        # Override defaults. We only output single value
+        return 1
+
+    def get_output_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ir.ArrayType(ctx.float_ty, self._result_length)
+
 
     def __gen_llvm_difference(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
