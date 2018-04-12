@@ -4696,8 +4696,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def _gen_llvm_function_body(self, ctx, builder):
         params, _, vi, vo = builder.function.args
 
-        # Cast input to an array
-        vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+        # Eliminate one dimension for 2d variable
+        if self.get_current_function_param(VARIABLE).ndim > 1:
+            assert self.get_current_function_param(VARIABLE).shape[0] == 1
+            vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         vec_in = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
         matrix = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -6103,8 +6105,10 @@ class AdaptiveIntegrator(
     def _gen_llvm_function_body(self, ctx, builder):
         params, state, vi, vo = builder.function.args
 
-        # Cast input to an array
-        vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+        # Eliminate one dimension for 2d variable
+        if self.get_current_function_param(VARIABLE).ndim > 1:
+            assert self.get_current_function_param(VARIABLE).shape[0] == 1
+            vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params": params, "state":state}
         inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
