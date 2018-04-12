@@ -4407,10 +4407,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         self._matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
-    @property
-    def _result_length(self):
-        return self.matrix.shape[1]
-
     # def _validate_variable(self, variable, context=None):
     #     """Insure that variable passed to LinearMatrix is a max 2D np.array
     #
@@ -4689,6 +4685,16 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 return matrix
         else:
             return np.array(specification)
+
+    @property
+    def _result_length(self):
+        return self.matrix.shape[1]
+
+
+    def get_output_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return ir.ArrayType(ctx.float_ty, self._result_length)
+
 
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
