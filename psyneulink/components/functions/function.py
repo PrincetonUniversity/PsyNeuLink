@@ -3012,6 +3012,23 @@ class TransferFunction(Function_Base):
     def additive(self, val):
         setattr(self, self.additive_param, val)
 
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, _, vi, vo = builder.function.args
+
+        # Eliminate one dimension for 2d variable
+        if self.get_current_function_param(VARIABLE).ndim > 1:
+            assert self.get_current_function_param(VARIABLE).shape[0] == 1
+            vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
+        inner = functools.partial(self._gen_llvm_transfer, **kwargs)
+
+        vector_length = ctx.int32_ty(vi.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "transfer_loop")
+
+        return builder
+
 
 class Linear(TransferFunction):  # -------------------------------------------------------------------------------------
     """
@@ -3136,7 +3153,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         return (self.get_current_function_param(SLOPE),
                 self.get_current_function_param(INTERCEPT))
 
-    def __gen_llvm_linear(self, builder, index, ctx, vi, vo, params):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         slope_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -3149,23 +3166,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
         val = builder.fadd(val, intercept)
 
         builder.store(val, ptro)
-
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, _, vi, vo = builder.function.args
-
-        if self.get_current_function_param(VARIABLE).ndim > 1:
-            assert self.get_current_function_param(VARIABLE).shape[0] == 1
-            vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
-        inner = functools.partial(self.__gen_llvm_linear, **kwargs)
-
-        vector_length = ctx.int32_ty(vi.type.pointee.count)
-        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
-
-        return builder
-
 
     def function(self,
                  variable=None,
@@ -3382,9 +3382,14 @@ class Exponential(TransferFunction):  # ----------------------------------------
         return (self.get_current_function_param(RATE),
                 self.get_current_function_param(SCALE))
 
-    def __gen_llvm_exponential(self, builder, index, ctx, vi, vo, rate, scale):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+
+        rate_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        rate = builder.load(rate_ptr)
+        scale = builder.load(scale_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
@@ -3393,29 +3398,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
         val = builder.fmul(val, scale)
 
         builder.store(val, ptro)
-
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, _, vi, vo = builder.function.args
-
-        # Eliminate one dimension for 2d variable
-        if self.get_current_function_param(VARIABLE).ndim > 1:
-            assert self.get_current_function_param(VARIABLE).shape[0] == 1
-            vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        rate_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        rate = builder.load(rate_ptr)
-        scale = builder.load(scale_ptr)
-
-        kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "rate":rate, "scale":scale}
-        inner = functools.partial(self.__gen_llvm_exponential, **kwargs)
-
-        vector_length = ctx.int32_ty(vi.type.pointee.count)
-        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exponential")
-
-        return builder
-
 
     def function(self,
                  variable=None,
@@ -3584,7 +3566,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                 self.get_current_function_param(BIAS),
                 self.get_current_function_param(OFFSET))
 
-    def __gen_llvm_logistic(self, builder, index, ctx, vi, vo, params):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         gain_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -3604,24 +3586,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
         val = builder.fdiv(ctx.float_ty(1), val)
 
         builder.store(val, ptro)
-
-
-    def _gen_llvm_function_body(self, ctx, builder):
-        params, _, vi, vo = builder.function.args
-
-        # Eliminate one dimension for 2d variable
-        if self.get_current_function_param(VARIABLE).ndim > 1:
-            assert self.get_current_function_param(VARIABLE).shape[0] == 1
-            vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
-        inner = functools.partial(self.__gen_llvm_logistic, **kwargs)
-
-        vector_length = ctx.int32_ty(vi.type.pointee.count)
-        builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "logistic")
-
-        return builder
 
 
     def function(self,
