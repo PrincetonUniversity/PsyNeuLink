@@ -721,14 +721,12 @@ class MappingProjection(PathwayProjection_Base):
 
     def get_output_struct_type(self):
         # This should be in sync with mechanism input struct type
-        vec_ty = [self.function_object.get_output_struct_type()]
-        return ir.LiteralStructType(vec_ty)
+        return self.function_object.get_output_struct_type()
 
 
     def get_input_struct_type(self):
         # This should be in sync with mechanism output struct type
-        vec_ty = [self.function_object.get_input_struct_type()]
-        return ir.LiteralStructType(vec_ty)
+        return self.function_object.get_input_struct_type()
 
 
     def get_param_initializer(self):
@@ -740,11 +738,7 @@ class MappingProjection(PathwayProjection_Base):
 
 
     def _gen_llvm_function_body(self, ctx, builder):
-        params, state, si, so = builder.function.args
-
-        # Get rid of the extra struct wrapper
-        vi = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        params, state, vi, vo = builder.function.args
 
         main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
         builder.call(main_function, [params, state, vi, vo])

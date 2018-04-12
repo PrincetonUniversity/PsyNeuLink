@@ -1174,7 +1174,9 @@ class Composition(object):
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
                 mech_vi = builder.alloca(mech.get_input_struct_type())
                 proj_vo = builder.bitcast(mech_vi, proj_function.args[3].type)
-                builder.call(proj_function, [proj_params, proj_context, vi, proj_vo])
+                # This should use proper output state instead of 0
+                proj_vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                builder.call(proj_function, [proj_params, proj_context, proj_vi, proj_vo])
                 vi = mech_vi
 
             params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
