@@ -4674,15 +4674,12 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def _gen_llvm_function_body(self, ctx, builder):
         params, _, vi, vo = builder.function.args
 
-        # Eliminate one dimension for 2d variable
-        if self.get_current_function_param(VARIABLE).ndim > 1:
-            assert self.get_current_function_param(VARIABLE).shape[0] == 1
-            vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # Restrict to 1d arrays
+        assert self.get_current_function_param(VARIABLE).ndim == 1
 
         vec_in = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        matrix = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
         vec_out = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        matrix = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
 
         input_length = ctx.int32_ty(vi.type.pointee.count)
         output_length = ctx.int32_ty(vo.type.pointee.count)
