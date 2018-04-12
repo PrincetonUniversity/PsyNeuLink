@@ -756,8 +756,8 @@ class Function_Base(Function):
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
 
     def get_output_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ir.ArrayType(ctx.float_ty, self._result_length)
+        # Keep format by default
+        return self.get_input_struct_type()
 
 
     def bin_function(self,
@@ -3156,6 +3156,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         if self.get_current_function_param(VARIABLE).ndim > 1:
             assert self.get_current_function_param(VARIABLE).shape[0] == 1
             vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
         inner = functools.partial(self.__gen_llvm_linear, **kwargs)
@@ -3400,6 +3401,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         if self.get_current_function_param(VARIABLE).ndim > 1:
             assert self.get_current_function_param(VARIABLE).shape[0] == 1
             vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         rate_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
@@ -3611,6 +3613,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         if self.get_current_function_param(VARIABLE).ndim > 1:
             assert self.get_current_function_param(VARIABLE).shape[0] == 1
             vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
         inner = functools.partial(self.__gen_llvm_logistic, **kwargs)
@@ -4101,6 +4104,7 @@ class SoftMax(NormalizingFunction):
         if self.get_current_function_param(VARIABLE).ndim > 1:
             assert self.get_current_function_param(VARIABLE).shape[0] == 1
             vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(0), exp_sum_ptr)
@@ -4713,6 +4717,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         if self.get_current_function_param(VARIABLE).ndim > 1:
             assert self.get_current_function_param(VARIABLE).shape[0] == 1
             vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         vec_in = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
         matrix = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -6072,7 +6077,7 @@ class AdaptiveIntegrator(
 
     def get_context_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
-            previous_ty = self.get_output_struct_type()
+            previous_ty = ir.ArrayType(ctx.float_ty, self._result_length)
             context_type = ir.LiteralStructType([previous_ty])
         return context_type
 
@@ -6122,6 +6127,7 @@ class AdaptiveIntegrator(
         if self.get_current_function_param(VARIABLE).ndim > 1:
             assert self.get_current_function_param(VARIABLE).shape[0] == 1
             vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params": params, "state":state}
         inner = functools.partial(self.__gen_llvm_integrate, **kwargs)

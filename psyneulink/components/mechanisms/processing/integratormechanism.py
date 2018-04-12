@@ -258,11 +258,11 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         builder.call(main_function, [mf_params, mf_context, mf_in, mf_out])
 
-        os_input = mf_out
         for i, state in enumerate(self.output_states):
             os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            os_input = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
             os_function = ctx.get_llvm_function(state.llvmSymbolName)
             builder.call(os_function, [os_params, os_context, os_input, os_output])
 
