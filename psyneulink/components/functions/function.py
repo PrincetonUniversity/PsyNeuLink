@@ -4064,11 +4064,8 @@ class SoftMax(NormalizingFunction):
     def _gen_llvm_function_body(self, ctx, builder):
         params, _, vi, vo = builder.function.args
 
-        # Eliminate one dimension for 2d variable
-        if self.get_current_function_param(VARIABLE).ndim > 1:
-            assert self.get_current_function_param(VARIABLE).shape[0] == 1
-            vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # Restrict to 1d arrays
+        assert self.get_current_function_param(VARIABLE).ndim == 1
 
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(0), exp_sum_ptr)
