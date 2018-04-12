@@ -1173,7 +1173,9 @@ class Composition(object):
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
                 mech_vi = builder.alloca(mech.get_input_struct_type())
-                proj_vo = builder.bitcast(mech_vi, proj_function.args[3].type)
+                # This should use proper input state and projection index
+                # instead of 0,0
+                proj_vo = builder.gep(mech_vi, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
                 # This should use proper output state instead of 0
                 proj_vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.call(proj_function, [proj_params, proj_context, proj_vi, proj_vo])
