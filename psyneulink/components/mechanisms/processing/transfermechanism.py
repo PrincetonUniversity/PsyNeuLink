@@ -994,12 +994,17 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _gen_llvm_function_body(self, ctx, builder):
         params, context, si, so = builder.function.args
 
+        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        if self.integrator_mode:
+            assert self.integrator_function is not None
+            integrator_function = ctx.get_llvm_function(self.integrator_function.llvmSymbolName)
+            is_out_type = integrator_function.args[2].type.pointee
+        else:
+            is_out_type = main_function.args[2].type.pointee
+
+
         # Call input states
-        is_output_type_list = []
-        for state in self.input_states:
-            is_output_type_list.append(state.get_output_struct_type())
-        is_output_type =  ir.LiteralStructType(is_output_type_list)
-        is_out = builder.alloca(is_output_type, 1)
+        is_out = builder.alloca(is_out_type, 1)
 
         for i, state in enumerate(self.input_states):
             is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -1011,19 +1016,16 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
 
         if self.integrator_mode:
-            assert self.integrator_function is not None
-            integrator_function = ctx.get_llvm_function(self.integrator_function.llvmSymbolName)
-            if_in = builder.bitcast(is_out, integrator_function.args[2].type)
+            if_in = is_out
             if_out = builder.alloca(integrator_function.args[3].type.pointee, 1)
             if_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
             builder.call(integrator_function, [if_params, if_context, if_in, if_out])
             mf_in = builder.bitcast(if_out, main_function.args[2].type)
         else:
-            mf_in = builder.bitcast(is_out, main_function.args[2].type)
+            mf_in = is_out
 
         mf_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
