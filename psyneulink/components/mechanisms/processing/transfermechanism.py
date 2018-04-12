@@ -1023,24 +1023,34 @@ class TransferMechanism(ProcessingMechanism_Base):
             if_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
             if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
             builder.call(integrator_function, [if_params, if_context, if_in, if_out])
-            mf_in = builder.bitcast(if_out, main_function.args[2].type)
+            mf_in = if_out
         else:
             mf_in = is_out
 
         mf_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
-        builder.call(main_function, [mf_params, mf_context, mf_in, mf_out])
 
-        out_arr = builder.bitcast(mf_out, ir.ArrayType(ctx.float_ty, self.function_object._result_length).as_pointer())
+        if isinstance(self.function_object, TransferFunction):
+            mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
+            builder.call(main_function, [mf_params, mf_context, mf_in, mf_out])
+        else:
+            # Call for each input state separately
+            mf_out = builder.alloca(ir.ArrayType(main_function.args[3].type.pointee, len(self.input_states)), 1)
+            for i, state in enumerate(self.input_states):
+                mf_in_local = builder.gep(mf_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                builder.call(main_function, [mf_params, mf_context, mf_in_local, mf_out_local])
+
         clip = self.get_current_mechanism_param("clip")
         if clip is not None:
-            kwargs = {"ctx":ctx, "vo":out_arr, "min_val":clip[0], "max_val":clip[1]}
-            inner = functools.partial(self.__gen_llvm_clamp, **kwargs)
+            for i in range(mf_out.type.pointee.count):
+                mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+                kwargs = {"ctx":ctx, "vo":mf_out_local, "min_val":clip[0], "max_val":clip[1]}
+                inner = functools.partial(self.__gen_llvm_clamp, **kwargs)
+                vector_length = ctx.int32_ty(mf_out_local.type.pointee.count)
+                builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "clip")
 
-            vector_length = ctx.int32_ty(main_function.args[3].type.pointee.count)
-            builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "clip")
-
+        out_arr = builder.bitcast(mf_out, ir.ArrayType(ctx.float_ty, self.function_object._result_length).as_pointer())
         os_input = out_arr
         for i, state in enumerate(self.output_states):
             os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
