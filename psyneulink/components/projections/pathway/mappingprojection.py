@@ -712,14 +712,11 @@ class MappingProjection(PathwayProjection_Base):
         self.parameter_states[MATRIX].logPref = setting
 
     def get_param_struct_type(self):
-        param_type_list = [self.function_object.get_param_struct_type()]
-        return ir.LiteralStructType(param_type_list)
+        return self.function_object.get_param_struct_type()
 
 
     def get_context_struct_type(self):
-        context_type_list = [self.function_object.get_context_struct_type()]
-        context_type = ir.LiteralStructType(context_type_list)
-        return context_type
+        return self.function_object.get_context_struct_type()
 
 
     def get_output_struct_type(self):
@@ -735,7 +732,11 @@ class MappingProjection(PathwayProjection_Base):
 
 
     def get_param_initializer(self):
-        return tuple([self.function_object.get_param_initializer()])
+        return self.function_object.get_param_initializer()
+
+
+    def get_context_initializer(self):
+        return self.function_object.get_context_initializer()
 
 
     def _gen_llvm_function_body(self, ctx, builder):
@@ -746,9 +747,6 @@ class MappingProjection(PathwayProjection_Base):
         vo = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
-        f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        f_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        builder.call(main_function, [f_params, f_state, vi, vo])
+        builder.call(main_function, [params, state, vi, vo])
 
         return builder
