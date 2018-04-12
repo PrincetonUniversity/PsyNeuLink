@@ -2274,6 +2274,13 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
 
+
+    def get_output_struct_type(self):
+        default_var = np.atleast_2d(self.get_current_function_param(VARIABLE))
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var[0])
+
+
     def get_param_initializer(self):
         param_init = {}
         for p in SCALE, OFFSET:
