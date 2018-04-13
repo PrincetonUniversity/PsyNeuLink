@@ -990,8 +990,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if isinstance(self.function_object, TransferFunction):
 
-            outputs = self.function(variable=current_input, params= runtime_params) # _mech_execute
-            # outputs = self._execute(variable=current_input, runtime_params=runtime_params)
+            # outputs = self.function(variable=current_input, params= runtime_params) # _mech_execute
+            outputs = super()._execute(variable=current_input, runtime_params=runtime_params, context=context)
             if clip is not None:
                 minCapIndices = np.where(outputs < clip[0])
                 maxCapIndices = np.where(outputs > clip[1])

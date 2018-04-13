@@ -1178,10 +1178,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
 
             function_variable[ERROR_OUTPUT_INDEX] = error_signal_input
-            learning_signal, error_signal = self.function(variable=function_variable,
-                                                          error_matrix=error_matrix,
-                                                          params=runtime_params,
-                                                          context=context)
+            # learning_signal, error_signal = self.function(variable=function_variable, # mech_execute
+            #                                               error_matrix=error_matrix,
+            #                                               params=runtime_params,
+            #                                               context=context)
+            learning_signal, error_signal = super()._execute(variable=function_variable,
+                                                             error_matrix=error_matrix,
+                                                             params=runtime_params,
+                                                             context=context)
             # Sum learning_signals and error_signals
             try:
                 summed_learning_signal += learning_signal

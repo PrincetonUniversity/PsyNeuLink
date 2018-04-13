@@ -869,6 +869,9 @@ class LCControlMechanism(ControlMechanism):
         output_values = self.function(variable=variable,
                              params=runtime_params,
                              context=context)
+        # output_values = super()._execute(variable=variable,  # mech_execute_control
+        #                                  runtime_params=runtime_params,
+        #                                  context=context)
 
         gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
 
