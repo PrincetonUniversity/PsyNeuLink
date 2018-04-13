@@ -297,7 +297,7 @@ from enum import IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, function_type, method_type
+from psyneulink.components.component import function_type, method_type
 # import Components
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
@@ -306,11 +306,11 @@ from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.components.states.outputstate import SEQUENTIAL
 from psyneulink.components.states.state import State_Base
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, AUTO, COMMAND_LINE, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER, SEPARATOR_BAR, SLOPE, SUM, kwAssign
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
 
 __all__ = [
@@ -684,11 +684,11 @@ class ControlSignal(ModulatorySignal):
 
         if context is None: # cxt-test
             context = COMMAND_LINE # cxt-done
-            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
             context = self # cxt-done
-            self.context.status = ContextStatus.CONSTRUCTOR
+            self.context.source = ContextFlags.CONSTRUCTOR
 
         # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState
         if params and ALLOCATION_SAMPLES in params and params[ALLOCATION_SAMPLES] is not None:
@@ -729,7 +729,7 @@ class ControlSignal(ModulatorySignal):
                          context=context)
 
         # Default cost params
-        if self.init_status is not InitStatus.DEFERRED_INITIALIZATION:
+        if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
             self.intensity_cost = self.intensity_cost_function(self.instance_defaults.allocation)
         else:
             self.intensity_cost = self.intensity_cost_function(self.ClassDefaults.allocation)
@@ -1186,7 +1186,7 @@ class ControlSignal(ModulatorySignal):
     @property
     def value(self):
         # In case the ControlSignal has not yet been assigned (and its value is INITIALIZING or DEFERRED_INITIALIZATION
-        if self.init_status in {InitStatus.DEFERRED_INITIALIZATION, InitStatus.INITIALIZING}:
+        if self.context.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
             return None
         else:
             return self._value

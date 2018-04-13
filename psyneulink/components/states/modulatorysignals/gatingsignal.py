@@ -237,7 +237,7 @@ from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUE
 from psyneulink.components.states.state import State_Base, _get_state_for_socket, _parse_state_type
 from psyneulink.globals.keywords import COMMAND_LINE, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.globals.context import ContextStatus
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -428,11 +428,11 @@ class GatingSignal(ModulatorySignal):
 
         if context is None: # cxt-test
             context = COMMAND_LINE # cxt-done
-            self.context.status = ContextStatus.COMMAND_LINE
+            self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
             context = self # cxt-done
-            self.context.status = ContextStatus.CONSTRUCTOR
+            self.context.source = ContextFlags.CONSTRUCTOR
 
         # Note: assign is not currently used by GatingSignal;
         #       it is included here for consistency with OutputState and possible use by subclasses.

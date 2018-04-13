@@ -485,14 +485,17 @@ import datetime
 import warnings
 
 from collections import Iterable
+from numbers import Number
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import ExecutionStatus, function_type
+from psyneulink.components.component import function_type
 from psyneulink.components.process import ProcessInputState
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
-from psyneulink.globals.keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
+from psyneulink.globals.keywords import EVC_SIMULATION, INPUT_LABELS_DICT, MECHANISM, \
+    OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET, TARGET_LABELS_DICT
+from psyneulink.globals.log import LogCondition
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.time import TimeScale
 
@@ -615,7 +618,7 @@ def run(object,
         or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
 
-    from psyneulink.globals.context import ContextStatus
+    from psyneulink.globals.context import ContextFlags
 
     # small version of 'sequence' format in the once case where it was still working (single origin mechanism)
     if isinstance(inputs, (list, np.ndarray)):
@@ -701,8 +704,9 @@ def run(object,
 
     # Class-specific validation:
     context = context or RUN + "validating " + object.name # cxt-done ? cxt-pass
-    if object.context.status is ContextStatus.OFF:
-        object.context.status = ContextStatus.RUN + ContextStatus.VALIDATION
+    if not object.context.flags:
+        # object.context.status = ContextFlags.RUN + ContextFlags.VALIDATING
+        object.context.initialization_status = ContextFlags.VALIDATING
         object.context.string = RUN + "validating " + object.name
 
     # INITIALIZATION
@@ -753,13 +757,13 @@ def run(object,
                         object.current_targets = execution_targets
 
 
-            # MODIFIED 3/16/17 END
             if RUN in context and not EVC_SIMULATION in context: # cxt-test
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
-                object.context.status &= ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION)
-                object.context.status |= ContextStatus.EXECUTION
+                # FIX: 3/30/18:  SHOULDN'T NEED THIS IF ContextFlags.INITIALIZED GETS SET AT END OF INITIALIZATION
+                # object.context.initialization_status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
+                # object.context.initialization_status = ContextFlags.INITIALIZED
+                object.context.execution_phase = ContextFlags.EXECUTING
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
-                object.execution_status = ExecutionStatus.EXECUTING
             result = object.execute(
                 input=execution_inputs,
                 execution_id=execution_id,
@@ -781,9 +785,9 @@ def run(object,
         if call_after_trial:
             call_after_trial()
 
-        from psyneulink.globals.log import _log_trials_and_runs, ContextStatus
+        from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
         _log_trials_and_runs(composition=object,
-                             curr_condition=ContextStatus.TRIAL,
+                             curr_condition=LogCondition.TRIAL,
                              context=context)
 
     try:
@@ -804,9 +808,9 @@ def run(object,
     else:
         object._learning_enabled = learning_state_buffer
 
-    from psyneulink.globals.log import _log_trials_and_runs, ContextStatus
+    from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
     _log_trials_and_runs(composition=object,
-                         curr_condition=ContextStatus.RUN,
+                         curr_condition=LogCondition.RUN,
                          context=context)
 
     return object.results
@@ -831,6 +835,10 @@ def _target_matches_input_state_variable(target, input_state_variable):
     return False
 
 def _adjust_stimulus_dict(obj, stimuli):
+
+    #  STEP 0:  parse any labels into array entries
+    if any(mech.input_labels_dict for mech in obj.origin_mechanisms):
+        _parse_input_labels(obj, stimuli)
 
     # STEP 1: validate that there is a one-to-one mapping of input entries to origin mechanisms
 
@@ -910,6 +918,10 @@ def _adjust_stimulus_dict(obj, stimuli):
 
 def _adjust_target_dict(component, target_dict):
 
+    #  STEP 0:  parse any labels into array entries
+    if any(mech.input_labels_dict for mech in component.target_mechanisms):
+        _parse_input_labels(component, target_dict)
+
     # STEP 1: validate that there is a one-to-one mapping of target entries and target mechanisms
     for target_mechanism in component.target_mechanisms:
         # If any projection to a target does not have a sender in the stimulus dict, raise an exception
@@ -976,6 +988,99 @@ def _adjust_target_dict(component, target_dict):
             _validate_target_function(target_list, mech.output_state.efferents[0].receiver.owner, mech)
             adjusted_targets[mech] = target_list
     return adjusted_targets, num_targets
+
+
+@tc.typecheck
+def _parse_input_labels(obj, stimuli:dict):
+    from psyneulink.components.states.inputstate import InputState
+
+    # def get_input_for_label(mech, key, input_array=None):
+    def get_input_for_label(mech, key, subdicts, input_array=None):
+        """check mech.input_labels_dict for key
+        If input_array is passed, need to check for subdicts (should be one for each InputState of mech)"""
+
+        # FIX: FOR SOME REASON dict IN TEST BELOW IS TREATED AS AN UNBOUND LOCAL VARIABLE
+        # subdicts = isinstance(list(mech.input_labels_dict.keys())[0], dict)
+
+        if input_array is None:
+            if subdicts:
+                raise RunError("Attempt to reference a label for a stimulus at top level of {} for {},"
+                               "which contains subdictionaries for each of its {}s".
+                               format(INPUT_LABELS_DICT, mech.name, InputState))
+            try:
+                return mech.input_labels_dict[key]
+            except KeyError:
+                raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
+                               format(key, obj.name, INPUT_LABELS_DICT, mech.name))
+        else:
+            if not subdicts:
+                try:
+                    return mech.input_labels_dict[key]
+                except KeyError:
+                    raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
+                                   format(key, obj.name, INPUT_LABELS_DICT, mech.name))
+            else:
+                # if subdicts, look exhaustively for any instances of the label in keys of all subdicts
+                name_value_pairs = []
+                for name, dict in mech.input_labels.items():
+                    if key in dict:
+                        name_value_pairs.append((name,dict[key]))
+                if len(name_value_pairs)==1:
+                    # if only one found, use its value
+                    return name_value_pairs[0][1]
+                else:
+                    # if more than one is found, now know that "convenience notation" has not been used
+                    #     check that number of items in input_array == number of states
+                    if len(input_array) != len(mech.input_states):
+                        raise RunError("Number of items in input for {} of {} ({}) "
+                                       "does not match the number of its {}s ({})".
+                                       format(mech.name, obj.name, len(input_array), 
+                                              InputState, len(mech.input_states)))
+                    # use index of item in outer array and key (int or name of state) to determine which subdict to use
+                    input_index = input_array.index(key)
+
+                    # try to match input_index against index in name_value_pairs[0];
+                    value = [item[1] for item in name_value_pairs if item[0]==input_index]
+                    if value:
+                        return value[0]
+                    else:
+                        # otherwise, match against index associated with name of state in name_value_pairs
+                        value = [item[1] for item in name_value_pairs if mech.input_states.index(item[0])==input_index]
+                        if value:
+                            return value[0]
+                        else:
+                            raise RunError("Unable to find value for label ({}) in {} for {} of {}".
+                                           format(key, INPUT_LABELS_DICT, mech.name, obj.name))
+
+    for mech, inputs in stimuli.items():
+
+        subdicts = isinstance(list(mech.input_labels_dict.keys())[0], dict)
+
+        if any(isinstance(input, str) for input in inputs) and not mech.input_labels_dict:
+            raise RunError("Labels can not be used to specify the inputs to {} since it does not have an {}".
+                           format(mech.name, INPUT_LABELS_DICT))
+        for i, stim in enumerate(inputs):
+            # "Burrow" down to determine whether there's a number at the "bottom";
+            #     if so, leave as is; otherwise, check if its a string and, if so, get value for label
+            if isinstance(stim, (list, np.ndarray)): # format of stimuli dict is at least: [[???]...?]
+                for j, item in enumerate(stim):
+                    if isinstance(item, (Number, list, np.ndarray)): # format of stimuli dict is [[int or []...?]]
+                        continue # leave input item as is
+                    elif isinstance(item, str): # format of stimuli dict is [[label]...]
+                        # inputs[i][j] = get_input_for_label(mech, item, stim)
+                        inputs[i][j] = get_input_for_label(mech, item, subdicts, stim)
+                    else:
+                        raise RunError("Unrecognized specification ({}) in stimulus {} of entry "
+                                       "for {} in inputs dictionary specified for {}".
+                                       format(item, i, mech.name, obj.name))
+            elif isinstance(stim, str):
+                # Don't pass input_array as no need to check for subdicts
+                # inputs[i] = get_input_for_label(mech, stim)
+                inputs[i] = get_input_for_label(mech, stim, subdicts)
+            else:
+                raise RunError("Unrecognized specification ({}) for stimulus {} in entry "
+                               "for {} of inputs dictionary specified for {}".
+                               format(stim, i, mech.name, obj.name))
 
 def _validate_target_function(target_function, target_mechanism, sample_mechanism):
 

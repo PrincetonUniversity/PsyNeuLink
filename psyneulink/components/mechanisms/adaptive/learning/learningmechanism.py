@@ -538,7 +538,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import \
     BackPropagation, ModulationParam, _is_modulation_param, is_function_type, ERROR_MATRIX
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
@@ -930,7 +930,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # delete self.init_args[ERROR_SOURCES]
 
         # # Flag for deferred initialization
-        # self.init_status = InitStatus.DEFERRED_INITIALIZATION
+        # self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         self._learning_rate = learning_rate
 
@@ -1177,10 +1178,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
 
             function_variable[ERROR_OUTPUT_INDEX] = error_signal_input
-            learning_signal, error_signal = self.function(variable=function_variable,
-                                                          error_matrix=error_matrix,
-                                                          params=runtime_params,
-                                                          context=context)
+            learning_signal, error_signal = super()._execute(variable=function_variable,
+                                                             error_matrix=error_matrix,
+                                                             runtime_params=runtime_params,
+                                                             context=context)
             # Sum learning_signals and error_signals
             try:
                 summed_learning_signal += learning_signal

@@ -394,7 +394,7 @@ class Scheduler(object):
         # stores the in order list of self.run's yielded outputs
         self.execution_list = []
         self.consideration_queue = []
-        self.termination_conds = {
+        self.default_termination_conds = {
             TimeScale.RUN: Never(),
             TimeScale.TRIAL: AllHaveRun(),
         }
@@ -470,8 +470,9 @@ class Scheduler(object):
                     self.counts_total[ts][c] = 0
 
     def update_termination_conditions(self, termination_conds):
+        self.termination_conds = dict(self.default_termination_conds)
         if termination_conds is not None:
-            logger.info('Specified termination_conds {0} overriding {1}'.format(termination_conds, self.termination_conds))
+            logger.info('Specified termination_conds {0} overriding {1}'.format(termination_conds, self.default_termination_conds))
             self.termination_conds.update(termination_conds)
 
         for ts in self.termination_conds:

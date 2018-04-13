@@ -1,22 +1,23 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" factoryName="Python" folderName="Examples" name="&#8226; Multilayer-Learning" singleton="true" type="PythonConfigurationType">
+    <module name="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
-      <env name="PATH" value="~/anaconda/bin/:/Users/jdc/bin:/Users/jdc/bin:/Users/jdc/anaconda/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin&#10;" />
+      <env name="PATH" value="~/anaconda/bin/:$USER_HOME$/bin:$USER_HOME$/bin:$USER_HOME$/anaconda/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin&#10;" />
     </envs>
     <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Scripts" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" runner="coverage.py" sample_coverage="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/Examples/Multilayer-Learning.py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
+    <option name="MODULE_MODE" value="false" />
     <method />
   </configuration>
 </component>

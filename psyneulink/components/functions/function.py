@@ -206,7 +206,8 @@ from psyneulink.globals.keywords import \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
     ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMS, PARAMETER_STATE_PARAMS, PEARSON, \
-    PREDICTION_ERROR_DELTA_FUNCTION, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
+    PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
     RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, \
     STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, \
     USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, \
@@ -3450,7 +3451,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
             * **MAX_INDICATOR**: 1 in place of the element with the maximum signed value;
             * **MAX_ABS_INDICATOR**: 1 in place of the element with the maximum absolute value;
             * **PROB**: probabilistically chosen element based on probabilities passed in second item of
-              `variable <OneHot.variable>`.
+            * **PROB_INDICATOR**: same as *PROB* but chosen item is assigned a value of 1.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -3486,7 +3487,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB)=MAX_VAL,
+                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR)=MAX_VAL,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -3496,7 +3497,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
         params = self._assign_args_to_param_dicts(mode=mode,
                                                   params=params)
 
-        if mode is PROB and default_variable is None:
+        if mode in {PROB, PROB_INDICATOR} and default_variable is None:
             default_variable = [[0],[0]]
 
         super().__init__(default_variable=default_variable,
@@ -3509,7 +3510,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
-        if request_set[MODE] is PROB:
+        if request_set[MODE] in {PROB, PROB_INDICATOR}:
             if not self.variable.ndim == 2:
                 raise FunctionError("If {} for {} {} is set to {}, variable must be 2d array".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB))
@@ -3576,7 +3577,8 @@ class OneHot(TransferFunction):  # ---------------------------------------------
             max_value = np.max(np.absolute(variable))
             return np.where(variable == max_value, 1, 0)
 
-        elif self.mode is PROB: # 1st item of variable should be data, and 2nd a probability distribution for choosing
+        elif self.mode in {PROB, PROB_INDICATOR}:
+            # 1st item of variable should be data, and 2nd a probability distribution for choosing
             v = variable[0]
             prob_dist = variable[1]
             # if not prob_dist.any() and INITIALIZING in context:
@@ -3586,7 +3588,11 @@ class OneHot(TransferFunction):  # ---------------------------------------------
             random_value = np.random.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-            return v * chosen_in_cum_sum
+            if self.mode is PROB:
+                result = v * chosen_in_cum_sum
+            else:
+                result = np.ones_like(v) * chosen_in_cum_sum
+            return result
             # chosen_item = np.random.choice(v, 1, p=prob_dist)
             # one_hot_indicator = np.where(v == chosen_item, 1, 0)
             # return v * one_hot_indicator
@@ -3805,7 +3811,7 @@ class SoftMax(NormalizingFunction):
 
         if output_type in {MAX_VAL, MAX_INDICATOR}:
             return self.one_hot_function(sm)
-        elif output_type is PROB:
+        elif output_type in {PROB, PROB_INDICATOR}:
             return self.one_hot_function([variable, sm])
         else:
             return sm
@@ -4342,8 +4348,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         cols = None
         # use of variable attribute here should be ok because it's using it as a format/type
         if isinstance(self, MappingProjection):
-            rows = len(self.sender.value)
-            cols = len(self.receiver.instance_defaults.variable)
+            if isinstance(self.sender.value, numbers.Number):
+                rows = 1
+            else:
+                rows = len(self.sender.value)
+            if isinstance(self.receiver.instance_defaults.variable, numbers.Number):
+                cols = 1
+            else:
+                cols = len(self.receiver.instance_defaults.variable)
         matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:
@@ -9024,7 +9036,7 @@ COMMENT
             raise FunctionError("Variable for {} must contain a single array or list of numbers".format(self.name))
         return variable
 
-    def _validate_params(self, request_set, target_set=None, context=None):
+    def _validate_params(self, variable, request_set, target_set=None, context=None):
         """Validate matrix param
 
         `matrix <Stability.matrix>` argument must be one of the following
@@ -9036,8 +9048,6 @@ COMMENT
         (but leave in the form in which it was specified so that, if it is a ParameterState or MappingProjection,
          its current value can be accessed at runtime (i.e., it can be used as a "pointer")
         """
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Validate matrix specification
         if MATRIX in target_set:
@@ -9093,6 +9103,12 @@ COMMENT
                 raise FunctionError("The value of the {} specified for the {} arg of {} ({}) "
                                     "must be a square matrix".
                                     format(param_type_string, MATRIX, self.name, matrix))
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+
 
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate matrix

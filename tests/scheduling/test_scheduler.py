@@ -901,3 +901,36 @@ class TestBranching:
             set([A1, A2]), set([A1, A2]), set([B1, B3]), set([A1, A2]), set([A1, A2]), set([B1, B2, B3]), set([C1, C2])
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)
+
+
+class TestTermination:
+
+    def test_termination_conditions_reset(self):
+        comp = Composition()
+        A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+        B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+        for m in [A, B]:
+            comp.add_mechanism(m)
+        comp.add_projection(A, MappingProjection(), B)
+
+        sched = Scheduler(composition=comp)
+
+        sched.add_condition(B, EveryNCalls(A, 2))
+
+        termination_conds = {}
+        termination_conds[TimeScale.RUN] = AfterNTrials(1)
+        termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 2)
+
+        output = list(sched.run(termination_conds=termination_conds))
+
+        expected_output = [A, A, B, A, A, B]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+        # reset the RUN because schedulers run TRIALs
+        sched.clock._increment_time(TimeScale.RUN)
+        sched._reset_counts_total(TimeScale.RUN)
+
+        output = list(sched.run())
+
+        expected_output = [A, A, B]
+        assert output == pytest.helpers.setify_expected_output(expected_output)

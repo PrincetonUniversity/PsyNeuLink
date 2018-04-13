@@ -83,10 +83,9 @@ Class Reference
 
 import inspect
 
-from psyneulink.components.component import InitStatus
 from psyneulink.components.projections.projection import Projection_Base
 from psyneulink.globals.keywords import EXECUTING, INITIALIZING, MODULATORY_PROJECTION, NAME, kwAssign
-from psyneulink.globals.log import LogEntry, ContextStatus
+from psyneulink.globals.log import LogEntry, ContextFlags
 
 
 __all__ = [
@@ -229,17 +228,19 @@ class ModulatoryProjection_Base(Projection_Base):
 
         template = "{} for {}[{}]"
 
-        if self.init_status in {InitStatus.INITIALIZED, InitStatus.INITIALIZING, InitStatus.UNSET}:
+        # if self.context.initialization_status &  \
+        #         (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING | ContextFlags.UNSET):
+        if self.context.initialization_status &  (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
             # If the name is not a default name for the class, return
             if not self.className + '-' in self.name:
                 return self.name
             self.name = template.format(self.className, self.receiver.owner.name, self.receiver.name)
 
-        elif self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        elif self.context.initialization_status == ContextFlags.DEFERRED_INIT:
             projection_name = template.format(self.className, state.owner.name, state.name)
             # self.init_args[NAME] = self.init_args[NAME] or projection_name
             self.name = self.init_args[NAME] or projection_name
 
         else:
-            raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".
-                                            format(self, self.init_status))
+            raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
+                                            format(self, ContextFlags._get_context_string(self.context.initialization_status)))
