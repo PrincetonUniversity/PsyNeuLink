@@ -1184,7 +1184,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             #                                               context=context)
             learning_signal, error_signal = super()._execute(variable=function_variable,
                                                              error_matrix=error_matrix,
-                                                             params=runtime_params,
+                                                             runtime_params=runtime_params,
                                                              context=context)
             # Sum learning_signals and error_signals
             try:

@@ -2814,7 +2814,7 @@ class Component(object):
     def execute(self, variable=None, runtime_params=None, context=None):
         return self._execute(variable=variable, runtime_params=runtime_params, context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, runtime_params=None, context=None, **kwargs):
 
         # MODIFIED 3/20/18 NEW:
         from psyneulink.components.functions.function import Function
@@ -2825,7 +2825,7 @@ class Component(object):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context) # cxt-pass
         # MODIFIED 3/20/18 END
-        return self.function(variable=variable, params=runtime_params, context=context)
+        return self.function(variable=variable, params=runtime_params, context=context, **kwargs)
 
     @property
     def execution_count(self):
