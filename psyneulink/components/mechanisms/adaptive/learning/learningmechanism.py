@@ -1036,7 +1036,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         Also determines and assigns `error_matrices` from the `error_sources`, identified as the matrix for the
             Projection with which each error_source is associated.
         """
-        from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary \
+        from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary \
             import _instantiate_error_signal_projection
 
         super()._instantiate_attributes_before_function(context=context)
@@ -1178,10 +1178,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
 
             function_variable[ERROR_OUTPUT_INDEX] = error_signal_input
-            learning_signal, error_signal = self.function(variable=function_variable,
-                                                          error_matrix=error_matrix,
-                                                          params=runtime_params,
-                                                          context=context)
+            learning_signal, error_signal = super()._execute(variable=function_variable,
+                                                             error_matrix=error_matrix,
+                                                             runtime_params=runtime_params,
+                                                             context=context)
             # Sum learning_signals and error_signals
             try:
                 summed_learning_signal += learning_signal

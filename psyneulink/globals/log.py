@@ -686,7 +686,7 @@ class Log:
             return
 
     def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
-        """Specifies items to be logged at the specified `LogCondition`\\(s).
+        """Specifies items to be logged under the specified `LogCondition`\\(s).
 
         Arguments
         ---------
@@ -835,7 +835,7 @@ class Log:
                 context_flags = _get_context(context)
 
             context_flags_string = ContextFlags._get_context_string(context_flags)
-            context_status_string = ContextFlags._get_context_string(self.owner.context.flags)
+            context_status_string = self.owner.context.flags_string
             # assert context_flags_string == context_status_string
 
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None
