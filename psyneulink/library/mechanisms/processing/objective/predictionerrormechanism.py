@@ -307,7 +307,8 @@ class PredictionErrorMechanism(ComparatorMechanism):
         reward = self.input_states[TARGET].value
 
         variable = [sample, reward]
-        delta = self.function(variable=variable)
+        # delta = self.function(variable=variable) # mech_execute
+        delta = self._execute(variable=variable, runtime_params=runtime_params, context=context)
         delta = delta[1:]
         delta = np.append(delta, 0)
 
