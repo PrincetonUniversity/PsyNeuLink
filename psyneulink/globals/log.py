@@ -437,7 +437,7 @@ class LogCondition(IntEnum):
     """Specifies all contexts."""
 
     @classmethod
-    def get_context_string(cls, condition, string=None):
+    def _get_context_string(cls, condition, string=None):
         """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
         if string:
             string += ": "
@@ -686,7 +686,7 @@ class Log:
             return
 
     def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
-        """Specifies items to be logged at the specified `LogCondition`\\(s).
+        """Specifies items to be logged under the specified `LogCondition`\\(s).
 
         Arguments
         ---------
@@ -779,7 +779,7 @@ class Log:
 
             if isinstance(context, ContextFlags): # cxt-test
                 context_flags = context
-                context = ContextFlags.get_context_string(context) # cxt-set
+                context = ContextFlags._get_context_string(context) # cxt-set
                 if not time:
                     raise LogError("Use of ContextFlags ({}) by {} to specify context requires specification of time".
                                    format(context, self.owner.name ))
@@ -789,7 +789,7 @@ class Log:
 
             elif self.owner.context.flags: # cxt-test
                 context_flags = self.owner.context.flags
-                context = ContextFlags.get_context_string(context_flags)
+                context = ContextFlags._get_context_string(context_flags)
 
             # Get context
             else:
@@ -834,8 +834,8 @@ class Log:
 
                 context_flags = _get_context(context)
 
-            context_flags_string = ContextFlags.get_context_string(context_flags)
-            context_status_string = ContextFlags.get_context_string(self.owner.context.flags)
+            context_flags_string = ContextFlags._get_context_string(context_flags)
+            context_status_string = self.owner.context.flags_string
             # assert context_flags_string == context_status_string
 
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None
@@ -1014,7 +1014,7 @@ class Log:
                     # if long_context:
                     #     context = datum.context # cxt-set
                     # else:
-                    #     context = ContextFlags.get_context_string(_get_context(datum.context)) # cxt-set
+                    #     context = ContextFlags._get_context_string(_get_context(datum.context)) # cxt-set
                     # c_width = max(c_width, len(context))
                     # MODIFIED 3/31/18 NEW:
                     c_width = max(c_width, len(datum.context))
@@ -1084,7 +1084,7 @@ class Log:
                         #     context = repr(context) # cxt-set
                         # else:
                         #     # Get names of ContextFlags flag(s) from parse of context string
-                        #     context = ContextFlags.get_context_string(_get_context(context)) # cxt-set
+                        #     context = ContextFlags._get_context_string(_get_context(context)) # cxt-set
                         # MODIFIED 3/31/18 NEW:
                         context = repr(context) # cxt-set
                         # MODIFIED 3/31/18 END
@@ -1513,7 +1513,7 @@ class Log:
         for c in self.loggable_components:
             name = self._alias_owner_name(c.name)
             try:
-                log_pref_names = LogCondition.get_context_string(c.logPref)
+                log_pref_names = LogCondition._get_context_string(c.logPref)
             except:
                 log_pref_names = None
             loggable_items[name] = log_pref_names
