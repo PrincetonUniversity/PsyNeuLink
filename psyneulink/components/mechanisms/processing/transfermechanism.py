@@ -990,7 +990,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if isinstance(self.function_object, TransferFunction):
 
-            # outputs = self.function(variable=current_input, params= runtime_params) # _mech_execute
             outputs = super()._execute(variable=current_input, runtime_params=runtime_params, context=context)
             if clip is not None:
                 minCapIndices = np.where(outputs < clip[0])
@@ -1001,7 +1000,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Apply TransferMechanism's function to each input state separately
             outputs = []
             for elem in current_input:
-                # output_item = self.function(variable=elem, params=runtime_params) # _mech_execute
                 output_item = super()._execute(variable=elem, runtime_params=runtime_params, context=context)
                 if clip is not None:
                     minCapIndices = np.where(output_item < clip[0])

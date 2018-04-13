@@ -356,9 +356,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # IMPLEMENTATION NOTE:  skip LearningMechanism's implementation of _execute
         #                       as it assumes projections from other LearningMechanisms
         #                       which are not relevant to an autoassociative projection
-        # self.learning_signal = self.function(variable=variable, # mech_execute
-        #                                      params=runtime_params,
-        #                                      context=context)
         self.learning_signal = super(LearningMechanism, self)._execute(variable=variable,
                                                                        runtime_params=runtime_params,
                                                                        context=context)
