@@ -5,7 +5,6 @@ import psyneulink as pnl
 Input_Layer = pnl.TransferMechanism(
     name='Input Layer',
     function=pnl.Logistic,
-    params={pnl.INPUT_LABELS_DICT:{'red': [-1, 30]}},
     default_variable=np.zeros((2,)))
 
 Hidden_Layer_1 = pnl.TransferMechanism(
@@ -111,13 +110,12 @@ Middle_Weights.set_log_conditions('matrix')
 mySystem.reportOutputPref = True
 # Shows graph will full information:
 # mySystem.show_graph(show_dimensions=pnl.ALL)
-mySystem.show_graph(show_learning=True)
+mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL)
 # mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL, show_mechanism_structure=True)
 # Shows minimal graph:
 # mySystem.show_graph()
 
-
-stim_list = {Input_Layer: ['red']}
+stim_list = {Input_Layer: [[-1, 30]]}
 target_list = {Output_Layer: [[0, 0, 1]]}
 
 mySystem.run(

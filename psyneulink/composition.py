@@ -772,8 +772,6 @@ class Composition(object):
         inputs,
         scheduler_processing=None,
         scheduler_learning=None,
-        termination_processing=None,
-        termination_learning=None,
         call_before_time_step=None,
         call_before_pass=None,
         call_after_time_step=None,
@@ -838,7 +836,7 @@ class Composition(object):
         if call_before_pass:
             call_before_pass()
 
-        for next_execution_set in execution_scheduler.run(termination_conds=termination_processing):
+        for next_execution_set in execution_scheduler.run():
             if call_after_pass:
                 if next_pass_after == execution_scheduler.clock.time.pass_:
                     logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.clock.current_pass()))
@@ -995,8 +993,6 @@ class Composition(object):
                 execution_inputs,
                 scheduler_processing,
                 scheduler_learning,
-                termination_processing,
-                termination_learning,
                 call_before_time_step,
                 call_before_pass,
                 call_after_time_step,

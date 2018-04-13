@@ -313,8 +313,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # self.init_args['name'] = name
 
         # # Flag for deferred initialization
-        # self.context.initialization_status = ContextFlags.DEFERRED_INIT
-        # self.initialization_status = ContextFlags.DEFERRED_INIT
+        # self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
         # self._learning_rate = learning_rate
 
@@ -353,12 +352,9 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         """
 
         # COMPUTE LEARNING SIGNAL (note that function is assumed to return only one value)
-        # IMPLEMENTATION NOTE:  skip LearningMechanism's implementation of _execute
-        #                       as it assumes projections from other LearningMechanisms
-        #                       which are not relevant to an autoassociative projection
-        self.learning_signal = super(LearningMechanism, self)._execute(variable=variable,
-                                                                       runtime_params=runtime_params,
-                                                                       context=context)
+        self.learning_signal = self.function(variable=variable,
+                                             params=runtime_params,
+                                             context=context)
 
         if not INITIALIZING in context and self.reportOutputPref: # cxt-test
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))

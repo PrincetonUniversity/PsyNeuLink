@@ -437,7 +437,7 @@ import typecheck as tc
 
 from toposort import toposort, toposort_flatten
 
-from psyneulink.components.component import Component
+from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary import _assign_error_signal_projections, _get_learning_mechanisms
 from psyneulink.components.mechanisms.mechanism import MechanismList
@@ -449,14 +449,14 @@ from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
     EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, FUNCTIONS, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, \
-    INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, \
-    PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, WEIGHT, \
-    kwSeparator, kwSystemComponentCategory
+    INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PARAMS, \
+    PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, WEIGHT, kwSeparator, \
+    kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, insert_list, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -828,7 +828,7 @@ class System(System_Base):
 
         # Required to defer assignment of self.controller by setter
         #     until the rest of the System has been instantiated
-        self.initialization_status = INITIALIZING
+        self.status = INITIALIZING
         processes = processes or []
         if not isinstance(processes, list):
             processes = [processes]
@@ -860,7 +860,7 @@ class System(System_Base):
 
         if not context: # cxt-test
             context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT # cxt-done
-            self.context.initialization_status = ContextFlags.INITIALIZING
+            self.context.status = ContextStatus.INITIALIZATION
             self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
         super().__init__(default_variable=default_variable,
                          size=size,
@@ -869,7 +869,7 @@ class System(System_Base):
                          prefs=prefs,
                          context=context)
 
-        self.initialization_status = INITIALIZED
+        self.status = INITIALIZED
         self._execution_id = None
 
         # Assign controller
@@ -2437,7 +2437,7 @@ class System(System_Base):
             for parameter_state in mech._parameter_states:
                 for projection in parameter_state.mod_afferents:
                     # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
-                    if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                    if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                         proj_control_signal_specs = projection.control_signal_params or {}
                         proj_control_signal_specs.update({PROJECTIONS: [projection]})
                         control_signal_specs.append(proj_control_signal_specs)
@@ -2519,8 +2519,9 @@ class System(System_Base):
 
         if not context: # cxt-test
             context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-done
-            self.context.execution_phase = ContextFlags.PROCESSING
+            self.context.status = ContextStatus.EXECUTION
             self.context.string = EXECUTING + " " + SYSTEM + " " + self.name
+            self.execution_status = ExecutionStatus.EXECUTING
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
         from psyneulink.globals.environment import _get_unique_id
@@ -2593,8 +2594,10 @@ class System(System_Base):
                         # raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
         self.input = input
-        self.termination_processing = termination_processing
-        self.termination_learning = termination_learning
+        if termination_processing is not None:
+            self.termination_processing = termination_processing
+        if termination_learning is not None:
+            self.termination_learning = termination_learning
         #endregion
 
         if self._report_system_output:
@@ -2614,17 +2617,16 @@ class System(System_Base):
 
         # region EXECUTE LEARNING FOR EACH PROCESS
 
-        # Execute learning except for simulation runs
+        # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context and self.learning: # cxt-test
-            # self.context.status &= ~ContextFlags.EXECUTION
-            # self.context.status &= ~ContextFlags.PROCESSING
-            self.context.execution_phase = ContextFlags.LEARNING
+            # self.context.status &= ~ContextStatus.EXECUTION
+            self.context.status |= ContextStatus.LEARNING
             self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
             self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
 
-            self.context.execution_phase = ContextFlags.IDLE
-            # self.context.status |= ContextFlags.EXECUTION
+            self.context.status &= ~ContextStatus.LEARNING
+            # self.context.status |= ContextStatus.EXECUTION
             self.context.string = self.context.string.replace(LEARNING, EXECUTING)
         # endregion
 
@@ -2635,9 +2637,6 @@ class System(System_Base):
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if not EVC_SIMULATION in context and self.enable_controller: # cxt-test
-
-            # FIX: 3/30/18 - SET SIMULATION CONTEXT HERE (OR WILL controller INHERIT IT FROM SYSTEM IN ITS _EXECUTE?)
-            # FIX:           CONTEXT FOR SYSTEM IS NOT PROPERLY SET HERE... HAS ALL FLAGS SET (FIX IN run ??)
             try:
                 self.controller.execute(
                     runtime_params=None,
@@ -2686,10 +2685,8 @@ class System(System_Base):
                 context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]" #
                 mechanism.context.string = context # cxt-push ? (note:  currently also assigned in Mechanism.execute())
                 mechanism.context.composition = self
-
-                mechanism.context.execution_phase = ContextFlags.PROCESSING
                 mechanism.execute(runtime_params=rt_params, context=context) # cxt-pass
-                mechanism.context.execution_phase = ContextFlags.IDLE
+
 
                 if self._report_system_output and  self._report_process_output:
 
@@ -2778,7 +2775,8 @@ class System(System_Base):
                                          re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
 
                 component.context.composition = self
-                component.context.execution_phase = ContextFlags.LEARNING
+                component.context.status &= ~ContextStatus.EXECUTION
+                component.context.status |= ContextStatus.LEARNING
                 component.context.string = context_str
 
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
@@ -2786,7 +2784,8 @@ class System(System_Base):
                 # # TEST PRINT:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
-                component.context.execution_phase = ContextFlags.IDLE
+                component.context.status &= ~ContextStatus.LEARNING
+                component.context.status |= ContextStatus.EXECUTION
 
 
         # THEN update all MappingProjections
@@ -2813,12 +2812,14 @@ class System(System_Base):
                                          component_type,
                                          component.name,
                                          re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
-                component.context.execution_phase = ContextFlags.LEARNING
+                component.context.status &= ~ContextStatus.EXECUTION
+                component.context.status |= ContextStatus.LEARNING
                 component.context.string = context_str
 
                 component._parameter_states[MATRIX].update(context=context_str)
 
-                component.context.execution_phase = ContextFlags.IDLE
+                component.context.status &= ~ContextStatus.LEARNING
+                component.context.status |= ContextStatus.EXECUTION
 
                 # TEST PRINT:
                 # print ("EXECUTING WEIGHT UPDATES: ", component.name)
@@ -3360,16 +3361,11 @@ class System(System_Base):
             * *VALUES* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
               <State_Base.value>` of each of its States.
 
-            * *LABELS* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <State_Base.value>` of each of its States, using any labels for the values of InputStates and
-              OutputStates specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
-              `output_labels_dict <Mechanism.output_labels_dict>`, respectively.
-
             * *FUNCTIONS* -- shows the `function <Mechanism_Base.function>` of the Mechanism and the `function
               <State_Base.function>` of its InputStates and OutputStates.
 
             * *ALL* -- shows both `value <Component.value>` and `function <Component.function>` of the Mechanism and
-              its States (using labels for the values, if specified;  see above).
+              its States (see above).
 
         COMMENT:
              and, optionally, the `function <Component.function>` and `value <Component.value>` of each
@@ -3382,7 +3378,6 @@ class System(System_Base):
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
             **show_mechanism_structure** is specified (see above).
 
-        COMMENT:
         show_functions : bool : default False
             specifies whether or not to show `function <Component.function>` of Mechanisms and their States in the
             graph;  this requires **show_mechanism_structure** to be specified as `True` to take effect.
@@ -3390,7 +3385,6 @@ class System(System_Base):
         show_values : bool : default False
             specifies whether or not to show `value <Component.value>` of Mechanisms and their States in the
             graph;  this requires **show_mechanism_structure** to be specified as `True` to take effect.
-        COMMENT
 
         show_projection_labels : bool : default False
             specifies whether or not to show names of projections.
@@ -3480,8 +3474,7 @@ class System(System_Base):
 
         # Argument values used to call Mechanism.show_structure()
         mech_struct_args = {'show_functions':show_mechanism_structure in {FUNCTIONS, ALL},
-                            'show_values':show_mechanism_structure in {VALUES, LABELS, ALL},
-                            'use_labels':show_mechanism_structure in {LABELS, ALL},
+                            'show_values':show_mechanism_structure in {VALUES, ALL},
                             'show_headers':show_headers,
                             'output_fmt':'struct'}
 
@@ -3982,7 +3975,7 @@ class SystemInputState(OutputState):
             self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
         else:
             self.name = owner.name + "_" + name
-        self.context.initialization_status = ContextFlags.INITIALIZING
+        self.context.status = ContextStatus.INITIALIZATION
         self.context.string = context
         self.prefs = prefs
         self.log = Log(owner=self)

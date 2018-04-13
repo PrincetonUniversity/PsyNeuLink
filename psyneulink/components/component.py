@@ -405,13 +405,12 @@ from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, C
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
-from psyneulink.globals.context import Context, ContextFlags, _get_time
-from psyneulink.globals.log import LogCondition
+from psyneulink.globals.context import Context, ContextStatus, _get_time
 from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_matrix, is_same_function_spec, iscompatible, kwCompatibilityLength, object_has_single_value
 
 __all__ = [
-    'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
-    'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
+    'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog', 'ExecutionStatus',
+    'InitStatus', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
 ]
 # Testing pull request
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
@@ -451,6 +450,18 @@ class ResetMode(Enum):
 #         for arg in kwargs:
 #             self.__setattr__(arg, kwargs[arg])
 
+
+class ExecutionStatus(Enum):
+    INITIALIZING = 1
+    EXECUTING = 2
+    VALIDATING = 3
+
+
+class InitStatus(Enum):
+    UNSET = 1
+    INITIALIZING = 2
+    DEFERRED_INITIALIZATION = 3
+    INITIALIZED = 4
 
 # Transitional type:
 #    for implementing params as attributes that are accessible via current paramsDicts
@@ -856,7 +867,7 @@ class Component(object):
         # # MODIFIED 8/14/16 NEW:
         # # PROBLEM: variable has different name for different classes;  need to standardize name across classes
         # try:
-        #     if self.initialization_status is ContextFlags.DEFERRED_INITIALIZATION:
+        #     if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
         #         defer_init = True
         # except AttributeError:
         #     pass
@@ -867,13 +878,12 @@ class Component(object):
         #         # del self.init_args['__class__']
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
-        self.context.initialization_status = ContextFlags.INITIALIZING
-        self.context.execution_phase = None
-        self.context.source = ContextFlags.COMPONENT
+        self.context.status = ContextStatus.INITIALIZATION
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
 
-        self.context.initialization_status = ContextFlags.INITIALIZING
-        # self.context.initialization_status = ContextFlags.UNSET
+        self.execution_status = ExecutionStatus.INITIALIZING
+        self.init_status = InitStatus.UNSET
+        # self.init_status = InitStatus.INITIALIZING
 
         defaults = self.ClassDefaults.values().copy()
         if param_defaults is not None:
@@ -995,7 +1005,7 @@ class Component(object):
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
 
-        self.context.initialization_status = ContextFlags.INITIALIZED
+        self.init_status = InitStatus.INITIALIZED
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -1162,12 +1172,12 @@ class Component(object):
     def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
-        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
 
             # Flag that object is now being initialized
             # Note: self.value will be resolved to the object's value as part of initialization
             #       (usually in _instantiate_function)
-            self.context.initialization_status = ContextFlags.INITIALIZING
+            self.init_status = InitStatus.INITIALIZING
 
             del self.init_args['self']
 
@@ -1200,7 +1210,7 @@ class Component(object):
             else:
                 self._assign_default_name()
 
-            self.context.initialization_status = ContextFlags.INITIALIZED
+            self.init_status = InitStatus.INITIALIZED
 
     def _assign_deferred_init_name(self, name, context):
 
@@ -1930,6 +1940,7 @@ class Component(object):
                 if isinstance(param_value, tuple):
                     param_value = self._get_param_value_from_tuple(param_value)
                 elif isinstance(param_value, (str, Component, type)):
+                    old_param_value = request_set[param_name]
                     param_value = self._get_param_value_for_modulatory_spec(param_name, param_value)
                 else:
                     continue
@@ -1955,7 +1966,7 @@ class Component(object):
 
         """
         if context is None:
-            self.context.source = ContextFlags.COMMAND_LINE # cxt-push
+            self.context.status = ContextStatus.COMMAND_LINE # cxt-push
             self.context.string = COMMAND_LINE
         context = context or COMMAND_LINE # cxt-done
         self._assign_params(request_set=request_set, context=context)
@@ -2024,7 +2035,7 @@ class Component(object):
 
         validated_set_param_names = list(validated_set.keys())
 
-        curr_context = self.context.flags # cxt-buffer
+        curr_context = self.context.status # cxt-buffer
         curr_context_str = self.context.string
 
         # If an input_state is being added from the command line,
@@ -2033,7 +2044,7 @@ class Component(object):
         #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
         #    that causes name-repetition problems when it is called as part of the standard init procedure
         if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context: # cxt-test
-            self.context.source = ContextFlags.COMMAND_LINE # cxt-push
+            self.context.status = ContextStatus.COMMAND_LINE # cxt-push
             self._instantiate_attributes_before_function(context=COMMAND_LINE)  # cxt-done
         # Give owner a chance to instantiate function and/or function params
         # (e.g., wrap in UserDefineFunction, as per EVCControlMechanism)
@@ -2044,7 +2055,7 @@ class Component(object):
 
         # If the object's function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
-            self.context.source = COMMAND_LINE # cxt-push
+            self.context.status = COMMAND_LINE # cxt-push
             self._instantiate_function(context=COMMAND_LINE) # cxt-done
         # FIX: WHY SHOULD IT BE CALLED DURING STANDRD INIT PROCEDURE?
         # # MODIFIED 5/5/17 OLD:
@@ -2052,10 +2063,10 @@ class Component(object):
         # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_states ARG OF CONSTRUCTOR]
         if OUTPUT_STATES in validated_set and COMMAND_LINE in context: # cxt-test
         # MODIFIED 5/5/17 END
-            self.context.source = COMMAND_LINE # cxt-push
+            self.context.status = COMMAND_LINE # cxt-push
             self._instantiate_attributes_after_function(context=COMMAND_LINE) # cxt-done
 
-        self.context.flags = curr_context # cxt-pop
+        self.context.status = curr_context # cxt-pop
         self.context.string = curr_context_str
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
@@ -2297,53 +2308,24 @@ class Component(object):
                     #     compatible but different from the one in paramClassDefaults;
                     #     therefore, FUNCTION_PARAMS will not match paramClassDefaults;
                     #     instead, check that functionParams are compatible with the function's default params
-                    if param_name is FUNCTION_PARAMS:
-                        if not self.assign_default_FUNCTION_PARAMS:
-                            # Get function:
-                            try:
-                                function = request_set[FUNCTION]
-                            except KeyError:
-                                # If no function is specified, self.assign_default_FUNCTION_PARAMS should be True
-                                # (see _instantiate_defaults above)
-                                raise ComponentError("PROGRAM ERROR: No function params for {} so should be able to "
-                                                    "validate {}".format(self.name, FUNCTION_PARAMS))
-                            else:
-                                for entry_name, entry_value in param_value.items():
-                                    try:
-                                        function.paramClassDefaults[entry_name]
-                                    except KeyError:
-                                        raise ComponentError("{0} is not a valid entry in {1} for {2} ".
-                                                            format(entry_name, param_name, self.name))
-                                    # add [entry_name] entry to [param_name] dict
-                                    else:
-                                        try:
-                                            target_set[param_name][entry_name] = entry_value
-                                        # [param_name] dict not yet created, so create it
-                                        except KeyError:
-                                            target_set[param_name] = {}
-                                            target_set[param_name][entry_name] = entry_value
-                                        # target_set None
-                                        except TypeError:
-                                            pass
+                    if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
+                        # Get function:
+                        try:
+                            function = request_set[FUNCTION]
+                        except KeyError:
+                            # If no function is specified, self.assign_default_FUNCTION_PARAMS should be True
+                            # (see _instantiate_defaults above)
+                            raise ComponentError("PROGRAM ERROR: No function params for {} so should be able to "
+                                                "validate {}".format(self.name, FUNCTION_PARAMS))
                         else:
-                            # if param_name != FUNCTION_PARAMS:
-                            #     assert True
                             for entry_name, entry_value in param_value.items():
-                                # Make sure [entry_name] entry is in [param_name] dict in paramClassDefaults
                                 try:
-                                    self.paramClassDefaults[param_name][entry_name]
+                                    function.paramClassDefaults[entry_name]
                                 except KeyError:
                                     raise ComponentError("{0} is not a valid entry in {1} for {2} ".
                                                         format(entry_name, param_name, self.name))
-                                # TBI: (see above)
-                                # if not iscompatible(entry_value,
-                                #                     self.paramClassDefaults[param_name][entry_name],
-                                #                     **{kwCompatibilityLength:0}):
-                                #     raise ComponentError("{0} ({1}) in {2} of {3} must be a {4}".
-                                #         format(entry_name, entry_value, param_name, self.name,
-                                #                type(self.paramClassDefaults[param_name][entry_name]).__name__))
+                                # add [entry_name] entry to [param_name] dict
                                 else:
-                                    # add [entry_name] entry to [param_name] dict
                                     try:
                                         target_set[param_name][entry_name] = entry_value
                                     # [param_name] dict not yet created, so create it
@@ -2353,6 +2335,32 @@ class Component(object):
                                     # target_set None
                                     except TypeError:
                                         pass
+                    else:
+                        for entry_name, entry_value in param_value.items():
+                            # Make sure [entry_name] entry is in [param_name] dict in paramClassDefaults
+                            try:
+                                self.paramClassDefaults[param_name][entry_name]
+                            except KeyError:
+                                raise ComponentError("{0} is not a valid entry in {1} for {2} ".
+                                                    format(entry_name, param_name, self.name))
+                            # TBI: (see above)
+                            # if not iscompatible(entry_value,
+                            #                     self.paramClassDefaults[param_name][entry_name],
+                            #                     **{kwCompatibilityLength:0}):
+                            #     raise ComponentError("{0} ({1}) in {2} of {3} must be a {4}".
+                            #         format(entry_name, entry_value, param_name, self.name,
+                            #                type(self.paramClassDefaults[param_name][entry_name]).__name__))
+                            else:
+                                # add [entry_name] entry to [param_name] dict
+                                try:
+                                    target_set[param_name][entry_name] = entry_value
+                                # [param_name] dict not yet created, so create it
+                                except KeyError:
+                                    target_set[param_name] = {}
+                                    target_set[param_name][entry_name] = entry_value
+                                # target_set None
+                                except TypeError:
+                                    pass
 
                 elif target_set is not None:
                     # Copy any iterables so that deletions can be made to assignments belonging to the instance
@@ -2814,20 +2822,18 @@ class Component(object):
     def execute(self, variable=None, runtime_params=None, context=None):
         return self._execute(variable=variable, runtime_params=runtime_params, context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None, **kwargs):
+    def _execute(self, variable=None, runtime_params=None, context=None):
 
+        # MODIFIED 3/20/18 NEW:
         from psyneulink.components.functions.function import Function
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
         else:
-            if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+            if self.context.status & ~(ContextStatus.VALIDATION | ContextStatus.INITIALIZATION):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context) # cxt-pass
-
-        # IMPLEMENTION NOTE:  **kwargs is included to accommodate required arguments
-        #                     that are specific to particular class of Functions
-        #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
-        return self.function(variable=variable, params=runtime_params, context=context, **kwargs)
+        # MODIFIED 3/20/18 END
+        return self.function(variable=variable, params=runtime_params, context=context)
 
     @property
     def execution_count(self):
@@ -2911,6 +2917,20 @@ class Component(object):
         for i in range(len(v)):
             s.append(len(v[i]))
         return np.array(s)
+
+    # @property
+    # def init_status(self):
+    #     try:
+    #         return self._init_status
+    #     except AttributeError:
+    #         return InitStatus.UNSET
+    #
+    # @init_status.setter
+    # def init_status(self, value):
+    #     if not isinstance(value, InitStatus):
+    #         raise ComponentError("PROGRAM ERROR:  Attempt to assign \'init_status\' attribute of {} "
+    #                              "a value ({}) other than one of InitStatus".format(self.name, value))
+    #     self._init_status = value
 
     @property
     def prefs(self):
@@ -3043,7 +3063,7 @@ class Component(object):
         try:
             return self._context
         except:
-            self._context = Context(owner=self)
+            self._context = Context(owner=self, status=ContextStatus.OFF)
             return self._context
 
     # from psyneulink.globals.context import Context
@@ -3063,7 +3083,7 @@ class Component(object):
         try:
             return self._log
         except AttributeError:
-            if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
                 raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete "
                                      "or appropriately configuring a system to which it belongs".
                                      format(self.name, 'log'))
@@ -3076,14 +3096,14 @@ class Component(object):
 
     @property
     def loggable_items(self):
-        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `ContextFlags`.
+        """Diciontary of items that can be logged in the Component's `log <Component.log>` and their current `ContextStatus`.
         This is a convenience method that calls the `loggable_items <Log.loggable_items>` property of the Component's
         `log <Component.log>`.
         """
         return self.log.loggable_items
 
-    from psyneulink.globals.log import ContextFlags
-    def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
+    from psyneulink.globals.log import ContextStatus
+    def set_log_conditions(self, items, log_condition=ContextStatus.EXECUTION):
         """
         set_log_conditions(          \
             items                    \
@@ -3091,8 +3111,8 @@ class Component(object):
         )
 
         Specifies items to be logged; these must be be `loggable_items <Component.loggable_items>` of the Component's
-        `log <Component.log>`. This is a convenience method that calls the `set_log_conditions <Log.set_log_conditions>`
-        method of the Component's `log <Component.log>`.
+        `log <Component.log>`. This is a convenience method that calls the `set_log_conditions <Log.set_log_conditions>` method
+        of the Component's `log <Component.log>`.
         """
         self.log.set_log_conditions(items=items, log_condition=log_condition)
 
@@ -3110,7 +3130,7 @@ class Component(object):
 
     @property
     def logged_items(self):
-        """Dictionary of all items that have entries in the log, and their currently assigned `ContextFlags`\\s
+        """Dictionary of all items that have entries in the log, and their currently assigned `ContextStatus`\\s
         This is a convenience method that calls the `logged_items <Log.logged_items>` property of the Component's
         `log <Component.log>`.
         """
