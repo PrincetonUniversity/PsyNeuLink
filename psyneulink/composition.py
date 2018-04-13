@@ -428,6 +428,7 @@ class Composition(object):
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
+            self.needs_update_scheduler_processing = True
 
     def add_projection(self, sender, projection, receiver):
         '''
@@ -767,6 +768,10 @@ class Composition(object):
         for k in self.input_mechanisms.keys():
             self.input_mechanisms[k]._execution_id = self._execution_id
 
+        # TODO: this is not stateful but necessary for current state of devel, 4/9/18;
+        #   most likely this should be overriden by whatever is done on composition branch
+        return self._execution_id
+
     def execute(
         self,
         inputs,
@@ -828,7 +833,7 @@ class Composition(object):
 
         self._create_input_mechanisms()
         self._assign_values_to_input_mechanisms(inputs)
-        self._assign_execution_ids(execution_id)
+        execution_id = self._assign_execution_ids(execution_id)
         next_pass_before = 1
         next_pass_after = 1
         # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
@@ -838,7 +843,7 @@ class Composition(object):
         if call_before_pass:
             call_before_pass()
 
-        for next_execution_set in execution_scheduler.run(termination_conds=termination_processing):
+        for next_execution_set in execution_scheduler.run(termination_conds=termination_processing, execution_id=execution_id):
             if call_after_pass:
                 if next_pass_after == execution_scheduler.clock.time.pass_:
                     logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.clock.current_pass()))
@@ -945,6 +950,9 @@ class Composition(object):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
+        execution_id = self._assign_execution_ids(execution_id)
+
+        scheduler_processing._init_counts(execution_id=execution_id)
         scheduler_processing.update_termination_conditions(termination_processing)
         scheduler_learning.update_termination_conditions(termination_learning)
 
@@ -971,7 +979,7 @@ class Composition(object):
 
         input_indices = range(len_inputs)
 
-        scheduler_processing._reset_counts_total(TimeScale.RUN)
+        scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
         # TBI: Handle learning graph
 
@@ -982,7 +990,7 @@ class Composition(object):
         for input_index in input_indices:
             if call_before_trial:
                 call_before_trial()
-            if scheduler_processing.termination_conds[TimeScale.RUN].is_satisfied():
+            if scheduler_processing.termination_conds[TimeScale.RUN].is_satisfied(scheduler=scheduler_processing, execution_id=execution_id):
                 break
 
             execution_inputs = {}
@@ -1010,7 +1018,7 @@ class Composition(object):
             if call_after_trial:
                 call_after_trial()
 
-        scheduler_processing.clock._increment_time(TimeScale.RUN)
+        scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)
 
         # return the output of the LAST mechanism executed in the composition
         return result

@@ -1036,7 +1036,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         Also determines and assigns `error_matrices` from the `error_sources`, identified as the matrix for the
             Projection with which each error_source is associated.
         """
-        from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary \
+        from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary \
             import _instantiate_error_signal_projection
 
         super()._instantiate_attributes_before_function(context=context)
