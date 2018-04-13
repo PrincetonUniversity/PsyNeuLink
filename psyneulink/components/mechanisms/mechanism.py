@@ -732,8 +732,8 @@ Attribute Dictionary
 Finally, a Mechanism has an attribute that contains a dictionary of its attributes that can be used to specify the
 `variable <OutputState.variable>` of its OutputState (see `OutputState_Customization`):
 
-    * `attributes_dict` -- a dictionary of that contains the value of its attributes that can be used as the
-      `variable <OutputState.variable>` of its OutputState.
+    * `attributes_dict` -- a dictionary that contains the attributes of the Mechanism and their values,
+      that can be used in the `variable <OutputState.variable>` of its OutputState(s).
 
 
 .. _Mechanism_Role_In_Processes_And_Systems:
