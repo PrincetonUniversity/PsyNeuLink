@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.4.6.0 documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.4.6.0+1.g6a276e2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.6.0 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.6.0+1.g6a276e2 documentation" href="index.html"/>
         <link rel="up" title="Components" href="Component.html"/>
         <link rel="next" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
         <link rel="prev" title="Components" href="Component.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.6.0
+                0.4.6.0+1
               </div>
             
           
@@ -283,9 +283,9 @@ same type for which a default name has been assigned.</dd>
 </li>
 <li><dl class="first docutils">
 <dt>&lt;name of parameter&gt;:&lt;value&gt;</dt>
-<dd>this can contain any of the <a class="reference internal" href="#mechanism-attributes"><span class="std std-ref">standard parameters</span></a> for instantiating a Mechanism
-or ones specific to a particular type of Mechanism (see documentation for the type).  The key must be
-the name of the argument used to specify the parameter in the Mechanism’s constructor, and the value must
+<dd>this can contain any of the <a class="reference internal" href="#mechanism-additional-attributes"><span class="std std-ref">standard parameters</span></a> for instantiating a
+Mechanism or ones specific to a particular type of Mechanism (see documentation for the type).  The key must
+be the name of the argument used to specify the parameter in the Mechanism’s constructor, and the value must
 be a legal value for that parameter, using any of the ways allowed for <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">specifying a parameter</span></a>. The parameter values specified will be used to instantiate the Mechanism.
 These can be overridden during execution by specifying <a class="reference internal" href="#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>, either when calling
 the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method, or where it is
@@ -372,12 +372,12 @@ default, can be specified to be the <a class="reference internal" href="Function
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Notice that the parameters of the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> (in this case, <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic.gain" title="psyneulink.components.functions.function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> and <a class="reference internal" href="Function.html#psyneulink.components.functions.function.NavarroAndFuss.bias" title="psyneulink.components.functions.function.NavarroAndFuss.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a>) can be specified by including
+<p>Notice that the parameters of the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> (in this case, <a class="reference internal" href="Function.html#psyneulink.components.functions.function.SoftMax.gain" title="psyneulink.components.functions.function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> and <a class="reference internal" href="Function.html#psyneulink.components.functions.function.NavarroAndFuss.bias" title="psyneulink.components.functions.function.NavarroAndFuss.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a>) can be specified by including
 them in its constructor.  Some Mechanisms support only a single function.  In that case, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>
 argument is not available in the Mechanism’s constructor, but it does include arguments for the function’s
 parameters.  For example, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is always the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination" title="psyneulink.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function,
 so the Mechanisms’ constructor does not have a <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> argument.  However, it does have a
-<strong>comparison_operation</strong> argument, that is used to set the LinearCombination function’s <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Reduce.operation" title="psyneulink.components.functions.function.Reduce.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> parameter.</p>
+<strong>comparison_operation</strong> argument, that is used to set the LinearCombination function’s <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination.operation" title="psyneulink.components.functions.function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> parameter.</p>
 <p>The parameters for a Mechanism’s primary function can also be specified as entries in a <em>FUNCTION_PARAMS</em> entry of a
 <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> in the <strong>params</strong> argument of the Mechanism’s
 constructor.  For example, the parameters of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function in the example above can
@@ -411,8 +411,8 @@ the parameters in the  example above could also be accessed as <code class="docu
 <p>Some Mechanisms have auxiliary functions that are inherent (i.e., not made available as arguments in the Mechanism’s
 constructor;  e.g., the <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>);
 however, the Mechanism may include parameters for those functions in its constructor (e.g., the <strong>noise</strong> argument in
-the constructor for a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> is used as the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.AdaptiveIntegrator.noise" title="psyneulink.components.functions.function.AdaptiveIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> parameter of the
-<a class="reference internal" href="IntegratorMechanism.html#psyneulink.components.mechanisms.processing.integratormechanism.IntegratorMechanism.AdaptiveIntegrator" title="psyneulink.components.mechanisms.processing.integratormechanism.IntegratorMechanism.AdaptiveIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AdaptiveIntegrator</span></code></a> assigned to the TransferMechanism’s <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>).</p>
+the constructor for a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> is used as the <a class="reference internal" href="IntegratorMechanism.html#psyneulink.components.mechanisms.processing.integratormechanism.IntegratorMechanism.AdaptiveIntegrator.noise" title="psyneulink.components.mechanisms.processing.integratormechanism.IntegratorMechanism.AdaptiveIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> parameter of the
+<a class="reference internal" href="Function.html#psyneulink.components.functions.function.AdaptiveIntegrator" title="psyneulink.components.functions.function.AdaptiveIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AdaptiveIntegrator</span></code></a> assigned to the TransferMechanism’s <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>).</p>
 </div>
 <div class="section" id="custom-functions">
 <span id="mechanism-custom-function"></span><h4>Custom Functions<a class="headerlink" href="#custom-functions" title="Permalink to this headline">¶</a></h4>
@@ -643,7 +643,9 @@ the Mechanism`s <a class="reference internal" href="#psyneulink.components.mecha
 </div>
 </div>
 <div class="section" id="additional-attributes">
-<span id="mechanism-attributes"></span><h3>Additional Attributes<a class="headerlink" href="#additional-attributes" title="Permalink to this headline">¶</a></h3>
+<span id="mechanism-additional-attributes"></span><h3>Additional Attributes<a class="headerlink" href="#additional-attributes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="additional-constructor-arguments">
+<span id="mechanism-constructor-arguments"></span><h4>Additional Constructor Arguments<a class="headerlink" href="#additional-constructor-arguments" title="Permalink to this headline">¶</a></h4>
 <p>In addition to the <a class="reference internal" href="Component.html#component-structure"><span class="std std-ref">standard attributes</span></a> of any <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>, Mechanisms have a set of
 Mechanism-specific attributes (listed below). These can be specified in arguments of the Mechanism’s constructor,
 in a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> assigned to the <strong>params</strong> argument of the
@@ -668,6 +670,9 @@ the <a class="reference internal" href="System.html#psyneulink.components.system
 learning (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-activation-output"><span class="std std-ref">Learning</span></a> for details of specification).</li>
 </ul>
 </div></blockquote>
+</div>
+<div class="section" id="projection-convenience-properties">
+<span id="mechanism-convenience-properties"></span><h4>Projection Convenience Properties<a class="headerlink" href="#projection-convenience-properties" title="Permalink to this headline">¶</a></h4>
 <p>A Mechanism also has several convenience properties, listed below, that list its <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> and the
 Mechanisms that send/receive these:</p>
 <blockquote>
@@ -686,6 +691,50 @@ Mechanism</li>
 <p>Each of these is a <a class="reference internal" href="Utilities.html#psyneulink.globals.utilities.ContentAddressableList" title="psyneulink.globals.utilities.ContentAddressableList"><code class="xref any py py-class docutils literal"><span class="pre">ContentAddressableList</span></code></a>, which means that the names of the Components in each list can be listed by
 appending <code class="docutils literal"><span class="pre">.names</span></code> to the property.  For examples, the names of all of the Mechanisms that receive a Projection from
 <code class="docutils literal"><span class="pre">my_mech</span></code> can be accessed by <code class="docutils literal"><span class="pre">my_mech.receivers.names</span></code>.</p>
+</div>
+<div class="section" id="value-label-dictionaries">
+<span id="mechanism-labels-dicts"></span><h4>Value Label Dictionaries<a class="headerlink" href="#value-label-dictionaries" title="Permalink to this headline">¶</a></h4>
+<p>Mechanisms also have two attributes that can be used to specify labels for the values of its InputState(s) and
+OutputState(s):</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>INPUT_LABELS_DICT</em> – used to specify labels for values of the InputState(s) of the Mechanism;  if specified,
+the dictionary is contained in the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict"><code class="xref any py py-attr docutils literal"><span class="pre">input_labels_dict</span></code></a> attribute.</li>
+</ul>
+<ul class="simple">
+<li><em>OUTPUT_LABELS_DICT</em> – used to specify labels for values of the OutputState(s) of the Mechanism;  if specified,
+the dictionary is contained in the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict"><code class="xref any py py-attr docutils literal"><span class="pre">output_labels_dict</span></code></a> attribute.</li>
+</ul>
+</div></blockquote>
+<p>The labels specified in these dictionaries can be used to specify items in the <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">inputs</span></a> and <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">targets</span></a> arguments of the <a class="reference internal" href="System.html#psyneulink.components.system.System.run" title="psyneulink.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, and to report the values of the InputState(s)
+and OutputState(s) of a Mechanism in a System’s <a class="reference internal" href="System.html#psyneulink.components.system.System.show_graph" title="psyneulink.components.system.System.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method (using its <strong>use_values</strong>
+option).  The labels for the current value(s) of the Mechanism’s InputState(s) and OutputState(s) are listed in its
+<a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels"><code class="xref any py py-attr docutils literal"><span class="pre">input_labels</span></code></a> and <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels"><code class="xref any py py-attr docutils literal"><span class="pre">output_labels</span></code></a>, respectively.</p>
+<p>Label dictionaries can only be specified in a parameters dictionary assigned to the <strong>params</strong> argument of the
+Mechanism’s constructor, using the keywords listed above.  A given label dictionary must contain entries <em>all</em> of which
+use <em>only one</em> of the two following formats for the <em>key:value</em> pair of each entry:</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>label:value</em> – the <em>label</em> is a string to be associated with the specified value of the State. If the
+Mechanism has more than one State of the type corresponding to the dictionary, then the label will be used for
+the specified value of any State of that type.  For example, if <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict"><code class="xref any py py-attr docutils literal"><span class="pre">input_labels_dict</span></code></a> has <em>label_value</em> entries, and the Mechanism has more than one InputState,
+then a specified label will be associated with the corresponding <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for any of the
+Mechanism’s InputStates.</li>
+</ul>
+<ul class="simple">
+<li><em>&lt;state name or index&gt;:&lt;sub-dictionary&gt;</em> – this is used to specify labels that are specific to individual States
+of the type corresponding to the dictionary;  the key of each entry must be either the name of a State of that
+type, or its index in the list of States of that type (i.e, <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> or
+<a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>), and the value a subdictionary containing <em>label:value</em> entries
+to be used for that State.  For example, if a Mechanism has two InputStates, named <em>SAMPLE</em> and <em>TARGET</em>, then
+<em>INPUT_LABELS_DICT</em> could be assigned two entries, <em>SAMPLE</em>:&lt;dict&gt; and <em>TARGET</em>:&lt;dict&gt; or, correspondingly,
+0:&lt;dict&gt; and 1:&lt;dict&gt;, in which each dict contained separate <em>label:value</em> entries for each of the two
+InputStates.</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="attribute-dictionary">
+<h4>Attribute Dictionary<a class="headerlink" href="#attribute-dictionary" title="Permalink to this headline">¶</a></h4>
 <p>Finally, a Mechanism has an attribute that contains a dictionary of its attributes that can be used to specify the
 <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of its OutputState (see <a class="reference internal" href="OutputState.html#outputstate-customization"><span class="std std-ref">OutputState Customization</span></a>):</p>
 <blockquote>
@@ -694,6 +743,7 @@ appending <code class="docutils literal"><span class="pre">.names</span></code> 
 <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.variable" title="psyneulink.components.states.outputstate.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of its OutputState.</li>
 </ul>
 </div></blockquote>
+</div>
 </div>
 <div class="section" id="role-in-processes-and-systems">
 <span id="mechanism-role-in-processes-and-systems"></span><h3>Role in Processes and Systems<a class="headerlink" href="#role-in-processes-and-systems" title="Permalink to this headline">¶</a></h3>
@@ -729,7 +779,7 @@ these can be overridden when it <code class="xref any docutils literal"><span cl
 dictionary</span></a> assigned to the <strong>runtime_param</strong> argument of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method, or in a <a class="reference internal" href="Process.html#process-mechanism-specification"><span class="std std-ref">tuple with the Mechanism</span></a> in the <a class="reference internal" href="Process.html#psyneulink.components.process.Process.pathway" title="psyneulink.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>
 of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.  Any value assigned to a parameter in a <strong>runtime_params</strong> dictionary will override the current value of
 that parameter for the (and <em>only</em> the) current execution of the Mechanism; the value will return to its previous value
-following that execution, unless the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.ComponentPreferenceSet.runtimeParamStickyAssignmentPref" title="psyneulink.globals.preferences.ComponentPreferenceSet.runtimeParamStickyAssignmentPref"><code class="xref any py py-attr docutils literal"><span class="pre">runtimeParamStickyAssignmentPref</span></code></a> is set for the component to which the parameter
+following that execution, unless the <a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamStickyAssignmentPref" title="psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamStickyAssignmentPref"><code class="xref any py py-attr docutils literal"><span class="pre">runtimeParamStickyAssignmentPref</span></code></a> is set for the component to which the parameter
 belongs.</p>
 <p>The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of which
 is for a parameter of the Mechanism or its  <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, or for one of the <a class="reference internal" href="#mechanism-states"><span class="std std-ref">Mechanism's States</span></a>. Entries for parameters of the Mechanism or its <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> use the
@@ -791,6 +841,24 @@ the Mechanism’s <a class="reference internal" href="InputState.html#inputstate
 each item is the same as the corresponding item in the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 attribute.  The latter is a 2d np.array; the <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_values" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_values"><code class="xref any py py-attr docutils literal"><span class="pre">input_values</span></code></a> attribute provides
 this information in a simpler list format.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict">
+<code class="descname">input_labels_dict</code><a class="headerlink" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dict</em> – contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
+in which each label (key) specifies a string associated with a value for the InputState(s) of the
+Mechanism; see <a class="reference internal" href="#mechanism-labels-dicts"><span class="std std-ref">Value Label Dictionaries</span></a> for additional details.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels">
+<code class="descname">input_labels</code><a class="headerlink" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list</em> – contains the labels corresponding to the value(s) of the InputState(s) of the Mechanism listed in
+<a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_values" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_values"><code class="xref any py py-attr docutils literal"><span class="pre">input_values</span></code></a> if <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels"><code class="xref any py py-attr docutils literal"><span class="pre">input_labels_dict</span></code></a> has been
+assigned, otherwise returns <code class="xref any docutils literal"><span class="pre">None</span></code>.  If <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_labels"><code class="xref any py py-attr docutils literal"><span class="pre">input_labels_dict</span></code></a> has been
+assigned, but does not contain a label for the current <a class="reference internal" href="InputState.html#psyneulink.components.states.inputstate.InputState.value" title="psyneulink.components.states.inputstate.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an InputState,
+then its value assigned as the corresponding entry in the list in place of a label.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -861,6 +929,24 @@ attribute may use the Mechanism’s <a class="reference internal" href="#psyneul
 the <code class="xref any docutils literal"><span class="pre">value</span></code> of that OutputState (and its corresponding item in the
 the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute).</p>
 </div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict">
+<code class="descname">output_labels_dict</code><a class="headerlink" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dict</em> – contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
+in which each label (key) specifies a string associated with a value for the OutputState(s) of the
+Mechanism; see <a class="reference internal" href="#mechanism-labels-dicts"><span class="std std-ref">Value Label Dictionaries</span></a> for additional details.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels">
+<code class="descname">output_labels</code><a class="headerlink" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list</em> – contains the labels corresponding to the value(s) of the OutputState(s) of the Mechanism listed in
+<a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> if <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels"><code class="xref any py py-attr docutils literal"><span class="pre">output_labels_dict</span></code></a> has been
+assigned, otherwise returns <code class="xref any docutils literal"><span class="pre">None</span></code>.  If <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_labels"><code class="xref any py py-attr docutils literal"><span class="pre">output_labels_dict</span></code></a> has been
+assigned, but does not contain a label for the current <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an OutputState,
+then its value assigned as the corresponding entry in the list in place of a label.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1023,26 +1109,26 @@ Finally, the mechanism updates its <a class="reference internal" href="#psyneuli
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>input</strong> (<em>List</em><em>[</em><a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><em>value</em></a><em>] or </em><em>ndarray : default self.instance_defaults.variable</em>) – input to use for execution of the Mechanism.
+<li><strong>input</strong> (<em>List</em><em>[</em><a class="reference internal" href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value"><em>value</em></a><em>] or </em><em>ndarray : default self.instance_defaults.variable</em>) – input to use for execution of the Mechanism.
 This must be consistent with the format of the Mechanism’s <a class="reference internal" href="#mechanism-inputstates"><span class="std std-ref">InputState(s)</span></a>:
 the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
 of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>, and each item must be compatible with the
 format (number and type of elements) of the <code class="xref any docutils literal"><span class="pre">variable</span></code> of the
 corresponding InputState (see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Run Inputs</span></a> for details of input
 specification formats).</li>
-<li><strong>runtime_params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><em>value</em></a><em>]</em><em>]</em><em>]</em><em>]</em><em>:</em>) – a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism,
+<li><strong>runtime_params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value"><em>value</em></a><em>]</em><em>]</em><em>]</em><em>]</em><em>:</em>) – a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism,
 its function, or <a class="reference internal" href="State.html#state-projections"><span class="std std-ref">Projection(s) to any of its States</span></a>.  Any value assigned to a
 parameter will override the current value of that parameter for the (and only the current) execution of
 the Mechanism, and will return to its previous value following execution (unless the
-<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.ComponentPreferenceSet.runtimeParamStickyAssignmentPref" title="psyneulink.globals.preferences.ComponentPreferenceSet.runtimeParamStickyAssignmentPref"><code class="xref any py py-attr docutils literal"><span class="pre">runtimeParamStickyAssignmentPref</span></code></a> is set for the Component to which the parameter belongs).  See
+<a class="reference internal" href="Preferences.html#psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamStickyAssignmentPref" title="psyneulink.globals.preferences.MechanismPreferenceSet.runtimeParamStickyAssignmentPref"><code class="xref any py py-attr docutils literal"><span class="pre">runtimeParamStickyAssignmentPref</span></code></a> is set for the Component to which the parameter belongs).  See
 <a class="reference internal" href="#mechanism-runtime-parameters"><span class="std std-ref">runtime_params</span></a> above for details concerning specification.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Mechanism’s output_values</strong> – list with the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of the Mechanism’s <a class="reference internal" href="#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a> after either one <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or a <a class="reference internal" href="Context.html#psyneulink.globals.context.ContextStatus.TRIAL" title="psyneulink.globals.context.ContextStatus.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Mechanism’s output_values</strong> – list with the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of the Mechanism’s <a class="reference internal" href="#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a> after either one <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or a <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value">value</a>]</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value">value</a>]</p>
 </td>
 </tr>
 </tbody>
@@ -1069,7 +1155,7 @@ description of formatting requirements and options).</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Mechanism’s output_values</strong> – list with the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of the Mechanism’s <a class="reference internal" href="#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a> for each execution of the Mechanism.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value">value</a>]</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value">value</a>]</p>
 </td>
 </tr>
 </tbody>
@@ -1085,7 +1171,7 @@ description of formatting requirements and options).</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>List</em><em>[</em><a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><em>value</em></a><em>] or </em><em>1d ndarray</em>) – value used to initialize the first item of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>List</em><em>[</em><a class="reference internal" href="KWTA.html#psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value" title="psyneulink.library.mechanisms.processing.transfer.kwta.KWTA.value"><em>value</em></a><em>] or </em><em>1d ndarray</em>) – value used to initialize the first item of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.</td>
 </tr>
 </tbody>
 </table>
@@ -1093,7 +1179,7 @@ description of formatting requirements and options).</li>
 
 <dl class="method">
 <dt id="psyneulink.components.mechanisms.mechanism.Mechanism_Base.show_structure">
-<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions=False</em>, <em>show_values=False</em>, <em>show_headers=False</em>, <em>output_fmt='pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.show_structure" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_structure</code><span class="sig-paren">(</span><em>show_functions=False</em>, <em>show_values=False</em>, <em>use_labels=False</em>, <em>show_headers=False</em>, <em>output_fmt='pdf'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.show_structure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a detailed display of a the structure of a Mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -1111,6 +1197,9 @@ by <a class="reference internal" href="System.html#psyneulink.components.system.
 States in the record.</li>
 <li><strong>show_values</strong> (<em>bool : default False</em>) – specifies whether or not to show the <a class="reference internal" href="Component.html#psyneulink.components.component.Component.value" title="psyneulink.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and each of its States
 in the record.</li>
+<li><strong>use_labels</strong> (<em>bool : default False</em>) – specifies whether or not to use labels for values if <strong>show_values</strong> is <code class="xref any docutils literal"><span class="pre">True</span></code>; labels must be specified
+in the <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code> (for InputState values) and
+<code class="xref any docutils literal"><span class="pre">output_labels_dict</span></code> (for OutputState values), otherwise the value is used.</li>
 <li><strong>show_headers</strong> (<em>bool : default False</em>) – specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers.</li>
 <li><strong>output_fmt</strong> (<em>keyword : default 'pdf'</em>) – <p>‘pdf’: generate and open a pdf with the visualization;</p>
 <p>’jupyter’: return the object (ideal for working in jupyter/ipython notebooks)</p>
@@ -1207,6 +1296,20 @@ State specification(s) can be an InputState or OutputState object or the name of
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">input_labels</code></dt>
+<dd><p>If Mechanism has an input_labels_dict, return list of labels for each value in input_values;
+For items of input_values that have no label, use its valiue.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">output_labels</code></dt>
+<dd><p>If Mechanism has an output_labels_dict, return list of labels for each value in output_values;
+For items of input_values that have no label, use its valiue.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1312,7 +1415,7 @@ State specification(s) can be an InputState or OutputState object or the name of
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.6.0',
+            VERSION:'0.4.6.0+1.g6a276e2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
