@@ -3015,15 +3015,16 @@ class TransferFunction(Function_Base):
     def _gen_llvm_function_body(self, ctx, builder):
         params, _, vi, vo = builder.function.args
 
-        # Eliminate one dimension for 2d variable
+        # Pretend we have one huge array to work on
+        # TODO: should this be invoked in parts?
         if self.get_current_function_param(VARIABLE).ndim > 1:
-            assert self.get_current_function_param(VARIABLE).shape[0] == 1
-            vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
+            vo = builder.bitcast(vo, ir.ArrayType(ctx.float_ty, self._result_length).as_pointer())
 
         kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
         inner = functools.partial(self._gen_llvm_transfer, **kwargs)
 
+        assert vi.type.pointee.count == vo.type.pointee.count
         vector_length = ctx.int32_ty(vi.type.pointee.count)
         builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "transfer_loop")
 
