@@ -243,4 +243,4 @@ class ModulatoryProjection_Base(Projection_Base):
 
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
-                                            format(self, ContextFlags._get_context_string(self.context.initialization_status)))
+                                            format(self, ContextFlags.get_context_string(self.context.initialization_status)))

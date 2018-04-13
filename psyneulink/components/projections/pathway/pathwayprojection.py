@@ -123,5 +123,5 @@ class PathwayProjection_Base(Projection_Base):
         else:
             raise PathwayProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
                                             format(self,
-                                                   ContextFlags._get_context_string(
+                                                   ContextFlags.get_context_string(
                                                            self.context.initialization_status)))
