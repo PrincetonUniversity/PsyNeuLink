@@ -3,7 +3,7 @@ import pytest
 
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.globals.keywords import INPUT_LABELS_DICT, ENABLED
+from psyneulink.globals.keywords import INPUT_LABELS_DICT, OUTPUT_LABELS_DICT, ENABLED
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 
@@ -101,27 +101,97 @@ class TestMechanismInputLabels:
         S.run(inputs=[['red', 'green'], ['green', 'red'], ['green', 'green']])
         assert np.allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
 
-# class TestMechanismTargetLabels:
-#     def test_dict_of_floats(self):
-#         input_labels_dict_M1 = {"red": 1,
-#                                 "green": 0}
-#         input_labels_dict_M2 = {"red": 0,
-#                                 "green": 1}
-#
-#         M1 = ProcessingMechanism(params={INPUT_LABELS_DICT: input_labels_dict_M1})
-#         M2 = ProcessingMechanism(params={INPUT_LABELS_DICT: input_labels_dict_M2})
-#         P = Process(pathway=[M1, M2],
-#                     learning=ENABLED,
-#                     learning_rate=0.25)
-#         S = System(processes=[P])
-#
-#         learned_matrix = []
-#         def record_matrix_after_trial():
-#             learned_matrix.append(M2.path_afferents[0].mod_matrix)
-#         S.run(inputs=['red', 'green', 'green', 'red'],
-#               # targets=['red', 'green', 'green', 'red'],
-#               call_after_trial=record_matrix_after_trial,
-#               targets=['red', 'green', 'green', 'red'])
-#
-#         assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[0.75]]])
-#         assert np.allclose(learned_matrix, [[[0.75]], [[0.75]], [[0.75]], [[0.5625]]])
+class TestMechanismTargetLabels:
+    def test_dict_of_floats(self):
+        input_labels_dict_M1 = {"red": 1,
+                                "green": 0}
+        output_labels_dict_M2 = {"red": 0,
+                                "green": 1}
+
+        M1 = ProcessingMechanism(params={INPUT_LABELS_DICT: input_labels_dict_M1})
+        M2 = ProcessingMechanism(params={OUTPUT_LABELS_DICT: output_labels_dict_M2})
+        P = Process(pathway=[M1, M2],
+                    learning=ENABLED,
+                    learning_rate=0.25)
+        S = System(processes=[P])
+
+        learned_matrix = []
+        def record_matrix_after_trial():
+            learned_matrix.append(M2.path_afferents[0].mod_matrix)
+        S.run(inputs=['red', 'green', 'green', 'red'],
+              targets=['red', 'green', 'green', 'red'],
+              call_after_trial=record_matrix_after_trial)
+
+        assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[0.75]]])
+        assert np.allclose(learned_matrix, [[[0.75]], [[0.75]], [[0.75]], [[0.5625]]])
+
+    def test_dict_of_arrays(self):
+        input_labels_dict_M1 = {"red": [1, 1],
+                                "green": [0, 0]}
+        output_labels_dict_M2 = {"red": [0, 0],
+                                "green": [1, 1]}
+
+        M1 = ProcessingMechanism(size=2,
+                                 params={INPUT_LABELS_DICT: input_labels_dict_M1})
+        M2 = ProcessingMechanism(size=2,
+                                 params={OUTPUT_LABELS_DICT: output_labels_dict_M2})
+        P = Process(pathway=[M1, M2],
+                    learning=ENABLED,
+                    learning_rate=0.25)
+        S = System(processes=[P])
+
+        learned_matrix = []
+        count = []
+        def record_matrix_after_trial():
+            learned_matrix.append(M2.path_afferents[0].mod_matrix)
+            count.append(1)
+
+
+        S.run(inputs=['red', 'green', 'green', 'red'],
+              targets=['red', 'green', 'green', 'red'],
+              # inputs=[[1, 1], [0, 0], [0, 0], [1, 1]],
+              # targets=[[0, 0], [1, 1], [1, 1], [0, 0]],
+              call_after_trial=record_matrix_after_trial)
+        print(S.results)
+        print(learned_matrix)
+        assert np.allclose(S.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
+        assert np.allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
+                                            np.array([[0.75, -0.25], [-0.25,  0.75]]),
+                                            np.array([[0.75, -0.25], [-0.25,  0.75]]),
+                                            np.array([[0.625, -0.375], [-0.375,  0.625]])])
+
+    def test_dict_of_subdicts(self):
+        input_labels_dict_M1 = {"red": [1, 1],
+                                "green": [0, 0]}
+        output_labels_dict_M2 = {0: {"red": [0, 0],
+                                       "green": [1, 1]}
+                                 }
+
+        M1 = ProcessingMechanism(size=2,
+                                 params={INPUT_LABELS_DICT: input_labels_dict_M1})
+        M2 = ProcessingMechanism(size=2,
+                                 params={OUTPUT_LABELS_DICT: output_labels_dict_M2})
+        P = Process(pathway=[M1, M2],
+                    learning=ENABLED,
+                    learning_rate=0.25)
+        S = System(processes=[P])
+
+        learned_matrix = []
+        count = []
+        def record_matrix_after_trial():
+            learned_matrix.append(M2.path_afferents[0].mod_matrix)
+            count.append(1)
+
+
+        S.run(inputs=['red', 'green', 'green', 'red'],
+              targets=['red', 'green', 'green', 'red'],
+              # inputs=[[1, 1], [0, 0], [0, 0], [1, 1]],
+              # targets=[[0, 0], [1, 1], [1, 1], [0, 0]],
+              call_after_trial=record_matrix_after_trial)
+        print(S.results)
+        print(learned_matrix)
+        assert np.allclose(S.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
+        assert np.allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
+                                            np.array([[0.75, -0.25], [-0.25,  0.75]]),
+                                            np.array([[0.75, -0.25], [-0.25,  0.75]]),
+                                            np.array([[0.625, -0.375], [-0.375,  0.625]])])

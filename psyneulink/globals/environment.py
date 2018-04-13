@@ -924,13 +924,13 @@ def _adjust_stimulus_dict(obj, stimuli):
 def _adjust_target_dict(component, target_dict):
 
     #  STEP 0:  parse any labels into array entries
-    need_parse_input_labels = []
-    for mech in component.target_mechanisms:
-        if hasattr(mech, "input_labels_dict"):
-            if mech.input_labels_dict is not None and mech.input_labels_dict != {}:
-                need_parse_input_labels.append(mech)
-    if len(need_parse_input_labels) > 0:
-        _parse_input_labels(component, target_dict, need_parse_input_labels)
+    need_parse_target_labels = []
+    for mech in target_dict:
+        if hasattr(mech, "output_labels_dict"):
+            if mech.output_labels_dict is not None and mech.output_labels_dict != {}:
+                need_parse_target_labels.append(mech)
+    if len(need_parse_target_labels) > 0:
+        target_dict = _parse_target_labels(component, target_dict, need_parse_target_labels)
 
     # STEP 1: validate that there is a one-to-one mapping of target entries and target mechanisms
     for target_mechanism in component.target_mechanisms:
@@ -1087,6 +1087,72 @@ def _parse_input_labels(obj, stimuli, mechanisms_to_parse):
                                    "for {} of inputs dictionary specified for {}".
                                    format(stim, i, mech.name, obj.name))
         return stimuli
+
+def _parse_target_labels(obj, target_dict, mechanisms_to_parse):
+    if len(mechanisms_to_parse) == 1:
+        if isinstance(target_dict, float):
+            return target_dict
+        elif isinstance(target_dict, str):
+            target_dict= {mechanisms_to_parse[0]: [target_dict]}
+        elif isinstance(target_dict, (list, np.ndarray)):
+            target_dict = {mechanisms_to_parse[0]: target_dict}
+    def get_target_for_label(mech, key):
+        """check mech.input_labels_dict for key"""
+
+        try:
+            return mech.output_labels_dict[key]
+        except KeyError:
+            raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
+                           format(key, obj.name, OUTPUT_LABELS_DICT, mech.name))
+
+    for mech in mechanisms_to_parse:
+        targets = target_dict[mech]
+        # Check for subdicts
+        subdicts = False
+        for k in mech.output_labels_dict:
+            value = mech.output_labels_dict[k]
+            if isinstance(value, dict):
+                subdicts = True
+                break
+
+        if subdicts:    # If there are subdicts, validate
+            for key in mech.output_labels_dict:
+                output_state = mech.output_states[key]
+                for proj in output_state.efferents:
+                    if proj.receiver.name == SAMPLE:
+                        output_state_index = mech.output_states.index(output_state)
+                        output_state_name = output_state.name
+
+            for i in range(len(targets)):
+                trial_target = targets[i]
+                if isinstance(trial_target, str):
+                    if output_state_index in mech.output_labels_dict:
+                        targets[i] = mech.output_labels_dict[output_state_index][trial_target]
+                    elif output_state_name in mech.output_labels_dict:
+                        targets[i] = mech.output_labels_dict[output_state_name][trial_target]
+
+        else:
+            for i, stim in enumerate(targets):
+                # "Burrow" down to determine whether there's a number at the "bottom";
+                #     if so, leave as is; otherwise, check if its a string and, if so, get value for label
+                if isinstance(stim, (list, np.ndarray)): # format of stimuli dict is at least: [[???]...?]
+                    for j, item in enumerate(stim):
+                        if isinstance(item, (Number, list, np.ndarray)): # format of stimuli dict is [[int or []...?]]
+                            continue # leave input item as is
+                        elif isinstance(item, str): # format of stimuli dict is [[label]...]
+                            # targets[i][j] = get_input_for_label(mech, item, stim)
+                            targets[i][j] = get_target_for_label(mech, item)
+                        else:
+                            raise RunError("Unrecognized specification ({}) in stimulus {} of entry "
+                                           "for {} in targets dictionary specified for {}".
+                                           format(item, i, mech.name, obj.name))
+                elif isinstance(stim, str):
+                    targets[i] = get_target_for_label(mech, stim)
+                else:
+                    raise RunError("Unrecognized specification ({}) for stimulus {} in entry "
+                                   "for {} of targets dictionary specified for {}".
+                                   format(stim, i, mech.name, obj.name))
+    return target_dict
 def _validate_target_function(target_function, target_mechanism, sample_mechanism):
 
     generated_targets = np.atleast_1d(target_function())
