@@ -912,10 +912,16 @@ class EVCControlMechanism(ControlMechanism):
         # IMPLEMENTATION NOTE:
         # self.system._store_system_state()
 
-        allocation_policy = self.function(controller=self,
-                                          variable=variable,
-                                          runtime_params=runtime_params,
-                                          context=context)
+        # allocation_policy = self.function(controller=self,  # mech_execute_control
+        #                                   variable=variable,
+        #                                   runtime_params=runtime_params,
+        #                                   context=context)
+        # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
+        allocation_policy = super(ControlMechanism, self)._execute(controller=self,
+                                                                   variable=variable,
+                                                                   runtime_params=runtime_params,
+                                                                   context=context)
+
         # IMPLEMENTATION NOTE:
         # self.system._restore_system_state()
 

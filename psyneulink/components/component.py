@@ -2816,7 +2816,6 @@ class Component(object):
 
     def _execute(self, variable=None, runtime_params=None, context=None, **kwargs):
 
-        # MODIFIED 3/20/18 NEW:
         from psyneulink.components.functions.function import Function
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
@@ -2824,7 +2823,10 @@ class Component(object):
             if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context) # cxt-pass
-        # MODIFIED 3/20/18 END
+
+        # IMPLEMENTION NOTE:  **kwargs is included to accommodate required arguments
+        #                     that are specific to particular class of Functions
+        #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
         return self.function(variable=variable, params=runtime_params, context=context, **kwargs)
 
     @property
