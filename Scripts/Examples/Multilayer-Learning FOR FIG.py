@@ -3,23 +3,23 @@ import numpy as np
 import psyneulink as pnl
 
 Input_Layer = pnl.TransferMechanism(
-    name='Input Layer',
+    name='Input',
     function=pnl.Logistic,
     params={pnl.INPUT_LABELS_DICT:{'red': [-1, 30]}},
     default_variable=np.zeros((2,)))
 
 Hidden_Layer_1 = pnl.TransferMechanism(
-    name='Hidden Layer_1',
+    name='Hidden1',
     function=pnl.Logistic(),
     default_variable=np.zeros((5,)))
 
 Hidden_Layer_2 = pnl.TransferMechanism(
-    name='Hidden Layer_2',
+    name='Hidden2',
     function=pnl.Logistic(),
     default_variable=[0, 0, 0, 0])
 
 Output_Layer = pnl.TransferMechanism(
-    name='Output Layer',
+    name='Output',
     function=pnl.Logistic,
     default_variable=[0, 0, 0])
 
@@ -111,7 +111,7 @@ Middle_Weights.set_log_conditions('matrix')
 mySystem.reportOutputPref = True
 # Shows graph will full information:
 # mySystem.show_graph(show_dimensions=pnl.ALL)
-mySystem.show_graph(show_learning=True)
+mySystem.show_graph()
 # mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL, show_mechanism_structure=True)
 # Shows minimal graph:
 # mySystem.show_graph()

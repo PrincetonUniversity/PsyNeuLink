@@ -664,7 +664,7 @@ appending ``.names`` to the property.  For examples, the names of all of the Mec
 ``my_mech`` can be accessed by ``my_mech.receivers.names``.
 
 
-.. Mechanism_Labels_Dicts:
+.. _Mechanism_Labels_Dicts:
 
 Value Label Dictionaries
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -680,25 +680,33 @@ OutputState(s):
       `TARGET` Mechanism used in `learning <LearningMechanism_Targets>`;  if specified, the dictionary is contained in
       the Mechanism's `target_labels_dict <Mechanism_Base.target_labels_dict>` attribute.
     COMMENT
-
+    ..
     * *OUTPUT_LABELS_DICT* -- used to specify labels for values of the OutputState(s) of the Mechanism;  if specified,
       the dictionary is contained in the Mechanism's `output_labels_dict <Mechanism_Base.output_labels_dict>` attribute.
 
 The labels specified in these dictionaries can be used to specify items in the `inputs <Run_Inputs>` and `targets
 <Run_Targets>` arguments of the `run <System.run>` method of a `System`, and to report the values of the InputState(s)
 and OutputState(s) of a Mechanism in a System's `show_graph <System.show_graph>` method (using its **use_values**
-option).  The labels for the current value(s) of the Mechanism's InputState(s) and OutputState(s) are listed in its
-`input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>`, respectively.
+option).  If they are used to specify `targets <Run_Targets>`, they must be included in the `output_labels_dict
+<Mechanism_Base.output_labels_dict>` of the Mechanism that projects to the `TARGET` Mechanism (see `TARGET Mechanisms
+<LearningMechanism_Targets>`,  the last one in a `learning sequence <Process_Learning_Sequence>`.
+
+The labels for the current value(s) of the Mechanism's InputState(s) and OutputState(s) are listed in its
+`input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>` attributes,
+respectively.
+
+*Specifying label dictionaries*
 
 Label dictionaries can only be specified in a parameters dictionary assigned to the **params** argument of the
-Mechanism's constructor, using the keywords listed above.  A given label dictionary must contain entries *all* of which
-use *only one* of the two following formats for the *key:value* pairs:
+Mechanism's constructor, using the keywords described above.  A given label dictionary must contain entries *all*
+of which use *only one* of the two following formats for the *key:value* pair of each entry:
 
-    * *label:value* -- the label must be a string to be associated with the specified value of the State. If the
+    * *label:value* -- the *label* is a string to be associated with the specified value of the State. If the
       Mechanism has more than one State of the type corresponding to the dictionary, then the label will be used for
-      the specified value of any State of that type.  For example, if input_labels_dict has *label_value*
-      entries, and the Mechanism has more than one InputState, then a specified label will be associated with the
-      corresponding value for any of the Mechanism's InputStates.
+      the specified value of any State of that type.  For example, if `input_labels_dict
+      <Mechanism_Base.input_labels_dict>` has *label_value* entries, and the Mechanism has more than one InputState,
+      then a specified label will be associated with the corresponding `value <InputState.value>` for any of the
+      Mechanism's InputStates.
       COMMENT:
           ADD EXAMPLE HERE
       COMMENT
@@ -706,10 +714,10 @@ use *only one* of the two following formats for the *key:value* pairs:
     * *<state name or index>:<sub-dictionary>* -- this is used to specify labels that are specific to individual States
       of the type corresponding to the dictionary;  the key of each entry must be either the name of a State of that
       type, or its index in the list of States of that type (i.e, `input_states <Mechanism_Base.input_states>` or
-      `output_states <Mechanism_Base.output_states>`, and the value a subdictionary containing *label:value* entries
+      `output_states <Mechanism_Base.output_states>`), and the value a subdictionary containing *label:value* entries
       to be used for that State.  For example, if a Mechanism has two InputStates, named *SAMPLE* and *TARGET*, then
       *INPUT_LABELS_DICT* could be assigned two entries, *SAMPLE*:<dict> and *TARGET*:<dict> or, correspondingly,
-      0:<dict> and 1:<dict>, in which each dict contained separate *label:value* entries for each of the two
+      0:<dict> and 1:<dict>, in which each dict contained separate *label:value* entries for the *SAMPLE* and *TARGET*
       InputStates.
       COMMENT:
           ADD EXAMPLE HERE
@@ -2033,7 +2041,7 @@ class Mechanism_Base(Mechanism):
                 new_input = self.integrator_function.reinitialize(*args)
                 if hasattr(self, "initial_value"):
                     self.initial_value = np.atleast_2d(*args)
-                self.value = self.function(new_input, context="REINITIALIZING")
+                self.value = super()._execute(variable=new_input, context="REINITIALIZING")
                 self._update_output_states(context="REINITIALIZING")
 
             elif self.integrator_function is None:
@@ -2150,9 +2158,9 @@ class Mechanism_Base(Mechanism):
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
                 return_value =  self._execute(
-                    variable=self.instance_defaults.variable,
-                    runtime_params=runtime_params,
-                    context=context,
+                        variable=self.instance_defaults.variable,
+                        runtime_params=runtime_params,
+                        context=context,
                 )
 
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
@@ -2178,9 +2186,9 @@ class Mechanism_Base(Mechanism):
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
-                return_value = self.function(
+                return_value = super()._execute(
                     variable=self.instance_defaults.variable,
-                    params=runtime_params,
+                    runtime_params=runtime_params,
                     context=context,
                 )
                 return np.atleast_2d(return_value)

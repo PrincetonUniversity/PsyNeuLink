@@ -149,10 +149,11 @@ class MechanismRoles:
     TARGET
         A `ComparatorMechanism` of a `Process` and/or `System` configured for learning that receives a target value
         from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
-        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
-        Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or System are listed in its
-        :keyword:`target_mechanisms` attribute, and can be displayed using its :keyword:`show` method.  For additional
-        details, see `TARGET Mechanisms <LearningMechanism_Targets>` and specifying `target values <Run_Targets>`.
+        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It is usually (but not necessarily)
+        associated with the `TERMINAL` Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or
+        System are listed in its :keyword:`target_mechanisms` attribute, and can be displayed using its
+        :keyword:`show` method.  For additional details, see `TARGET Mechanisms <LearningMechanism_Targets>`,
+        `learning sequence <Process_Learning_Sequence>`, and specifying `target values <Run_Targets>`.
 
 
     """
