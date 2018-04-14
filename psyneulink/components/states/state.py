@@ -1103,7 +1103,6 @@ class State_Base(State):
             name = self._assign_default_state_name(context=context)
 
 
-
         # Register State with StateRegistry of owner (Mechanism to which the State is being assigned)
         register_category(entry=self,
                           base_class=State_Base,
