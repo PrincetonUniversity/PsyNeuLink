@@ -1883,7 +1883,7 @@ class State_Base(State):
         elif isinstance(self.owner, MappingProjection):
             try:
                 self_id = self.owner.sender.owner._execution_id
-            # If it has not execution_id (e.g., MappingProjection is from an SystemInputState), don't update State
+            # If there is no execution_id (e.g., MappingProjection is from an SystemInputState), don't update State
             except AttributeError:
                 return
         else:

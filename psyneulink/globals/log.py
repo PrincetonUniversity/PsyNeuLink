@@ -1496,7 +1496,8 @@ class Log:
         for c in self.loggable_components:
             name = self._alias_owner_name(c.name)
             try:
-                log_pref_names = LogCondition._get_context_string(c.logPref)
+                # log_pref_names = LogCondition._get_context_string(c.logPref)
+                log_pref_names = ContextFlags._get_context_string(c.logPref)
             except:
                 log_pref_names = None
             loggable_items[name] = log_pref_names

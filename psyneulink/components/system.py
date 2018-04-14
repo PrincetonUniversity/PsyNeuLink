@@ -2616,8 +2616,6 @@ class System(System_Base):
 
         # Execute learning except for simulation runs
         if not EVC_SIMULATION in context and self.learning: # cxt-test
-            # self.context.status &= ~ContextFlags.EXECUTION
-            # self.context.status &= ~ContextFlags.PROCESSING
             self.context.execution_phase = ContextFlags.LEARNING
             self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
