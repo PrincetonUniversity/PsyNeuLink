@@ -732,8 +732,8 @@ Attribute Dictionary
 Finally, a Mechanism has an attribute that contains a dictionary of its attributes that can be used to specify the
 `variable <OutputState.variable>` of its OutputState (see `OutputState_Customization`):
 
-    * `attributes_dict` -- a dictionary of that contains the value of its attributes that can be used as the
-      `variable <OutputState.variable>` of its OutputState.
+    * `attributes_dict` -- a dictionary that contains the attributes of the Mechanism and their values,
+      that can be used in the `variable <OutputState.variable>` of its OutputState(s).
 
 
 .. _Mechanism_Role_In_Processes_And_Systems:
@@ -2133,12 +2133,9 @@ class Mechanism_Base(Mechanism):
             self.context.string = COMMAND_LINE
         else:
             # These need to be set for states to use as context
-            self.context.string = context
-            if not INITIALIZING in context: # cxt-set
-                # FIX: 3/31/18 - THIS SHOULD BE MOVED TO END OF __init__ METHOD(S)
-                # self.context.initialization_status &= ~ContextFlags.INITIALIZING
-                # self.context.initialization_status = ContextFlags.INITIALIZED
-
+            self.context.string = context # cxt-set
+            # FIX: MODIFY TO USE self.context.flags RATHER THAN context MESSAGE
+            if not INITIALIZING in context:
                 if EXECUTING in context:
                     self.context.execution_phase = ContextFlags.PROCESSING
                 if LEARNING in context:
