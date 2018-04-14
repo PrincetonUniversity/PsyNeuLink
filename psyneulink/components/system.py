@@ -2773,7 +2773,7 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
+                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-done
 
                 component.context.composition = self
                 component.context.execution_phase = ContextFlags.LEARNING
@@ -2810,7 +2810,7 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
+                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-done
                 component.context.execution_phase = ContextFlags.LEARNING
                 component.context.string = context_str
 

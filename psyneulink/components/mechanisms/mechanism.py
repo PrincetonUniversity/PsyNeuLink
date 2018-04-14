@@ -2133,15 +2133,7 @@ class Mechanism_Base(Mechanism):
             self.context.string = COMMAND_LINE
         else:
             # These need to be set for states to use as context
-            self.context.string = context # cxt-set
-            # FIX: MODIFY TO USE self.context.flags RATHER THAN context MESSAGE
-            if not INITIALIZING in context:
-                if EXECUTING in context:
-                    self.context.execution_phase = ContextFlags.PROCESSING
-                if LEARNING in context:
-                    self.context.execution_phase = ContextFlags.LEARNING
-                if EVC_SIMULATION in context:
-                    self.context.execution_phase = ContextFlags.SIMULATION
+            self.context.string = context # cxt-done
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
