@@ -885,11 +885,11 @@ class Projection_Base(Projection):
 
     def _execute(self, variable, runtime_params=None, context=None):
 
-        # MODIFIED 3/20/18 OLD:
-        # self.value = self.function(variable=self.sender.value, params=runtime_params, context=context)
-        # MODIFIED 3/20/18 NEW:
+        self.context.execution_phase = ContextFlags.PROCESSING
+        self.context.string = context
+
         self.value = super()._execute(variable=self.sender.value, runtime_params=runtime_params, context=context)
-        # MODIFIED 3/20/18 END
+
         self.context.execution_phase = ContextFlags.IDLE
         return self.value
 

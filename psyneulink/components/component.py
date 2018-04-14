@@ -2824,7 +2824,7 @@ class Component(object):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context) # cxt-pass
 
-        # IMPLEMENTION NOTE:  **kwargs is included to accommodate required arguments
+        # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
         return self.function(variable=variable, params=runtime_params, context=context, **kwargs)
