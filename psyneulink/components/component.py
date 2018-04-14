@@ -1620,13 +1620,13 @@ class Component(object):
             variable = self._update_variable(variable())
 
         # Validate variable if parameter_validation is set and the function was called with a variable
+        # IMPLEMENTATION NOTE:  context is used here just for reporting;  it is not tested in any of the methods called
         if self.prefs.paramValidationPref and variable is not None:
-            if context: # cxt-test
-                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS # cxt-done
-                # self.context.string = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS # cxt-push
+            if context:
+                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
             else:
-                context = FUNCTION_CHECK_ARGS # cxt-done
-                # self.context.string = context + FUNCTION_CHECK_ARGS # cxt-push
+                context = FUNCTION_CHECK_ARGS
+            self.context.string = context
             variable = self._update_variable(self._validate_variable(variable, context=context))
 
         # PARAMS ------------------------------------------------------------
@@ -1693,10 +1693,13 @@ class Component(object):
 
         # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
         if self.prefs.paramValidationPref and params and not params is target_set:
+            curr_context = self.context.initialization_status
+            self.context.initialization_status = ContextFlags.VALIDATING
             try:
                 self._validate_params(variable=variable, request_set=params, target_set=target_set, context=context)
             except TypeError:
                 self._validate_params(request_set=params, target_set=target_set, context=context)
+            self.context.initialization_status = curr_context
 
         return variable
 
