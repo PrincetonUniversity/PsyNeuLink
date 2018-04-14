@@ -437,7 +437,7 @@ class LogCondition(IntEnum):
     """Specifies all contexts."""
 
     @classmethod
-    def _get_context_string(cls, condition, string=None):
+    def _get_log_condition_string(cls, condition, string=None):
         """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
         if string:
             string += ": "
@@ -1496,8 +1496,7 @@ class Log:
         for c in self.loggable_components:
             name = self._alias_owner_name(c.name)
             try:
-                # log_pref_names = LogCondition._get_context_string(c.logPref)
-                log_pref_names = ContextFlags._get_context_string(c.logPref)
+                log_pref_names = LogCondition._get_log_condition_string(c.logPref)
             except:
                 log_pref_names = None
             loggable_items[name] = log_pref_names
