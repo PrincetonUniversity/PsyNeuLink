@@ -1100,7 +1100,7 @@ class State_Base(State):
 
         # If name is not specified, assign default name
         if name is not None and DEFERRED_INITIALIZATION in name:
-            name = self._assign_default_state_name(context=context) # cxt-set
+            name = self._assign_default_state_name(context=context)
 
 
 
