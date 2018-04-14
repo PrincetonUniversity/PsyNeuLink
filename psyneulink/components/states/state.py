@@ -739,9 +739,11 @@ from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEX
     LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
     NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, \
     PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, SIZE, \
-    STANDARD_OUTPUT_STATES, STATE, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, \
+    STANDARD_OUTPUT_STATES, STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, \
+    VALUE, \
+    VARIABLE, \
     WEIGHT, \
-    kwAssign, kwStateComponentCategory, kwStateContext
+    kwAssign, kwStateComponentCategory,
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -1049,7 +1051,7 @@ class State_Base(State):
                 + STATE_PARAMS = params
                 + STATE_NAME = name
                 + STATE_PREFS = prefs
-                + kwStateContext = context
+                + STATE_CONTEXT = context
                 NOTES:
                     * these are used for dictionary specification of a State in param declarations
                     * they take precedence over arguments specified directly in the call to __init__()
@@ -1076,8 +1078,8 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                context = kargs[kwStateContext] # cxt-set
-                self.context.string = kargs[kwStateContext]
+                context = kargs[STATE_CONTEXT]
+                self.context.string = kargs[STATE_CONTEXT]
             except (KeyError, NameError):
                 pass
 
