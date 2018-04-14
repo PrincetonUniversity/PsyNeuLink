@@ -828,7 +828,7 @@ class System(System_Base):
 
         # Required to defer assignment of self.controller by setter
         #     until the rest of the System has been instantiated
-        self.initialization_status = INITIALIZING
+        self.context.initialization_status = ContextFlags.INITIALIZING # cxt-init
         processes = processes or []
         if not isinstance(processes, list):
             processes = [processes]
@@ -869,7 +869,7 @@ class System(System_Base):
                          prefs=prefs,
                          context=context)
 
-        self.initialization_status = INITIALIZED
+        self.context.initialization_status = ContextFlags.INITIALIZED # cxt-init
         self._execution_id = None
 
         # Assign controller
