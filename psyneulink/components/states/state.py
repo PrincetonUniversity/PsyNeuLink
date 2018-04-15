@@ -1739,13 +1739,10 @@ class State_Base(State):
 
             # VALIDATE (if initialized or being initialized (INITIALIZA))
 
-            # if projection.context.initialization_status & \
-            #         (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING | ContextFlags.UNSET):
             if projection.context.initialization_status & (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
 
                 # If still being initialized, then assign sender and receiver as necessary
-                # if projection.context.initialization_status & (ContextFlags.INITIALIZING | ContextFlags.UNSET):
-                if projection.context.initialization_status & ContextFlags.INITIALIZING:
+                if projection.context.initialization_status == ContextFlags.INITIALIZING:
                     if not isinstance(projection.sender, State):
                         projection.sender = self
 

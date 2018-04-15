@@ -2127,7 +2127,7 @@ class Process(Process_Base):
             mech._execution_id = self._execution_id
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}) # cxt-test
+        report_output = self.prefs.reportOutputPref and self.context.initialization_status == ContextFlags.INITIALIZED
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input

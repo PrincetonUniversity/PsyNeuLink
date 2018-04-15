@@ -2782,12 +2782,6 @@ class Component(object):
 
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
         #    execute method, not its function
-
-        # MODIFIED 3/17/18 OLD:
-        # if not context: # cxt-test
-        #     context = "DIRECT CALL" # cxt-done
-        # MODIFIED 3/17/18 END
-
         try:
             value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:

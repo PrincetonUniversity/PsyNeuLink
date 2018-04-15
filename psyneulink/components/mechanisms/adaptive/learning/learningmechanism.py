@@ -549,14 +549,13 @@ from psyneulink.components.states.state import ADD_STATES
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INITIALIZING, \
-    INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, \
-    PROJECTIONS, SAMPLE, STATE_TYPE, TARGET, VARIABLE
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
+    LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
+    MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
@@ -1193,7 +1192,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         self.learning_signal = summed_learning_signal
         self.error_signal = summed_error_signal
 
-        if INITIALIZING not in context and self.reportOutputPref: # cxt-test
+        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal, self.error_signal]

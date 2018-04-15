@@ -331,7 +331,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             from psyneulink.components.states.inputstate import InputState
             from psyneulink.components.states.outputstate import OutputState
             if not isinstance(self.receiver, (InputState, OutputState, Mechanism)):
