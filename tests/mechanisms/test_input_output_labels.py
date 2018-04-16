@@ -18,6 +18,10 @@ class TestMechanismInputLabels:
         S.run(inputs=['red', 'green', 'green', 'red'])
         assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
 
+        S.run(inputs=[1, 'green', 0, 'red'])
+        assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
+
+
     def test_dict_of_arrays(self):
         input_labels_dict = {"red": [1, 0, 0],
                              "green": [0, 1, 0],
@@ -52,6 +56,11 @@ class TestMechanismInputLabels:
               call_after_trial=call_after_trial)
 
         assert np.allclose(M_output, [[[0], [1]], [[1], [0]]])
+
+        S.run(inputs=[[[0], 'green'], [[1], 'red']],
+              call_after_trial=call_after_trial)
+
+        assert np.allclose(M_output, [[[0], [1]], [[1], [0]], [[0], [1]], [[1], [0]]])
 
     def test_dict_of_2d_arrays(self):
         input_labels_dict = {"red": [[1, 0], [1, 0]],
@@ -101,6 +110,9 @@ class TestMechanismInputLabels:
         S.run(inputs=[['red', 'green'], ['green', 'red'], ['green', 'green']])
         assert np.allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
 
+        S.run(inputs=[['red', [1, 0]], ['green', 'red'], [[0,1], 'green']])
+        assert np.allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]], [[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
+
 class TestMechanismTargetLabels:
     def test_dict_of_floats(self):
         input_labels_dict_M1 = {"red": 1,
@@ -149,11 +161,7 @@ class TestMechanismTargetLabels:
 
         S.run(inputs=['red', 'green', 'green', 'red'],
               targets=['red', 'green', 'green', 'red'],
-              # inputs=[[1, 1], [0, 0], [0, 0], [1, 1]],
-              # targets=[[0, 0], [1, 1], [1, 1], [0, 0]],
               call_after_trial=record_matrix_after_trial)
-        print(S.results)
-        print(learned_matrix)
         assert np.allclose(S.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
         assert np.allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
@@ -185,8 +193,6 @@ class TestMechanismTargetLabels:
 
         S.run(inputs=['red', 'green', 'green', 'red'],
               targets=['red', 'green', 'green', 'red'],
-              # inputs=[[1, 1], [0, 0], [0, 0], [1, 1]],
-              # targets=[[0, 0], [1, 1], [1, 1], [0, 0]],
               call_after_trial=record_matrix_after_trial)
         print(S.results)
         print(learned_matrix)
