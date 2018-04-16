@@ -437,7 +437,7 @@ class LogCondition(IntEnum):
     """Specifies all contexts."""
 
     @classmethod
-    def _get_context_string(cls, condition, string=None):
+    def _get_log_condition_string(cls, condition, string=None):
         """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
         if string:
             string += ": "
@@ -686,7 +686,7 @@ class Log:
             return
 
     def set_log_conditions(self, items, log_condition=LogCondition.EXECUTION):
-        """Specifies items to be logged at the specified `LogCondition`\\(s).
+        """Specifies items to be logged under the specified `LogCondition`\\(s).
 
         Arguments
         ---------
@@ -777,9 +777,9 @@ class Log:
 
         else:
 
-            if isinstance(context, ContextFlags): # cxt-test
+            if isinstance(context, ContextFlags):
                 context_flags = context
-                context = ContextFlags._get_context_string(context) # cxt-set
+                context = ContextFlags._get_context_string(context) # cxt-test
                 if not time:
                     raise LogError("Use of ContextFlags ({}) by {} to specify context requires specification of time".
                                    format(context, self.owner.name ))
@@ -787,13 +787,13 @@ class Log:
             elif context is COMMAND_LINE:
                 context_flags = ContextFlags.COMMAND_LINE
 
-            elif self.owner.context.flags: # cxt-test
-                context_flags = self.owner.context.flags
-                context = ContextFlags._get_context_string(context_flags)
+            elif self.owner.context.flags:
+                context_flags = self.owner.context.flags # cxt-test
+                context = ContextFlags._get_context_string(context_flags) # cxt-set
 
             # Get context
             else:
-                if context is COMMAND_LINE: # cxt-test
+                if context is COMMAND_LINE:
                     # If _log_value is being called programmatically,
                     #    flag for later and set context to None to get context from the stack
                     programmatic = True
@@ -835,7 +835,7 @@ class Log:
                 context_flags = _get_context(context)
 
             context_flags_string = ContextFlags._get_context_string(context_flags)
-            context_status_string = ContextFlags._get_context_string(self.owner.context.flags)
+            context_status_string = self.owner.context.flags_string
             # assert context_flags_string == context_status_string
 
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None
@@ -1010,15 +1010,7 @@ class Log:
             c_width = 0
             for entry in entries:
                 for datum in self.logged_entries[entry]:
-                    # MODIFIED 3/31/18 OLD:
-                    # if long_context:
-                    #     context = datum.context # cxt-set
-                    # else:
-                    #     context = ContextFlags._get_context_string(_get_context(datum.context)) # cxt-set
-                    # c_width = max(c_width, len(context))
-                    # MODIFIED 3/31/18 NEW:
                     c_width = max(c_width, len(datum.context))
-                    # MODIFIED 3/31/18 END
             context_width = min(context_width, c_width)
 
         # Set other widths based on options:
@@ -1078,16 +1070,7 @@ class Log:
                         data_str = data_str + time_str.ljust(time_width)
 
                     if options.CONTEXT & option_flags:
-                        # MODIFIED 3/31/18 OLD:
-                        # if long_context:
-                        #     # Use context from LogEntry
-                        #     context = repr(context) # cxt-set
-                        # else:
-                        #     # Get names of ContextFlags flag(s) from parse of context string
-                        #     context = ContextFlags._get_context_string(_get_context(context)) # cxt-set
-                        # MODIFIED 3/31/18 NEW:
                         context = repr(context) # cxt-set
-                        # MODIFIED 3/31/18 END
                         if len(context) > context_width:
                             context = context[:context_width-3] + "..." # cxt-set
                         data_str = data_str + context.ljust(context_width, spacer)
@@ -1513,7 +1496,7 @@ class Log:
         for c in self.loggable_components:
             name = self._alias_owner_name(c.name)
             try:
-                log_pref_names = LogCondition._get_context_string(c.logPref)
+                log_pref_names = LogCondition._get_log_condition_string(c.logPref)
             except:
                 log_pref_names = None
             loggable_items[name] = log_pref_names

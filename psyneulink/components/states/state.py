@@ -1881,7 +1881,11 @@ class State_Base(State):
             self_id = self.owner._execution_id
         # If owner is a MappingProjection, get it's sender's execution_id
         elif isinstance(self.owner, MappingProjection):
-            self_id = self.owner.sender.owner._execution_id
+            try:
+                self_id = self.owner.sender.owner._execution_id
+            # If there is no execution_id (e.g., MappingProjection is from an SystemInputState), don't update State
+            except AttributeError:
+                return
         else:
             raise StateError("PROGRAM ERROR: Object ({}) of type {} has a {}, but this is only allowed for "
                              "Mechanisms and MappingProjections".

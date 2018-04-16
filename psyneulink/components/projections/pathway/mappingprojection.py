@@ -625,17 +625,10 @@ class MappingProjection(PathwayProjection_Base):
 
         """
 
-        # FIX: MOVE THIS TO SUPER
-        if EXECUTING in context: # cxt-test
-            # self.context.initialization_status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
-            # self.context.initialization_status = ContextFlags.INITIALIZED
-            self.context.execution_phase = ContextFlags.PROCESSING
-            self.context.string = context
+        self.context.execution_phase = ContextFlags.PROCESSING
+        self.context.string = context
 
-        # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
-        # minor bug with execution ID): maybe we should just fix this bug instead, if it's useful to do so
-        if "System" not in str(self.sender.owner):
-            self._update_parameter_states(runtime_params=runtime_params, context=context)
+        self._update_parameter_states(runtime_params=runtime_params, context=context)
 
         return super()._execute(self.sender.value, runtime_params, context)
 

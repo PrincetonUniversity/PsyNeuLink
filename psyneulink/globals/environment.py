@@ -705,7 +705,6 @@ def run(object,
     # Class-specific validation:
     context = context or RUN + "validating " + object.name # cxt-done ? cxt-pass
     if not object.context.flags:
-        # object.context.status = ContextFlags.RUN + ContextFlags.VALIDATING
         object.context.initialization_status = ContextFlags.VALIDATING
         object.context.string = RUN + "validating " + object.name
 
