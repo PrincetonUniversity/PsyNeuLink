@@ -114,6 +114,22 @@ class TestThreshold:
         # time accumulation does not stop
         assert np.allclose(time_points, [1.0, 2.0, 3.0, 4.0, 5.0])
 
+    def test_threshold_stops_accumulation_negative(self):
+        D = DDM(name='DDM',
+                function=DriftDiffusionIntegrator(threshold=5.0))
+        decision_variables = []
+        time_points = []
+        for i in range(5):
+            output = D.execute(-2.0)
+            decision_variables.append(output[0][0][0])
+            time_points.append(output[1][0][0])
+
+        # decision variable accumulation stops
+        assert np.allclose(decision_variables, [-2.0, -4.0, -5.0, -5.0, -5.0])
+
+        # time accumulation does not stop
+        assert np.allclose(time_points, [1.0, 2.0, 3.0, 4.0, 5.0])
+
     # def test_threshold_stops_accumulation_multiple_variables(self):
     #     D = IntegratorMechanism(name='DDM',
     #                             default_variable=[[0,0,0]],

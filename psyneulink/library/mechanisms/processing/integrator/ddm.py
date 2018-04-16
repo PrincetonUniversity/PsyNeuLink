@@ -1002,10 +1002,6 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # PLACEHOLDER for a time_step_size parameter when time_step_mode/Scheduling is implemented:
-        time_step_size = 1.0
-
-
         # FIX: 2/5/18: PUT CODE HERE FOR input_format = ARRAY/VECTOR, TO SUBTRACT variable[1] from variable[0]
 
         if variable is None or np.isnan(variable):
