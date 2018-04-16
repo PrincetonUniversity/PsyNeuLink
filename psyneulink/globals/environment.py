@@ -1082,10 +1082,7 @@ def _parse_input_labels(obj, stimuli, mechanisms_to_parse):
                                            format(item, i, mech.name, obj.name))
                 elif isinstance(stim, str):
                     inputs[i] = get_input_for_label(mech, stim)
-                else:
-                    raise RunError("Unrecognized specification ({}) for stimulus {} in entry "
-                                   "for {} of inputs dictionary specified for {}".
-                                   format(stim, i, mech.name, obj.name))
+
         return stimuli
 
 def _parse_target_labels(obj, target_dict, mechanisms_to_parse):
