@@ -314,7 +314,8 @@ class Context():
                  flags=None,
                  initialization_status=ContextFlags.UNINITIALIZED,
                  execution_phase=None,
-                 source=ContextFlags.COMPONENT,
+                 # source=ContextFlags.COMPONENT,
+                 source=ContextFlags.NONE,
                  execution_id:UUID=None,
                  string:str='', time=None):
 

@@ -869,7 +869,8 @@ class Component(object):
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
         self.context.initialization_status = ContextFlags.INITIALIZING
         self.context.execution_phase = None
-        self.context.source = ContextFlags.COMPONENT
+        if not self.context.source:
+            self.context.source = ContextFlags.COMPONENT
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
 
         self.context.initialization_status = ContextFlags.INITIALIZING

@@ -508,7 +508,7 @@ def iscompatible(candidate, reference=None, **kargs):
 
 def get_args(frame):
     """Gets dictionary of arguments and their values for a function
-    Frame should be assigned as follows in the funciton itself:  frame = inspect.currentframe()
+    Frame should be assigned as follows in the function itself:  frame = inspect.currentframe()
     """
     args, _, _, values = inspect.getargvalues(frame)
     return dict((key, value) for key, value in values.items() if key in args)
