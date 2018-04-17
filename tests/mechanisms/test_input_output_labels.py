@@ -201,3 +201,22 @@ class TestMechanismTargetLabels:
                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
                                             np.array([[0.625, -0.375], [-0.375,  0.625]])])
+
+class TestMechanismOutputLabels:
+    def test_dict_of_floats(self):
+        input_labels_dict = {"red": 1,
+                              "green": 0}
+        output_labels_dict = {"red": 1,
+                             "green":0}
+        M = ProcessingMechanism(params={INPUT_LABELS_DICT: input_labels_dict,
+                                        OUTPUT_LABELS_DICT: output_labels_dict})
+        P = Process(pathway=[M])
+        S = System(processes=[P])
+
+        S.run(inputs=['red', 'green', 'green', 'red'])
+        assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
+
+        S.run(inputs=[1, 'green', 0, 'red'])
+        assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
+        print(M.output_labels)
+        # S.show_graph(show_values=True)
