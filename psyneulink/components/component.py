@@ -872,6 +872,7 @@ class Component(object):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
+
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
         self.context.initialization_status = ContextFlags.INITIALIZING
         self.context.execution_phase = None
@@ -3199,6 +3200,27 @@ class Component(object):
     @_default_variable_handled.setter
     def _default_variable_handled(self, value):
         self.__default_variable_handled = value
+
+    @classmethod
+    def get_constructor_defaults(cls):
+        return {arg_name: arg.default for (arg_name, arg) in inspect.signature(cls.__init__).parameters.items()}
+
+    @classmethod
+    def get_param_class_defaults(cls):
+        try:
+            return cls._param_class_defaults
+        except AttributeError:
+            excluded_keys = ['self', 'args', 'kwargs']
+
+            cls._param_class_defaults = {}
+            for klass in reversed(cls.__mro__):
+                try:
+                    cls._param_class_defaults.update({k: v for (k, v) in klass.get_constructor_defaults().items() if k not in excluded_keys})
+                except AttributeError:
+                    # skip before Component
+                    pass
+
+            return cls._param_class_defaults
 
 
 COMPONENT_BASE_CLASS = Component
