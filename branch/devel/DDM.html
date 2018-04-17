@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.4.4.4+146.g9961fc5 documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.4.4.4+149.g5f5007c documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+146.g9961fc5 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+149.g5f5007c documentation" href="index.html"/>
         <link rel="up" title="IntegratorMechanisms" href="IntegratorMechanisms.html"/>
         <link rel="next" title="Objective Mechanisms" href="ObjectiveMechanisms.html"/>
         <link rel="prev" title="IntegratorMechanisms" href="IntegratorMechanisms.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.4+146
+                0.4.4.4+149
               </div>
             
           
@@ -593,17 +593,29 @@ is assigned using <code class="xref any docutils literal"><span class="pre">clas
 <dt id="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.plot">
 <code class="descname">plot</code><span class="sig-paren">(</span><em>stimulus=1.0</em>, <em>threshold=10.0</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a dynamic plot of the DDM integrating over time towards a threshold.</p>
-<p>NOTE: plot is only available <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">integration mode</span></a> (with the Integrator function).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The plot method is only available when the DriftDiffusionIntegrator function is in use. The plot method does
+not represent the results of this DDM mechanism in particular, and does not affect the current state of this
+mechanism’s DriftDiffusionIntegrator. The plot method is only meant to visualize a possible path of a DDM
+mechanism with these function parameters.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>threshold</strong> (<em>float: default 10.0</em>) – specify the threshold at which the DDM will stop integrating</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stimulus</strong> (<em>float: default 1.0</em>) – specify a stimulus value for the AdaptiveIntegrator function</li>
+<li><strong>threshold</strong> (<em>float: default 10.0</em>) – specify the threshold at which the DDM will stop integrating</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Mechanism’s function plot</strong> – Matplotlib window of the Mechanism’s function plotting dynamically over time with specified parameters
-towards a specified threshold</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Mechanism’s function plot</strong> – Matplotlib window of the Mechanism’s function plotting dynamically over time with specified parameters
+towards a specified threshold</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Matplotlib window</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Matplotlib window</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -658,7 +670,7 @@ towards a specified threshold</td>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+146.g9961fc5',
+            VERSION:'0.4.4.4+149.g5f5007c',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
