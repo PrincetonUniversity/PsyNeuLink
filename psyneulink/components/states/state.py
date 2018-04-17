@@ -1144,7 +1144,11 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
-        if context is COMMAND_LINE: # cxt-test
+        # # MODIFIED 4/15/18 OLD:
+        # if context is COMMAND_LINE: # cxt-test
+        # MODIFIED 4/15/18 NEW:
+        if self.context.source == ContextFlags.COMMAND_LINE:
+        # MODIFIED 4/15/18 END
             state_list = getattr(owner, owner.stateListAttr[self.__class__])
             if state_list and not self in state_list:
                 owner.add_states(self)
