@@ -1049,6 +1049,7 @@ class OutputState(State_Base):
 
         # variable is passed to OutputState by _instantiate_function for OutputState
         if variable is not None:
+            # assert INITIALIZING in context # cxt-test
             assert self.context.initialization_status == ContextFlags.INITIALIZING
             fct_var = variable
 

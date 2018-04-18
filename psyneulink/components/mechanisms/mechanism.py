@@ -2069,6 +2069,7 @@ class Mechanism_Base(Mechanism):
             return getattr(self, param_name)
 
     def execute(self,
+                # input=None,
                 input=None,
                 runtime_params=None,
                 ignore_execution_id = False,
