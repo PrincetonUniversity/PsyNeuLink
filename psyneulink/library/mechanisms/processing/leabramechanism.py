@@ -259,7 +259,7 @@ class LeabraFunction(Function_Base):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         # HACK: otherwise the INITIALIZING function executions impact the state of the leabra network
-        if INITIALIZING in context:
+        if INITIALIZING in context: # cxt-test
             output_size = len(self.network.layers[-1].units)
             return np.zeros(output_size)
 

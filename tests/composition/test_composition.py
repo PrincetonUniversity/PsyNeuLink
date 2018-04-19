@@ -35,16 +35,16 @@ class TestConstructor:
         comp_2 = Composition()
         assert isinstance(comp, Composition)
 
-    # @pytest.mark.stress
-    # @pytest.mark.parametrize(
-    #     'count', [
-    #         10000,
-    #     ]
-    # )
-    # def test_timing_no_args(self, count):
-    #     t = timeit('comp = Composition()', setup='from psyneulink.compositions.composition import Composition', number=count)
-    #     print()
-    #     logger.info('completed {0} creation{2} of Composition() in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
+    @pytest.mark.stress
+    @pytest.mark.parametrize(
+        'count', [
+            10000,
+        ]
+    )
+    def test_timing_no_args(self, count):
+        t = timeit('comp = Composition()', setup='from psyneulink.compositions.composition import Composition', number=count)
+        print()
+        logger.info('completed {0} creation{2} of Composition() in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
 class TestAddMechanism:
 
@@ -63,26 +63,47 @@ class TestAddMechanism:
         comp.add_mechanism(mech)
         comp.add_mechanism(mech)
 
-    # @pytest.mark.stress
-    # @pytest.mark.parametrize(
-    #     'count', [
-    #         100,
-    #     ]
-    # )
-#     def test_timing_stress(self, count):
-#         t = timeit(
-#             'comp.add_mechanism(TransferMechanism())',
-#             setup='''
-#
-# from psyNeuLink.components.mechanisms.processing.transfermechanism import TransferMechanism
-# from psyneulink.compositions.composition import Composition
-# comp = Composition()
-# ''',
-#             number=count
-#         )
-#         print()
-#         logger.info('completed {0} addition{2} of a Mechanism to a Composition in {1:.8f}s'.
-#                     format(count, t, 's' if count != 1 else ''))
+
+    @pytest.mark.stress
+    @pytest.mark.parametrize(
+        'count', [
+            100,
+        ]
+    )
+    def test_timing_stress(self, count):
+        t = timeit(
+            'comp.add_mechanism(TransferMechanism())',
+            setup='''
+
+from psyNeuLink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.compositions.composition import Composition
+comp = Composition()
+''',
+            number=count
+        )
+        print()
+        logger.info('completed {0} addition{2} of a Mechanism to a Composition in {1:.8f}s'.
+                    format(count, t, 's' if count != 1 else ''))
+
+    @pytest.mark.stress
+    @pytest.mark.parametrize(
+        'count', [
+            100,
+        ]
+    )
+    def test_timing_stress(self, count):
+        t = timeit(
+            'comp.add_mechanism(TransferMechanism())',
+            setup='''
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.composition import Composition
+comp = Composition()
+''',
+            number=count
+        )
+        print()
+        logger.info('completed {0} addition{2} of a Mechanism to a Composition in {1:.8f}s'.
+                    format(count, t, 's' if count != 1 else ''))
 
 class TestAddProjection:
 
@@ -113,31 +134,56 @@ class TestAddProjection:
         comp.add_projection(A, proj, B)
         comp.add_projection(A, proj, B)
 
-    # @pytest.mark.stress
-    # @pytest.mark.parametrize(
-    #     'count', [
-    #         1000,
-    #     ]
-    # )
-#     def test_timing_stress(self, count):
-#         t = timeit('comp.add_projection(A, MappingProjection(), B)',
-#                    setup='''
-#
-# from psyneulink.components.mechanisms.processingmechanisms.transfermechanism import TransferMechanism
-# from psyneulink.components.projections.pathwayprojections.mappingprojection import MappingProjection
-# from psyneulink.compositions.composition import Composition
-#
-# comp = Composition()
-# A = TransferMechanism(name='A')
-# B = TransferMechanism(name='B')
-# comp.add_mechanism(A)
-# comp.add_mechanism(B)
-# ''',
-#                    number=count
-#                    )
-#         print()
-#         logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
+    @pytest.mark.stress
+    @pytest.mark.parametrize(
+        'count', [
+            1000,
+        ]
+    )
+    def test_timing_stress(self, count):
+        t = timeit('comp.add_projection(A, MappingProjection(), B)',
+                   setup='''
 
+from psyneulink.components.mechanisms.processingmechanisms.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathwayprojections.mappingprojection import MappingProjection
+from psyneulink.compositions.composition import Composition
+
+comp = Composition()
+A = TransferMechanism(name='A')
+B = TransferMechanism(name='B')
+comp.add_mechanism(A)
+comp.add_mechanism(B)
+''',
+                   number=count
+                   )
+        print()
+        logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
+
+    @pytest.mark.stress
+    @pytest.mark.parametrize(
+        'count', [
+            1000,
+        ]
+    )
+    def test_timing_stress(self, count):
+        t = timeit('comp.add_projection(A, MappingProjection(), B)',
+                   setup='''
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.composition import Composition
+comp = Composition()
+A = TransferMechanism(name='A')
+B = TransferMechanism(name='B')
+comp.add_mechanism(A)
+comp.add_mechanism(B)
+''',
+                   number=count
+                   )
+        print()
+        logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
+
+
+@pytest.mark.skip
 class TestAnalyzeGraph:
 
     def test_empty_call(self):

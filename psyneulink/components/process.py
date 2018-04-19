@@ -451,7 +451,7 @@ from collections import UserList, namedtuple
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ExecutionStatus, InitStatus, function_type
+from psyneulink.components.component import Component, function_type
 from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
@@ -466,6 +466,7 @@ from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENAB
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.time import TimeScale
 
@@ -855,10 +856,11 @@ class Process(Process_Base):
                           registry=ProcessRegistry,
                           context=context)
 
-        if not context:
+        if not context: # cxt-test
             # context = self.__class__.__name__
-            context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
-
+            context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT # cxt-done
+            self.context.initialization_status = ContextFlags.INITIALIZING
+            self.context.string = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
         if default_variable is None and len(pathway) > 0:
             default_variable = pathway[0].instance_defaults.variable
@@ -1447,17 +1449,18 @@ class Process(Process_Base):
 
                         # If initialization of MappingProjection has been deferred,
                         #    check sender and receiver, assign them if they have not been assigned, and initialize it
-                        if item.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                        if item.context.initialization_status == ContextFlags.DEFERRED_INIT:
                             # Check sender arg
                             try:
                                 sender_arg = item.init_args[SENDER]
                             except AttributeError:
-                                raise ProcessError("PROGRAM ERROR: init_status of {} is {} but it does not have init_args".
-                                                   format(item, InitStatus.DEFERRED_INITIALIZATION))
+                                raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
+                                                   "but it does not have init_args".
+                                                   format(item, ContextFlags.DEFERRED_INIT.name))
                             except KeyError:
-                                raise ProcessError("PROGRAM ERROR: Value of {} is {} "
-                                                   "but init_args does not have entry for {}".
-                                                   format(item.init_args[NAME], InitStatus.DEFERRED_INITIALIZATION, SENDER))
+                                raise ProcessError("PROGRAM ERROR: Value of {} is {} but "
+                                                   "init_args does not have entry for {}".
+                                                   format(item.init_args[NAME],ContextFlags.DEFERRED_INIT.name, SENDER))
                             else:
                                 # If sender is not specified for the Projection,
                                 #    assign mechanism that precedes in pathway
@@ -1473,12 +1476,15 @@ class Process(Process_Base):
                             try:
                                 receiver_arg = item.init_args[kwReceiverArg]
                             except AttributeError:
-                                raise ProcessError("PROGRAM ERROR: init_status of {} is {} but it does not have init_args".
-                                                   format(item, InitStatus.DEFERRED_INITIALIZATION))
+                                raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
+                                                   "but it does not have init_args".
+                                                   format(item, ContextFlags.DEFERRED_INIT))
                             except KeyError:
-                                raise ProcessError("PROGRAM ERROR: init_status of {} is {} "
+                                raise ProcessError("PROGRAM ERROR: initialization_status of {} is {} "
                                                    "but init_args does not have entry for {}".
-                                                   format(item.init_args[NAME], InitStatus.DEFERRED_INITIALIZATION, kwReceiverArg))
+                                                   format(item.init_args[NAME],
+                                                          ContextFlags.DEFERRED_INIT,
+                                                          kwReceiverArg))
                             else:
                                 # If receiver is not specified for the Projection,
                                 #    assign mechanism that follows it in the pathway
@@ -1733,7 +1739,7 @@ class Process(Process_Base):
         if input is None:
             input = self.first_mechanism.instance_defaults.variable
             if (self.prefs.verbosePref and
-                    not (not context or COMPONENT_INIT in context)):
+                    not (not context or COMPONENT_INIT in context)): # cxt-test
                 print("- No input provided;  default will be used: {0}")
 
         else:
@@ -2111,16 +2117,17 @@ class Process(Process_Base):
         """
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
-        if not context:
-            context = EXECUTING + " " + PROCESS + " " + self.name
-            self.execution_status = ExecutionStatus.EXECUTING
+        if not context: # cxt-test
+            context = EXECUTING + " " + PROCESS + " " + self.name # cxt-done
+            self.context.execution_phase = ContextFlags.PROCESSING
+            self.context.string = EXECUTING + " " + PROCESS + " " + self.name
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
         for mech in self.mechanisms:
             mech._execution_id = self._execution_id
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING})
+        report_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}) # cxt-test
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
@@ -2142,8 +2149,12 @@ class Process(Process_Base):
                     (isinstance(mechanism, ObjectiveMechanism) and mechanism._role is LEARNING)):
                 continue
 
+            # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.execute(context=context)
+            mechanism.context.execution_phase = ContextFlags.PROCESSING
+            mechanism.execute(context=context) # cxt-pass ? cxt-push
+            mechanism.context.execution_phase = ContextFlags.IDLE
+
             if report_output:
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
                 self._report_mechanism_execution(mechanism)
@@ -2153,7 +2164,7 @@ class Process(Process_Base):
                 #     in case it is repeated in the pathway or receives a recurrent Projection
                 variable = self._update_variable(variable * 0)
 
-        # Execute LearningMechanism
+        # Execute LearningMechanisms
         if self._learning_enabled:
             self._execute_learning(target=target, context=context)
 
@@ -2211,6 +2222,9 @@ class Process(Process_Base):
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
 
+            mech.context.execution_phase = ContextFlags.LEARNING
+            mech.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
+
             # IMPLEMENTATION NOTE:
             #    This implementation restricts learning to ParameterStates of projections to input_states
             #    That means that other parameters (e.g. object or function parameters) are not currenlty learnable
@@ -2232,25 +2246,37 @@ class Process(Process_Base):
                     try:
                         for parameter_state in projection._parameter_states:
 
-                            # MODIFIED 9/23/17 NEW:
                             # Skip learning if the LearningMechanism to which the LearningProjection belongs is disabled
                             if all(projection.sender.owner.learning_enabled is False
                                    for projection in parameter_state.mod_afferents):
                                 continue
-                            # MODIFIED 9/23/17 END:
 
                             # Call parameter_state.update with LEARNING in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                            context = context.replace(EXECUTING, LEARNING + ' ')
+                            context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
+                            parameter_state.context.execution_phase = ContextFlags.LEARNING
+                            parameter_state.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, context=context)
-                            parameter_state.update(context=context)
+                            parameter_state.update(context=context) # cxt-pass cxt-push
+
+                            parameter_state.context.execution_phase = ContextFlags.IDLE
+                            parameter_state.context.string = self.context.string.replace(LEARNING, EXECUTING)
 
                     # Not all Projection subclasses instantiate ParameterStates
                     except AttributeError as e:
-                        pass
+                        if e.args[0] is '_parameter_states':
+                            pass
+                        else:
+                            raise ProcessError("PROGRAM ERROR: unrecognized attribute (\'{}\') encountered "
+                                               "while attempting to update {} {} of {}".
+                                               format(e.args[0], parameter_state.name, ParameterState.__name__,
+                                                      projection.name))
+            mech.context.execution_phase = ContextFlags.IDLE
+            mech.context.string = self.context.string.replace(LEARNING, EXECUTING)
+
 
     def run(self,
             inputs,

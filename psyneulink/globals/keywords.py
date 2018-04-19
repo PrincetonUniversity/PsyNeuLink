@@ -36,18 +36,19 @@ __all__ = [
     'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION', 'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION',
     'DIST_FUNCTION_TYPE', 'DIST_MEAN', 'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE',
-    'DIVISION', 'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DRIFT_RATE', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY',
-    'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE',
-    'EXECUTING', 'EXECUTION', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
-    'FHN_INTEGRATOR_FUNCTION', 'FINAL', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
-    'FUNCTION', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE',
+    'DIVISION', 'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DRIFT_RATE',
+    'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY', 'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN', 'EVC_MECHANISM',
+    'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE', 'EXECUTING', 'EXECUTION', 'EXECUTION_COUNT', 'EXECUTION_TIME',
+    'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
+    'FHN_INTEGRATOR_FUNCTION', 'FINAL', 'FLAGS', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
+    'FUNCTION', 'FUNCTIONS', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE',
     'FUNCTION_OUTPUT_TYPE_CONVERSION', 'FUNCTION_PARAMS', 'GAIN', 'GAMMA_DIST_FUNCTION', 'GATE', 'GATING',
     'GATING_MECHANISM', 'GATING_POLICY', 'GATING_PROJECTION', 'GATING_PROJECTION_PARAMS', 'GATING_PROJECTIONS',
     'GATING_SIGNAL', 'GATING_SIGNAL_SPECS', 'GATING_SIGNALS', 'GILZENRAT_INTEGRATOR_FUNCTION', 'HARD_CLAMP',
     'HEBBIAN_FUNCTION', 'HETERO', 'HIGH', 'HOLLOW_MATRIX', 'IDENTITY_MATRIX', 'INCREMENT', 'INDEX',
     'INIT__EXECUTE__METHOD_ONLY', 'INIT_FULL_EXECUTE_METHOD', 'INIT_FUNCTION_METHOD_ONLY', 'INITIAL_VALUES',
     'INITIALIZE_CYCLE', 'INITIALIZATION', 'INITIALIZED', 'INITIALIZER', 'INITIALIZING',
-    'INPUT_STATE', 'INPUT_STATES', 'INPUT_STATE_PARAMS', 'INPUT_STATE_VARIABLES',
+    'INPUT_LABELS_DICT', 'INPUT_STATE', 'INPUT_STATES', 'INPUT_STATE_PARAMS', 'INPUT_STATE_VARIABLES',
     'INPUTS_DIM', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION_TYPE',
     'INTEGRATOR_MECHANISM', 'INTERCEPT', 'INTERNAL', 'K_VALUE', 'kpMechanismControlAllocationsLogEntry',
     'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry', 'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry',
@@ -61,7 +62,7 @@ __all__ = [
     'kwPrefsOwner', 'kwProcessComponentCategory', 'kwProcessDefaultMechanism', 'kwProcessDefaultProjectionFunction',
     'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
     'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory', 'kwStateContext', 'kwStateName', 'kwStatePrefs',
-    'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'LCA', 'LEARNED_PARAM', 'LEARNING',
+    'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'LABELS', 'LCA', 'LEARNED_PARAM', 'LEARNING',
     'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE',
     'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION',
     'LINEAR_FUNCTION', 'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'LOW',
@@ -69,26 +70,27 @@ __all__ = [
     'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS', 'MatrixKeywords',
     'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_INDICATOR', 'MAX_VAL', 'MEAN', 'MECHANISM',
     'MechanismRoles', 'MECHANISM_VALUE', 'MEDIAN', 'MODULATION', 'MODULATORY_PROJECTION',
-    'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME', 'NO_CONTEXT',
+    'MODULATORY_SIGNAL', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MUTUAL_ENTROPY', 'NAME',
     'NOISE', 'NORMAL_DIST_FUNCTION', 'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
     'OFF', 'OFFSET', 'ON', 'OPERATION', 'ORIGIN', 'ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME_FUNCTION',
-    'OUTPUT_STATE', 'OUTPUT_STATE_PARAMS', 'OUTPUT_STATES', 'OUTPUT_TYPE', 'OWNER', 'OWNER_VALUE', 'OWNER_VARIABLE',
+    'OUTPUT_LABELS_DICT', 'OUTPUT_STATE', 'OUTPUT_STATE_PARAMS', 'OUTPUT_STATES', 'OUTPUT_TYPE',
+    'OWNER', 'OWNER_VALUE', 'OWNER_VARIABLE',
     'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_STATE', 'PARAMETER_STATE_PARAMS',
     'PARAMETER_STATES', 'PARAMS', 'PARAMS_DICT', 'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
     'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT',
-    'PREDICTION_MECHANISM_PARAMS', 'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PRIMARY', 'PROB', 'PROCESS', 'PROCESSING',
-    'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING_MECHANISM', 'PRODUCT', 'PROJECTION',
-    'PROJECTION_PARAMS', 'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS',
+    'PREDICTION_MECHANISM_PARAMS', 'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
+    'PROCESS', 'PROCESSING', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING_MECHANISM',
+    'PRODUCT', 'PROJECTION', 'PROJECTION_PARAMS', 'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS',
     'QUOTIENT', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'RECEIVER', 'RECURRENT_TRANSFER_MECHANISM',
     'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RESULT', 'RESULTS', 'RL_FUNCTION', 'RUN', 'SAMPLE',
     'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SENDER', 'SEPARATOR_BAR', 'SET_ATTRIBUTE',
     'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION',
     'STABILITY_FUNCTION', 'STANDARD_ARGS','STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES', 'STATE', 'STATE_PARAMS',
     'STATE_TYPE', 'STATE_VALUE', 'STATES', 'SUBTRACTION', 'SUM', 'SYSTEM', 'SYSTEM_DEFAULT_CONTROLLER',
-    'SYSTEM_INIT', 'TARGET', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
+    'SYSTEM_INIT', 'TARGET', 'TARGET_LABELS_DICT', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
     'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIAL', 'TRIALS_DIM', 'UNCHANGED', 'UNIFORM_DIST_FUNCTION',
     'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS', 'UTILITY_INTEGRATOR_FUNCTION',
-    'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE', 'VECTOR',
+    'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE', 'VECTOR',
     'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS'
 ]
 
@@ -147,10 +149,11 @@ class MechanismRoles:
     TARGET
         A `ComparatorMechanism` of a `Process` and/or `System` configured for learning that receives a target value
         from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
-        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
-        Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or System are listed in its
-        :keyword:`target_mechanisms` attribute, and can be displayed using its :keyword:`show` method.  For additional
-        details, see `TARGET Mechanisms <LearningMechanism_Targets>` and specifying `target values <Run_Targets>`.
+        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It is usually (but not necessarily)
+        associated with the `TERMINAL` Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or
+        System are listed in its :keyword:`target_mechanisms` attribute, and can be displayed using its
+        :keyword:`show` method.  For additional details, see `TARGET Mechanisms <LearningMechanism_Targets>`,
+        `learning sequence <Process_Learning_Sequence>`, and specifying `target values <Run_Targets>`.
 
 
     """
@@ -319,7 +322,6 @@ DEFAULT = False
 # AUTO = True  # MODIFIED 7/14/17 CW
 ASSERT = True
 
-
 # Used by initDirective
 INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
 INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass _execute method'
@@ -329,11 +331,13 @@ INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 #region ---------------------------------------------    GENERAL    ----------------------------------------------------
 # General
 
+ALL = 'all'
+
 kwSeparator = ': '
 SEPARATOR_BAR = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
-NO_CONTEXT = "NO_CONTEXT"
+FLAGS = 'flags'
 INITIALIZING = " INITIALIZING "  # Used as status and context for Log
 INITIALIZED = " INITIALIZED "  # Used as status
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
@@ -401,6 +405,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 VARIABLE = "variable"
 DEFAULT_VARIABLE = "default_variable"
 VALUE = "value"
+LABELS = 'labels'
 PARAMS = "params"
 NAME = "name"
 PREFS_ARG = "prefs"
@@ -573,6 +578,9 @@ CONROLLER_PHASE_SPEC = 'ControllerPhaseSpec'
 RUN = 'run'
 TRIAL = 'trial'
 
+VALUES = 'values'
+FUNCTIONS = 'functions'
+
 #endregion
 
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
@@ -610,8 +618,15 @@ kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechan
 # Keywords for OUTPUT_STATE_VARIABLE dict:
 OWNER_VARIABLE = 'OWNER_VARIABLE'
 OWNER_VALUE = 'OWNER_VALUE'
+EXECUTION_COUNT = 'EXECUTION_COUNT'
+EXECUTION_TIME = 'EXECUTION_TIME'
 INPUT_STATE_VARIABLES = 'INPUT_STATE_VARIABLES'
 PARAMS_DICT = 'PARAMS_DICT'
+
+# Dictionaries of labels for input, output and target arrays
+INPUT_LABELS_DICT = 'input_labels_dict'
+OUTPUT_LABELS_DICT = 'output_labels_dict'
+TARGET_LABELS_DICT = 'target_labels_dict'
 
 ORIGIN = 'ORIGIN'
 INTERNAL = 'INTERNAL'
@@ -809,7 +824,6 @@ STANDARD_DEVIATION = 'standard_dev'
 DIST_MEAN = 'mean'
 
 OUTPUT_TYPE = 'output'
-ALL = 'all'
 # MAX_VAL = 'max_val'
 # MAX_ABS_VAL = 'max_abs_val'
 # MAX_INDICATOR = 'max_indicator'
@@ -820,6 +834,7 @@ MAX_ABS_VAL = 'MAX_ABS_VAL'
 MAX_INDICATOR = 'MAX_INDICATOR'
 MAX_ABS_INDICATOR = 'MAX_ABS_INDICATOR'
 PROB = 'PROB'
+PROB_INDICATOR = 'PROB_INDICATOR'
 MUTUAL_ENTROPY = 'mutual entropy'
 
 INITIALIZER = 'initializer'

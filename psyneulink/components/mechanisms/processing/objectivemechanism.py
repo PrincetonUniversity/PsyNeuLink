@@ -326,12 +326,12 @@ from collections import Iterable
 
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import PARAMS, PROJECTION, PROJECTIONS, CONTROL, DEFAULT_MATRIX, DEFAULT_VARIABLE, \
     EXPONENT, EXPONENTS, FUNCTION, \
     INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
@@ -657,7 +657,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
         from psyneulink.components.states.inputstate import InputState
         # If call is for initialization
-        if self.init_status is InitStatus.UNSET:
+        if self.context.initialization_status == ContextFlags.UNSET:
             # Use self.input_states (containing specs from **input_states** arg of constructor) or default InputState
             input_states = self.input_states or [{STATE_TYPE: InputState, VARIABLE: [0]}]
             return super()._instantiate_input_states(input_states=input_states, context=context)
@@ -858,7 +858,7 @@ def _instantiate_monitoring_projections(owner,
         if isinstance(sender, OutputState):
             # Projection has been specified for receiver and initialization begun, so call deferred_init()
             if receiver.path_afferents:
-                if not receiver.path_afferents[0].init_status is InitStatus.DEFERRED_INITIALIZATION:
+                if not receiver.path_afferents[0].context.initialization_status == ContextFlags.DEFERRED_INIT:
                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
                                                   "implemented and initialized ({})".
                                                   format(receiver.name, owner.name, receiver.path_afferents[0].name))

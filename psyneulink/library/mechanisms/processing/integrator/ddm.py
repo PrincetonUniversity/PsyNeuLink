@@ -345,8 +345,8 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, ASSIGN, FUNCTION, FUNCTION_PARAMS, \
-    INDEX, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES,  OWNER_VALUE, VALUE, VARIABLE, kwPreferenceSetName
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, \
+    INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES,  OWNER_VALUE, VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, object_has_single_value
@@ -822,13 +822,19 @@ class DDM(ProcessingMechanism_Base):
         """
         Generate a dynamic plot of the DDM integrating over time towards a threshold.
 
-        NOTE: plot is only available `integration mode <DDM_Integration_Mode>` (with the Integrator function).
+        .. note::
+            The plot method is only available when the DriftDiffusionIntegrator function is in use. The plot method does
+            not represent the results of this DDM mechanism in particular, and does not affect the current state of this
+            mechanism's DriftDiffusionIntegrator. The plot method is only meant to visualize a possible path of a DDM
+            mechanism with these function parameters.
 
         Arguments
         ---------
+        stimulus: float: default 1.0
+            specify a stimulus value for the AdaptiveIntegrator function
 
         threshold: float: default 10.0
-             specify the threshold at which the DDM will stop integrating
+            specify the threshold at which the DDM will stop integrating
 
         Returns
         -------
@@ -1002,10 +1008,6 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # PLACEHOLDER for a time_step_size parameter when time_step_mode/Scheduling is implemented:
-        time_step_size = 1.0
-
-
         # FIX: 2/5/18: PUT CODE HERE FOR input_format = ARRAY/VECTOR, TO SUBTRACT variable[1] from variable[0]
 
         if variable is None or np.isnan(variable):
@@ -1017,7 +1019,7 @@ class DDM(ProcessingMechanism_Base):
 
             result = self.function(variable, context=context)
 
-            if INITIALIZING not in context:
+            if INITIALIZING not in context: # cxt-test
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
             return np.array([result, [self.function_object.previous_time]])

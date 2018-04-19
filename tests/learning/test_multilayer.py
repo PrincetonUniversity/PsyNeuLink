@@ -5,7 +5,7 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.process import Process
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.system import System
-from psyneulink.globals.keywords import SOFT_CLAMP, EXECUTION, LEARNING, VALUE
+from psyneulink.globals.keywords import SOFT_CLAMP, EXECUTION, PROCESSING, LEARNING, VALUE
 from psyneulink.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.library.mechanisms.processing.objective.comparatormechanism import MSE
 
@@ -98,7 +98,7 @@ def test_multilayer():
         },
     )
 
-    Middle_Weights.set_log_conditions(('matrix', EXECUTION))
+    Middle_Weights.set_log_conditions(('matrix', PROCESSING))
 
     stim_list = {Input_Layer: [[-1, 30]]}
     target_list = {Output_Layer: [[0, 0, 1]]}
@@ -196,8 +196,7 @@ def test_multilayer():
                 [ [[ 0.05,  0.1 ,  0.15,  0.2 ],
                    [ 0.25,  0.3 ,  0.35,  0.4 ],
                    [ 0.45,  0.5 ,  0.55,  0.6 ],
-                   [ 0.65,  0.7 ,  0.75,  0.8 ],
-                   [ 0.85,  0.9 ,  0.95,  1.  ]],
+                   [ 0.65,  0.7 ,  0.75,  0.8 ],                   [ 0.85,  0.9 ,  0.95,  1.  ]],
                   [[ 0.04789907,  0.09413833,  0.14134241,  0.18938924],
                    [ 0.24780811,  0.29388455,  0.34096758,  0.38892985],
                    [ 0.44772121,  0.49364209,  0.54060947,  0.58849095],

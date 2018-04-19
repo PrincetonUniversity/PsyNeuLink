@@ -184,7 +184,7 @@ class PreferenceSet(object):
 
         #region VALIDATE ATTRIBUTES AND ARGS
         # PreferenceSet is an abstract class, and so should only be initialized from a subclass
-        if not isinstance(context, type(self)):
+        if not isinstance(context, type(self)): # cxt-test
             raise PreferenceSetError("Direct call to abstract class PreferenceSet() is not allowed; "
                                      "use one of the following subclasses: {0}".
                                      format(", ".join("{!s}".format(key) for (key) in PreferenceSetRegistry.keys())))

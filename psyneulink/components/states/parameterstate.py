@@ -357,12 +357,13 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, InitStatus, function_type, method_type, parameter_keywords
+from psyneulink.components.component import Component, function_type, method_type, parameter_keywords
 from psyneulink.components.functions.function import Linear, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state, state_type_keywords
 from psyneulink.globals.keywords import CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities \
@@ -794,7 +795,7 @@ class ParameterState(State_Base):
                                                                      ControlProjection.__name__,
                                                                      LearningProjection.__name__,
                                                                      mod_projection, state_dict[NAME], owner.name))
-                                elif mod_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                elif mod_projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
                                 mod_proj_value = mod_projection.value
                             else:
@@ -856,10 +857,16 @@ class ParameterState(State_Base):
                 # param_value = self.owner.params[self.name]
                 param_value = getattr(self.owner, '_'+ self.name)
 
-            value = self.function(variable=param_value,
-                                  params=runtime_params,
-                                  context=context)
-            return value
+            # # MODIFIED 3/20/18 OLD:
+            # value = self.function(variable=param_value,
+            #                       params=runtime_params,
+            #                       context=context)
+            # return value
+            # MODIFIED 3/20/18 NEW:
+            return super()._execute(variable=param_value,
+                                    runtime_params=runtime_params,
+                                    context=context)
+            # MODIFIED 3/20/18 END
 
     @property
     def pathway_projections(self):
@@ -1085,6 +1092,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                   context=context)
         if state:
             owner._parameter_states[param_name] = state
+
 
 def _is_legal_param_value(owner, value):
 

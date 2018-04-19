@@ -885,7 +885,7 @@ class EVCControlMechanism(ControlMechanism):
         Return an allocation_policy
         """
 
-        if not 'System.controller setter' in context:
+        if not 'System.controller setter' in context: # cxt-test
             self._update_predicted_input()
         # self.system._cache_state()
 
@@ -912,10 +912,12 @@ class EVCControlMechanism(ControlMechanism):
         # IMPLEMENTATION NOTE:
         # self.system._store_system_state()
 
-        allocation_policy = self.function(controller=self,
-                                          variable=variable,
-                                          runtime_params=runtime_params,
-                                          context=context)
+        # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
+        allocation_policy = super(ControlMechanism, self)._execute(controller=self,
+                                                                   variable=variable,
+                                                                   runtime_params=runtime_params,
+                                                                   context=context)
+
         # IMPLEMENTATION NOTE:
         # self.system._restore_system_state()
 
@@ -971,6 +973,9 @@ class EVCControlMechanism(ControlMechanism):
 
         """
 
+        # FIX: 3/30/18:
+        # self.context.execution_phase = ContextFlags.SIMULATION
+
         if self.value is None:
             # Initialize value if it is None
             self.value = np.empty(len(self.control_signals))
@@ -983,6 +988,9 @@ class EVCControlMechanism(ControlMechanism):
         self._update_output_states(runtime_params=runtime_params, context=context)
 
         self.system.run(inputs=inputs, context=context)
+
+        # FIX: 3/30/18:
+        # self.context.execution_phase = ContextFlags.IDLE
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)

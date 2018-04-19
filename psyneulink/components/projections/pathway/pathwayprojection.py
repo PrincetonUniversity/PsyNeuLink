@@ -47,7 +47,7 @@ Execution
 
 from psyneulink.components.projections.projection import Projection_Base
 from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, SENDER, RECEIVER, CONTEXT
-from psyneulink.components.component import InitStatus
+from psyneulink.globals.context import ContextFlags
 
 __all__ = []
 
@@ -94,7 +94,7 @@ class PathwayProjection_Base(Projection_Base):
         name_template = "{}[{}]"
         projection_name_template = "{} from {} to {}"
 
-        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
             if self.init_args[SENDER]:
                 sender = self.init_args[SENDER]
                 if isinstance(sender, type):
@@ -113,7 +113,7 @@ class PathwayProjection_Base(Projection_Base):
         elif not self.className + '-' in self.name:
             return self.name
 
-        elif self.init_status is InitStatus.INITIALIZED:
+        elif self.context.initialization_status == ContextFlags.INITIALIZED:
             if self.sender.owner:
                 sender_name = name_template.format(self.sender.owner.name, self.sender.name)
             if self.receiver.owner:
@@ -121,5 +121,7 @@ class PathwayProjection_Base(Projection_Base):
             self.name = projection_name_template.format(self.className, sender_name, receiver_name)
 
         else:
-            raise PathwayProjectionError("PROGRAM ERROR: {} has unrecognized InitStatus ({})".
-                                            format(self, self.init_status))
+            raise PathwayProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
+                                            format(self,
+                                                   ContextFlags._get_context_string(
+                                                           self.context.initialization_status)))

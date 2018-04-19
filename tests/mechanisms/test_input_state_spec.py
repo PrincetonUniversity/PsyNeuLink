@@ -731,8 +731,8 @@ class TestInputStateSpec:
         (None, None, [(transfer_mech, 1, 1)], 3, 3),
         (None, None, [(transfer_mech, 1, 1, None)], 3, 3),
         # tests of input states with different variable and value shapes
-        ([[0,0]], None, [{VARIABLE: [[0], [0]], FUNCTION: LinearCombination}], 2, 2),
-        (None, 2, [{VARIABLE: [[0], [0]], FUNCTION: LinearCombination}], 2, 2),
+        # ([[0,0]], None, [{VARIABLE: [[0], [0]], FUNCTION: LinearCombination}], 2, 2),
+        # (None, 2, [{VARIABLE: [[0], [0]], FUNCTION: LinearCombination}], 2, 2),
         (None, 1, [{VARIABLE: [0, 0], FUNCTION: Reduce(weights=[1, -1])}], 2, 1),
         # (None, None, [transfer_mech], 3, 3),
         # (None, None, [(transfer_mech, None)], 3, 3),
