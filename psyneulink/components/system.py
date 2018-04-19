@@ -2629,6 +2629,7 @@ class System(System_Base):
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if self.context.execution_phase != ContextFlags.SIMULATION and self.enable_controller:
+            self.controller.context.execution_phase = ContextFlags.PROCESSING
             try:
                 self.controller.execute(
                     runtime_params=None,

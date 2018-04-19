@@ -2216,8 +2216,11 @@ class Process(Process_Base):
                     target_input_state.value *= 0
 
         # THEN, execute ComparatorMechanism and LearningMechanism
+
         for mechanism in self._learning_mechs:
+            mechanism.context.execution_phase = ContextFlags.LEARNING
             mechanism.execute(context=context)
+            mechanism.context.execution_phase = ContextFlags.IDLE
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:

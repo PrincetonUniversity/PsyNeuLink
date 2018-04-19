@@ -1346,7 +1346,7 @@ class Mechanism_Base(Mechanism):
         self._execution_id = None
         self._is_finished = False
         # Register with MechanismRegistry or create one
-        if not context is VALIDATE: # cxt-test
+        if self.context.initialization_status != ContextFlags.VALIDATING:
             register_category(entry=self,
                               base_class=Mechanism_Base,
                               name=name,
@@ -2141,17 +2141,15 @@ class Mechanism_Base(Mechanism):
         #             self.functionsDict[func]()
 
         # Limit init to scope specified by context
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             if PROCESS_INIT in context or SYSTEM_INIT in context: # cxt-test
                 # Run full execute method for init of Process and System
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-                return_value =  self._execute(
-                        variable=self.instance_defaults.variable,
-                        runtime_params=runtime_params,
-                        context=context,
-                )
+                return_value =  self._execute(variable=self.instance_defaults.variable,
+                                              runtime_params=runtime_params,
+                                              context=context)
 
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
                 #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2220,8 +2218,9 @@ class Mechanism_Base(Mechanism):
 
         # Executing or simulating Process or System, get input by updating input_states
         if (input is None
-            and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION}) # cxt-test
+            and (self.context.execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
             and (self.input_state.path_afferents != [])):
+
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
                                                                        context=context))
 
