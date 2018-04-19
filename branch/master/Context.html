@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Context &mdash; PsyNeuLink 0.4.6.0+1.g6a276e2 documentation</title>
+  <title>Context &mdash; PsyNeuLink 0.4.6.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.6.0+1.g6a276e2 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.6.0 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.6.0+1
+                0.4.6.0
               </div>
             
           
@@ -160,86 +160,62 @@
   <div class="section" id="module-psyneulink.globals.context">
 <span id="context"></span><h1>Context<a class="headerlink" href="#module-psyneulink.globals.context" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="psyneulink.globals.context.ContextFlags">
-<em class="property">class </em><code class="descclassname">psyneulink.globals.context.</code><code class="descname">ContextFlags</code><a class="headerlink" href="#psyneulink.globals.context.ContextFlags" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.globals.context.ContextStatus">
+<em class="property">class </em><code class="descclassname">psyneulink.globals.context.</code><code class="descname">ContextStatus</code><a class="headerlink" href="#psyneulink.globals.context.ContextStatus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to identify the status of a <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> when its value or one of its attributes is being accessed.
 Also used to specify the context in which a value of the Component or its attribute is <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">logged</span></a>.</p>
 <dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.DEFERRED_INIT">
-<code class="descname">DEFERRED_INIT</code><em class="property"> = 2</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.DEFERRED_INIT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set if flagged for deferred initialization.</p>
+<dt id="psyneulink.globals.context.ContextStatus.INITIALIZATION">
+<code class="descname">INITIALIZATION</code><em class="property"> = 2</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.INITIALIZATION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set during execution of the Component’s constructor.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.INITIALIZING">
-<code class="descname">INITIALIZING</code><em class="property"> = 4</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.INITIALIZING" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set during initialization of the Component.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.VALIDATING">
-<code class="descname">VALIDATING</code><em class="property"> = 8</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.VALIDATING" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.globals.context.ContextStatus.VALIDATION">
+<code class="descname">VALIDATION</code><em class="property"> = 4</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.VALIDATION" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set during validation of the value of a Component or its attribute.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.INITIALIZED">
-<code class="descname">INITIALIZED</code><em class="property"> = 16</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.INITIALIZED" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set after completion of initialization of the Component.</p>
+<dt id="psyneulink.globals.context.ContextStatus.EXECUTION">
+<code class="descname">EXECUTION</code><em class="property"> = 8</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.EXECUTION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set during any execution of the Component.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.REINITIALIZED">
-<code class="descname">REINITIALIZED</code><em class="property"> = 16</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.REINITIALIZED" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set on stateful Components when they are re-initialized.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.PROCESSING">
-<code class="descname">PROCESSING</code><em class="property"> = 32</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.PROCESSING" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.globals.context.ContextStatus.PROCESSING">
+<code class="descname">PROCESSING</code><em class="property"> = 16</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.PROCESSING" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set during the <a class="reference internal" href="System.html#system-execution-processing"><span class="std std-ref">processing phase</span></a> of execution of a Composition.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.LEARNING">
-<code class="descname">LEARNING</code><em class="property"> = 64</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.LEARNING" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.globals.context.ContextStatus.LEARNING">
+<code class="descname">LEARNING</code><em class="property"> = 32</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.LEARNING" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set during the <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">learning phase</span></a> of execution of a Composition.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.CONTROL">
-<code class="descname">CONTROL</code><em class="property"> = 128</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.CONTROL" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.globals.context.ContextStatus.CONTROL">
+<code class="descname">CONTROL</code><em class="property"> = 64</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.CONTROL" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set during the <code class="xref any docutils literal"><span class="pre">control</span> <span class="pre">phase</span> <span class="pre">System_Execution_Control&gt;</span></code> of execution of a Composition.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.SIMULATION">
-<code class="descname">SIMULATION</code><em class="property"> = 256</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.SIMULATION" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set during simulation by Composition.controller</p>
+<dt id="psyneulink.globals.context.ContextStatus.TRIAL">
+<code class="descname">TRIAL</code><em class="property"> = 128</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.TRIAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set at the end of a <a class="reference internal" href="#psyneulink.globals.context.ContextStatus.TRIAL" title="psyneulink.globals.context.ContextStatus.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.CONSTRUCTOR">
-<code class="descname">CONSTRUCTOR</code><em class="property"> = 512</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.CONSTRUCTOR" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call to method from Component’s constructor.</p>
+<dt id="psyneulink.globals.context.ContextStatus.RUN">
+<code class="descname">RUN</code><em class="property"> = 256</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.RUN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set at the end of a <a class="reference internal" href="#psyneulink.globals.context.ContextStatus.RUN" title="psyneulink.globals.context.ContextStatus.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.COMMAND_LINE">
-<code class="descname">COMMAND_LINE</code><em class="property"> = 1024</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.COMMAND_LINE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Direct call to method by user (either interactively from the command line, or in a script).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.COMPONENT">
-<code class="descname">COMPONENT</code><em class="property"> = 2048</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.COMPONENT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call to method by the Component.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.COMPOSITION">
-<code class="descname">COMPOSITION</code><em class="property"> = 4096</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.COMPOSITION" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call to method by a/the Composition to which the Component belongs.</p>
+<dt id="psyneulink.globals.context.ContextStatus.ALL_ASSIGNMENTS">
+<code class="descname">ALL_ASSIGNMENTS</code><em class="property"> = 126</em><a class="headerlink" href="#psyneulink.globals.context.ContextStatus.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies all contexts.</p>
 </dd></dl>
 
 </dd></dl>
@@ -281,7 +257,7 @@ Also used to specify the context in which a value of the Component or its attrib
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.6.0+1.g6a276e2',
+            VERSION:'0.4.6.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
