@@ -110,6 +110,7 @@ test_linear_combination_data = [
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_S + RAND2_V),
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_S),
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_V),
+    (Function.LinearCombination, test_var2, {'exponents': -1., 'operation': pnl.SUM}, 1 / test_var2[0] + 1 / test_var2[1]),
 ]
 
 # pytest naming function produces ugly names
