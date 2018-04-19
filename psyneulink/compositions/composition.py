@@ -58,7 +58,7 @@ from psyneulink.components.mechanisms.processing.compositioninterfacemechanism i
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.globals.keywords import SYSTEM, EXECUTING, SOFT_CLAMP, IDENTITY_MATRIX
+from psyneulink.globals.keywords import SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAMP, PULSE_CLAMP, NO_CLAMP, IDENTITY_MATRIX
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -155,6 +155,13 @@ class CompositionError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
+class RunError(Exception):
+
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
 
 class Vertex(object):
     '''
@@ -968,15 +975,15 @@ class Composition(object):
 
         for next_execution_set in execution_scheduler.run(termination_conds=termination_processing, execution_id=execution_id):
             if call_after_pass:
-                if next_pass_after == execution_scheduler.times[execution_id][TimeScale.TRIAL][TimeScale.PASS]:
-                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.times[execution_id][TimeScale.TRIAL][TimeScale.PASS]))
+                if next_pass_after == execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL):
+                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)))
                     call_after_pass()
                     next_pass_after += 1
 
             if call_before_pass:
-                if next_pass_before == execution_scheduler.times[execution_id][TimeScale.TRIAL][TimeScale.PASS]:
+                if next_pass_before == execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL):
                     call_before_pass()
-                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.format(next_pass_before, execution_scheduler.times[execution_id][TimeScale.TRIAL][TimeScale.PASS]))
+                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.format(next_pass_before, execution_scheduler.clocks[execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)))
                     next_pass_before += 1
 
             if call_before_time_step:
@@ -1006,12 +1013,7 @@ class Composition(object):
 
                 if isinstance(mechanism, Mechanism):
                     current_context = EXECUTING + "composition "
-                    # if isinstance(mechanism, LearningMechanism) or isinstance(mechanism, ComparatorMechanism):
-                    #     current_context += "LEARNING "
-                    if any(isinstance(m, LearningMechanism) for m in self.mechanisms):
-                        current_context += " LEARNING "
                     num = mechanism.execute(context=current_context)
-
 
                 if mechanism in origin_mechanisms:
                     if clamp_input:
@@ -1117,6 +1119,7 @@ class Composition(object):
 
         # ------------------------------------ FROM DEVEL START ------------------------------------
         origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+
         # if there is only one origin mechanism, allow inputs to be specified in a list
         if isinstance(inputs, (list, np.ndarray)):
             if len(origin_mechanisms) == 1:
@@ -1125,6 +1128,7 @@ class Composition(object):
                 raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
                                "mechanisms.".format(self.name, len(origin_mechanisms)))
         elif not isinstance(inputs, dict):
+            print(inputs)
             if len(origin_mechanisms) == 1:
                 raise CompositionError(
                     "Inputs to {} must be specified in a list or in a dictionary with the origin mechanism({}) "
@@ -1133,7 +1137,7 @@ class Composition(object):
                 raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
                                "mechanisms.".format(self.name, len(origin_mechanisms)))
 
-        inputs, num_inputs_sets = self._adjust_stimulus_dict(self, inputs)
+        inputs, num_inputs_sets = self._adjust_stimulus_dict(inputs)
 
         if num_trials is not None:
             num_trials = num_trials
@@ -1209,18 +1213,18 @@ class Composition(object):
                     # self.target = execution_targets
                     # self.current_targets = execution_targets
 
-            # execute learning
+            # TBI execute learning
             # pass along the targets for this trial
-            self.learning_composition.execute(execution_targets,
-                                              scheduler_processing,
-                                              scheduler_learning,
-                                              call_before_time_step,
-                                              call_before_pass,
-                                              call_after_time_step,
-                                              call_after_pass,
-                                              execution_id,
-                                              clamp_input,
-                                              )
+            # self.learning_composition.execute(execution_targets,
+            #                                   scheduler_processing,
+            #                                   scheduler_learning,
+            #                                   call_before_time_step,
+            #                                   call_before_pass,
+            #                                   call_after_time_step,
+            #                                   call_after_pass,
+            #                                   execution_id,
+            #                                   clamp_input,
+            #                                   )
 
             if call_after_trial:
                 call_after_trial()
@@ -1250,7 +1254,7 @@ class Composition(object):
         # Check that all of the mechanisms listed in the inputs dict are ORIGIN mechanisms in the self
         origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
         for mech in stimuli.keys():
-            if not mech in origin_mechanisms.mechanisms:
+            if not mech in origin_mechanisms:
                 raise CompositionError("{} in inputs dict for {} is not one of its ORIGIN mechanisms".
                                format(mech.name, self.name))
         # Check that all of the ORIGIN mechanisms in the self are represented by entries in the inputs dict
@@ -1293,7 +1297,7 @@ class Composition(object):
             else:
                 adjusted_stimuli[mech] = []
                 for stim in stimuli[mech]:
-                    check_spec_type = _input_matches_variable(stim, mech.instance_defaults.variable)
+                    check_spec_type = self._input_matches_variable(stim, mech.instance_defaults.variable)
                     # loop over each input to verify that it matches variable
                     if check_spec_type == False:
                         err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\

@@ -734,19 +734,19 @@ class TestGraph:
 
 class TestRun:
 
-    def test_run_2_mechanisms_default_input_1(self):
-        comp = Composition()
-        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
-        B = TransferMechanism(function=Linear(slope=5.0))
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp._analyze_graph()
-        sched = Scheduler(composition=comp)
-        output = comp.run(
-            scheduler_processing=sched
-        )
-        assert 25 == output[0][0]
+    # def test_run_2_mechanisms_default_input_1(self):
+    #     comp = Composition()
+    #     A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
+    #     B = TransferMechanism(function=Linear(slope=5.0))
+    #     comp.add_mechanism(A)
+    #     comp.add_mechanism(B)
+    #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+    #     comp._analyze_graph()
+    #     sched = Scheduler(composition=comp)
+    #     output = comp.run(
+    #         scheduler_processing=sched
+    #     )
+    #     assert 25 == output[0][0]
 
     def test_run_2_mechanisms_input_5(self):
         comp = Composition()
@@ -778,8 +778,7 @@ class TestRun:
         comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(B, MappingProjection(sender=B, receiver=D), C)
-
-        assert "is incompatible with the positions of these components in their composition" in str(error_text.value)
+        assert "is incompatible with the positions of these Components in their Composition" in str(error_text.value)
 
     def test_projection_assignment_mistake_swap2(self):
         # A ----> C --
@@ -800,7 +799,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(B, MappingProjection(sender=B, receiver=C), D)
 
-        assert "is incompatible with the positions of these components in their composition" in str(error_text.value)
+        assert "is incompatible with the positions of these Components in their Composition" in str(error_text.value)
 
     def test_run_5_mechanisms_2_origins_1_terminal(self):
         # A ----> C --
@@ -932,24 +931,6 @@ class TestRun:
         )
         assert 125 == output[0][0]
 
-    def test_run_2_mechanisms_incorrect_trial_spec(self):
-        comp = Composition()
-        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
-        B = TransferMechanism(function=Linear(slope=5.0))
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp._analyze_graph()
-        inputs_dict = {A: [[5], [4], [3]]}
-        sched = Scheduler(composition=comp)
-        with pytest.raises(CompositionError) as error_text:
-            comp.run(
-                inputs=inputs_dict,
-                scheduler_processing=sched,
-                num_trials=5
-            )
-        assert "number of trials" in str(error_text.value) and "does not match the length" in str(error_text.value)
-
     def test_run_2_mechanisms_double_trial_specs(self):
         comp = Composition()
         A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
@@ -1044,7 +1025,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, B_to_C, A_to_B, B, C])
 
-        assert "A projection in a linear processing pathway must be preceded by a Mechanism and followed by a " \
+        assert "A Projection in a linear processing pathway must be preceded by a Mechanism and followed by a " \
                "Mechanism" \
                in str(error_text.value)
 
@@ -1067,7 +1048,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, Nonsense, B])
 
-        assert "A linear processing pathway must be made up of projections and mechanisms." in str(
+        assert "A linear processing pathway must be made up of Projections and Mechanisms." in str(
             error_text.value)
 
     def test_LPP_two_origins_one_terminal(self):
@@ -1141,7 +1122,7 @@ class TestCallBeforeAfterTimescale:
         comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched,
-            call_before_time_step=cb_timestep(sched, time_step_array),
+            call_after_time_step=cb_timestep(sched, time_step_array),
             call_before_trial=cb_trial(sched, trial_array),
             call_before_pass=cb_pass(sched, pass_array)
         )
@@ -1161,7 +1142,7 @@ class TestCallBeforeAfterTimescale:
                 if mech.value is None:
                     d[time_scale][mech].append(np.nan)
                 else:
-                    d[time_scale][mech].append(mech.value)
+                    d[time_scale][mech].append(mech.value[0])
 
         comp = Composition()
 
@@ -1243,7 +1224,7 @@ class TestCallBeforeAfterTimescale:
                 if mech.value is None:
                     d[time_scale][mech].append(np.nan)
                 else:
-                    d[time_scale][mech].append(mech.value)
+                    d[time_scale][mech].append(mech.value[0])
 
         comp = Composition()
 
