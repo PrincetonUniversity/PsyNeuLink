@@ -691,7 +691,7 @@ class Component(object):
         + ClassDefaults.variable (value)
         + variableClassDefault_np_info (ndArrayInfo)
         + instance_defaults.variable (value)
-        + _variable_not_specified
+        + _default_variable_flexibility
         + variable (value)
         + variable_np_info (ndArrayInfo)
         + function (method)
@@ -1081,9 +1081,9 @@ class Component(object):
                 self._default_variable_handled = True
                 return None
             else:
-                self._variable_not_specified = False
+                self._default_variable_flexibility = DefaultsFlexibility.RIGID
         else:
-            self._variable_not_specified = False
+            self._default_variable_flexibility = DefaultsFlexibility.RIGID
 
         self._default_variable_handled = True
 
@@ -1102,7 +1102,7 @@ class Component(object):
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
         if size is not NotImplemented:
-            self._variable_not_specified = False
+            self._default_variable_flexibility = DefaultsFlexibility.RIGID
             # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
             #     variable = self.ClassDefaults.variable
@@ -3211,16 +3211,16 @@ class Component(object):
                 owner = None
 
     @property
-    def _variable_not_specified(self):
+    def _default_variable_flexibility(self):
         try:
-            return self.__variable_not_specified
+            return self.__default_variable_flexibility
         except AttributeError:
-            self.__variable_not_specified = True
-            return self.__variable_not_specified
+            self.__default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+            return self.__default_variable_flexibility
 
-    @_variable_not_specified.setter
-    def _variable_not_specified(self, value):
-        self.__variable_not_specified = value
+    @_default_variable_flexibility.setter
+    def _default_variable_flexibility(self, value):
+        self.__default_variable_flexibility = value
 
     @property
     def _default_variable_handled(self):
