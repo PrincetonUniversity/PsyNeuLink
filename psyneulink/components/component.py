@@ -412,7 +412,7 @@ from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrdered
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
-    'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
+    'DefaultsFlexibility', 'make_property', 'parameter_keywords', 'ParamsDict', 'ResetMode',
 ]
 # Testing pull request
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
@@ -445,6 +445,39 @@ class ResetMode(Enum):
     CURRENT_TO_INSTANCE_DEFAULTS = 0
     INSTANCE_TO_CLASS = 1
     ALL_TO_CLASS_DEFAULTS = 2
+
+
+class DefaultsFlexibility(Enum):
+    """
+        Denotes how rigid an assignment to a default is. That is, how much, if at all
+        it can be modified to suit the purpose of a method/owner/etc.
+
+        e.g. when assigning a Function to a Mechanism:
+
+            ``pnl.TransferMechanism(default_variable=[0, 0], function=pnl.Linear())``
+
+            the Linear function is assigned a default variable ([0]) based on it's ClassDefault,
+            which conflicts with the default variable specified by its future owner ([0, 0]). Since
+            the default for Linear was not explicitly stated, we allow the TransferMechanism to
+            reassign the Linear's default variable as needed (`FLEXIBLE`)
+
+    Attributes
+    ----------
+
+    FLEXIBLE
+        can be modified in any way
+
+    RIGID
+        cannot be modifed in any way
+
+    INCREASE_DIMENSION
+        can be wrapped in a single extra dimension
+
+    """
+    FLEXIBLE = 0
+    RIGID = 1
+    INCREASE_DIMENSION = 2
+
 
 # Prototype for implementing params as objects rather than dicts
 # class Params(object):
