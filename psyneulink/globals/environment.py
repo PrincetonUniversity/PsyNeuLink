@@ -756,11 +756,11 @@ def run(object,
                         object.current_targets = execution_targets
 
 
-            if RUN in context and not EVC_SIMULATION in context: # cxt-test
+            if RUN in context and not object.context.execution_phase == ContextFlags.SIMULATION: # cxt-test
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
-                # object.context.execution_phase = ContextFlags.EXECUTING
-                object.context.execution_phase = ContextFlags.PROCESSING
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
+                object.context.execution_phase = ContextFlags.PROCESSING
+
             result = object.execute(
                 input=execution_inputs,
                 execution_id=execution_id,
