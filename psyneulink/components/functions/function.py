@@ -1729,13 +1729,14 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if context is not None and INITIALIZING in context: # cxt-test
-                try:
-                    variable = self._update_variable(variable ** exponents)
-                except ZeroDivisionError:
-                    variable = self._update_variable(np.ones_like(variable))
+            if context is not None and INITIALIZING in context:  # cxt-test
+                with np.errstate(divide='raise'):
+                    try:
+                        variable = self._update_variable(variable ** exponents)
+                    except FloatingPointError:
+                        variable = self._update_variable(np.ones_like(variable))
             else:
-                # if this fails with ZeroDivisionError it should not be caught outside of initialization
+                # if this fails with FloatingPointError it should not be caught outside of initialization
                 variable = self._update_variable(variable ** exponents)
 
         # Apply weights if they were specified
@@ -2152,19 +2153,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
         if exponents is not None:
-            try:
-                variable = self._update_variable(variable ** exponents)
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            except ZeroDivisionError:
-                # Allow during initialization because 0s are common in
-                # default_variable argument
-                if context is not None and INITIALIZING in context: # cxt-test
-                    variable = self._update_variable(np.ones_like(variable))
-                else:
-                # if this fails with ZeroDivisionError it should not be caught
-                # outside of initialization
-                    raise
+            # Allow during initialization because 0s are common in default_variable argument
+            if context is not None and INITIALIZING in context:  # cxt-test
+                with np.errstate(divide='raise'):
+                    try:
+                        variable = self._update_variable(variable ** exponents)
+                    except FloatingPointError:
+                        variable = self._update_variable(np.ones_like(variable))
+            else:
+                # if this fails with FloatingPointError it should not be caught outside of initialization
+                variable = self._update_variable(variable ** exponents)
 
         # Apply weights if they were specified
         if weights is not None:
@@ -4684,23 +4684,23 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         #     self._validate_initializer(target_set[INITIALIZER])
 
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
+            self._validate_noise(target_set[NOISE])
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
 
-    def _validate_noise(self, noise, var):
+    def _validate_noise(self, noise):
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif (not iscompatible(np.atleast_2d(noise), var)
-                  and not iscompatible(np.atleast_1d(noise), var) and len(noise) > 1):
+            elif (not iscompatible(np.atleast_2d(noise), self.instance_defaults.variable)
+                  and not iscompatible(np.atleast_1d(noise), self.instance_defaults.variable) and len(noise) > 1):
                 raise FunctionError(
                         "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
                         "must be specified as a float, a function, or an array of the appropriate shape ({})."
-                            .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
+                            .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(self.instance_defaults.variable))))
             else:
                 for noise_item in noise:
                     if not isinstance(noise_item, (float, int)) and not callable(noise_item):
@@ -5635,7 +5635,7 @@ class AdaptiveIntegrator(
                         "1.0 because it is an AdaptiveIntegrator".format(target_set[RATE], self.name))
 
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
+            self._validate_noise(target_set[NOISE])
         # if INITIALIZER in target_set:
         #     self._validate_initializer(target_set[INITIALIZER])
 
@@ -5878,7 +5878,7 @@ class DriftDiffusionIntegrator(
         self.previous_time = self.t0
         self.auto_dependent = True
 
-    def _validate_noise(self, noise, var):
+    def _validate_noise(self, noise):
         if not isinstance(noise, float):
             raise FunctionError(
                 "Invalid noise parameter for {}. DriftDiffusionIntegrator requires noise parameter to be a float. Noise"
@@ -5928,8 +5928,10 @@ class DriftDiffusionIntegrator(
 
         if np.all(abs(value) < threshold):
             adjusted_value = value + offset
-        else:
+        elif np.all(value >= threshold):
             adjusted_value = np.atleast_2d(threshold)
+        elif np.all(value <= -threshold):
+            adjusted_value = np.atleast_2d(-threshold)
 
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
@@ -6135,7 +6137,7 @@ class OrnsteinUhlenbeckIntegrator(
         self.previous_time = self.t0
         self.auto_dependent = True
 
-    def _validate_noise(self, noise, var):
+    def _validate_noise(self, noise):
         if not isinstance(noise, float):
             raise FunctionError(
                 "Invalid noise parameter for {}. OrnsteinUhlenbeckIntegrator requires noise parameter to be a float. "
@@ -7577,7 +7579,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                         "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
+            self._validate_noise(target_set[NOISE])
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])
 

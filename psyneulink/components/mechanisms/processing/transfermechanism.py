@@ -787,7 +787,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
                 target_set[NOISE] = noise.function
-            self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
+            self._validate_noise(target_set[NOISE])
 
         # Validate SMOOTHING_FACTOR:
         if SMOOTHING_FACTOR in target_set:
@@ -816,7 +816,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         #                                       rate = self.smoothing_factor,
         #                                       integration_type= ADAPTIVE)
 
-    def _validate_noise(self, noise, var):
+    def _validate_noise(self, noise):
         # Noise is a list or array
         from psyneulink.components.functions.function import DistributionFunction
 
@@ -824,11 +824,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif not iscompatible(np.atleast_2d(noise), var) and len(noise) > 1:
+            elif not iscompatible(np.atleast_2d(noise), self.instance_defaults.variable) and len(noise) > 1:
                 raise MechanismError(
                     "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified"
                     " as a float, a function, or an array of the appropriate shape ({})."
-                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
+                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(self.instance_defaults.variable))))
             else:
                 for noise_item in noise:
                     if not isinstance(noise_item, (float, int)) and not callable(noise_item):

@@ -823,13 +823,19 @@ class DDM(ProcessingMechanism_Base):
         """
         Generate a dynamic plot of the DDM integrating over time towards a threshold.
 
-        NOTE: plot is only available `integration mode <DDM_Integration_Mode>` (with the Integrator function).
+        .. note::
+            The plot method is only available when the DriftDiffusionIntegrator function is in use. The plot method does
+            not represent the results of this DDM mechanism in particular, and does not affect the current state of this
+            mechanism's DriftDiffusionIntegrator. The plot method is only meant to visualize a possible path of a DDM
+            mechanism with these function parameters.
 
         Arguments
         ---------
+        stimulus: float: default 1.0
+            specify a stimulus value for the AdaptiveIntegrator function
 
         threshold: float: default 10.0
-             specify the threshold at which the DDM will stop integrating
+            specify the threshold at which the DDM will stop integrating
 
         Returns
         -------
@@ -1002,10 +1008,6 @@ class DDM(ProcessingMechanism_Base):
         :param context: (str)
         :rtype self.outputState.value: (number)
         """
-
-        # PLACEHOLDER for a time_step_size parameter when time_step_mode/Scheduling is implemented:
-        time_step_size = 1.0
-
 
         # FIX: 2/5/18: PUT CODE HERE FOR input_format = ARRAY/VECTOR, TO SUBTRACT variable[1] from variable[0]
 
