@@ -2726,23 +2726,24 @@ class System(System_Base):
         # Note:  this accomodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
-
         # if isinstance(self.targets, function_type):
         #     self.current_targets = self.targets()
         #     for i in range(len(self.target_mechanisms)):
         #         self.target_input_states[i].value = self.current_targets[i]
-        if isinstance(self.targets, dict):
+
+        if not hasattr(self, "target"):
+            self.target = self.targets
+        if isinstance(self.target, dict):
             for i in range(len(self.target_mechanisms)):
 
                 terminal_mechanism = self.target_mechanisms[i].input_states[SAMPLE].path_afferents[0].sender.owner
                 target_value = self.current_targets[terminal_mechanism]
-
                 if callable(target_value):
                     self.target_input_states[i].value = target_value()
                 else:
                     self.target_input_states[i].value = target_value
 
-        elif isinstance(self.targets, (list, np.ndarray)):
+        elif isinstance(self.target, (list, np.ndarray)):
             for i in range(len(self.target_mechanisms)):
                 self.target_input_states[i].value = self.current_targets[i]
         # NEXT, execute all components involved in learning
