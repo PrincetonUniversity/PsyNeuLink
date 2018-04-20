@@ -2286,8 +2286,8 @@ class Mechanism_Base(Mechanism):
         self._update_output_states(runtime_params=runtime_params, context=context) # cxt-pass cxt-push
 
         # REPORT EXECUTION
-        # if self.prefs.reportOutputPref and context and EXECUTING in context:
-        if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}): # cxt-test
+        if self.prefs.reportOutputPref and (self.context.execution_phase &
+                                            ContextFlags.PROCESSING|ContextFlags.LEARNING):
             self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
 
         #RE-SET STATE_VALUES AFTER INITIALIZATION
@@ -2417,8 +2417,8 @@ class Mechanism_Base(Mechanism):
 
     def _update_attribs_dicts(self, context=None):
         from psyneulink.globals.keywords import NOISE
-        for state in self._parameter_states: # cxt-test
-            if NOISE in state.name and INITIALIZING in context:
+        for state in self._parameter_states:
+            if NOISE in state.name and self.context.initialization_status == ContextFlags.INITIALIZING:
                 continue
             if state.name in self.user_params:
                 self.user_params.__additem__(state.name, state.value)

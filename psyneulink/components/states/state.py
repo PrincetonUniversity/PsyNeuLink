@@ -1843,7 +1843,7 @@ class State_Base(State):
         Returns combined values of projections, modulated by any mod_afferents
     """
 
-        # Set context to owner's context
+        # Set context to owner's context:
         self.context.execution_phase = self.owner.context.execution_phase
         self.context.string = self.owner.context.string
 
@@ -1947,14 +1947,14 @@ class State_Base(State):
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningProjection) and not LEARNING in context: # cxt-test
+            if isinstance(projection, LearningProjection) and self.context.execution_phase != ContextFlags.LEARNING:
                 projection_value = projection.value * 0.0
             else:
                 projection_value = projection.execute(runtime_params=projection_params,
                                                       context=context) # cxt-pass cxt-push
 
             # If this is initialization run and projection initialization has been deferred, pass
-            if INITIALIZING in context and projection.context.initialization_status == ContextFlags.DEFERRED_INIT: # cxt-test
+            if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                 continue
 
             if isinstance(projection, PathwayProjection_Base):

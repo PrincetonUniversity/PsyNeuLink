@@ -1049,8 +1049,10 @@ class OutputState(State_Base):
 
         # variable is passed to OutputState by _instantiate_function for OutputState
         if variable is not None:
-            # assert INITIALIZING in context # cxt-test
-            assert self.context.initialization_status == ContextFlags.INITIALIZING
+            if self.context.initialization_status != ContextFlags.INITIALIZING:
+                raise OutputStateError("PROGRAM ERROR: variable unexpectedly passed to OutputState._execute"
+                                       "for {} of {} when it is being run rather than initialized".
+                                       format(self.name, self.owner.name))
             fct_var = variable
 
         # otherwise, OutputState uses specified item(s) of owner's value
