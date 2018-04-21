@@ -1494,8 +1494,20 @@ class Component(object):
         # self.user_params = params.copy()
         self.user_params = ReadOnlyOrderedDict(name=USER_PARAMS)
         for param_name in sorted(list(params.keys())):
-            self.user_params.__additem__(param_name, params[param_name])
+            # copy dicts because otherwise if you ever modify the dict specified
+            # as the params argument, you will change the user_params of this object
+            # and any other object instantiated with that dict
+            new_param_val = params[param_name]
+            if isinstance(new_param_val, dict):
+                new_param_val = new_param_val.copy()
+            elif isinstance(new_param_val, (dict, ReadOnlyOrderedDict)):
+                # construct the ROOD key by key because disallows standard creation
+                val_dict = new_param_val.copy()
+                new_param_val = ReadOnlyOrderedDict()
+                for k in val_dict:
+                    new_param_val.__additem__(k, val_dict[k])
 
+            self.user_params.__additem__(param_name, new_param_val)
 
         # Cache a (deep) copy of the user-specified values;  this is to deal with the following:
         #    • _create_attributes_for_params assigns properties to each param in user_params;
