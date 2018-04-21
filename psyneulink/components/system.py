@@ -1044,26 +1044,9 @@ class System(System_Base):
             if isinstance(process, Process_Base):
                 if process_input is not None:
                     process._instantiate_defaults(variable=process_input, context=context)
-
-            # Otherwise, instantiate Process
             else:
-                if inspect.isclass(process) and issubclass(process, Process_Base):
-                    # FIX: MAKE SURE THIS IS CORRECT
-                    # Provide self as context, so that Process knows it is part of a System (and which one)
-                    # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
-                    #           in Pathway, to override instantiation of projections from Process.input_state
-                    process = Process_Base(default_variable=process_input,
-                                           learning_rate=self.learning_rate,
-                                           context=self)
-                elif isinstance(process, dict):
-                    # IMPLEMENT:  HANDLE Process specification dict here;
-                    #             include process_input as ??param, and context=self
-                    raise SystemError("Attempt to instantiate process {0} in PROCESSES of {1} "
-                                      "using a Process specification dict: not currently supported".
-                                      format(process.name, self.name))
-                else:
-                    raise SystemError("Entry {0} of PROCESSES ({1}) must be a Process object, class, or a "
-                                      "specification dict for a Process".format(i, process))
+                raise SystemError("Entry {0} of PROCESSES ({1}) for {} must be a Process object".
+                                  format(i, process, self.name))
 
             # # process should now be a Process object;  assign to processList
             # self.processList.append(process)
