@@ -1421,12 +1421,13 @@ class Component(object):
                 # function arg is a class
                 if inspect.isclass(function):
                     params[FUNCTION] = function
+                    function_instance = function()
                     # Get copy of default params
                     # IMPLEMENTATION NOTE: this is needed so that function_params gets included in user_params and
                     #                      thereby gets instantiated as a property in _create_attributes_for_params
                     params[FUNCTION_PARAMS] = ReadOnlyOrderedDict(name=FUNCTION_PARAMS)
-                    for param_name in sorted(list(function().user_params.keys())):
-                        params[FUNCTION_PARAMS].__additem__(param_name, function().user_params[param_name])
+                    for param_name in sorted(list(function_instance.user_params.keys())):
+                        params[FUNCTION_PARAMS].__additem__(param_name, function_instance.user_params[param_name])
                     continue
 
                 # function arg is not a class (presumably an object)
