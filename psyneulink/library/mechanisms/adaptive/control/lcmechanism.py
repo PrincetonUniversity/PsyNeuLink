@@ -455,7 +455,6 @@ class LCMechanism(ControlMechanism):
                                            "\'ALL\' was specified for the {} "
                                            "argument the constructor for {}".format(MODULATED_MECHANISMS,
                                                                                     self.name))
-
             if not isinstance(spec, list):
                 spec = [spec]
 
