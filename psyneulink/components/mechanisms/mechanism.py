@@ -1346,7 +1346,7 @@ class Mechanism_Base(Mechanism):
         self._execution_id = None
         self._is_finished = False
         # Register with MechanismRegistry or create one
-        if not context is VALIDATE: # cxt-test
+        if self.context.initialization_status != ContextFlags.VALIDATING:
             register_category(entry=self,
                               base_class=Mechanism_Base,
                               name=name,
@@ -2069,6 +2069,7 @@ class Mechanism_Base(Mechanism):
             return getattr(self, param_name)
 
     def execute(self,
+                # input=None,
                 input=None,
                 runtime_params=None,
                 ignore_execution_id = False,
@@ -2133,32 +2134,22 @@ class Mechanism_Base(Mechanism):
             self.context.string = COMMAND_LINE
         else:
             # These need to be set for states to use as context
-            self.context.string = context # cxt-set
-            # FIX: MODIFY TO USE self.context.flags RATHER THAN context MESSAGE
-            if not INITIALIZING in context:
-                if EXECUTING in context:
-                    self.context.execution_phase = ContextFlags.PROCESSING
-                if LEARNING in context:
-                    self.context.execution_phase = ContextFlags.LEARNING
-                if EVC_SIMULATION in context:
-                    self.context.execution_phase = ContextFlags.SIMULATION
+            self.context.string = context # cxt-done
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
 
         # Limit init to scope specified by context
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             if PROCESS_INIT in context or SYSTEM_INIT in context: # cxt-test
                 # Run full execute method for init of Process and System
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-                return_value =  self._execute(
-                        variable=self.instance_defaults.variable,
-                        runtime_params=runtime_params,
-                        context=context,
-                )
+                return_value =  self._execute(variable=self.instance_defaults.variable,
+                                              runtime_params=runtime_params,
+                                              context=context)
 
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
                 #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2227,8 +2218,9 @@ class Mechanism_Base(Mechanism):
 
         # Executing or simulating Process or System, get input by updating input_states
         if (input is None
-            and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION}) # cxt-test
+            and (self.context.execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
             and (self.input_state.path_afferents != [])):
+
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
                                                                        context=context))
 
@@ -2294,8 +2286,8 @@ class Mechanism_Base(Mechanism):
         self._update_output_states(runtime_params=runtime_params, context=context) # cxt-pass cxt-push
 
         # REPORT EXECUTION
-        # if self.prefs.reportOutputPref and context and EXECUTING in context:
-        if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}): # cxt-test
+        if self.prefs.reportOutputPref and (self.context.execution_phase &
+                                            ContextFlags.PROCESSING|ContextFlags.LEARNING):
             self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
 
         #RE-SET STATE_VALUES AFTER INITIALIZATION
@@ -2425,8 +2417,8 @@ class Mechanism_Base(Mechanism):
 
     def _update_attribs_dicts(self, context=None):
         from psyneulink.globals.keywords import NOISE
-        for state in self._parameter_states: # cxt-test
-            if NOISE in state.name and INITIALIZING in context:
+        for state in self._parameter_states:
+            if NOISE in state.name and self.context.initialization_status == ContextFlags.INITIALIZING:
                 continue
             if state.name in self.user_params:
                 self.user_params.__additem__(state.name, state.value)

@@ -251,7 +251,7 @@ class Context():
         `initialization_status <Context.initialization_status>`, `execution_phase <Context.initialization_status>`,
         and `source <Context.source>` (described below).
 
-    initialization_status :  field of flags attribute
+    initialization_status : field of flags attribute
         indicates the state of initialization of the Component;
         one and only one of the following flags is always set:
 
@@ -261,7 +261,7 @@ class Context():
             * `INITIALIZED <ContextFlags.INITIALIZED>`
             * `REINITIALIZED <ContextFlags.REINITIALIZED>`
 
-    execution_phase :  field of flags attribute
+    execution_phase : field of flags attribute
         indicates the phase of execution of the Component;
         one or more of the following flags can be set:
 
@@ -274,7 +274,7 @@ class Context():
         `execution_phase <Context.execution_phase>` flags may be set, in which case `flags_string
         <Context.flags_string>` will include *EXECUTING* in the string.
 
-    source :  field of the flags attribute
+    source : field of the flags attribute
         indicates the source of a call to a method belonging to or referencing the Component;
         one of the following flags is always set:
 
@@ -314,7 +314,8 @@ class Context():
                  flags=None,
                  initialization_status=ContextFlags.UNINITIALIZED,
                  execution_phase=None,
-                 source=ContextFlags.COMPONENT,
+                 # source=ContextFlags.COMPONENT,
+                 source=ContextFlags.NONE,
                  execution_id:UUID=None,
                  string:str='', time=None):
 

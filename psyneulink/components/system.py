@@ -2538,20 +2538,20 @@ class System(System_Base):
                     for projection in state.all_afferents:
                         projection.sender.owner._execution_id = self._execution_id
 
-        self._report_system_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING,
-                                                                                                         LEARNING}) # cxt-test
+        self._report_system_output = (self.prefs.reportOutputPref and
+                                      self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING))
 
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
 
         # FIX: MOVE TO RUN??
-        #region ASSIGN INPUTS TO SystemInputStates
+        # ASSIGN INPUTS TO SystemInputStates
         #    that will be used as the input to the MappingProjection to each ORIGIN mechanism
         num_origin_mechs = len(list(self.origin_mechanisms))
 
         if input is None:
-            if (self.prefs.verbosePref and
-                    not (not context or COMPONENT_INIT in context)): # cxt-test
+            if (self.prefs.verbosePref and not (self.context.source == ContextFlags.COMMAND_LINE or
+                                                self.context.initialization_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
             input = np.zeros_like(self.instance_defaults.variable)
             for i in range(num_origin_mechs):
@@ -2595,13 +2595,12 @@ class System(System_Base):
         self.input = input
         self.termination_processing = termination_processing
         self.termination_learning = termination_learning
-        #endregion
 
         if self._report_system_output:
             self._report_system_initiation()
 
 
-        #region EXECUTE MECHANISMS
+        # EXECUTE MECHANISMS
 
         # TEST PRINT:
         # for i in range(len(self.execution_list)):
@@ -2610,32 +2609,27 @@ class System(System_Base):
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
         self._execute_processing(context=context)
-        #endregion
 
-        # region EXECUTE LEARNING FOR EACH PROCESS
+        # EXECUTE LEARNING FOR EACH PROCESS
 
         # Execute learning except for simulation runs
-        if not EVC_SIMULATION in context and self.learning: # cxt-test
+        if self.context.execution_phase != ContextFlags.SIMULATION and self.learning:
             self.context.execution_phase = ContextFlags.LEARNING
             self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
             self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
 
             self.context.execution_phase = ContextFlags.IDLE
-            # self.context.status |= ContextFlags.EXECUTION
             self.context.string = self.context.string.replace(LEARNING, EXECUTING)
-        # endregion
 
 
-        #region EXECUTE CONTROLLER
-# FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
-# FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
+        # EXECUTE CONTROLLER
+        # FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
+        # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if not EVC_SIMULATION in context and self.enable_controller: # cxt-test
-
-            # FIX: 3/30/18 - SET SIMULATION CONTEXT HERE (OR WILL controller INHERIT IT FROM SYSTEM IN ITS _EXECUTE?)
-            # FIX:           CONTEXT FOR SYSTEM IS NOT PROPERLY SET HERE... HAS ALL FLAGS SET (FIX IN run ??)
+        if self.context.execution_phase != ContextFlags.SIMULATION and self.enable_controller:
+            self.controller.context.execution_phase = ContextFlags.PROCESSING
             try:
                 self.controller.execute(
                     runtime_params=None,
@@ -2645,11 +2639,10 @@ class System(System_Base):
                     print("{0}: {1} executed".format(self.name, self.controller.name))
 
             except AttributeError as error_msg:
-                if not 'INIT' in context: # cxt-test
+                if self.context.initialization_status != ContextFlags.INITIALIZING:
                     raise SystemError("PROGRAM ERROR: Problem executing controller ({}) for {}: unidentified "
                                       "attribute (\'{}\') encountered for it or one of the methods it calls."
                                       .format(self.controller.name, self.name, error_msg.args[0]))
-        #endregion
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
@@ -2774,7 +2767,7 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
+                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-done
 
                 component.context.composition = self
                 component.context.execution_phase = ContextFlags.LEARNING
@@ -2811,7 +2804,7 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
+                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-done
                 component.context.execution_phase = ContextFlags.LEARNING
                 component.context.string = context_str
 

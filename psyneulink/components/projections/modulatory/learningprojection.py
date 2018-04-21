@@ -473,7 +473,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             # VALIDATE SENDER
             sender = self.sender
             if isinstance(sender, LearningMechanism):
@@ -592,11 +592,6 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
-        # # MODIFIED 9/22/17 OLD:
-        # candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
-        # if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
-        #     learned_projection.objective_mechanism = candidate_objective_mech
-        # MODIFIED 9/22/17 NEW:
         try:
             candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
             if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
@@ -605,7 +600,6 @@ class LearningProjection(ModulatoryProjection_Base):
             # learning_mechanism does not receive from an ObjectiveMechanism
             #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
             pass
-        # MODIFIED 9/22/17 END
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = True
 
@@ -650,30 +644,17 @@ class LearningProjection(ModulatoryProjection_Base):
                                               format(self.sender.owner.name, learning_signal,
                                                      self.receiver.owner.name, matrix))
 
-        if EXECUTING in context: # cxt-test
-            self.context.execution_phase = ContextFlags.EXECUTING
-        elif LEARNING in context: # cxt-test
-            self.context.execution_phase = ContextFlags.LEARNING
-
-        # # MODIFIED 3/20/18 OLD:
-        # self.weight_change_matrix = self.function(
-        #     variable=learning_signal,
-        #     params=runtime_params,
-        #     context=context
-        # )
-        # MODIFIED 3/20/18 NEW:
         # IMPLEMENTATION NOTE:  skip Projection._execute, as that uses self.sender.value as variable,
         #                       which undermines formatting of it (as learning_signal) above
         self.weight_change_matrix = super(ShellClass, self)._execute(variable=learning_signal,
                                                                      runtime_params=runtime_params,
                                                                      context=context
                                                                      )
-        # MODIFIED 3/20/18 END
 
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate
 
-        if not INITIALIZING in context and self.reportOutputPref: # cxt-test
+        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(self.weight_change_matrix)))
 
         return self.value

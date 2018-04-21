@@ -499,10 +499,11 @@ class LeabraMechanism(ProcessingMechanism_Base):
                          context=self)
 
     def _execute(self,
-                input = None,
+                # input = None,
+                variable = None,
                 runtime_params = None,
                 time_scale = TimeScale.TRIAL,
-                ignore_execution_id = False,
+                # ignore_execution_id = False,
                 context = None):
 
         if runtime_params:
@@ -510,9 +511,9 @@ class LeabraMechanism(ProcessingMechanism_Base):
                 self.training_flag = runtime_params["training_flag"]
                 del runtime_params["training_flag"]
 
-        return super()._execute(input = input,
+        return super()._execute(variable = variable,
                                runtime_params = runtime_params,
-                               ignore_execution_id = ignore_execution_id,
+                               # ignore_execution_id = ignore_execution_id,
                                context = context)
 
     @property

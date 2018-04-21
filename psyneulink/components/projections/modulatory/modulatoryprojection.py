@@ -228,8 +228,6 @@ class ModulatoryProjection_Base(Projection_Base):
 
         template = "{} for {}[{}]"
 
-        # if self.context.initialization_status &  \
-        #         (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING | ContextFlags.UNSET):
         if self.context.initialization_status &  (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
             # If the name is not a default name for the class, return
             if not self.className + '-' in self.name:

@@ -61,7 +61,7 @@ __all__ = [
     'kwPrefBaseValue', 'kwPrefCurrentValue', 'kwPreferenceSet', 'kwPreferenceSetName', 'kwPrefLevel', 'kwPrefs',
     'kwPrefsOwner', 'kwProcessComponentCategory', 'kwProcessDefaultMechanism', 'kwProcessDefaultProjectionFunction',
     'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
-    'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory', 'kwStateContext', 'kwStateName', 'kwStatePrefs',
+    'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory',
     'kwSystemComponentCategory', 'KWTA', 'kwThreshold', 'LABELS', 'LCA', 'LEARNED_PARAM', 'LEARNING',
     'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE',
     'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION',
@@ -85,7 +85,8 @@ __all__ = [
     'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'RESULT', 'RESULTS', 'RL_FUNCTION', 'RUN', 'SAMPLE',
     'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SENDER', 'SEPARATOR_BAR', 'SET_ATTRIBUTE',
     'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP', 'SOFTMAX_FUNCTION',
-    'STABILITY_FUNCTION', 'STANDARD_ARGS','STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES', 'STATE', 'STATE_PARAMS',
+    'STABILITY_FUNCTION', 'STANDARD_ARGS','STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES',
+    'STATE', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS',
     'STATE_TYPE', 'STATE_VALUE', 'STATES', 'SUBTRACTION', 'SUM', 'SYSTEM', 'SYSTEM_DEFAULT_CONTROLLER',
     'SYSTEM_INIT', 'TARGET', 'TARGET_LABELS_DICT', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM',
     'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIAL', 'TRIALS_DIM', 'UNCHANGED', 'UNIFORM_DIST_FUNCTION',
@@ -728,9 +729,9 @@ STATE_TYPE = "state_type"
 STATES = "STATES"
 PROJECTIONS = "projections"  # Used to specify projection list to State DEPRECATED;  REPLACED BY CONNECTIONS
 CONNECTIONS = 'CONNECTIONS'
-kwStateName = "StateName"
-kwStatePrefs = "StatePrefs"
-kwStateContext = "StateContext"
+STATE_NAME = "StateName"
+STATE_PREFS = "StatePrefs"
+STATE_CONTEXT = "StateContext"
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
 FULL = 'FULL'
