@@ -2310,12 +2310,12 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
     def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
         scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        scale_type = params.type.pointee.elements[0];
+        scale_type = scale_ptr.type.pointee
         if isinstance(scale_type, ir.ArrayType):
             scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), index])
 
         offset_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        offset_type = params.type.pointee.elements[1]
+        offset_type = offset_ptr.type.pointee
         if isinstance(offset_type, ir.ArrayType):
             offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), index])
 
