@@ -121,7 +121,7 @@ def _naming_function(config):
     inputs = var.shape[0]
     op = params['operation']
     param_string = ""
-    for p in 'scale','offset':
+    for p in 'scale', 'offset', 'exponents':
         if p not in params or params[p] is None:
             param_string += " NO "
         elif np.isscalar(params[p]):
