@@ -2283,7 +2283,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
     def get_param_initializer(self):
         param_init = []
-        for p in SCALE, OFFSET:
+        for p in SCALE, OFFSET, EXPONENTS:
             param = self.get_current_function_param(p)
             if param is None:
                 param = tuple()
@@ -2295,7 +2295,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
     def get_param_struct_type(self):
         param_list = []
-        for p in SCALE, OFFSET:
+        for p in SCALE, OFFSET, EXPONENTS:
             # work around 2d structure of params
             param = self.get_current_function_param(p)
             if param is not None and not np.isscalar(param):
@@ -2318,6 +2318,9 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         if isinstance(offset_type, ir.ArrayType):
             offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), index])
 
+        exponent_param_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        exponent_type = exponent_param_ptr.type.pointee
+
         scale = ctx.float_ty(1.0) if isinstance(scale_type, ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
 
 
@@ -2330,10 +2333,26 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         else:
             val = ctx.float_ty(1.0)
 
-        input_count = ctx.int32_ty(vi.type.pointee.count)
+        pow_f = ctx.module.declare_intrinsic("llvm.pow", [ctx.float_ty])
+
         for i in range(vi.type.pointee.count):
+            # exponenes is always an array
+            if len(exponent_type) > 1:
+                assert exponent_type.pointee.count == vo.type.pointee.count * vi.type.pointee.count
+                exponent_index = ctx.int32_ty(vo.type.pointee.count * (i - 1))
+                exponent_index = builder.add(exponent_index, index)
+            else:
+                exponent_index = ctx.int32_ty(0)
+
+            if isinstance(exponent_type, ir.LiteralStructType):
+                exponent = ctx.float_ty(1.0)
+            else:
+                exponent_ptr = builder.gep(exponent_param_ptr, [ctx.int32_ty(0), exponent_index])
+                exponent = builder.load(exponent_ptr)
+
             ptri = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(i), index])
             in_val = builder.load(ptri)
+            in_val = builder.call(pow_f, [in_val, exponent])
 
             if operation is SUM:
                 val = builder.fadd(val, in_val)
