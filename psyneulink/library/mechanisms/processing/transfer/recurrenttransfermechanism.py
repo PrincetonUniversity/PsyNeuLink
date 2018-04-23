@@ -161,7 +161,6 @@ Class Reference
 """
 
 import numbers
-
 from collections import Iterable
 
 import numpy as np
@@ -176,12 +175,11 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
-from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, HOLLOW_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
@@ -751,12 +749,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # FIX: validate learning_function and learning_rate here (use Hebbian as template for learning_rate
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """ using the `matrix` argument the user passed in (which is now stored in function_params), instantiate
         ParameterStates for auto and hetero if they haven't already been instantiated. This is useful if auto and
         hetero were None in the initialization call.
+        :param function:
         """
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
         param_keys = self._parameter_states.key_values
         specified_matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
@@ -815,8 +814,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputStates
         """
-        from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
-
+        from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
         super()._instantiate_attributes_after_function(context=context)
 

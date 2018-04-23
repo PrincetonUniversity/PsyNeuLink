@@ -100,13 +100,17 @@ class Mechanism(ShellClass):
                  param_defaults=None,
                  name=None,
                  prefs=None,
-                 context=None):
+                 context=None,
+                 function=None,
+                 ):
         super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=param_defaults,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         raise ShellClassError("Must implement _validate_params in {0}".format(self))

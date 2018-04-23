@@ -440,31 +440,23 @@ from toposort import toposort, toposort_flatten
 from psyneulink.components.component import Component
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
 from psyneulink.components.process import Process, ProcessList, ProcessTuple
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.projection import Projection
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
-    EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, FUNCTIONS, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, \
-    INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, \
-    PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, WEIGHT, \
-    kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTIONS, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, insert_list, iscompatible
+from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import Projection
-
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
@@ -846,7 +838,6 @@ class System(System_Base):
                                                   targets=targets,
                                                   params=params)
 
-        self.function = self.execute
         self.scheduler_processing = scheduler
         self.scheduler_learning = None
         self.termination_processing = None
@@ -915,16 +906,17 @@ class System(System_Base):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiate processes and graph
 
         These calls must be made before _instantiate_function as the latter may be called during init for validation
+        :param function:
         """
         self._instantiate_processes(input=self.instance_defaults.variable, context=context)
         self._instantiate_graph(context=context)
         self._instantiate_learning_graph(context=context)
 
-    def _instantiate_function(self, context=None):
+    def _instantiate_function(self, function, function_params=None, context=None):
         """Suppress validation of function
 
         This is necessary to:
@@ -938,12 +930,19 @@ class System(System_Base):
                 format(self.name, self.paramsCurrent[FUNCTION], FUNCTION)
             self.paramsCurrent[FUNCTION] = self.execute
 
-        # If validation pref is set, instantiate and execute the System
+    def _instantiate_value(self, context=None):
+        # If validation pref is set, execute the System
         if self.prefs.paramValidationPref:
-            super(System, self)._instantiate_function(context=context)
+            super()._instantiate_value(context=context)
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
-            self.value = self.processes[-1].output_state.value
+            value = self.processes[-1].output_state.value
+            try:
+                # Could be mutable, so assign copy
+                self.instance_defaults.value = value.copy()
+            except AttributeError:
+                # Immutable, so just assign value
+                self.instance_defaults.value = value
 
     def _instantiate_processes(self, input=None, context=None):
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN PATHWAY
@@ -1594,7 +1593,7 @@ class System(System_Base):
         """Build graph of LearningMechanism and LearningProjections
         """
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
-            LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
+            LearningMechanism
 
         self.learningGraph = OrderedDict()
         self.learning_execution_graph = OrderedDict()
@@ -3209,6 +3208,10 @@ class System(System_Base):
         pass
 
     @property
+    def function(self):
+        return self.execute
+
+    @property
     def mechanisms(self):
         """List of all mechanisms in the system
 
@@ -3757,7 +3760,7 @@ class System(System_Base):
                                         # Create node for System "targets" input
                                         # Note: Mechanism.show_structure is not called for SystemInterfaceMechanism
                                         elif isinstance(smpl_or_trgt_src, System):
-                                            
+
                                             if smpl_or_trgt_src is active_item:
                                                 smpl_or_trgt_src_color = active_color
                                             else:

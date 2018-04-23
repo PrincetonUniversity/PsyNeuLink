@@ -48,7 +48,6 @@ Class Reference
 
 import logging
 import uuid
-
 from collections import Iterable, OrderedDict
 from enum import Enum
 

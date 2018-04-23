@@ -311,15 +311,13 @@ from psyneulink.components.mechanisms.adaptive.adaptivemechanism import Adaptive
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.shellclasses import System_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.components.states.outputstate import SEQUENTIAL
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTROL, CONTROLLER, CONTROL_PROJECTION, \
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTROL, CONTROL_PROJECTION, \
     CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, \
     OBJECTIVE_MECHANISM, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'ALLOCATION_POLICY', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -558,7 +556,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     class InstanceDefaults(AdaptiveMechanism_Base.InstanceDefaults, _DefaultsAliases):
         pass
 
-    from psyneulink.components.functions.function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OBJECTIVE_MECHANISM: None,
@@ -570,7 +567,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  size=None,
                  system:tc.optional(System_Base)=None,
                  objective_mechanism=None,
-                 function = Linear(slope=1, intercept=0),
+                 function=None,
                  control_signals=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -592,7 +589,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                     params=params,
                                                     name=name,
                                                     prefs=prefs,
-                                                    context=self)
+                                                    context=self,
+                                                    function=function,
+                                                    )
 
         try:
             self.monitored_output_states
@@ -905,10 +904,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         return control_signal
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Updates ControlSignals based on inputs
 
         Must be overriden by subclass
