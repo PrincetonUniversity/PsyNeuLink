@@ -1729,13 +1729,14 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if context is not None and INITIALIZING in context: # cxt-test
-                try:
-                    variable = self._update_variable(variable ** exponents)
-                except ZeroDivisionError:
-                    variable = self._update_variable(np.ones_like(variable))
+            if context is not None and INITIALIZING in context:  # cxt-test
+                with np.errstate(divide='raise'):
+                    try:
+                        variable = self._update_variable(variable ** exponents)
+                    except FloatingPointError:
+                        variable = self._update_variable(np.ones_like(variable))
             else:
-                # if this fails with ZeroDivisionError it should not be caught outside of initialization
+                # if this fails with FloatingPointError it should not be caught outside of initialization
                 variable = self._update_variable(variable ** exponents)
 
         # Apply weights if they were specified
@@ -2152,19 +2153,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
         if exponents is not None:
-            try:
-                variable = self._update_variable(variable ** exponents)
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            except ZeroDivisionError:
-                # Allow during initialization because 0s are common in
-                # default_variable argument
-                if context is not None and INITIALIZING in context: # cxt-test
-                    variable = self._update_variable(np.ones_like(variable))
-                else:
-                # if this fails with ZeroDivisionError it should not be caught
-                # outside of initialization
-                    raise
+            # Allow during initialization because 0s are common in default_variable argument
+            if context is not None and INITIALIZING in context:  # cxt-test
+                with np.errstate(divide='raise'):
+                    try:
+                        variable = self._update_variable(variable ** exponents)
+                    except FloatingPointError:
+                        variable = self._update_variable(np.ones_like(variable))
+            else:
+                # if this fails with FloatingPointError it should not be caught outside of initialization
+                variable = self._update_variable(variable ** exponents)
 
         # Apply weights if they were specified
         if weights is not None:

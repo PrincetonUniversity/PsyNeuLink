@@ -733,7 +733,14 @@ from psyneulink.components.component import Component, ComponentError, component
     function_type, method_type
 from psyneulink.components.functions.function import Function, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXECUTING, EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, SIZE, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, WEIGHT, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, \
+    CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXECUTING, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
+    GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION_PARAMS, \
+    LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
+    NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, \
+    PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, SIZE, \
+    STANDARD_OUTPUT_STATES, STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, \
+    VALUE, VARIABLE, WEIGHT, kwAssign, kwStateComponentCategory
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -1039,9 +1046,9 @@ class State_Base(State):
                 # + STATE_VALUE = value
                 + VARIABLE = variable
                 + STATE_PARAMS = params
-                + kwStateName = name
-                + kwStatePrefs = prefs
-                + kwStateContext = context
+                + STATE_NAME = name
+                + STATE_PREFS = prefs
+                + STATE_CONTEXT = context
                 NOTES:
                     * these are used for dictionary specification of a State in param declarations
                     * they take precedence over arguments specified directly in the call to __init__()
@@ -1060,16 +1067,16 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                name = kargs[kwStateName]
+                name = kargs[STATE_NAME]
             except (KeyError, NameError):
                 pass
             try:
-                prefs = kargs[kwStatePrefs]
+                prefs = kargs[STATE_PREFS]
             except (KeyError, NameError):
                 pass
             try:
-                context = kargs[kwStateContext] # cxt-set
-                self.context.string = kargs[kwStateContext]
+                context = kargs[STATE_CONTEXT]
+                self.context.string = kargs[STATE_CONTEXT]
             except (KeyError, NameError):
                 pass
 
@@ -1093,8 +1100,7 @@ class State_Base(State):
 
         # If name is not specified, assign default name
         if name is not None and DEFERRED_INITIALIZATION in name:
-            name = self._assign_default_state_name(context=name) # cxt-set
-
+            name = self._assign_default_state_name(context=context)
 
 
         # Register State with StateRegistry of owner (Mechanism to which the State is being assigned)
@@ -1138,10 +1144,18 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
+        # # MODIFIED 4/15/18 OLD:
         if context is COMMAND_LINE: # cxt-test
+        # # MODIFIED 4/15/18 NEW:
+        #     assert self.context.source == ContextFlags.COMMAND_LINE
+        # MODIFIED 4/15/18 END
             state_list = getattr(owner, owner.stateListAttr[self.__class__])
             if state_list and not self in state_list:
                 owner.add_states(self)
+        # # MODIFIED 4/15/18 NEW:
+        # else:
+        #     assert self.context.source != ContextFlags.COMMAND_LINE
+        # MODIFIED 4/15/18 END
 
 
     def _handle_size(self, size, variable):
@@ -1733,13 +1747,10 @@ class State_Base(State):
 
             # VALIDATE (if initialized or being initialized (INITIALIZA))
 
-            # if projection.context.initialization_status & \
-            #         (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING | ContextFlags.UNSET):
             if projection.context.initialization_status & (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
 
                 # If still being initialized, then assign sender and receiver as necessary
-                # if projection.context.initialization_status & (ContextFlags.INITIALIZING | ContextFlags.UNSET):
-                if projection.context.initialization_status & ContextFlags.INITIALIZING:
+                if projection.context.initialization_status == ContextFlags.INITIALIZING:
                     if not isinstance(projection.sender, State):
                         projection.sender = self
 
@@ -1832,7 +1843,7 @@ class State_Base(State):
         Returns combined values of projections, modulated by any mod_afferents
     """
 
-        # Set context to owner's context
+        # Set context to owner's context:
         self.context.execution_phase = self.owner.context.execution_phase
         self.context.string = self.owner.context.string
 
@@ -1936,14 +1947,14 @@ class State_Base(State):
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningProjection) and not LEARNING in context: # cxt-test
+            if isinstance(projection, LearningProjection) and self.context.execution_phase != ContextFlags.LEARNING:
                 projection_value = projection.value * 0.0
             else:
                 projection_value = projection.execute(runtime_params=projection_params,
                                                       context=context) # cxt-pass cxt-push
 
             # If this is initialization run and projection initialization has been deferred, pass
-            if INITIALIZING in context and projection.context.initialization_status == ContextFlags.DEFERRED_INIT: # cxt-test
+            if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                 continue
 
             if isinstance(projection, PathwayProjection_Base):

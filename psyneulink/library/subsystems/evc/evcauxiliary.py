@@ -177,7 +177,7 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         """
 
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             return (np.array([0]), np.array([0]), np.array([0]))
 
         cost_function = controller.paramsCurrent[COST_FUNCTION]
@@ -296,7 +296,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         """
 
-        if INITIALIZING in context: # cxt-test
+        if (self.context.initialization_status == ContextFlags.INITIALIZING or
+                self.owner.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
         # Get value of, or set default for standard args
@@ -525,7 +526,7 @@ def _compute_EVC(args):
     outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
                         allocation_vector=allocation_vector,
                         runtime_params=runtime_params,
-                        context=context) # cxt-set cxt-pass
+                        context=context) # cxt-done
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
                                                               # MODIFIED 5/7/17 OLD:
@@ -534,7 +535,7 @@ def _compute_EVC(args):
                                                               outcome=outcome,
                                                               # MODIFIED 5/7/17 END
                                                               costs=ctlr.control_signal_costs,
-                                                              context=context) # cxt-set cxt-pass
+                                                              context=context) # cxt-done
 
 
     if PY_MULTIPROCESSING:

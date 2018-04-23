@@ -888,7 +888,20 @@ class OutputState(State_Base):
                  context=None,
                  **kwargs):
 
+        # from psyneulink.globals.utilities import get_args
+        # import inspect
+
+        # curr_frame = inspect.currentframe()
+        # args = get_args(curr_frame)
+        # prev_frame = inspect.getouterframes(inspect.currentframe(),2)
+        #
+        # try:
+        #     prev_args = get_args(prev_frame)
+        # except:
+        #     prev_args = None
+
         if context is None: # cxt-test
+        # if not (self.context.source or prev_args):
             context = COMMAND_LINE # cxt-done
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
@@ -1036,7 +1049,10 @@ class OutputState(State_Base):
 
         # variable is passed to OutputState by _instantiate_function for OutputState
         if variable is not None:
-            assert INITIALIZING in context # cxt-test
+            if self.context.initialization_status != ContextFlags.INITIALIZING:
+                raise OutputStateError("PROGRAM ERROR: variable unexpectedly passed to OutputState._execute"
+                                       "for {} of {} when it is being run rather than initialized".
+                                       format(self.name, self.owner.name))
             fct_var = variable
 
         # otherwise, OutputState uses specified item(s) of owner's value
@@ -1058,16 +1074,10 @@ class OutputState(State_Base):
                 except AttributeError:
                     raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
                                            format(self.name, self.owner.name))
-        # # MODIFIED 3/20/18 OLD:
-        # value = self.function(variable=fct_var,
-        #                      params=runtime_params,
-        #                      context=context)
-        # return value
-        # MODIFIED 3/20/18 NEW:
+
         return super()._execute(variable=fct_var,
                                 runtime_params=runtime_params,
                                 context=context)
-        # MODIFIED 3/20/18 END
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
@@ -1403,6 +1413,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
+    # if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}): # cxt-test
     if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}): # cxt-test
         owner.output_states.extend(state_list)
     else:

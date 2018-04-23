@@ -2127,7 +2127,7 @@ class Process(Process_Base):
             mech._execution_id = self._execution_id
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}) # cxt-test
+        report_output = self.prefs.reportOutputPref and self.context.initialization_status == ContextFlags.INITIALIZED
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
@@ -2216,8 +2216,11 @@ class Process(Process_Base):
                     target_input_state.value *= 0
 
         # THEN, execute ComparatorMechanism and LearningMechanism
+
         for mechanism in self._learning_mechs:
+            mechanism.context.execution_phase = ContextFlags.LEARNING
             mechanism.execute(context=context)
+            mechanism.context.execution_phase = ContextFlags.IDLE
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
@@ -2242,6 +2245,15 @@ class Process(Process_Base):
                     if isinstance(sender, Process) or not self in (sender.processes):
                         continue
 
+                    # Call parameter_state.update with LEARNING in context to update LearningSignals
+                    # Note: context is set on the projection,
+                    #    as the ParameterStates are assigned their owner's context in their update methods
+                    # Note: do this rather just calling LearningSignals directly
+                    #       since parameter_state.update() handles parsing of LearningProjection-specific params
+                    context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
+                    projection.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
+                    projection.context.execution_phase = ContextFlags.LEARNING
+
                     # For each parameter_state of the Projection
                     try:
                         for parameter_state in projection._parameter_states:
@@ -2251,19 +2263,9 @@ class Process(Process_Base):
                                    for projection in parameter_state.mod_afferents):
                                 continue
 
-                            # Call parameter_state.update with LEARNING in context to update LearningSignals
-                            # Note: do this rather just calling LearningSignals directly
-                            #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                            context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
-                            parameter_state.context.execution_phase = ContextFlags.LEARNING
-                            parameter_state.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
-
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, context=context)
                             parameter_state.update(context=context) # cxt-pass cxt-push
-
-                            parameter_state.context.execution_phase = ContextFlags.IDLE
-                            parameter_state.context.string = self.context.string.replace(LEARNING, EXECUTING)
 
                     # Not all Projection subclasses instantiate ParameterStates
                     except AttributeError as e:
@@ -2274,6 +2276,9 @@ class Process(Process_Base):
                                                "while attempting to update {} {} of {}".
                                                format(e.args[0], parameter_state.name, ParameterState.__name__,
                                                       projection.name))
+
+                    projection.context.execution_phase = ContextFlags.IDLE
+
             mech.context.execution_phase = ContextFlags.IDLE
             mech.context.string = self.context.string.replace(LEARNING, EXECUTING)
 

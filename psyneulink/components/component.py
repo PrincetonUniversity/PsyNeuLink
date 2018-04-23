@@ -869,7 +869,8 @@ class Component(object):
         context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
         self.context.initialization_status = ContextFlags.INITIALIZING
         self.context.execution_phase = None
-        self.context.source = ContextFlags.COMPONENT
+        if not self.context.source:
+            self.context.source = ContextFlags.COMPONENT
         self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
 
         self.context.initialization_status = ContextFlags.INITIALIZING
@@ -1620,13 +1621,13 @@ class Component(object):
             variable = self._update_variable(variable())
 
         # Validate variable if parameter_validation is set and the function was called with a variable
+        # IMPLEMENTATION NOTE:  context is used here just for reporting;  it is not tested in any of the methods called
         if self.prefs.paramValidationPref and variable is not None:
-            if context: # cxt-test
-                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS # cxt-done
-                # self.context.string = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS # cxt-push
+            if context:
+                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
             else:
-                context = FUNCTION_CHECK_ARGS # cxt-done
-                # self.context.string = context + FUNCTION_CHECK_ARGS # cxt-push
+                context = FUNCTION_CHECK_ARGS
+            self.context.string = context
             variable = self._update_variable(self._validate_variable(variable, context=context))
 
         # PARAMS ------------------------------------------------------------
@@ -1693,10 +1694,13 @@ class Component(object):
 
         # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
         if self.prefs.paramValidationPref and params and not params is target_set:
+            curr_context = self.context.initialization_status
+            self.context.initialization_status = ContextFlags.VALIDATING
             try:
                 self._validate_params(variable=variable, request_set=params, target_set=target_set, context=context)
             except TypeError:
                 self._validate_params(request_set=params, target_set=target_set, context=context)
+            self.context.initialization_status = curr_context
 
         return variable
 
@@ -2779,12 +2783,6 @@ class Component(object):
 
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
         #    execute method, not its function
-
-        # MODIFIED 3/17/18 OLD:
-        # if not context: # cxt-test
-        #     context = "DIRECT CALL" # cxt-done
-        # MODIFIED 3/17/18 END
-
         try:
             value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:

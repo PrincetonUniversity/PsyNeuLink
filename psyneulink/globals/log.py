@@ -779,7 +779,7 @@ class Log:
 
             if isinstance(context, ContextFlags):
                 context_flags = context
-                context = ContextFlags._get_context_string(context) # cxt-test
+                context = ContextFlags._get_context_string(context) # cxt-done
                 if not time:
                     raise LogError("Use of ContextFlags ({}) by {} to specify context requires specification of time".
                                    format(context, self.owner.name ))
@@ -788,8 +788,8 @@ class Log:
                 context_flags = ContextFlags.COMMAND_LINE
 
             elif self.owner.context.flags:
-                context_flags = self.owner.context.flags # cxt-test
-                context = ContextFlags._get_context_string(context_flags) # cxt-set
+                context_flags = self.owner.context.flags # cxt-done
+                context = ContextFlags._get_context_string(context_flags) # cxt-done
 
             # Get context
             else:
@@ -797,7 +797,7 @@ class Log:
                     # If _log_value is being called programmatically,
                     #    flag for later and set context to None to get context from the stack
                     programmatic = True
-                    context = None # cxt-set
+                    context = None # cxt-done
                 # Get context from the stack
                 if context is None: # cxt-test
                     curr_frame = inspect.currentframe()
@@ -806,29 +806,29 @@ class Log:
                     # Search stack for first frame (most recent call) with a context specification
                     while context is None:
                         try:
-                            context = inspect.getargvalues(prev_frame[i][0]).locals['context'] # cxt-set
+                            context = inspect.getargvalues(prev_frame[i][0]).locals['context'] # cxt-done
                         except KeyError:
                             # Try earlier frame
                             i += 1
                         except IndexError:
                             # Ran out of frames, so just set context to empty string
-                            context = "" # cxt-set
+                            context = "" # cxt-done
                         else:
                             break
 
                 # If context is a Component object, it must be during its initialization, so assign accordingly:
                 if isinstance(context, Component):
-                    context = "{} of {}".format(INITIALIZING, context.name) # cxt-set
+                    context = "{} of {}".format(INITIALIZING, context.name) # cxt-done
                 # No context was specified in any frame
-                if context is None: # cxt-test
+                if context is None: # cxt-done
                     raise LogError("PROGRAM ERROR: No context specification found in any frame")
 
                 if not isinstance(context, str):
                     raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
 
                 # Context is an empty string, but called programmatically
-                if not context and programmatic: # cxt-test
-                    context = COMMAND_LINE # cxt-set
+                if not context and programmatic: # cxt-done
+                    context = COMMAND_LINE # cxt-done
                     #  context = self.owner.prev_context + "FROM " + COMMAND_LINE
                     # context = self.owner.prev_context
 
@@ -845,7 +845,7 @@ class Log:
                 time = time or _get_time(self.owner, context_flags)
                 self.entries[self.owner.name] = LogEntry(time, context_flags_string, value)
 
-        if not context_flags & ContextFlags.COMMAND_LINE: # cxt-test
+        if not context_flags & ContextFlags.COMMAND_LINE: # cxt-done
             self.owner.prev_context = self.owner.context
 
     @tc.typecheck
@@ -1070,9 +1070,9 @@ class Log:
                         data_str = data_str + time_str.ljust(time_width)
 
                     if options.CONTEXT & option_flags:
-                        context = repr(context) # cxt-set
+                        context = repr(context)
                         if len(context) > context_width:
-                            context = context[:context_width-3] + "..." # cxt-set
+                            context = context[:context_width-3] + "..."
                         data_str = data_str + context.ljust(context_width, spacer)
 
                     if options.VALUE & option_flags:

@@ -1,7 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" factoryName="py.test" name="py.test for tests.control.test_EVC.test_EVC" nameIsGenerated="true" singleton="true" type="tests">
     <module name="" />
-    <module name="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
