@@ -729,9 +729,7 @@ class EVCControlMechanism(ControlMechanism):
                                            modulation=modulation,
                                            params=params,
                                            name=name,
-                                           prefs=prefs,
-                                           # context=ContextFlags.CONSTRUCTOR) cxt-CONSTRUCTOR
-        )
+                                           prefs=prefs)
 
 
     def _instantiate_input_states(self, context=None):
@@ -796,9 +794,7 @@ class EVCControlMechanism(ControlMechanism):
                     name=origin_mech.name + " " + PREDICTION_MECHANISM,
                     default_variable=variable,
                     input_states=state_names,
-                    params = prediction_mechanism_params,
-                    # context=context, # cxt-CONSTRUCTOR
-            )
+                    params = prediction_mechanism_params)
             prediction_mechanism._role = CONTROL
             prediction_mechanism.origin_mech = origin_mech
 

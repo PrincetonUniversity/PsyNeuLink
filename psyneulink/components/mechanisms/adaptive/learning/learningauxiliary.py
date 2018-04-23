@@ -546,9 +546,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                   VARIABLE: target_input},
                                                           function=error_function,
                                                           name="{} {}".format(lc.activation_mech.name,
-                                                                              COMPARATOR_MECHANISM),
-                                                          # context=context # cxt-CONSTRUCTOR
-                                                          )
+                                                                              COMPARATOR_MECHANISM))
                 # MODIFIED 10/10/17 END
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism

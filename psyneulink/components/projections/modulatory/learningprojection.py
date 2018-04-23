@@ -457,8 +457,7 @@ class LearningProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR, # cxt-CONSTRUCTOR
-                         )
+                         context=ContextFlags.CONSTRUCTOR)
         self.learning_enable = True
 
 

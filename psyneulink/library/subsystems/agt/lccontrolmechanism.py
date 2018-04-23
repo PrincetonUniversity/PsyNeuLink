@@ -780,9 +780,7 @@ class LCControlMechanism(ControlMechanism):
                          modulation=modulation,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         # context=ContextFlags.CONSTRUCTOR) cxt-CONSTRUCTOR
-                         )
+                         prefs=prefs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS

@@ -492,8 +492,7 @@ class MappingProjection(PathwayProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR # cxt-CONSTRUCTOR
-                         )
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _instantiate_parameter_states(self, context=None):
 

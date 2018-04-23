@@ -249,10 +249,7 @@ class AutoAssociativeProjection(MappingProjection):
                          matrix=matrix,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         # context=context)
-                         # context=ContextFlags.CONSTRUCTOR) # cxt-CONSTRUCTOR
-                         )
+                         prefs=prefs)
 
     def _execute(self, variable, runtime_params=None, context=None):
         """

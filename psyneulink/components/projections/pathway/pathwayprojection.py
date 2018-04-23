@@ -84,9 +84,7 @@ class PathwayProjection_Base(Projection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context
-                         # context=ContextFlags.CONSTRUCTOR # cxt-CONSTRUCTOR
-                         )
+                         context=context)
 
     def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 
