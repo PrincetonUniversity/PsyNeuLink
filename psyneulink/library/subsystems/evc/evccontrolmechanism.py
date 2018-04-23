@@ -704,8 +704,7 @@ class EVCControlMechanism(ControlMechanism):
                  save_all_values_and_policies:bool=False,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=componentType+INITIALIZING):
+                 prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
@@ -731,7 +730,9 @@ class EVCControlMechanism(ControlMechanism):
                                            params=params,
                                            name=name,
                                            prefs=prefs,
-                                           context=self)
+                                           # context=ContextFlags.CONSTRUCTOR) cxt-CONSTRUCTOR
+        )
+
 
     def _instantiate_input_states(self, context=None):
         """Instantiate PredictionMechanisms
@@ -796,7 +797,7 @@ class EVCControlMechanism(ControlMechanism):
                     default_variable=variable,
                     input_states=state_names,
                     params = prediction_mechanism_params,
-                    context=context,
+                    # context=context, # cxt-CONSTRUCTOR
             )
             prediction_mechanism._role = CONTROL
             prediction_mechanism.origin_mech = origin_mech

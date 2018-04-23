@@ -1693,7 +1693,8 @@ class Process(Process_Base):
                 MappingProjection(sender=self.process_input_states[i],
                                   receiver=mechanism.input_states[i],
                                   name=self.name+'_Input Projection',
-                                  context=context)
+                                  # context=context) # cxt-CONSTRUCTOR
+                                  )
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
                           format(i, process_input[i], self.name, mechanism.name))
@@ -1868,7 +1869,7 @@ class Process(Process_Base):
                     # Initialize each Projection to the ParameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
                     for param_projection in parameter_state.mod_afferents:
-                        param_projection._deferred_init(context=context)
+                        param_projection._deferred_init()
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _learning_mechs
                             try:

@@ -311,6 +311,7 @@ from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import FUNCTION, INITIALIZER, INITIALIZING, OWNER_VALUE, \
     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MEAN, MEDIAN, NAME, NOISE, NORMALIZING_FUNCTION_TYPE, \
     PROB,RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE, \
@@ -694,8 +695,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=componentType+INITIALIZING):
+                 prefs:is_pref_set=None):
         """Assign type-level preferences and call super.__init__
         """
 
@@ -731,7 +731,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             params=params,
             name=name,
             prefs=prefs,
-            context=self,
+            context=ContextFlags.CONSTRUCTOR,
             input_states=input_states,
         )
 

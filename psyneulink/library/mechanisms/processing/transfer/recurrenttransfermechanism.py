@@ -616,8 +616,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
-                 prefs: is_pref_set=None,
-                 context=componentType+INITIALIZING):
+                 prefs: is_pref_set=None):
         """Instantiate RecurrentTransferMechanism
         """
 
@@ -662,8 +661,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.
@@ -1013,8 +1011,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                               learning_rate=learning_rate,
                                                               name="{} for {}".format(
                                                                       AutoAssociativeLearningMechanism.className,
-                                                                      self.name),
-                                                              context=context)
+                                                                      self.name))
 
         # Instantiate Projection from Mechanism's output to LearningMechanism
         MappingProjection(sender=activity_vector,

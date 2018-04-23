@@ -547,7 +547,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                           function=error_function,
                                                           name="{} {}".format(lc.activation_mech.name,
                                                                               COMPARATOR_MECHANISM),
-                                                          context=context)
+                                                          # context=context # cxt-CONSTRUCTOR
+                                                          )
                 # MODIFIED 10/10/17 END
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
@@ -612,8 +613,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                            function=learning_function,
                                            # learning_signals=[lc.activation_mech_projection],
                                            learning_signals=[learning_projection],
-                                           name=LEARNING_MECHANISM + " for " + lc.activation_mech_projection.name,
-                                           context=context)
+                                           name=LEARNING_MECHANISM + " for " + lc.activation_mech_projection.name)
 
     # IMPLEMENTATION NOTE:
     # ADD ARGUMENTS TO LearningMechanism FOR activation_input AND activation_output, AND THEN INSTANTIATE THE
@@ -624,15 +624,13 @@ def _instantiate_learning_components(learning_projection, context=None):
     MappingProjection(sender=lc.activation_mech_input,
                       receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
                       matrix=IDENTITY_MATRIX,
-                      name = lc.activation_mech_input.owner.name + ' to ' + ACTIVATION_INPUT,
-                      context=context)
+                      name = lc.activation_mech_input.owner.name + ' to ' + ACTIVATION_INPUT)
 
     # Assign MappingProjection from activation_mech_output to LearningMechanism's ACTIVATION_OUTPUT inputState
     MappingProjection(sender=lc.activation_mech_output,
                       receiver=learning_mechanism.input_states[ACTIVATION_OUTPUT],
                       matrix=IDENTITY_MATRIX,
-                      name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT,
-                      context=context)
+                      name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT)
 
 
 def _instantiate_error_signal_projection(sender, receiver):

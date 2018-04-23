@@ -243,7 +243,6 @@ class ComponentPreferenceSet(PreferenceSet):
                  prefs=None,
                  level=PreferenceLevel.SYSTEM,
                  name=None,
-                 context=None,
                  **kargs):
         """Instantiate PreferenceSet for owner and/or classPreferences for owner's class
 

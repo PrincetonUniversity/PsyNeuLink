@@ -530,8 +530,7 @@ class LCA(RecurrentTransferMechanism):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=componentType+INITIALIZING):
+                 prefs:is_pref_set=None):
         """Instantiate LCA
         """
 
@@ -574,8 +573,7 @@ class LCA(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
 
     def _execute(self,
                  variable=None,

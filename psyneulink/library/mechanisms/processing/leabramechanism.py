@@ -102,6 +102,7 @@ from psyneulink.components.functions.function import Function_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates, standard_output_states
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import FUNCTION, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE,\
     LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
@@ -454,8 +455,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                  quarter_size=50,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
-                 context=componentType + INITIALIZING):
+                 prefs: is_pref_set = None):
         if not leabra_available:
             raise LeabraError('leabra python module is not installed. Please install it from '
                               'https://github.com/benureau/leabra')
@@ -496,7 +496,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _execute(self,
                 # input = None,

@@ -428,8 +428,7 @@ class LearningProjection(ModulatoryProjection_Base):
                  exponent=None,
                  params:tc.optional(dict)=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # IMPLEMENTATION NOTE:
         #     the error_function and learning_function arguments are implemented to preserve the ability to pass
@@ -458,7 +457,8 @@ class LearningProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR, # cxt-CONSTRUCTOR
+                         )
         self.learning_enable = True
 
 

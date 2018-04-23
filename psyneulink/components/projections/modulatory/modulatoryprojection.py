@@ -109,8 +109,7 @@ class ModulatoryProjection_Base(Projection_Base):
         exponent=None,             \
         params=None,               \
         name=None,                 \
-        prefs=None,                \
-        context=None)
+        prefs=None)
 
     Subclass of `Projection <Projection>` that modulates the value of a `State <State>`.
 

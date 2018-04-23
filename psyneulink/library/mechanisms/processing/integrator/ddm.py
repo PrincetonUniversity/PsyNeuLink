@@ -727,9 +727,7 @@ class DDM(ProcessingMechanism_Base):
                  params=None,
                  name=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
-                 prefs: is_pref_set = None,
-                 context=componentType + INITIALIZING
-    ):
+                 prefs: is_pref_set = None):
 
         self.standard_output_states = StandardOutputStates(self,
                                                            DDM_standard_output_states,
@@ -810,8 +808,7 @@ class DDM(ProcessingMechanism_Base):
                                   name=name,
                                   prefs=prefs,
                                   size=size,
-                                  # context=context)
-                                  context=self)
+                                  context=ContextFlags.CONSTRUCTOR)
         self._instantiate_plotting_functions()
         # # TEST PRINT
         # print("\n{} user_params:".format(self.name))

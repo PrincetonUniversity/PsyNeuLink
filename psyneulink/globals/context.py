@@ -64,6 +64,25 @@ operating state of the Component:
        The `string <Context.string>` attribute of Context is not the same as, nor does it usually contain the same
        information as the string returned by the `flags_string <Context.flags_string>` method of Context.
 
+COMMENT:
+    IMPLEMENTATION NOTE: Use of ContextFlags in **context** argument of methods for context message-passing
+        ContextFlags is also used for passing context messages to methods (in the **context** argument).
+
+        Among other things, this is used to determine the source of call of a constructor (until someone
+            proposes/implements a better method!).  This is used in several ways, for example:
+            a) to insure that any call to a _Base class is from a subclass constructor
+              rather than by the user from the command line (which is not allowed).
+            b) to determine whether an InputState or OutputState is being added as part of the construction process
+              (e.g., for LearningMechanism) or by the user from the command line (see Mechanism.add_states)
+
+        Application (a) above is implemented as follows:
+            * user-accessible subclasses do not implement a context argument in their constructors
+            * subclasses just below the _Base class call super().__init__() with context=ContextFlags.CONSTRUCTOR
+            * all lower sub-subclasses call super without context arg
+            * the constructor for all _Base classes checks that context==ContextFlags.CONSTRUCTOR
+              and assign self.context.source = context
+COMMENT
+
 .. _Context_Class_Reference:
 
 Class Reference

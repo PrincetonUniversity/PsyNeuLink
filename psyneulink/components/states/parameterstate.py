@@ -575,7 +575,8 @@ class ParameterState(State_Base):
                                              params=params,
                                              name=name,
                                              prefs=prefs,
-                                             context=self)
+                                             # context=ContextFlags.CONSTRUCTOR)
+                                             context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that ParameterState (as identified by its name) is for a valid parameter of the owner

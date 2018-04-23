@@ -527,8 +527,7 @@ class KWTA(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
 
     # adds indexOfInhibitionInputState to the attributes of KWTA
     def _instantiate_attributes_before_function(self, context=None):

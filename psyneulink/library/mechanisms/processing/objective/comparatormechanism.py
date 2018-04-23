@@ -138,6 +138,7 @@ from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates
 from psyneulink.components.states.state import _parse_state_spec
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_STATES, NAME, SAMPLE, TARGET, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -333,7 +334,6 @@ class ComparatorMechanism(ObjectiveMechanism):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
                  **input_states # IMPLEMENTATION NOTE: this is for backward compatibility
                  ):
 
@@ -362,7 +362,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible

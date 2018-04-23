@@ -465,8 +465,7 @@ class MappingProjection(PathwayProjection_Base):
                  matrix=DEFAULT_MATRIX,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
@@ -493,7 +492,8 @@ class MappingProjection(PathwayProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR # cxt-CONSTRUCTOR
+                         )
 
     def _instantiate_parameter_states(self, context=None):
 
