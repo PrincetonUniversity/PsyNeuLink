@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Components &mdash; PsyNeuLink 0.4.4.4+155.gb834baa documentation</title>
+  <title>Components &mdash; PsyNeuLink 0.4.4.4+167.gefa7940 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+155.gb834baa documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+167.gefa7940 documentation" href="index.html"/>
         <link rel="up" title="Core" href="Core.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Core" href="Core.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.4+155
+                0.4.4.4+167
               </div>
             
           
@@ -451,8 +451,43 @@ argument, using a value of <a class="reference internal" href="#component-resetm
 </dd></dl>
 
 <dl class="class">
+<dt id="psyneulink.components.component.DefaultsFlexibility">
+<em class="property">class </em><code class="descclassname">psyneulink.components.component.</code><code class="descname">DefaultsFlexibility</code><a class="headerlink" href="#psyneulink.components.component.DefaultsFlexibility" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Denotes how rigid an assignment to a default is. That is, how much, if at all
+it can be modified to suit the purpose of a method/owner/etc.</p>
+<p>e.g. when assigning a Function to a Mechanism:</p>
+<blockquote>
+<div><p><code class="docutils literal"><span class="pre">pnl.TransferMechanism(default_variable=[0,</span> <span class="pre">0],</span> <span class="pre">function=pnl.Linear())</span></code></p>
+<p>the Linear function is assigned a default variable ([0]) based on it’s ClassDefault,
+which conflicts with the default variable specified by its future owner ([0, 0]). Since
+the default for Linear was not explicitly stated, we allow the TransferMechanism to
+reassign the Linear’s default variable as needed (<a class="reference internal" href="#psyneulink.components.component.DefaultsFlexibility.FLEXIBLE" title="psyneulink.components.component.DefaultsFlexibility.FLEXIBLE"><code class="xref any py py-attr docutils literal"><span class="pre">FLEXIBLE</span></code></a>)</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="attribute">
+<dt id="psyneulink.components.component.DefaultsFlexibility.FLEXIBLE">
+<code class="descname">FLEXIBLE</code><a class="headerlink" href="#psyneulink.components.component.DefaultsFlexibility.FLEXIBLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>can be modified in any way</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.component.DefaultsFlexibility.RIGID">
+<code class="descname">RIGID</code><a class="headerlink" href="#psyneulink.components.component.DefaultsFlexibility.RIGID" title="Permalink to this definition">¶</a></dt>
+<dd><p>cannot be modifed in any way</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.component.DefaultsFlexibility.INCREASE_DIMENSION">
+<code class="descname">INCREASE_DIMENSION</code><a class="headerlink" href="#psyneulink.components.component.DefaultsFlexibility.INCREASE_DIMENSION" title="Permalink to this definition">¶</a></dt>
+<dd><p>can be wrapped in a single extra dimension</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="psyneulink.components.component.Component">
-<em class="property">class </em><code class="descclassname">psyneulink.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.component.Component" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em>, <em>function=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.component.Component" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for Component.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -572,17 +607,10 @@ Instantiate any items in request set that require it (i.e., function or states).
 Incremented in the Component’s execute method by call to self._increment_execution_count</p>
 </dd></dl>
 
-<dl class="class">
-<dt id="psyneulink.components.component.Component.ContextFlags">
-<em class="property">class </em><code class="descname">ContextFlags</code><a class="headerlink" href="#psyneulink.components.component.Component.ContextFlags" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to identify the status of a <a class="reference internal" href="#"><span class="doc">Component</span></a> when its value or one of its attributes is being
-accessed. Also used to specify the context in which a value of the Component or its attribute is <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">logged</span></a>.</p>
-</dd></dl>
-
 <dl class="attribute">
 <dt id="psyneulink.components.component.Component.loggable_items">
 <code class="descname">loggable_items</code><a class="headerlink" href="#psyneulink.components.component.Component.loggable_items" title="Permalink to this definition">¶</a></dt>
-<dd><p>Diciontary of items that can be logged in the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> and their current <a class="reference internal" href="#psyneulink.components.component.Component.ContextFlags" title="psyneulink.components.component.Component.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a>.
+<dd><p>Diciontary of items that can be logged in the Component’s <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> and their current <a class="reference internal" href="Context.html#psyneulink.globals.context.ContextFlags" title="psyneulink.globals.context.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a>.
 This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.loggable_items" title="psyneulink.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> property of the Component’s
 <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
 </dd></dl>
@@ -606,7 +634,7 @@ of the Component’s <a class="reference internal" href="#psyneulink.components.
 <dl class="attribute">
 <dt id="psyneulink.components.component.Component.logged_items">
 <code class="descname">logged_items</code><a class="headerlink" href="#psyneulink.components.component.Component.logged_items" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dictionary of all items that have entries in the log, and their currently assigned <a class="reference internal" href="#psyneulink.components.component.Component.ContextFlags" title="psyneulink.components.component.Component.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a>s
+<dd><p>Dictionary of all items that have entries in the log, and their currently assigned <a class="reference internal" href="Context.html#psyneulink.globals.context.ContextFlags" title="psyneulink.globals.context.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a>s
 This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.globals.log.Log.logged_items" title="psyneulink.globals.log.Log.logged_items"><code class="xref any py py-attr docutils literal"><span class="pre">logged_items</span></code></a> property of the Component’s
 <a class="reference internal" href="#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
 </dd></dl>
@@ -660,7 +688,7 @@ This is a convenience method that calls the <a class="reference internal" href="
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+155.gb834baa',
+            VERSION:'0.4.4.4+167.gefa7940',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
