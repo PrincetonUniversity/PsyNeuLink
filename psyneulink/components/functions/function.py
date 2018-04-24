@@ -2305,12 +2305,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         scale_type = scale_ptr.type.pointee
         if isinstance(scale_type, ir.ArrayType):
-            scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), index])
+            if len(scale_type) == 1:
+                scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            else:
+                scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), index])
 
         offset_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         offset_type = offset_ptr.type.pointee
         if isinstance(offset_type, ir.ArrayType):
-            offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), index])
+            if len(offset_type) == 1:
+                offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            else:
+                offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), index])
 
         exponent_param_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         exponent_type = exponent_param_ptr.type.pointee
