@@ -1081,32 +1081,6 @@ class TestRun:
 class TestCallBeforeAfterTimescale:
 
     def test_call_before_record_timescale(self):
-        time_step_array = []
-        trial_array = []
-        pass_array = []
-
-        def cb_timestep(scheduler, arr):
-            def record_timestep():
-
-                arr.append(scheduler.clock.get_total_times_relative(TimeScale.TIME_STEP, TimeScale.TRIAL))
-
-            return record_timestep
-
-        def cb_pass(scheduler, arr):
-
-            def record_pass():
-
-                arr.append(scheduler.clock.get_total_times_relative(TimeScale.PASS, TimeScale.RUN))
-
-            return record_pass
-
-        def cb_trial(scheduler, arr):
-
-            def record_trial():
-
-                arr.append(scheduler.clock.get_total_times_relative(TimeScale.TRIAL, TimeScale.LIFE))
-
-            return record_trial
 
         comp = Composition()
 
@@ -1119,6 +1093,34 @@ class TestCallBeforeAfterTimescale:
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
 
+        time_step_array = []
+        trial_array = []
+        pass_array = []
+
+        def cb_timestep(scheduler, arr):
+
+            def record_timestep():
+                
+                arr.append(scheduler.clocks[comp._execution_id].get_total_times_relative(TimeScale.TIME_STEP, TimeScale.TRIAL))
+
+            return record_timestep
+
+        def cb_pass(scheduler, arr):
+
+            def record_pass():
+
+                arr.append(scheduler.clocks[comp._execution_id].get_total_times_relative(TimeScale.PASS, TimeScale.RUN))
+
+            return record_pass
+
+        def cb_trial(scheduler, arr):
+
+            def record_trial():
+
+                arr.append(scheduler.clocks[comp._execution_id].get_total_times_relative(TimeScale.TRIAL, TimeScale.LIFE))
+
+            return record_trial
+
         comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched,
@@ -1126,7 +1128,8 @@ class TestCallBeforeAfterTimescale:
             call_before_trial=cb_trial(sched, trial_array),
             call_before_pass=cb_pass(sched, pass_array)
         )
-
+        from pprint import pprint
+        pprint(comp.scheduler_processing.clocks)
         assert time_step_array == [0, 1, 0, 1, 0, 1, 0, 1]
         assert trial_array == [0, 1, 2, 3]
         assert pass_array == [0, 1, 2, 3]
