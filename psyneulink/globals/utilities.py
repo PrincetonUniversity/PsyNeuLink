@@ -75,14 +75,13 @@ OTHER
 
 """
 
-import collections
 import inspect
 import logging
 import numbers
 import warnings
-
 from enum import Enum, EnumMeta, IntEnum
 
+import collections
 import numpy as np
 
 from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE
@@ -508,7 +507,7 @@ def iscompatible(candidate, reference=None, **kargs):
 
 def get_args(frame):
     """Gets dictionary of arguments and their values for a function
-    Frame should be assigned as follows in the funciton itself:  frame = inspect.currentframe()
+    Frame should be assigned as follows in the function itself:  frame = inspect.currentframe()
     """
     args, _, _, values = inspect.getargvalues(frame)
     return dict((key, value) for key, value in values.items() if key in args)
@@ -1070,6 +1069,15 @@ def is_component(val):
     """
     from psyneulink.components.component import Component
     return isinstance(val, Component)
+
+def is_instance_or_subclass(candidate, spec):
+    """
+    Returns
+    -------
+
+    True if **candidate** is a subclass of **spec** or an instance thereof, False otherwise
+    """
+    return isinstance(candidate, spec) or (inspect.isclass(candidate) and issubclass(candidate, spec))
 
 
 def make_readonly_property(val):

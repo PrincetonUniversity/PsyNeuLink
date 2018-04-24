@@ -348,7 +348,6 @@ Class Reference
 ---------------
 
 """
-import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import FHNIntegrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
@@ -359,7 +358,6 @@ from psyneulink.components.shellclasses import Mechanism, System_Base
 from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
@@ -860,15 +858,22 @@ class LCControlMechanism(ControlMechanism):
         # MODIFIED 9/3/17 END
         super()._instantiate_output_states(context=context)
 
-    def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
-        output_values = self.function(variable=variable,
-                             params=runtime_params,
-                             context=context)
+        # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
+        output_values = super(ControlMechanism, self)._execute(
+            variable=variable,
+            function_variable=function_variable,
+            runtime_params=runtime_params,
+            context=context
+        )
 
         gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
 

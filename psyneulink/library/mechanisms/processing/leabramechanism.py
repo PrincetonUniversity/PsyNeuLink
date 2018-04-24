@@ -90,6 +90,7 @@ Class Reference
 """
 
 import numbers
+
 import numpy as np
 
 try:
@@ -498,22 +499,28 @@ class LeabraMechanism(ProcessingMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-    def _execute(self,
-                input = None,
-                runtime_params = None,
-                time_scale = TimeScale.TRIAL,
-                ignore_execution_id = False,
-                context = None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        time_scale=TimeScale.TRIAL,
+        # ignore_execution_id=False,
+        context=None
+    ):
 
         if runtime_params:
             if "training_flag" in runtime_params.keys():
                 self.training_flag = runtime_params["training_flag"]
                 del runtime_params["training_flag"]
 
-        return super()._execute(input = input,
-                               runtime_params = runtime_params,
-                               ignore_execution_id = ignore_execution_id,
-                               context = context)
+        return super()._execute(
+            variable=variable,
+            function_variable=function_variable,
+            runtime_params=runtime_params,
+            ignore_execution_id=ignore_execution_id,
+            context=context
+        )
 
     @property
     def training_flag(self):

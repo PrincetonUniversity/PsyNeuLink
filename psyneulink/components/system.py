@@ -439,32 +439,24 @@ from toposort import toposort, toposort_flatten
 
 from psyneulink.components.component import Component
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
-from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary import _assign_error_signal_projections, _get_learning_mechanisms
+from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
 from psyneulink.components.process import Process, ProcessList, ProcessTuple
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.projection import Projection
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
-    EVC_SIMULATION, EXECUTING, EXPONENT, FUNCTION, FUNCTIONS, IDENTITY_MATRIX, INITIALIZED, INITIALIZE_CYCLE, \
-    INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, LEARNING_SIGNAL, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, \
-    PARAMS, PROJECTIONS, SAMPLE, SEPARATOR_BAR, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, WEIGHT, \
-    kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTIONS, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, insert_list, iscompatible
+from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
-from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import Projection
-
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
@@ -828,7 +820,7 @@ class System(System_Base):
 
         # Required to defer assignment of self.controller by setter
         #     until the rest of the System has been instantiated
-        self.initialization_status = INITIALIZING
+        self.context.initialization_status = ContextFlags.INITIALIZING # cxt-init
         processes = processes or []
         if not isinstance(processes, list):
             processes = [processes]
@@ -846,7 +838,6 @@ class System(System_Base):
                                                   targets=targets,
                                                   params=params)
 
-        self.function = self.execute
         self.scheduler_processing = scheduler
         self.scheduler_learning = None
         self.termination_processing = None
@@ -869,7 +860,7 @@ class System(System_Base):
                          prefs=prefs,
                          context=context)
 
-        self.initialization_status = INITIALIZED
+        self.context.initialization_status = ContextFlags.INITIALIZED # cxt-init
         self._execution_id = None
 
         # Assign controller
@@ -915,16 +906,17 @@ class System(System_Base):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiate processes and graph
 
         These calls must be made before _instantiate_function as the latter may be called during init for validation
+        :param function:
         """
         self._instantiate_processes(input=self.instance_defaults.variable, context=context)
         self._instantiate_graph(context=context)
         self._instantiate_learning_graph(context=context)
 
-    def _instantiate_function(self, context=None):
+    def _instantiate_function(self, function, function_params=None, context=None):
         """Suppress validation of function
 
         This is necessary to:
@@ -938,12 +930,19 @@ class System(System_Base):
                 format(self.name, self.paramsCurrent[FUNCTION], FUNCTION)
             self.paramsCurrent[FUNCTION] = self.execute
 
-        # If validation pref is set, instantiate and execute the System
+    def _instantiate_value(self, context=None):
+        # If validation pref is set, execute the System
         if self.prefs.paramValidationPref:
-            super(System, self)._instantiate_function(context=context)
+            super()._instantiate_value(context=context)
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
-            self.value = self.processes[-1].output_state.value
+            value = self.processes[-1].output_state.value
+            try:
+                # Could be mutable, so assign copy
+                self.instance_defaults.value = value.copy()
+            except AttributeError:
+                # Immutable, so just assign value
+                self.instance_defaults.value = value
 
     def _instantiate_processes(self, input=None, context=None):
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN PATHWAY
@@ -1594,7 +1593,7 @@ class System(System_Base):
         """Build graph of LearningMechanism and LearningProjections
         """
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
-            LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
+            LearningMechanism
 
         self.learningGraph = OrderedDict()
         self.learning_execution_graph = OrderedDict()
@@ -2538,20 +2537,20 @@ class System(System_Base):
                     for projection in state.all_afferents:
                         projection.sender.owner._execution_id = self._execution_id
 
-        self._report_system_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING,
-                                                                                                         LEARNING}) # cxt-test
+        self._report_system_output = (self.prefs.reportOutputPref and
+                                      self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING))
 
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
 
         # FIX: MOVE TO RUN??
-        #region ASSIGN INPUTS TO SystemInputStates
+        # ASSIGN INPUTS TO SystemInputStates
         #    that will be used as the input to the MappingProjection to each ORIGIN mechanism
         num_origin_mechs = len(list(self.origin_mechanisms))
 
         if input is None:
-            if (self.prefs.verbosePref and
-                    not (not context or COMPONENT_INIT in context)): # cxt-test
+            if (self.prefs.verbosePref and not (self.context.source == ContextFlags.COMMAND_LINE or
+                                                self.context.initialization_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
             input = np.zeros_like(self.instance_defaults.variable)
             for i in range(num_origin_mechs):
@@ -2595,13 +2594,12 @@ class System(System_Base):
         self.input = input
         self.termination_processing = termination_processing
         self.termination_learning = termination_learning
-        #endregion
 
         if self._report_system_output:
             self._report_system_initiation()
 
 
-        #region EXECUTE MECHANISMS
+        # EXECUTE MECHANISMS
 
         # TEST PRINT:
         # for i in range(len(self.execution_list)):
@@ -2610,34 +2608,27 @@ class System(System_Base):
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
         self._execute_processing(context=context)
-        #endregion
 
-        # region EXECUTE LEARNING FOR EACH PROCESS
+        # EXECUTE LEARNING FOR EACH PROCESS
 
         # Execute learning except for simulation runs
-        if not EVC_SIMULATION in context and self.learning: # cxt-test
-            # self.context.status &= ~ContextFlags.EXECUTION
-            # self.context.status &= ~ContextFlags.PROCESSING
+        if self.context.execution_phase != ContextFlags.SIMULATION and self.learning:
             self.context.execution_phase = ContextFlags.LEARNING
             self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
             self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
 
             self.context.execution_phase = ContextFlags.IDLE
-            # self.context.status |= ContextFlags.EXECUTION
             self.context.string = self.context.string.replace(LEARNING, EXECUTING)
-        # endregion
 
 
-        #region EXECUTE CONTROLLER
-# FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
-# FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
+        # EXECUTE CONTROLLER
+        # FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
+        # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if not EVC_SIMULATION in context and self.enable_controller: # cxt-test
-
-            # FIX: 3/30/18 - SET SIMULATION CONTEXT HERE (OR WILL controller INHERIT IT FROM SYSTEM IN ITS _EXECUTE?)
-            # FIX:           CONTEXT FOR SYSTEM IS NOT PROPERLY SET HERE... HAS ALL FLAGS SET (FIX IN run ??)
+        if self.context.execution_phase != ContextFlags.SIMULATION and self.enable_controller:
+            self.controller.context.execution_phase = ContextFlags.PROCESSING
             try:
                 self.controller.execute(
                     runtime_params=None,
@@ -2647,11 +2638,10 @@ class System(System_Base):
                     print("{0}: {1} executed".format(self.name, self.controller.name))
 
             except AttributeError as error_msg:
-                if not 'INIT' in context: # cxt-test
+                if self.context.initialization_status != ContextFlags.INITIALIZING:
                     raise SystemError("PROGRAM ERROR: Problem executing controller ({}) for {}: unidentified "
                                       "attribute (\'{}\') encountered for it or one of the methods it calls."
                                       .format(self.controller.name, self.name, error_msg.args[0]))
-        #endregion
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
@@ -2728,23 +2718,24 @@ class System(System_Base):
         # Note:  this accomodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
-
         # if isinstance(self.targets, function_type):
         #     self.current_targets = self.targets()
         #     for i in range(len(self.target_mechanisms)):
         #         self.target_input_states[i].value = self.current_targets[i]
-        if isinstance(self.targets, dict):
+
+        if not hasattr(self, "target"):
+            self.target = self.targets
+        if isinstance(self.target, dict):
             for i in range(len(self.target_mechanisms)):
 
                 terminal_mechanism = self.target_mechanisms[i].input_states[SAMPLE].path_afferents[0].sender.owner
                 target_value = self.current_targets[terminal_mechanism]
-
                 if callable(target_value):
                     self.target_input_states[i].value = target_value()
                 else:
                     self.target_input_states[i].value = target_value
 
-        elif isinstance(self.targets, (list, np.ndarray)):
+        elif isinstance(self.target, (list, np.ndarray)):
             for i in range(len(self.target_mechanisms)):
                 self.target_input_states[i].value = self.current_targets[i]
         # NEXT, execute all components involved in learning
@@ -2775,7 +2766,7 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
+                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-done
 
                 component.context.composition = self
                 component.context.execution_phase = ContextFlags.LEARNING
@@ -2812,7 +2803,7 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-set cxt-push cxt-pass
+                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-done
                 component.context.execution_phase = ContextFlags.LEARNING
                 component.context.string = context_str
 
@@ -3215,6 +3206,10 @@ class System(System_Base):
 
     def _restore_state(self):
         pass
+
+    @property
+    def function(self):
+        return self.execute
 
     @property
     def mechanisms(self):
@@ -3765,7 +3760,7 @@ class System(System_Base):
                                         # Create node for System "targets" input
                                         # Note: Mechanism.show_structure is not called for SystemInterfaceMechanism
                                         elif isinstance(smpl_or_trgt_src, System):
-                                            
+
                                             if smpl_or_trgt_src is active_item:
                                                 smpl_or_trgt_src_color = active_color
                                             else:

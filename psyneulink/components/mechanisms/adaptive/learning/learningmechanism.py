@@ -540,23 +540,22 @@ import typecheck as tc
 
 from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import \
-    BackPropagation, ModulationParam, _is_modulation_param, is_function_type, ERROR_MATRIX
+    BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.shellclasses import Mechanism
-from psyneulink.components.states.state import ADD_STATES
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
-from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, IDENTITY_MATRIX, INITIALIZING, \
-    INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, MATRIX_KEYWORD_SET, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, \
-    PROJECTIONS, SAMPLE, STATE_TYPE, TARGET, VARIABLE
+from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.components.states.state import ADD_STATES
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
+    LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
+    MATRIX, NAME, OUTPUT_STATE, OUTPUT_STATES, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, STATE_TYPE, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_numeric, parameter_spec
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
@@ -885,7 +884,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    # ClassDefaults.variable = None
+    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults):
+        function = BackPropagation
 
     paramClassDefaults = AdaptiveMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -904,7 +904,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  default_variable=None,
                  size=None,
                  error_sources:tc.optional(tc.any(Mechanism, list))=None,
-                 function:is_function_type=BackPropagation,
+                 function=None,
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
@@ -941,7 +941,18 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=self,
+                         function=function,
+                         )
+
+    def _parse_function_variable(self, variable):
+        function_variable = np.zeros_like(
+            variable[np.array([ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_OUTPUT_INDEX])]
+        )
+        function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
+        function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
+
+        return function_variable
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
@@ -1030,16 +1041,17 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 else:
                     pass
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiates MappingProjection(s) from error_sources (if specified) to LearningMechanism
 
         Also determines and assigns `error_matrices` from the `error_sources`, identified as the matrix for the
             Projection with which each error_source is associated.
+            :param function:
         """
-        from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary \
+        from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary \
             import _instantiate_error_signal_projection
 
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
         self.error_matrices = None
         if self.error_sources:
@@ -1139,10 +1151,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
             if ERROR_SIGNAL in input_state.name:
                 self._error_signal_input_states.append(input_state)
 
-    def _execute(self,
-                variable=None,
-                runtime_params=None,
-                context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Execute LearningMechanism function and return learning_signal
 
         Identify error_signals received from LearningMechanisms currently being executed
@@ -1167,21 +1182,17 @@ class LearningMechanism(AdaptiveMechanism_Base):
             if isinstance(error_matrices[i], ParameterState):
                 error_matrices[i] = error_matrices[i].value
 
-        # Construct variable for function
-        function_variable = np.zeros_like(variable[np.array([ACTIVATION_INPUT_INDEX,
-                                                             ACTIVATION_OUTPUT_INDEX,
-                                                             ERROR_OUTPUT_INDEX])])
-        function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
-        function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
-
         # Compute learning_signal for each error_signal (and corresponding error-Matrix:
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
 
             function_variable[ERROR_OUTPUT_INDEX] = error_signal_input
-            learning_signal, error_signal = self.function(variable=function_variable,
-                                                          error_matrix=error_matrix,
-                                                          params=runtime_params,
-                                                          context=context)
+            learning_signal, error_signal = super()._execute(
+                variable=variable,
+                function_variable=function_variable,
+                error_matrix=error_matrix,
+                runtime_params=runtime_params,
+                context=context
+            )
             # Sum learning_signals and error_signals
             try:
                 summed_learning_signal += learning_signal
@@ -1193,7 +1204,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         self.learning_signal = summed_learning_signal
         self.error_signal = summed_error_signal
 
-        if INITIALIZING not in context and self.reportOutputPref: # cxt-test
+        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal, self.error_signal]

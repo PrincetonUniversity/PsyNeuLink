@@ -17,12 +17,11 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import Function_Base
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.context import ContextFlags
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch', 'EVCAuxiliaryError',
@@ -93,7 +92,9 @@ class EVCAuxiliaryFunction(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
         self.functionOutputType = None
 
@@ -177,7 +178,7 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         """
 
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             return (np.array([0]), np.array([0]), np.array([0]))
 
         cost_function = controller.paramsCurrent[COST_FUNCTION]
@@ -296,7 +297,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         """
 
-        if INITIALIZING in context: # cxt-test
+        if (self.context.initialization_status == ContextFlags.INITIALIZING or
+                self.owner.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
         # Get value of, or set default for standard args
@@ -525,7 +527,7 @@ def _compute_EVC(args):
     outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
                         allocation_vector=allocation_vector,
                         runtime_params=runtime_params,
-                        context=context) # cxt-set cxt-pass
+                        context=context) # cxt-done
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
                                                               # MODIFIED 5/7/17 OLD:
@@ -534,7 +536,7 @@ def _compute_EVC(args):
                                                               outcome=outcome,
                                                               # MODIFIED 5/7/17 END
                                                               costs=ctlr.control_signal_costs,
-                                                              context=context) # cxt-set cxt-pass
+                                                              context=context) # cxt-done
 
 
     if PY_MULTIPROCESSING:

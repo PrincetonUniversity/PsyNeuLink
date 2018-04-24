@@ -328,28 +328,25 @@ Class Reference
 ---------------
 """
 import logging
-import numbers
 import random
+
+from collections import Iterable
 
 import numpy as np
 import typecheck as tc
 
-from collections import Iterable
-
 from psyneulink.components.component import method_type
-from psyneulink.components.functions.function import \
-    BogaczEtAl, DriftDiffusionIntegrator, Integrator, LinearCombination, Reduce, \
-    NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
+from psyneulink.components.functions.function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, Reduce, STARTING_POINT, THRESHOLD
+from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL, StandardOutputStates
-from psyneulink.globals.keywords import ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, \
-    INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES,  OWNER_VALUE, VALUE, VARIABLE, kwPreferenceSetName
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import ALLOCATION_SAMPLES, CLASS_DEFAULTS, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.utilities import is_numeric, object_has_single_value
+from psyneulink.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value
 
 __all__ = [
     'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError',
@@ -706,6 +703,16 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        function = BogaczEtAl(
+            drift_rate=1.0,
+            starting_point=0.0,
+            threshold=1.0,
+            noise=0.5,
+            t0=.200,
+            owner=CLASS_DEFAULTS
+        )
+
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OUTPUT_STATES: None})
@@ -810,7 +817,10 @@ class DDM(ProcessingMechanism_Base):
                                   prefs=prefs,
                                   size=size,
                                   # context=context)
-                                  context=self)
+                                  context=self,
+                                  function=function,
+                                  )
+
         self._instantiate_plotting_functions()
         # # TEST PRINT
         # print("\n{} user_params:".format(self.name))
@@ -822,13 +832,19 @@ class DDM(ProcessingMechanism_Base):
         """
         Generate a dynamic plot of the DDM integrating over time towards a threshold.
 
-        NOTE: plot is only available `integration mode <DDM_Integration_Mode>` (with the Integrator function).
+        .. note::
+            The plot method is only available when the DriftDiffusionIntegrator function is in use. The plot method does
+            not represent the results of this DDM mechanism in particular, and does not affect the current state of this
+            mechanism's DriftDiffusionIntegrator. The plot method is only meant to visualize a possible path of a DDM
+            mechanism with these function parameters.
 
         Arguments
         ---------
+        stimulus: float: default 1.0
+            specify a stimulus value for the AdaptiveIntegrator function
 
         threshold: float: default 10.0
-             specify the threshold at which the DDM will stop integrating
+            specify the threshold at which the DDM will stop integrating
 
         Returns
         -------
@@ -911,7 +927,10 @@ class DDM(ProcessingMechanism_Base):
             if isinstance(fun, method_type):
                 fun = fun.__self__.__class__
 
-            if not fun in functions:
+            for function_type in functions:
+                if is_same_function_spec(fun, function_type):
+                    break
+            else:
                 function_names = [fun.componentName for fun in functions]
                 raise DDMError("{} param of {} must be one of the following functions: {}".
                                format(FUNCTION, self.name, function_names))
@@ -950,11 +969,12 @@ class DDM(ProcessingMechanism_Base):
                 raise DDMError("PROGRAM ERROR: unrecognized specification for {} of {} ({})".
                                format(THRESHOLD, self.name, threshold))
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Delete params not in use, call super.instantiate_execute_method
+        :param function:
         """
 
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
     def _instantiate_plotting_functions(self, context=None):
         if "DriftDiffusionIntegrator" in str(self.function):
@@ -966,10 +986,13 @@ class DDM(ProcessingMechanism_Base):
                                                           context='plot').function
 
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Execute DDM function (currently only trial-level, analytic solution)
         Execute DDM and estimate outcome or calculate trajectory of decision variable
         Currently implements only trial-level DDM (analytic solution) and returns:
@@ -1002,22 +1025,20 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # PLACEHOLDER for a time_step_size parameter when time_step_mode/Scheduling is implemented:
-        time_step_size = 1.0
-
-
         # FIX: 2/5/18: PUT CODE HERE FOR input_format = ARRAY/VECTOR, TO SUBTRACT variable[1] from variable[0]
 
-        if variable is None or np.isnan(variable):
+        if function_variable is None or np.isnan(function_variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
-            variable = self._update_variable(self.instance_defaults.variable)
+            function_variable = self._update_variable(self.instance_defaults.variable)
+
+        function_variable = self._validate_variable(function_variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if isinstance(self.function.__self__, Integrator):
 
-            result = self.function(variable, context=context)
+            result = self.function(function_variable, context=context)
 
-            if INITIALIZING not in context: # cxt-test
+            if self.context.initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
             return np.array([result, [self.function_object.previous_time]])
@@ -1026,9 +1047,11 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         else:
 
-            result = self.function(variable=variable,
-                                   params=runtime_params,
-                                   context=context)
+            result = self.function(
+                variable=function_variable,
+                params=runtime_params,
+                context=context
+            )
 
             if isinstance(self.function.__self__, BogaczEtAl):
                 return_value = np.array([[0.0], [0.0], [0.0], [0.0]])

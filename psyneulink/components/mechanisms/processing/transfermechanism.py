@@ -298,7 +298,6 @@ Class Reference
 """
 import inspect
 import numbers
-
 from collections import Iterable
 
 import numpy as np
@@ -311,15 +310,10 @@ from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.globals.keywords import FUNCTION, INITIALIZER, INITIALIZING, OWNER_VALUE, \
-    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MEAN, MEDIAN, NAME, NOISE, NORMALIZING_FUNCTION_TYPE, \
-    PROB,RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE, \
-    kwPreferenceSetName
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, \
-    kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
-from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.globals.keywords import FUNCTION, INITIALIZER, INITIALIZING, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MEDIAN, NAME, NOISE, NORMALIZING_FUNCTION_TYPE, OWNER_VALUE, PROB, RATE, RESULT, RESULTS, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE, VARIANCE
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, iscompatible
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'INITIAL_VALUE', 'CLIP', 'SMOOTHING_FACTOR', 'Transfer_DEFAULT_BIAS', 'Transfer_DEFAULT_GAIN',
@@ -738,6 +732,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             prefs=prefs,
             context=self,
             input_states=input_states,
+            function=function,
         )
 
     def _parse_arg_initial_value(self, initial_value):
@@ -792,7 +787,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
                 target_set[NOISE] = noise.function
-            self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
+            self._validate_noise(target_set[NOISE])
 
         # Validate SMOOTHING_FACTOR:
         if SMOOTHING_FACTOR in target_set:
@@ -821,19 +816,18 @@ class TransferMechanism(ProcessingMechanism_Base):
         #                                       rate = self.smoothing_factor,
         #                                       integration_type= ADAPTIVE)
 
-    def _validate_noise(self, noise, var):
+    def _validate_noise(self, noise):
         # Noise is a list or array
-        from psyneulink.components.functions.function import DistributionFunction
 
         if isinstance(noise, (np.ndarray, list)):
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif not iscompatible(np.atleast_2d(noise), var) and len(noise) > 1:
+            elif not iscompatible(np.atleast_2d(noise), self.instance_defaults.variable) and len(noise) > 1:
                 raise MechanismError(
                     "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified"
                     " as a float, a function, or an array of the appropriate shape ({})."
-                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(var))))
+                    .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(self.instance_defaults.variable))))
             else:
                 for noise_item in noise:
                     if not isinstance(noise_item, (float, int)) and not callable(noise_item):
@@ -874,7 +868,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return param
 
-    def _instantiate_parameter_states(self, context=None):
+    def _instantiate_parameter_states(self, function=None, context=None):
 
         from psyneulink.components.functions.function import Logistic
         # If function is a logistic, and clip has not been specified, bound it between 0 and 1
@@ -883,11 +877,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.clip is None):
             self.clip = (0,1)
 
-        super()._instantiate_parameter_states(context=context)
+        super()._instantiate_parameter_states(function=function, context=context)
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
 
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:
             self.initial_value = self.instance_defaults.variable
@@ -1061,10 +1055,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         return builder
 
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Execute TransferMechanism function and return transform of input
 
         Execute TransferMechanism function on input, and assign to output_values:
@@ -1127,14 +1124,15 @@ class TransferMechanism(ProcessingMechanism_Base):
             if not self.integrator_function:
 
                 self.integrator_function = AdaptiveIntegrator(
-                                            variable,
-                                            initializer=initial_value,
-                                            noise=noise,
-                                            rate=smoothing_factor,
-                                            owner=self)
+                    function_variable,
+                    initializer=initial_value,
+                    noise=noise,
+                    rate=smoothing_factor,
+                    owner=self
+                )
                 self.original_integrator_function = self.integrator_function
             current_input = self.integrator_function.execute(
-                variable,
+                function_variable,
                 # Should we handle runtime params?
                 runtime_params={
                     INITIALIZER: self.initial_value,
@@ -1144,18 +1142,18 @@ class TransferMechanism(ProcessingMechanism_Base):
                 context=context
             )
         else:
-            noise = self._try_execute_param(self.noise, variable)
+            noise = self._try_execute_param(self.noise, function_variable)
             # formerly: current_input = self.input_state.value + noise
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
             # when the input is given as a string.
             if (np.array(noise) != 0).any():
-                current_input = variable + noise
+                current_input = function_variable + noise
             else:
-                current_input = variable
+                current_input = function_variable
 
         if isinstance(self.function_object, TransferFunction):
 
-            outputs = self.function(variable=current_input, params= runtime_params)
+            outputs = super()._execute(function_variable=current_input, runtime_params=runtime_params, context=context)
             if clip is not None:
                 minCapIndices = np.where(outputs < clip[0])
                 maxCapIndices = np.where(outputs > clip[1])
@@ -1165,7 +1163,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Apply TransferMechanism's function to each input state separately
             outputs = []
             for elem in current_input:
-                output_item = self.function(variable=elem, params=runtime_params)
+                output_item = super()._execute(function_variable=elem, runtime_params=runtime_params, context=context)
                 if clip is not None:
                     minCapIndices = np.where(output_item < clip[0])
                     maxCapIndices = np.where(output_item > clip[1])

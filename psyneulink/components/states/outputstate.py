@@ -448,7 +448,7 @@ COMMENT
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
     ...                                   pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
-    ...                                   pnl.FUNCTION: pnl.Stability(metric=pnl.ENTROPY).function }])
+    ...                                   pnl.FUNCTION: pnl.Stability(metric=pnl.ENTROPY) }])
 
 COMMENT:
    ADD VERSION IN WHICH INDEX IS SPECIFIED USING DDM_standard_output_states
@@ -470,7 +470,7 @@ the ``DECISION ENTROPY`` OutputState could be created as follows::
 
     >>> decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
     ...                                                 variable=(OWNER_VALUE, 2),
-    ...                                                 function=pnl.Stability(metric=pnl.ENTROPY).function)
+    ...                                                 function=pnl.Stability(metric=pnl.ENTROPY))
 
 and then assigned either as::
 
@@ -483,7 +483,7 @@ or::
 
     >>> another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
     ...                                                variable=(OWNER_VALUE, 2),
-    ...                                                function=pnl.Stability(metric=pnl.ENTROPY).function)
+    ...                                                function=pnl.Stability(metric=pnl.ENTROPY))
     >>> my_mech2 = pnl.DDM(function=pnl.BogaczEtAl(),
     ...                    output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
@@ -584,28 +584,20 @@ Class Reference
 
 """
 
-import numbers
 import warnings
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component
-from psyneulink.components.functions.function import Function, \
-    Linear, OneHot, function_type, method_type, is_function_type
-from psyneulink.components.shellclasses import Mechanism, Projection
+from psyneulink.components.functions.function import Function, OneHot, function_type, method_type
+from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, FUNCTION_PARAMS, GATING_SIGNAL,\
-    INDEX, INITIALIZING, INPUT_STATE, INPUT_STATES, \
-    MAPPING_PROJECTION, MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MEAN, MECHANISM_VALUE, MEDIAN, NAME, \
-    OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, \
-    PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, \
-    PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, \
-    VALUE, VARIABLE, VARIANCE
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM_VALUE, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, type_match, recursive_update
+from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, recursive_update
 
 __all__ = [
     'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
@@ -880,7 +872,7 @@ class OutputState(State_Base):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 function=Linear(),
+                 function=None,
                  projections=None,
                  params=None,
                  name=None,
@@ -888,7 +880,20 @@ class OutputState(State_Base):
                  context=None,
                  **kwargs):
 
+        # from psyneulink.globals.utilities import get_args
+        # import inspect
+
+        # curr_frame = inspect.currentframe()
+        # args = get_args(curr_frame)
+        # prev_frame = inspect.getouterframes(inspect.currentframe(),2)
+        #
+        # try:
+        #     prev_args = get_args(prev_frame)
+        # except:
+        #     prev_args = None
+
         if context is None: # cxt-test
+        # if not (self.context.source or prev_args):
             context = COMMAND_LINE # cxt-done
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
@@ -960,7 +965,36 @@ class OutputState(State_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
+
+    def _parse_function_variable(self, variable):
+        # variable is passed to OutputState by _instantiate_function for OutputState
+        if variable is not None:
+            return variable
+        # otherwise, OutputState uses specified item(s) of owner's value
+        else:
+            # variable attribute should not be used for computations!
+            fct_var = self.variable
+
+            # If variable is not specified, check if OutputState has index attribute
+            #    (for backward compatibility with INDEX and ASSIGN)
+            if fct_var is None:
+                try:
+                    # Get indexed item of owner's value
+                    fct_var = self.owner.value[self.index]
+                except IndexError:
+                    # Index is ALL, so use owner's entire value
+                    if self.index is ALL:
+                        fct_var = self.owner.value
+                    else:
+                        raise IndexError
+                except AttributeError:
+                    raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
+                                           format(self.name, self.owner.name))
+
+            return fct_var
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that State.variable is compatible with the reference_value
@@ -969,10 +1003,11 @@ class OutputState(State_Base):
         """
         return
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiate default variable if it is None or numeric
+        :param function:
         """
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
         # If variable has not been assigned, or it is numeric (in which case it can be assumed that
         #    the value was a reference_value generated during initialization/parsing and passed in the constructor
@@ -996,13 +1031,9 @@ class OutputState(State_Base):
         function_value is converted to returned value by assign function
 
         """
-        from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.components.states.modulatorysignals.modulatorysignal import \
-            ModulatorySignal, _is_modulatory_spec
-        from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
+            _is_modulatory_spec
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.components.projections.projection import ProjectionTuple
-
 
         # Treat as ModulatoryProjection spec if it is a ModulatoryProjection, ModulatorySignal or AdaptiveMechanism
         # or one of those is the first or last item of a ProjectionTuple
@@ -1029,45 +1060,6 @@ class OutputState(State_Base):
             self._instantiate_projection_from_state(projection_spec=MappingProjection,
                                                     receiver=proj,
                                                     context=context)
-
-    def _execute(self, variable=None, runtime_params=None, context=None):
-        """Call self.function with owner's value as variable
-        """
-
-        # variable is passed to OutputState by _instantiate_function for OutputState
-        if variable is not None:
-            assert INITIALIZING in context # cxt-test
-            fct_var = variable
-
-        # otherwise, OutputState uses specified item(s) of owner's value
-        else:
-            fct_var = self.variable
-
-            # If variable is not specified, check if OutputState has index attribute
-            #    (for backward compatibility with INDEX and ASSIGN)
-            if fct_var is None:
-                try:
-                    # Get indexed item of owner's value
-                    fct_var = self.owner.value[self.index]
-                except IndexError:
-                    # Index is ALL, so use owner's entire value
-                    if self.index is ALL:
-                        fct_var = self.owner.value
-                    else:
-                        raise IndexError
-                except AttributeError:
-                    raise OutputStateError("PROGRAM ERROR: Failure to parse variable for {} of {}".
-                                           format(self.name, self.owner.name))
-        # # MODIFIED 3/20/18 OLD:
-        # value = self.function(variable=fct_var,
-        #                      params=runtime_params,
-        #                      context=context)
-        # return value
-        # MODIFIED 3/20/18 NEW:
-        return super()._execute(variable=fct_var,
-                                runtime_params=runtime_params,
-                                context=context)
-        # MODIFIED 3/20/18 END
 
     def _get_primary_state(self, mechanism):
         return mechanism.output_state
@@ -1097,7 +1089,6 @@ class OutputState(State_Base):
         #      THIS WOULD ALLOW FULLY GENEREAL (HIEARCHICALLY NESTED) ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.components.projections.projection import _parse_connection_specs, ProjectionTuple
-        from psyneulink.components.system import MonitoredOutputStatesOption
 
         params_dict = {}
         state_spec = state_specific_spec
@@ -1403,6 +1394,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
+    # if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}): # cxt-test
     if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}): # cxt-test
         owner.output_states.extend(state_list)
     else:
@@ -1643,6 +1635,8 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     if it is and does, leave as is,
     otherwise, wrap in lambda function that provides first item of OutputState's value as the functions argument.
     """
+    if function is None:
+        function = OutputState.ClassDefaults.function
 
     if isinstance(function, (function_type, method_type)):
         return function

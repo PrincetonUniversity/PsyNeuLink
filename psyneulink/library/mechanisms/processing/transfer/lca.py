@@ -141,13 +141,9 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.globals.keywords import \
-    BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, INITIALIZING, LCA, MEAN, \
-    MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
+from psyneulink.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'LCA', 'LCA_OUTPUT', 'LCAError', 'MAX_VS_AVG', 'MAX_VS_NEXT',
@@ -503,6 +499,8 @@ class LCA(RecurrentTransferMechanism):
         # RATE: None,
         BETA: None
     })
+    class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
+        function = Logistic
 
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
@@ -577,10 +575,13 @@ class LCA(RecurrentTransferMechanism):
                          prefs=prefs,
                          context=context)
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Execute TransferMechanism function and return transform of input
 
         Execute TransferMechanism function on input, and assign to output_values:
@@ -644,15 +645,16 @@ class LCA(RecurrentTransferMechanism):
             if not self.integrator_function:
 
                 self.integrator_function = LCAIntegrator(
-                                            variable,
-                                            initializer=initial_value,
-                                            noise=noise,
-                                            time_step_size=time_step_size,
-                                            rate=leak,
-                                            owner=self)
+                    function_variable,
+                    initializer=initial_value,
+                    noise=noise,
+                    time_step_size=time_step_size,
+                    rate=leak,
+                    owner=self
+                )
 
             current_input = self.integrator_function.execute(
-                variable,
+                function_variable,
                 # Should we handle runtime params?
                 runtime_params={
                     INITIALIZER: initial_value,
@@ -664,15 +666,15 @@ class LCA(RecurrentTransferMechanism):
             )
         else:
         # elif time_scale is TimeScale.TRIAL:
-            noise = self._try_execute_param(noise, variable)
+            noise = self._try_execute_param(noise, function_variable)
             # formerly: current_input = self.input_state.value + noise
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
             # when the input is given as a string.
             if (np.array(noise) != 0).any():
-                current_input = variable + noise
+                current_input = function_variable + noise
             else:
 
-                current_input = variable
+                current_input = function_variable
 
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)

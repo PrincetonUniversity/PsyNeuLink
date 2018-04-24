@@ -6,10 +6,10 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *******************************************  LearningAuxilliary ******************************************************
+# *******************************************  LearningAuxiliary ******************************************************
 
 """
-.. _LearningAuxilliary_Overview:
+.. _LearningAuxiliary_Overview:
 
 Overview
 --------
@@ -134,35 +134,27 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
 from psyneulink.components.component import function_type, method_type
-from psyneulink.components.functions.function import BackPropagation, Hebbian, \
-    Linear, Reinforcement, TDLearning, LinearCombination, LinearMatrix, PredictionErrorDeltaFunction, ERROR_MATRIX
+from psyneulink.components.functions.function import BackPropagation, Hebbian, Linear, PredictionErrorDeltaFunction, Reinforcement, TDLearning
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
-    ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, OUTCOME
+from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function
-from psyneulink.components.states.state import ADD_STATES
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.globals.keywords import \
-    BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, \
-    IDENTITY_MATRIX, INPUT_STATES, LEARNING, LEARNING_MECHANISM, \
-    MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, \
-    WEIGHT, PROJECTIONS, TDLEARNING_FUNCTION, PREDICTION_ERROR_MECHANISM, \
-    FUNCTION, HOLLOW_MATRIX
+from psyneulink.globals.keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, PREDICTION_ERROR_MECHANISM, PROJECTIONS, RL_FUNCTION, SAMPLE, TARGET, TDLEARNING_FUNCTION, VARIABLE, WEIGHT
+from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
 
 __all__ = [
-    'LearningAuxilliaryError'
+    'LearningAuxiliaryError'
 ]
 
 
-class LearningAuxilliaryError(Exception):
+class LearningAuxiliaryError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -219,7 +211,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
     if not learning_projection.name in context: # cxt-test
-        raise LearningAuxilliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "
+        raise LearningAuxiliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "
                                                              "calls from a LearningProjection._instantiate_sender()"))
 
 
@@ -237,8 +229,8 @@ def _instantiate_learning_components(learning_projection, context=None):
     #                       will need to be dealt with in Composition implementation (by examining its learning graph??)
     if any((isinstance(projection, LearningProjection) and not projection is learning_projection) for projection in
            learning_projection.receiver.mod_afferents):
-        raise LearningAuxilliaryError("{} can't be assigned as LearningProjection to {} since that already has one.".
-                                      format(learning_projection.name, learning_projection.receiver.owner.name))
+        raise LearningAuxiliaryError("{} can't be assigned as LearningProjection to {} since that already has one.".
+                                     format(learning_projection.name, learning_projection.receiver.owner.name))
 
     # Now that the receiver has been identified, use it to get the components (lc) needed for learning.
     # Note: error-related components may not yet be defined (if LearningProjection is for a TERMINAL mechanism)
@@ -308,9 +300,9 @@ def _instantiate_learning_components(learning_projection, context=None):
                 # If receiver_mech is a LearningMechanism that is the sender for the learning_projection,
                 #    raise an exception since this function should not have been called.
                 if learning_projection.sender is receiver_mech:
-                    raise LearningAuxilliaryError("PROGRAM ERROR: "
+                    raise LearningAuxiliaryError("PROGRAM ERROR: "
                                                   "{} already has a LearningMechanism as its sender ({})".
-                                                  format(learning_projection.name, receiver_mech.name))
+                                                 format(learning_projection.name, receiver_mech.name))
 
                 # If receiver_mech is a LearningMechanism that receives projections to its:
                 #     - inputState[ACTIVATION_OUTPUT] from lc.activation_mech
@@ -333,9 +325,9 @@ def _instantiate_learning_components(learning_projection, context=None):
 
                 # ObjectiveMechanism is for learning but projection is not to its SAMPLE inputState
                 if LEARNING in receiver_mech._role and not receiver_state.name is SAMPLE:
-                    raise LearningAuxilliaryError("PROGRAM ERROR: {} projects to the {} rather than the {} "
+                    raise LearningAuxiliaryError("PROGRAM ERROR: {} projects to the {} rather than the {} "
                                                   "inputState of an ObjectiveMechanism for learning {}".
-                                                  format(lc.activation_mech.name,
+                                                 format(lc.activation_mech.name,
                                                          receiver_state.name,
                                                          SAMPLE,
                                                          receiver_mech.name))
@@ -347,10 +339,10 @@ def _instantiate_learning_components(learning_projection, context=None):
                 elif (isinstance(learning_projection.sender, LearningMechanism) and
                           any(learning_projection.sender.owner is projection.receiver.owner
                               for projection in receiver_mech.output_state.efferents)):
-                    raise LearningAuxilliaryError("PROGRAM ERROR:  {} already has an "
+                    raise LearningAuxiliaryError("PROGRAM ERROR:  {} already has an "
                                                   "ObjectiveMechanism ({}) and a "
                                                   "LearningMechanism ({}) assigned to it".
-                                                  format(learning_projection.name,
+                                                 format(learning_projection.name,
                                                          receiver_mech.name,
                                                          learning_projection.sender.owner.name))
 
@@ -445,7 +437,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         try:
             activation_derivative = lc.activation_mech_fct.derivative
         except AttributeError:
-            raise LearningAuxilliaryError("Function for activation_mech of {} "
+            raise LearningAuxiliaryError("Function for activation_mech of {} "
                                           "must have a derivative to be used "
                                           "with {}".format(learning_projection.name,
                                                            BackPropagation.componentName))
@@ -467,7 +459,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             try:
                 error_derivative = lc.error_derivative
             except AttributeError:
-                raise LearningAuxilliaryError("Function for error_mech of {} "
+                raise LearningAuxiliaryError("Function for error_mech of {} "
                                               "must have a derivative to be "
                                               "used with {}".format(learning_projection.name,
                                                                     BackPropagation.componentName))
@@ -483,7 +475,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                             context=context)
 
     else:
-        raise LearningAuxilliaryError("PROGRAM ERROR: unrecognized learning "
+        raise LearningAuxiliaryError("PROGRAM ERROR: unrecognized learning "
                                       "function ({}) for {}".format(learning_function.componentName,
                                                                     learning_projection.name))
 
@@ -572,7 +564,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             # FIX: THIS IS TO FORCE ASSIGNMENT (SINCE IT DOESN'T SEEM TO BE
             # ASSIGNED BY TEST BELOW)
         except AttributeError:
-            raise LearningAuxilliaryError("PROGRAM ERROR: problem finding "
+            raise LearningAuxiliaryError("PROGRAM ERROR: problem finding "
                                           "projection to TARGET "
                                           "ObjectiveMechanism from {} when "
                                           "instantiating {}".format(
@@ -580,7 +572,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                 learning_projection.name))
         else:
             if not lc.error_matrix:
-                raise LearningAuxilliaryError("PROGRAM ERROR: problem "
+                raise LearningAuxiliaryError("PROGRAM ERROR: problem "
                                               "assigning error_matrix for "
                                               "projection to "
                                               "ObjectiveMechanism for {} when "
@@ -652,18 +644,18 @@ def _instantiate_error_signal_projection(sender, receiver):
     elif isinstance(sender, LearningMechanism):
         sender = sender.output_states[ERROR_SIGNAL]
     else:
-        raise LearningAuxilliaryError("Sender of the error signal Projection {} "
+        raise LearningAuxiliaryError("Sender of the error signal Projection {} "
                                      "must be either an ObjectiveMechanism or "
                                      "a LearningMechanism".format(sender))
 
     if isinstance(receiver, LearningMechanism):
         receiver = receiver.input_states[ERROR_SIGNAL]
     else:
-        raise LearningAuxilliaryError("Receiver of the error signal Projection "
+        raise LearningAuxiliaryError("Receiver of the error signal Projection "
                                      "{} must be a LearningMechanism".format(receiver))
 
     if len(sender.value) != len(receiver.value):
-        raise LearningAuxilliaryError("The length of the OutputState ({}) for "
+        raise LearningAuxiliaryError("The length of the OutputState ({}) for "
                                      "the sender ({}) of the error signal "
                                      "Projection does not match the length of "
                                      "the InputState ({}) for the receiver "
@@ -696,8 +688,8 @@ def _get_learning_mechanisms(mech:Mechanism, composition=None):
     eff = []
 
     if composition and not isinstance(composition, (Process, System)):
-        raise LearningAuxilliaryError("composition argument for _get_learing_mechanisms ({}) must be a {} or {}".
-                                      format(composition, Process.__name__, System.__name__))
+        raise LearningAuxiliaryError("composition argument for _get_learing_mechanisms ({}) must be a {} or {}".
+                                     format(composition, Process.__name__, System.__name__))
 
     for projection in mech.path_afferents:
         if projection.has_learning_projection and (composition is None
@@ -734,10 +726,10 @@ def _assign_error_signal_projections(processing_mech, system, objective_mech=Non
         #    that the ObjectMechanism received
         if objective_mech and not (aff_lm.input_states['activation_output'].path_afferents[0].sender ==
                                    objective_mech.input_states[SAMPLE].path_afferents[0].sender):
-            raise LearningAuxilliaryError("PROGRAM ERROR: The {} being assigned to replace {} ({}) receives its "
+            raise LearningAuxiliaryError("PROGRAM ERROR: The {} being assigned to replace {} ({}) receives its "
                                           "ACTIVATION_OUTPUT Projection from a source ({}) that is different than "
                                           "the source of the {}'s SAMPLE InputState ({})."
-                                          .format(LearningMechanism, objective_mech.name, aff_lm.name,
+                                         .format(LearningMechanism, objective_mech.name, aff_lm.name,
                                                   aff_lm.input_states['activation_output'].path_afferents[0].sender,
                                                   aff_lm.name,
                                                   objective_mech.input_states[SAMPLE].path_afferents[0].sender.name))
@@ -830,7 +822,7 @@ class LearningComponents(object):
     def _validate_learning_projection(self, learning_projection):
 
         if not isinstance(learning_projection, LearningProjection):
-            raise LearningAuxilliaryError("{} is not a LearningProjection".format(learning_projection.name))
+            raise LearningAuxiliaryError("{} is not a LearningProjection".format(learning_projection.name))
 
     # HELPER METHODS FOR lc_components
     # ---------------------------------------------------------------------------------------------------------------
@@ -842,9 +834,9 @@ class LearningComponents(object):
                 self.activation_mech_projection = self.learning_projection.receiver.owner
                 return self.learning_projection.receiver.owner
             except AttributeError:
-                raise LearningAuxilliaryError("activation_mech_projection not identified: learning_projection ({})"
+                raise LearningAuxiliaryError("activation_mech_projection not identified: learning_projection ({})"
                                               "not appear to have been assiged a receiver.".
-                                              format(self.learning_projection))
+                                             format(self.learning_projection))
         return self._activation_mech_projection or _get_act_proj()
 
     @activation_mech_projection.setter
@@ -852,7 +844,7 @@ class LearningComponents(object):
         if isinstance(assignment, (MappingProjection)):
             self._activation_mech_projection = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_mech_projection; "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to activation_mech_projection; "
                                           "it must be a MappingProjection.")
 
 
@@ -867,9 +859,9 @@ class LearningComponents(object):
                 self.activation_mech = self.activation_mech_projection.receiver.owner
                 return self.activation_mech_projection.receiver.owner
             except AttributeError:
-                raise LearningAuxilliaryError("activation_mech not identified: activation_mech_projection ({})"
+                raise LearningAuxiliaryError("activation_mech not identified: activation_mech_projection ({})"
                                               "not appear to have been assiged a receiver.".
-                                              format(self.learning_projection))
+                                             format(self.learning_projection))
         return self._activation_mech or _get_act_mech()
 
     @activation_mech.setter
@@ -877,7 +869,7 @@ class LearningComponents(object):
         if isinstance(assignment, (ProcessingMechanism_Base)):
             self._activation_mech = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_mech; "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to activation_mech; "
                                           "it must be a ProcessingMechanism.")
 
 
@@ -892,9 +884,9 @@ class LearningComponents(object):
                 self.activation_mech_input = self.activation_mech_projection.sender
                 return self.activation_mech_projection.sender
             except AttributeError:
-                raise LearningAuxilliaryError("activation_mech_input not identified: activation_mech_projection ({})"
+                raise LearningAuxiliaryError("activation_mech_input not identified: activation_mech_projection ({})"
                                               "not appear to have been assiged a sender.".
-                                              format(self.activation_mech_projection))
+                                             format(self.activation_mech_projection))
         return self._activation_mech_input or _get_act_input()
 
     @activation_mech_input.setter
@@ -902,7 +894,7 @@ class LearningComponents(object):
         if isinstance(assignment, (OutputState)):
             self._activation_mech_input = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_mech_input; "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to activation_mech_input; "
                                           "it must be a OutputState.")
 
 
@@ -917,9 +909,9 @@ class LearningComponents(object):
                 self.activation_mech_fct = self.activation_mech.function_object
                 return self.activation_mech.function_object
             except AttributeError:
-                raise LearningAuxilliaryError("activation_mech_fct not identified: activation_mech ({})"
+                raise LearningAuxiliaryError("activation_mech_fct not identified: activation_mech ({})"
                                               "not appear to have been assiged a Function.".
-                                              format(self.learning_projection))
+                                             format(self.learning_projection))
         return self._activation_mech_fct or _get_act_mech_fct()
 
     @activation_mech_fct.setter
@@ -927,7 +919,7 @@ class LearningComponents(object):
         if isinstance(assignment, (Function)):
             self._activation_mech_fct = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_mech_fct; "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to activation_mech_fct; "
                                           "it must be a Function.")
 
 
@@ -942,9 +934,9 @@ class LearningComponents(object):
                 self._activation_derivative = self.activation_mech.function_object.derivative
                 return self.activation_mech.function_object.derivative
             except AttributeError:
-                raise LearningAuxilliaryError("activation_derivative not identified: activation_mech_fct ({})"
+                raise LearningAuxiliaryError("activation_derivative not identified: activation_mech_fct ({})"
                                               "not appear to have a derivative defined.".
-                                              format(self.learning_projection))
+                                             format(self.learning_projection))
         return self._activation_derivative or _get_act_deriv()
 
     @activation_derivative.setter
@@ -952,7 +944,7 @@ class LearningComponents(object):
         if isinstance(assignment, (function_type, method_type)):
             self._activation_derivative = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_derivative; "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to activation_derivative; "
                                           "it must be a function or method.")
 
 
@@ -968,17 +960,17 @@ class LearningComponents(object):
                 sample_state_name = self.activation_mech.paramsCurrent[MONITOR_FOR_LEARNING]
                 self.activation_mech_output = self.activation_mech.output_states[sample_state_name]
                 if not isinstance(self.activation_mech_output, OutputState):
-                    raise LearningAuxilliaryError("The specification of the MONITOR_FOR_LEARNING parameter ({}) "
+                    raise LearningAuxiliaryError("The specification of the MONITOR_FOR_LEARNING parameter ({}) "
                                                   "for {} is not an outputState".
-                                                  format(self.activation_mech_output, self.learning_projection))
+                                                 format(self.activation_mech_output, self.learning_projection))
             except KeyError:
                 # No outputState specified so use primary outputState
                 try:
                     self.activation_mech_output = self.activation_mech.output_state
                 except AttributeError:
-                    raise LearningAuxilliaryError("activation_mech_output not identified: activation_mech ({})"
+                    raise LearningAuxiliaryError("activation_mech_output not identified: activation_mech ({})"
                                                   "not appear to have been assigned a primary outputState.".
-                                                  format(self.learning_projection))
+                                                 format(self.learning_projection))
             return self.activation_mech.output_state
 
         return self._activation_mech_output or _get_act_sample()
@@ -988,7 +980,7 @@ class LearningComponents(object):
         if isinstance(assignment, (OutputState)):
             self._activation_mech_output =assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_mech_output; "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to activation_mech_output; "
                                           "it must be a OutputState.")
 
 
@@ -1006,9 +998,9 @@ class LearningComponents(object):
                 self.error_matrix = self.error_projection._parameter_states[MATRIX]
                 return self.error_projection._parameter_states[MATRIX]
             except AttributeError:
-                raise LearningAuxilliaryError("error_matrix not identified: error_projection ({})"
+                raise LearningAuxiliaryError("error_matrix not identified: error_projection ({})"
                                               "not not have a {} parameterState".
-                                              format(self.error_projection))
+                                             format(self.error_projection))
         return self._error_matrix or _get_err_matrix()
 
     @error_matrix.setter
@@ -1016,7 +1008,7 @@ class LearningComponents(object):
         if isinstance(assignment, (ParameterState)):
             self._error_matrix = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_matrix; "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to error_matrix; "
                                           "it must be a ParameterState.")
 
 
@@ -1056,7 +1048,7 @@ class LearningComponents(object):
         if isinstance(assignment, (MappingProjection)):
             self._error_projection = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_projection; "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to error_projection; "
                                           "it must be a MappingProjection.")
 
 
@@ -1072,13 +1064,13 @@ class LearningComponents(object):
             try:
                 self.error_mech = self.error_projection.receiver.owner
             except AttributeError:
-                raise LearningAuxilliaryError("error_mech not identified: error_projection ({})"
+                raise LearningAuxiliaryError("error_mech not identified: error_projection ({})"
                                               "does not appear to have a receiver or owner".
-                                              format(self.error_projection))
+                                             format(self.error_projection))
             if not isinstance(self.error_mech, ProcessingMechanism_Base):
-                raise LearningAuxilliaryError("error_mech found ({}) but it does not "
+                raise LearningAuxiliaryError("error_mech found ({}) but it does not "
                                               "appear to be a ProcessingMechanism".
-                                              format(self.error_mech.name))
+                                             format(self.error_mech.name))
             return self.error_projection.receiver.owner
         return self._error_mech or _get_err_mech()
 
@@ -1087,7 +1079,7 @@ class LearningComponents(object):
         if isinstance(assignment, (ProcessingMechanism_Base)):
             self._error_mech = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_mech; "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to error_mech; "
                                           "it must be a ProcessingMechanism.")
 
 
@@ -1103,9 +1095,9 @@ class LearningComponents(object):
                 self.error_derivative = self.error_mech.function_object.derivative
                 return self.error_mech.function_object.derivative
             except AttributeError:
-                raise LearningAuxilliaryError("error_derivative not identified: the function ({}) "
+                raise LearningAuxiliaryError("error_derivative not identified: the function ({}) "
                                               "for error_mech ({}) does not have a derivative attribute".
-                                              format(self.error_mech.function_object.__class__.__name__,
+                                             format(self.error_mech.function_object.__class__.__name__,
                                                      self.error_mech.name))
         return self._error_derivative or _get_error_deriv()
 
@@ -1114,7 +1106,7 @@ class LearningComponents(object):
         if isinstance(assignment, (function_type, method_type)):
             self._error_derivative = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_derivative; "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to error_derivative; "
                                           "it must be a function.")
 
 
@@ -1129,13 +1121,13 @@ class LearningComponents(object):
             try:
                 self.error_mech_output = self.error_mech.output_state
             except AttributeError:
-                raise LearningAuxilliaryError("error_mech_output not identified: error_mech ({})"
+                raise LearningAuxiliaryError("error_mech_output not identified: error_mech ({})"
                                               "does not appear to have an outputState".
-                                              format(self.error_mech_output))
+                                             format(self.error_mech_output))
             if not isinstance(self.error_mech_output, OutputState):
-                raise LearningAuxilliaryError("error_mech_output found ({}) but it does not "
+                raise LearningAuxiliaryError("error_mech_output found ({}) but it does not "
                                               "appear to be an OutputState".
-                                              format(self.error_mech_output.name))
+                                             format(self.error_mech_output.name))
             return self.error_mech.output_state
         return self._error_mech_output or _get_err_mech_out()
 
@@ -1144,7 +1136,7 @@ class LearningComponents(object):
         if isinstance(assignment, (OutputState)):
             self._error_mech_output = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_mech_output; "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to error_mech_output; "
                                           "it must be an OutputState.")
 
     # ---------------------------------------------------------------------------------------------------------------
@@ -1165,7 +1157,7 @@ class LearningComponents(object):
                 #    LearningProjection, but its error_projection does project to an ObjectiveMechanism, so return that
                 objective_mechanism = self.error_matrix.owner.receiver.owner
                 if not isinstance(objective_mechanism, ObjectiveMechanism):
-                    raise LearningAuxilliaryError("error_signal_mech not identified: error_matrix does not have "
+                    raise LearningAuxiliaryError("error_signal_mech not identified: error_matrix does not have "
                                                   "a LearningProjection and error_projection does not project to a "
                                                   "TARGET ObjectiveMechanism")
                 else:
@@ -1174,10 +1166,10 @@ class LearningComponents(object):
             try:
                 learning_mech = learning_proj.sender.owner
             except AttributeError:
-                raise LearningAuxilliaryError("error_signal_mech not identified: "
+                raise LearningAuxiliaryError("error_signal_mech not identified: "
                                               "the LearningProjection to error_matrix does not have a sender")
             if not isinstance(learning_mech, LearningMechanism):
-                raise LearningAuxilliaryError("error_signal_mech not identified: "
+                raise LearningAuxiliaryError("error_signal_mech not identified: "
                                               "the LearningProjection to error_matrix does not come from a "
                                               "LearningMechanism")
 
@@ -1211,9 +1203,9 @@ class LearningComponents(object):
                     next_mech_processes = set(self.error_projection.receiver.owner.processes.keys())
                     shared_processes = current_processes.intersection(next_mech_processes)
                     if not shared_processes:
-                        raise LearningAuxilliaryError("PROGRAM ERROR: expected to find that {} projects "
+                        raise LearningAuxiliaryError("PROGRAM ERROR: expected to find that {} projects "
                                                       "to another Mechanism in {}".
-                                                      format(self.activation_mech.name, current_processes))
+                                                     format(self.activation_mech.name, current_processes))
                     for process in shared_processes:
                         if not process in learning_mech.processes:
                             learning_mech.processes[process] = LEARNING
@@ -1230,7 +1222,7 @@ class LearningComponents(object):
                 (isinstance(assignment, ObjectiveMechanism) and assignment._role is LEARNING)):
             self._error_signal_mech = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment "
                                           "to error_signal_mech; it must be a "
                                           "LearningMechanism.")
 
@@ -1248,31 +1240,31 @@ class LearningComponents(object):
                 try:
                     self.error_signal_mech_output = self.error_signal_mech.output_state
                 except AttributeError:
-                    raise LearningAuxilliaryError("error_signal_mech_output "
+                    raise LearningAuxiliaryError("error_signal_mech_output "
                                                   "not identified: "
                                                   "error_signal_mech ({}) does "
                                                   "not appear to have an "
                                                   "OutputState".
-                                                  format(self.error_signal_mech.name))
+                                                 format(self.error_signal_mech.name))
                 if not isinstance(self.error_signal_mech_output, OutputState):
-                    raise LearningAuxilliaryError("error_signal_mech_output "
+                    raise LearningAuxiliaryError("error_signal_mech_output "
                                                   "found ({}) for {} but it "
                                                   "does not appear to be an "
                                                   "OutputState".
-                                                  format(self.error_signal_mech.name,
+                                                 format(self.error_signal_mech.name,
                                                          self.error_signal_mech_output.name))
             elif isinstance(self.error_signal_mech, LearningMechanism):
                 try:
                     self.error_signal_mech_output = self.error_signal_mech.output_states[ERROR_SIGNAL]
                 except AttributeError:
-                    raise LearningAuxilliaryError("error_signal_mech_output "
+                    raise LearningAuxiliaryError("error_signal_mech_output "
                                                   "not identified: "
                                                   "error_signal_mech ({}) does "
                                                   "not appear to have an "
                                                   "ERROR_SIGNAL outputState".
-                                                  format(self.error_signal_mech))
+                                                 format(self.error_signal_mech))
                 if not isinstance(self.error_signal_mech_output, OutputState):
-                    raise LearningAuxilliaryError("error_signal_mech_output "
+                    raise LearningAuxiliaryError("error_signal_mech_output "
                                                   "found ({}) for {} but it "
                                                   "does not appear to be an "
                                                   "OutputState".format(self.error_signal_mech.name,
@@ -1285,7 +1277,7 @@ class LearningComponents(object):
         if isinstance(assignment, (OutputState)):
             self._error_signal_mech_output = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment "
+            raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment "
                                           "to error_signal_mech_output; it "
                                           "must be an OutputState.")
 
@@ -1305,15 +1297,15 @@ class LearningComponents(object):
     #                 self.error_objective_mech = self.error_matrix.owner.receiver.owner
     #                 return self.error_matrix.owner.receiver.owner
     #             else:
-    #                 raise LearningAuxilliaryError("error_objective_mech not identified: error_matrix does not have a "
+    #                 raise LearningAuxiliaryError("error_objective_mech not identified: error_matrix does not have a "
     #                                               "LearningProjection and is not for a TARGET ObjectiveMechanism")
     #         try:
     #             learning_mech = learning_proj.sender.owner
     #         except AttributeError:
-    #             raise LearningAuxilliaryError("error_objective_mech not identified: "
+    #             raise LearningAuxiliaryError("error_objective_mech not identified: "
     #                                           "the LearningProjection to error_matrix does not have a sender")
     #         if not isinstance(learning_mech, LearningMechanism):
-    #             raise LearningAuxilliaryError("error_objective_mech not identified: "
+    #             raise LearningAuxiliaryError("error_objective_mech not identified: "
     #                                           "the LearningProjection to error_matrix does not come from a "
     #                                           "LearningMechanism")
     #         try:
@@ -1322,11 +1314,11 @@ class LearningComponents(object):
     #                                    if isinstance(proj.sender.owner, ObjectiveMechanism)),None)
     #         except AttributeError:
     #             # return None
-    #             raise LearningAuxilliaryError("error_objective_mech not identified: "
+    #             raise LearningAuxiliaryError("error_objective_mech not identified: "
     #                                           "could not find any projections to the LearningMechanism ({})".
     #                                           format(learning_mech))
     #         # if not error_obj_mech:
-    #         #     raise LearningAuxilliaryError("error_objective_mech not identified: "
+    #         #     raise LearningAuxiliaryError("error_objective_mech not identified: "
     #         #                                   "the LearningMechanism ({}) does not receive a projection "
     #         #                                   "from an ObjectiveMechanism".
     #         #                                   format(learning_mech))
@@ -1340,7 +1332,7 @@ class LearningComponents(object):
     #     if assignment is None or isinstance(assignment, (ObjectiveMechanism)):
     #         self._error_objective_mech = assignment
     #     else:
-    #         raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech; "
+    #         raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech; "
     #                                       "it must be an ObjectiveMechanism.")
     #
     # # ---------------------------------------------------------------------------------------------------------------
@@ -1354,11 +1346,11 @@ class LearningComponents(object):
     #         try:
     #             self.error_objective_mech_output = self.error_objective_mech.outputState
     #         except AttributeError:
-    #             raise LearningAuxilliaryError("error_objective_mech_output not identified: error_objective_mech ({})"
+    #             raise LearningAuxiliaryError("error_objective_mech_output not identified: error_objective_mech ({})"
     #                                           "does not appear to have an outputState".
     #                                           format(self.error_objective_mech_output))
     #         if not isinstance(self.error_objective_mech_output, OutputState):
-    #             raise LearningAuxilliaryError("error_objective_mech_output found ({}) but it does not "
+    #             raise LearningAuxiliaryError("error_objective_mech_output found ({}) but it does not "
     #                                           "appear to be an OutputState".
     #                                           format(self.error_objective_mech_output.name))
     #         return self.error_objective_mech.outputState
@@ -1369,5 +1361,5 @@ class LearningComponents(object):
     #     if isinstance(assignment, (OutputState)):
     #         self._error_objective_mech_output = assignment
     #     else:
-    #         raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech_output; "
+    #         raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech_output; "
     #                                       "it must be an OutputState.")

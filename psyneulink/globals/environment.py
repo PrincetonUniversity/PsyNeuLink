@@ -483,7 +483,6 @@ Class Reference
 
 import datetime
 import warnings
-
 from collections import Iterable
 from numbers import Number
 
@@ -491,12 +490,10 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import function_type
-from psyneulink.components.process import ProcessInputState
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
-from psyneulink.globals.keywords import EVC_SIMULATION, INPUT_LABELS_DICT, MECHANISM, \
-    OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET, TARGET_LABELS_DICT
+from psyneulink.globals.keywords import INPUT_LABELS_DICT, MECHANISM, \
+    PROCESS, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.globals.log import LogCondition
-from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
@@ -705,7 +702,6 @@ def run(object,
     # Class-specific validation:
     context = context or RUN + "validating " + object.name # cxt-done ? cxt-pass
     if not object.context.flags:
-        # object.context.status = ContextFlags.RUN + ContextFlags.VALIDATING
         object.context.initialization_status = ContextFlags.VALIDATING
         object.context.string = RUN + "validating " + object.name
 
@@ -757,13 +753,11 @@ def run(object,
                         object.current_targets = execution_targets
 
 
-            if RUN in context and not EVC_SIMULATION in context: # cxt-test
+            if RUN in context and not object.context.execution_phase == ContextFlags.SIMULATION: # cxt-test
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
-                # FIX: 3/30/18:  SHOULDN'T NEED THIS IF ContextFlags.INITIALIZED GETS SET AT END OF INITIALIZATION
-                # object.context.initialization_status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
-                # object.context.initialization_status = ContextFlags.INITIALIZED
-                object.context.execution_phase = ContextFlags.EXECUTING
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
+                object.context.execution_phase = ContextFlags.PROCESSING
+
             result = object.execute(
                 input=execution_inputs,
                 execution_id=execution_id,
@@ -808,7 +802,7 @@ def run(object,
     else:
         object._learning_enabled = learning_state_buffer
 
-    from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
+    from psyneulink.globals.log import _log_trials_and_runs
     _log_trials_and_runs(composition=object,
                          curr_condition=LogCondition.RUN,
                          context=context)
@@ -1034,7 +1028,7 @@ def _parse_input_labels(obj, stimuli:dict):
                     if len(input_array) != len(mech.input_states):
                         raise RunError("Number of items in input for {} of {} ({}) "
                                        "does not match the number of its {}s ({})".
-                                       format(mech.name, obj.name, len(input_array), 
+                                       format(mech.name, obj.name, len(input_array),
                                               InputState, len(mech.input_states)))
                     # use index of item in outer array and key (int or name of state) to determine which subdict to use
                     input_index = input_array.index(key)

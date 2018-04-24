@@ -664,7 +664,7 @@ appending ``.names`` to the property.  For examples, the names of all of the Mec
 ``my_mech`` can be accessed by ``my_mech.receivers.names``.
 
 
-.. Mechanism_Labels_Dicts:
+.. _Mechanism_Labels_Dicts:
 
 Value Label Dictionaries
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -680,25 +680,33 @@ OutputState(s):
       `TARGET` Mechanism used in `learning <LearningMechanism_Targets>`;  if specified, the dictionary is contained in
       the Mechanism's `target_labels_dict <Mechanism_Base.target_labels_dict>` attribute.
     COMMENT
-
+    ..
     * *OUTPUT_LABELS_DICT* -- used to specify labels for values of the OutputState(s) of the Mechanism;  if specified,
       the dictionary is contained in the Mechanism's `output_labels_dict <Mechanism_Base.output_labels_dict>` attribute.
 
 The labels specified in these dictionaries can be used to specify items in the `inputs <Run_Inputs>` and `targets
 <Run_Targets>` arguments of the `run <System.run>` method of a `System`, and to report the values of the InputState(s)
 and OutputState(s) of a Mechanism in a System's `show_graph <System.show_graph>` method (using its **use_values**
-option).  The labels for the current value(s) of the Mechanism's InputState(s) and OutputState(s) are listed in its
-`input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>`, respectively.
+option).  If they are used to specify `targets <Run_Targets>`, they must be included in the `output_labels_dict
+<Mechanism_Base.output_labels_dict>` of the Mechanism that projects to the `TARGET` Mechanism (see `TARGET Mechanisms
+<LearningMechanism_Targets>`,  the last one in a `learning sequence <Process_Learning_Sequence>`.
+
+The labels for the current value(s) of the Mechanism's InputState(s) and OutputState(s) are listed in its
+`input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>` attributes,
+respectively.
+
+*Specifying label dictionaries*
 
 Label dictionaries can only be specified in a parameters dictionary assigned to the **params** argument of the
-Mechanism's constructor, using the keywords listed above.  A given label dictionary must contain entries *all* of which
-use *only one* of the two following formats for the *key:value* pairs:
+Mechanism's constructor, using the keywords described above.  A given label dictionary must contain entries *all*
+of which use *only one* of the two following formats for the *key:value* pair of each entry:
 
-    * *label:value* -- the label must be a string to be associated with the specified value of the State. If the
+    * *label:value* -- the *label* is a string to be associated with the specified value of the State. If the
       Mechanism has more than one State of the type corresponding to the dictionary, then the label will be used for
-      the specified value of any State of that type.  For example, if input_labels_dict has *label_value*
-      entries, and the Mechanism has more than one InputState, then a specified label will be associated with the
-      corresponding value for any of the Mechanism's InputStates.
+      the specified value of any State of that type.  For example, if `input_labels_dict
+      <Mechanism_Base.input_labels_dict>` has *label_value* entries, and the Mechanism has more than one InputState,
+      then a specified label will be associated with the corresponding `value <InputState.value>` for any of the
+      Mechanism's InputStates.
       COMMENT:
           ADD EXAMPLE HERE
       COMMENT
@@ -706,10 +714,10 @@ use *only one* of the two following formats for the *key:value* pairs:
     * *<state name or index>:<sub-dictionary>* -- this is used to specify labels that are specific to individual States
       of the type corresponding to the dictionary;  the key of each entry must be either the name of a State of that
       type, or its index in the list of States of that type (i.e, `input_states <Mechanism_Base.input_states>` or
-      `output_states <Mechanism_Base.output_states>`, and the value a subdictionary containing *label:value* entries
+      `output_states <Mechanism_Base.output_states>`), and the value a subdictionary containing *label:value* entries
       to be used for that State.  For example, if a Mechanism has two InputStates, named *SAMPLE* and *TARGET*, then
       *INPUT_LABELS_DICT* could be assigned two entries, *SAMPLE*:<dict> and *TARGET*:<dict> or, correspondingly,
-      0:<dict> and 1:<dict>, in which each dict contained separate *label:value* entries for each of the two
+      0:<dict> and 1:<dict>, in which each dict contained separate *label:value* entries for the *SAMPLE* and *TARGET*
       InputStates.
       COMMENT:
           ADD EXAMPLE HERE
@@ -724,8 +732,8 @@ Attribute Dictionary
 Finally, a Mechanism has an attribute that contains a dictionary of its attributes that can be used to specify the
 `variable <OutputState.variable>` of its OutputState (see `OutputState_Customization`):
 
-    * `attributes_dict` -- a dictionary of that contains the value of its attributes that can be used as the
-      `variable <OutputState.variable>` of its OutputState.
+    * `attributes_dict` -- a dictionary that contains the attributes of the Mechanism and their values,
+      that can be used in the `variable <OutputState.variable>` of its OutputState(s).
 
 
 .. _Mechanism_Role_In_Processes_And_Systems:
@@ -845,7 +853,6 @@ Class Reference
 
 import inspect
 import logging
-import numbers
 
 from collections import Iterable, OrderedDict
 from inspect import isclass
@@ -854,23 +861,17 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
+from psyneulink.components.functions.function import Linear
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import ADD_STATES, REMOVE_STATES, _parse_state_spec
-from psyneulink.globals.keywords import \
-    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
-    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
-    INPUT_LABELS_DICT, INPUT_STATES, \
-    INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    OUTPUT_LABELS_DICT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
-    PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TARGET_LABELS_DICT, UNCHANGED, \
-    VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import CHANGED, COMMAND_LINE, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_LABELS_DICT, INPUT_STATES, INPUT_STATE_PARAMS, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TARGET_LABELS_DICT, UNCHANGED, VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 import ctypes
@@ -1016,13 +1017,13 @@ class Mechanism_Base(Mechanism):
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
         in which each label (key) specifies a string associated with a value for the InputState(s) of the
         Mechanism; see `Mechanism_Labels_Dicts` for additional details.
-        
+
     input_labels : list
-        contains the labels corresponding to the value(s) of the InputState(s) of the Mechanism listed in 
-        `input_values <Mechanism_Base.input_values>` if `input_labels_dict <Mechanism_Base.input_labels>` has been 
-        assigned, otherwise returns `None`.  If `input_labels_dict <Mechanism_Base.input_labels>` has been 
-        assigned, but does not contain a label for the current `value <InputState.value>` of an InputState, 
-        then its value assigned as the corresponding entry in the list in place of a label. 
+        contains the labels corresponding to the value(s) of the InputState(s) of the Mechanism listed in
+        `input_values <Mechanism_Base.input_values>` if `input_labels_dict <Mechanism_Base.input_labels>` has been
+        assigned, otherwise returns `None`.  If `input_labels_dict <Mechanism_Base.input_labels>` has been
+        assigned, but does not contain a label for the current `value <InputState.value>` of an InputState,
+        then its value assigned as the corresponding entry in the list in place of a label.
 
     COMMENT:
     target_labels_dict : dict
@@ -1113,11 +1114,11 @@ class Mechanism_Base(Mechanism):
         Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
     output_labels : list
-        contains the labels corresponding to the value(s) of the OutputState(s) of the Mechanism listed in 
-        `output_values <Mechanism_Base.output_values>` if `output_labels_dict <Mechanism_Base.output_labels>` has been 
-        assigned, otherwise returns `None`.  If `output_labels_dict <Mechanism_Base.output_labels>` has been 
-        assigned, but does not contain a label for the current `value <OutputState.value>` of an OutputState, 
-        then its value assigned as the corresponding entry in the list in place of a label. 
+        contains the labels corresponding to the value(s) of the OutputState(s) of the Mechanism listed in
+        `output_values <Mechanism_Base.output_values>` if `output_labels_dict <Mechanism_Base.output_labels>` has been
+        assigned, otherwise returns `None`.  If `output_labels_dict <Mechanism_Base.output_labels>` has been
+        assigned, but does not contain a label for the current `value <OutputState.value>` of an OutputState,
+        then its value assigned as the corresponding entry in the list in place of a label.
 
     is_finished : bool : default False
         set by a Mechanism to signal completion of its `execution <Mechanism_Execution>`; used by `Component-based
@@ -1217,6 +1218,7 @@ class Mechanism_Base(Mechanism):
 
     class ClassDefaults(Mechanism.ClassDefaults):
         variable = np.array([[0]])
+        function = Linear
 
     registry = MechanismRegistry
 
@@ -1287,7 +1289,9 @@ class Mechanism_Base(Mechanism):
                  params=None,
                  name=None,
                  prefs=None,
-                 context=None):
+                 context=None,
+                 function=None,
+                 ):
         """Assign name, category-level preferences, and variable; register Mechanism; and enforce category methods
 
         This is an abstract class, and can only be called from a subclass;
@@ -1300,7 +1304,6 @@ class Mechanism_Base(Mechanism):
         * registers Mechanism with MechanismRegistry
 
         """
-        from psyneulink.components.states.inputstate import InputState
 
         # Forbid direct call to base class constructor
         # this context stuff is confusing: when do I use super().__init__(context=self)
@@ -1341,7 +1344,7 @@ class Mechanism_Base(Mechanism):
         self._execution_id = None
         self._is_finished = False
         # Register with MechanismRegistry or create one
-        if not context is VALIDATE: # cxt-test
+        if self.context.initialization_status != ContextFlags.VALIDATING:
             register_category(entry=self,
                               base_class=Mechanism_Base,
                               name=name,
@@ -1389,7 +1392,9 @@ class Mechanism_Base(Mechanism):
                                              param_defaults=params,
                                              prefs=prefs,
                                              name=name,
-                                             context=context)
+                                             context=context,
+                                             function=function,
+                                             )
 
         # FUNCTIONS:
 
@@ -1888,17 +1893,17 @@ class Mechanism_Base(Mechanism):
         # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and LearningMechanism do not
         raise MechanismError("{} does not support run() method".format(self.__class__.__name__))
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
 
         self._instantiate_input_states(context=context)
-        self._instantiate_parameter_states(context=context)
-        super()._instantiate_attributes_before_function(context=context)
+        self._instantiate_parameter_states(function=function, context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
-    def _instantiate_function(self, context=None):
+    def _instantiate_function(self, function, function_params=None, context=None):
         """Assign weights and exponents if specified in input_states
         """
 
-        super()._instantiate_function(context=context)
+        super()._instantiate_function(function=function, function_params=function_params, context=context)
 
         if self.input_states and any(input_state.weight is not None for input_state in self.input_states):
 
@@ -1949,14 +1954,15 @@ class Mechanism_Base(Mechanism):
                                          reference_value=reference_value,
                                          context=context)
 
-    def _instantiate_parameter_states(self, context=None):
+    def _instantiate_parameter_states(self, function=None, context=None):
         """Call State._instantiate_parameter_states to instantiate a ParameterState for each parameter in user_params
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_states
             or process InputStates before and/or after call to _instantiate_parameter_states
+            :param function:
         """
         from psyneulink.components.states.parameterstate import _instantiate_parameter_states
-        _instantiate_parameter_states(owner=self, context=context)
+        _instantiate_parameter_states(owner=self, function=function, context=context)
 
     def _instantiate_output_states(self, context=None):
         """Call State._instantiate_output_states to instantiate orderedDict of OutputState(s)
@@ -2036,7 +2042,7 @@ class Mechanism_Base(Mechanism):
                 new_input = self.integrator_function.reinitialize(*args)
                 if hasattr(self, "initial_value"):
                     self.initial_value = np.atleast_2d(*args)
-                self.value = self.function(new_input, context="REINITIALIZING")
+                self.value = super()._execute(function_variable=new_input, context="REINITIALIZING")
                 self._update_output_states(context="REINITIALIZING")
 
             elif self.integrator_function is None:
@@ -2129,25 +2135,14 @@ class Mechanism_Base(Mechanism):
             self.context.string = COMMAND_LINE
         else:
             # These need to be set for states to use as context
-            self.context.string = context
-            if not INITIALIZING in context: # cxt-set
-                # FIX: 3/31/18 - THIS SHOULD BE MOVED TO END OF __init__ METHOD(S)
-                # self.context.initialization_status &= ~ContextFlags.INITIALIZING
-                # self.context.initialization_status = ContextFlags.INITIALIZED
-
-                if EXECUTING in context:
-                    self.context.execution_phase = ContextFlags.PROCESSING
-                if LEARNING in context:
-                    self.context.execution_phase = ContextFlags.LEARNING
-                if EVC_SIMULATION in context:
-                    self.context.execution_phase = ContextFlags.SIMULATION
+            self.context.string = context # cxt-done
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
 
         # Limit init to scope specified by context
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             if PROCESS_INIT in context or SYSTEM_INIT in context: # cxt-test
                 # Run full execute method for init of Process and System
                 pass
@@ -2155,6 +2150,7 @@ class Mechanism_Base(Mechanism):
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
                 return_value =  self._execute(
                     variable=self.instance_defaults.variable,
+                    function_variable=self.instance_defaults.variable,
                     runtime_params=runtime_params,
                     context=context,
                 )
@@ -2182,9 +2178,10 @@ class Mechanism_Base(Mechanism):
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
-                return_value = self.function(
+                return_value = super()._execute(
                     variable=self.instance_defaults.variable,
-                    params=runtime_params,
+                    function_variable=self.instance_defaults.variable,
+                    runtime_params=runtime_params,
                     context=context,
                 )
                 return np.atleast_2d(return_value)
@@ -2226,10 +2223,12 @@ class Mechanism_Base(Mechanism):
 
         # Executing or simulating Process or System, get input by updating input_states
         if (input is None
-            and (c in context for c in {EXECUTING, LEARNING, EVC_SIMULATION}) # cxt-test
+            and (self.context.execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
             and (self.input_state.path_afferents != [])):
+
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
                                                                        context=context))
+            function_variable = self._parse_function_variable(variable)
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
@@ -2240,6 +2239,7 @@ class Mechanism_Base(Mechanism):
             if input is None:
                 input = self.instance_defaults.variable
             variable = self._update_variable(self._get_variable_from_input(input))
+            function_variable = self._parse_function_variable(variable)
 
         # UPDATE PARAMETER STATE(S)
         self._update_parameter_states(runtime_params=runtime_params, context=context) # cxt-pass ? cxt-push
@@ -2258,6 +2258,7 @@ class Mechanism_Base(Mechanism):
             # MODIFIED 3/20/18 OLD:
             value = self._execute(
                 variable=variable,
+                function_variable=function_variable,
                 runtime_params=runtime_params,
                 context=context # cxt-pass cxt-push
             )
@@ -2299,22 +2300,10 @@ class Mechanism_Base(Mechanism):
         self._update_output_states(runtime_params=runtime_params, context=context) # cxt-pass cxt-push
 
         # REPORT EXECUTION
-        # if self.prefs.reportOutputPref and context and EXECUTING in context:
-        if self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}): # cxt-test
+        if self.prefs.reportOutputPref and (self.context.execution_phase &
+                                            ContextFlags.PROCESSING|ContextFlags.LEARNING):
             self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
-
-        #RE-SET STATE_VALUES AFTER INITIALIZATION
-        # If this is (the end of) an initialization run, restore state values to initial condition
-        if '_init_' in context: # cxt-test
-            for state in self.input_states:
-                self.input_states[state].value = self.input_states[state].instance_defaults.variable
-            for state in self._parameter_states:
-                self._parameter_states[state].value =  getattr(self, '_'+state)
-            for state in self.output_states:
-                # Zero OutputStates in case of recurrence:
-                #    don't want any non-zero values as a residuum of initialization runs to be
-                #    transmittted back via recurrent Projections as initial inputs
-                self.output_states[state].value = self.output_states[state].value * 0.0
+        #endregion
 
         if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
             self._increment_execution_count()
@@ -2430,8 +2419,8 @@ class Mechanism_Base(Mechanism):
 
     def _update_attribs_dicts(self, context=None):
         from psyneulink.globals.keywords import NOISE
-        for state in self._parameter_states: # cxt-test
-            if NOISE in state.name and INITIALIZING in context:
+        for state in self._parameter_states:
+            if NOISE in state.name and self.context.initialization_status == ContextFlags.INITIALIZING:
                 continue
             if state.name in self.user_params:
                 self.user_params.__additem__(state.name, state.value)
@@ -2962,8 +2951,8 @@ class Mechanism_Base(Mechanism):
             State specification(s) can be an InputState or OutputState object or the name of one.
 
         """
-        from psyneulink.components.states.inputstate import InputState, _instantiate_input_states, INPUT_STATE
-        from psyneulink.components.states.outputstate import OutputState, _instantiate_output_states, OUTPUT_STATE
+        from psyneulink.components.states.inputstate import INPUT_STATE
+        from psyneulink.components.states.outputstate import OutputState, OUTPUT_STATE
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):
@@ -3206,10 +3195,16 @@ class Mechanism_Base(Mechanism):
         )
         attribs_dict.update(self.user_params)
         del attribs_dict[FUNCTION]
-        del attribs_dict[FUNCTION_PARAMS]
+        try:
+            del attribs_dict[FUNCTION_PARAMS]
+        except KeyError:
+            pass
         del attribs_dict[INPUT_STATES]
         del attribs_dict[OUTPUT_STATES]
-        attribs_dict.update(self.function_params)
+        try:
+            attribs_dict.update(self.function_params)
+        except KeyError:
+            pass
         return attribs_dict
 
 

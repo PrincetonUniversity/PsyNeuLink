@@ -44,7 +44,6 @@ from psyneulink.globals.keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPU
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'DefaultControlMechanism', 'DefaultControlMechanismError'
@@ -108,7 +107,9 @@ class DefaultControlMechanism(ControlMechanism):
                  control_signals:tc.optional(list)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 function=None,
+                 ):
 
         super(DefaultControlMechanism, self).__init__(# default_variable=default_variable,
                                                     # size=size,
@@ -117,7 +118,9 @@ class DefaultControlMechanism(ControlMechanism):
                                                     params=params,
                                                     name=name,
                                                     prefs=prefs,
-                                                    context=self)
+                                                    context=self,
+                                                    function=function,
+                                                    )
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_value attribute

@@ -12,11 +12,8 @@
 
 import inspect
 
-from psyneulink.globals.keywords import NAME, kwPrefsOwner, kwPrefLevel
-from psyneulink.globals.preferences.componentpreferenceset import \
-    ComponentPreferenceSet, kpReportOutputPref, \
-    kpRuntimeParamStickyAssignmentPref, kpVerbosePref, \
-    kpRuntimeParamModulationPref, kpLogPref, kpParamValidationPref
+from psyneulink.globals.keywords import NAME, kwPrefLevel, kwPrefsOwner
+from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpLogPref, kpParamValidationPref, kpReportOutputPref, kpRuntimeParamModulationPref, kpRuntimeParamStickyAssignmentPref, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import Modulation
 
