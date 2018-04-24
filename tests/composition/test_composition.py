@@ -1100,7 +1100,7 @@ class TestCallBeforeAfterTimescale:
         def cb_timestep(scheduler, arr):
 
             def record_timestep():
-                
+
                 arr.append(scheduler.clocks[comp._execution_id].get_total_times_relative(TimeScale.TIME_STEP, TimeScale.TRIAL))
 
             return record_timestep
@@ -1128,8 +1128,6 @@ class TestCallBeforeAfterTimescale:
             call_before_trial=cb_trial(sched, trial_array),
             call_before_pass=cb_pass(sched, pass_array)
         )
-        from pprint import pprint
-        pprint(comp.scheduler_processing.clocks)
         assert time_step_array == [0, 1, 0, 1, 0, 1, 0, 1]
         assert trial_array == [0, 1, 2, 3]
         assert pass_array == [0, 1, 2, 3]
