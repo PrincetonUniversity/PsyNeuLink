@@ -573,6 +573,7 @@ class Composition(object):
             # assign them based on the sender and receiver passed into add_projection()
             projection.init_args['sender'] = sender
             projection.init_args['receiver'] = receiver
+            projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
 
         if projection.sender.owner != sender:
@@ -1014,7 +1015,6 @@ class Composition(object):
                 if isinstance(mechanism, Mechanism):
                     current_context = EXECUTING + "composition "
                     mechanism.context.execution_phase = ContextFlags.PROCESSING
-                    num = mechanism.execute(context=EXECUTING + "composition")
                     num = mechanism.execute(context=current_context)
 
                 if mechanism in origin_mechanisms:
