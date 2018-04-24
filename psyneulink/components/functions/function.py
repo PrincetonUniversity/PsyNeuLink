@@ -756,7 +756,6 @@ class Function_Base(Function):
     def bin_function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
 
         # TODO: Port this to llvm
@@ -6198,10 +6197,9 @@ class AdaptiveIntegrator(
     def bin_function(self,
                      variable=None,
                      params=None,
-                     time_scale=TimeScale.TRIAL,
                      context=None):
 
-        ret = super().bin_function(variable, params, time_scale, context)
+        ret = super().bin_function(variable, params, context)
 
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
@@ -10103,10 +10101,9 @@ class Distance(ObjectiveFunction):
     def bin_function(self,
                  variable=None,
                  params=None,
-                 time_scale=TimeScale.TRIAL,
                  context=None):
 
-        ret = super().bin_function(variable, params, time_scale, context)
+        ret = super().bin_function(variable, params, context)
 
         # FIXME: PEARSON breaks output format
         if (self.metric == PEARSON):
