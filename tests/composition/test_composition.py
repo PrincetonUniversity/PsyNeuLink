@@ -109,16 +109,16 @@ class TestAddProjection:
 
     def test_add_once(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
 
     def test_add_twice(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -126,8 +126,8 @@ class TestAddProjection:
 
     def test_add_same_twice(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         proj = MappingProjection()
@@ -149,8 +149,8 @@ from psyneulink.components.projections.pathwayprojections.mappingprojection impo
 from psyneulink.compositions.composition import Composition
 
 comp = Composition()
-A = TransferMechanism(name='A')
-B = TransferMechanism(name='B')
+A = TransferMechanism(name='composition-pytests-A')
+B = TransferMechanism(name='composition-pytests-B')
 comp.add_mechanism(A)
 comp.add_mechanism(B)
 ''',
@@ -172,8 +172,8 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.composition import Composition
 comp = Composition()
-A = TransferMechanism(name='A')
-B = TransferMechanism(name='B')
+A = TransferMechanism(name='composition-pytests-A')
+B = TransferMechanism(name='composition-pytests-B')
 comp.add_mechanism(A)
 comp.add_mechanism(B)
 ''',
@@ -192,7 +192,7 @@ class TestAnalyzeGraph:
 
     def test_singleton(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
+        A = TransferMechanism(name='composition-pytests-A')
         comp.add_mechanism(A)
         comp._analyze_graph()
         assert A in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
@@ -200,8 +200,8 @@ class TestAnalyzeGraph:
 
     def test_two_independent(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp._analyze_graph()
@@ -212,8 +212,8 @@ class TestAnalyzeGraph:
 
     def test_two_in_a_row(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -226,8 +226,8 @@ class TestAnalyzeGraph:
     # (A)<->(B)
     def test_two_recursive(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -243,10 +243,10 @@ class TestAnalyzeGraph:
     # (A)->(B)<->(C)<-(D)
     def test_two_origins_pointing_to_recursive_pair(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
-        C = TransferMechanism(name='C')
-        D = TransferMechanism(name='D')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
+        C = TransferMechanism(name='composition-pytests-C')
+        D = TransferMechanism(name='composition-pytests-D')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_mechanism(C)
@@ -265,8 +265,8 @@ class TestValidateFeedDict:
 
     def test_empty_feed_dicts(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -278,8 +278,8 @@ class TestValidateFeedDict:
 
     def test_origin_and_terminal_with_mapping(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -291,8 +291,8 @@ class TestValidateFeedDict:
 
     def test_origin_and_terminal_with_swapped_feed_dicts_1(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -304,8 +304,8 @@ class TestValidateFeedDict:
 
     def test_origin_and_terminal_with_swapped_feed_dicts_2(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -317,9 +317,9 @@ class TestValidateFeedDict:
 
     def test_multiple_origin_mechs(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
-        C = TransferMechanism(name='C')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
+        C = TransferMechanism(name='composition-pytests-C')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_mechanism(C)
@@ -333,9 +333,9 @@ class TestValidateFeedDict:
 
     def test_multiple_origin_mechs_only_one_in_feed_dict(self):
         comp = Composition()
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B')
-        C = TransferMechanism(name='C')
+        A = TransferMechanism(name='composition-pytests-A')
+        B = TransferMechanism(name='composition-pytests-B')
+        C = TransferMechanism(name='composition-pytests-C')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_mechanism(C)
@@ -349,8 +349,8 @@ class TestValidateFeedDict:
 
     def test_input_state_len_3(self):
         comp = Composition()
-        A = TransferMechanism(default_variable=[0, 1, 2], name='A')
-        B = TransferMechanism(default_variable=[0, 1, 2], name='B')
+        A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
+        B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -362,8 +362,8 @@ class TestValidateFeedDict:
 
     def test_input_state_len_3_feed_dict_len_2(self):
         comp = Composition()
-        A = TransferMechanism(default_variable=[0, 1, 2], name='A')
-        B = TransferMechanism(default_variable=[0, 1, 2], name='B')
+        A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
+        B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -375,8 +375,8 @@ class TestValidateFeedDict:
 
     def test_input_state_len_2_feed_dict_len_3(self):
         comp = Composition()
-        A = TransferMechanism(default_variable=[0, 1], name='A')
-        B = TransferMechanism(default_variable=[0, 1], name='B')
+        A = TransferMechanism(default_variable=[0, 1], name='composition-pytests-A')
+        B = TransferMechanism(default_variable=[0, 1], name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -388,8 +388,8 @@ class TestValidateFeedDict:
 
     def test_feed_dict_includes_mechs_of_correct_and_incorrect_types(self):
         comp = Composition()
-        A = TransferMechanism(default_variable=[0], name='A')
-        B = TransferMechanism(default_variable=[0], name='B')
+        A = TransferMechanism(default_variable=[0], name='composition-pytests-A')
+        B = TransferMechanism(default_variable=[0], name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -400,8 +400,8 @@ class TestValidateFeedDict:
 
     def test_input_state_len_3_brackets_extra_1(self):
         comp = Composition()
-        A = TransferMechanism(default_variable=[0, 1, 2], name='A')
-        B = TransferMechanism(default_variable=[0, 1, 2], name='B')
+        A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
+        B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -413,8 +413,8 @@ class TestValidateFeedDict:
 
     def test_input_state_len_3_brackets_missing_1(self):
         comp = Composition()
-        A = TransferMechanism(default_variable=[0, 1, 2], name='A')
-        B = TransferMechanism(default_variable=[0, 1, 2], name='B')
+        A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
+        B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -426,8 +426,8 @@ class TestValidateFeedDict:
 
     def test_empty_feed_dict_for_empty_type(self):
         comp = Composition()
-        A = TransferMechanism(default_variable=[0], name='A')
-        B = TransferMechanism(default_variable=[0], name='B')
+        A = TransferMechanism(default_variable=[0], name='composition-pytests-A')
+        B = TransferMechanism(default_variable=[0], name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -439,7 +439,7 @@ class TestValidateFeedDict:
     def test_mech_in_feed_dict_for_empty_type(self):
         comp = Composition()
         A = TransferMechanism(default_variable=[0])
-        B = TransferMechanism(name='B')
+        B = TransferMechanism(name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -469,8 +469,8 @@ class TestValidateFeedDict:
 
     def test_multiple_time_steps_1(self):
         comp = Composition()
-        A = TransferMechanism(default_variable=[[0, 1, 2]], name='A')
-        B = TransferMechanism(default_variable=[[0, 1, 2]], name='B')
+        A = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-A')
+        B = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -482,8 +482,8 @@ class TestValidateFeedDict:
 
     def test_multiple_time_steps_2(self):
         comp = Composition()
-        A = TransferMechanism(default_variable=[[0, 1, 2]], name='A')
-        B = TransferMechanism(default_variable=[[0, 1, 2]], name='B')
+        A = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-A')
+        B = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -531,9 +531,9 @@ class TestGraph:
 
         def test_all_mechanisms(self):
             comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
             mechs = [A, B, C]
             for m in mechs:
                 comp.add_mechanism(m)
@@ -553,9 +553,9 @@ class TestGraph:
 
         def test_triangle(self):
             comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
             mechs = [A, B, C]
             for m in mechs:
                 comp.add_mechanism(m)
@@ -577,11 +577,11 @@ class TestGraph:
 
         def test_x(self):
             comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-            D = TransferMechanism(function=Linear(intercept=1.5), name='D')
-            E = TransferMechanism(function=Linear(intercept=1.5), name='E')
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
+            D = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-D')
+            E = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-E')
             mechs = [A, B, C, D, E]
             for m in mechs:
                 comp.add_mechanism(m)
@@ -615,9 +615,9 @@ class TestGraph:
 
         def test_cycle_linear(self):
             comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='C')
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
             mechs = [A, B, C]
             for m in mechs:
                 comp.add_mechanism(m)
@@ -640,11 +640,11 @@ class TestGraph:
 
         def test_cycle_x(self):
             comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-            D = TransferMechanism(function=Linear(intercept=1.5), name='D')
-            E = TransferMechanism(function=Linear(intercept=1.5), name='E')
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
+            D = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-D')
+            E = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-E')
             mechs = [A, B, C, D, E]
             for m in mechs:
                 comp.add_mechanism(m)
@@ -680,11 +680,11 @@ class TestGraph:
 
         def test_cycle_x_multiple_incoming(self):
             comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='C')
-            D = TransferMechanism(function=Linear(intercept=1.5), name='D')
-            E = TransferMechanism(function=Linear(intercept=1.5), name='E')
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
+            D = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-D')
+            E = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-E')
             mechs = [A, B, C, D, E]
             for m in mechs:
                 comp.add_mechanism(m)
@@ -767,10 +767,10 @@ class TestRun:
     def test_projection_assignment_mistake_swap(self):
 
         comp = Composition()
-        A = TransferMechanism(name="A", function=Linear(slope=1.0))
-        B = TransferMechanism(name="B", function=Linear(slope=1.0))
-        C = TransferMechanism(name="C", function=Linear(slope=5.0))
-        D = TransferMechanism(name="D", function=Linear(slope=5.0))
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=1.0))
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=1.0))
+        C = TransferMechanism(name="composition-pytests-C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="composition-pytests-D", function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_mechanism(C)
@@ -786,11 +786,11 @@ class TestRun:
         # B ----> D --
 
         comp = Composition()
-        A = TransferMechanism(name="A", function=Linear(slope=1.0))
-        B = TransferMechanism(name="B", function=Linear(slope=1.0))
-        C = TransferMechanism(name="C", function=Linear(slope=5.0))
-        D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=1.0))
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=1.0))
+        C = TransferMechanism(name="composition-pytests-C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="composition-pytests-D", function=Linear(slope=5.0))
+        E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_mechanism(C)
@@ -811,11 +811,11 @@ class TestRun:
         # 5 * 1 = 5 ----> 5 x 5 = 25 --
 
         comp = Composition()
-        A = TransferMechanism(name="A", function=Linear(slope=1.0))
-        B = TransferMechanism(name="B", function=Linear(slope=1.0))
-        C = TransferMechanism(name="C", function=Linear(slope=5.0))
-        D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=1.0))
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=1.0))
+        C = TransferMechanism(name="composition-pytests-C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="composition-pytests-D", function=Linear(slope=5.0))
+        E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_mechanism(C)
@@ -967,11 +967,11 @@ class TestRun:
     def test_LPP(self):
 
         comp = Composition()
-        A = TransferMechanism(name="A", function=Linear(slope=2.0))   # 1 x 2 = 2
-        B = TransferMechanism(name="B", function=Linear(slope=2.0))   # 2 x 2 = 4
-        C = TransferMechanism(name="C", function=Linear(slope=2.0))   # 4 x 2 = 8
-        D = TransferMechanism(name="D", function=Linear(slope=2.0))   # 8 x 2 = 16
-        E = TransferMechanism(name="E", function=Linear(slope=2.0))  # 16 x 2 = 32
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))   # 1 x 2 = 2
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))   # 2 x 2 = 4
+        C = TransferMechanism(name="composition-pytests-C", function=Linear(slope=2.0))   # 4 x 2 = 8
+        D = TransferMechanism(name="composition-pytests-D", function=Linear(slope=2.0))   # 8 x 2 = 16
+        E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=2.0))  # 16 x 2 = 32
         comp.add_linear_processing_pathway([A, B, C, D, E])
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
@@ -984,11 +984,11 @@ class TestRun:
 
     def test_LPP_with_projections(self):
         comp = Composition()
-        A = TransferMechanism(name="A", function=Linear(slope=2.0))  # 1 x 2 = 2
-        B = TransferMechanism(name="B", function=Linear(slope=2.0))  # 2 x 2 = 4
-        C = TransferMechanism(name="C", function=Linear(slope=2.0))  # 4 x 2 = 8
-        D = TransferMechanism(name="D", function=Linear(slope=2.0))  # 8 x 2 = 16
-        E = TransferMechanism(name="E", function=Linear(slope=2.0))  # 16 x 2 = 32
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))  # 1 x 2 = 2
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))  # 2 x 2 = 4
+        C = TransferMechanism(name="composition-pytests-C", function=Linear(slope=2.0))  # 4 x 2 = 8
+        D = TransferMechanism(name="composition-pytests-D", function=Linear(slope=2.0))  # 8 x 2 = 16
+        E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=2.0))  # 16 x 2 = 32
         A_to_B = MappingProjection(sender=A, receiver=B)
         D_to_E = MappingProjection(sender=D, receiver=E)
         comp.add_linear_processing_pathway([A, A_to_B, B, C, D, D_to_E, E])
@@ -1003,11 +1003,11 @@ class TestRun:
 
     def test_LPP_end_with_projection(self):
         comp = Composition()
-        A = TransferMechanism(name="A", function=Linear(slope=2.0))
-        B = TransferMechanism(name="B", function=Linear(slope=2.0))
-        C = TransferMechanism(name="C", function=Linear(slope=2.0))
-        D = TransferMechanism(name="D", function=Linear(slope=2.0))
-        E = TransferMechanism(name="E", function=Linear(slope=2.0))
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
+        C = TransferMechanism(name="composition-pytests-C", function=Linear(slope=2.0))
+        D = TransferMechanism(name="composition-pytests-D", function=Linear(slope=2.0))
+        E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=2.0))
         A_to_B = MappingProjection(sender=A, receiver=B)
         D_to_E = MappingProjection(sender=D, receiver=E)
         with pytest.raises(CompositionError) as error_text:
@@ -1017,9 +1017,9 @@ class TestRun:
 
     def test_LPP_two_projections_in_a_row(self):
         comp = Composition()
-        A = TransferMechanism(name="A", function=Linear(slope=2.0))
-        B = TransferMechanism(name="B", function=Linear(slope=2.0))
-        C = TransferMechanism(name="C", function=Linear(slope=2.0))
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
+        C = TransferMechanism(name="composition-pytests-C", function=Linear(slope=2.0))
         A_to_B = MappingProjection(sender=A, receiver=B)
         B_to_C = MappingProjection(sender=B, receiver=C)
         with pytest.raises(CompositionError) as error_text:
@@ -1032,8 +1032,8 @@ class TestRun:
     def test_LPP_start_with_projection(self):
         comp = Composition()
         Nonsense_Projection = MappingProjection()
-        A = TransferMechanism(name="A", function=Linear(slope=2.0))
-        B = TransferMechanism(name="B", function=Linear(slope=2.0))
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([Nonsense_Projection, A, B])
 
@@ -1043,8 +1043,8 @@ class TestRun:
     def test_LPP_wrong_component(self):
         comp = Composition()
         Nonsense = "string"
-        A = TransferMechanism(name="A", function=Linear(slope=2.0))
-        B = TransferMechanism(name="B", function=Linear(slope=2.0))
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, Nonsense, B])
 
@@ -1061,11 +1061,11 @@ class TestRun:
         # 5 * 1 = 5 ----> 5 x 5 = 25 --
 
         comp = Composition()
-        A = TransferMechanism(name="A", function=Linear(slope=1.0))
-        B = TransferMechanism(name="B", function=Linear(slope=1.0))
-        C = TransferMechanism(name="C", function=Linear(slope=5.0))
-        D = TransferMechanism(name="D", function=Linear(slope=5.0))
-        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=1.0))
+        B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=1.0))
+        C = TransferMechanism(name="composition-pytests-C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="composition-pytests-D", function=Linear(slope=5.0))
+        E = TransferMechanism(name="composition-pytests-E", function=Linear(slope=5.0))
         comp.add_linear_processing_pathway([A, C, E])
         comp.add_linear_processing_pathway([B, D, E])
         comp._analyze_graph()
