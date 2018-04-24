@@ -89,12 +89,12 @@ belongs is run. A ProcessingMechanism always executes before any `AdaptiveMechan
 
 """
 
-import typecheck as tc
 from collections import Iterable
+
+import typecheck as tc
 
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, PROCESSING_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -142,7 +142,9 @@ class ProcessingMechanism_Base(Mechanism_Base):
                  params=None,
                  name=None,
                  prefs=None,
-                 context=None):
+                 context=None,
+                 function=None,
+                 ):
         """Abstract class for processing mechanisms
 
         :param variable: (value)
@@ -162,7 +164,9 @@ class ProcessingMechanism_Base(Mechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
     def _validate_inputs(self, inputs=None):
         # Let mechanism itself do validation of the input
@@ -282,6 +286,8 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=self)
+                                                  context=self,
+                                                  function=function
+                                                  )
 
 

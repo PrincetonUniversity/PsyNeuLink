@@ -88,27 +88,30 @@ def test_reinforcement():
 
     expected_output = [
         (input_layer.output_states.values, [np.array([1., 1., 1.])]),
-        (action_selection.output_states.values, [np.array([0., 3.38417298, 0.])]),
-        (pytest.helpers.expand_np_ndarray(mech_objective_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array([6.61582702]), np.array(43.7691671006736)])),
-        (pytest.helpers.expand_np_ndarray(mech_learning_input_to_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array(
-                [0.0, 0.33079135078125005, 0.0, 0.0, 0.33079135078125005, 0.0]
-        )])),
+        (action_selection.output_states.values, [np.array([0., 4.02921612, 0.])]),
+        (pytest.helpers.expand_np_ndarray(mech_objective_action.output_states.values), pytest.helpers.expand_np_ndarray([np.array([5.97078388]), np.array(35.65026016079303)])),
+        (pytest.helpers.expand_np_ndarray(mech_learning_input_to_action.output_states.values), pytest.helpers.expand_np_ndarray([
+            np.array([
+                [0., 0.29853919, 0.],
+                [0., 0.29853919, 0.]
+            ])
+        ])),
         (reward_prediction_weights.mod_matrix, np.array([
-            [ 1.,          0.,          0.,        ],
-            [ 0.,          3.71496434,  0.,        ],
-            [ 0.,          0.,          2.283625,  ],
+            [1.,         0.,         0.],
+            [0.,         4.32775531, 0.],
+            [0.,         0.,         1.45]
         ])),
         (results, [
             [np.array([0., 1., 0.])],
             [np.array([0., 1.45, 0.])],
             [np.array([0., 1.8775, 0.])],
             [np.array([0., 2.283625, 0.])],
-            [np.array([0., 0., 1.])],
-            [np.array([0., 0., 1.45])],
-            [np.array([0., 2.66944375, 0.])],
-            [np.array([0., 0., 1.8775])],
+            [np.array([0.,         2.66944375, 0.])],
             [np.array([0., 3.03597156, 0.])],
-            [np.array([0., 3.38417298, 0.])]
+            [np.array([0., 0., 1.])],
+            [np.array([0., 3.38417298, 0.])],
+            [np.array([0., 3.71496434, 0.])],
+            [np.array([0., 4.02921612, 0.])]
         ]),
     ]
 

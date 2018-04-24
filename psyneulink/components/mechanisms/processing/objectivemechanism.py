@@ -321,7 +321,6 @@ Class Reference
 
 """
 import warnings
-
 from collections import Iterable
 
 import typecheck as tc
@@ -332,10 +331,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import PARAMS, PROJECTION, PROJECTIONS, CONTROL, DEFAULT_MATRIX, DEFAULT_VARIABLE, \
-    EXPONENT, EXPONENTS, FUNCTION, \
-    INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
-    kwPreferenceSetName
+from psyneulink.globals.keywords import CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, PARAMS, PROJECTION, PROJECTIONS, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -539,6 +535,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
+    # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
+    # kmantel: above needs to be clarified - can ClassDefaults.variable truly be anything? or should there be some format?
+    #   if the latter, we should specify one such valid assignment here, and override _validate_default_variable accordingly
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        function = LinearCombination
+
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -586,7 +588,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=self,
+                         function=function,
+                         )
 
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
         #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism

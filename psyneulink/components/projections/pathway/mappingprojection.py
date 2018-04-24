@@ -256,6 +256,7 @@ Class Reference
 
 """
 import inspect
+
 import numpy as np
 import typecheck as tc
 
@@ -264,8 +265,8 @@ from psyneulink.components.functions.function import AccumulatorIntegrator, Line
 from psyneulink.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CHANGED, DEFAULT_MATRIX, EXECUTING, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZING, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE, kwAssign
-from psyneulink.globals.log import ContextFlags, LogEntry
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROCESS_INPUT_STATE, PROJECTION_SENDER, SYSTEM_INPUT_STATE, VALUE
+from psyneulink.globals.log import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -436,6 +437,9 @@ class MappingProjection(PathwayProjection_Base):
     className = componentType
     suffix = " " + className
 
+    class ClassDefaults(PathwayProjection_Base.ClassDefaults):
+        function = LinearMatrix
+
     classPreferenceLevel = PreferenceLevel.TYPE
 
     @property
@@ -466,7 +470,9 @@ class MappingProjection(PathwayProjection_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 context=None,
+                 function=None,
+                 ):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
@@ -486,18 +492,21 @@ class MappingProjection(PathwayProjection_Base):
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
-        super().__init__(sender=sender,
-                         receiver=receiver,
-                         weight=weight,
-                         exponent=exponent,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         context=self)
+        super().__init__(
+            sender=sender,
+            receiver=receiver,
+            weight=weight,
+            exponent=exponent,
+            params=params,
+            name=name,
+            prefs=prefs,
+            context=self,
+            function=function,
+        )
 
-    def _instantiate_parameter_states(self, context=None):
+    def _instantiate_parameter_states(self, function=None, context=None):
 
-        super()._instantiate_parameter_states(context=context)
+        super()._instantiate_parameter_states(function=function, context=context)
 
         # FIX: UPDATE FOR LEARNING
         # FIX: UPDATE WITH MODULATION_MODS
@@ -611,7 +620,7 @@ class MappingProjection(PathwayProjection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
         """
         If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix ParameterState:
 
@@ -630,7 +639,12 @@ class MappingProjection(PathwayProjection_Base):
 
         self._update_parameter_states(runtime_params=runtime_params, context=context)
 
-        return super()._execute(self.sender.value, runtime_params, context)
+        return super()._execute(
+            variable=variable,
+            function_variable=function_variable,
+            runtime_params=runtime_params,
+            context=context
+        )
 
     @property
     def matrix(self):
