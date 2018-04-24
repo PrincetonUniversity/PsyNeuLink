@@ -60,6 +60,7 @@ from psyneulink.components.mechanisms.processing.compositioninterfacemechanism i
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.globals.keywords import EXECUTING
+from psyneulink.globals.context import ContextFlags
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -535,6 +536,7 @@ class Composition(object):
             # assign them based on the sender and receiver passed into add_projection()
             projection.init_args['sender'] = sender
             projection.init_args['receiver'] = receiver
+            projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
 
         if projection.sender.owner != sender:
@@ -899,6 +901,7 @@ class Composition(object):
 #                        bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ct_res)
 #                        print(res);
                     else:
+                        mechanism.context.execution_phase = ContextFlags.PROCESSING
                         num = mechanism.execute(context=EXECUTING + "composition")
 #                        print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
 #                        print("result = ", num)
