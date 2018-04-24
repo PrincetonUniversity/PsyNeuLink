@@ -183,7 +183,6 @@ comp.add_mechanism(B)
         logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
 
-@pytest.mark.skip
 class TestAnalyzeGraph:
 
     def test_empty_call(self):
@@ -241,6 +240,7 @@ class TestAnalyzeGraph:
         assert B in comp.get_mechanisms_by_role(MechanismRole.RECURRENT_INIT)
 
     # (A)->(B)<->(C)<-(D)
+    @pytest.mark.skip
     def test_two_origins_pointing_to_recursive_pair(self):
         comp = Composition()
         A = TransferMechanism(name='composition-pytests-A')
