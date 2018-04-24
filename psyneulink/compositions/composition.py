@@ -60,6 +60,7 @@ from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.globals.keywords import SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAMP, PULSE_CLAMP, NO_CLAMP, IDENTITY_MATRIX
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
+from psyneulink.globals.context import ContextFlags, ContextStatus
 
 __all__ = [
     'Composition', 'CompositionError', 'MechanismRole',
@@ -1012,6 +1013,8 @@ class Composition(object):
 
                 if isinstance(mechanism, Mechanism):
                     current_context = EXECUTING + "composition "
+                    mechanism.context.execution_phase = ContextFlags.PROCESSING
+                    num = mechanism.execute(context=EXECUTING + "composition")
                     num = mechanism.execute(context=current_context)
 
                 if mechanism in origin_mechanisms:
