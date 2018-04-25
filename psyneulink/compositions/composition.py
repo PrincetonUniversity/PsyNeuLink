@@ -832,6 +832,8 @@ class Composition(object):
     def _assign_values_to_CIM_output_states(self, inputs):
         current_mechanisms = set()
         for key in inputs:
+            if isinstance(inputs[key], (float, int)):
+                inputs[key] = np.atleast_2d(inputs[key])
             for i in range(len(inputs[key])):
                 self.CIM_output_states[key.input_states[i]].value = inputs[key][i]
             current_mechanisms.add(key)
@@ -1126,7 +1128,6 @@ class Composition(object):
                 raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
                                "mechanisms.".format(self.name, len(origin_mechanisms)))
         elif not isinstance(inputs, dict):
-            print(inputs)
             if len(origin_mechanisms) == 1:
                 raise CompositionError(
                     "Inputs to {} must be specified in a list or in a dictionary with the origin mechanism({}) "
@@ -1169,22 +1170,19 @@ class Composition(object):
             stimulus_index = trial_num % num_inputs_sets
             for mech in inputs:
                 execution_stimuli[mech] = inputs[mech][stimulus_index]
-
             # execute processing
             # pass along the stimuli for this trial
-            trial_output = self.execute(
-                execution_stimuli,
-                scheduler_processing,
-                scheduler_learning,
-                termination_processing,
-                termination_learning,
-                call_before_time_step,
-                call_before_pass,
-                call_after_time_step,
-                call_after_pass,
-                execution_id,
-                clamp_input,
-            )
+            trial_output = self.execute(inputs=execution_stimuli,
+                                        scheduler_processing=scheduler_processing,
+                                        scheduler_learning=scheduler_learning,
+                                        termination_processing=termination_processing,
+                                        termination_learning=termination_learning,
+                                        call_before_time_step=call_before_time_step,
+                                        call_before_pass=call_before_pass,
+                                        call_after_time_step=call_after_time_step,
+                                        call_after_pass=call_after_pass,
+                                        execution_id=execution_id,
+                                        clamp_input=clamp_input)
 
         # ---------------------------------------------------------------------------------
             # store the result of this execute in case it will be the final result
