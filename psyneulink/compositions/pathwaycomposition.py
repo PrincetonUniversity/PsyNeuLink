@@ -82,11 +82,13 @@ class PathwayComposition(Composition):
         inputs,
         scheduler_processing=None,
         scheduler_learning=None,
-        execution_id=None,
+        termination_processing=None,
+        termination_learning=None,
         call_before_time_step=None,
         call_before_pass=None,
         call_after_time_step=None,
         call_after_pass=None,
+        execution_id=None,
         clamp_input=SOFT_CLAMP,
         targets=None
     ):
@@ -98,11 +100,14 @@ class PathwayComposition(Composition):
             inputs,
             scheduler_processing,
             scheduler_learning,
-            execution_id,
-            call_after_time_step,
+            termination_processing,
+            termination_learning,
+            call_before_time_step,
             call_before_pass,
             call_after_time_step,
             call_after_pass,
+            execution_id,
             clamp_input,
+            targets
         )
         return output
