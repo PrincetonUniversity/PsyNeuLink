@@ -869,12 +869,12 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import ADD_STATES, REMOVE_STATES, _parse_state_spec
 from psyneulink.globals.keywords import \
-    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
+    CHANGED, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
     INPUT_LABELS_DICT, INPUT_STATES, \
     INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
     OUTPUT_LABELS_DICT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
-    PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TARGET_LABELS_DICT, UNCHANGED, \
+    PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SYSTEM_INIT, TARGET_LABELS_DICT, UNCHANGED, \
     VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
@@ -1308,7 +1308,7 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.inputstate import InputState
 
         # Forbid direct call to base class constructor
-        if context is None or (context!=ContextFlags.CONSTRUCTOR and
+        if context is None or (context !=ContextFlags.CONSTRUCTOR and
                                not self.context.initialization_status == ContextFlags.VALIDATING): # cxt-test
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; use a subclass")
 
@@ -1746,7 +1746,8 @@ class Mechanism_Base(Mechanism):
         # INPUT_STATES is not specified
         else:
             # pass if call is from assign_params (i.e., not from an init method)
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
+            # if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test-X
+            if context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
                 pass
             else:
                 # INPUT_STATES not specified:
@@ -1758,7 +1759,8 @@ class Mechanism_Base(Mechanism):
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
+            # if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test-X
+            if context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
                 pass
             elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
@@ -1833,7 +1835,8 @@ class Mechanism_Base(Mechanism):
         # OUTPUT_STATES is not specified
         else:
             # pass if call is from assign_params (i.e., not from an init method)
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
+            # if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test-X
+            if context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
                 pass
             else:
                 # OUTPUT_STATES not specified:
@@ -2126,8 +2129,8 @@ class Mechanism_Base(Mechanism):
 
         """
         self.ignore_execution_id = ignore_execution_id
-        context = context or COMMAND_LINE # cxt-done
-        if not self.context.source or context is COMMAND_LINE:
+        context = context or ContextFlags.COMMAND_LINE # cxt-done
+        if not self.context.source or context & ContextFlags.COMMAND_LINE:
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
@@ -2224,7 +2227,7 @@ class Mechanism_Base(Mechanism):
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
-            if context is COMMAND_LINE: # cxt-test
+            if context & ContextFlags.COMMAND_LINE: # cxt-test
                 context = EXECUTING + ' ' + append_type_to_name(self) # cxt-done
                 self.context.execution_phase = ContextFlags.PROCESSING
                 self.context.string = EXECUTING + ' ' + append_type_to_name(self)

@@ -595,7 +595,7 @@ from psyneulink.components.functions.function import Function, \
     Linear, OneHot, function_type, method_type, is_function_type
 from psyneulink.components.shellclasses import Mechanism, Projection
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, FUNCTION_PARAMS, GATING_SIGNAL,\
+from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, FUNCTION, FUNCTION_PARAMS, GATING_SIGNAL,\
     INDEX, INITIALIZING, INPUT_STATE, INPUT_STATES, \
     MAPPING_PROJECTION, MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MEAN, MECHANISM_VALUE, MEDIAN, NAME, \
     OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, \
@@ -902,11 +902,12 @@ class OutputState(State_Base):
 
         if context is None: # cxt-test
         # if not (self.context.source or prev_args):
-            context = COMMAND_LINE # cxt-done
+            context = ContextFlags.COMMAND_LINE # cxt-done
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
-            context = self # cxt-done
+            # context=self
+            context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
@@ -1414,7 +1415,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
     # if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}): # cxt-test
-    if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}): # cxt-test
+    if context & (ContextFlags.COMMAND_LINE | ContextFlags.CONSTRUCTOR): # cxt-test
         owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list

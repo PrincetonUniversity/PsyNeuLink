@@ -972,7 +972,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             self.system._validate_monitored_states_in_system(output_states, context=context)
 
     @tc.typecheck
-    def assign_as_controller(self, system:System_Base, context=COMMAND_LINE):
+    def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
         """Assign ControlMechanism as `controller <System.controller>` for a `System`.
 
         **system** must be a System for which the ControlMechanism should be assigned as the `controller
@@ -1005,7 +1005,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         COMMENT
         """
 
-        if context==COMMAND_LINE: # cxt-test
+        if context & ContextFlags.COMMAND_LINE: # cxt-test
             system.controller = self
             return
 

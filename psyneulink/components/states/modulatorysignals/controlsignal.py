@@ -683,11 +683,12 @@ class ControlSignal(ModulatorySignal):
                  context=None):
 
         if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-done
+            context = ContextFlags.COMMAND_LINE # cxt-done
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
-            context = self # cxt-done
+            # context = self # cxt-done
+            context = ContextFlags.CONSTRUCTOR # cxt-done
             self.context.source = ContextFlags.CONSTRUCTOR
 
         # Note index and assign are not used by ControlSignal, but included here for consistency with OutputState

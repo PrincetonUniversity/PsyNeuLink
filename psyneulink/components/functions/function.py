@@ -190,6 +190,7 @@ from random import randint
 
 from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, \
     AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, \
@@ -3525,7 +3526,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
                                     "array of elements each of which is in the (0,1) interval".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
-            if INITIALIZING in context: # cxt-test
+            if self.context.initialization_status == ContextFlags.INITIALIZING: # cxt-test
                 return
             if not np.sum(prob_dist)==1:
                 raise FunctionError("If {} for {} {} is set to {}, the 2nd item of its variable ({}) must be an "
@@ -5681,7 +5682,7 @@ class AdaptiveIntegrator(
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context: # cxt-test
+        if not context or self.context.initialization_status != ContextFlags.INITIALIZING: # cxt-test
             self.previous_value = adjusted_value
         return adjusted_value
 

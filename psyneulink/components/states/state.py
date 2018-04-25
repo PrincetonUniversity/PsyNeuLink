@@ -1082,7 +1082,9 @@ class State_Base(State):
 
         # Enforce that only called from subclass
         if (not isinstance(context, State_Base) and
-                not any(key in context for key in {INITIALIZING, ADD_STATES, COMMAND_LINE})): # cxt-test
+                # not any(key in context for key in {INITIALIZING, ADD_STATES, COMMAND_LINE})): # cxt-test-X
+                not (self.context.initialization_status == ContextFlags.INITIALIZING or
+                     context & (ContextFlags.CONSTRUCTOR | ContextFlags.COMMAND_LINE))): # cxt ADD_STATES
             raise StateError("Direct call to abstract class State() is not allowed; "
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
@@ -1145,7 +1147,7 @@ class State_Base(State):
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
         # # MODIFIED 4/15/18 OLD:
-        if context is COMMAND_LINE: # cxt-test
+        if context & ContextFlags.COMMAND_LINE: # cxt-test
         # # MODIFIED 4/15/18 NEW:
         #     assert self.context.source == ContextFlags.COMMAND_LINE
         # MODIFIED 4/15/18 END

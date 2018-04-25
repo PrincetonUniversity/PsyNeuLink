@@ -176,7 +176,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
-from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, HOLLOW_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
+from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, HOLLOW_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
@@ -904,8 +904,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             backing_field = '_matrix'
             if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
                 val_type = val.__class__.__name__
-                curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
-                self._assign_params(request_set={name: val}, context=curr_context)
+                # curr_context=SET_ATTRIBUTE+': '+val_type+str(val) + ' for ' + name + ' of ' + self.name # cxt-test-S
+                self._assign_params(request_set={name: val}, context=ContextFlags.PROPERTY)
             else:
                 setattr(self, backing_field, val)
             self.user_params.__additem__(name, val)
@@ -925,9 +925,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
             val_type = val.__class__.__name__
-            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + "auto" + ' of ' + self.name
+            # curr_context=SET_ATTRIBUTE+': '+val_type + str(val) + ' for ' + "auto" + ' of ' + self.name # cxt-test-S
             # self.prev_context = "nonsense" + str(curr_context)
-            self._assign_params(request_set={"auto": val}, context=curr_context)
+            self._assign_params(request_set={"auto": val}, context=ContextFlags.PROPERTY)
         else:
             setattr(self, "_auto", val)
 
@@ -946,9 +946,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
             val_type = val.__class__.__name__
-            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + "hetero" + ' of ' + self.name
+            # curr_context=SET_ATTRIBUTE+': '+val_type+str(val) + ' for ' + "hetero" + ' of ' + self.name # cxt-test-S
             # self.prev_context = "nonsense" + str(curr_context)
-            self._assign_params(request_set={"hetero": val}, context=curr_context)
+            self._assign_params(request_set={"hetero": val}, context=ContextFlags.PROPERTY)
         else:
             setattr(self, "_hetero", val)
 
@@ -1049,7 +1049,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if learning_rate:
             self.learning_rate = learning_rate
 
-        context = context or COMMAND_LINE # cxt-done cxt-pass ? cxt-push
+        context = context or ContextFlags.COMMAND_LINE # cxt-done cxt-pass ? cxt-push
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
 
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self.output_state,

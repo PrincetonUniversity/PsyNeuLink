@@ -392,7 +392,7 @@ import numpy as np
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.utilities import ContentAddressableList, AutoNumber, is_component
 from psyneulink.globals.keywords \
-    import INITIALIZING, EXECUTING, VALIDATE, CONTROL, LEARNING, TRIAL, RUN, COMMAND_LINE, CONTEXT, VALUE, TIME, ALL
+    import COMMAND_LINE, INITIALIZING, EXECUTING, VALIDATE, CONTROL, LEARNING, TRIAL, RUN, CONTEXT, VALUE, TIME, ALL
 from psyneulink.globals.context import ContextFlags, _get_context, _get_time
 
 
@@ -828,7 +828,7 @@ class Log:
 
                 # Context is an empty string, but called programmatically
                 if not context and programmatic: # cxt-done
-                    context = COMMAND_LINE # cxt-done
+                    context = ContextFlags.COMMAND_LINE # cxt-done
                     #  context = self.owner.prev_context + "FROM " + COMMAND_LINE
                     # context = self.owner.prev_context
 
@@ -872,7 +872,8 @@ class Log:
 
         # Validate the Component field of each LogEntry
         for entry in entries:
-            self._log_value(self.loggable_components[self._dealias_owner_name(entry)].value, context=COMMAND_LINE)
+            self._log_value(self.loggable_components[self._dealias_owner_name(entry)].value,
+                            context=ContextFlags.COMMAND_LINE)
 
     def clear_entries(self, entries=ALL, delete_entry=True, confirm=False):
         """Clear one or more entries either by deleting the entry or just removing its data.

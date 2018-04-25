@@ -156,16 +156,18 @@ class ContextFlags(IntEnum):
     """
 
     # source (source-of-call) flags
-    CONSTRUCTOR =   1<<9  # 512
-    """Call to method from Component's constructor."""
-    COMMAND_LINE =  1<<10 # 1024
+    COMMAND_LINE =  1<<9  # 512
     """Direct call to method by user (either interactively from the command line, or in a script)."""
+    CONSTRUCTOR =   1<<10 # 1024
+    """Call to method from Component's constructor."""
     COMPONENT =     1<<11 # 2048
     """Call to method by the Component."""
-    COMPOSITION =   1<<12 # 4096
+    PROPERTY =      1<<12 # 4096
+    """Call to method by property of the Component."""
+    COMPOSITION =   1<<13 # 8192
     """Call to method by a/the Composition to which the Component belongs."""
 
-    SOURCE_MASK = CONSTRUCTOR | COMMAND_LINE | COMPONENT | COMPOSITION
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | COMPONENT | PROPERTY | COMPOSITION
     NONE = ~SOURCE_MASK
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK
@@ -328,7 +330,7 @@ class Context():
 
     __name__ = 'Context'
     def __init__(self,
-                 owner,
+                 owner=None,
                  composition=None,
                  flags=None,
                  initialization_status=ContextFlags.UNINITIALIZED,

@@ -713,7 +713,7 @@ class InputState(State_Base):
                  context=None):
 
         if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-done
+            context = ContextFlags.COMMAND_LINE # cxt-done
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
