@@ -18,7 +18,7 @@ from psyneulink.compositions.systemcomposition import SystemComposition
 from psyneulink.scheduling.condition import EveryNCalls
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
-from psyneulink.globals.keywords import NAME
+from psyneulink.globals.keywords import NAME, INPUT_STATE
 
 logger = logging.getLogger(__name__)
 
@@ -2939,23 +2939,17 @@ class TestInputStateSpecifications:
 
         # get comp ready to run (identify roles, create sched, assign inputs)
         comp._analyze_graph()
-        inputs_dict = { A: { A.input_states[0]: [[2.]],
-                             A.input_states[1]: [[4.]]}
-                       }
+        inputs_dict = { A: [[2.],[4.]]}
+
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched
         )
 
-        assert 2. == A.input_states[0].value
-        assert 4. == A.input_states[1].value
-        assert "Input State 1" == A.input_states[0].name
-        assert "Input State 2" == A.input_states[1].name
-        assert 2. == A.variable[0]
-        assert 4. == A.variable[1]
-
-        assert 2 == output[0][0]
+        assert np.allclose(A.input_states[0].value, [2.0])
+        assert np.allclose(A.input_states[1].value, [4.0])
+        assert np.allclose(A.variable, [[2.0], [4.0]])
 
     def test_two_input_states_created_with_keyword(self):
         comp = Composition()
@@ -2974,21 +2968,17 @@ class TestInputStateSpecifications:
 
         # get comp ready to run (identify roles, create sched, assign inputs)
         comp._analyze_graph()
-        inputs_dict = { A: { A.input_states[0]: [[2.]],
-                             A.input_states[1]: [[4.]]}
-                       }
+        inputs_dict = {A: [[2.], [4.]]}
+
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched
         )
 
-        assert 2. == A.input_states[0].value
-        assert 4. == A.input_states[1].value
-        assert "InputState" == A.input_states[0].name
-        assert "InputState-1" == A.input_states[1].name
-        assert 2. == A.variable[0]
-        assert 4. == A.variable[1]
+        assert np.allclose(A.input_states[0].value, [2.0])
+        assert np.allclose(A.input_states[1].value, [4.0])
+        assert np.allclose(A.variable, [[2.0], [4.0]])
 
         assert 2 == output[0][0]
 
@@ -3009,23 +2999,18 @@ class TestInputStateSpecifications:
 
         # get comp ready to run (identify roles, create sched, assign inputs)
         comp._analyze_graph()
-        inputs_dict = { A: { A.input_states[0]: [[2.]],
-                             A.input_states[1]: [[4.]]}
-                       }
+
+        inputs_dict = {A: [[2.], [4.]]}
+
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched
         )
 
-        assert 2. == A.input_states[0].value
-        assert 4. == A.input_states[1].value
-        assert "Input State 1" == A.input_states[0].name
-        assert "Input State 2" == A.input_states[1].name
-        assert 2. == A.variable[0]
-        assert 4. == A.variable[1]
-
-        assert 2 == output[0][0]
+        assert np.allclose(A.input_states[0].value, [2.0])
+        assert np.allclose(A.input_states[1].value, [4.0])
+        assert np.allclose(A.variable, [[2.0], [4.0]])
 
     def test_two_input_states_created_with_values(self):
         comp = Composition()
@@ -3044,23 +3029,17 @@ class TestInputStateSpecifications:
 
         # get comp ready to run (identify roles, create sched, assign inputs)
         comp._analyze_graph()
-        inputs_dict = { A: { A.input_states[0]: [[2.]],
-                             A.input_states[1]: [[4.]]}
-                       }
+        inputs_dict = {A: [[2.], [4.]]}
+
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched
         )
 
-        assert 2. == A.input_states[0].value
-        assert 4. == A.input_states[1].value
-        assert "Default_InputState-1" == A.input_states[0].name
-        assert "Default_InputState-2" == A.input_states[1].name
-        assert 2. == A.variable[0]
-        assert 4. == A.variable[1]
-
-        assert 2 == output[0][0]
+        assert np.allclose(A.input_states[0].value, [2.0])
+        assert np.allclose(A.input_states[1].value, [4.0])
+        assert np.allclose(A.variable, [[2.0], [4.0]])
 
 class TestInputSpecifications:
 
