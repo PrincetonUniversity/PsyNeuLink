@@ -2908,13 +2908,9 @@ class TestInputStateSpecifications:
 
         inputs_dict = {A: [[2.], [4.]]}
         sched = Scheduler(composition=comp)
-        output = comp.run(
-            inputs=inputs_dict,
-            scheduler_processing=sched
-        )
-        print(A.input_states)
-        print(A.input_states[0].value)
-        print(A.input_states[1].value)
+        comp.run(inputs=inputs_dict,
+                 scheduler_processing=sched)
+
         assert np.allclose(A.input_states[0].value, [2.0])
         assert np.allclose(A.input_states[1].value, [4.0])
         assert np.allclose(A.variable, [[2.0], [4.0]])

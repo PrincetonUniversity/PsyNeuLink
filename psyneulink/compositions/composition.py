@@ -832,12 +832,9 @@ class Composition(object):
     def _assign_values_to_CIM_output_states(self, inputs):
         current_mechanisms = set()
         for key in inputs:
-            if isinstance(key, Mechanism):
-                self.CIM_output_states[key.input_state].value = inputs[key]
-                current_mechanisms.add(key)
-            else:
-                self.CIM_output_states[key].value = inputs[key]
-                current_mechanisms.add(key.owner)
+            for i in range(len(inputs[key])):
+                self.CIM_output_states[key.input_states[i]].value = inputs[key][i]
+            current_mechanisms.add(key)
 
         origins = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
 
@@ -1119,7 +1116,6 @@ class Composition(object):
         scheduler_processing.update_termination_conditions(termination_processing)
         scheduler_learning.update_termination_conditions(termination_learning)
 
-        # ------------------------------------ FROM DEVEL START ------------------------------------
         origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
 
         # if there is only one origin mechanism, allow inputs to be specified in a list
