@@ -1697,50 +1697,75 @@ class Component(object):
                 if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
                     continue
                 # If param is specified in runtime_params, then assign it
-                if param_name in runtime_params:
-                    self.paramsCurrent[param_name] = runtime_params[param_name]
-                # Otherwise, (re-)assign to paramInstanceDefaults
+                if self.runtimeParamStickyAssignmentPref:
+                    if param_name in runtime_params:
+                        # self.paramsCurrent[param_name] = runtime_params[param_name]
+                        if hasattr(self, "parameter_states"):
+                            if param_name in self.parameter_states:
+                                self.parameter_states[param_name].value = self.parameter_states[param_name].execute(runtime_params[param_name])
+                        elif hasattr(self.owner, "parameter_states"):
+                            if param_name in self.owner.parameter_states:
+                                self.owner.parameter_states[param_name].value = self.owner.parameter_states[param_name].execute(runtime_params[param_name])
+                        else:
+                            print("no parameter state ")
+                else:
+                    if param_name in runtime_params:
+                        setattr(self, param_name, runtime_params[param_name])
+                        if hasattr(self, "parameter_states"):
+                            if param_name in self.parameter_states:
+                                self.parameter_states[param_name].value = self.parameter_states[param_name].execute(runtime_params[param_name])
+                        elif hasattr(self.owner, "parameter_states"):
+                            if param_name in self.owner.parameter_states:
+                                self.owner.parameter_states[param_name].value = self.owner.parameter_states[
+                                    param_name].execute(runtime_params[param_name])
+                        else:
+                            print("no parameter state ")
+
+                                # Otherwise, (re-)assign to paramInstanceDefaults
                 #    this insures that any params that were assigned as runtime on last execution are reset here
                 #    (unless they have been assigned another runtime value)
-                elif not self.runtimeParamStickyAssignmentPref:
-                    if param_name is FUNCTION_PARAMS:
-                        for function_param in self.function_object.user_params:
-                            self.function_object.paramsCurrent[function_param] = \
-                                self.function_object.paramInstanceDefaults[function_param]
-                        continue
-                    self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
+                # elif not self.runtimeParamStickyAssignmentPref:
+                #     if param_name is FUNCTION_PARAMS:
+                #         for function_param in self.function_object.user_params:
+                #             self.function_object.paramsCurrent[function_param] = \
+                #                 self.function_object.paramInstanceDefaults[function_param]
+                #         continue
+                #     self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
             self.runtime_params_in_use = True
 
         # CW 1/24/18: This elif block appears to be accidentally deleting self.input_states
-        # Otherwise, reset paramsCurrent to paramInstanceDefaults
-        elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
-            # Can't do the following since function could still be a class ref rather than abound method (see below)
-            # self.paramsCurrent = self.paramInstanceDefaults
-            for param_name in self.user_params:
-                # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-                #    At present, assignment of ``function`` as runtime param is not supported
-                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-                if param_name is FUNCTION:
-                    continue
-                if param_name is FUNCTION_PARAMS:
-                    for function_param in self.function_object.user_params:
-                        self.function_object.paramsCurrent[function_param] = \
-                            self.function_object.paramInstanceDefaults[function_param]
-                    continue
-                self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
+        # KAM 4/26/18: commenting out elif block to prevent deletion of self.input states -- will reinstate once
+        #              runtime params are working
 
-            self.runtime_params_in_use = False
+        # Otherwise, reset paramsCurrent to paramInstanceDefaults
+        # elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
+        #     # Can't do the following since function could still be a class ref rather than abound method (see below)
+        #     # self.paramsCurrent = self.paramInstanceDefaults
+        #     for param_name in self.user_params:
+        #         # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+        #         #    At present, assignment of ``function`` as runtime param is not supported
+        #         #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+        #         #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+        #         if param_name is FUNCTION:
+        #             continue
+        #         if param_name is FUNCTION_PARAMS:
+        #             for function_param in self.function_object.user_params:
+        #                 self.function_object.paramsCurrent[function_param] = \
+        #                     self.function_object.paramInstanceDefaults[function_param]
+        #             continue
+        #         self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
+        #
+        #     self.runtime_params_in_use = False
 
         # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
-        if self.prefs.paramValidationPref and params and not params is target_set:
-            curr_context = self.context.initialization_status
-            self.context.initialization_status = ContextFlags.VALIDATING
-            try:
-                self._validate_params(variable=variable, request_set=params, target_set=target_set, context=context)
-            except TypeError:
-                self._validate_params(request_set=params, target_set=target_set, context=context)
-            self.context.initialization_status = curr_context
+        # if self.prefs.paramValidationPref and params and not params is target_set:
+        #     curr_context = self.context.initialization_status
+        #     self.context.initialization_status = ContextFlags.VALIDATING
+        #     try:
+        #         self._validate_params(variable=variable, request_set=params, target_set=target_set, context=context)
+        #     except TypeError:
+        #         self._validate_params(request_set=params, target_set=target_set, context=context)
+        #     self.context.initialization_status = curr_context
 
         return variable
 

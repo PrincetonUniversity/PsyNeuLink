@@ -105,6 +105,7 @@ def test_danglingControlledMech():
 
     # no assert, should only complete without error
 
+
 class TestInputSpecsDocumentationExamples:
 
     def test_example_1(self):
@@ -429,6 +430,7 @@ class TestInputSpecsDocumentationExamples:
 
         p1.execute(input_dictionary)
 
+
 class TestInputSpecsHeterogeneousVariables:
 
     def test_heterogeneous_variables_drop_outer_list(self):
@@ -458,6 +460,8 @@ class TestInputSpecsHeterogeneousVariables:
         inputs = {a: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]}
 
         s.run(inputs)
+
+
 class TestGraphAndInput:
 
     def test_branch(self):
@@ -643,6 +647,8 @@ class TestGraphAndInput:
         assert d.systems[s] == TERMINAL
         assert e.systems[s] == ORIGIN
         assert f.systems[s] == INITIALIZE_CYCLE
+
+
 class TestInitialize:
 
     def test_initialize_mechanisms(self):
@@ -672,3 +678,16 @@ class TestInitialize:
         # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
         # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
         assert np.allclose(C.log.nparray_dictionary('value')['value'], [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]])
+
+class TestRuntimeParams:
+
+    def test_mechanism_execute(self):
+        T = TransferMechanism()
+        print(T.input_states)
+        T.execute(runtime_params={"slope": 10.0}, input=2.0)
+        print(T.function_object.slope)
+        print(T.parameter_states['slope'].value)
+        print(T.value)
+        print(T.input_states)
+        T.execute(input=2.0)
+        print(T.value)
