@@ -377,23 +377,16 @@ class TestIntegratorFunctions:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
-    def test_transfer_integrator(self, benchmark):
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_transfer_integrator(self, benchmark, mode):
         I = IntegratorMechanism(
             default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(slope=5.0))
-        val = benchmark(I.execute, [1.0 for i in range(VECTOR_SIZE)])
+        val = benchmark(I.execute, [1.0 for i in range(VECTOR_SIZE)], bin_execute=(mode=='LLVM'))
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.benchmark(group="IntegratorMechanism")
-    def test_transfer_integrator_llvm(self, benchmark):
-        I = IntegratorMechanism(
-            default_variable=[0 for i in range(VECTOR_SIZE)],
-            function=Linear(slope=5.0))
-        val = benchmark(I.execute, [1.0 for i in range(VECTOR_SIZE)], bin_execute=True)
-        assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
-
     def test_constant_integrator(self):
         I = IntegratorMechanism(
             function=ConstantIntegrator(
@@ -516,10 +509,11 @@ class TestIntegratorFunctions:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    def test_integrator_no_function(self):
+    @pytest.mark.parametrize('mode', ['Python', 'LLVM'])
+    def test_integrator_no_function(self, mode):
         I = IntegratorMechanism()
         # P = Process(pathway=[I])
-        val = float(I.execute(10))
+        val = float(I.execute(10, bin_execute=(mode=='LLVM')))
         assert val == 5
 
 class TestIntegratorInputs:
