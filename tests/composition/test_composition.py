@@ -7,7 +7,7 @@ import pytest
 
 from psyneulink.components.functions.function import Linear, SimpleIntegrator
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism, TRANSFER_OUTPUT
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
@@ -2793,6 +2793,78 @@ class TestCompositionInterface:
         assert np.allclose(D.variable, [[2.], [4.]])
 
         assert np.allclose(output2, [[40]])
+
+    def test_output_cim_one_terminal_mechanism_multiple_output_states(self):
+
+        comp = Composition()
+        A = TransferMechanism(name="composition-pytests-A",
+                              function=Linear(slope=1.0))
+        B = TransferMechanism(name="composition-pytests-B",
+                              function=Linear(slope=1.0))
+        C = TransferMechanism(name="composition-pytests-C",
+                              function=Linear(slope=2.0),
+                              output_states=[TRANSFER_OUTPUT.RESULT,
+                                             TRANSFER_OUTPUT.VARIANCE])
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_mechanism(C)
+
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(B, MappingProjection(sender=B, receiver=C), C)
+
+        comp._analyze_graph()
+        comp.run(inputs={A: [1.0]})
+
+        for CIM_output_state in comp.output_CIM_output_states:
+            # all CIM output state keys in the CIM --> Terminal mapping dict are on the actual output CIM
+            assert comp.output_CIM_output_states[CIM_output_state] in comp.output_CIM.output_states
+
+        # all Terminal Output states are in the CIM --> Terminal mapping dict
+        assert C.output_states[0] in comp.output_CIM_output_states.keys()
+        assert C.output_states[1] in comp.output_CIM_output_states.keys()
+
+        # May change to 2 in the future if we get rid of the original primary output state
+        assert len(comp.output_CIM.output_states) == 3
+
+    def test_output_cim_many_terminal_mechanisms(self):
+
+        comp = Composition()
+        A = TransferMechanism(name="composition-pytests-A",
+                              function=Linear(slope=1.0))
+        B = TransferMechanism(name="composition-pytests-B",
+                              function=Linear(slope=1.0))
+        C = TransferMechanism(name="composition-pytests-C",
+                              function=Linear(slope=2.0))
+        D = TransferMechanism(name="composition-pytests-D",
+                              function=Linear(slope=3.0))
+        E = TransferMechanism(name="composition-pytests-E",
+                              function=Linear(slope=4.0),
+                              output_states=[TRANSFER_OUTPUT.RESULT,
+                                             TRANSFER_OUTPUT.VARIANCE])
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_mechanism(C)
+        comp.add_mechanism(D)
+        comp.add_mechanism(E)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(B, MappingProjection(sender=B, receiver=C), C)
+        comp.add_projection(B, MappingProjection(sender=B, receiver=D), D)
+        comp.add_projection(B, MappingProjection(sender=B, receiver=E), E)
+        comp._analyze_graph()
+        comp.run(inputs={A: [1.0]})
+
+        for CIM_output_state in comp.output_CIM_output_states:
+            # all CIM output state keys in the CIM --> Terminal mapping dict are on the actual output CIM
+            assert comp.output_CIM_output_states[CIM_output_state] in comp.output_CIM.output_states
+
+        # all Terminal Output states are in the CIM --> Terminal mapping dict
+        assert C.output_state in comp.output_CIM_output_states.keys()
+        assert D.output_state in comp.output_CIM_output_states.keys()
+        assert E.output_states[0] in comp.output_CIM_output_states.keys()
+        assert E.output_states[1] in comp.output_CIM_output_states.keys()
+
+        # May change to 4 in the future if we get rid of the original primary output state
+        assert len(comp.output_CIM.output_states) == 5
 
 
 class TestInputStateSpecifications:

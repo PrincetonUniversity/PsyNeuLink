@@ -809,7 +809,6 @@ class Composition(object):
                                                          reference_value= input_state.variable,
                                                          name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
                     # self.input_CIM.add_states(interface_output_state)
-                    self.input_CIM.output_states.append(interface_output_state)
                     self.input_CIM_output_states[input_state] = interface_output_state
                     MappingProjection(sender=interface_output_state,
                                       receiver=input_state,
@@ -845,7 +844,6 @@ class Composition(object):
                                                          reference_value=output_state.variable,
                                                          name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
 
-                    self.output_CIM.output_states.append(interface_output_state)
                     self.output_CIM_output_states[output_state] = interface_output_state
                     # MappingProjection(sender=interface_output_state,
                     #                   receiver=output_state,
@@ -1259,10 +1257,10 @@ class Composition(object):
         terminal_mechanisms = self.get_mechanisms_by_role(MechanismRole.TERMINAL)
 
         for terminal_mechanism in terminal_mechanisms:
-            for terminal_output_state in terminal_mechanisms.output_states:
+            for terminal_output_state in terminal_mechanism.output_states:
                 CIM_output_state = self.output_CIM_output_states[terminal_output_state]
                 CIM_output_state.value = terminal_output_state.value
-                
+
         # return the output of the LAST mechanism executed in the composition
         return result
 
