@@ -851,7 +851,6 @@ class Composition(object):
                     #                   name="("+interface_output_state.name + ") to ("
                     #                        + output_state.owner.name + "-" + output_state.name+")")
 
-    # - - - - -
         previous_terminal_output_states = set(self.output_CIM_output_states.keys())
         for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
             self.output_CIM.output_states.remove(self.output_CIM_output_states[output_state])
@@ -912,10 +911,6 @@ class Composition(object):
         # clamp type of this list is NOT same as the one the user set for the whole composition; return empty list
         else:
             return []
-
-        # TODO: this is not stateful but necessary for current state of devel, 4/9/18;
-        #   most likely this should be overriden by whatever is done on composition branch
-        return self._execution_id
 
     def execute(
         self,
