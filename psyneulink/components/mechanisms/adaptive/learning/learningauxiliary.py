@@ -746,7 +746,8 @@ def _assign_error_signal_projections(processing_mech, system, objective_mech=Non
                 #                              name=ERROR_SIGNAL))
                 aff_lm.add_states(InputState(projections=eff_lm.output_states[ERROR_SIGNAL],
                                              name=ERROR_SIGNAL,
-                                             context=ContextFlags.METHOD))
+                                             context=ContextFlags.METHOD),
+                                  context=ContextFlags.METHOD)
 
         if not aff_lm.systems:
             aff_lm.systems[system] = LEARNING
