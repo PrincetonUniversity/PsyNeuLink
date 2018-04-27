@@ -1076,9 +1076,11 @@ class Composition(object):
         return result
 
     def get_param_struct_type(self):
-        param_type_list = [m.get_param_struct_type() for m in self.mechanisms]
-        param_type_list += [p.get_param_struct_type() for p in self.projections]
-        return ir.LiteralStructType(param_type_list)
+        mech_param_type_list = [m.get_param_struct_type() for m in self.mechanisms]
+        proj_param_type_list = [p.get_param_struct_type() for p in self.projections]
+        return ir.LiteralStructType([
+            ir.LiteralStructType(mech_param_type_list),
+            ir.LiteralStructType(proj_param_type_list)])
 
     def get_context_struct_type(self):
         mech_ctx_type_list = [m.get_context_struct_type() for m in self.mechanisms]
@@ -1091,6 +1093,12 @@ class Composition(object):
         output_type_list = [m.get_input_struct_type() for m in self.input_mechanisms.keys()]
         output_type_list.extend([m.get_output_struct_type() for m in self.mechanisms])
         return ir.LiteralStructType(output_type_list)
+
+
+    def get_param_initializer(self):
+        mech_params = [tuple(m.get_param_initializer()) for m in self.mechanisms]
+        proj_params = [tuple(p.get_param_initializer()) for p in self.projections]
+        return (tuple(mech_params), tuple(proj_params))
 
 
     def __get_bin_mechanism(self, mechanism):
@@ -1123,12 +1131,13 @@ class Composition(object):
                 return tuple([tupleize(y) for y in x])
             return tuple([x])
         self.__data_struct = c_data(tupleize(data))
+
         if reinit or self.__params_struct is None:
-            params = [m.get_param_initializer() for m in self.mechanisms]
-            params += [tuple(p.get_param_initializer()) for p in self.projections]
-            params = tuple(params)
             c_params = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())
-            self.__params_struct = c_params(*params) # FIXME: I have no idea why this needs *
+            params = self.get_param_initializer()
+            # FIXME: I have no idea why this needs *
+            self.__params_struct = c_params(*params)
+
         if reinit or self.__context_struct is None:
             self.__context_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_context_struct_type())()
 
@@ -1143,7 +1152,7 @@ class Composition(object):
             par = self.graph.get_parents_from_component(mech)
             assert len(par) == 1
             par_proj = par[0].component
-            proj_idx = len(self.mechanisms) + self.projections.index(par_proj)
+            proj_idx = self.projections.index(par_proj)
 
             # Get parent mechanism
             par = self.graph.get_parents_from_component(par_proj)
@@ -1173,9 +1182,9 @@ class Composition(object):
             vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
             vo = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vo_idx)])
 
+            # Run all incoming projections
             if not is_input_mechanism:
-                proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(proj_idx)])
-                proj_idx -= len(self.mechanisms)
+                proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
                 mech_vi = builder.alloca(mech.get_input_struct_type())
@@ -1187,7 +1196,7 @@ class Composition(object):
                 builder.call(proj_function, [proj_params, proj_context, proj_vi, proj_vo])
                 vi = mech_vi
 
-            params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             mech_function = ctx.get_llvm_function(mech.llvmSymbolName)
             builder.call(mech_function, [params, context, vi, vo])
