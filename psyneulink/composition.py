@@ -1129,7 +1129,7 @@ class Composition(object):
 
     def __bin_initialize(self, inputs, reinit=False):
         #FIXME this is an ugly hack to make us work with vectors
-        #FIXME converts instacned efault variable to arrays of floats
+        #FIXME converts instance default variable to arrays of floats
         data = [inputs[m] if m in inputs else m.instance_defaults.variable.tolist()[0] for m in self.input_mechanisms.keys()]
         c_data = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())
         def tupleize(x):
