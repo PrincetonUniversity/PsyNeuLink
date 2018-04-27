@@ -1193,7 +1193,7 @@ class Composition(object):
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
 
-                m_in = builder.alloca(mech.get_input_struct_type())
+                m_in = builder.alloca(m_function.args[2].type.pointee)
                 # This should use proper input state and projection index
                 # instead of 0,0
                 proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
