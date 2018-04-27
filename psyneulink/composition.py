@@ -1081,9 +1081,11 @@ class Composition(object):
         return ir.LiteralStructType(param_type_list)
 
     def get_context_struct_type(self):
-        ctx_type_list = [m.get_context_struct_type() for m in self.mechanisms]
-        ctx_type_list += [p.get_context_struct_type() for p in self.projections]
-        return ir.LiteralStructType(ctx_type_list)
+        mech_ctx_type_list = [m.get_context_struct_type() for m in self.mechanisms]
+        proj_ctx_type_list = [p.get_context_struct_type() for p in self.projections]
+        return ir.LiteralStructType([
+            ir.LiteralStructType(mech_ctx_type_list),
+            ir.LiteralStructType(proj_ctx_type_list)])
 
     def get_data_struct_type(self):
         output_type_list = [m.get_input_struct_type() for m in self.input_mechanisms.keys()]
@@ -1173,7 +1175,8 @@ class Composition(object):
 
             if not is_input_mechanism:
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(proj_idx)])
-                proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(proj_idx)])
+                proj_idx -= len(self.mechanisms)
+                proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
                 mech_vi = builder.alloca(mech.get_input_struct_type())
                 # This should use proper input state and projection index
@@ -1185,7 +1188,7 @@ class Composition(object):
                 vi = mech_vi
 
             params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             mech_function = ctx.get_llvm_function(mech.llvmSymbolName)
             builder.call(mech_function, [params, context, vi, vo])
             builder.ret_void()
