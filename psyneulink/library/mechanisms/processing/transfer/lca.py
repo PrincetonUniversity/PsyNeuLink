@@ -642,23 +642,23 @@ class LCA(RecurrentTransferMechanism):
             if not self.integrator_function:
 
                 self.integrator_function = LCAIntegrator(
-                                            variable,
-                                            initializer=initial_value,
-                                            noise=noise,
-                                            time_step_size=time_step_size,
-                                            rate=leak,
-                                            owner=self)
+                        variable,
+                        initializer=initial_value,
+                        noise=noise,
+                        time_step_size=time_step_size,
+                        rate=leak,
+                        owner=self)
 
-            current_input = self.integrator_function.execute(
-                variable,
-                # Should we handle runtime params?
-                runtime_params={
-                    INITIALIZER: initial_value,
-                    NOISE: noise,
-                    RATE: leak,
-                    TIME_STEP_SIZE: time_step_size
-                },
-                context=context
+            current_input = self.integrator_function._execute(
+                    variable,
+                    # Should we handle runtime params?
+                    runtime_params={
+                        INITIALIZER: initial_value,
+                        NOISE: noise,
+                        RATE: leak,
+                        TIME_STEP_SIZE: time_step_size
+                    },
+                    context=context
             )
         else:
         # elif time_scale is TimeScale.TRIAL:

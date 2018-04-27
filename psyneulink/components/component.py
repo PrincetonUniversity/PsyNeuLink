@@ -2824,20 +2824,30 @@ class Component(object):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context) # cxt-pass
 
-        # If function is for a Function that belongs to another Component, get that Component's execution_phase
+        # If Component has a Function (function_object), assign Component's execution_phase to its context
         try:
-            fct_context = self.function_object.context
-            curr_context = self.context.execution_phase
-        # Otherwise assume ContextFlags.PROCESSING
+            fct_context_attrib = self.function_object.context
+            # curr_context = self.context.execution_phase
+            curr_context = self.context.flags
         except AttributeError:
-            fct_context = self.context
-            curr_context = ContextFlags.PROCESSING
-        fct_context.execution_phase = curr_context
+            # Otherwise if Component *is* a Function, assign its owner's execution_phase to its context
+            try:
+                fct_context_attrib = self.context
+                # curr_context = self.owner.context.execution_phase
+                curr_context = self.owner.context.flags
+            except AttributeError:
+                # Otherwise assign ContextFlags.PROCESSING as its execution_phase context
+                fct_context_attrib = self.context
+                # curr_context = ContextFlags.PROCESSING
+                fct_context_attrib.execution_phase = ContextFlags.PROCESSING
+                curr_context = self.context.flags
+        # fct_context_attrib.execution_phase = curr_context
+        fct_context_attrib.flags = curr_context
         # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
         value = self.function(variable=variable, params=runtime_params, context=context, **kwargs)
-        fct_context.execution_phase = ContextFlags.IDLE
+        fct_context_attrib.execution_phase = ContextFlags.IDLE
 
         return value
 
