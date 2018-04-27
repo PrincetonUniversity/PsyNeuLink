@@ -1151,25 +1151,7 @@ class Composition(object):
             self.__context_struct = c_contexts(*contexts)
 
     def __gen_mech_wrapper(self, mech):
-        idx = self.mechanisms.index(mech)
-        #TODO should this use mechanism role?
-        is_input_mechanism = mech in self.input_mechanisms.keys()
-        if is_input_mechanism:
-            vi_idx = list(self.input_mechanisms.keys()).index(mech)
-        else:
-            # Get projection
-            par = self.graph.get_parents_from_component(mech)
-            assert len(par) == 1
-            par_proj = par[0].component
-            proj_idx = self.projections.index(par_proj)
 
-            # Get parent mechanism
-            par = self.graph.get_parents_from_component(par_proj)
-            assert len(par) == 1
-            par_mech = par[0].component
-            vi_idx = len(self.input_mechanisms) + self.mechanisms.index(par_mech)
-
-        vo_idx = idx + len(self.input_mechanisms)
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("comp_wrap_" + mech.name)
@@ -1188,27 +1170,45 @@ class Composition(object):
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
-            vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
-            vo = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vo_idx)])
+            m_function = ctx.get_llvm_function(mech.llvmSymbolName)
 
             # Run all incoming projections
-            if not is_input_mechanism:
+            #FIXME should this use mechanism role?
+            if not mech in self.input_mechanisms.keys():
+                # Get projection
+                par = self.graph.get_parents_from_component(mech)
+                assert len(par) == 1
+                par_proj = par[0].component
+                proj_idx = self.projections.index(par_proj)
+
+                # Get parent mechanism
+                par = self.graph.get_parents_from_component(par_proj)
+                assert len(par) == 1
+                par_mech = par[0].component
+
+                vi_idx = len(self.input_mechanisms) + self.mechanisms.index(par_mech)
+                vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
+
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
-                mech_vi = builder.alloca(mech.get_input_struct_type())
+                m_in = builder.alloca(mech.get_input_struct_type())
                 # This should use proper input state and projection index
                 # instead of 0,0
-                proj_vo = builder.gep(mech_vi, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+                proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
                 # This should use proper output state instead of 0
                 proj_vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.call(proj_function, [proj_params, proj_context, proj_vi, proj_vo])
-                vi = mech_vi
+            else:
+                vi_idx = list(self.input_mechanisms.keys()).index(mech)
+                m_in = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
 
-            params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            mech_function = ctx.get_llvm_function(mech.llvmSymbolName)
-            builder.call(mech_function, [params, context, vi, vo])
+            idx = self.mechanisms.index(mech)
+            vo_idx = idx + len(self.input_mechanisms)
+            m_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+            m_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+            m_out = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vo_idx)])
+            builder.call(m_function, [m_params, m_context, m_in, m_out])
             builder.ret_void()
 
         return func_name
