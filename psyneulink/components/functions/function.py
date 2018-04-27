@@ -1732,7 +1732,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if context is not None and INITIALIZING in context:  # cxt-test
+            # if context is not None and INITIALIZING in context:  # cxt-test
+            if self.context.initialization_status == ContextFlags.INITIALIZING:
                 with np.errstate(divide='raise'):
                     try:
                         variable = self._update_variable(variable ** exponents)
@@ -2161,7 +2162,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
             # if context is not None and INITIALIZING in context:  # cxt-test
-            if self.context.flags == ContextFlags.INITIALIZING:
+            if self.context.initialization_status == ContextFlags.INITIALIZING:
                 with np.errstate(divide='raise'):
                     try:
                         variable = self._update_variable(variable ** exponents)
@@ -2598,7 +2599,9 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         if exponents is not None:
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            if INITIALIZING in context and any(not any(i) and j < 0 for i, j in zip(variable, exponents)): # cxt-test
+            # if INITIALIZING in context and any(not any(i) and j < 0 for i, j in zip(variable, exponents)):# cxt-test-X
+            if (self.context.initialization_status == ContextFlags.INITIALIZING and
+                    any(not any(i) and j < 0 for i, j in zip(variable, exponents))):
                 means = np.ones_like(means)
             else:
                 means = means ** exponents
@@ -7635,7 +7638,8 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
         value = self.combine_utilities(short_term_utility, long_term_utility)
 
-        if not context or not INITIALIZING in context: # cxt-test
+        # if not context or not INITIALIZING in context: # cxt-test-X
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_short_term_utility = short_term_utility
             self.previous_long_term_utility = long_term_utility
 
@@ -8308,8 +8312,7 @@ class NormalDist(DistributionFunction):
                  standard_dev=1.0,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(mean=mean,
                                                   standard_dev=standard_dev,
@@ -8319,7 +8322,7 @@ class NormalDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -8436,8 +8439,7 @@ class UniformToNormalDist(DistributionFunction):
                  standard_dev=1.0,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(mean=mean,
                                                   standard_dev=standard_dev,
@@ -8447,7 +8449,7 @@ class UniformToNormalDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -8534,8 +8536,7 @@ class ExponentialDist(DistributionFunction):
                  beta=1.0,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(beta=beta,
                                                   params=params)
@@ -8544,7 +8545,7 @@ class ExponentialDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -8633,8 +8634,7 @@ class UniformDist(DistributionFunction):
                  high=1.0,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(low=low,
                                                   high=high,
@@ -8644,7 +8644,7 @@ class UniformDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -8735,8 +8735,7 @@ class GammaDist(DistributionFunction):
                  dist_shape=1.0,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(scale=scale,
                                                   dist_shape=dist_shape,
@@ -8746,7 +8745,7 @@ class GammaDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -8836,8 +8835,7 @@ class WaldDist(DistributionFunction):
                  mean=1.0,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(scale=scale,
                                                   mean=mean,
@@ -8847,7 +8845,7 @@ class WaldDist(DistributionFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -9008,8 +9006,7 @@ COMMENT
                  normalize:bool=False,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
                                                   metric=metric,
@@ -9021,7 +9018,7 @@ COMMENT
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -9373,7 +9370,8 @@ class Distance(ObjectiveFunction):
         # Cross-entropy of v1 and v2
         elif self.metric is CROSS_ENTROPY:
             # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
-            if context is None or INITIALIZING in context: # cxt-test
+            # if context is None or INITIALIZING in context: # cxt-test-X
+            if self.context.initialization_status != ContextFlags.INITIALIZING:
                 v1 = np.where(v1==0, EPSILON, v1)
                 v2 = np.where(v2==0, EPSILON, v2)
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
@@ -9883,7 +9881,8 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                                  format(self.name, self.error_signal))
 
         # Allow initialization with zero but not during a run (i.e., when called from check_args())
-        if not INITIALIZING in context: # cxt-test
+        # if not INITIALIZING in context: # cxt-test-X
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
             if np.count_nonzero(self.activation_output) != 1:
                 raise ComponentError("Second item ({}) of variable for {} must be an array with a single non-zero value "
                                      "(if output Mechanism being trained uses softmax,"
@@ -10315,7 +10314,8 @@ class BackPropagation(LearningFunction):
         # Manage error_matrix param
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
         #     so need "placemarker" error_matrix for validation
-        if INITIALIZING in context and error_matrix is None: # cxt-test
+        # if INITIALIZING in context and error_matrix is None: # cxt-test-X
+        if self.context.initialization_status == ContextFlags.INITIALIZING and error_matrix is None:
             self.error_matrix = np.zeros((len(variable[LEARNING_ACTIVATION_OUTPUT]),
                                           len(variable[LEARNING_ERROR_OUTPUT])))
         # If error_matrix is specified, assign to self.error_matrix attribute for validation
