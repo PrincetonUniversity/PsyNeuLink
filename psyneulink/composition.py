@@ -1095,6 +1095,12 @@ class Composition(object):
         return ir.LiteralStructType(output_type_list)
 
 
+    def get_context_initializer(self):
+        mech_contexts = [tuple(m.get_context_initializer()) for m in self.mechanisms]
+        proj_contexts = [tuple(p.get_context_initializer()) for p in self.projections]
+        return (tuple(mech_contexts), tuple(proj_contexts))
+
+
     def get_param_initializer(self):
         mech_params = [tuple(m.get_param_initializer()) for m in self.mechanisms]
         proj_params = [tuple(p.get_param_initializer()) for p in self.projections]
@@ -1139,7 +1145,10 @@ class Composition(object):
             self.__params_struct = c_params(*params)
 
         if reinit or self.__context_struct is None:
-            self.__context_struct = pnlvm._convert_llvm_ir_to_ctype(self.get_context_struct_type())()
+            c_contexts = pnlvm._convert_llvm_ir_to_ctype(self.get_context_struct_type())
+            contexts = self.get_context_initializer()
+            # FIXME: I have no idea why this needs *
+            self.__context_struct = c_contexts(*contexts)
 
     def __gen_mech_wrapper(self, mech):
         idx = self.mechanisms.index(mech)
