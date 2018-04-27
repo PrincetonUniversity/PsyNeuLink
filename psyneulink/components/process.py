@@ -858,7 +858,7 @@ class Process(Process_Base):
 
         if not context: # cxt-test
             # context = self.__class__.__name__
-            context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT # cxt-done
+            # context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT # cxt-done
             self.context.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
@@ -869,8 +869,7 @@ class Process(Process_Base):
                                       size=size,
                                       param_defaults=params,
                                       name=self.name,
-                                      prefs=prefs,
-                                      context=context)
+                                      prefs=prefs)
 
     def _parse_arg_variable(self, variable):
         if variable is None:

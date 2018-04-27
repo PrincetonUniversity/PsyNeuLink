@@ -841,8 +841,7 @@ class Component(object):
                  param_defaults,
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
                  name=None,
-                 prefs=None,
-                 context=None):
+                 prefs=None):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
 
         Initialization arguments:

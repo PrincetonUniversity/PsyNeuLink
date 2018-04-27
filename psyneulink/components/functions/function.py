@@ -660,8 +660,7 @@ class Function_Base(Function):
         super().__init__(default_variable=default_variable,
                          param_defaults=params,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
 
     def _parse_arg_generic(self, arg_val):
         if isinstance(arg_val, list):

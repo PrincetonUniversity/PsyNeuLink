@@ -150,6 +150,7 @@ from psyneulink.components.states.state import ADD_STATES
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
     BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, \
     IDENTITY_MATRIX, INPUT_STATES, LEARNING, LEARNING_MECHANISM, \
@@ -218,7 +219,8 @@ def _instantiate_learning_components(learning_projection, context=None):
     #                               APPROPRIATE ObjectiveMechanism, etc.
     from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
-    if not learning_projection.name in context: # cxt-test
+    # if not learning_projection.name in context: # cxt-test-X
+    if context != ContextFlags.METHOD:
         raise LearningAuxiliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "
                                                              "calls from a LearningProjection._instantiate_sender()"))
 
@@ -479,8 +481,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                               # error_output,
                                                               error_signal],
                                             activation_derivative_fct=activation_derivative,
-                                            learning_rate=learning_rate,
-                                            context=context)
+                                            learning_rate=learning_rate)
 
     else:
         raise LearningAuxiliaryError("PROGRAM ERROR: unrecognized learning "
@@ -523,8 +524,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                                          # WEIGHT:1
             #                                                          }],
             #                                           name="{} {}".format(lc.activation_mech.name,
-            #                                                               COMPARATOR_MECHANISM),
-            #                                           context=context)
+            #                                                               COMPARATOR_MECHANISM))
             # MODIFIED 10/10/17 NEW:
             if learning_function.componentName == TDLEARNING_FUNCTION:
                 objective_mechanism = PredictionErrorMechanism(
@@ -535,8 +535,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                 VARIABLE: target_input},
                         function=PredictionErrorDeltaFunction(gamma=1.0),
                         name="{} {}".format(lc.activation_mech.name,
-                                            PREDICTION_ERROR_MECHANISM),
-                        context=context)
+                                            PREDICTION_ERROR_MECHANISM))
             else:
                 objective_mechanism = ComparatorMechanism(sample={NAME: SAMPLE,
                                                                   VARIABLE: sample_input,
@@ -560,8 +559,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                                         {NAME:MSE,
             #                                                          ASSIGN:lambda x: np.sum(x*x)/len(x)}],
             #                                          name="\'{}\' {}".format(lc.activation_mech.name,
-            #                                                                  COMPARATOR_MECHANISM),
-            #                                          context=context)
+            #                                                                  COMPARATOR_MECHANISM))
 
             objective_mechanism._role = LEARNING
             objective_mechanism._learning_role = TARGET
@@ -747,7 +745,8 @@ def _assign_error_signal_projections(processing_mech, system, objective_mech=Non
                 #                              projections=eff_lm.output_states[ERROR_SIGNAL],
                 #                              name=ERROR_SIGNAL))
                 aff_lm.add_states(InputState(projections=eff_lm.output_states[ERROR_SIGNAL],
-                                             name=ERROR_SIGNAL))
+                                             name=ERROR_SIGNAL,
+                                             context=ContextFlags.METHOD))
 
         if not aff_lm.systems:
             aff_lm.systems[system] = LEARNING

@@ -861,7 +861,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                             variable=defaultControlAllocation,
                                             reference_value=ControlSignal.ClassDefaults.allocation,
                                             modulation=self.modulation,
-                                            state_spec=control_signal)
+                                            state_spec=control_signal,
+                                            context=context)
         control_signal.owner = self
 
         # Update control_signal_costs to accommodate instantiated Projection

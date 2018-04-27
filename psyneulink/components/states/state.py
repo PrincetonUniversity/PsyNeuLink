@@ -1133,7 +1133,8 @@ class State_Base(State):
                                          param_defaults=params,
                                          name=name,
                                          prefs=prefs,
-                                         context=context.__class__.__name__) # cxt-done cxt-pass
+                                         # context=context.__class__.__name__) # cxt-done cxt-pass
+        )
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]

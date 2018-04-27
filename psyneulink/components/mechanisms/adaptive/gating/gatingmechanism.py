@@ -492,7 +492,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                            owner=self,
                                            reference_value=defaultGatingPolicy,
                                            modulation=self.modulation,
-                                           state_spec=gating_signal)
+                                           state_spec=gating_signal,
+                                           context=context)
 
         # Validate index
         try:

@@ -1391,8 +1391,7 @@ class Mechanism_Base(Mechanism):
                                              size=size,
                                              param_defaults=params,
                                              prefs=prefs,
-                                             name=name,
-                                             context=context)
+                                             name=name)
 
         # FUNCTIONS:
 
@@ -2782,7 +2781,7 @@ class Mechanism_Base(Mechanism):
         if context is None:
             # context = ADD_STATES # cxt-set
             # context = Context(source=ContextFlags.METHOD, string=ADD_STATES)
-            context = ContextFlags.METHOD
+            context = ContextFlags.COMMAND_LINE
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):

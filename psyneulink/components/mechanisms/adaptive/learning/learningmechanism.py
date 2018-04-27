@@ -1106,7 +1106,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                  reference_value=self.learning_signal,
                                                  modulation=self.modulation,
                                                  # state_spec=self.learning_signal)
-                                                 state_spec=learning_signal)
+                                                 state_spec=learning_signal,
+                                                 context=context)
             # Add LearningSignal to output_states list
             self._output_states.append(learning_signal)
 
@@ -1132,7 +1133,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if context is None:
             # context.source = ContextFlags.METHOD
             # context.string = ADD_STATES
-            context = ContextFlags.METHOD
+            context = ContextFlags.COMMAND_LINE
 
         states = super().add_states(states=states, context=context)
         for input_state in states[INPUT_STATES]:

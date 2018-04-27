@@ -2601,7 +2601,8 @@ class System(System_Base):
             self.context.execution_phase = ContextFlags.LEARNING
             self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
-            self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' '))
+            # self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' ')) # cxt-set-X
+            self._execute_learning(context)
 
             self.context.execution_phase = ContextFlags.IDLE
             self.context.string = self.context.string.replace(LEARNING, EXECUTING)
@@ -2760,7 +2761,8 @@ class System(System_Base):
                 component.context.string = context_str
 
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                component.execute(runtime_params=params, context=context_str)
+                # component.execute(runtime_params=params, context=context_str) # cxt-test-X
+                component.execute(runtime_params=params, context=context)
                 # # TEST PRINT:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 

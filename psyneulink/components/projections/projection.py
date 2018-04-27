@@ -716,8 +716,7 @@ class Projection_Base(Projection):
         super(Projection_Base, self).__init__(default_variable=variable,
                                               param_defaults=params,
                                               name=self.name,
-                                              prefs=prefs,
-                                              context=context.__class__.__name__)
+                                              prefs=prefs)
 
         self._assign_default_projection_name()
 
@@ -2017,11 +2016,11 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                                       format(projection_spec.name, sender.name))
 
     output_state = _instantiate_state(owner=sender,
-                                     state_type=OutputState,
-                                     name=output_state,
-                                     reference_value=projection_spec.value,
-                                     reference_value_name='Projection_spec value for new InputState',
-context=context)
+                                      state_type=OutputState,
+                                      name=output_state,
+                                      reference_value=projection_spec.value,
+                                      reference_value_name='Projection_spec value for new InputState',
+                                      context=context)
     #  Update output_state and output_states
     try:
         sender.output_states[output_state.name] = output_state

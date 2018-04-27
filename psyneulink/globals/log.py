@@ -778,18 +778,20 @@ class Log:
         else:
 
             if isinstance(context, ContextFlags):
-                context_flags = context
-                context = ContextFlags._get_context_string(context) # cxt-done
-                if not time:
+                if context == ContextFlags.COMMAND_LINE:
+                    pass
+                elif not time:
                     raise LogError("Use of ContextFlags ({}) by {} to specify context requires specification of time".
                                    format(context, self.owner.name ))
+                context_flags = context
+                # context = ContextFlags._get_context_string(context) # cxt-done
 
             elif context is COMMAND_LINE:
                 context_flags = ContextFlags.COMMAND_LINE
 
             elif self.owner.context.flags:
                 context_flags = self.owner.context.flags # cxt-done
-                context = ContextFlags._get_context_string(context_flags) # cxt-done
+                # context = ContextFlags._get_context_string(context_flags) # cxt-done
 
             # Get context
             else:

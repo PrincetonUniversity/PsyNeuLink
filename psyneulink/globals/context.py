@@ -81,6 +81,8 @@ COMMENT:
             * all lower sub-subclasses call super without context arg
             * the constructor for all _Base classes checks that context==ContextFlags.CONSTRUCTOR
               and assign self.context.source = context
+            * the constructor for all _Base classes do NOT pass a context arg to super (i.e., shellclasses or Component)
+              since Component.__init__() assigns context arg as CONSTRUCTOR for all of its calls
 COMMENT
 
 .. _Context_Class_Reference:
