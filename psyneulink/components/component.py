@@ -790,7 +790,7 @@ class Component(object):
         def _values(self):
             return {
                 k: getattr(self, k) for k in dir(self) + dir(type(self))
-                if (k[:1] != '_' and not callable(getattr(self, k)))
+                if (k[:1] != '_' and not isinstance(getattr(self, k), (types.MethodType, types.BuiltinMethodType)))
             }
 
         def _show(self):
