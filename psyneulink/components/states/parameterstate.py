@@ -62,7 +62,7 @@ COMMENT:
                     suppressed if a *PARAMETER_STATES* entry is included and set to `NotImplemented` in the
                     paramClassDefaults dictionary of its class definition;  the instantiation of a ParameterState
                     for an individual parameter in user_params can be suppressed by including it in
-                    ClassDefaults.exclude_from_parameter_states for the class (or one of its parent classes)
+                    exclude_from_parameter_states for the class (or one of its parent classes)
                     (see LearningProjection and EVCControlMechanism for examples, and `note
                     <ParameterStates_Suppression>` below for additional information about how
                     to suppress creation of a ParameterState for individual parameters.  This should be done
@@ -892,7 +892,7 @@ def _instantiate_parameter_states(owner, function=None, context=None):
     #                       and that, in turn, will overwrite their current values with the defaults from paramsCurrent)
     for param_name, param_value in owner.user_params_for_instantiation.items():
         # Skip any parameter that has been specifically excluded
-        if param_name in owner.ClassDefaults.exclude_from_parameter_states:
+        if param_name in owner.exclude_from_parameter_states:
             continue
         _instantiate_parameter_state(owner, param_name, param_value, context=context, function=function)
 
