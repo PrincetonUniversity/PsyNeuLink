@@ -310,10 +310,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller.EVC_policies = []
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        context = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION)) # cxt-done cxt-pass
+        # context = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION)) # cxt-done cxt-pass
         # FIX 3/30/18 - IS controller CORRECT FOR THIS, OR SHOULD IT BE System (controller.system)??
         controller.context.execution_phase = ContextFlags.SIMULATION
-        controller.context.string = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION))
+        controller.context.string = "{0} EXECUTING {1} of {2}".format(controller.name,
+                                                                      EVC_SIMULATION,
+                                                                      controller.system.name)
         # Print progress bar
         if controller.prefs.reportOutputPref:
             progress_bar_rate_str = ""

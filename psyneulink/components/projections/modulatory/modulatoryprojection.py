@@ -84,7 +84,7 @@ Class Reference
 import inspect
 
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import EXECUTING, INITIALIZING, MODULATORY_PROJECTION, NAME, kwAssign
+from psyneulink.globals.keywords import EXECUTING, INITIALIZING, MODULATORY_PROJECTION, NAME, kwAssign, INITIALIZATION_STATUS
 from psyneulink.globals.log import LogEntry, ContextFlags
 
 
@@ -240,4 +240,5 @@ class ModulatoryProjection_Base(Projection_Base):
 
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
-                                            format(self, ContextFlags._get_context_string(self.context.initialization_status)))
+                                            format(self, ContextFlags._get_context_string(self.context.flags,
+                                                                                          INITIALIZATION_STATUS)))

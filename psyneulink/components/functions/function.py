@@ -2160,7 +2160,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             # Allow during initialization because 0s are common in default_variable argument
-            if context is not None and INITIALIZING in context:  # cxt-test
+            # if context is not None and INITIALIZING in context:  # cxt-test
+            if self.context.flags == ContextFlags.INITIALIZING:
                 with np.errstate(divide='raise'):
                     try:
                         variable = self._update_variable(variable ** exponents)
@@ -5195,7 +5196,8 @@ class LCAIntegrator(
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context: # cxt-test
+        # if not context or not INITIALIZING in context: # cxt-test-X
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
 
         return adjusted_value
@@ -5400,7 +5402,8 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context: # cxt-test
+        # if not context or not INITIALIZING in context: # cxt-test-X
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
 
         return adjusted_value
@@ -5921,7 +5924,8 @@ class DriftDiffusionIntegrator(
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context: # cxt-test
+        # if not context or not INITIALIZING in context: # cxt-test-X
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
             self.previous_time += time_step_size
 
@@ -6175,7 +6179,8 @@ class OrnsteinUhlenbeckIntegrator(
         #    (don't want to count it as an execution step)
         adjusted_value = value + offset
 
-        if not context or not INITIALIZING in context: # cxt-test
+        # if not context or not INITIALIZING in context: # cxt-test-X
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
             self.previous_time += time_step_size
 

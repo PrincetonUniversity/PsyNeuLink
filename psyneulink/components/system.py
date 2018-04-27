@@ -858,8 +858,8 @@ class System(System_Base):
                           registry=SystemRegistry,
                           context=context)
 
-        if not context: # cxt-test
-            context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT # cxt-done
+        if not context: # cxt-test-X
+            context = ContextFlags.COMPOSITION
             self.context.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
         super().__init__(default_variable=default_variable,
@@ -2501,7 +2501,8 @@ class System(System_Base):
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
         if not context: # cxt-test
-            context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-done
+            # context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-done
+            context = ContextFlags.COMPOSITION
             self.context.execution_phase = ContextFlags.PROCESSING
             self.context.string = EXECUTING + " " + SYSTEM + " " + self.name
 
@@ -3228,7 +3229,8 @@ class System(System_Base):
 
     @controller.setter
     def controller(self, control_mech_spec):
-        self._instantiate_controller(control_mech_spec, context='System.controller setter')
+        # self._instantiate_controller(control_mech_spec, context='System.controller setter') cxt-set
+        self._instantiate_controller(control_mech_spec, context=ContextFlags.PROPERTY)
 
     @property
     def control_signals(self):

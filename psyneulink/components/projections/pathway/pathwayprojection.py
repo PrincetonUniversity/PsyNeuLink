@@ -46,7 +46,7 @@ Execution
 """
 
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, SENDER, RECEIVER, CONTEXT
+from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, SENDER, RECEIVER, CONTEXT, INITIALIZATION_STATUS
 from psyneulink.globals.context import ContextFlags
 
 __all__ = []
@@ -124,4 +124,4 @@ class PathwayProjection_Base(Projection_Base):
             raise PathwayProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
                                             format(self,
                                                    ContextFlags._get_context_string(
-                                                           self.context.initialization_status)))
+                                                           self.context.flags, INITIALIZATION_STATUS)))

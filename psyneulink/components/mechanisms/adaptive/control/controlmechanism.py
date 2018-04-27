@@ -1080,7 +1080,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
         self._objective_mechanism.controller = True
 
-        if context != 'System.controller setter': # cxt-test
+        # if context != 'System.controller setter': # cxt-test-X
+        if context != ContextFlags.PROPERTY:
             system._controller = self
 
     @property

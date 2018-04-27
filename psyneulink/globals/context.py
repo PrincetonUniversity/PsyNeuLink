@@ -98,7 +98,8 @@ import typecheck as tc
 import warnings
 
 
-from psyneulink.globals.keywords import FLAGS, INITIALIZING, VALIDATE, EXECUTING, CONTROL, LEARNING
+from psyneulink.globals.keywords import \
+    CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, SOURCE, LEARNING, VALIDATE
 # from psyneulink.composition import Composition
 
 
@@ -175,40 +176,62 @@ class ContextFlags(IntEnum):
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK
 
     @classmethod
-    def _get_context_string(cls, condition, string=None):
-        """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
+    @tc.typecheck
+    def _get_context_string(cls, condition_flags,
+                            fields:tc.any(tc.enum(INITIALIZATION_STATUS,
+                                                  EXECUTION_PHASE,
+                                                  SOURCE), set, list)={INITIALIZATION_STATUS,
+                                                                       EXECUTION_PHASE,
+                                                                       SOURCE},
+                            string:tc.optional(str)=None):
+        """Return string with the names of flags that are set in **condition_flags**
+
+        If **fields** is specified, then only the names of the flag(s) in the specified field(s) are returned.
+        The fields argument must be the name of a field (*INITIALIZATION_STATUS*, *EXECUTION_PHASE*, or *SOURCE*)
+        or a set or list of them.
+
+        If **string** is specified, the string returned is prepended by **string**.
+        """
+
         if string:
             string += ": "
         else:
             string = ""
+
+        if isinstance(fields, str):
+            fields = {fields}
+
         flagged_items = []
         # If OFF or ALL_FLAGS, just return that
-        if condition == ContextFlags.ALL_FLAGS:
+        if condition_flags == ContextFlags.ALL_FLAGS:
             return ContextFlags.ALL_FLAGS.name
-        if condition == ContextFlags.UNSET:
+        if condition_flags == ContextFlags.UNSET:
             return ContextFlags.UNSET.name
         # Otherwise, append each flag's name to the string
         # for c in (INITIALIZATION_STATUS_FLAGS | EXECUTION_PHASE_FLAGS | SOURCE_FLAGS):
-        #     if c & condition:
+        #     if c & condition_flags:
         #        flagged_items.append(c.name)
-        for c in INITIALIZATION_STATUS_FLAGS:
-            if not condition & ContextFlags.INITIALIZATION_MASK:
-                flagged_items.append(ContextFlags.UNINITIALIZED.name)
-                break
-            if c & condition:
-               flagged_items.append(c.name)
-        for c in EXECUTION_PHASE_FLAGS:
-            if not condition & ContextFlags.EXECUTION_PHASE_MASK:
-                flagged_items.append(ContextFlags.IDLE.name)
-                break
-            if c & condition:
-               flagged_items.append(c.name)
-        for c in SOURCE_FLAGS:
-            if not condition & ContextFlags.SOURCE_MASK:
-                flagged_items.append(ContextFlags.NONE.name)
-                break
-            if c & condition:
-               flagged_items.append(c.name)
+        if INITIALIZATION_STATUS in fields:
+            for c in INITIALIZATION_STATUS_FLAGS:
+                if not condition_flags & ContextFlags.INITIALIZATION_MASK:
+                    flagged_items.append(ContextFlags.UNINITIALIZED.name)
+                    break
+                if c & condition_flags:
+                   flagged_items.append(c.name)
+        if EXECUTION_PHASE in fields:
+            for c in EXECUTION_PHASE_FLAGS:
+                if not condition_flags & ContextFlags.EXECUTION_PHASE_MASK:
+                    flagged_items.append(ContextFlags.IDLE.name)
+                    break
+                if c & condition_flags:
+                   flagged_items.append(c.name)
+        if SOURCE in fields:
+            for c in SOURCE_FLAGS:
+                if not condition_flags & ContextFlags.SOURCE_MASK:
+                    flagged_items.append(ContextFlags.NONE.name)
+                    break
+                if c & condition_flags:
+                   flagged_items.append(c.name)
         string += ", ".join(flagged_items)
         return string
 
@@ -352,17 +375,17 @@ class Context():
                     not (flags & ContextFlags.INITIALIZATION_MASK & initialization_status)):
                 raise ContextError("Conflict in assignment to flags ({}) and status ({}) arguments of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.INITIALIZATION_MASK),
-                                          ContextFlags._get_context_string(initialization_status),
+                                          ContextFlags._get_context_string(flags, INITIALIZATION_STATUS),
                                           self.owner.name))
             if (execution_phase and not (flags & ContextFlags.EXECUTION_PHASE_MASK & execution_phase)):
                 raise ContextError("Conflict in assignment to flags ({}) and execution_phase ({}) arguments "
                                    "of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.EXECUTION_PHASE_MASK),
-                                          ContextFlags._get_context_string(execution_phase), self.owner.name))
+                                          ContextFlags._get_context_string(flags, EXECUTION_PHASE), self.owner.name))
             if (source != ContextFlags.COMPONENT) and not (flags & ContextFlags.SOURCE_MASK & source):
                 raise ContextError("Conflict in assignment to flags ({}) and source ({}) arguments of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.SOURCE_MASK),
-                                          ContextFlags._get_context_string(source),
+                                          ContextFlags._get_context_string(flags, SOURCE),
                                           self.owner.name))
         self.execution_id = execution_id
         self.execution_time = None
@@ -487,7 +510,7 @@ class Context():
         """String with names of flags currently set in the owner's `flags <Context.flags>` attribute,
         possibly prepended by an additional string.
         """
-        return ContextFlags._get_context_string(self.owner.context.flags, string)
+        return ContextFlags._get_context_string(self.owner.context.flags, string=string)
 
 @tc.typecheck
 def _get_context(context:tc.any(ContextFlags, str)):
