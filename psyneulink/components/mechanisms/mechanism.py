@@ -2232,7 +2232,7 @@ class Mechanism_Base(Mechanism):
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
             if context & ContextFlags.COMMAND_LINE: # cxt-test
-                context = EXECUTING + ' ' + append_type_to_name(self) # cxt-done
+                # context = EXECUTING + ' ' + append_type_to_name(self) # cxt-done
                 self.context.execution_phase = ContextFlags.PROCESSING
                 self.context.string = EXECUTING + ' ' + append_type_to_name(self)
             if input is None:
