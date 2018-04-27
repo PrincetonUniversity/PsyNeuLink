@@ -101,6 +101,15 @@ its OutputStates) and its `function <Mechanism_Base.function>` (for example, see
 regarding InputStates). Parameter States **cannot** on their own; they are always and only created when the Component
 to which a parameter belongs is created.
 
+COMMENT:
+    IMPLEMENTATION NOTE:
+    If the constructor for a State is called programmatically other than on the command line (e.g., within a method)
+    the **context** argument must be specified (by convention, as ContextFlags.METHOD); otherwise, it is assumed that
+    it is being created on the command line.  This is taken care of when it is created automatically (e.g., as part
+    of the construction of a Mechanism or Projection) by the _instantiate_state method that specifies a context
+    when it calls the relevant State constructor methods.
+COMMENT
+
 .. _State_Specification:
 
 Specifying a State

@@ -2116,7 +2116,9 @@ class Process(Process_Base):
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
         if not context: # cxt-test
-            context = EXECUTING + " " + PROCESS + " " + self.name # cxt-done
+            # context = EXECUTING + " " + PROCESS + " " + self.name # cxt-set-X
+            context = ContextFlags.COMPOSITION
+            self.context.source = context
             self.context.execution_phase = ContextFlags.PROCESSING
             self.context.string = EXECUTING + " " + PROCESS + " " + self.name
         from psyneulink.globals.environment import _get_unique_id
@@ -2248,7 +2250,7 @@ class Process(Process_Base):
                     #    as the ParameterStates are assigned their owner's context in their update methods
                     # Note: do this rather just calling LearningSignals directly
                     #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                    context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
+                    # context = context.replace(EXECUTING, LEARNING + ' ') # cxt-set-X
                     projection.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
                     projection.context.execution_phase = ContextFlags.LEARNING
 
