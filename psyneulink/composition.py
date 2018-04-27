@@ -1090,9 +1090,11 @@ class Composition(object):
             ir.LiteralStructType(proj_ctx_type_list)])
 
     def get_data_struct_type(self):
-        output_type_list = [m.get_input_struct_type() for m in self.input_mechanisms.keys()]
-        output_type_list.extend([m.get_output_struct_type() for m in self.mechanisms])
-        return ir.LiteralStructType(output_type_list)
+        input_type_list  = [m.get_input_struct_type() for m in self.input_mechanisms.keys()]
+        output_type_list = [m.get_output_struct_type() for m in self.mechanisms]
+        return ir.LiteralStructType([
+            ir.LiteralStructType(input_type_list),
+            ir.LiteralStructType(output_type_list)])
 
 
     def get_context_initializer(self):
@@ -1136,7 +1138,7 @@ class Composition(object):
             if hasattr(x, "__len__"):
                 return tuple([tupleize(y) for y in x])
             return tuple([x])
-        self.__data_struct = c_data(tupleize(data))
+        self.__data_struct = c_data(tupleize([data]))
 
         if reinit or self.__params_struct is None:
             c_params = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())
@@ -1186,28 +1188,29 @@ class Composition(object):
                 assert len(par) == 1
                 par_mech = par[0].component
 
-                vi_idx = len(self.input_mechanisms) + self.mechanisms.index(par_mech)
-                vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
 
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
+
                 m_in = builder.alloca(mech.get_input_struct_type())
                 # This should use proper input state and projection index
                 # instead of 0,0
                 proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+
+                vi_idx = self.mechanisms.index(par_mech)
+                proj_vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(vi_idx)])
                 # This should use proper output state instead of 0
-                proj_vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                proj_vi = builder.gep(proj_vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.call(proj_function, [proj_params, proj_context, proj_vi, proj_vo])
             else:
                 vi_idx = list(self.input_mechanisms.keys()).index(mech)
-                m_in = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
+                m_in = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
 
             idx = self.mechanisms.index(mech)
-            vo_idx = idx + len(self.input_mechanisms)
             m_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             m_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            m_out = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(vo_idx)])
+            m_out = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
             builder.call(m_function, [m_params, m_context, m_in, m_out])
             builder.ret_void()
 
@@ -1217,7 +1220,6 @@ class Composition(object):
     def __gen_mech_result_extract(self, mech):
         idx = self.mechanisms.index(mech)
 
-        res_idx = idx + len(self.input_mechanisms)
         func_name = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("comp_result_wrap_" + mech.name)
@@ -1235,7 +1237,7 @@ class Composition(object):
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
-            res = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(res_idx)])
+            res = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
             data = builder.load(res)
             builder.store(data, vo)
 
