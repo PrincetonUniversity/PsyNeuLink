@@ -493,6 +493,7 @@ import typecheck as tc
 from psyneulink.components.component import function_type
 from psyneulink.components.process import ProcessInputState
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import EVC_SIMULATION, INPUT_LABELS_DICT, MECHANISM, \
     OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET, TARGET_LABELS_DICT
 from psyneulink.globals.log import LogCondition
@@ -528,7 +529,7 @@ def run(object,
         call_after_time_step:tc.optional(callable)=None,
         termination_processing=None,
         termination_learning=None,
-        context=None):
+        context=ContextFlags.COMMAND_LINE): # cxt-set
     """run(                      \
     inputs,                      \
     num_trials=None,             \
@@ -617,7 +618,6 @@ def run(object,
         list of the values, for each `TRIAL`, of the OutputStates for a Mechanism run directly,
         or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
-
     from psyneulink.globals.context import ContextFlags
 
     # small version of 'sequence' format in the once case where it was still working (single origin mechanism)
@@ -703,7 +703,7 @@ def run(object,
                     projection.function_object.learning_rate = object.learning_rate
 
     # Class-specific validation:
-    context = context or RUN + "validating " + object.name # cxt-done ? cxt-pass
+    # context = context or RUN + "validating " + object.name # cxt-set
     if not object.context.flags:
         object.context.initialization_status = ContextFlags.VALIDATING
         object.context.string = RUN + "validating " + object.name
@@ -755,8 +755,8 @@ def run(object,
                         object.target = execution_targets
                         object.current_targets = execution_targets
 
-
-            if RUN in context and not object.context.execution_phase == ContextFlags.SIMULATION: # cxt-test
+            # if RUN in context and not object.context.execution_phase == ContextFlags.SIMULATION: # cxt-test-X
+            if context == ContextFlags.COMMAND_LINE and not object.context.execution_phase == ContextFlags.SIMULATION:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
                 object.context.execution_phase = ContextFlags.PROCESSING

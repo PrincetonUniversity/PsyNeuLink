@@ -717,7 +717,8 @@ class InputState(State_Base):
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
-            context = self # cxt-done
+            # context = self # cxt-done
+            context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
         if variable is None and size is None and projections is not None:
@@ -1196,7 +1197,9 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
     # IMPLEMENTATION NOTE: USE OF CONTEXT STRING
-    if context and 'ADD_STATES' in context: # cxt-test
+    # if context and 'ADD_STATES' in context: # cxt-test-X
+    # if context.source == ContextFlags.METHOD and context.string == ADD_STATES:
+    if context == ContextFlags.METHOD:
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list

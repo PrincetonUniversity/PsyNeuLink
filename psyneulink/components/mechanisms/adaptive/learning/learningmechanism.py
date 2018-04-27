@@ -1126,8 +1126,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #    since it is used by the execute method
         self._error_signal_input_states = self.error_signal_input_states
 
-    def add_states(self, states, context=ADD_STATES):
+    def add_states(self, states, context=None):
         """Add error_source and error_matrix for each InputState added"""
+
+        if context is None:
+            # context.source = ContextFlags.METHOD
+            # context.string = ADD_STATES
+            context = ContextFlags.METHOD
 
         states = super().add_states(states=states, context=context)
         for input_state in states[INPUT_STATES]:

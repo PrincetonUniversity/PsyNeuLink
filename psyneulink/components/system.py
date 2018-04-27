@@ -2657,8 +2657,10 @@ class System(System_Base):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]" #
-                mechanism.context.string = context # cxt-push ? (note:  currently also assigned in Mechanism.execute())
+                # context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]" # cxt-set
+                context = ContextFlags.COMPOSITION
+                # mechanism.context.string = context # cxt-push ? (note: currently also assigned in Mechanism.execute())
+                mechanism.context.string = "Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
                 mechanism.context.composition = self
 
                 mechanism.context.execution_phase = ContextFlags.PROCESSING
@@ -2911,7 +2913,8 @@ class System(System_Base):
                    call_after_time_step=call_after_time_step,
                    termination_processing=termination_processing,
                    termination_learning=termination_learning,
-                   context=context) # cxt-pass
+                   # context=context) # cxt-pass
+                   context=ContextFlags.COMPOSITION) # cxt-pass
 
     def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of Processes in System being executed

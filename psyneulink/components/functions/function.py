@@ -629,7 +629,7 @@ class Function_Base(Function):
                  owner=None,
                  name=None,
                  prefs=None,
-                 context='Function_Base Init'):
+                 context=None):
         """Assign category-level preferences, register category, and call super.__init__
 
         Initialization arguments:
@@ -643,6 +643,9 @@ class Function_Base(Function):
         :param name: (string) - optional, overrides assignment of default (componentName of subclass)
         :return:
         """
+
+        if context != ContextFlags.CONSTRUCTOR:
+            raise FunctionError("Direct call to abstract class Function() is not allowed; use a Function subclass")
 
         self._functionOutputType = None
         # self.name = self.componentName
@@ -843,8 +846,7 @@ class ArgumentTherapy(Function_Base):
                  pertincacity=Manner.CONTRARIAN,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(propensity=propensity,
@@ -861,7 +863,7 @@ class ArgumentTherapy(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -1325,7 +1327,6 @@ class UserDefinedFunction(Function_Base):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING,
                  **kwargs):
 
         def get_cust_fct_args(custom_function):
@@ -1408,7 +1409,7 @@ class UserDefinedFunction(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -1612,8 +1613,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  offset: parameter_spec = 0.0,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(weights=weights,
@@ -1627,7 +1627,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _validate_variable(self, variable, context=None):
         """Insure that list or array is 1d and that all elements are numeric
@@ -1660,7 +1660,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_1d(target_set[WEIGHTS])
-            if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test
+            # if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test
+            if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of elements in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
@@ -1668,7 +1669,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
             target_set[EXPONENTS] = np.atleast_1d(target_set[EXPONENTS])
-            if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test
+            # if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test
+            if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of elements in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
@@ -1954,8 +1956,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(weights=weights,
@@ -1969,7 +1970,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
@@ -2028,7 +2029,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
-            if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test
+            # if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test-X
+            if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
                 if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
@@ -2036,7 +2038,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
-            if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test
+            # if any(c in context for c in {EXECUTING, LEARNING}): # cxt-test
+            if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
                 if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
@@ -2424,8 +2427,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(weights=weights,
@@ -2439,7 +2441,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
@@ -2667,8 +2669,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                  gamma: tc.optional(float) = 1.0,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts
         # (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gamma=gamma,
@@ -2678,7 +2679,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.gamma = gamma
 
@@ -2960,8 +2961,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                  intercept: parameter_spec = 0.0,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(slope=slope,
@@ -2972,7 +2972,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         # self.functionOutputType = None
 
@@ -3169,8 +3169,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  scale: parameter_spec = 1.0,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   scale=scale,
@@ -3180,7 +3179,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def function(self,
                  variable=None,
@@ -3325,8 +3324,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  offset: parameter_spec = 0.0,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context='Logistic Init'):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
                                                   bias=bias,
@@ -3337,7 +3335,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def function(self,
                  variable=None,
@@ -3491,8 +3489,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
                  mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, PROB, PROB_INDICATOR)=MAX_VAL,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(mode=mode,
@@ -3505,7 +3502,7 @@ class OneHot(TransferFunction):  # ---------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         # self.functionOutputType = None
 
@@ -3739,8 +3736,7 @@ class SoftMax(NormalizingFunction):
                  output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context='SoftMax Init'):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(gain=gain,
@@ -3751,7 +3747,7 @@ class SoftMax(NormalizingFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _instantiate_function(self, context=None):
 
@@ -4014,8 +4010,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  matrix:tc.optional(is_matrix) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(matrix=matrix,
@@ -4028,7 +4023,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self._matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
@@ -4592,7 +4587,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context="Integrator Init"):
+                 context=None):
 
         if initializer is None:
             if params is not None and INITIALIZER in params and params[INITIALIZER] is not None:
@@ -4922,8 +4917,7 @@ class SimpleIntegrator(
                  initializer=None,
                  params: tc.optional(dict)=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context="SimpleIntegrator Init"):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -4934,12 +4928,11 @@ class SimpleIntegrator(
 
         super().__init__(
             default_variable=default_variable,
+            initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            context=context,
-            initializer=initializer,
-        )
+            context=ContextFlags.CONSTRUCTOR)
 
         self.auto_dependent = True
 
@@ -4990,7 +4983,8 @@ class SimpleIntegrator(
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context: # cxt-test
+        # if not context or not INITIALIZING in context: # cxt-test
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
 
         return adjusted_value
@@ -5129,8 +5123,7 @@ class LCAIntegrator(
                  time_step_size=0.1,
                  params: tc.optional(dict)=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context="LCAIntegrator Init"):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -5142,12 +5135,11 @@ class LCAIntegrator(
 
         super().__init__(
             default_variable=default_variable,
+            initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            context=context,
-            initializer=initializer,
-        )
+            context=ContextFlags.CONSTRUCTOR)
 
         self.auto_dependent = True
 
@@ -5344,8 +5336,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context="ConstantIntegrator Init"):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -5360,12 +5351,11 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         super().__init__(
             default_variable=default_variable,
+            initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            context=context,
-            initializer=initializer,
-        )
+            context=ContextFlags.CONSTRUCTOR)
 
         # Reassign to initializer in case default value was overridden
 
@@ -5415,8 +5405,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         return adjusted_value
 
-class AdaptiveIntegrator(
-    Integrator):  # --------------------------------------------------------------------------------
+class AdaptiveIntegrator(Integrator):  # -------------------------------------------------------------------------------
     """
     AdaptiveIntegrator(                 \
         default_variable=None,          \
@@ -5549,8 +5538,7 @@ class AdaptiveIntegrator(
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context="AdaptiveIntegrator Init"):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -5562,13 +5550,11 @@ class AdaptiveIntegrator(
 
         super().__init__(
             default_variable=default_variable,
+            initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            context=context,
-            initializer=initializer,
-        )
-
+            context=ContextFlags.CONSTRUCTOR)
 
         self.auto_dependent = True
 
@@ -5682,7 +5668,7 @@ class AdaptiveIntegrator(
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or self.context.initialization_status != ContextFlags.INITIALIZING: # cxt-test
+        if self.context.initialization_status != ContextFlags.INITIALIZING: # cxt-test
             self.previous_value = adjusted_value
         return adjusted_value
 
@@ -5852,8 +5838,7 @@ class DriftDiffusionIntegrator(
                  threshold=100.0,
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context="DriftDiffusionIntegrator Init"):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -5869,12 +5854,11 @@ class DriftDiffusionIntegrator(
         self.previous_value = initializer
         super().__init__(
             default_variable=default_variable,
+            initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            context=context,
-            initializer=initializer,
-        )
+            context=ContextFlags.CONSTRUCTOR)
 
         self.previous_time = self.t0
         self.auto_dependent = True
@@ -6110,8 +6094,7 @@ class OrnsteinUhlenbeckIntegrator(
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context="OrnsteinUhlenbeckIntegrator Init"):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -6128,12 +6111,11 @@ class OrnsteinUhlenbeckIntegrator(
 
         super().__init__(
             default_variable=default_variable,
+            initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            context=context,
-            initializer=initializer,
-        )
+            context=ContextFlags.CONSTRUCTOR)
 
         self.previous_time = self.t0
         self.auto_dependent = True
@@ -6643,8 +6625,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                  integration_method="RK4",
                  params: tc.optional(dict)=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context="FHNIntegrator Init"):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
@@ -6675,12 +6656,13 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         self.previous_v = self.initial_v
         self.previous_w = self.initial_w
         self.previous_time = self.t_0
+
         super().__init__(
             default_variable=default_variable,
             params=params,
             owner=owner,
             prefs=prefs,
-            context=context)
+            context=ContextFlags.CONSTRUCTOR)
 
         self.auto_dependent = True
 
@@ -7154,8 +7136,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context="AccumulatorIntegrator Init"):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -7166,12 +7147,11 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
 
         super().__init__(
             default_variable=default_variable,
+            initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            context=context,
-            initializer=initializer,
-        )
+            context=ContextFlags.CONSTRUCTOR)
 
 
         self.auto_dependent = True
@@ -7303,7 +7283,8 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not context or not INITIALIZING in context: # cxt-test
+        # if not context or not INITIALIZING in context: # cxt-test
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = value
         return value
 
@@ -7483,8 +7464,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                  operation="s*l",
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context="AGTUtilityIntegrator Init"):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -7507,12 +7487,11 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
         super().__init__(
             default_variable=default_variable,
+            initializer=initializer,
             params=params,
             owner=owner,
             prefs=prefs,
-            context=context,
-            initializer=initializer,
-        )
+            context=ContextFlags.CONSTRUCTOR)
 
         self.auto_dependent = True
 
@@ -7853,8 +7832,7 @@ class BogaczEtAl(
                  t0: parameter_spec = .200,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context='Integrator Init'):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
@@ -7868,7 +7846,7 @@ class BogaczEtAl(
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def function(self,
                  variable=None,
@@ -8153,8 +8131,7 @@ class NavarroAndFuss(IntegratorFunction):
                  t0: parameter_spec = .200,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context='Integrator Init'):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
                                                   starting_point=starting_point,
@@ -8167,7 +8144,7 @@ class NavarroAndFuss(IntegratorFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _instantiate_function(self, context=None):
         import os
@@ -9287,8 +9264,7 @@ class Distance(ObjectiveFunction):
                  normalize:bool=False,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context=componentName + INITIALIZING):
+                 prefs: is_pref_set = None):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(metric=metric,
                                                   normalize=normalize,
@@ -9298,7 +9274,7 @@ class Distance(ObjectiveFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -9608,8 +9584,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context='Component Init'):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
@@ -9621,7 +9596,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -9859,8 +9834,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context='Component Init'):
+                 prefs: is_pref_set = None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(# activation_function=activation_function,
@@ -9871,7 +9845,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -10151,8 +10125,7 @@ class BackPropagation(LearningFunction):
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
-                 context='Component Init'):
+                 prefs: is_pref_set = None):
 
         error_matrix=np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
                                len(default_variable[LEARNING_ERROR_OUTPUT])))
@@ -10169,7 +10142,7 @@ class BackPropagation(LearningFunction):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
         self.functionOutputType = None
 
@@ -10393,8 +10366,7 @@ class TDLearning(Reinforcement):
                  learning_rate=Reinforcement.default_learning_rate,
                  params=None,
                  owner=None,
-                 prefs=None,
-                 context='TDLearning Function Init'):
+                 prefs=None):
         """
         Dummy function used to implement TD Learning via Reinforcement Learning
 
@@ -10413,9 +10385,9 @@ class TDLearning(Reinforcement):
                          # activation_function=activation_function,
                          learning_rate=learning_rate,
                          params=params,
-                         context=context,
                          owner=owner,
-                         prefs=prefs)
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super(Reinforcement, self)._validate_variable(variable, context))
@@ -10437,16 +10409,6 @@ class TDLearning(Reinforcement):
 
     def function(self, variable=None, params=None, context=None, **kwargs):
         return super().function(variable=variable, params=params, context=context)
-
-
-# region *****************************************   OBJECTIVE FUNCTIONS
-# ***********************************************
-# endregion
-# TBI
-
-# region  *****************************************   REGISTER FUNCTIONS ***********************************************
-
-# region
 
 
 # FIX: IMPLEMENT AS Functions

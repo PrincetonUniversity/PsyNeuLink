@@ -869,7 +869,7 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import ADD_STATES, REMOVE_STATES, _parse_state_spec
 from psyneulink.globals.keywords import \
-    CHANGED, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
+    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
     INPUT_LABELS_DICT, INPUT_STATES, \
     INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
@@ -2135,7 +2135,7 @@ class Mechanism_Base(Mechanism):
             self.context.string = COMMAND_LINE
         else:
             # These need to be set for states to use as context
-            self.context.string = context # cxt-done
+            self.context.string = context # cxt-set
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
@@ -2143,7 +2143,8 @@ class Mechanism_Base(Mechanism):
 
         # Limit init to scope specified by context
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            if PROCESS_INIT in context or SYSTEM_INIT in context: # cxt-test
+            # if PROCESS_INIT in context or SYSTEM_INIT in context: # cxt-test-X
+            if self.context.composition:
                 # Run full execute method for init of Process and System
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
@@ -2734,7 +2735,7 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_states(self, states, context=ADD_STATES):
+    def add_states(self, states, context=None):
         """
         add_states(states)
 
@@ -2772,6 +2773,12 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.state import _parse_state_type
         from psyneulink.components.states.inputstate import InputState, _instantiate_input_states
         from psyneulink.components.states.outputstate import OutputState, _instantiate_output_states
+
+        if context is None:
+            # context = ADD_STATES # cxt-set
+            # context = Context(source=ContextFlags.METHOD, string=ADD_STATES)
+            context = ContextFlags.METHOD
+
         # Put in list to standardize treatment below
         if not isinstance(states, list):
             states = [states]

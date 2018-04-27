@@ -157,15 +157,17 @@ class ContextFlags(IntEnum):
 
     # source (source-of-call) flags
     COMMAND_LINE =  1<<9  # 512
-    """Direct call to method by user (either interactively from the command line, or in a script)."""
+    """Direct call by user (either interactively from the command line, or in a script)."""
     CONSTRUCTOR =   1<<10 # 1024
-    """Call to method from Component's constructor."""
+    """Call from Component's constructor method."""
     COMPONENT =     1<<11 # 2048
-    """Call to method by the Component."""
-    PROPERTY =      1<<12 # 4096
-    """Call to method by property of the Component."""
-    COMPOSITION =   1<<13 # 8192
-    """Call to method by a/the Composition to which the Component belongs."""
+    """Call by Component __init__."""
+    METHOD =        1<<12 # 4096
+    """Call by method of the Component other than its constructor."""
+    PROPERTY =      1<<13 # 8192
+    """Call by property of the Component."""
+    COMPOSITION =   1<<14 # 16384
+    """Call by a/the Composition to which the Component belongs."""
 
     SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | COMPONENT | PROPERTY | COMPOSITION
     NONE = ~SOURCE_MASK

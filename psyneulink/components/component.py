@@ -2686,8 +2686,7 @@ class Component(object):
                                              #    Don't bother with this, since it has to be assigned explicitly below
                                              #    anyhow, for cases in which function already exists
                                              #    and would require every function to have the owner arg in its __init__
-                                             owner=self,
-                                             context=context)
+                                             owner=self)
                 self.function = function_instance.function
 
                 # If in VERBOSE mode, report assignment
@@ -2825,10 +2824,22 @@ class Component(object):
                 self._increment_execution_count()
             self._update_current_execution_time(context=context) # cxt-pass
 
+        # If function is for a Function that belongs to another Component, get that Component's execution_phase
+        try:
+            fct_context = self.function_object.context
+            curr_context = self.context.execution_phase
+        # Otherwise assume ContextFlags.PROCESSING
+        except AttributeError:
+            fct_context = self.context
+            curr_context = ContextFlags.PROCESSING
+        fct_context.execution_phase = curr_context
         # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
-        return self.function(variable=variable, params=runtime_params, context=context, **kwargs)
+        value = self.function(variable=variable, params=runtime_params, context=context, **kwargs)
+        fct_context.execution_phase = ContextFlags.IDLE
+
+        return value
 
     @property
     def execution_count(self):
