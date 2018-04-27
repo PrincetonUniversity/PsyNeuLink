@@ -6679,23 +6679,25 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             raise FunctionError("Invalid integration method ({}) selected for {}. Choose 'RK4' or 'EULER'".
                                 format(self.integration_method, self.name))
 
-    def _euler_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size, a_v,
+    def _euler_FHN(self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size, a_v,
                    threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w, uncorrelated_activity,
                    time_constant_w):
 
-        slope_v_approx = slope_v(previous_time,
-                                   previous_value_v,
-                                   previous_value_w,
-                                   a_v,
-                                   threshold,
-                                   b_v,
-                                   c_v,
-                                   d_v,
-                                   e_v,
-                                   f_v,
-                                   time_constant_v)
+        slope_v_approx = slope_v(variable,
+                                 previous_time,
+                                 previous_value_v,
+                                 previous_value_w,
+                                 a_v,
+                                 threshold,
+                                 b_v,
+                                 c_v,
+                                 d_v,
+                                 e_v,
+                                 f_v,
+                                 time_constant_v)
 
-        slope_w_approx = slope_w(previous_time,
+        slope_w_approx = slope_w(variable,
+                                 previous_time,
                                  previous_value_w,
                                  previous_value_v,
                                  mode,
@@ -6710,7 +6712,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         return new_v, new_w
 
-    def _runge_kutta_4_FHN(self, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size,
+    def _runge_kutta_4_FHN(self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size,
                            a_v, threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w,
                            uncorrelated_activity, time_constant_w):
 
@@ -6718,7 +6720,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         # v is approximately previous_value_v
         # w is approximately previous_value_w
 
-        slope_v_approx_1 = slope_v(previous_time,
+        slope_v_approx_1 = slope_v(variable,
+                                   previous_time,
                                    previous_value_v,
                                    previous_value_w,
                                    a_v,
@@ -6730,7 +6733,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    f_v,
                                    time_constant_v)
 
-        slope_w_approx_1 = slope_w(previous_time,
+        slope_w_approx_1 = slope_w(variable,
+                                   previous_time,
                                    previous_value_w,
                                    previous_value_v,
                                    mode,
@@ -6743,7 +6747,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         # v is approximately previous_value_v + 0.5 * time_step_size * slope_w_approx_1
         # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_1
 
-        slope_v_approx_2 = slope_v(previous_time + time_step_size/2,
+        slope_v_approx_2 = slope_v(variable,
+                                   previous_time + time_step_size/2,
                                    previous_value_v + (0.5 * time_step_size * slope_v_approx_1),
                                    previous_value_w + (0.5 * time_step_size * slope_w_approx_1),
                                    a_v,
@@ -6755,7 +6760,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    f_v,
                                    time_constant_v)
 
-        slope_w_approx_2 = slope_w(previous_time + time_step_size/2,
+        slope_w_approx_2 = slope_w(variable,
+                                   previous_time + time_step_size/2,
                                    previous_value_w + (0.5 * time_step_size * slope_w_approx_1),
                                    previous_value_v + (0.5 * time_step_size * slope_v_approx_1),
                                    mode,
@@ -6769,7 +6775,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_2
         # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_2
 
-        slope_v_approx_3 = slope_v(previous_time + time_step_size/2,
+        slope_v_approx_3 = slope_v(variable,
+                                   previous_time + time_step_size/2,
                                    previous_value_v + (0.5 * time_step_size * slope_v_approx_2),
                                    previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
                                    a_v,
@@ -6781,7 +6788,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    f_v,
                                    time_constant_v)
 
-        slope_w_approx_3 = slope_w(previous_time + time_step_size/2,
+        slope_w_approx_3 = slope_w(variable,
+                                   previous_time + time_step_size/2,
                                    previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
                                    previous_value_v + (0.5 * time_step_size * slope_v_approx_2),
                                    mode,
@@ -6795,7 +6803,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         # v is approximately previous_value_v + time_step_size * slope_v_approx_3
         # w is approximately previous_value_w + time_step_size * slope_w_approx_3
 
-        slope_v_approx_4 = slope_v(previous_time + time_step_size,
+        slope_v_approx_4 = slope_v(variable,
+                                   previous_time + time_step_size,
                                    previous_value_v + (time_step_size * slope_v_approx_3),
                                    previous_value_w + (time_step_size * slope_v_approx_3),
                                    a_v,
@@ -6807,7 +6816,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    f_v,
                                    time_constant_v)
 
-        slope_w_approx_4 = slope_w(previous_time + time_step_size,
+        slope_w_approx_4 = slope_w(variable,
+                                   previous_time + time_step_size,
                                    previous_value_w + (time_step_size * slope_v_approx_3),
                                    previous_value_v + (time_step_size * slope_v_approx_3),
                                    mode,
@@ -6824,7 +6834,31 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         return new_v, new_w
 
+    def dv_dt(self, variable, time, v, w, a_v, threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v):
 
+        val= (a_v*(v**3) + (1+threshold)*b_v*(v**2) + (-threshold)*c_v*v + d_v
+                + e_v*self.previous_w + f_v*variable)/time_constant_v
+
+        # Standard coefficients - hardcoded for testing
+        # val = v - (v**3)/3 - w + variable
+
+        # Gilzenrat paper - hardcoded for testing
+        # val = (v*(v-0.5)*(1-v) - w + variable)/0.01
+
+        return val
+
+    def dw_dt(self, variable, time, w, v, mode, a_w, b_w, c_w, uncorrelated_activity, time_constant_w):
+        val = (mode*a_w*self.previous_v + b_w*w + c_w +
+                (1-mode)*uncorrelated_activity)/time_constant_w
+
+        # Standard coefficients - hardcoded for testing
+        # val = (v + 0.7 - 0.8*w)/12.5
+
+        #Gilzenrat paper - hardcoded for testing
+
+        # val = (v - 0.5*w)
+
+        return val
 
     def function(self,
                  variable=None,
@@ -6878,37 +6912,13 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         integration_method = self.get_current_function_param("integration_method")
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE)
 
-        def dv_dt(time, v, w, a_v, threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v):
-
-            val= (a_v*(v**3) + (1+threshold)*b_v*(v**2) + (-threshold)*c_v*v + d_v
-                    + e_v*self.previous_w + f_v*variable)/time_constant_v
-
-            # Standard coefficients - hardcoded for testing
-            # val = v - (v**3)/3 - w + variable
-
-            # Gilzenrat paper - hardcoded for testing
-            # val = (v*(v-0.5)*(1-v) - w + variable)/0.01
-
-            return val
-
-        def dw_dt(time, w, v, mode, a_w, b_w, c_w, uncorrelated_activity, time_constant_w):
-            val = (mode*a_w*self.previous_v + b_w*w + c_w +
-                    (1-mode)*uncorrelated_activity)/time_constant_w
-
-            # Standard coefficients - hardcoded for testing
-            # val = (v + 0.7 - 0.8*w)/12.5
-
-            #Gilzenrat paper - hardcoded for testing
-
-            # val = (v - 0.5*w)
-
-            return val
         if integration_method == "RK4":
-            approximate_values = self._runge_kutta_4_FHN(self.previous_v,
+            approximate_values = self._runge_kutta_4_FHN(variable,
+                                                         self.previous_v,
                                                          self.previous_w,
                                                          self.previous_time,
-                                                         dv_dt,
-                                                         dw_dt,
+                                                         self.dv_dt,
+                                                         self.dw_dt,
                                                          time_step_size,
                                                          a_v,
                                                          threshold,
@@ -6927,31 +6937,32 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
 
         elif integration_method == "EULER":
-            approximate_values = self._euler_FHN(self.previous_v,
-                                                         self.previous_w,
-                                                         self.previous_time,
-                                                         dv_dt,
-                                                         dw_dt,
-                                                         time_step_size,
-                                                         a_v,
-                                                         threshold,
-                                                         b_v,
-                                                         c_v,
-                                                         d_v,
-                                                         e_v,
-                                                         f_v,
-                                                         time_constant_v,
-                                                         mode,
-                                                         a_w,
-                                                         b_w,
-                                                         c_w,
-                                                         uncorrelated_activity,
-                                                         time_constant_w)
+            approximate_values = self._euler_FHN(variable,
+                                                 self.previous_v,
+                                                 self.previous_w,
+                                                 self.previous_time,
+                                                 self.dv_dt,
+                                                 self.dw_dt,
+                                                 time_step_size,
+                                                 a_v,
+                                                 threshold,
+                                                 b_v,
+                                                 c_v,
+                                                 d_v,
+                                                 e_v,
+                                                 f_v,
+                                                 time_constant_v,
+                                                 mode,
+                                                 a_w,
+                                                 b_w,
+                                                 c_w,
+                                                 uncorrelated_activity,
+                                                 time_constant_w)
         else:
             raise FunctionError("Invalid integration method ({}) selected for {}".
                                 format(integration_method, self.name))
 
-        if not context or INITIALIZING not in context: # cxt-test
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_v = approximate_values[0]
             self.previous_w = approximate_values[1]
             self.previous_time += time_step_size
