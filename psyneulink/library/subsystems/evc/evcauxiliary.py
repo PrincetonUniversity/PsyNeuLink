@@ -263,7 +263,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         function = function or self.function
         super().__init__(function=function,
                          owner=owner,
-                         context=self.ContextFlags.CONSTRUCTOR)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def function(
         self,
