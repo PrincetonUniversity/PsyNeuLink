@@ -359,7 +359,8 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                                                                        runtime_params=runtime_params,
                                                                        context=context)
 
-        if not INITIALIZING in context and self.reportOutputPref: # cxt-test
+        # if not INITIALIZING in context and self.reportOutputPref: # cxt-test-X
+        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal]

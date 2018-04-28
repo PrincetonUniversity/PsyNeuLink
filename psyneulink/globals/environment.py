@@ -757,9 +757,9 @@ def run(object,
 
             # if RUN in context and not object.context.execution_phase == ContextFlags.SIMULATION: # cxt-test-X
             if context == ContextFlags.COMMAND_LINE and not object.context.execution_phase == ContextFlags.SIMULATION:
-                context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
-                object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
+                # context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-set-X
                 object.context.execution_phase = ContextFlags.PROCESSING
+                object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
 
             result = object.execute(
                 input=execution_inputs,

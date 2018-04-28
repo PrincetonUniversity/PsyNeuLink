@@ -10401,8 +10401,7 @@ class TDLearning(Reinforcement):
                          learning_rate=learning_rate,
                          params=params,
                          owner=owner,
-                         prefs=prefs,
-                         context=ContextFlags.CONSTRUCTOR)
+                         prefs=prefs)
 
     def _validate_variable(self, variable, context=None):
         variable = self._update_variable(super(Reinforcement, self)._validate_variable(variable, context))

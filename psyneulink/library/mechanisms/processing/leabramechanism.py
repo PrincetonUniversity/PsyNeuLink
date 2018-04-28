@@ -207,8 +207,7 @@ class LeabraFunction(Function_Base):
                  network=None,
                  params=None,
                  owner=None,
-                 prefs=None,
-                 context=componentName + INITIALIZING):
+                 prefs=None):
 
         if not leabra_available:
             raise LeabraError('leabra python module is not installed. Please install it from '
@@ -226,7 +225,7 @@ class LeabraFunction(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _validate_variable(self, variable, context=None):
         if not isinstance(variable, (list, np.ndarray, numbers.Number)):
@@ -260,7 +259,7 @@ class LeabraFunction(Function_Base):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         # HACK: otherwise the INITIALIZING function executions impact the state of the leabra network
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             output_size = len(self.network.layers[-1].units)
             return np.zeros(output_size)
 

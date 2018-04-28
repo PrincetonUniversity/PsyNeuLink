@@ -1199,7 +1199,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
     # IMPLEMENTATION NOTE: USE OF CONTEXT STRING
     # if context and 'ADD_STATES' in context: # cxt-test-X
     # if context.source == ContextFlags.METHOD and context.string == ADD_STATES:
-    if context == ContextFlags.METHOD:
+    if context & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list
