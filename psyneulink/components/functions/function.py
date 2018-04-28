@@ -5965,7 +5965,7 @@ class DriftDiffusionIntegrator(
 class OrnsteinUhlenbeckIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
-    OrnsteinUhlenbeckIntegrator(                 \
+    OrnsteinUhlenbeckIntegrator(        \
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \

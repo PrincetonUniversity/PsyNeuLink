@@ -753,101 +753,109 @@ class Log:
             else:
                 assign_log_condition(item[0], item[1])
 
-    def _log_value(self, value, time=None, context=None):
+    @tc.typecheck
+    def _log_value(self, 
+                   value, 
+                   time=None, 
+                   condition:tc.optional(LogCondition)=None, 
+                   context:tc.optional(tc.enum(ContextFlags.COMMAND_LINE))=None):
         """Add LogEntry to an entry in the Log
 
         If **value** is a LogEntry, it is assigned to the entry
-        If **context** is a ContextFlags, it is used to determine whether the entry should be made;
-           **time** must be passed;  the name of the ContextFlags specified are assigned to the context of LogEntry
-        Otherwise, uses string (or Component) passed in **context**;
-        If value is None, uses owner's `value <Component.value>` attribute.
+        If **condition** is specified, it is used to determine whether the value is logged; **time** must be passed.
+        Otherwise, the Component's `log_pref <Component.log_pref>` attribute is used to determine whether value is
+        logged.
+        If **value** is specified, that is the value logged; otherwise the owner's `value <Component.value>`
+           attribute is logged.
 
-        .. note::
+        COMMENT:
+            IMPLEMENTATION NOTE:
+
+            Component.log_value calls with **context** = *ContextFlags.COMMAND_LINE*; this logs the specified value.
+
             Since _log_value is usually called by the setter for the `value <Component.value>` property of a Component
-            (which doesn't/can't receive a context argument), it does not pass a **context** argument to _log_value;
-            in that case, _log_value searches the stack for the most recent frame with a context specification, and
-            uses that.
+            (which doesn't/can't receive a context argument), it does not pass a **condition** argument to _log_value;
+            in that case, the context attribute of the log's owner is used.
+            DEPRECATED:
+            As a backup, it searches the stack for the most recent frame with a context specification, and uses that.
+        COMMENT
+
 
         """
-        from psyneulink.components.component import Component
+        from psyneulink.components.shellclasses import Function
         programmatic = False
 
         if isinstance(value, LogEntry):
             self.entries[self.owner.name] = value
 
         else:
+            # LEGACY:
+            # # Get context from stack
+            #     if context is COMMAND_LINE:
+            #         # If _log_value is being called programmatically,
+            #         #    flag for later and set context to None to get context from the stack
+            #         programmatic = True
+            #         context = None # cxt-done
+            #     # Get context from the stack
+            #     if context is None: # cxt-test
+            #         curr_frame = inspect.currentframe()
+            #         prev_frame = inspect.getouterframes(curr_frame, 2)
+            #         i = 1
+            #         # Search stack for first frame (most recent call) with a context specification
+            #         while context is None:
+            #             try:
+            #                 context = inspect.getargvalues(prev_frame[i][0]).locals['context'] # cxt-done
+            #             except KeyError:
+            #                 # Try earlier frame
+            #                 i += 1
+            #             except IndexError:
+            #                 # Ran out of frames, so just set context to empty string
+            #                 context = "" # cxt-done
+            #             else:
+            #                 break
+            # 
+            #     # If context is a Component object, it must be during its initialization, so assign accordingly:
+            #     if isinstance(context, Component):
+            #         context = "{} of {}".format(INITIALIZING, context.name) # cxt-done
+            #     # No context was specified in any frame
+            #     if context is None: # cxt-done
+            #         raise LogError("PROGRAM ERROR: No context specification found in any frame")
+            # 
+            #     if not isinstance(context, str):
+            #         raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
+            # 
+            #     # Context is an empty string, but called programmatically
+            #     if not context and programmatic: # cxt-done
+            #         context = ContextFlags.COMMAND_LINE # cxt-done
+            #         #  context = self.owner.prev_context + "FROM " + COMMAND_LINE
+            #         # context = self.owner.prev_context
+            # 
+            #     condition = _get_context(context)
 
-            if isinstance(context, ContextFlags):
-                if context == ContextFlags.COMMAND_LINE:
-                    pass
-                elif not time:
-                    raise LogError("Use of ContextFlags ({}) by {} to specify context requires specification of time".
-                                   format(context, self.owner.name ))
-                context_flags = context
-                # context = ContextFlags._get_context_string(context) # cxt-done
+            condition = condition or context
+            if not condition:
+                # IMPLEMENTATION NOTE:  Functions not supported for logging at this time.
+                if isinstance(self.owner, Function):
+                    if self.owner.verbosePref:
+                        warnings.warn("Logging currently does not support {} (only Mechanisms, States, and Projections).".
+                                      format(self.owner.__class__.__name__))
+                    return
+                elif self.owner.context.flags:
+                    condition = self.owner.context.flags
+                else:
+                    raise LogError("PROGRAM ERROR: No condition or context specified in call to _log_value for "
+                                   "{} and it has not context.flags".format(self.owner.name))
 
-            elif context is COMMAND_LINE:
-                context_flags = ContextFlags.COMMAND_LINE
-
-            elif self.owner.context.flags:
-                context_flags = self.owner.context.flags # cxt-done
-                # context = ContextFlags._get_context_string(context_flags) # cxt-done
-
-            # Get context
-            else:
-                if context is COMMAND_LINE:
-                    # If _log_value is being called programmatically,
-                    #    flag for later and set context to None to get context from the stack
-                    programmatic = True
-                    context = None # cxt-done
-                # Get context from the stack
-                if context is None: # cxt-test
-                    curr_frame = inspect.currentframe()
-                    prev_frame = inspect.getouterframes(curr_frame, 2)
-                    i = 1
-                    # Search stack for first frame (most recent call) with a context specification
-                    while context is None:
-                        try:
-                            context = inspect.getargvalues(prev_frame[i][0]).locals['context'] # cxt-done
-                        except KeyError:
-                            # Try earlier frame
-                            i += 1
-                        except IndexError:
-                            # Ran out of frames, so just set context to empty string
-                            context = "" # cxt-done
-                        else:
-                            break
-
-                # If context is a Component object, it must be during its initialization, so assign accordingly:
-                if isinstance(context, Component):
-                    context = "{} of {}".format(INITIALIZING, context.name) # cxt-done
-                # No context was specified in any frame
-                if context is None: # cxt-done
-                    raise LogError("PROGRAM ERROR: No context specification found in any frame")
-
-                if not isinstance(context, str):
-                    raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
-
-                # Context is an empty string, but called programmatically
-                if not context and programmatic: # cxt-done
-                    context = ContextFlags.COMMAND_LINE # cxt-done
-                    #  context = self.owner.prev_context + "FROM " + COMMAND_LINE
-                    # context = self.owner.prev_context
-
-                context_flags = _get_context(context)
-
-            context_flags_string = ContextFlags._get_context_string(context_flags)
-            context_status_string = self.owner.context.flags_string
-            # assert context_flags_string == context_status_string
+            condition_string = ContextFlags._get_context_string(condition)
 
             log_pref = self.owner.prefs.logPref if self.owner.prefs else None
 
             # Get time and log value if logging condition is satisfied or called for programmatically
-            if (log_pref and log_pref & context_flags) or context_flags & ContextFlags.COMMAND_LINE:
-                time = time or _get_time(self.owner, context_flags)
-                self.entries[self.owner.name] = LogEntry(time, context_flags_string, value)
+            if (log_pref and log_pref & condition) or condition & ContextFlags.COMMAND_LINE:
+                time = time or _get_time(self.owner, condition)
+                self.entries[self.owner.name] = LogEntry(time, condition_string, value)
 
-        if not context_flags & ContextFlags.COMMAND_LINE: # cxt-done
+        if not condition & ContextFlags.COMMAND_LINE: # cxt-done
             self.owner.prev_context = self.owner.context
 
     @tc.typecheck
@@ -874,7 +882,7 @@ class Log:
 
         # Validate the Component field of each LogEntry
         for entry in entries:
-            self._log_value(self.loggable_components[self._dealias_owner_name(entry)].value,
+            self._log_value(value=self.loggable_components[self._dealias_owner_name(entry)].value,
                             context=ContextFlags.COMMAND_LINE)
 
     def clear_entries(self, entries=ALL, delete_entry=True, confirm=False):
@@ -1557,7 +1565,7 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
                 #                  curr_condition,
                 #                  component.value)
                 # component.log._log_value(value=value, context=context)
-                component.log._log_value(value=component.value, context=curr_condition.name)
+                component.log._log_value(value=component.value, condition=curr_condition.name)
 
         for proj in mech.afferents:
             for component in proj.log.loggable_components:
@@ -1568,7 +1576,7 @@ def _log_trials_and_runs(composition, curr_condition:tc.enum(LogCondition.TRIAL,
                     #                  context,
                     #                  component.value)
                     # component.log._log_value(value, context)
-                    component.log._log_value(value=component.value, context=curr_condition.name)
+                    component.log._log_value(value=component.value, condition=curr_condition.name)
 
 
     # FIX: IMPLEMENT ONCE projections IS ADDED AS ATTRIBUTE OF Composition
