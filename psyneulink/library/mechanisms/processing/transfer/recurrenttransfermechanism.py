@@ -167,7 +167,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import Hebbian, Linear, Stability, get_matrix, is_function_type
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
+    ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
@@ -175,13 +176,14 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
-from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, HOLLOW_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.globals.keywords import \
+    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, MATRIX, MEAN, MEDIAN, NAME, \
+    PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
-from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
+from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import \
+    AutoAssociativeLearningMechanism
 
 __all__ = [
     'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
