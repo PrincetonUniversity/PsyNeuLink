@@ -836,9 +836,6 @@ class Log:
             if not condition:
                 # IMPLEMENTATION NOTE:  Functions not supported for logging at this time.
                 if isinstance(self.owner, Function):
-                    if self.owner.verbosePref:
-                        warnings.warn("Logging currently does not support {} (only Mechanisms, States, and Projections).".
-                                      format(self.owner.__class__.__name__))
                     return
                 elif self.owner.context.flags:
                     condition = self.owner.context.flags
