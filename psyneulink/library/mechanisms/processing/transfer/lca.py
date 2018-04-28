@@ -650,7 +650,7 @@ class LCA(RecurrentTransferMechanism):
                                             rate=leak,
                                             owner=self)
 
-            current_input = self.integrator_function._execute(
+            current_input = self.integrator_function.execute(
                 function_variable,
                 # Should we handle runtime params?
                 runtime_params={
