@@ -46,14 +46,12 @@ Class Reference
 
 import typecheck as tc
 
-from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = []
 
@@ -136,7 +134,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=None,
                  size=None,
-                 function = Linear(slope = 1, intercept=0.0),
+                 function=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
@@ -150,6 +148,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         super(CompositionInterfaceMechanism, self).__init__(variable=default_input_value,
                                                   size=size,
                                                   params=params,
+                                                  function=function,
                                                   name=name,
                                                   prefs=prefs,
                                                   context=ContextFlags.CONSTRUCTOR)

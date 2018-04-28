@@ -96,8 +96,7 @@ from psyneulink.components.projections.modulatory.modulatoryprojection import Mo
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Process_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.defaults import defaultGatingPolicy
-from psyneulink.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INITIALIZING, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER
+from psyneulink.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -263,6 +262,9 @@ class GatingProjection(ModulatoryProjection_Base):
         sender=[GATING_SIGNAL]
         receiver=[INPUT_STATE, OUTPUT_STATE]
 
+    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
+        function = Linear(params={FUNCTION_OUTPUT_TYPE:FunctionOutputType.RAW_NUMBER})
+
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_SENDER: GatingMechanism,
@@ -296,6 +298,7 @@ class GatingProjection(ModulatoryProjection_Base):
                          receiver=receiver,
                          weight=weight,
                          exponent=exponent,
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs,

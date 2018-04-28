@@ -48,6 +48,7 @@ Execution
 from psyneulink.components.projections.projection import Projection_Base
 from psyneulink.globals.keywords import PATHWAY_PROJECTION, NAME, SENDER, RECEIVER, CONTEXT, INITIALIZATION_STATUS
 from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import NAME, PATHWAY_PROJECTION, RECEIVER, SENDER
 
 __all__ = []
 
@@ -75,7 +76,9 @@ class PathwayProjection_Base(Projection_Base):
                  params=None,
                  name=None,
                  prefs=None,
-                 context=None):
+                 context=None,
+                 function=None,
+                 ):
 
         super().__init__(receiver=receiver,
                          sender=sender,
@@ -84,7 +87,9 @@ class PathwayProjection_Base(Projection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
     def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 

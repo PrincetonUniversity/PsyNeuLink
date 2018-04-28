@@ -89,8 +89,9 @@ belongs is run. A ProcessingMechanism always executes before any `AdaptiveMechan
 
 """
 
-import typecheck as tc
 from collections import Iterable
+
+import typecheck as tc
 
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -143,7 +144,9 @@ class ProcessingMechanism_Base(Mechanism_Base):
                  params=None,
                  name=None,
                  prefs=None,
-                 context=None):
+                 context=None,
+                 function=None,
+                 ):
         """Abstract class for processing mechanisms
 
         :param variable: (value)
@@ -163,7 +166,9 @@ class ProcessingMechanism_Base(Mechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
     def _validate_inputs(self, inputs=None):
         # Let mechanism itself do validation of the input
@@ -278,6 +283,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         super(ProcessingMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   input_states=input_states,
+                                                  function=function,
                                                   output_states=output_states,
                                                   params=params,
                                                   name=name,

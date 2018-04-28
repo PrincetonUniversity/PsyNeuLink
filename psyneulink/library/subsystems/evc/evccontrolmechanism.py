@@ -343,7 +343,6 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'EVCControlMechanism', 'EVCError',
@@ -682,6 +681,9 @@ class EVCControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
+    class ClassDefaults(ControlMechanism.ClassDefaults):
+        function = ControlSignalGridSearch
+
     from psyneulink.components.functions.function import LinearCombination
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
@@ -866,10 +868,13 @@ class EVCControlMechanism(ControlMechanism):
         self._instantiate_prediction_mechanisms(system=system, context=context)
         super().assign_as_controller(system=system, context=context)
 
-    def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Determine `allocation_policy <EVCControlMechanism.allocation_policy>` for next run of System
 
         Update prediction mechanisms
@@ -910,10 +915,13 @@ class EVCControlMechanism(ControlMechanism):
         # self.system._store_system_state()
 
         # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
-        allocation_policy = super(ControlMechanism, self)._execute(controller=self,
-                                                                   variable=variable,
-                                                                   runtime_params=runtime_params,
-                                                                   context=context)
+        allocation_policy = super(ControlMechanism, self)._execute(
+            controller=self,
+            variable=variable,
+            function_variable=function_variable,
+            runtime_params=runtime_params,
+            context=context
+        )
 
         # IMPLEMENTATION NOTE:
         # self.system._restore_system_state()

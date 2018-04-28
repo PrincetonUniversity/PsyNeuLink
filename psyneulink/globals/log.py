@@ -380,21 +380,18 @@ Class Reference
 ---------------
 
 """
-import warnings
 import inspect
-import typecheck as tc
-from collections import namedtuple, OrderedDict
+import warnings
+from collections import OrderedDict, namedtuple
 # from enum import IntEnum, unique, auto
-from enum import IntEnum, unique
+from enum import IntEnum
 
 import numpy as np
+import typecheck as tc
 
-from psyneulink.scheduling.time import TimeScale
-from psyneulink.globals.utilities import ContentAddressableList, AutoNumber, is_component
-from psyneulink.globals.keywords \
-    import COMMAND_LINE, INITIALIZING, EXECUTING, VALIDATE, CONTROL, LEARNING, TRIAL, RUN, CONTEXT, VALUE, TIME, ALL
 from psyneulink.globals.context import ContextFlags, _get_context, _get_time
-
+from psyneulink.globals.keywords import ALL, COMMAND_LINE, CONTEXT, INITIALIZING, LEARNING, TIME, VALUE
+from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, is_component
 
 __all__ = [
     'EntriesDict', 'Log', 'LogEntry', 'LogError', 'LogCondition'
@@ -754,10 +751,10 @@ class Log:
                 assign_log_condition(item[0], item[1])
 
     @tc.typecheck
-    def _log_value(self, 
-                   value, 
-                   time=None, 
-                   condition:tc.optional(LogCondition)=None, 
+    def _log_value(self,
+                   value,
+                   time=None,
+                   condition:tc.optional(LogCondition)=None,
                    context:tc.optional(tc.enum(ContextFlags.COMMAND_LINE))=None):
         """Add LogEntry to an entry in the Log
 
@@ -813,23 +810,23 @@ class Log:
             #                 context = "" # cxt-done
             #             else:
             #                 break
-            # 
+            #
             #     # If context is a Component object, it must be during its initialization, so assign accordingly:
             #     if isinstance(context, Component):
             #         context = "{} of {}".format(INITIALIZING, context.name) # cxt-done
             #     # No context was specified in any frame
             #     if context is None: # cxt-done
             #         raise LogError("PROGRAM ERROR: No context specification found in any frame")
-            # 
+            #
             #     if not isinstance(context, str):
             #         raise LogError("PROGRAM ERROR: Unrecognized context specification ({})".format(context))
-            # 
+            #
             #     # Context is an empty string, but called programmatically
             #     if not context and programmatic: # cxt-done
             #         context = ContextFlags.COMMAND_LINE # cxt-done
             #         #  context = self.owner.prev_context + "FROM " + COMMAND_LINE
             #         # context = self.owner.prev_context
-            # 
+            #
             #     condition = _get_context(context)
 
             condition = condition or context

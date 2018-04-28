@@ -92,13 +92,14 @@ Class Reference
 
 """
 
-from uuid import UUID
-from enum import IntEnum
+import warnings
 from collections import namedtuple
+from enum import IntEnum
+from uuid import UUID
 
 import typecheck as tc
-import warnings
 
+from psyneulink.globals.keywords import CONTROL, EXECUTING, FLAGS, INITIALIZING, LEARNING, VALIDATE
 
 from psyneulink.globals.keywords import \
     CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, SOURCE, LEARNING, VALIDATE

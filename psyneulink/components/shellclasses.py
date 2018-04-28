@@ -94,11 +94,13 @@ class Mechanism(ShellClass):
     def __init__(self,
                  default_variable=None,
                  size=None,
+                 function=None,
                  param_defaults=None,
                  name=None,
                  prefs=None):
         super().__init__(default_variable=default_variable,
                          size=size,
+                         function=function,
                          param_defaults=param_defaults,
                          name=name,
                          prefs=prefs)

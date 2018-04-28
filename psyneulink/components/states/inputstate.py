@@ -453,23 +453,21 @@ Class Reference
 ---------------
 
 """
-import collections
 import numbers
 import warnings
 
+import collections
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component
 from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
-from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.states.state import ADD_STATES, StateError, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
+from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import CLASS_DEFAULTS, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.utilities import append_type_to_name, is_numeric, iscompatible
+from psyneulink.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords',
@@ -690,6 +688,9 @@ class InputState(State_Base):
     variableEncodingDim = 1
     valueEncodingDim = 1
 
+    class ClassDefaults(State_Base.ClassDefaults):
+        function = LinearCombination(operation=SUM, owner=CLASS_DEFAULTS)
+
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
                                MECHANISM: None,     # These are used to specifiy InputStates by projections to them
@@ -703,7 +704,7 @@ class InputState(State_Base):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 function=LinearCombination(operation=SUM),
+                 function=None,
                  projections=None,
                  weight=None,
                  exponent=None,
@@ -756,7 +757,9 @@ class InputState(State_Base):
                                          params=params,
                                          name=name,
                                          prefs=prefs,
-                                         context=context)
+                                         context=context,
+                                         function=function,
+                                         )
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
             self._assign_default_state_name(context=context)
@@ -765,15 +768,15 @@ class InputState(State_Base):
         """Assign variable to value of Projection in projections
         """
         from psyneulink.components.projections.projection import \
-            Projection, _parse_connection_specs, ProjectionTuple
+            Projection, _parse_connection_specs
 
         if not isinstance(projections, list):
             projections = [projections]
 
-        # Use only first specification in the list returned, and assume any others are the same size 
+        # Use only first specification in the list returned, and assume any others are the same size
         #     (which they must be); leave validation of this to _instantiate_projections_to_state
         proj_spec = _parse_connection_specs(InputState, self, projections)[0]
-        
+
         if isinstance(proj_spec.projection, Projection):
             variable = proj_spec.projection.value
         elif isinstance(proj_spec.state, OutputState):
@@ -812,49 +815,17 @@ class InputState(State_Base):
             raise InputStateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
                                   .format(name, self.componentName, self.owner.name, self.value, reference_value))
 
-    def _instantiate_function(self, context=None):
-        """Insure that function is LinearCombination and that output is compatible with owner.instance_defaults.variable
-
-        Insures that function:
-            - is LinearCombination (to aggregate Projection inputs)
-            - generates an output (assigned to self.value) that is compatible with the component of
-                owner.function's variable that corresponds to this InputState,
-                since the latter will be called with the value of this InputState;
-
-        Notes:
-        * Relevant item of owner.function's variable should have been provided
-            as reference_value arg in the call to InputState__init__()
-        * Insures that self.value has been assigned (by call to super()._validate_function)
-        * This method is called only if the parameterValidationPref is True
-
-        :param context:
-        :return:
-        """
-
-        super()._instantiate_function(context=context)
-
+    def _validate_function(self, function):
         # Insure that function is Function.LinearCombination
-        if not isinstance(self.function.__self__, (LinearCombination, Linear, Reduce)):
+        if not is_instance_or_subclass(function, (LinearCombination, Linear, Reduce)):
             raise StateError(
-                "{0} of {1} for {2} is {3}; it must be of LinearCombination "
-                "or Linear type".
-                format(FUNCTION,
-                       self.name,
-                       self.owner.name,
-                       self.function.__self__.componentName))
-
-        # Insure that self.value is compatible with self.reference_value
-        if self.reference_value is not None and not iscompatible(self.value,
-                                                                 self.reference_value):
-            raise InputStateError("Value ({}) of {} {} for {} is not "
-                                  "compatible with specified {} ({})".
-                                  format(self.value,
-                                         self.componentName,
-                                         self.name,
-                                         self.owner.name,
-                                         REFERENCE_VALUE,
-                                         self.reference_value))
-                                         # self.owner.variable))
+                "{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".format(
+                    FUNCTION,
+                    self.name,
+                    self.owner.name,
+                    function.componentName
+                )
+            )
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -865,14 +836,14 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
         If there were no PathwayProjections, ignore and return None
         """
 
-        if variable is not None:
-            return self.function(variable, runtime_params, context)
+        if function_variable is not None:
+            return self.function(function_variable, runtime_params, context)
         # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
@@ -885,9 +856,12 @@ class InputState(State_Base):
             #                                 params=runtime_params,
             #                                 context=context)
             # MODIFIED 3/20/18 NEW:
-            combined_values = super()._execute(variable=variable,
-                                                    runtime_params=runtime_params,
-                                                    context=context)
+            combined_values = super()._execute(
+                variable=variable,
+                function_variable=variable,
+                runtime_params=runtime_params,
+                context=context
+            )
             # MODIFIED 3/20/18 END
             return combined_values
         # There were no Projections
@@ -921,6 +895,7 @@ class InputState(State_Base):
         #      THIS WOULD ALLOW AN ADDITONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.components.projections.projection import Projection, _parse_connection_specs
+        from psyneulink.components.mechanisms.mechanism import Mechanism
 
         params_dict = {}
         state_spec = state_specific_spec
@@ -1055,7 +1030,7 @@ class InputState(State_Base):
                                           format(InputState.__name__,
                                                  owner.name,
                                                  projections_spec,
-                                                 Mechanism.__name__,
+                                                 'Mechanism',
                                                  OutputState.__name__,
                                                  Projection.__name__))
 
@@ -1102,6 +1077,8 @@ class InputState(State_Base):
 
             ex: specifiying an InputState with a Mechanism allows overriding
         '''
+        from psyneulink.components.mechanisms.mechanism import Mechanism
+
         if isinstance(spec, Mechanism):
             return True
         if isinstance(spec, collections.Iterable):

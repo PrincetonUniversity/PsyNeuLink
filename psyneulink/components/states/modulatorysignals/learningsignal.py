@@ -170,16 +170,14 @@ Class Reference
 
 import typecheck as tc
 
-from psyneulink.components.functions.function import Linear, LinearCombination, ModulationParam, _is_modulation_param
+from psyneulink.components.functions.function import Linear, ModulationParam, _is_modulation_param
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.components.states.outputstate import PRIMARY
 from psyneulink.components.states.state import State_Base
-from psyneulink.globals.keywords import \
-    COMMAND_LINE, LEARNED_PARAM, LEARNING_SIGNAL, LEARNING_PROJECTION, \
-    PROJECTION_TYPE, RECEIVER, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, SUM
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import COMMAND_LINE, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import parameter_spec
 
 __all__ = [
@@ -402,7 +400,9 @@ class LearningSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
     def _get_primary_state(self, projection):
         return projection.parameter_state

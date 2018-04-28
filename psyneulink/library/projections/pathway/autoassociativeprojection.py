@@ -93,10 +93,9 @@ from psyneulink.components.projections.projection import projection_keywords
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, INITIALIZING, MATRIX
+from psyneulink.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, MATRIX
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'AutoAssociativeError', 'AutoAssociativeProjection', 'get_auto_matrix', 'get_hetero_matrix',
@@ -230,9 +229,12 @@ class AutoAssociativeProjection(MappingProjection):
                  sender=None,
                  receiver=None,
                  matrix=DEFAULT_MATRIX,
+                 function=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 context=None,
+                 ):
 
         if owner is not None:
             if not isinstance(owner, Mechanism):
@@ -247,11 +249,12 @@ class AutoAssociativeProjection(MappingProjection):
         super().__init__(sender=sender,
                          receiver=receiver,
                          matrix=matrix,
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs)
 
-    def _execute(self, variable, runtime_params=None, context=None):
+    def _execute(self, variable, function_variable=None, runtime_params=None, context=None):
         """
         Based heavily on the execute() method for MappingProjection.
 
@@ -356,7 +359,7 @@ class AutoAssociativeProjection(MappingProjection):
         #
         # return self.function(self.sender.value, params=runtime_params, context=context)
         # MODIFIED 9/23/17 NEW:
-        return super()._execute(variable, runtime_params=runtime_params, context=context)
+        return super()._execute(variable, function_variable, runtime_params=runtime_params, context=context)
         # MODIFIED 9/23/17 END:
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech

@@ -432,6 +432,7 @@ USER_PARAMS = 'user_params' # Params available to user for inspection in user_pa
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 
+CLASS_DEFAULTS = "ClassDefaults"
 PARAM_CLASS_DEFAULTS = "paramClassDefaults"        # "Factory" default params for a Function
 PARAM_INSTANCE_DEFAULTS = "paramInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
 PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect for an instance of a Function

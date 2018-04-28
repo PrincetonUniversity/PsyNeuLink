@@ -134,29 +134,21 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
 from psyneulink.components.component import function_type, method_type
-from psyneulink.components.functions.function import BackPropagation, Hebbian, \
-    Linear, Reinforcement, TDLearning, LinearCombination, LinearMatrix, PredictionErrorDeltaFunction, ERROR_MATRIX
+from psyneulink.components.functions.function import BackPropagation, Hebbian, Linear, PredictionErrorDeltaFunction, Reinforcement, TDLearning
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
-    ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL, LearningMechanism
-from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, OUTCOME
+from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME, ObjectiveMechanism
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function
-from psyneulink.components.states.state import ADD_STATES
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import \
-    BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, \
-    IDENTITY_MATRIX, INPUT_STATES, LEARNING, LEARNING_MECHANISM, \
-    MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, \
-    WEIGHT, PROJECTIONS, TDLEARNING_FUNCTION, PREDICTION_ERROR_MECHANISM, \
-    FUNCTION, HOLLOW_MATRIX
+from psyneulink.globals.keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, PREDICTION_ERROR_MECHANISM, PROJECTIONS, RL_FUNCTION, SAMPLE, TARGET, TDLEARNING_FUNCTION, VARIABLE, WEIGHT
+from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
 
 __all__ = [
     'LearningAuxiliaryError'

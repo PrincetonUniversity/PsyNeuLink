@@ -180,44 +180,23 @@ Class Reference
 """
 
 import numbers
-import numpy as np
-import typecheck as tc
 import warnings
 
 from collections import namedtuple
 from enum import Enum, IntEnum
 from random import randint
 
-from psyneulink.components.component import ComponentError, function_type, method_type, parameter_keywords
+import numpy as np
+import typecheck as tc
+
+from psyneulink.components.component import ComponentError, DefaultsFlexibility, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import \
-    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, \
-    AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, \
-    COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY,\
-    DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
-    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
-    EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, \
-    FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, \
-    GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, \
-    INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
-    LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
-    LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
-    MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_ABS_INDICATOR, MAX_VAL, MAX_ABS_VAL, \
-    NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
-    OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
-    ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMS, PARAMETER_STATE_PARAMS, PEARSON, \
-    PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, \
-    RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, \
-    STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, \
-    USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, \
-    WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import AutoNumber, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
-from psyneulink.scheduling.time import TimeScale
+from psyneulink.globals.utilities import is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
@@ -420,7 +399,17 @@ def get_param_value_for_keyword(owner, keyword):
 
     """
     try:
-        return owner.paramsCurrent[FUNCTION].keyword(owner, keyword)
+        function_val = owner.params[FUNCTION]
+        if function_val is None:
+            # paramsCurrent will go directly to an attribute value first before
+            # returning what's actually in its dictionary, so fall back
+            try:
+                keyval = owner.params.data[FUNCTION].keyword(owner, keyword)
+            except KeyError:
+                keyval = None
+        else:
+            keyval = function_val.keyword(owner, keyword)
+        return keyval
     except FunctionError as e:
         # assert(False)
         # prefs is not always created when this is called, so check
@@ -626,6 +615,7 @@ class Function_Base(Function):
     def __init__(self,
                  default_variable,
                  params,
+                 function=None,
                  owner=None,
                  name=None,
                  prefs=None,
@@ -658,6 +648,7 @@ class Function_Base(Function):
         self.owner = owner
 
         super().__init__(default_variable=default_variable,
+                         function=function,
                          param_defaults=params,
                          name=name,
                          prefs=prefs)
@@ -1405,6 +1396,7 @@ class UserDefinedFunction(Function_Base):
                                                   )
 
         super().__init__(default_variable=default_variable,
+                         function=custom_function,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -3752,7 +3744,7 @@ class SoftMax(NormalizingFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _instantiate_function(self, context=None):
+    def _instantiate_function(self, function, function_params=None, context=None):
 
         self.one_hot_function = None
         output_type = self.get_current_function_param(OUTPUT_TYPE)
@@ -3761,7 +3753,7 @@ class SoftMax(NormalizingFunction):
         if not output_type is ALL:
             self.one_hot_function = OneHot(mode=output_type).function
 
-        super()._instantiate_function(context=context)
+        super()._instantiate_function(function, function_params=function_params, context=context)
 
     def function(self,
                  variable=None,
@@ -4262,7 +4254,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                self.owner_name,
                                                MATRIX_KEYWORD_NAMES))
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         if self.matrix is None and not hasattr(self.owner, "receiver"):
             variable_length = np.size(np.atleast_2d(self.instance_defaults.variable), 1)
             self.matrix = np.identity(variable_length)
@@ -4340,26 +4332,27 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         matrix = self.get_current_function_param(MATRIX)
         return np.dot(variable, matrix)
 
-    def keyword(self, keyword):
+    @staticmethod
+    def keyword(obj, keyword):
 
         from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
         rows = None
         cols = None
         # use of variable attribute here should be ok because it's using it as a format/type
-        if isinstance(self, MappingProjection):
-            if isinstance(self.sender.value, numbers.Number):
+        if isinstance(obj, MappingProjection):
+            if isinstance(obj.sender.value, numbers.Number):
                 rows = 1
             else:
-                rows = len(self.sender.value)
-            if isinstance(self.receiver.instance_defaults.variable, numbers.Number):
+                rows = len(obj.sender.value)
+            if isinstance(obj.receiver.instance_defaults.variable, numbers.Number):
                 cols = 1
             else:
-                cols = len(self.receiver.instance_defaults.variable)
+                cols = len(obj.receiver.instance_defaults.variable)
         matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:
             raise FunctionError("Unrecognized keyword ({}) specified for the {} function of {}".
-                                format(keyword, self.name, self.owner_name))
+                                format(keyword, obj.name, obj.owner_name))
         else:
             return matrix
 
@@ -4626,6 +4619,9 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         self.auto_dependent = True
 
+    def _validate(self):
+        self._validate_rate(self.instance_defaults.rate)
+        super()._validate()
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -4643,7 +4639,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism); in that
                     #       case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
-                    if self._variable_not_specified:
+                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
@@ -4684,6 +4680,54 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         if NOISE in target_set:
             self._validate_noise(target_set[NOISE])
+
+    def _validate_rate(self, rate):
+        # kmantel: this duplicates much code in _validate_params above, but that calls _instantiate_defaults
+        # which I don't think is the right thing to do here, but if you don't call it in _validate_params
+        # then a lot of things don't get instantiated properly
+        if rate is not None:
+            if isinstance(rate, list):
+                rate = np.asarray(rate)
+
+            rate_type_msg = 'The rate parameter of {0} must be a number or an array/list of at most 1d (you gave: {1})'
+            if isinstance(rate, np.ndarray):
+                # kmantel: current test_gating test depends on 2d rate
+                #   this should be looked at but for now this restriction is removed
+                # if rate.ndim > 1:
+                #     raise FunctionError(rate_type_msg.format(self.name, rate))
+                pass
+            elif not isinstance(rate, numbers.Number):
+                raise FunctionError(rate_type_msg.format(self.name, rate))
+
+            if isinstance(rate, np.ndarray) and not iscompatible(rate, self.instance_defaults.variable):
+                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                        self.instance_defaults.variable = np.zeros_like(np.array(rate))
+                        if self.verbosePref:
+                            warnings.warn(
+                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                "must match the length ({}) of the default input ({});  "
+                                "the default input has been updated to match".format(
+                                    len(rate),
+                                    rate,
+                                    self.name,
+                                    np.array(self.instance_defaults.variable).size
+                                ),
+                                self.instance_defaults.variable,
+                            )
+                        self._instantiate_value()
+                        self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
+                    else:
+                        raise FunctionError(
+                            "The length of the array specified for the rate parameter of {} ({})"
+                            "must match the length of the default input ({}).".format(
+                                len(rate),
+                                # rate,
+                                self.name,
+                                np.array(self.instance_defaults.variable).size,
+                                # self.instance_defaults.variable,
+                            )
+                        )
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
@@ -5365,6 +5409,27 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         self.auto_dependent = True
 
+    def _validate_rate(self, rate):
+        # unlike other Integrators, variable does not need to match rate
+
+        if isinstance(rate, list):
+            rate = np.asarray(rate)
+
+        rate_type_msg = 'The rate parameter of {0} must be a number or an array/list of at most 1d (you gave: {1})'
+        if isinstance(rate, np.ndarray):
+            # kmantel: current test_gating test depends on 2d rate
+            #   this should be looked at but for now this restriction is removed
+            # if rate.ndim > 1:
+            #     raise FunctionError(rate_type_msg.format(self.name, rate))
+            pass
+        elif not isinstance(rate, numbers.Number):
+            raise FunctionError(rate_type_msg.format(self.name, rate))
+
+        if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+            self.instance_defaults.variable = np.zeros_like(np.array(rate))
+            self._instantiate_value()
+            self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
+
     def function(self,
                  variable=None,
                  params=None,
@@ -5578,7 +5643,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]])
                     #       before the object itself, thus does not see the array specification for the input.
-                    if self._variable_not_specified:
+                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
@@ -5614,23 +5679,35 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                                  context=context)
 
         if RATE in target_set:
-            if isinstance(target_set[RATE], (list, np.ndarray)):
-                for r in target_set[RATE]:
+            # cannot use _validate_rate here because it assumes it's being run after instantiation of the object
+            rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
+            if isinstance(rate, np.ndarray) and rate.ndim > 0:
+                for r in rate:
                     if r < 0.0 or r > 1.0:
-                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                            "between 0.0 and 1.0 because it is an AdaptiveIntegrator".
-                                            format(target_set[RATE], self.name))
+                        raise FunctionError(rate_value_msg.format(rate, self.name))
             else:
-                if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                    raise FunctionError(
-                        "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                        "1.0 because it is an AdaptiveIntegrator".format(target_set[RATE], self.name))
+                if rate < 0.0 or rate > 1.0:
+                    raise FunctionError(rate_value_msg.format(rate, self.name))
 
         if NOISE in target_set:
             self._validate_noise(target_set[NOISE])
         # if INITIALIZER in target_set:
         #     self._validate_initializer(target_set[INITIALIZER])
 
+    def _validate_rate(self, rate):
+        super()._validate_rate(rate)
+
+        if isinstance(rate, list):
+            rate = np.asarray(rate)
+
+        rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
+        if isinstance(rate, np.ndarray) and rate.ndim > 0:
+            for r in rate:
+                if r < 0.0 or r > 1.0:
+                    raise FunctionError(rate_value_msg.format(rate, self.name))
+        else:
+            if rate < 0.0 or rate > 1.0:
+                raise FunctionError(rate_value_msg.format(rate, self.name))
 
     def function(self,
                  variable=None,
@@ -7528,7 +7605,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
-                    if self._variable_not_specified:
+                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
@@ -8165,7 +8242,7 @@ class NavarroAndFuss(IntegratorFunction):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def _instantiate_function(self, context=None):
+    def _instantiate_function(self, function, function_params=None, context=None):
         import os
         import sys
         try:
@@ -8183,7 +8260,7 @@ class NavarroAndFuss(IntegratorFunction):
         # MATLAB is very finnicky about the formatting here to actually add the path so be careful if you modify
         self.eng1 = matlab.engine.start_matlab("-r 'addpath(char(\"{0}\"))' -nojvm".format(ddm_functions_path))
 
-        super()._instantiate_function(context=context)
+        super()._instantiate_function(function=function, function_params=function_params, context=context)
 
     def function(self,
                  variable=None,
@@ -9102,13 +9179,14 @@ COMMENT
 
 
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiate matrix
 
         Specified matrix is convolved with HOLLOW_MATRIX
             to eliminate the diagonal (self-connections) from the calculation.
         The `Distance` Function is used for all calculations except ENERGY (which is not really a distance metric).
         If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the Distance Function.
+        :param function:
 
         """
 
