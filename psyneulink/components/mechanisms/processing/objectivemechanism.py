@@ -560,7 +560,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
                  **kwargs):
 
         input_states = monitored_output_states
@@ -585,12 +584,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          size=size,
                          input_states=input_states,
                          output_states=output_states,
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self,
-                         function=function,
-                         )
+                         context=ContextFlags.CONSTRUCTOR)
 
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
         #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
@@ -739,7 +737,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         input_states = self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
                                               reference_value=reference_value,
-                                              context='ADD_STATES')
+                                              # context='ADD_STATES')
+                                              context = ContextFlags.METHOD)
+
         output_states = [[projection.sender for projection in state.path_afferents] for state in input_states]
 
         self._instantiate_function_weights_and_exponents(context=context)

@@ -95,6 +95,8 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, PROCESSING_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -270,8 +272,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  function=Linear,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -282,12 +283,11 @@ class ProcessingMechanism(ProcessingMechanism_Base):
         super(ProcessingMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   input_states=input_states,
+                                                  function=function,
                                                   output_states=output_states,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=self,
-                                                  function=function
-                                                  )
+                                                  context=ContextFlags.CONSTRUCTOR)
 
 

@@ -67,13 +67,11 @@ class EVCAuxiliaryFunction(Function_Base):
                                FUNCTION_OUTPUT_TYPE_CONVERSION: False,
                                PARAMETER_STATE_PARAMS: None})
 
-    # MODIFIED 11/29/16 NEW:
     classPreferences = {
         kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
         kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
-    # MODIFIED 11/29/16 END
 
     @tc.typecheck
     def __init__(self,
@@ -82,7 +80,7 @@ class EVCAuxiliaryFunction(Function_Base):
                  params=None,
                  owner=None,
                  prefs:is_pref_set=None,
-                 context=componentType+INITIALIZING):
+                 context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(params=params)
@@ -127,7 +125,7 @@ class ValueFunction(EVCAuxiliaryFunction):
     def __init__(self, function=None):
         function = function or self.function
         super().__init__(function=function,
-                         context=self.componentName+INITIALIZING)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def function(
         self,
@@ -259,12 +257,11 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                  default_variable=None,
                  params=None,
                  function=None,
-                 owner=None,
-                 context=None):
+                 owner=None):
         function = function or self.function
         super().__init__(function=function,
                          owner=owner,
-                         context=self.componentName+INITIALIZING)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def function(
         self,
@@ -312,10 +309,11 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller.EVC_policies = []
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        context = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION)) # cxt-done cxt-pass
         # FIX 3/30/18 - IS controller CORRECT FOR THIS, OR SHOULD IT BE System (controller.system)??
         controller.context.execution_phase = ContextFlags.SIMULATION
-        controller.context.string = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION))
+        controller.context.string = "{0} EXECUTING {1} of {2}".format(controller.name,
+                                                                      EVC_SIMULATION,
+                                                                      controller.system.name)
         # Print progress bar
         if controller.prefs.reportOutputPref:
             progress_bar_rate_str = ""
@@ -518,7 +516,7 @@ def _compute_EVC(args):
 
     """
 
-    ctlr, allocation_vector, runtime_params, context = args # cxt-set
+    ctlr, allocation_vector, runtime_params, context = args
     # # TEST PRINT:
     # print("Allocation vector: {}\nPredicted input: {}".
     #       format(allocation_vector, [mech.outputState.value for mech in ctlr.predicted_input]),
@@ -527,16 +525,12 @@ def _compute_EVC(args):
     outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
                         allocation_vector=allocation_vector,
                         runtime_params=runtime_params,
-                        context=context) # cxt-done
+                        context=context)
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
-                                                              # MODIFIED 5/7/17 OLD:
-                                                              # outcome=ctlr.input_values,
-                                                              # MODIFIED 5/7/17 NEW:
                                                               outcome=outcome,
-                                                              # MODIFIED 5/7/17 END
                                                               costs=ctlr.control_signal_costs,
-                                                              context=context) # cxt-done
+                                                              context=context)
 
 
     if PY_MULTIPROCESSING:

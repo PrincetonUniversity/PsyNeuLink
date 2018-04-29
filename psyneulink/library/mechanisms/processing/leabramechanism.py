@@ -103,6 +103,7 @@ from psyneulink.components.functions.function import Function_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates, standard_output_states
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import FUNCTION, INITIALIZING, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE,\
     LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
@@ -207,8 +208,7 @@ class LeabraFunction(Function_Base):
                  network=None,
                  params=None,
                  owner=None,
-                 prefs=None,
-                 context=componentName + INITIALIZING):
+                 prefs=None):
 
         if not leabra_available:
             raise LeabraError('leabra python module is not installed. Please install it from '
@@ -226,7 +226,7 @@ class LeabraFunction(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _validate_variable(self, variable, context=None):
         if not isinstance(variable, (list, np.ndarray, numbers.Number)):
@@ -260,7 +260,7 @@ class LeabraFunction(Function_Base):
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         # HACK: otherwise the INITIALIZING function executions impact the state of the leabra network
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             output_size = len(self.network.layers[-1].units)
             return np.zeros(output_size)
 
@@ -455,8 +455,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                  quarter_size=50,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
-                 context=componentType + INITIALIZING):
+                 prefs: is_pref_set = None):
         if not leabra_available:
             raise LeabraError('leabra python module is not installed. Please install it from '
                               'https://github.com/benureau/leabra')
@@ -497,7 +496,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _execute(
         self,

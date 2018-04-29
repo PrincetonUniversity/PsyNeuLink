@@ -713,12 +713,12 @@ class InputState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-done
+        if context is None:
+            context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
-            context = self # cxt-done
+            context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
         if variable is None and size is None and projections is not None:
@@ -842,7 +842,7 @@ class InputState(State_Base):
         """
 
         if function_variable is not None:
-            return self.function(function_variable, runtime_params, context)
+            return super()._execute(function_variable, runtime_params=runtime_params, context=context)
         # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
@@ -850,18 +850,12 @@ class InputState(State_Base):
             #       maybe safe when self.value is only passed or stateful
             variable = np.asarray(self._path_proj_values)
             self._update_variable(variable[0])
-            # # MODIFIED 3/20/18 OLD:
-            # combined_values = self.function(variable=variable,
-            #                                 params=runtime_params,
-            #                                 context=context)
-            # MODIFIED 3/20/18 NEW:
             combined_values = super()._execute(
                 variable=variable,
                 function_variable=variable,
                 runtime_params=runtime_params,
                 context=context
             )
-            # MODIFIED 3/20/18 END
             return combined_values
         # There were no Projections
         else:
@@ -1172,8 +1166,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
-    # IMPLEMENTATION NOTE: USE OF CONTEXT STRING
-    if context and 'ADD_STATES' in context: # cxt-test
+    if context & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list

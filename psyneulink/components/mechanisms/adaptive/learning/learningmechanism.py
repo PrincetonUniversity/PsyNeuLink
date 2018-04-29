@@ -910,8 +910,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         if error_sources and not isinstance(error_sources, list):
             error_sources = [error_sources]
@@ -938,12 +937,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         super().__init__(default_variable=default_variable,
                          size=size,
                          modulation=modulation,
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self,
-                         function=function,
-                         )
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _parse_function_variable(self, variable):
         function_variable = np.zeros_like(
@@ -1120,7 +1118,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                  reference_value=self.learning_signal,
                                                  modulation=self.modulation,
                                                  # state_spec=self.learning_signal)
-                                                 state_spec=learning_signal)
+                                                 state_spec=learning_signal,
+                                                 context=context)
             # Add LearningSignal to output_states list
             self._output_states.append(learning_signal)
 
@@ -1140,8 +1139,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #    since it is used by the execute method
         self._error_signal_input_states = self.error_signal_input_states
 
-    def add_states(self, states, context=ADD_STATES):
+    def add_states(self, states, context=None):
         """Add error_source and error_matrix for each InputState added"""
+
+        if context is None:
+            # context.source = ContextFlags.METHOD
+            # context.string = ADD_STATES
+            context = ContextFlags.COMMAND_LINE
 
         states = super().add_states(states=states, context=context)
         for input_state in states[INPUT_STATES]:

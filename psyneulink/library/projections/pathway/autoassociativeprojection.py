@@ -92,6 +92,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.projections.projection import projection_keywords
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.outputstate import OutputState
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, MATRIX
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -116,8 +117,7 @@ class AutoAssociativeProjection(MappingProjection):
         matrix=DEFAULT_MATRIX,                              \
         params=None,                                        \
         name=None,                                          \
-        prefs=None                                          \
-        context=None)
+        prefs=None)
 
     Implements a MappingProjection that is self-recurrent on a `RecurrentTransferMechanism`; an AutoAssociativeProjection
     represents connections between nodes in a single-layer recurrent network. It multiplies the output of the
@@ -229,11 +229,11 @@ class AutoAssociativeProjection(MappingProjection):
                  sender=None,
                  receiver=None,
                  matrix=DEFAULT_MATRIX,
+                 function=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
                  context=None,
-                 function=None,
                  ):
 
         if owner is not None:
@@ -249,12 +249,10 @@ class AutoAssociativeProjection(MappingProjection):
         super().__init__(sender=sender,
                          receiver=receiver,
                          matrix=matrix,
+                         function=function,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=context,
-                         function=function,
-                         )
+                         prefs=prefs)
 
     def _execute(self, variable, function_variable=None, runtime_params=None, context=None):
         """

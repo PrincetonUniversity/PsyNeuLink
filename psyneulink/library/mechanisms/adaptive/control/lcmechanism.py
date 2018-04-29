@@ -237,6 +237,7 @@ from psyneulink.components.functions.function import Integrator, MULTIPLICATIVE_
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.shellclasses import Mechanism
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -393,8 +394,7 @@ class LCMechanism(ControlMechanism):
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(mode=mode,
@@ -408,7 +408,7 @@ class LCMechanism(ControlMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
@@ -454,7 +454,6 @@ class LCMechanism(ControlMechanism):
                                            "\'ALL\' was specified for the {} "
                                            "argument the constructor for {}".format(MODULATED_MECHANISMS,
                                                                                     self.name))
-
             if not isinstance(spec, list):
                 spec = [spec]
 

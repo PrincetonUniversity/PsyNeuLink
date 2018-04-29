@@ -146,6 +146,7 @@ from psyneulink.components.shellclasses import Function
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, PREDICTION_ERROR_MECHANISM, PROJECTIONS, RL_FUNCTION, SAMPLE, TARGET, TDLEARNING_FUNCTION, VARIABLE, WEIGHT
 from psyneulink.library.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
 
@@ -210,7 +211,9 @@ def _instantiate_learning_components(learning_projection, context=None):
     #                               APPROPRIATE ObjectiveMechanism, etc.
     from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
-    if not learning_projection.name in context: # cxt-test
+    # Call should generally be from LearningProjection._instantiate_sender,
+    #    but may be used more generally in the future
+    if context != ContextFlags.METHOD:
         raise LearningAuxiliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "
                                                              "calls from a LearningProjection._instantiate_sender()"))
 
@@ -471,8 +474,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                               # error_output,
                                                               error_signal],
                                             activation_derivative_fct=activation_derivative,
-                                            learning_rate=learning_rate,
-                                            context=context)
+                                            learning_rate=learning_rate)
 
     else:
         raise LearningAuxiliaryError("PROGRAM ERROR: unrecognized learning "
@@ -515,8 +517,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                                          # WEIGHT:1
             #                                                          }],
             #                                           name="{} {}".format(lc.activation_mech.name,
-            #                                                               COMPARATOR_MECHANISM),
-            #                                           context=context)
+            #                                                               COMPARATOR_MECHANISM))
             # MODIFIED 10/10/17 NEW:
             if learning_function.componentName == TDLEARNING_FUNCTION:
                 objective_mechanism = PredictionErrorMechanism(
@@ -527,8 +528,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                 VARIABLE: target_input},
                         function=PredictionErrorDeltaFunction(gamma=1.0),
                         name="{} {}".format(lc.activation_mech.name,
-                                            PREDICTION_ERROR_MECHANISM),
-                        context=context)
+                                            PREDICTION_ERROR_MECHANISM))
             else:
                 objective_mechanism = ComparatorMechanism(sample={NAME: SAMPLE,
                                                                   VARIABLE: sample_input,
@@ -538,8 +538,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                   VARIABLE: target_input},
                                                           function=error_function,
                                                           name="{} {}".format(lc.activation_mech.name,
-                                                                              COMPARATOR_MECHANISM),
-                                                          context=context)
+                                                                              COMPARATOR_MECHANISM))
                 # MODIFIED 10/10/17 END
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
@@ -553,8 +552,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                                         {NAME:MSE,
             #                                                          ASSIGN:lambda x: np.sum(x*x)/len(x)}],
             #                                          name="\'{}\' {}".format(lc.activation_mech.name,
-            #                                                                  COMPARATOR_MECHANISM),
-            #                                          context=context)
+            #                                                                  COMPARATOR_MECHANISM))
 
             objective_mechanism._role = LEARNING
             objective_mechanism._learning_role = TARGET
@@ -604,8 +602,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                            function=learning_function,
                                            # learning_signals=[lc.activation_mech_projection],
                                            learning_signals=[learning_projection],
-                                           name=LEARNING_MECHANISM + " for " + lc.activation_mech_projection.name,
-                                           context=context)
+                                           name=LEARNING_MECHANISM + " for " + lc.activation_mech_projection.name)
 
     # IMPLEMENTATION NOTE:
     # ADD ARGUMENTS TO LearningMechanism FOR activation_input AND activation_output, AND THEN INSTANTIATE THE
@@ -616,15 +613,13 @@ def _instantiate_learning_components(learning_projection, context=None):
     MappingProjection(sender=lc.activation_mech_input,
                       receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
                       matrix=IDENTITY_MATRIX,
-                      name = lc.activation_mech_input.owner.name + ' to ' + ACTIVATION_INPUT,
-                      context=context)
+                      name = lc.activation_mech_input.owner.name + ' to ' + ACTIVATION_INPUT)
 
     # Assign MappingProjection from activation_mech_output to LearningMechanism's ACTIVATION_OUTPUT inputState
     MappingProjection(sender=lc.activation_mech_output,
                       receiver=learning_mechanism.input_states[ACTIVATION_OUTPUT],
                       matrix=IDENTITY_MATRIX,
-                      name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT,
-                      context=context)
+                      name = lc.activation_mech_output.owner.name + ' to ' + ACTIVATION_OUTPUT)
 
 
 def _instantiate_error_signal_projection(sender, receiver):
@@ -743,7 +738,9 @@ def _assign_error_signal_projections(processing_mech, system, objective_mech=Non
                 #                              projections=eff_lm.output_states[ERROR_SIGNAL],
                 #                              name=ERROR_SIGNAL))
                 aff_lm.add_states(InputState(projections=eff_lm.output_states[ERROR_SIGNAL],
-                                             name=ERROR_SIGNAL))
+                                             name=ERROR_SIGNAL,
+                                             context=ContextFlags.METHOD),
+                                  context=ContextFlags.METHOD)
 
         if not aff_lm.systems:
             aff_lm.systems[system] = LEARNING

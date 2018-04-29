@@ -569,12 +569,12 @@ class ParameterState(State_Base):
                                              variable=variable,
                                              size=size,
                                              projections=projections,
+                                             function=function,
                                              params=params,
                                              name=name,
                                              prefs=prefs,
-                                             context=self,
-                                             function=function,
-                                             )
+                                             context=ContextFlags.CONSTRUCTOR)
+                                             # context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that ParameterState (as identified by its name) is for a valid parameter of the owner
@@ -822,7 +822,8 @@ class ParameterState(State_Base):
         """
 
         if function_variable is not None:
-            return self.function(function_variable, runtime_params, context)
+            # return self.function(function_variable, runtime_params, context)
+            return super()._execute(function_variable, runtime_params=runtime_params, context=context)
         else:
             # Most commonly, ParameterState is for the parameter of a function
             try:
@@ -834,19 +835,12 @@ class ParameterState(State_Base):
                 # param_value = self.owner.params[self.name]
                 param_value = getattr(self.owner, '_'+ self.name)
 
-            # # MODIFIED 3/20/18 OLD:
-            # value = self.function(variable=param_value,
-            #                       params=runtime_params,
-            #                       context=context)
-            # return value
-            # MODIFIED 3/20/18 NEW:
             return super()._execute(
                 variable=variable,
                 function_variable=param_value,
                 runtime_params=runtime_params,
                 context=context
             )
-            # MODIFIED 3/20/18 END
 
     @property
     def pathway_projections(self):
