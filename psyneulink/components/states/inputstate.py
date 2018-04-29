@@ -843,7 +843,7 @@ class InputState(State_Base):
         """
 
         if function_variable is not None:
-            return self.function(function_variable, runtime_params, context)
+            return super()._execute(function_variable, runtime_params=runtime_params, context=context)
         # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
@@ -851,18 +851,12 @@ class InputState(State_Base):
             #       maybe safe when self.value is only passed or stateful
             variable = np.asarray(self._path_proj_values)
             self._update_variable(variable[0])
-            # # MODIFIED 3/20/18 OLD:
-            # combined_values = self.function(variable=variable,
-            #                                 params=runtime_params,
-            #                                 context=context)
-            # MODIFIED 3/20/18 NEW:
             combined_values = super()._execute(
                 variable=variable,
                 function_variable=variable,
                 runtime_params=runtime_params,
                 context=context
             )
-            # MODIFIED 3/20/18 END
             return combined_values
         # There were no Projections
         else:
