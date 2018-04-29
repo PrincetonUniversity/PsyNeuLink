@@ -139,6 +139,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
@@ -674,7 +675,11 @@ class LCA(RecurrentTransferMechanism):
                 current_input = function_variable
 
         # Apply TransferMechanism function
-        output_vector = self.function(variable=current_input, params=runtime_params)
+        # output_vector = self.function(variable=current_input, params=runtime_params)
+        # Override TransferMechanism._execute
+        output_vector = super(Mechanism, self)._execute(variable=current_input,
+                                                                runtime_params=runtime_params,
+                                                                context=context)
 
         if clip is not None:
             minCapIndices = np.where(output_vector < clip[0])
