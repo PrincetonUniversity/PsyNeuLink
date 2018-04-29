@@ -1029,7 +1029,6 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if isinstance(self.function.__self__, Integrator):
 
-            # result = self.function(function_variable, context=context)
             result = super()._execute(variable, context=context)
 
             if self.context.initialization_status != ContextFlags.INITIALIZING:
@@ -1041,10 +1040,9 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         else:
 
-            result = self.function(
-            # result = self._execute(
+            result = super()._execute(
                 variable=function_variable,
-                params=runtime_params,
+                runtime_params=runtime_params,
                 context=context
             )
 
