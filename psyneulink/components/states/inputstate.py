@@ -464,7 +464,11 @@ from psyneulink.components.functions.function import Linear, LinearCombination, 
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CLASS_DEFAULTS, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import \
+    CLASS_DEFAULTS, COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, \
+    INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, \
+    OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
+    SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible
@@ -704,10 +708,11 @@ class InputState(State_Base):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 function=None,
                  projections=None,
                  weight=None,
                  exponent=None,
+                 function=None,
+                 combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -723,6 +728,13 @@ class InputState(State_Base):
 
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
+
+        if combine:
+            if function:
+                raise InputStateError("Can't specify both {} ({}) and {} ({}) arguments of an {}".
+                                      format(COMBINE, combine, FUNCTION, function, InputState.__name__))
+            else:
+                function=LinearCombination(operation=combine)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
