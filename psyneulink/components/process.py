@@ -853,9 +853,7 @@ class Process(Process_Base):
                           registry=ProcessRegistry,
                           context=context)
 
-        if not context: # cxt-test
-            # context = self.__class__.__name__
-            # context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT # cxt-done
+        if not context:
             self.context.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
@@ -1741,8 +1739,8 @@ class Process(Process_Base):
         # Validate input
         if input is None:
             input = self.first_mechanism.instance_defaults.variable
-            if (self.prefs.verbosePref and
-                    not (not context or COMPONENT_INIT in context)): # cxt-test
+            if (self.prefs.verbosePref and not (context == ContextFlags.COMMAND_LINE or
+                                                self.context.initializaton_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
 
         else:

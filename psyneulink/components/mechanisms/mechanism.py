@@ -1311,37 +1311,10 @@ class Mechanism_Base(Mechanism):
 
         # Forbid direct call to base class constructor
         if context is None or (context !=ContextFlags.CONSTRUCTOR and
-                               not self.context.initialization_status == ContextFlags.VALIDATING): # cxt-test
+                               not self.context.initialization_status == ContextFlags.VALIDATING):
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; use a subclass")
 
         # IMPLEMENT **kwargs (PER State)
-
-
-        # Ensure that all input_states and output_states, whether from paramClassDefaults or constructor arg,
-        #    have been included in user_params and implemented as properties
-        #    (in case the subclass did not include one and/or the other as an argument in its constructor)
-
-        # kwargs = {}
-
-        # input_states = []
-        # if INPUT_STATES in self.paramClassDefaults and self.paramClassDefaults[INPUT_STATES]:
-        #     input_states.extend(self.paramClassDefaults[INPUT_STATES])
-        # if INPUT_STATES in self.user_params and self.user_params[INPUT_STATES]:
-        #     input_states.extend(self.user_params[INPUT_STATES])
-        # if input_states:
-        #     kwargs[INPUT_STATES] = input_states
-        #
-        # output_states = []
-        # if OUTPUT_STATES in self.paramClassDefaults and self.paramClassDefaults[OUTPUT_STATES]:
-        #     output_states.extend(self.paramClassDefaults[OUTPUT_STATES])
-        # if OUTPUT_STATES in self.user_params and self.user_params[OUTPUT_STATES]:
-        #     output_states.extend(self.user_params[OUTPUT_STATES])
-        # if output_states:
-        #     kwargs[OUTPUT_STATES] = output_states
-        #
-        # kwargs[PARAMS] = params
-        #
-        # params = self._assign_args_to_param_dicts(**kwargs)
 
         self._execution_id = None
         self._is_finished = False
@@ -1377,17 +1350,6 @@ class Mechanism_Base(Mechanism):
                           context=context)
 
         default_variable = self._handle_default_variable(default_variable, size, input_states, params)
-        if isinstance(output_states, tuple):
-            output_states = list(output_states)
-
-        # Mark initialization in context
-        self.context.initialization_status = ContextFlags.INITIALIZING
-        if not context or isinstance(context, object) or inspect.isclass(context): # cxt-test
-            context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__ # cxt-done
-            self.context.string = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__
-        else:
-            context = context + SEPARATOR_BAR + INITIALIZING + self.name # cxt-done
-            self.context.string = context + SEPARATOR_BAR + INITIALIZING + self.name # cxt-done
 
         super(Mechanism_Base, self).__init__(default_variable=default_variable,
                                              size=size,
@@ -1745,17 +1707,11 @@ class Mechanism_Base(Mechanism):
         if INPUT_STATES in params and params[INPUT_STATES] is not None:
             for state_spec in params[INPUT_STATES]:
                 _parse_state_spec(owner=self, state_type=InputState, state_spec=state_spec)
-        # INPUT_STATES is not specified
-        else:
-            # pass if call is from assign_params (i.e., not from an init method)
-            # if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test-X
-            if context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
-                pass
-            else:
-                # INPUT_STATES not specified:
-                # - set to None, so it is set to default (self.instance_defaults.variable) in instantiate_inputState
-                # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
-                params[INPUT_STATES] = None
+        # INPUT_STATES is not specified and call is from constructor (i.e., not assign_params):
+        elif context & ContextFlags.CONSTRUCTOR:
+            # - set to None, so it is set to default (self.instance_defaults.variable) in instantiate_inputState
+            # - defer warning (if in VERBOSE mode) to instantiate_inputState, where default value is known
+            params[INPUT_STATES] = None
 
         # VALIDATE FUNCTION_PARAMS
         try:

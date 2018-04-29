@@ -905,16 +905,14 @@ class Component(object):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
-       # context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done# context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-set
         context = ContextFlags.COMPONENT
         self.context.initialization_status = ContextFlags.INITIALIZING
         self.context.execution_phase = None
         if not self.context.source:
             self.context.source = ContextFlags.COMPONENT
-        self.context.string = INITIALIZING + ": " + COMPONENT_INIT
+        self.context.string = "{}: {} {}".format(COMPONENT_INIT, INITIALIZING, self.name)
 
         self.context.initialization_status = ContextFlags.INITIALIZING
-        # self.context.initialization_status = ContextFlags.UNSET
 
         defaults = self.ClassDefaults.values().copy()
         if param_defaults is not None:

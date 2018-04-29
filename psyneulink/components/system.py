@@ -820,7 +820,7 @@ class System(System_Base):
 
         # Required to defer assignment of self.controller by setter
         #     until the rest of the System has been instantiated
-        self.context.initialization_status = ContextFlags.INITIALIZING # cxt-init
+        self.context.initialization_status = ContextFlags.INITIALIZING
         processes = processes or []
         if not isinstance(processes, list):
             processes = [processes]
@@ -849,7 +849,7 @@ class System(System_Base):
                           registry=SystemRegistry,
                           context=context)
 
-        if not context: # cxt-test-X
+        if not context:
             context = ContextFlags.COMPOSITION
             self.context.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
@@ -860,7 +860,7 @@ class System(System_Base):
                          prefs=prefs,
                          context=context)
 
-        self.context.initialization_status = ContextFlags.INITIALIZED # cxt-init
+        self.context.initialization_status = ContextFlags.INITIALIZED
         self._execution_id = None
 
         # Assign controller
@@ -2499,8 +2499,7 @@ class System(System_Base):
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
-        if not context: # cxt-test
-            # context = EXECUTING + " " + SYSTEM + " " + self.name # cxt-done
+        if not context:
             context = ContextFlags.COMPOSITION
             self.context.execution_phase = ContextFlags.PROCESSING
             self.context.string = EXECUTING + " " + SYSTEM + " " + self.name
@@ -2600,7 +2599,6 @@ class System(System_Base):
             self.context.execution_phase = ContextFlags.LEARNING
             self.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
 
-            # self._execute_learning(context=context.replace(EXECUTING, LEARNING + ' ')) # cxt-set-X
             self._execute_learning(context)
 
             self.context.execution_phase = ContextFlags.IDLE
@@ -2658,14 +2656,12 @@ class System(System_Base):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                # context + "| Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]" # cxt-set
                 context = ContextFlags.COMPOSITION
-                # mechanism.context.string = context # cxt-push ? (note: currently also assigned in Mechanism.execute())
                 mechanism.context.string = "Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
                 mechanism.context.composition = self
 
                 mechanism.context.execution_phase = ContextFlags.PROCESSING
-                mechanism.execute(runtime_params=rt_params, context=context) # cxt-pass
+                mechanism.execute(runtime_params=rt_params, context=context)
                 mechanism.context.execution_phase = ContextFlags.IDLE
 
                 if self._report_system_output and  self._report_process_output:
@@ -2753,20 +2749,19 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-done
+                                         re.sub(r'[\[,\],\n]','',str(process_names))))
 
                 component.context.composition = self
                 component.context.execution_phase = ContextFlags.LEARNING
                 component.context.string = context_str
 
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                # component.execute(runtime_params=params, context=context_str) # cxt-test-X
                 component.execute(runtime_params=params, context=context)
-                # # TEST PRINT:
-                # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
                 component.context.execution_phase = ContextFlags.IDLE
 
+                # # TEST PRINT:
+                # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
         # THEN update all MappingProjections
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
@@ -2791,11 +2786,11 @@ class System(System_Base):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub(r'[\[,\],\n]','',str(process_names)))) # cxt-done
+                                         re.sub(r'[\[,\],\n]','',str(process_names))))
                 component.context.execution_phase = ContextFlags.LEARNING
                 component.context.string = context_str
 
-                component._parameter_states[MATRIX].update(context=context_str)
+                component._parameter_states[MATRIX].update(context=ContextFlags.COMPOSITION)
 
                 component.context.execution_phase = ContextFlags.IDLE
 
@@ -2915,8 +2910,7 @@ class System(System_Base):
                    call_after_time_step=call_after_time_step,
                    termination_processing=termination_processing,
                    termination_learning=termination_learning,
-                   # context=context) # cxt-pass
-                   context=ContextFlags.COMPOSITION) # cxt-pass
+                   context=ContextFlags.COMPOSITION)
 
     def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of Processes in System being executed
@@ -3234,7 +3228,7 @@ class System(System_Base):
 
     @controller.setter
     def controller(self, control_mech_spec):
-        # self._instantiate_controller(control_mech_spec, context='System.controller setter') cxt-set
+        self.context.string = 'System.controller setter'
         self._instantiate_controller(control_mech_spec, context=ContextFlags.PROPERTY)
 
     @property
