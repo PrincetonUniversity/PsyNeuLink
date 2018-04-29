@@ -1008,7 +1008,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         COMMENT
         """
 
-        if context & ContextFlags.COMMAND_LINE: # cxt-test
+        if context == ContextFlags.COMMAND_LINE:
             system.controller = self
             return
 
@@ -1083,7 +1083,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
         self._objective_mechanism.controller = True
 
-        # if context != 'System.controller setter': # cxt-test-X
         if context != ContextFlags.PROPERTY:
             system._controller = self
 

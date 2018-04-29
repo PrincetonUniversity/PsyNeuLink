@@ -1710,14 +1710,13 @@ class Mechanism_Base(Mechanism):
         # INPUT_STATES is not specified and call is from constructor (i.e., not assign_params):
         elif context & ContextFlags.CONSTRUCTOR:
             # - set to None, so it is set to default (self.instance_defaults.variable) in instantiate_inputState
-            # - defer warning (if in VERBOSE mode) to instantiate_inputState, where default value is known
+            # - warning (if in VERBOSE mode) will be issued in instantiate_inputState, where default value is known
             params[INPUT_STATES] = None
 
         # VALIDATE FUNCTION_PARAMS
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            # if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test-X
             if context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
                 pass
             elif self.prefs.verbosePref:
@@ -1790,20 +1789,13 @@ class Mechanism_Base(Mechanism):
                 i += 1
             params[OUTPUT_STATES] = param_value
 
-        # OUTPUT_STATES is not specified
-        else:
-            # pass if call is from assign_params (i.e., not from an init method)
-            # if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test-X
-            if context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
-                pass
-            else:
-                # OUTPUT_STATES not specified:
-                # - set to None, so that it is set to default (self.value) in instantiate_output_state
-                # Notes:
-                # * if in VERBOSE mode, warning will be issued in instantiate_output_state, where default value is known
-                # * number of OutputStates is validated against length of owner Mechanism's execute method output (EMO)
-                #     in instantiate_output_state, where an OutputState is assigned to each item (value) of the EMO
-                params[OUTPUT_STATES] = None
+        # OUTPUT_STATES is not specified and call is from construct (i.e., not assign_params)
+        elif context & ContextFlags.CONSTRUCTOR:
+            # - set to None, so that it is set to default (self.value) in instantiate_output_state
+            # - warning (if in VERBOSE mode) will be issued in instantiate_inputState, where default value is known
+            # - number of OutputStates is validated against length of owner Mechanism's execute method output (EMO)
+            #     in instantiate_output_state, where an OutputState is assigned to each item (value) of the EMO
+            params[OUTPUT_STATES] = None
 
         def validate_labels_dict(lablel_dict, type):
             for label, value in labels_dict.items():
@@ -2087,17 +2079,15 @@ class Mechanism_Base(Mechanism):
 
         """
         self.ignore_execution_id = ignore_execution_id
-        context = context or ContextFlags.COMMAND_LINE # cxt-done
+        context = context or ContextFlags.COMMAND_LINE
         if not self.context.source or context & ContextFlags.COMMAND_LINE:
             self.context.source = ContextFlags.COMMAND_LINE
-            self.context.string = COMMAND_LINE
+        if self.context.initialization_status == ContextFlags.INITIALIZED:
+            self.context.string = "{} EXECUTING {}: {}".format(context.name,self.name,
+                                                               ContextFlags._get_context_string(
+                                                                       self.context.flags, EXECUTION_PHASE))
         else:
-            # These need to be set for states to use as context
-            # self.context.string = context # cxt-set
-            if self.context.initialization_status == ContextFlags.INITIALIZED:
-                self.context.string = ContextFlags._get_context_string(self.context.flags, EXECUTION_PHASE)
-            else:
-                self.context.string = ContextFlags._get_context_string(self.context.flags, INITIALIZATION_STATUS)
+            self.context.string = "{} INITIALIZING {}".format(context.name, self.name)
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
@@ -2105,7 +2095,6 @@ class Mechanism_Base(Mechanism):
 
         # Limit init to scope specified by context
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            # if PROCESS_INIT in context or SYSTEM_INIT in context: # cxt-test-X
             if self.context.composition:
                 # Run full execute method for init of Process and System
                 pass
@@ -2195,37 +2184,26 @@ class Mechanism_Base(Mechanism):
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
-            if context & ContextFlags.COMMAND_LINE: # cxt-test
-                # context = EXECUTING + ' ' + append_type_to_name(self) # cxt-done
+            if context & ContextFlags.COMMAND_LINE:
                 self.context.execution_phase = ContextFlags.PROCESSING
-                self.context.string = EXECUTING + ' ' + append_type_to_name(self)
             if input is None:
                 input = self.instance_defaults.variable
             variable = self._update_variable(self._get_variable_from_input(input))
             function_variable = self._parse_function_variable(variable)
 
         # UPDATE PARAMETER STATE(S)
-        self._update_parameter_states(runtime_params=runtime_params, context=context) # cxt-pass ? cxt-push
+        self._update_parameter_states(runtime_params=runtime_params, context=context)
 
         # CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
         # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
         #                      to avoid multiple calls to (and potential log entries for) self.value property
-
-        # MODIFIED 3/20/18 OLD:
         value = self._execute(
             variable=variable,
             function_variable=function_variable,
             runtime_params=runtime_params,
-            context=context # cxt-pass cxt-push
+            context=context
         )
-        # # MODIFIED 3/20/18 NEW:
-        # value = super()._execute(
-        #     variable=variable,
-        #     runtime_params=runtime_params,
-        #     context=context # cxt-pass cxt-push
-        # )
-        # MODIFIED 3/20/18 END
 
         # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
         #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2254,7 +2232,7 @@ class Mechanism_Base(Mechanism):
         self.value = value
 
         # UPDATE OUTPUT STATE(S)
-        self._update_output_states(runtime_params=runtime_params, context=context) # cxt-pass cxt-push
+        self._update_output_states(runtime_params=runtime_params, context=context)
 
         # REPORT EXECUTION
         if self.prefs.reportOutputPref and (self.context.execution_phase &
@@ -2263,7 +2241,7 @@ class Mechanism_Base(Mechanism):
 
         if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
             self._increment_execution_count()
-            self._update_current_execution_time(context=context) # cxt-pass
+            self._update_current_execution_time(context=context)
 
         return self.value
 
@@ -2366,11 +2344,7 @@ class Mechanism_Base(Mechanism):
     def _update_parameter_states(self, runtime_params=None, context=None):
 
         for state in self._parameter_states:
-            state.update(params=runtime_params, context=context) # cxt-pass
-            # if state.name in self.user_params:
-            #     self.user_params.__additem__(state.name, state.value)
-            # if state.name in self.function_params:
-            #     self.function_params.__additem__(state.name, state.value)
+            state.update(params=runtime_params, context=context)
         self._update_attribs_dicts(context=context)
 
     def _update_attribs_dicts(self, context=None):
@@ -2731,8 +2705,6 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.outputstate import OutputState, _instantiate_output_states
 
         if context is None:
-            # context = ADD_STATES # cxt-set
-            # context = Context(source=ContextFlags.METHOD, string=ADD_STATES)
             context = ContextFlags.COMMAND_LINE
 
         # Put in list to standardize treatment below

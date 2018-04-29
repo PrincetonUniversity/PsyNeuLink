@@ -1091,10 +1091,8 @@ class State_Base(State):
 
         # Enforce that only called from subclass
         if (not isinstance(context, State_Base) and
-                # not any(key in context for key in {INITIALIZING, ADD_STATES, COMMAND_LINE})): # cxt-test-X
                 not (self.context.initialization_status == ContextFlags.INITIALIZING or
-                     context & (ContextFlags.COMMAND_LINE | ContextFlags.CONSTRUCTOR))): # cxt ADD_STATES
-                     # context & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD))): # cxt ADD_STATES
+                     context & (ContextFlags.COMMAND_LINE | ContextFlags.CONSTRUCTOR))):
             raise StateError("Direct call to abstract class State() is not allowed; "
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
@@ -1148,7 +1146,7 @@ class State_Base(State):
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
-            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context) # cxt-pass cxt-push
+            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -1157,18 +1155,10 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
-        if context & ContextFlags.COMMAND_LINE: # cxt-test
-        # # MODIFIED 4/15/18 NEW:
-        #     assert self.context.source == ContextFlags.COMMAND_LINE
-        # MODIFIED 4/15/18 END
+        if context & ContextFlags.COMMAND_LINE:
             state_list = getattr(owner, owner.stateListAttr[self.__class__])
             if state_list and not self in state_list:
                 owner.add_states(self)
-        # # MODIFIED 4/15/18 NEW:
-        # else:
-        #     assert self.context.source != ContextFlags.COMMAND_LINE
-        # MODIFIED 4/15/18 END
-
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
@@ -1962,11 +1952,9 @@ class State_Base(State):
             if isinstance(projection, LearningProjection) and self.context.execution_phase != ContextFlags.LEARNING:
                 projection_value = projection.value * 0.0
             else:
-                projection_value = projection.execute(
-                    variable=projection.sender.value,
-                    runtime_params=projection_params,
-                    context=context  # cxt-pass cxt-push
-                )
+                projection_value = projection.execute(variable=projection.sender.value,
+                                                      runtime_params=projection_params,
+                                                      context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
             if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
@@ -2512,7 +2500,7 @@ def _parse_state_spec(state_type=None,
         state_specific_args.update(state_spec)
 
     state_dict = standard_args
-    context = state_dict.pop(CONTEXT, None) # cxt-set
+    context = state_dict.pop(CONTEXT, None)
     owner = state_dict[OWNER]
     state_type = state_dict[STATE_TYPE]
     reference_value = state_dict[REFERENCE_VALUE]

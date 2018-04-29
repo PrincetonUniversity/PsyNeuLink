@@ -880,25 +880,11 @@ class OutputState(State_Base):
                  context=None,
                  **kwargs):
 
-        # from psyneulink.globals.utilities import get_args
-        # import inspect
-
-        # curr_frame = inspect.currentframe()
-        # args = get_args(curr_frame)
-        # prev_frame = inspect.getouterframes(inspect.currentframe(),2)
-        #
-        # try:
-        #     prev_args = get_args(prev_frame)
-        # except:
-        #     prev_args = None
-
-        if context is None: # cxt-test
-        # if not (self.context.source or prev_args):
-            context = ContextFlags.COMMAND_LINE # cxt-done
+        if context is None:
+            context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
-            # context=self
             context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
@@ -1395,8 +1381,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
-    # if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}): # cxt-test
-    if context & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD): # cxt-test
+    if context & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
         owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list

@@ -530,9 +530,7 @@ class LearningProjection(ModulatoryProjection_Base):
             from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary \
                 import _instantiate_learning_components
             _instantiate_learning_components(learning_projection=self,
-                                             # context="{0} {1}".format(context, self.name))  # cxt-set-X
                                              context=ContextFlags.METHOD)
-
 
         if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".

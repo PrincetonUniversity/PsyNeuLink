@@ -2118,11 +2118,10 @@ class Process(Process_Base):
         """
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
-        if not context: # cxt-test
-            # context = EXECUTING + " " + PROCESS + " " + self.name # cxt-set-X
+        if not context:
             context = ContextFlags.COMPOSITION
-            self.context.source = context
             self.context.execution_phase = ContextFlags.PROCESSING
+            self.context.source = context
             self.context.string = EXECUTING + " " + PROCESS + " " + self.name
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
@@ -2155,7 +2154,7 @@ class Process(Process_Base):
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.context.execution_phase = ContextFlags.PROCESSING
-            mechanism.execute(context=context) # cxt-pass ? cxt-push
+            mechanism.execute(context=context)
             mechanism.context.execution_phase = ContextFlags.IDLE
 
             if report_output:
@@ -2253,7 +2252,6 @@ class Process(Process_Base):
                     #    as the ParameterStates are assigned their owner's context in their update methods
                     # Note: do this rather just calling LearningSignals directly
                     #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                    # context = context.replace(EXECUTING, LEARNING + ' ') # cxt-set-X
                     projection.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
                     projection.context.execution_phase = ContextFlags.LEARNING
 
@@ -2268,7 +2266,7 @@ class Process(Process_Base):
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, context=context)
-                            parameter_state.update(context=context) # cxt-pass cxt-push
+                            parameter_state.update(context=context)
 
                     # Not all Projection subclasses instantiate ParameterStates
                     except AttributeError as e:

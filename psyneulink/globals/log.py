@@ -849,7 +849,7 @@ class Log:
                 time = time or _get_time(self.owner, condition)
                 self.entries[self.owner.name] = LogEntry(time, condition_string, value)
 
-        if not condition & ContextFlags.COMMAND_LINE: # cxt-done
+        if not condition & ContextFlags.COMMAND_LINE:
             self.owner.prev_context = self.owner.context
 
     @tc.typecheck

@@ -905,8 +905,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             name = 'matrix'
             backing_field = '_matrix'
             if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-                val_type = val.__class__.__name__
-                # curr_context=SET_ATTRIBUTE+': '+val_type+str(val) + ' for ' + name + ' of ' + self.name # cxt-test-S
                 self._assign_params(request_set={name: val}, context=ContextFlags.PROPERTY)
             else:
                 setattr(self, backing_field, val)
@@ -926,9 +924,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     def auto(self, val):
 
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            val_type = val.__class__.__name__
-            # curr_context=SET_ATTRIBUTE+': '+val_type + str(val) + ' for ' + "auto" + ' of ' + self.name # cxt-test-S
-            # self.prev_context = "nonsense" + str(curr_context)
             self._assign_params(request_set={"auto": val}, context=ContextFlags.PROPERTY)
         else:
             setattr(self, "_auto", val)
@@ -947,9 +942,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     def hetero(self, val):
 
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            val_type = val.__class__.__name__
-            # curr_context=SET_ATTRIBUTE+': '+val_type+str(val) + ' for ' + "hetero" + ' of ' + self.name # cxt-test-S
-            # self.prev_context = "nonsense" + str(curr_context)
             self._assign_params(request_set={"hetero": val}, context=ContextFlags.PROPERTY)
         else:
             setattr(self, "_hetero", val)
@@ -1051,7 +1043,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if learning_rate:
             self.learning_rate = learning_rate
 
-        context = context or ContextFlags.COMMAND_LINE # cxt-done cxt-pass ? cxt-push
+        context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
 
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self.output_state,

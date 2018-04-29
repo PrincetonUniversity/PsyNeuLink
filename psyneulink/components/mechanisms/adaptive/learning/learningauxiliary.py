@@ -211,7 +211,8 @@ def _instantiate_learning_components(learning_projection, context=None):
     #                               APPROPRIATE ObjectiveMechanism, etc.
     from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
-    # if not learning_projection.name in context: # cxt-test-X
+    # Call should generally be from LearningProjection._instantiate_sender,
+    #    but may be used more generally in the future
     if context != ContextFlags.METHOD:
         raise LearningAuxiliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "
                                                              "calls from a LearningProjection._instantiate_sender()"))

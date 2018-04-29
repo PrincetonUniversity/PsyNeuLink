@@ -526,7 +526,7 @@ def run(object,
         call_after_time_step:tc.optional(callable)=None,
         termination_processing=None,
         termination_learning=None,
-        context=ContextFlags.COMMAND_LINE): # cxt-set
+        context=ContextFlags.COMMAND_LINE):
     """run(                      \
     inputs,                      \
     num_trials=None,             \
@@ -700,7 +700,6 @@ def run(object,
                     projection.function_object.learning_rate = object.learning_rate
 
     # Class-specific validation:
-    # context = context or RUN + "validating " + object.name # cxt-set
     if not object.context.flags:
         object.context.initialization_status = ContextFlags.VALIDATING
         object.context.string = RUN + "validating " + object.name
@@ -752,9 +751,7 @@ def run(object,
                         object.target = execution_targets
                         object.current_targets = execution_targets
 
-            # if RUN in context and not object.context.execution_phase == ContextFlags.SIMULATION: # cxt-test-X
             if context == ContextFlags.COMMAND_LINE and not object.context.execution_phase == ContextFlags.SIMULATION:
-                # context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-set-X
                 object.context.execution_phase = ContextFlags.PROCESSING
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
 
@@ -763,7 +760,7 @@ def run(object,
                 execution_id=execution_id,
                 termination_processing=termination_processing,
                 termination_learning=termination_learning,
-                context=context # cxt-pass
+                context=context
             )
 
             if call_after_time_step:
