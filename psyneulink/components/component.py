@@ -2706,6 +2706,8 @@ class Component(object):
 
     def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None, **kwargs):
 
+        # GET/SET CONTEXT
+
         from psyneulink.components.functions.function import Function
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
@@ -2733,6 +2735,11 @@ class Component(object):
                 curr_context = self.context.flags
         # fct_context_attrib.execution_phase = curr_context
         fct_context_attrib.flags = curr_context
+
+        # CALL function
+
+        if function_variable is None:
+            function_variable = self._parse_function_variable(variable)
         # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
