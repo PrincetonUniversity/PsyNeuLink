@@ -675,8 +675,7 @@ class LCA(RecurrentTransferMechanism):
                 current_input = function_variable
 
         # Apply TransferMechanism function
-        # output_vector = self.function(variable=current_input, params=runtime_params)
-        # Override TransferMechanism._execute
+        # Override TransferMechanism._execute since much of its functionality is duplicated here
         output_vector = super(Mechanism, self)._execute(variable=current_input,
                                                                 runtime_params=runtime_params,
                                                                 context=context)
