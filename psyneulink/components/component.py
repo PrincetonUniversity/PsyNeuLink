@@ -905,7 +905,7 @@ class Component(object):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
-       # context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done# context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
+       # context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done# context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-set
         context = ContextFlags.COMPONENT
         self.context.initialization_status = ContextFlags.INITIALIZING
         self.context.execution_phase = None
@@ -1824,7 +1824,6 @@ class Component(object):
 
         # VALIDATE VARIABLE (if not called from assign_params)
 
-        # if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test-X
         if not (context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY)):
             # if variable has been passed then validate and, if OK, assign as self.instance_defaults.variable
             variable = self._update_variable(self._validate_variable(variable, context=context))
@@ -1842,7 +1841,6 @@ class Component(object):
             raise ComponentError("Altering paramClassDefaults not permitted")
 
         if default_set is None:
-            # if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test-X
             if context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
                 default_set = {}
                 for param_name in request_set:
@@ -1934,7 +1932,7 @@ class Component(object):
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
                 if param_name is FUNCTION:
                     try:
-                        if function_class != default_function_class and context & ContextFlags.COMMAND_LINE: # cxt-test
+                        if function_class != default_function_class and context & ContextFlags.COMMAND_LINE:
                             from psyneulink.components.functions.function import Function_Base
                             if isinstance(function, Function_Base):
                                 request_set[FUNCTION] = function.__class__
@@ -2000,10 +1998,7 @@ class Component(object):
         Instantiate any items in request set that require it (i.e., function or states).
 
         """
-        # if context is None:
-        #     self.context.source = ContextFlags.COMMAND_LINE
-        #     self.context.string = COMMAND_LINE
-        context = context or ContextFlags.COMMAND_LINE # cxt-test-X
+        context = context or ContextFlags.COMMAND_LINE
         self._assign_params(request_set=request_set, context=context)
 
     @tc.typecheck
@@ -2070,7 +2065,7 @@ class Component(object):
 
         validated_set_param_names = list(validated_set.keys())
 
-        curr_context = self.context.flags # cxt-buffer
+        curr_context = self.context.flags
         curr_context_str = self.context.string
 
         # If an input_state is being added from the command line,
@@ -2078,7 +2073,7 @@ class Component(object):
         # Otherwise, should not be run,
         #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
         #    that causes name-repetition problems when it is called as part of the standard init procedure
-        if INPUT_STATES in validated_set_param_names and context & ContextFlags.COMMAND_LINE: # cxt-test
+        if INPUT_STATES in validated_set_param_names and context & ContextFlags.COMMAND_LINE:
             self.context.source = ContextFlags.COMMAND_LINE
             self._instantiate_attributes_before_function(context=ContextFlags.COMMAND_LINE)
         # Give owner a chance to instantiate function and/or function params
@@ -2096,12 +2091,12 @@ class Component(object):
         # # MODIFIED 5/5/17 OLD:
         # if OUTPUT_STATES in validated_set:
         # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_states ARG OF CONSTRUCTOR]
-        if OUTPUT_STATES in validated_set and context & ContextFlags.COMMAND_LINE: # cxt-test
+        if OUTPUT_STATES in validated_set and context & ContextFlags.COMMAND_LINE:
         # MODIFIED 5/5/17 END
             self.context.source = ContextFlags.COMMAND_LINE
             self._instantiate_attributes_after_function(context=ContextFlags.COMMAND_LINE)
 
-        self.context.flags = curr_context # cxt-pop
+        self.context.flags = curr_context
         self.context.string = curr_context_str
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
@@ -2714,7 +2709,7 @@ class Component(object):
         else:
             if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
                 self._increment_execution_count()
-            self._update_current_execution_time(context=context) # cxt-pass
+            self._update_current_execution_time(context=context)
 
         # If Component has a Function (function_object), assign Component's execution_phase to its context
         try:
@@ -2781,7 +2776,7 @@ class Component(object):
         return _get_time(self, context_flags=_get_context(context))
 
     def _update_current_execution_time(self, context):
-        self._current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
+        self._current_execution_time = self._get_current_execution_time(context=context)
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -3124,9 +3119,6 @@ def make_property(name):
 
     def setter(self, val):
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            val_type = val.__class__.__name__
-            # curr_context=SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name # cxt-test-S
-            # self.prev_context = "nonsense" + str(curr_context)
             self._assign_params(request_set={name:val}, context=ContextFlags.PROPERTY)
         else:
             setattr(self, backing_field, val)
