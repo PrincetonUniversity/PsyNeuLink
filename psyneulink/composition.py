@@ -1138,7 +1138,8 @@ class Composition(object):
             if hasattr(x, "__len__"):
                 return tuple([tupleize(y) for y in x])
             return tuple([x])
-        self.__data_struct = c_data(tupleize([data]))
+        data = [np.atleast_2d(elem) for elem in data]
+        self.__data_struct = c_data(tupleize(data))
 
         if reinit or self.__params_struct is None:
             c_params = pnlvm._convert_llvm_ir_to_ctype(self.get_param_struct_type())
