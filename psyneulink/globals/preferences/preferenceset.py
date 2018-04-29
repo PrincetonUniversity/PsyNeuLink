@@ -491,12 +491,7 @@ class PreferenceSet(object):
         if inspect.isclass(self.owner):
             owner_name = self.owner.__name__
         else:
-            # FIX: SHOULDN"T THIS BE self.owner.name??
-            # # MODIFIED 9/16/16 OLD:
-            # owner_name = self.name
-            # MODIFIED 9/16/16 NEW:
             owner_name = self.owner.name
-            # MODIFIED 9/16/16 END
 
         # Set all to True, so that if only one is being checked, the other does not interfere with final test
         level_OK = True
