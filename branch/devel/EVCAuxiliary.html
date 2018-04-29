@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EVCAuxiliary &mdash; PsyNeuLink 0.4.4.4+168.gbf3d16b documentation</title>
+  <title>EVCAuxiliary &mdash; PsyNeuLink 0.4.4.4+169.gbd9917b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+168.gbf3d16b documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.4.4+169.gbd9917b documentation" href="index.html"/>
         <link rel="up" title="EVC" href="EVC.html"/>
         <link rel="next" title="Models" href="Models.html"/>
         <link rel="prev" title="EVCControlMechanism" href="EVCControlMechanism.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.4.4+168
+                0.4.4.4+169
               </div>
             
           
@@ -240,7 +240,7 @@ evaluated.</li>
 
 <dl class="class">
 <dt id="psyneulink.library.subsystems.evc.evcauxiliary.ControlSignalGridSearch">
-<em class="property">class </em><code class="descclassname">psyneulink.library.subsystems.evc.evcauxiliary.</code><code class="descname">ControlSignalGridSearch</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>params=None</em>, <em>function=None</em>, <em>owner=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.subsystems.evc.evcauxiliary.ControlSignalGridSearch" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.library.subsystems.evc.evcauxiliary.</code><code class="descname">ControlSignalGridSearch</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>params=None</em>, <em>function=None</em>, <em>owner=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.subsystems.evc.evcauxiliary.ControlSignalGridSearch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conduct an exhaustive search of allocation polices and return the one with the maximum <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-evc"><span class="std std-ref">EVC</span></a>.</p>
 <p>This is the default <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.function" title="psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for an EVCControlMechanism. It identifies the <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.allocation_policy" title="psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
 with the maximum <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-evc"><span class="std std-ref">EVC</span></a> by a conducting a grid search over every possible <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.allocation_policy" title="psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
@@ -314,7 +314,7 @@ Its operation can be modified by customizing or replacing any or all of the func
 <li>Called by ControlSignalGridSearch.</li>
 <li>Call System.execute for each <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.allocation_policy" title="psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> in <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.control_signal_search_space" title="psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.control_signal_search_space"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal_search_space</span></code></a>.</li>
 <li><dl class="first docutils">
-<dt>Store an array of values for output_states in <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states" title="psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a></dt>
+<dt>Store an array of values for output_states in <a class="reference internal" href="ControlMechanism.html#psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.monitored_output_states" title="psyneulink.components.mechanisms.adaptive.control.controlmechanism.ControlMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a></dt>
 <dd>(i.e., the input_states in <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>) for each <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.allocation_policy" title="psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</dd>
 </dl>
 </li>
@@ -387,7 +387,7 @@ Its operation can be modified by customizing or replacing any or all of the func
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+168.gbf3d16b',
+            VERSION:'0.4.4.4+169.gbd9917b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

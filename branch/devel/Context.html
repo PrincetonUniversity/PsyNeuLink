@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Context &mdash; PsyNeuLink 0.4.4.4+168.gbf3d16b documentation</title>
+  <title>Context &mdash; PsyNeuLink 0.4.4.4+169.gbd9917b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+168.gbf3d16b documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.4.4+169.gbd9917b documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.4.4+168
+                0.4.4.4+169
               </div>
             
           
@@ -278,34 +278,46 @@ accessed. Also used to specify the context in which a value of the Component or 
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.CONSTRUCTOR">
-<code class="descname">CONSTRUCTOR</code><em class="property"> = 512</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.CONSTRUCTOR" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call to method from Component’s constructor.</p>
+<dt id="psyneulink.globals.context.ContextFlags.COMMAND_LINE">
+<code class="descname">COMMAND_LINE</code><em class="property"> = 512</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.COMMAND_LINE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Direct call by user (either interactively from the command line, or in a script).</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.globals.context.ContextFlags.COMMAND_LINE">
-<code class="descname">COMMAND_LINE</code><em class="property"> = 1024</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.COMMAND_LINE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Direct call to method by user (either interactively from the command line, or in a script).</p>
+<dt id="psyneulink.globals.context.ContextFlags.CONSTRUCTOR">
+<code class="descname">CONSTRUCTOR</code><em class="property"> = 1024</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.CONSTRUCTOR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call from Component’s constructor method.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.globals.context.ContextFlags.COMPONENT">
 <code class="descname">COMPONENT</code><em class="property"> = 2048</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.COMPONENT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call to method by the Component.</p>
+<dd><p>Call by Component __init__.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.context.ContextFlags.METHOD">
+<code class="descname">METHOD</code><em class="property"> = 4096</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.METHOD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call by method of the Component other than its constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.globals.context.ContextFlags.PROPERTY">
+<code class="descname">PROPERTY</code><em class="property"> = 8192</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.PROPERTY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call by property of the Component.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.globals.context.ContextFlags.COMPOSITION">
-<code class="descname">COMPOSITION</code><em class="property"> = 4096</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.COMPOSITION" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call to method by a/the Composition to which the Component belongs.</p>
+<code class="descname">COMPOSITION</code><em class="property"> = 16384</em><a class="headerlink" href="#psyneulink.globals.context.ContextFlags.COMPOSITION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call by a/the Composition to which the Component belongs.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="psyneulink.globals.context.Context">
-<em class="property">class </em><code class="descclassname">psyneulink.globals.context.</code><code class="descname">Context</code><span class="sig-paren">(</span><em>owner</em>, <em>composition=None</em>, <em>flags=None</em>, <em>initialization_status=&lt;ContextFlags.UNINITIALIZED: -31&gt;</em>, <em>execution_phase=None</em>, <em>source=&lt;ContextFlags.NONE: -7681&gt;</em>, <em>execution_id: uuid.UUID = None</em>, <em>string: str = ''</em>, <em>time=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.context.Context" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.globals.context.</code><code class="descname">Context</code><span class="sig-paren">(</span><em>owner=None</em>, <em>composition=None</em>, <em>flags=None</em>, <em>initialization_status=&lt;ContextFlags.UNINITIALIZED: -31&gt;</em>, <em>execution_phase=None</em>, <em>source=&lt;ContextFlags.NONE: -28161&gt;</em>, <em>execution_id: uuid.UUID = None</em>, <em>string: str = ''</em>, <em>time=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.globals.context.Context" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to indicate the state of initialization and phase of execution of a Component, as well as the source of
 call of a method;  also used to specify and identify <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">conditions</span></a> for <a class="reference internal" href="Log.html"><span class="doc">logging</span></a>.</p>
 <dl class="attribute">
@@ -444,7 +456,7 @@ possibly prepended by an additional string.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+168.gbf3d16b',
+            VERSION:'0.4.4.4+169.gbd9917b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
