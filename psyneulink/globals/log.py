@@ -780,7 +780,6 @@ class Log:
 
         """
         from psyneulink.components.shellclasses import Function
-        programmatic = False
 
         if isinstance(value, LogEntry):
             self.entries[self.owner.name] = value
