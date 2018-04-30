@@ -1815,19 +1815,19 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     variable : 1d or 2d np.array : default ClassDefaults.variable
         specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
 
-    weights : 1d or 2d np.array : default None
-        specifies values used to multiply the elements of each array in `variable  <LinearCombination.variable>`.
+    weights : scalar or 1d or 2d np.array : default None
+        specifies values used to multiply the elements of each array in **variable**.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
         if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
-        (see `weights <LinearCombination.weights>` for details)
+        (see `weights <LinearCombination.weights>` for details of how weights are applied).
 
-    exponents : 1d or 2d np.array : default None
+    exponents : scalar or 1d or 2d np.array : default None
         specifies values used to exponentiate the elements of each array in `variable  <LinearCombination.variable>`.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
         if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
-        (see `exponents <LinearCombination.exponents>` for details)
+        (see `exponents <LinearCombination.exponents>` for details of how exponents are applied).
 
     operation : SUM or PRODUCT : default SUM
         specifies whether the `function <LinearCombination.function>` takes the elementwise (Hadamarad)
@@ -1865,18 +1865,20 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         specified by `weights <LinearCombination.weights>` and/or `exponents <LinearCombination.exponents>`
         and then combined as specified by `operation <LinearCombination.operation>`.
 
-    weights : 1d or 2d np.array
-        if it is 1d, each element is used to multiply all elements in the corresponding array of
-        `variable <LinearCombination.variable>`;    if it is 2d, then each array is multiplied elementwise
-        (i.e., the Hadamard Product is taken) with the corresponding array of `variable <LinearCombinations.variable>`.
-        All :keyword:`weights` are applied before any exponentiation (if it is specified).
+    weights : scalar or 1d or 2d np.array
+        if it is a scalar, the value is used to multiply all elements of all arrays in `variable
+        <LinearCombination.variable>`; if it is a 1d array, each element is used to multiply all elements in the
+        corresponding array of `variable <LinearCombination.variable>`;  if it is a 2d array, then each array is
+        multiplied elementwise (i.e., the Hadamard Product is taken) with the corresponding array of `variable
+        <LinearCombinations.variable>`. All `weights` are applied before any exponentiation (if it is specified).
 
-    exponents : 1d or 2d np.array
-        if it is 1d, each element is used to exponentiate the elements of the corresponding array of
-        `variable <LinearCombinations.variable>`;  if it is 2d, the element of each array is used to exponentiate
-        the correspnding element of the corresponding array of `variable <LinearCombination.variable>`.
-        In either case, exponentiating is applied after application of the `weights <LinearCombination.weights>`
-        (if any are specified).
+    exponents : scalar or 1d or 2d np.array
+        if it is a scalar, the value is used to exponentiate all elements of all arrays in `variable
+        <LinearCombination.variable>`; if it is a 1d array, each element is used to exponentiate the elements of the
+        corresponding array of `variable <LinearCombinations.variable>`;  if it is a 2d array, the element of each
+        array is used to exponentiate the corresponding element of the corresponding array of `variable
+        <LinearCombination.variable>`. In either case, all exponents are applied after application of the `weights
+        <LinearCombination.weights>` (if any are specified).
 
     operation : SUM or PRODUCT
         determines whether the `function <LinearCombination.function>` takes the elementwise (Hadamard) sum or
@@ -2121,6 +2123,11 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         weights = self.get_current_function_param(WEIGHTS)
         exponents = self.get_current_function_param(EXPONENTS)
+        if self.context.initialization_status == ContextFlags.INITIALIZED:
+            if weights is not None and weights.shape != variable.shape:
+                weights = weights.reshape(variable.shape)
+            if exponents is not None and exponents.shape != variable.shape:
+                exponents = exponents.reshape(variable.shape)
         operation = self.get_current_function_param(OPERATION)
         scale = self.get_current_function_param(SCALE)
         offset = self.get_current_function_param(OFFSET)
