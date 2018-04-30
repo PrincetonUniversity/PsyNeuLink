@@ -2264,7 +2264,13 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         return np.atleast_2d(self.get_current_function_param(VARIABLE)).shape[1]
 
     def get_input_struct_type(self):
-        default_var = np.atleast_2d(self.get_current_function_param(VARIABLE))
+        #FIXME this is ugly as HELL!
+        if (self.owner and hasattr(self.owner, 'pathway_projections') and len(self.owner.pathway_projections) != 0):
+#            assert len(self.owner.pathway_projections) == len(default_var)
+            var = self.get_current_function_param(VARIABLE)
+            default_var = np.broadcast_to(np.asfarray(var), (len(self.owner.pathway_projections), len(var)))
+        else:
+            default_var = np.atleast_2d(self.get_current_function_param(VARIABLE))
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
 
