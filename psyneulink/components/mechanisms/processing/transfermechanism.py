@@ -737,7 +737,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         """Validate FUNCTION and Mechanism params
 
         """
-        from psyneulink.components.functions.function import DistributionFunction
+        from psyneulink.components.functions.function import \
+            Function, TransferFunction, NormalizingFunction, DistributionFunction
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -745,22 +746,36 @@ class TransferMechanism(ProcessingMechanism_Base):
         if FUNCTION in target_set:
             # FIX: check for value = same shape as variable of function and then get rid of constraints below
             transfer_function = target_set[FUNCTION]
+            transfer_function_class = None
+
             # FUNCTION is a Function
-            if isinstance(transfer_function, Component):
+            if isinstance(transfer_function, Function):
                 transfer_function_class = transfer_function.__class__
-                transfer_function_name = transfer_function.__class__.__name__
-            # FUNCTION is a function or method
-            elif isinstance(transfer_function, (function_type, method_type)):
-                transfer_function_class = transfer_function.__self__.__class__
-                transfer_function_name = transfer_function.__self__.__class__.__name__
             # FUNCTION is a class
             elif inspect.isclass(transfer_function):
                 transfer_function_class = transfer_function
-                transfer_function_name = transfer_function.__name__
 
-            if not transfer_function_class.componentType is TRANSFER_FUNCTION_TYPE and not transfer_function_class.componentType is NORMALIZING_FUNCTION_TYPE:
-                raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
-                                    format(transfer_function_name, self.name, TRANSFER_FUNCTION_TYPE))
+            # if (not transfer_function_class.componentType is TRANSFER_FUNCTION_TYPE
+            #         and not transfer_function_class.componentType is NORMALIZING_FUNCTION_TYPE):
+            if issubclass(transfer_function_class, Function):
+                if not issubclass(transfer_function_class, (TransferFunction, NormalizingFunction)):
+                    raise TransferError("Function type specified as {} param of {} ({}) must be a {}".
+                                        format(repr(FUNCTION),
+                                               self.name,
+                                               transfer_function_class.__name__,
+                                               TRANSFER_FUNCTION_TYPE + ' or ' + NORMALIZING_FUNCTION_TYPE))
+
+            # FUNCTION is a function or method, so test that shape of output = shape of input
+            elif isinstance(transfer_function, (function_type, method_type)):
+                var_shape = self.variable.shape
+                val_shape = np.array(transfer_function(self.variable)).shape
+                if val_shape != var_shape:
+                    raise TransferError("The shape ({}) of the value returned by the python function or method "
+                                        "specified as the {} param of {} must be the same shape ({}) as its {}".
+                                        format(val_shape, repr(FUNCTION), self.name, var_shape, repr(VARIABLE)))
+            else:
+                raise TransferError("Unrecognized specification for {} param of {} ({})".
+                                    format(repr(FUNCTION), self.name, transfer_function))
 
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set:

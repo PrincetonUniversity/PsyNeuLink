@@ -2120,11 +2120,11 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         weights = self.get_current_function_param(WEIGHTS)
         exponents = self.get_current_function_param(EXPONENTS)
-        if self.context.initialization_status == ContextFlags.INITIALIZED:
-            if weights is not None and weights.shape != variable.shape:
-                weights = weights.reshape(variable.shape)
-            if exponents is not None and exponents.shape != variable.shape:
-                exponents = exponents.reshape(variable.shape)
+        # if self.context.initialization_status == ContextFlags.INITIALIZED:
+        #     if weights is not None and weights.shape != variable.shape:
+        #         weights = weights.reshape(variable.shape)
+        #     if exponents is not None and exponents.shape != variable.shape:
+        #         exponents = exponents.reshape(variable.shape)
         operation = self.get_current_function_param(OPERATION)
         scale = self.get_current_function_param(SCALE)
         offset = self.get_current_function_param(OFFSET)
