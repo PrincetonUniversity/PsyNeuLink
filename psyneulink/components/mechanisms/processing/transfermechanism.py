@@ -743,6 +743,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Validate FUNCTION
         if FUNCTION in target_set:
+            # FIX: check for value = same shape as variable of function and then get rid of constraints below
             transfer_function = target_set[FUNCTION]
             # FUNCTION is a Function
             if isinstance(transfer_function, Component):
