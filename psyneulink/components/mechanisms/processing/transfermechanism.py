@@ -304,7 +304,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import AdaptiveIntegrator, Linear, TransferFunction
+from psyneulink.components.functions.function import AdaptiveIntegrator, Linear, NormalizingFunction
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -987,15 +987,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             else:
                 current_input = function_variable
 
-        if isinstance(self.function_object, TransferFunction):
-
-            outputs = super()._execute(function_variable=current_input, runtime_params=runtime_params, context=context)
-            if clip is not None:
-                minCapIndices = np.where(outputs < clip[0])
-                maxCapIndices = np.where(outputs > clip[1])
-                outputs[minCapIndices] = np.min(clip)
-                outputs[maxCapIndices] = np.max(clip)
-        else:
+        if isinstance(self.function_object, NormalizingFunction):
             # Apply TransferMechanism's function to each input state separately
             outputs = []
             for elem in current_input:
@@ -1006,6 +998,14 @@ class TransferMechanism(ProcessingMechanism_Base):
                     output_item[minCapIndices] = np.min(clip)
                     output_item[maxCapIndices] = np.max(clip)
                 outputs.append(output_item)
+
+        else:
+            outputs = super()._execute(function_variable=current_input, runtime_params=runtime_params, context=context)
+            if clip is not None:
+                minCapIndices = np.where(outputs < clip[0])
+                maxCapIndices = np.where(outputs > clip[1])
+                outputs[minCapIndices] = np.min(clip)
+                outputs[maxCapIndices] = np.max(clip)
 
         return outputs
         #endregion
