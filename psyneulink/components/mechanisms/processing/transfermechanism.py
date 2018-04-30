@@ -85,7 +85,7 @@ arguments **smoothing_factor** and/or **initial_value** in the mechanism's const
     **initial_value** are ignored, because the mechanism does not have an `integrator_function
     <TransferMechanism.integrator_function>` to construct.
 
-Finally, the TransferMechanism has two arguments which can adjust the final result of the mechanism: **clip** and
+Finally, the TransferMechanism has two arguments that can adjust the final result of the mechanism: **clip** and
 **noise**. If `integrator_mode <TransferMechanism.integrator_mode>` is False, `clip <TransferMechanism.clip>` and
 `noise <TransferMechanism.noise>` modify the value returned by the mechanism's `function <TransferMechanism.function>`
 before setting it as the mechanism's value. If `integrator_mode <TransferMechanism.integrator_mode>` is True,
@@ -116,8 +116,11 @@ modulated by one or more `GatingSignals <GatingSignal_Modulation>` prior to tran
 Function
 ~~~~~~~~
 
-*Function*.  The `function <TransferMechanism.function>` can be selected from one of four standard PsyNeuLink
-`Functions <Function>`: `Linear`, `Logistic`, `Exponential` or `SoftMax`.
+*Function*.  The default function for a TransferMechanism is `Linear`.  A custom function can be specified in the
+**function** argument of the constructor.  This can be any PsyNeuLink `Function <Function>` that is a subtype of
+either `TransferFunction` or `NormalizationFunction.` It can also be any python function or method, with the constraint
+that it returns an output that is identical in shape to its input;  the function or method is "wrapped" as
+`UserDefinedFunction`, and assigned as the TransferMechanism's `function <TransferMechanism.function>` attribute.
 
 The result of the `function <TransferMechanism.function>` applied to the `value <InputState.value>` of each InputState
 is:
