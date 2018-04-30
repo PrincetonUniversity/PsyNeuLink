@@ -2336,7 +2336,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         pow_f = ctx.module.declare_intrinsic("llvm.pow", [ctx.float_ty])
 
         for i in range(vi.type.pointee.count):
-            # exponenes is always an array
             if len(exponent_type) > 1:
                 assert exponent_type.pointee.count == vo.type.pointee.count * vi.type.pointee.count
                 exponent_index = ctx.int32_ty(vo.type.pointee.count * (i - 1))

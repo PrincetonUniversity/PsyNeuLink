@@ -899,7 +899,7 @@ class Composition(object):
 #                        res = np.zeros(len(num.instance_defaults.variable))
 #                        ct_res = res.ctypes.data_as(ctypes.POINTER(out))
 #                        bin_mech_extract(ctypes.cast(ctypes.byref(self.__data_struct), ctypes.POINTER(data)), ct_res)
-#                        print(res);
+#                        print("{}: {}".format(num, res))
                     else:
                         mechanism.context.execution_phase = ContextFlags.PROCESSING
                         num = mechanism.execute(context=EXECUTING + "composition")
