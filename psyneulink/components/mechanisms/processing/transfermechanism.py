@@ -307,7 +307,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import AdaptiveIntegrator, Linear, NormalizingFunction
+from psyneulink.components.functions.function import AdaptiveIntegrator, Linear, NormalizingFunction, UserDefinedFunction
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -758,22 +758,27 @@ class TransferMechanism(ProcessingMechanism_Base):
                 transfer_function_class = transfer_function
 
             if issubclass(transfer_function_class, Function):
-                if not issubclass(transfer_function_class, (TransferFunction, NormalizingFunction)):
+                if not issubclass(transfer_function_class, (TransferFunction, NormalizingFunction, UserDefinedFunction)):
                     raise TransferError("Function type specified as {} param of {} ({}) must be a {}".
                                         format(repr(FUNCTION), self.name, transfer_function_class.__name__,
                                                TRANSFER_FUNCTION_TYPE + ' or ' + NORMALIZING_FUNCTION_TYPE))
+            elif not isinstance(transfer_function, (function_type, method_type)):
+                raise TransferError("Unrecognized specification for {} param of {} ({})".
+                                    format(repr(FUNCTION), self.name, transfer_function))
 
             # FUNCTION is a function or method, so test that shape of output = shape of input
-            elif isinstance(transfer_function, (function_type, method_type)):
-                var_shape = self.variable.shape
-                val_shape = np.array(transfer_function(self.variable)).shape
+            if isinstance(transfer_function, (function_type, method_type, UserDefinedFunction)):
+                var_shape = self.instance_defaults.variable.shape
+                if isinstance(transfer_function, UserDefinedFunction):
+                    val_shape = transfer_function._execute(self.instance_defaults.variable).shape
+                else:
+                    val_shape = np.array(transfer_function(self.instance_defaults.variable)).shape
+
                 if val_shape != var_shape:
                     raise TransferError("The shape ({}) of the value returned by the python function or method "
                                         "specified as the {} param of {} must be the same shape ({}) as its {}".
                                         format(val_shape, repr(FUNCTION), self.name, var_shape, repr(VARIABLE)))
-            else:
-                raise TransferError("Unrecognized specification for {} param of {} ({})".
-                                    format(repr(FUNCTION), self.name, transfer_function))
+
 
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set:
