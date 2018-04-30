@@ -1174,39 +1174,40 @@ class Composition(object):
             builder = ir.IRBuilder(block)
 
             m_function = ctx.get_llvm_function(mech.llvmSymbolName)
+            if mech in self.input_mechanisms.keys():
+                assert mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+                vi_idx = list(self.input_mechanisms.keys()).index(mech)
+                m_in = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
+            else:
+                m_in = builder.alloca(m_function.args[2].type.pointee)
 
             # Run all incoming projections
-            #FIXME should this use mechanism role?
-            if not mech in self.input_mechanisms.keys():
+            for i, par in enumerate(self.graph.get_parents_from_component(mech)):
+                assert not mech in self.input_mechanisms.keys()
                 # Get projection
-                par = self.graph.get_parents_from_component(mech)
-                assert len(par) == 1
-                par_proj = par[0].component
+                par_proj = par.component
                 proj_idx = self.projections.index(par_proj)
 
                 # Get parent mechanism
                 par = self.graph.get_parents_from_component(par_proj)
                 assert len(par) == 1
                 par_mech = par[0].component
-
+                vi_idx = self.mechanisms.index(par_mech)
 
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
 
-                m_in = builder.alloca(m_function.args[2].type.pointee)
-                # This should use proper input state and projection index
-                # instead of 0,0
-                proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+                # This should use proper input state index instead of 0
+                target_input_state = ctx.int32_ty(0)
+                proj_vo = builder.gep(m_in, [ctx.int32_ty(0), target_input_state, ctx.int32_ty(i)])
 
-                vi_idx = self.mechanisms.index(par_mech)
-                proj_vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(vi_idx)])
                 # This should use proper output state instead of 0
-                proj_vi = builder.gep(proj_vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                consume_output_state = ctx.int32_ty(0)
+                proj_vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(vi_idx), consume_output_state])
+
                 builder.call(proj_function, [proj_params, proj_context, proj_vi, proj_vo])
-            else:
-                vi_idx = list(self.input_mechanisms.keys()).index(mech)
-                m_in = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
+
 
             idx = self.mechanisms.index(mech)
             m_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])

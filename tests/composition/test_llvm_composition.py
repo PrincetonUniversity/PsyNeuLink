@@ -60,6 +60,7 @@ def test_LPP(benchmark, llvm):
     output = benchmark(comp.execute, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(llvm=='LLVM'))
     assert 32 == output[0][0]
 
+
 @pytest.mark.composition
 @pytest.mark.benchmark(group="LinearComposition Vector")
 @pytest.mark.parametrize("llvm, vector_length", product(('Python', 'LLVM'), [2**x for x in range(1)]))
@@ -75,3 +76,38 @@ def test_run_composition_vector(benchmark, llvm, vector_length):
     sched = Scheduler(composition=comp)
     output = benchmark(comp.run, inputs={A: [var]}, scheduler_processing=sched, bin_execute=(llvm=='LLVM'))
     assert np.allclose([25.0 for x in range(vector_length)], output[0])
+
+
+@pytest.mark.composition
+@pytest.mark.benchmark(group="Merge composition scalar")
+@pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+def test_5_mechanisms_2_origins_1_terminal(benchmark, mode):
+    # A ----> C --
+    #              ==> E
+    # B ----> D --
+
+    # 5 x 1 = 5 ----> 5 x 5 = 25 --
+    #                                25 + 25 = 50  ==> 50 * 5 = 250
+    # 5 x 1 = 5 ----> 5 x 5 = 25 --
+
+    comp = Composition()
+    A = TransferMechanism(name="A", function=Linear(slope=1.0))
+    B = TransferMechanism(name="B", function=Linear(slope=1.0))
+    C = TransferMechanism(name="C", function=Linear(slope=5.0))
+    D = TransferMechanism(name="D", function=Linear(slope=5.0))
+    E = TransferMechanism(name="E", function=Linear(slope=5.0))
+    comp.add_mechanism(A)
+    comp.add_mechanism(B)
+    comp.add_mechanism(C)
+    comp.add_mechanism(D)
+    comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
+    comp.add_projection(B, MappingProjection(sender=B, receiver=D), D)
+    comp.add_mechanism(E)
+    comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
+    comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
+    comp._analyze_graph()
+    inputs_dict = {A: [5.0],
+                   B: [5.0]}
+    sched = Scheduler(composition=comp)
+    output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+    assert 250 == output[0][0]
