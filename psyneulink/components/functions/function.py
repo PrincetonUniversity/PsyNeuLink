@@ -1748,9 +1748,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
 
 class LinearCombination(CombinationFunction):  # ------------------------------------------------------------------------
-    # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
-    # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
-    # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMILARLY FOR NP.ARRAY
     """
     LinearCombination(     \
          default_variable, \
