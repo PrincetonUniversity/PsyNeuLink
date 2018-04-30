@@ -16,6 +16,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import SystemDefaultInputValue
 from psyneulink.globals.keywords import DEFAULT_PROCESSING_MECHANISM, FUNCTION, FUNCTION_PARAMS, INTERCEPT, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -86,9 +87,8 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
 
         super(DefaultProcessingMechanism_Base, self).__init__(default_variable=default_variable,
                                                               size=size,
+                                                              function=function,
                                                               params=params,
                                                               name=name,
                                                               prefs=prefs,
-                                                              context=self,
-                                                              function=function,
-                                                              )
+                                                              context=ContextFlags.CONSTRUCTOR)

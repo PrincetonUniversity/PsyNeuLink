@@ -82,8 +82,8 @@ Class Reference
 """
 
 from psyneulink.components.projections.projection import Projection_Base
-from psyneulink.globals.keywords import MODULATORY_PROJECTION, NAME
-from psyneulink.globals.log import ContextFlags
+from psyneulink.globals.keywords import EXECUTING, INITIALIZING, MODULATORY_PROJECTION, NAME, kwAssign, INITIALIZATION_STATUS
+from psyneulink.globals.log import LogEntry, ContextFlags
 
 
 __all__ = [
@@ -107,8 +107,7 @@ class ModulatoryProjection_Base(Projection_Base):
         exponent=None,             \
         params=None,               \
         name=None,                 \
-        prefs=None,                \
-        context=None)
+        prefs=None)
 
     Subclass of `Projection <Projection>` that modulates the value of a `State <State>`.
 
@@ -243,4 +242,5 @@ class ModulatoryProjection_Base(Projection_Base):
 
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
-                                            format(self, ContextFlags._get_context_string(self.context.initialization_status)))
+                                            format(self, ContextFlags._get_context_string(self.context.flags,
+                                                                                          INITIALIZATION_STATUS)))

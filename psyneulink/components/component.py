@@ -398,7 +398,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.globals.context import Context, ContextFlags, _get_time
-from psyneulink.globals.keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from psyneulink.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SEPARATOR_BAR, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.globals.log import LogCondition
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
@@ -790,7 +790,7 @@ class Component(object):
         def _values(self):
             return {
                 k: getattr(self, k) for k in dir(self) + dir(type(self))
-                if (k[:1] != '_' and not callable(getattr(self, k)))
+                if (k[:1] != '_' and not isinstance(getattr(self, k), (types.MethodType, types.BuiltinMethodType)))
             }
 
         def _show(self):
@@ -879,11 +879,9 @@ class Component(object):
                  default_variable,
                  param_defaults,
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
-                 name=None,
-                 prefs=None,
-                 context=None,
                  function=None,
-                 ):
+                 name=None,
+                 prefs=None):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
 
         Initialization arguments:
@@ -907,16 +905,14 @@ class Component(object):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
-
-        context = context + INITIALIZING + ": " + COMPONENT_INIT # cxt-done
+        context = ContextFlags.COMPONENT
         self.context.initialization_status = ContextFlags.INITIALIZING
         self.context.execution_phase = None
         if not self.context.source:
             self.context.source = ContextFlags.COMPONENT
-        self.context.string = context + INITIALIZING + ": " + COMPONENT_INIT
+        self.context.string = "{}: {} {}".format(COMPONENT_INIT, INITIALIZING, self.name)
 
         self.context.initialization_status = ContextFlags.INITIALIZING
-        # self.context.initialization_status = ContextFlags.UNSET
 
         defaults = self.ClassDefaults.values().copy()
         if param_defaults is not None:
@@ -1663,11 +1659,10 @@ class Component(object):
         # Validate variable if parameter_validation is set and the function was called with a variable
         # IMPLEMENTATION NOTE:  context is used here just for reporting;  it is not tested in any of the methods called
         if self.prefs.paramValidationPref and variable is not None:
-            if context:
-                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
+            if self.context.string:
+                self.context.string = self.context.string + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
             else:
-                context = FUNCTION_CHECK_ARGS
-            self.context.string = context
+                self.context.string = FUNCTION_CHECK_ARGS
             variable = self._update_variable(self._validate_variable(variable, context=context))
 
         # PARAMS ------------------------------------------------------------
@@ -1852,7 +1847,7 @@ class Component(object):
 
         # VALIDATE VARIABLE (if not called from assign_params)
 
-        if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
+        if not (context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY)):
             # if variable has been passed then validate and, if OK, assign as self.instance_defaults.variable
             variable = self._update_variable(self._validate_variable(variable, context=context))
 
@@ -1869,7 +1864,7 @@ class Component(object):
             raise ComponentError("Altering paramClassDefaults not permitted")
 
         if default_set is None:
-            if any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}): # cxt-test
+            if context & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
                 default_set = {}
                 for param_name in request_set:
                     try:
@@ -1960,7 +1955,7 @@ class Component(object):
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
                 if param_name is FUNCTION:
                     try:
-                        if function_class != default_function_class and COMMAND_LINE in context: # cxt-test
+                        if function_class != default_function_class and context & ContextFlags.COMMAND_LINE:
                             from psyneulink.components.functions.function import Function_Base
                             if isinstance(function, Function_Base):
                                 request_set[FUNCTION] = function.__class__
@@ -2026,10 +2021,7 @@ class Component(object):
         Instantiate any items in request set that require it (i.e., function or states).
 
         """
-        if context is None:
-            self.context.source = ContextFlags.COMMAND_LINE # cxt-push
-            self.context.string = COMMAND_LINE
-        context = context or COMMAND_LINE # cxt-done
+        context = context or ContextFlags.COMMAND_LINE
         self._assign_params(request_set=request_set, context=context)
 
     @tc.typecheck
@@ -2096,7 +2088,7 @@ class Component(object):
 
         validated_set_param_names = list(validated_set.keys())
 
-        curr_context = self.context.flags # cxt-buffer
+        curr_context = self.context.flags
         curr_context_str = self.context.string
 
         # If an input_state is being added from the command line,
@@ -2104,9 +2096,9 @@ class Component(object):
         # Otherwise, should not be run,
         #    as it induces an unecessary call to _instantatiate_parameter_states (during instantiate_input_states),
         #    that causes name-repetition problems when it is called as part of the standard init procedure
-        if INPUT_STATES in validated_set_param_names and COMMAND_LINE in context: # cxt-test
-            self.context.source = ContextFlags.COMMAND_LINE # cxt-push
-            self._instantiate_attributes_before_function(context=COMMAND_LINE)  # cxt-done
+        if INPUT_STATES in validated_set_param_names and context & ContextFlags.COMMAND_LINE:
+            self.context.source = ContextFlags.COMMAND_LINE
+            self._instantiate_attributes_before_function(context=ContextFlags.COMMAND_LINE)
         # Give owner a chance to instantiate function and/or function params
         # (e.g., wrap in UserDefineFunction, as per EVCControlMechanism)
         elif any(isinstance(param_value, (function_type, Function)) or
@@ -2114,16 +2106,20 @@ class Component(object):
                  for param_value in validated_set.values()):
             self._instantiate_attributes_before_function()
 
+        # If the object's function is being assigned, and it is a class, instantiate it as a Function object
+        if FUNCTION in validated_set and inspect.isclass(self.function):
+            self.context.source = ContextFlags.COMMAND_LINE
+            self._instantiate_function(context=ContextFlags.COMMAND_LINE)
         # FIX: WHY SHOULD IT BE CALLED DURING STANDRD INIT PROCEDURE?
         # # MODIFIED 5/5/17 OLD:
         # if OUTPUT_STATES in validated_set:
         # MODIFIED 5/5/17 NEW:  [THIS FAILS WITH A SPECIFICATION IN output_states ARG OF CONSTRUCTOR]
-        if OUTPUT_STATES in validated_set and COMMAND_LINE in context: # cxt-test
+        if OUTPUT_STATES in validated_set and context & ContextFlags.COMMAND_LINE:
         # MODIFIED 5/5/17 END
-            self.context.source = COMMAND_LINE # cxt-push
-            self._instantiate_attributes_after_function(context=COMMAND_LINE) # cxt-done
+            self.context.source = ContextFlags.COMMAND_LINE
+            self._instantiate_attributes_after_function(context=ContextFlags.COMMAND_LINE)
 
-        self.context.flags = curr_context # cxt-pop
+        self.context.flags = curr_context
         self.context.string = curr_context_str
 
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS):
@@ -2728,18 +2724,47 @@ class Component(object):
 
     def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None, **kwargs):
 
+        # GET/SET CONTEXT
+
         from psyneulink.components.functions.function import Function
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
         else:
             if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
                 self._increment_execution_count()
-            self._update_current_execution_time(context=context) # cxt-pass
+            self._update_current_execution_time(context=context)
 
+        # If Component has a Function (function_object), assign Component's execution_phase to its context
+        try:
+            fct_context_attrib = self.function_object.context
+            # curr_context = self.context.execution_phase
+            curr_context = self.context.flags
+        except AttributeError:
+            # Otherwise if Component *is* a Function, assign its owner's execution_phase to its context
+            try:
+                fct_context_attrib = self.context
+                # curr_context = self.owner.context.execution_phase
+                curr_context = self.owner.context.flags
+            except AttributeError:
+                # Otherwise assign ContextFlags.PROCESSING as its execution_phase context
+                fct_context_attrib = self.context
+                # curr_context = ContextFlags.PROCESSING
+                fct_context_attrib.execution_phase = ContextFlags.PROCESSING
+                curr_context = self.context.flags
+        # fct_context_attrib.execution_phase = curr_context
+        fct_context_attrib.flags = curr_context
+
+        # CALL function
+
+        if function_variable is None:
+            function_variable = self._parse_function_variable(variable)
         # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
-        return self.function(variable=function_variable, params=runtime_params, context=context, **kwargs)
+        value = self.function(variable=function_variable, params=runtime_params, context=context, **kwargs)
+        fct_context_attrib.execution_phase = ContextFlags.IDLE
+
+        return value
 
     @property
     def execution_count(self):
@@ -2774,7 +2799,7 @@ class Component(object):
         return _get_time(self, context_flags=_get_context(context))
 
     def _update_current_execution_time(self, context):
-        self._current_execution_time = self._get_current_execution_time(context=context) # cxt-pass
+        self._current_execution_time = self._get_current_execution_time(context=context)
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -3117,10 +3142,7 @@ def make_property(name):
 
     def setter(self, val):
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            val_type = val.__class__.__name__
-            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
-            # self.prev_context = "nonsense" + str(curr_context)
-            self._assign_params(request_set={name:val}, context=curr_context)
+            self._assign_params(request_set={name:val}, context=ContextFlags.PROPERTY)
         else:
             setattr(self, backing_field, val)
 

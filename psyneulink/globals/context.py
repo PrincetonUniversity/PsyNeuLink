@@ -64,6 +64,27 @@ operating state of the Component:
        The `string <Context.string>` attribute of Context is not the same as, nor does it usually contain the same
        information as the string returned by the `flags_string <Context.flags_string>` method of Context.
 
+COMMENT:
+    IMPLEMENTATION NOTE: Use of ContextFlags in **context** argument of methods for context message-passing
+        ContextFlags is also used for passing context messages to methods (in the **context** argument).
+
+        Among other things, this is used to determine the source of call of a constructor (until someone
+            proposes/implements a better method!).  This is used in several ways, for example:
+            a) to insure that any call to a _Base class is from a subclass constructor
+              rather than by the user from the command line (which is not allowed).
+            b) to determine whether an InputState or OutputState is being added as part of the construction process
+              (e.g., for LearningMechanism) or by the user from the command line (see Mechanism.add_states)
+
+        Application (a) above is implemented as follows:
+            * user-accessible subclasses do not implement a context argument in their constructors
+            * subclasses just below the _Base class call super().__init__() with context=ContextFlags.CONSTRUCTOR
+            * all lower sub-subclasses call super without context arg
+            * the constructor for all _Base classes checks that context==ContextFlags.CONSTRUCTOR
+              and assign self.context.source = context
+            * the constructor for all _Base classes do NOT pass a context arg to super (i.e., shellclasses or Component)
+              since Component.__init__() assigns context arg as CONSTRUCTOR for all of its calls
+COMMENT
+
 .. _Context_Class_Reference:
 
 Class Reference
@@ -80,6 +101,8 @@ import typecheck as tc
 
 from psyneulink.globals.keywords import CONTROL, EXECUTING, FLAGS, INITIALIZING, LEARNING, VALIDATE
 
+from psyneulink.globals.keywords import \
+    CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, SOURCE, LEARNING, VALIDATE
 # from psyneulink.composition import Composition
 
 
@@ -99,9 +122,14 @@ class ContextError(Exception):
 
 
 class ContextFlags(IntEnum):
-    """Used to identify the status of a `Component <Component>` when its value or one of its attributes is being
-    accessed. Also used to specify the context in which a value of the Component or its attribute is `logged
-    <Log_Conditions>`.
+    """Used to identify the initialization and execution status of a `Component <Component>`.
+
+    Used when a Component's `value <Component.value>` or one of its attributes is being accessed.
+    Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`..
+
+    COMMENT:
+        Used to by **context** argument of all methods to specify type of caller.
+    COMMENT
     """
 
     UNSET = 0
@@ -137,55 +165,81 @@ class ContextFlags(IntEnum):
     """
 
     # source (source-of-call) flags
-    CONSTRUCTOR =   1<<9  # 512
-    """Call to method from Component's constructor."""
-    COMMAND_LINE =  1<<10 # 1024
-    """Direct call to method by user (either interactively from the command line, or in a script)."""
+    COMMAND_LINE =  1<<9  # 512
+    """Direct call by user (either interactively from the command line, or in a script)."""
+    CONSTRUCTOR =   1<<10 # 1024
+    """Call from Component's constructor method."""
     COMPONENT =     1<<11 # 2048
-    """Call to method by the Component."""
-    COMPOSITION =   1<<12 # 4096
-    """Call to method by a/the Composition to which the Component belongs."""
+    """Call by Component __init__."""
+    METHOD =        1<<12 # 4096
+    """Call by method of the Component other than its constructor."""
+    PROPERTY =      1<<13 # 8192
+    """Call by property of the Component."""
+    COMPOSITION =   1<<14 # 16384
+    """Call by a/the Composition to which the Component belongs."""
 
-    SOURCE_MASK = CONSTRUCTOR | COMMAND_LINE | COMPONENT | COMPOSITION
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | COMPONENT | PROPERTY | COMPOSITION
     NONE = ~SOURCE_MASK
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK
 
     @classmethod
-    def _get_context_string(cls, condition, string=None):
-        """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
+    @tc.typecheck
+    def _get_context_string(cls, condition_flags,
+                            fields:tc.any(tc.enum(INITIALIZATION_STATUS,
+                                                  EXECUTION_PHASE,
+                                                  SOURCE), set, list)={INITIALIZATION_STATUS,
+                                                                       EXECUTION_PHASE,
+                                                                       SOURCE},
+                            string:tc.optional(str)=None):
+        """Return string with the names of flags that are set in **condition_flags**
+
+        If **fields** is specified, then only the names of the flag(s) in the specified field(s) are returned.
+        The fields argument must be the name of a field (*INITIALIZATION_STATUS*, *EXECUTION_PHASE*, or *SOURCE*)
+        or a set or list of them.
+
+        If **string** is specified, the string returned is prepended by **string**.
+        """
+
         if string:
             string += ": "
         else:
             string = ""
+
+        if isinstance(fields, str):
+            fields = {fields}
+
         flagged_items = []
         # If OFF or ALL_FLAGS, just return that
-        if condition == ContextFlags.ALL_FLAGS:
+        if condition_flags == ContextFlags.ALL_FLAGS:
             return ContextFlags.ALL_FLAGS.name
-        if condition == ContextFlags.UNSET:
+        if condition_flags == ContextFlags.UNSET:
             return ContextFlags.UNSET.name
         # Otherwise, append each flag's name to the string
         # for c in (INITIALIZATION_STATUS_FLAGS | EXECUTION_PHASE_FLAGS | SOURCE_FLAGS):
-        #     if c & condition:
+        #     if c & condition_flags:
         #        flagged_items.append(c.name)
-        for c in INITIALIZATION_STATUS_FLAGS:
-            if not condition & ContextFlags.INITIALIZATION_MASK:
-                flagged_items.append(ContextFlags.UNINITIALIZED.name)
-                break
-            if c & condition:
-               flagged_items.append(c.name)
-        for c in EXECUTION_PHASE_FLAGS:
-            if not condition & ContextFlags.EXECUTION_PHASE_MASK:
-                flagged_items.append(ContextFlags.IDLE.name)
-                break
-            if c & condition:
-               flagged_items.append(c.name)
-        for c in SOURCE_FLAGS:
-            if not condition & ContextFlags.SOURCE_MASK:
-                flagged_items.append(ContextFlags.NONE.name)
-                break
-            if c & condition:
-               flagged_items.append(c.name)
+        if INITIALIZATION_STATUS in fields:
+            for c in INITIALIZATION_STATUS_FLAGS:
+                if not condition_flags & ContextFlags.INITIALIZATION_MASK:
+                    flagged_items.append(ContextFlags.UNINITIALIZED.name)
+                    break
+                if c & condition_flags:
+                   flagged_items.append(c.name)
+        if EXECUTION_PHASE in fields:
+            for c in EXECUTION_PHASE_FLAGS:
+                if not condition_flags & ContextFlags.EXECUTION_PHASE_MASK:
+                    flagged_items.append(ContextFlags.IDLE.name)
+                    break
+                if c & condition_flags:
+                   flagged_items.append(c.name)
+        if SOURCE in fields:
+            for c in SOURCE_FLAGS:
+                if not condition_flags & ContextFlags.SOURCE_MASK:
+                    flagged_items.append(ContextFlags.NONE.name)
+                    break
+                if c & condition_flags:
+                   flagged_items.append(c.name)
         string += ", ".join(flagged_items)
         return string
 
@@ -309,7 +363,7 @@ class Context():
 
     __name__ = 'Context'
     def __init__(self,
-                 owner,
+                 owner=None,
                  composition=None,
                  flags=None,
                  initialization_status=ContextFlags.UNINITIALIZED,
@@ -329,17 +383,17 @@ class Context():
                     not (flags & ContextFlags.INITIALIZATION_MASK & initialization_status)):
                 raise ContextError("Conflict in assignment to flags ({}) and status ({}) arguments of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.INITIALIZATION_MASK),
-                                          ContextFlags._get_context_string(initialization_status),
+                                          ContextFlags._get_context_string(flags, INITIALIZATION_STATUS),
                                           self.owner.name))
             if (execution_phase and not (flags & ContextFlags.EXECUTION_PHASE_MASK & execution_phase)):
                 raise ContextError("Conflict in assignment to flags ({}) and execution_phase ({}) arguments "
                                    "of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.EXECUTION_PHASE_MASK),
-                                          ContextFlags._get_context_string(execution_phase), self.owner.name))
+                                          ContextFlags._get_context_string(flags, EXECUTION_PHASE), self.owner.name))
             if (source != ContextFlags.COMPONENT) and not (flags & ContextFlags.SOURCE_MASK & source):
                 raise ContextError("Conflict in assignment to flags ({}) and source ({}) arguments of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.SOURCE_MASK),
-                                          ContextFlags._get_context_string(source),
+                                          ContextFlags._get_context_string(flags, SOURCE),
                                           self.owner.name))
         self.execution_id = execution_id
         self.execution_time = None
@@ -464,7 +518,7 @@ class Context():
         """String with names of flags currently set in the owner's `flags <Context.flags>` attribute,
         possibly prepended by an additional string.
         """
-        return ContextFlags._get_context_string(self.owner.context.flags, string)
+        return ContextFlags._get_context_string(self.owner.context.flags, string=string)
 
 @tc.typecheck
 def _get_context(context:tc.any(ContextFlags, str)):

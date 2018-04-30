@@ -139,6 +139,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
@@ -528,8 +529,7 @@ class LCA(RecurrentTransferMechanism):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=componentType+INITIALIZING):
+                 prefs:is_pref_set=None):
         """Instantiate LCA
         """
 
@@ -572,8 +572,7 @@ class LCA(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
 
     def _execute(
         self,
@@ -645,23 +644,22 @@ class LCA(RecurrentTransferMechanism):
             if not self.integrator_function:
 
                 self.integrator_function = LCAIntegrator(
-                    function_variable,
-                    initializer=initial_value,
-                    noise=noise,
-                    time_step_size=time_step_size,
-                    rate=leak,
-                    owner=self
-                )
+                                            function_variable,
+                                            initializer=initial_value,
+                                            noise=noise,
+                                            time_step_size=time_step_size,
+                                            rate=leak,
+                                            owner=self)
 
-            current_input = self.integrator_function.execute(
-                function_variable,
-                # Should we handle runtime params?
-                runtime_params={
-                    INITIALIZER: initial_value,
-                    NOISE: noise,
-                    RATE: leak,
-                    TIME_STEP_SIZE: time_step_size
-                },
+            current_input = self.integrator_function._execute(
+                    function_variable,
+                    # Should we handle runtime params?
+                    runtime_params={
+                        INITIALIZER: initial_value,
+                        NOISE: noise,
+                        RATE: leak,
+                        TIME_STEP_SIZE: time_step_size
+                    },
                 context=context
             )
         else:
@@ -677,7 +675,10 @@ class LCA(RecurrentTransferMechanism):
                 current_input = function_variable
 
         # Apply TransferMechanism function
-        output_vector = self.function(variable=current_input, params=runtime_params)
+        # Override TransferMechanism._execute since much of its functionality is duplicated here
+        output_vector = super(Mechanism, self)._execute(variable=current_input,
+                                                                runtime_params=runtime_params,
+                                                                context=context)
 
         if clip is not None:
             minCapIndices = np.where(output_vector < clip[0])

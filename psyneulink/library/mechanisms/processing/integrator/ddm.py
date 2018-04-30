@@ -733,9 +733,7 @@ class DDM(ProcessingMechanism_Base):
                  params=None,
                  name=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
-                 prefs: is_pref_set = None,
-                 context=componentType + INITIALIZING
-    ):
+                 prefs: is_pref_set = None):
 
         self.standard_output_states = StandardOutputStates(self,
                                                            DDM_standard_output_states,
@@ -812,15 +810,12 @@ class DDM(ProcessingMechanism_Base):
         super(DDM, self).__init__(default_variable=default_variable,
                                   input_states=input_states,
                                   output_states=output_states,
+                                  function=function,
                                   params=params,
                                   name=name,
                                   prefs=prefs,
                                   size=size,
-                                  # context=context)
-                                  context=self,
-                                  function=function,
-                                  )
-
+                                  context=ContextFlags.CONSTRUCTOR)
         self._instantiate_plotting_functions()
         # # TEST PRINT
         # print("\n{} user_params:".format(self.name))
@@ -979,11 +974,9 @@ class DDM(ProcessingMechanism_Base):
     def _instantiate_plotting_functions(self, context=None):
         if "DriftDiffusionIntegrator" in str(self.function):
             self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                              noise=self.function_params['noise'],
-                                                              context='plot').function
+                                                              noise=self.function_params['noise']).function
             self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                          noise=self.function_params['noise'],
-                                                          context='plot').function
+                                                          noise=self.function_params['noise']).function
 
 
     def _execute(
@@ -1036,7 +1029,7 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if isinstance(self.function.__self__, Integrator):
 
-            result = self.function(function_variable, context=context)
+            result = super()._execute(variable, context=context)
 
             if self.context.initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
@@ -1047,9 +1040,9 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         else:
 
-            result = self.function(
+            result = super()._execute(
                 variable=function_variable,
-                params=runtime_params,
+                runtime_params=runtime_params,
                 context=context
             )
 
