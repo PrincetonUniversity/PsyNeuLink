@@ -744,7 +744,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Validate FUNCTION
         if FUNCTION in target_set:
-            # FIX: check for value = same shape as variable of function and then get rid of constraints below
             transfer_function = target_set[FUNCTION]
             transfer_function_class = None
 
@@ -755,14 +754,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             elif inspect.isclass(transfer_function):
                 transfer_function_class = transfer_function
 
-            # if (not transfer_function_class.componentType is TRANSFER_FUNCTION_TYPE
-            #         and not transfer_function_class.componentType is NORMALIZING_FUNCTION_TYPE):
             if issubclass(transfer_function_class, Function):
                 if not issubclass(transfer_function_class, (TransferFunction, NormalizingFunction)):
                     raise TransferError("Function type specified as {} param of {} ({}) must be a {}".
-                                        format(repr(FUNCTION),
-                                               self.name,
-                                               transfer_function_class.__name__,
+                                        format(repr(FUNCTION), self.name, transfer_function_class.__name__,
                                                TRANSFER_FUNCTION_TYPE + ' or ' + NORMALIZING_FUNCTION_TYPE))
 
             # FUNCTION is a function or method, so test that shape of output = shape of input
