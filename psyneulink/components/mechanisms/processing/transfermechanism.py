@@ -775,7 +775,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     val_shape = np.array(transfer_function(self.instance_defaults.variable)).shape
 
                 if val_shape != var_shape:
-                    raise TransferError("The shape ({}) of the value returned by the python function or method "
+                    raise TransferError("The shape ({}) of the value returned by the Python function, method, or UDF "
                                         "specified as the {} param of {} must be the same shape ({}) as its {}".
                                         format(val_shape, repr(FUNCTION), self.name, var_shape, repr(VARIABLE)))
 
