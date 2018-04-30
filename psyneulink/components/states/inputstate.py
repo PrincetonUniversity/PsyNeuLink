@@ -737,9 +737,11 @@ class InputState(State_Base):
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
 
-        # Need to do validation and assignment here, as specification of **combine** influences the value
-        #    returned
         if combine:
+            # Make sure it doesn't conflict with any specification in **function**
+            # IMPLEMENTATION NOTE:
+            #    Need to do validation & assignment here, since specification of **combine** influences value
+            #    returned by function which is needed for validation of other attributes of InputState
             if function:
                 owner_name = ""
                 if owner:
@@ -752,6 +754,9 @@ class InputState(State_Base):
                                               format(repr(COMBINE), combine.upper(),
                                                      repr(OPERATION),function.operation.upper(),
                                                      repr(FUNCTION), owner_name))
+                    else:
+                        # Leave function intact, as it may have other parameters specified by user
+                        pass
                 elif isinstance(function, Function):
                     raise InputStateError("Specification of {} argument ({}) conflicts with "
                                           "Function specified in {} argument ({}){}".
