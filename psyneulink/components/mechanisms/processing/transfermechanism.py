@@ -909,6 +909,53 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.output_states.append({NAME: RESULT, VARIABLE: (OWNER_VALUE, i)})
         super()._instantiate_output_states(context=context)
 
+    def _get_instantaneous_function_input(self, function_variable, noise):
+
+        noise = self._try_execute_param(noise, function_variable)
+        if (np.array(noise) != 0).any():
+            current_input = function_variable + noise
+        else:
+            current_input = function_variable
+
+        return current_input
+
+    def _get_integrated_function_input(self, function_variable, initial_value, noise, rate, context, **kwargs):
+
+        if not self.integrator_function:
+
+            self.integrator_function = AdaptiveIntegrator(
+                function_variable,
+                initializer=initial_value,
+                noise=noise,
+                rate=rate,
+                owner=self
+            )
+
+            self.original_integrator_function = self.integrator_function
+
+        current_input = self.integrator_function.execute(
+            function_variable,
+            # Should we handle runtime params?
+            runtime_params={
+                INITIALIZER: self.initial_value,
+                NOISE: self.noise,
+                RATE: self.smoothing_factor
+            },
+            context=context
+        )
+
+        return current_input
+
+    def _clip_result(self, clip, current_input, runtime_params, context):
+
+        outputs = super(Mechanism, self)._execute(function_variable=current_input, runtime_params=runtime_params, context=context)
+        if clip is not None:
+            minCapIndices = np.where(outputs < clip[0])
+            maxCapIndices = np.where(outputs > clip[1])
+            outputs[minCapIndices] = np.min(clip)
+            outputs[maxCapIndices] = np.max(clip)
+        return outputs
+
     def _execute(
         self,
         variable=None,
@@ -974,56 +1021,25 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Update according to time-scale of integration
         if integrator_mode:
+            current_input = self._get_integrated_function_input(function_variable,
+                                                                    initial_value,
+                                                                    noise,
+                                                                    smoothing_factor,
+                                                                    context)
 
-            if not self.integrator_function:
-
-                self.integrator_function = AdaptiveIntegrator(
-                    function_variable,
-                    initializer=initial_value,
-                    noise=noise,
-                    rate=smoothing_factor,
-                    owner=self
-                )
-                self.original_integrator_function = self.integrator_function
-            current_input = self.integrator_function.execute(
-                function_variable,
-                # Should we handle runtime params?
-                runtime_params={
-                    INITIALIZER: self.initial_value,
-                    NOISE: self.noise,
-                    RATE: self.smoothing_factor
-                },
-                context=context
-            )
         else:
-            noise = self._try_execute_param(self.noise, function_variable)
-            # formerly: current_input = self.input_state.value + noise
-            # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
-            # when the input is given as a string.
-            if (np.array(noise) != 0).any():
-                current_input = function_variable + noise
-            else:
-                current_input = function_variable
+            current_input = self._get_instantaneous_function_input(function_variable,
+                                                                       noise)
 
         if isinstance(self.function_object, NormalizingFunction):
             # Apply TransferMechanism's function to each input state separately
             outputs = []
             for elem in current_input:
-                output_item = super()._execute(function_variable=elem, runtime_params=runtime_params, context=context)
-                if clip is not None:
-                    minCapIndices = np.where(output_item < clip[0])
-                    maxCapIndices = np.where(output_item > clip[1])
-                    output_item[minCapIndices] = np.min(clip)
-                    output_item[maxCapIndices] = np.max(clip)
+                output_item = self._clip_result(clip, elem, runtime_params, context)
                 outputs.append(output_item)
 
         else:
-            outputs = super()._execute(function_variable=current_input, runtime_params=runtime_params, context=context)
-            if clip is not None:
-                minCapIndices = np.where(outputs < clip[0])
-                maxCapIndices = np.where(outputs > clip[1])
-                outputs[minCapIndices] = np.min(clip)
-                outputs[maxCapIndices] = np.max(clip)
+            outputs = self._clip_result(clip, current_input, runtime_params, context)
 
         return outputs
         #endregion

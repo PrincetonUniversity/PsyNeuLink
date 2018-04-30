@@ -140,7 +140,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next
+from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next, NormalizingFunction
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -574,6 +574,31 @@ class LCA(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
+    def _get_integrated_function_input(self, function_variable, initial_value, noise, rate, context, time_step_size):
+
+        if not self.integrator_function:
+            self.integrator_function = LCAIntegrator(
+                function_variable,
+                initializer=initial_value,
+                noise=noise,
+                time_step_size=time_step_size,
+                rate=rate,
+                owner=self)
+
+        current_input = self.integrator_function._execute(
+            function_variable,
+            # Should we handle runtime params?
+            runtime_params={
+                INITIALIZER: initial_value,
+                NOISE: noise,
+                RATE: rate,
+                TIME_STEP_SIZE: time_step_size
+            },
+            context=context
+        )
+
+        return current_input
+
     def _execute(
         self,
         variable=None,
@@ -641,52 +666,27 @@ class LCA(RecurrentTransferMechanism):
 
         # Update according to time-scale of integration
         if integrator_mode:
-            if not self.integrator_function:
-
-                self.integrator_function = LCAIntegrator(
-                                            function_variable,
-                                            initializer=initial_value,
-                                            noise=noise,
-                                            time_step_size=time_step_size,
-                                            rate=leak,
-                                            owner=self)
-
-            current_input = self.integrator_function._execute(
-                    function_variable,
-                    # Should we handle runtime params?
-                    runtime_params={
-                        INITIALIZER: initial_value,
-                        NOISE: noise,
-                        RATE: leak,
-                        TIME_STEP_SIZE: time_step_size
-                    },
-                context=context
-            )
+            current_input = self._get_integrated_function_input(function_variable,
+                                                                initial_value,
+                                                                noise,
+                                                                leak,
+                                                                context,
+                                                                time_step_size)
         else:
-        # elif time_scale is TimeScale.TRIAL:
-            noise = self._try_execute_param(noise, function_variable)
-            # formerly: current_input = self.input_state.value + noise
-            # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
-            # when the input is given as a string.
-            if (np.array(noise) != 0).any():
-                current_input = function_variable + noise
-            else:
+            current_input = self._get_instantaneous_function_input(function_variable, noise)
 
-                current_input = function_variable
+        if isinstance(self.function_object, NormalizingFunction):
+            # Apply TransferMechanism's function to each input state separately
+            outputs = []
+            for elem in current_input:
+                output_item = self._clip_result(clip, elem, runtime_params, context)
+                outputs.append(output_item)
 
-        # Apply TransferMechanism function
-        # Override TransferMechanism._execute since much of its functionality is duplicated here
-        output_vector = super(Mechanism, self)._execute(variable=current_input,
-                                                                runtime_params=runtime_params,
-                                                                context=context)
+        else:
+            outputs = self._clip_result(clip, current_input, runtime_params, context)
 
-        if clip is not None:
-            minCapIndices = np.where(output_vector < clip[0])
-            maxCapIndices = np.where(output_vector > clip[1])
-            output_vector[minCapIndices] = np.min(clip)
-            output_vector[maxCapIndices] = np.max(clip)
 
-        return output_vector
+        return outputs
     # @property
     # def inhibition(self):
     #     return self.hetero
