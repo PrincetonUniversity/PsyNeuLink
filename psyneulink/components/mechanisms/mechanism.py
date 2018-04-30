@@ -867,7 +867,7 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.state import ADD_STATES, REMOVE_STATES, _parse_state_spec
+from psyneulink.components.states.state import REMOVE_STATES, _parse_state_spec
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
     CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \

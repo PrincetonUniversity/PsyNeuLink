@@ -122,9 +122,14 @@ class ContextError(Exception):
 
 
 class ContextFlags(IntEnum):
-    """Used to identify the status of a `Component <Component>` when its value or one of its attributes is being
-    accessed. Also used to specify the context in which a value of the Component or its attribute is `logged
-    <Log_Conditions>`.
+    """Used to identify the initialization and execution status of a `Component <Component>`.
+
+    Used when a Component's `value <Component.value>` or one of its attributes is being accessed.
+    Also used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`..
+
+    COMMENT:
+        Used to by **context** argument of all methods to specify type of caller.
+    COMMENT
     """
 
     UNSET = 0

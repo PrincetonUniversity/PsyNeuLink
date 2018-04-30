@@ -737,7 +737,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         input_states = self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
                                               reference_value=reference_value,
-                                              # context='ADD_STATES')
                                               context = ContextFlags.METHOD)
 
         output_states = [[projection.sender for projection in state.path_afferents] for state in input_states]

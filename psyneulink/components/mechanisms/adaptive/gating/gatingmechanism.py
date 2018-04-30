@@ -534,7 +534,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         if GATING_PROJECTIONS in self.paramsCurrent:
             if self.paramsCurrent[GATING_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[GATING_PROJECTIONS].items():
-                    self._instantiate_gating_projection(projection, context=self.name)
+                    self._instantiate_gating_projection(projection, context=ContextFlags.METHOD)
 
     def _assign_as_gating_mechanism(self, context=None):
 

@@ -548,7 +548,6 @@ from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.state import ADD_STATES
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ASSERT, CONTROL_PROJECTIONS, ENABLED, INPUT_STATES, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
@@ -1143,8 +1142,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         """Add error_source and error_matrix for each InputState added"""
 
         if context is None:
-            # context.source = ContextFlags.METHOD
-            # context.string = ADD_STATES
             context = ContextFlags.COMMAND_LINE
 
         states = super().add_states(states=states, context=context)
