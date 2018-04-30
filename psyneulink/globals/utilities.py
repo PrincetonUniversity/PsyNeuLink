@@ -75,6 +75,7 @@ OTHER
 
 """
 
+import copy
 import inspect
 import logging
 import numbers
@@ -616,6 +617,35 @@ def multi_getattr(obj, attr, default = None):
 # multi_getattr(obj, attr) #Will return the docstring for the
 #                          #capitalize method of the builtin string
 #                          #object
+
+
+# based off the answer here https://stackoverflow.com/a/15774013/3131666
+def get_deepcopy_with_shared_keys(shared_keys_iter):
+    '''
+        Arguments
+        ---------
+            shared_keys_iter
+                an Iterable containing a list of strings that should be shallow copied
+
+        Returns
+        -------
+            a __deepcopy__ function
+    '''
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k in shared_keys_iter:
+            if k in self.__dict__:
+                setattr(result, k, self.__dict__[k])
+
+        for k, v in self.__dict__.items():
+            if k not in shared_keys_iter:
+                res_val = copy.deepcopy(v, memo)
+                setattr(result, k, res_val)
+        return result
+
+    return __deepcopy__
 
 
 #region NUMPY ARRAY METHODS ******************************************************************************************
