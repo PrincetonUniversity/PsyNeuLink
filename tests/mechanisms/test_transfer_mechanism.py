@@ -365,7 +365,6 @@ class TestTransferMechanismFunctions:
             T = TransferMechanism(name='T-udf',
                                   default_variable=[[0.0, 0.0]],
                                   function=UserDefinedFunction(custom_function=sum_all_elements))
-        print(str(error_text))
         assert "value returned by the Python function, method, or UDF specified" in str(error_text.value) \
                and "must be the same shape" in str(error_text.value) \
                and "as its 'variable'" in str(error_text.value)
