@@ -4683,7 +4683,11 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         #     self._validate_initializer(target_set[INITIALIZER])
 
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE])
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
+            self._validate_noise(noise)
 
     def _validate_rate(self, rate):
         # kmantel: this duplicates much code in _validate_params above, but that calls _instantiate_defaults
@@ -5701,7 +5705,11 @@ class AdaptiveIntegrator(
                     raise FunctionError(rate_value_msg.format(rate, self.name))
 
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE])
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
+            self._validate_noise(noise)
         # if INITIALIZER in target_set:
         #     self._validate_initializer(target_set[INITIALIZER])
 
@@ -7659,7 +7667,11 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                         "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE])
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
+            self._validate_noise(noise)
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])
 
