@@ -781,7 +781,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
-                target_set[NOISE] = noise.function
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
 
         # Validate SMOOTHING_FACTOR:
