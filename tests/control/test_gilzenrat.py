@@ -62,7 +62,8 @@ class TestGilzenratMechanisms:
         # - - - - - starting values - - - - -
         # variable = G.output_state.value + stimulus = 0.0 + 1.0 = 1.0
         # previous_value = initial_value = 1.0
-
+        # single_run = S.execute([[1.0]])
+        # np.testing.assert_allclose(single_run, np.array([[2.0]]))
         np.testing.assert_allclose(S.execute([[1.0]]), np.array([[2.0]]))
         # X = 1.0 + (-1.0 + 1.0)*0.02 + 0.0
         # X = 1.0 + 0.0 + 0.0 = 1.0 <--- previous value 1.0

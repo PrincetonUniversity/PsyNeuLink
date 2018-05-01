@@ -101,6 +101,15 @@ its OutputStates) and its `function <Mechanism_Base.function>` (for example, see
 regarding InputStates). Parameter States **cannot** on their own; they are always and only created when the Component
 to which a parameter belongs is created.
 
+COMMENT:
+    IMPLEMENTATION NOTE:
+    If the constructor for a State is called programmatically other than on the command line (e.g., within a method)
+    the **context** argument must be specified (by convention, as ContextFlags.METHOD); otherwise, it is assumed that
+    it is being created on the command line.  This is taken care of when it is created automatically (e.g., as part
+    of the construction of a Mechanism or Projection) by the _instantiate_state method that specifies a context
+    when it calls the relevant State constructor methods.
+COMMENT
+
 .. _State_Specification:
 
 Specifying a State
@@ -768,7 +777,6 @@ state_type_keywords = {STATE_TYPE}
 
 STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 STATE_SPEC = 'state_spec'
-ADD_STATES = 'ADD_STATES'
 REMOVE_STATES = 'REMOVE_STATES'
 
 def _is_state_class(spec):
@@ -1082,7 +1090,8 @@ class State_Base(State):
 
         # Enforce that only called from subclass
         if (not isinstance(context, State_Base) and
-                not any(key in context for key in {INITIALIZING, ADD_STATES, COMMAND_LINE})): # cxt-test
+                not (self.context.initialization_status == ContextFlags.INITIALIZING or
+                     context & (ContextFlags.COMMAND_LINE | ContextFlags.CONSTRUCTOR))):
             raise StateError("Direct call to abstract class State() is not allowed; "
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
@@ -1127,17 +1136,16 @@ class State_Base(State):
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(default_variable=variable,
                                          size=size,
+                                         function=function,
                                          param_defaults=params,
                                          name=name,
-                                         prefs=prefs,
-                                         context=context.__class__.__name__,  # cxt-done cxt-pass
-                                         function=function,
-                                         )
+                                         prefs=prefs
+        )
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
-            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context) # cxt-pass cxt-push
+            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -1146,19 +1154,10 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
-        # # MODIFIED 4/15/18 OLD:
-        if context is COMMAND_LINE: # cxt-test
-        # # MODIFIED 4/15/18 NEW:
-        #     assert self.context.source == ContextFlags.COMMAND_LINE
-        # MODIFIED 4/15/18 END
+        if context & ContextFlags.COMMAND_LINE:
             state_list = getattr(owner, owner.stateListAttr[self.__class__])
             if state_list and not self in state_list:
                 owner.add_states(self)
-        # # MODIFIED 4/15/18 NEW:
-        # else:
-        #     assert self.context.source != ContextFlags.COMMAND_LINE
-        # MODIFIED 4/15/18 END
-
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
@@ -1952,11 +1951,9 @@ class State_Base(State):
             if isinstance(projection, LearningProjection) and self.context.execution_phase != ContextFlags.LEARNING:
                 projection_value = projection.value * 0.0
             else:
-                projection_value = projection.execute(
-                    variable=projection.sender.value,
-                    runtime_params=projection_params,
-                    context=context  # cxt-pass cxt-push
-                )
+                projection_value = projection.execute(variable=projection.sender.value,
+                                                      runtime_params=projection_params,
+                                                      context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
             if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
@@ -2524,7 +2521,7 @@ def _parse_state_spec(state_type=None,
         state_specific_args.update(state_spec)
 
     state_dict = standard_args
-    context = state_dict.pop(CONTEXT, None) # cxt-set
+    context = state_dict.pop(CONTEXT, None)
     owner = state_dict[OWNER]
     state_type = state_dict[STATE_TYPE]
     reference_value = state_dict[REFERENCE_VALUE]

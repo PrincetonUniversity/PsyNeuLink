@@ -1168,6 +1168,37 @@ def safe_len(arr, fallback=1):
         return fallback
 
 
+import typecheck as tc
+@tc.typecheck
+def _get_arg_from_stack(arg_name:str):
+    # Get arg from the stack
+
+    import inspect
+
+    curr_frame = inspect.currentframe()
+    prev_frame = inspect.getouterframes(curr_frame, 2)
+    i = 1
+    # Search stack for first frame (most recent call) with a arg_val specification
+    arg_val = None
+    while arg_val is None:
+        try:
+            arg_val = inspect.getargvalues(prev_frame[i][0]).locals[arg_name]
+        except KeyError:
+            # Try earlier frame
+            i += 1
+        except IndexError:
+            # Ran out of frames, so just set arg_val to empty string
+            arg_val = ""
+        else:
+            break
+
+    # No arg_val was specified in any frame
+    if arg_val is None: # cxt-done
+        raise UtilitiesError("PROGRAM ERROR: arg_name not found in any frame")
+
+    return arg_val
+
+
 def prune_unused_args(func, args, kwargs):
     # use the func signature to filter out arguments that aren't compatible
     sig = inspect.signature(func)

@@ -528,8 +528,7 @@ class KWTA(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
 
     def _parse_function_variable(self, variable):
         if variable.dtype.char == "U":

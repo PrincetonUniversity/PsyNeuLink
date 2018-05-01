@@ -73,6 +73,7 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import AdaptiveIntegrator
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import CLASS_DEFAULTS, INTEGRATOR_MECHANISM, RESULTS, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -207,8 +208,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
@@ -226,12 +226,11 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         super(IntegratorMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   # input_states=input_states,
+                                                  function=function,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=self,
-                                                  function=function,
-                                                  )
+                                                  context=ContextFlags.CONSTRUCTOR)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 

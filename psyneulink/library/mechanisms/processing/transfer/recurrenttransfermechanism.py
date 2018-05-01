@@ -167,7 +167,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import Hebbian, Linear, Stability, get_matrix, is_function_type
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
+    ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
@@ -175,11 +176,14 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
+from psyneulink.globals.keywords import \
+    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, MATRIX, MEAN, MEDIAN, NAME, \
+    PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import AUTO, COMMAND_LINE, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none, parameter_spec
-from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
+from psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism import \
+    AutoAssociativeLearningMechanism
 
 __all__ = [
     'DECAY', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
@@ -614,8 +618,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
-                 prefs: is_pref_set=None,
-                 context=componentType+INITIALIZING):
+                 prefs: is_pref_set=None):
         """Instantiate RecurrentTransferMechanism
         """
 
@@ -660,8 +663,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.
@@ -903,9 +905,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             name = 'matrix'
             backing_field = '_matrix'
             if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-                val_type = val.__class__.__name__
-                curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
-                self._assign_params(request_set={name: val}, context=curr_context)
+                self._assign_params(request_set={name: val}, context=ContextFlags.PROPERTY)
             else:
                 setattr(self, backing_field, val)
             self.user_params.__additem__(name, val)
@@ -924,10 +924,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def auto(self, val):
 
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            val_type = val.__class__.__name__
-            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + "auto" + ' of ' + self.name
-            # self.prev_context = "nonsense" + str(curr_context)
-            self._assign_params(request_set={"auto": val}, context=curr_context)
+            self._assign_params(request_set={"auto": val}, context=ContextFlags.PROPERTY)
         else:
             setattr(self, "_auto", val)
 
@@ -945,10 +942,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def hetero(self, val):
 
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            val_type = val.__class__.__name__
-            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + "hetero" + ' of ' + self.name
-            # self.prev_context = "nonsense" + str(curr_context)
-            self._assign_params(request_set={"hetero": val}, context=curr_context)
+            self._assign_params(request_set={"hetero": val}, context=ContextFlags.PROPERTY)
         else:
             setattr(self, "_hetero", val)
 
@@ -1011,8 +1005,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                               learning_rate=learning_rate,
                                                               name="{} for {}".format(
                                                                       AutoAssociativeLearningMechanism.className,
-                                                                      self.name),
-                                                              context=context)
+                                                                      self.name))
 
         # Instantiate Projection from Mechanism's output to LearningMechanism
         MappingProjection(sender=activity_vector,
@@ -1050,7 +1043,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if learning_rate:
             self.learning_rate = learning_rate
 
-        context = context or COMMAND_LINE # cxt-done cxt-pass ? cxt-push
+        context = context or ContextFlags.COMMAND_LINE
         self.context.source = self.context.source or ContextFlags.COMMAND_LINE
 
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self.output_state,

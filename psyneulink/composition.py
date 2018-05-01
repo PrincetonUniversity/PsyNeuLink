@@ -59,6 +59,7 @@ from llvmlite import ir
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Mechanism, Projection
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import EXECUTING
 from psyneulink.globals.context import ContextFlags
 from psyneulink.scheduling.scheduler import Scheduler
@@ -902,7 +903,9 @@ class Composition(object):
 #                        print("{}: {}".format(num, res))
                     else:
                         mechanism.context.execution_phase = ContextFlags.PROCESSING
-                        num = mechanism.execute(context=EXECUTING + "composition")
+                        # num = mechanism.execute(context=EXECUTING + "composition")
+                        num = mechanism.execute(context=ContextFlags.COMPOSITION)
+                        mechanism.context.execution_phase = ContextFlags.IDLE
 #                        print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
 #                        print("result = ", num)
 #                        print()

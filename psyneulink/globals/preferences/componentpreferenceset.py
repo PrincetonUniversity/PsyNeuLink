@@ -12,6 +12,7 @@
 
 import inspect
 
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import NAME, kwDefaultPreferenceSetOwner, kwPrefLevel, kwPreferenceSetName, kwPrefs, kwPrefsOwner
 from psyneulink.globals.log import LogCondition
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
@@ -243,7 +244,6 @@ class ComponentPreferenceSet(PreferenceSet):
                  prefs=None,
                  level=PreferenceLevel.SYSTEM,
                  name=None,
-                 context=None,
                  **kargs):
         """Instantiate PreferenceSet for owner and/or classPreferences for owner's class
 
@@ -314,13 +314,13 @@ class ComponentPreferenceSet(PreferenceSet):
                                                     level=owner_class.classPreferenceLevel,
                                                     prefs=ComponentDefaultPrefDicts[owner_class.classPreferenceLevel],
                                                     name=name,
-                                                    context=self)
+                                                    context=ContextFlags.CONSTRUCTOR)
         # Instantiate PreferenceSet
         super().__init__(owner=owner,
                          level=owner_class.classPreferenceLevel,
                          prefs=prefs,
                          name=name,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
         self._level = level
 
     @property
