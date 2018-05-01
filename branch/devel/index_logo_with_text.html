@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to &mdash; PsyNeuLink 0.4.4.4+178.gd7e5c69 documentation</title>
+  <title>Welcome to &mdash; PsyNeuLink 0.4.6.0+55.g62eaf22 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.4.4+178.gd7e5c69 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.6.0+55.g62eaf22 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.4.4+178
+                0.4.6.0+55
               </div>
             
           
@@ -158,7 +158,7 @@
            <div itemprop="articleBody">
             
   <div class="section" id="welcome-to-logo">
-<h1>Welcome to       <a class="reference internal" href="_images/PsyNeuLink_logo.svg"><img alt="logo" src="_images/PsyNeuLink_logo.svg" width="20%" /></a><a class="headerlink" href="#welcome-to-logo" title="Permalink to this headline">¶</a></h1>
+<h1>Welcome to       <a class="reference external" href="http://psyneulink.org"><img alt="logo" src="_images/PsyNeuLink_logo.svg" width="20%" /></a><a class="headerlink" href="#welcome-to-logo" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="#purpose"><span class="std std-ref">Purpose</span></a></li>
 <li><a class="reference internal" href="#what-psyneulink-is-not"><span class="std std-ref">What PsyNeuLink is NOT</span></a></li>
@@ -171,7 +171,7 @@
 <div class="section" id="purpose">
 <span id="id1"></span><h2>Purpose<a class="headerlink" href="#purpose" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink is an open-source, software environment written in Python, and designed for the needs of
-neuroscientists, psychologists, computational psychiatrists and others interested learning about and building
+neuroscientists, psychologists, computational psychiatrists and others interested in learning about and building
 models of the relationship between brain function, mental processes and behavior.</p>
 <p>PsyNeuLink can be used as a “block modeling environment”, in which to construct, simulate, document, and exchange
 computational models of neural mechanisms and/or psychological processes at the subsystem and system levels.
@@ -241,10 +241,11 @@ and <a class="reference external" href="http://www.nengo.ca">Nengo</a>  (for bio
 In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
 possible, with the ability to integrate components constructed in other packages (including some of the ones listed
 above) into a single functioning system.  These are characteristics that are often (at least in the initial
-stages of development) in tension with efficiency (think:  interpreted vs. compiled).  Two priorities for continued
-development are the accleration of PsyNeuLink using just-in-time compilation methods, parallelization and adaptation
-to FPGA hardware; and the implementation of a graphic interface for the construction of models and realtime display
-of their execution.</p>
+stages of development) in tension with efficiency (think:  interpreted vs. compiled).  Three priorities for continued
+development are the acceleration of PsyNeuLink, using just-in-time compilation methods, parallelization and adaptation
+to FPGA hardware; integration of tools for model analysis (such as those implemented in HDDM); and the implementation</p>
+<blockquote>
+<div>of a graphic interface for the construction of models and realtime display of their execution.</div></blockquote>
 </div>
 <div class="section" id="environment-overview">
 <span id="overview"></span><h2>Environment Overview<a class="headerlink" href="#environment-overview" title="Permalink to this headline">¶</a></h2>
@@ -252,8 +253,8 @@ of their execution.</p>
 most Python packages.  <a class="reference internal" href="BasicsAndSampler.html"><span class="doc">Basics and Sampler</span></a> provides an orientation to PsyNeuLinks Components, some examples of what
 PsyNeuLink models look like, and some of its capabilities. <a class="reference internal" href="QuickReference.html"><span class="doc">Quick Reference</span></a> provides an overview of how PsyNeuLink is
 organized and some of its basic principles of operation.  The <a class="reference internal" href="#tutorial"><span class="std std-ref">Tutorial</span></a> provides an interactive guide to the
-construction of models using PsyNeuLink.  <a class="reference internal" href="Core.html"><span class="doc">Core</span></a> contains the fundamental constructs out of which PsyNeuLink models
-are built, and <a class="reference internal" href="Library.html"><span class="doc">Library</span></a> contains extensions, including speciality components and implemented models.</p>
+construction of models using PsyNeuLink.  <a class="reference internal" href="Core.html"><span class="doc">Core</span></a> contains the fundamental objects used to build PsyNeuLink models, and
+<a class="reference internal" href="Library.html"><span class="doc">Library</span></a> contains extensions, including speciality components, implemented compositions, and published models.</p>
 </div>
 <div class="section" id="installation">
 <span id="id3"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
@@ -302,9 +303,11 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
 <li><strong>Allie Burton</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Jonathan D. Cohen</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Peter Johnson</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Justin Junge</strong>, Department of Psychology, Princeton University</li>
 <li><strong>Kristen Manning</strong>, Princeton Neuroscience Institute, Princeton University</li>
-<li><strong>K. Mantel</strong>, Princeton Neuroscience Institute, Princeton University</li>
-<li><strong>Ted Willke</strong>, Intel Labs, Intel Corporation</li>
+<li><strong>Katherine Mantel</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Markus Spitzer</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Jan Vesely</strong>, Department of Computer Science, Rutgers University</li>
 <li><strong>Changyan Wang</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Nate Wilson</strong>, Princeton Neuroscience Institute, Princeton University</li>
 </ul>
@@ -318,7 +321,7 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
 <li><strong>Amitai Shenhav</strong>, Cognitive, Linguistic, &amp; Psychological Sciences, Brown University</li>
 <li><strong>Michael Shvartsman</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Ben Singer</strong>, Princeton Neuroscience Institute, Princeton University</li>
-<li><strong>Jan Vesely</strong>, Department of Computer Science, Rutgers University</li>
+<li><strong>Ted Willke</strong>, Intel Labs, Intel Corporation</li>
 </ul>
 </div>
 <div class="section" id="table-of-contents">
@@ -516,7 +519,7 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.4.4+178.gd7e5c69',
+            VERSION:'0.4.6.0+55.g62eaf22',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
