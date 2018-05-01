@@ -1,4 +1,5 @@
 import psyneulink as pnl
+import numpy as np
 
 
 def clear_registry():
@@ -253,3 +254,24 @@ class TestProjectionSpecificationFormats:
 
             assert T.output_states[0].mod_afferents[0].name in \
                    'GatingProjection for T-GATING-{}[OutputState-0]'.format(i)
+
+
+    def test_masked_mapping_projection(self):
+        t1 = pnl.TransferMechanism(size=2)
+        t2 = pnl.TransferMechanism(size=2)
+        pnl.MaskedMappingProjection(sender=t1,
+                                    receiver=t2,
+                                    matrix=[[1,2],[3,4]],
+                                    mask=[[1,0],[0,1]],
+                                    mask_operation=pnl.PRODUCT
+                                    )
+        p = pnl.Process(pathway=[t1, t2])
+        val = p.execute(input=[1,2])
+        assert np.allclose(val, [[1, 4]])
+
+    # def test_combine_param_conflicting_fct_operation_spec(self):
+    #     with pytest.raises(pnl.InputStateError) as error_text:
+    #         t = pnl.TransferMechanism(input_states=pnl.InputState(function=pnl.LinearCombination(operation=pnl.SUM),
+    #                                                               combine=pnl.PRODUCT))
+    #     assert "Specification of 'combine' argument (PRODUCT) conflicts with specification of 'operation' (SUM) " \
+    #            "for LinearCombination in 'function' argument for InputState" in str(error_text.value)
