@@ -214,13 +214,17 @@ class LeabraFunction(Function_Base):
             raise LeabraError('leabra python module is not installed. Please install it from '
                               'https://github.com/benureau/leabra')
 
+        if network is None:
+            raise LeabraError('network was None. Cannot create function for Leabra Mechanism if network is not specified.')
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(network=network,
                                                   params=params)
 
         if default_variable is None:
             input_size = len(self.network.layers[0].units)
-            default_variable = np.zeros(input_size)
+            output_size = len(self.network.layers[-1].units)
+            default_variable = [np.zeros(input_size), np.zeros(output_size)]
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -517,7 +521,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
             variable=variable,
             function_variable=function_variable,
             runtime_params=runtime_params,
-            ignore_execution_id=ignore_execution_id,
+            # ignore_execution_id=ignore_execution_id,
             context=context
         )
 
