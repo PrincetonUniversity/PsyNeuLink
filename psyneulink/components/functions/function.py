@@ -4680,6 +4680,10 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         #     self._validate_initializer(target_set[INITIALIZER])
 
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
 
     def _validate_rate(self, rate):
@@ -4746,11 +4750,12 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                         "must be specified as a float, a function, or an array of the appropriate shape ({})."
                             .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(self.instance_defaults.variable))))
             else:
-                for noise_item in noise:
-                    if not isinstance(noise_item, (float, int)) and not callable(noise_item):
-                        raise FunctionError(
-                            "The elements of a noise list or array must be floats or functions. "
-                            "{} is not a valid noise element for {}".format(noise_item, self.name))
+                for i in range(len(noise)):
+                    if isinstance(noise[i], DistributionFunction):
+                        noise[i] = noise[i]._execute
+                    if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
+                        raise FunctionError("The elements of a noise list or array must be floats or functions. "
+                                            "{} is not a valid noise element for {}".format(noise[i], self.name))
 
         # Otherwise, must be a float, int or function
         elif not isinstance(noise, (float, int)) and not callable(noise):
@@ -5688,6 +5693,10 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                     raise FunctionError(rate_value_msg.format(rate, self.name))
 
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
         # if INITIALIZER in target_set:
         #     self._validate_initializer(target_set[INITIALIZER])
@@ -7649,6 +7658,10 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                         "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])

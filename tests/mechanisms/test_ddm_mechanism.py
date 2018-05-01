@@ -302,7 +302,7 @@ def test_DDM_noise_fn():
             name='DDM',
             function=DriftDiffusionIntegrator(
 
-                noise=NormalDist().function,
+                noise=NormalDist(),
                 rate=1.0,
                 time_step_size=1.0
             ),
@@ -405,7 +405,7 @@ def test_DDM_input_list_len_2():
 
 def test_DDM_input_fn():
     with pytest.raises(TypeError) as error_text:
-        stim = NormalDist().function
+        stim = NormalDist()
         T = DDM(
             name='DDM',
             function=DriftDiffusionIntegrator(

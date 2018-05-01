@@ -141,7 +141,7 @@ class TestTransferMechanismNoise:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=NormalDist().function,
+            noise=NormalDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -156,7 +156,7 @@ class TestTransferMechanismNoise:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=[NormalDist().function, NormalDist().function, NormalDist().function, NormalDist().function],
+            noise=[NormalDist(), NormalDist(), NormalDist(), NormalDist()],
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -224,7 +224,7 @@ class TestDistributionFunctions:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=NormalDist().function,
+            noise=NormalDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -240,7 +240,7 @@ class TestDistributionFunctions:
                 name="T",
                 default_variable=[0, 0, 0, 0],
                 function=Linear(),
-                noise=NormalDist(standard_dev=standard_deviation).function,
+                noise=NormalDist(standard_dev=standard_deviation),
                 smoothing_factor=1.0,
                 integrator_mode=True
             )
@@ -255,7 +255,7 @@ class TestDistributionFunctions:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=ExponentialDist().function,
+            noise=ExponentialDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -271,7 +271,7 @@ class TestDistributionFunctions:
                 name='T',
                 default_variable=[0, 0, 0, 0],
                 function=Linear(),
-                noise=UniformToNormalDist().function,
+                noise=UniformToNormalDist(),
                 smoothing_factor=1.0
             )
             np.random.seed(22)
@@ -283,7 +283,7 @@ class TestDistributionFunctions:
                     name='T',
                     default_variable=[0, 0, 0, 0],
                     function=Linear(),
-                    noise=UniformToNormalDist().function,
+                    noise=UniformToNormalDist(),
                     smoothing_factor=1.0
                 )
             assert "The UniformToNormalDist function requires the SciPy package." in str(error_text)
@@ -297,7 +297,7 @@ class TestDistributionFunctions:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=UniformDist().function,
+            noise=UniformDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -312,7 +312,7 @@ class TestDistributionFunctions:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=GammaDist().function,
+            noise=GammaDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -327,7 +327,7 @@ class TestDistributionFunctions:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=WaldDist().function,
+            noise=WaldDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -903,7 +903,7 @@ class TestTransferMechanismMultipleInputStates:
         T = TransferMechanism(
             name='T',
             function=Linear(slope=2.0, intercept=1.0),
-            noise=NormalDist().function,
+            noise=NormalDist(),
             default_variable=[[0.0, 0.0], [0.0, 0.0]]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
