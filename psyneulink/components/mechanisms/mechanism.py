@@ -2015,6 +2015,11 @@ class Mechanism_Base(Mechanism):
                                  "(It does not have an accumulator to reinitialize).".format(self.name))
 
     def get_current_mechanism_param(self, param_name):
+        if param_name == "variable":
+            raise MechanismError("The method 'get_current_mechanism_param' is intended for retrieving the current "
+                                 "value of a mechanism parameter. 'variable' is not a mechanism parameter. If looking "
+                                 "for {}'s default variable, try {}.instance_defaults.variable."
+                                 .format(self.name, self.name))
         try:
             return self._parameter_states[param_name].value
         except (AttributeError, TypeError):

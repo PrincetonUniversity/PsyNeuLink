@@ -668,6 +668,10 @@ class Function_Base(Function):
                                 format(param, param_name, self.__class__.__name__, owner_name))
 
     def get_current_function_param(self, param_name):
+        if param_name == "variable":
+            raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
+                                "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
+                                "default variable, try {}.instance_defaults.variable.".format(self.name, self.name))
         try:
             return self.owner._parameter_states[param_name].value
         except (AttributeError, TypeError):
