@@ -7,4 +7,5 @@ Pathway Projections
    :maxdepth: 1
 
    MappingProjection
+   MaskedMappingProjection
    AutoAssociativeProjection
