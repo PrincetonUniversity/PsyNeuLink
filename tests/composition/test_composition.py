@@ -78,13 +78,8 @@ class TestAddMechanism:
         t = timeit(
             'comp.add_mechanism(TransferMechanism())',
             setup='''
-<<<<<<< HEAD
-from psyneulink.components.mechanisms.Mechanism import mechanism
-from PsyNeuLink.Composition import Composition
-=======
-from psyNeuLink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.composition import Composition
->>>>>>> devel
 comp = Composition()
 ''',
             number=count
@@ -133,15 +128,9 @@ class TestAddProjection:
     def test_timing_stress(self, count):
         t = timeit('comp.add_projection(A, MappingProjection(), B)',
                    setup='''
-<<<<<<< HEAD
-from psyneulink.components.mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from psyneulink.components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Composition import Composition
-=======
-from psyneulink.components.mechanisms.processingmechanisms.transfermechanism import TransferMechanism
-from psyneulink.components.projections.pathwayprojections.mappingprojection import MappingProjection
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.composition import Composition
->>>>>>> devel
 comp = Composition()
 A = TransferMechanism(name='A')
 B = TransferMechanism(name='B')

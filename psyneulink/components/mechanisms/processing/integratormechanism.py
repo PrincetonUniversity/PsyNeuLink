@@ -67,13 +67,16 @@ Class Reference
 ---------------
 
 """
+from collections import Iterable
+
 import typecheck as tc
 
+from psyneulink.components.functions.function import AdaptiveIntegrator
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.globals.keywords import INTEGRATOR_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import CLASS_DEFAULTS, INTEGRATOR_MECHANISM, RESULTS, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'DEFAULT_RATE', 'IntegratorMechanism', 'IntegratorMechanismError'
@@ -180,29 +183,34 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'IntegratorMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        # setting owner to a string to avoid using this exact instance
+        # in the future, best to make this a sort of spec that can be used to
+        # construct a default instance
+        function = AdaptiveIntegrator(rate=0.5, owner=CLASS_DEFAULTS)
+
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
-
-    })
-
-    from psyneulink.components.functions.function import AdaptiveIntegrator
+    # paramClassDefaults.update({
+    #     OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
+    # })
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
-                 function=AdaptiveIntegrator(rate=0.5),
+                 function=None,
+                 output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(input_states=input_states,
+                                                  output_states=output_states,
+                                                  function=function,
                                                   params=params)
 
         # if default_variable is NotImplemented:
@@ -212,11 +220,12 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
         super(IntegratorMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
-                                                  input_states=input_states,
+                                                  # input_states=input_states,
+                                                  function=function,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=self)
+                                                  context=ContextFlags.CONSTRUCTOR)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 

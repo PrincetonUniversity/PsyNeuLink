@@ -39,7 +39,7 @@ being created within the `pathway <Process.pathway>` of a `Process`, its InputSt
 <Process.pathway>`.  InputStates can also be specified in the **input_states** argument of a Mechanism's
 constructor (see `below <InputState_Specification>`).
 
-The `variable <variable.InputState>` of an InputState can be specified using the **variable** or **size** arguments of
+The `variable <InputState.variable>` of an InputState can be specified using the **variable** or **size** arguments of
 its constructor.  It can also be specified using the **projections** argument, if neither **variable** nor **size** is
 specified.  The **projections** argument is used to `specify Projections <State_Projections>` to the InputState. If
 neither the **variable** nor **size** arguments is specified, then the value of the `Projections(s) <Projection>` or
@@ -453,23 +453,25 @@ Class Reference
 ---------------
 
 """
-import collections
 import numbers
 import warnings
 
+import collections
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, InitStatus
-from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
-from psyneulink.components.mechanisms.mechanism import Mechanism
+from psyneulink.components.functions.function import Function, Linear, LinearCombination, Reduce
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.states.state import ADD_STATES, StateError, State_Base, _instantiate_state_list, state_type_keywords
-from psyneulink.globals.keywords import COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
+from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import \
+    CLASS_DEFAULTS, COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, \
+    INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, \
+    OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
+    SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextStatus
-from psyneulink.globals.utilities import append_type_to_name, is_numeric, iscompatible
+from psyneulink.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords',
@@ -509,6 +511,7 @@ class InputState(State_Base):
         variable=None,                             \
         size=None,                                 \
         function=LinearCombination(operation=SUM), \
+        combine=None,                              \
         projections=None,                          \
         weight=None,                               \
         exponent=None,                             \
@@ -571,6 +574,13 @@ class InputState(State_Base):
         received by the InputState, under the possible influence of `GatingProjections <GatingProjection>` received
         by the InputState.  It must produce a result that has the same format (number and type of elements) as the
         item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been assigned.
+
+    combine : SUM or PRODUCT : default None
+        specifies the **operation** argument used by the default `LinearCombination` function, wnich determines how the
+        `value <Projection.value>` of the InputState's `projections <InputState.projections>` are combined.  This is a
+        convenience argument, that **operation** to be specified without having to specify the function's constructor;
+        accordingly, it assumes that LinearCombination (the default) is used as the InputState's function -- if it
+        conflicts with a specification of **function** an error is generated.
 
     projections : list of Projection specifications
         specifies the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
@@ -690,6 +700,9 @@ class InputState(State_Base):
     variableEncodingDim = 1
     valueEncodingDim = 1
 
+    class ClassDefaults(State_Base.ClassDefaults):
+        function = LinearCombination(operation=SUM, owner=CLASS_DEFAULTS)
+
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION,
                                MECHANISM: None,     # These are used to specifiy InputStates by projections to them
@@ -703,8 +716,9 @@ class InputState(State_Base):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 function=LinearCombination(operation=SUM),
+                 function=None,
                  projections=None,
+                 combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
                  weight=None,
                  exponent=None,
                  params=None,
@@ -712,16 +726,21 @@ class InputState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-done
-            self.context.status = ContextStatus.COMMAND_LINE
+        if context is None:
+            context = ContextFlags.COMMAND_LINE
+            self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
-            context = self # cxt-done
-            self.context.status = ContextStatus.CONSTRUCTOR
+            context = ContextFlags.CONSTRUCTOR
+            self.context.source = ContextFlags.CONSTRUCTOR
 
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
+
+        # If combine argument is specified, save it along with any user-specified function for _validate_params()
+        # (but don't pass to _assign_args_to_param_dicts, as it is an option not a legitimate InputState parameter)
+        if combine:
+            self.combine_function_args = (combine, function)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -741,7 +760,7 @@ class InputState(State_Base):
             self.init_args['projections'] = projections
 
             # Flag for deferred initialization
-            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
             return
 
         self.reference_value = reference_value
@@ -755,7 +774,9 @@ class InputState(State_Base):
                                          params=params,
                                          name=name,
                                          prefs=prefs,
-                                         context=context)
+                                         context=context,
+                                         function=function,
+                                         )
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
             self._assign_default_state_name(context=context)
@@ -764,15 +785,15 @@ class InputState(State_Base):
         """Assign variable to value of Projection in projections
         """
         from psyneulink.components.projections.projection import \
-            Projection, _parse_connection_specs, ProjectionTuple
+            Projection, _parse_connection_specs
 
         if not isinstance(projections, list):
             projections = [projections]
 
-        # Use only first specification in the list returned, and assume any others are the same size 
+        # Use only first specification in the list returned, and assume any others are the same size
         #     (which they must be); leave validation of this to _instantiate_projections_to_state
         proj_spec = _parse_connection_specs(InputState, self, projections)[0]
-        
+
         if isinstance(proj_spec.projection, Projection):
             variable = proj_spec.projection.value
         elif isinstance(proj_spec.state, OutputState):
@@ -790,6 +811,44 @@ class InputState(State_Base):
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        # Make sure **combine** and **function** args specified in constructor don't conflict
+        if hasattr(self, 'combine_function_args'):
+            combine, function = self.combine_function_args
+            if function:
+                owner_name = ""
+                if self.owner:
+                    owner_name = " for InputState of {}".format(self.owner.name)
+                if isinstance(function, LinearCombination):
+                    # specification of combine conflicts with operation specified for LinearCombination in function arg
+                    if function.operation != combine:
+                        raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                              "specification of {} ({}) for LinearCombination in {} "
+                                              "argument{}".
+                                              format(repr(COMBINE), combine.upper(),
+                                                     repr(OPERATION),function.operation.upper(),
+                                                     repr(FUNCTION), owner_name))
+                    else:
+                        # LinearFunction has been specified with same operation as specified for combine,
+                        # so delete combine_function_args attribute so it is not seen in _instantiate_function
+                        # in order to leave function intact (as it may have other parameters specified by user)
+                        del self.combine_function_args
+                # combine assumes LinearCombination, but Function other than LinearCombination specified for function
+                elif isinstance(function, Function):
+                    raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                          "Function specified in {} argument ({}){}".
+                                          format(repr(COMBINE), combine.upper(),
+                                                 repr(FUNCTION), function.name, owner_name))
+                # combine assumes LinearCombination, but class other than LinearCombination specified for function
+                elif isinstance(function, type):
+                    if not issubclass(function, LinearCombination):
+                        raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                              "Function specified in {} argument ({}){}".
+                                              format(repr(COMBINE), combine.upper(),
+                                                     repr(FUNCTION), function.__name__, owner_name))
+                else:
+                    raise InputStateError("PROGRAM ERROR: unrecognized specification for function argument ({}){} ".
+                                          format(function, owner_name))
 
         if WEIGHT in target_set and target_set[WEIGHT] is not None:
             if not isinstance(target_set[WEIGHT], (int, float)):
@@ -811,49 +870,24 @@ class InputState(State_Base):
             raise InputStateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
                                   .format(name, self.componentName, self.owner.name, self.value, reference_value))
 
-    def _instantiate_function(self, context=None):
-        """Insure that function is LinearCombination and that output is compatible with owner.instance_defaults.variable
-
-        Insures that function:
-            - is LinearCombination (to aggregate Projection inputs)
-            - generates an output (assigned to self.value) that is compatible with the component of
-                owner.function's variable that corresponds to this InputState,
-                since the latter will be called with the value of this InputState;
-
-        Notes:
-        * Relevant item of owner.function's variable should have been provided
-            as reference_value arg in the call to InputState__init__()
-        * Insures that self.value has been assigned (by call to super()._validate_function)
-        * This method is called only if the parameterValidationPref is True
-
-        :param context:
-        :return:
-        """
-
-        super()._instantiate_function(context=context)
-
+    def _validate_function(self, function):
         # Insure that function is Function.LinearCombination
-        if not isinstance(self.function.__self__, (LinearCombination, Linear, Reduce)):
+        if not is_instance_or_subclass(function, (LinearCombination, Linear, Reduce)):
             raise StateError(
-                "{0} of {1} for {2} is {3}; it must be of LinearCombination "
-                "or Linear type".
-                format(FUNCTION,
-                       self.name,
-                       self.owner.name,
-                       self.function.__self__.componentName))
+                "{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".format(
+                    FUNCTION,
+                    self.name,
+                    self.owner.name,
+                    function.componentName
+                )
+            )
 
-        # Insure that self.value is compatible with self.reference_value
-        if self.reference_value is not None and not iscompatible(self.value,
-                                                                 self.reference_value):
-            raise InputStateError("Value ({}) of {} {} for {} is not "
-                                  "compatible with specified {} ({})".
-                                  format(self.value,
-                                         self.componentName,
-                                         self.name,
-                                         self.owner.name,
-                                         REFERENCE_VALUE,
-                                         self.reference_value))
-                                         # self.owner.variable))
+    def _instantiate_function(self, function, function_params=None, context=None):
+        """If combine option was specified in constructor, assign as operation argument of LinearCombination function"""
+        if hasattr(self, 'combine_function_args'):
+            function = LinearCombination(operation=self.combine_function_args[0])
+            del self.combine_function_args
+        super()._instantiate_function(function=function, context=context)
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
@@ -864,14 +898,14 @@ class InputState(State_Base):
         """
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
         """Call self.function with self._path_proj_values
 
         If there were no PathwayProjections, ignore and return None
         """
 
-        if variable is not None:
-            return self.function(variable, runtime_params, context)
+        if function_variable is not None:
+            return super()._execute(function_variable, runtime_params=runtime_params, context=context)
         # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
@@ -879,15 +913,12 @@ class InputState(State_Base):
             #       maybe safe when self.value is only passed or stateful
             variable = np.asarray(self._path_proj_values)
             self._update_variable(variable[0])
-            # # MODIFIED 3/20/18 OLD:
-            # combined_values = self.function(variable=variable,
-            #                                 params=runtime_params,
-            #                                 context=context)
-            # MODIFIED 3/20/18 NEW:
-            combined_values = super()._execute(variable=variable,
-                                                    runtime_params=runtime_params,
-                                                    context=context)
-            # MODIFIED 3/20/18 END
+            combined_values = super()._execute(
+                variable=variable,
+                function_variable=variable,
+                runtime_params=runtime_params,
+                context=context
+            )
             return combined_values
         # There were no Projections
         else:
@@ -920,6 +951,7 @@ class InputState(State_Base):
         #      THIS WOULD ALLOW AN ADDITONAL HIERARCHICAL LEVEL FOR NESTING ALGEBRAIC COMBINATION OF INPUT VALUES
         #      TO A MECHANISM
         from psyneulink.components.projections.projection import Projection, _parse_connection_specs
+        from psyneulink.components.mechanisms.mechanism import Mechanism
 
         params_dict = {}
         state_spec = state_specific_spec
@@ -1000,7 +1032,7 @@ class InputState(State_Base):
                             try:
                                 sender_dim = projection_spec.state.value.ndim
                             except AttributeError:
-                                if projection_spec.state.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                if projection_spec.state.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
                                 else:
                                     raise StateError("PROGRAM ERROR: indeterminate value for {} "
@@ -1021,7 +1053,7 @@ class InputState(State_Base):
                                     matrix = None
                                 # MODIFIED 11/25/17 END
                             elif isinstance(projection, Projection):
-                                if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                                if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
                                 matrix = projection.matrix
                             else:
@@ -1054,7 +1086,7 @@ class InputState(State_Base):
                                           format(InputState.__name__,
                                                  owner.name,
                                                  projections_spec,
-                                                 Mechanism.__name__,
+                                                 'Mechanism',
                                                  OutputState.__name__,
                                                  Projection.__name__))
 
@@ -1101,6 +1133,8 @@ class InputState(State_Base):
 
             ex: specifiying an InputState with a Mechanism allows overriding
         '''
+        from psyneulink.components.mechanisms.mechanism import Mechanism
+
         if isinstance(spec, Mechanism):
             return True
         if isinstance(spec, collections.Iterable):
@@ -1195,8 +1229,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
-    # IMPLEMENTATION NOTE: USE OF CONTEXT STRING
-    if context and 'ADD_STATES' in context: # cxt-test
+    if context & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list

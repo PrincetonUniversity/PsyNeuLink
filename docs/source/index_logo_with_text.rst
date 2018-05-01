@@ -7,7 +7,7 @@
 
 .. |logo| image:: _static/PsyNeuLink_logo.svg
     :width: 20%
-
+    :target: http://psyneulink.org
 
 Welcome to       |logo|
 =======================
@@ -25,8 +25,9 @@ Welcome to       |logo|
 
 Purpose
 -------
+
 PsyNeuLink is an open-source, software environment written in Python, and designed for the needs of
-neuroscientists, psychologists, computational psychiatrists and others interested learning about and building
+neuroscientists, psychologists, computational psychiatrists and others interested in learning about and building
 models of the relationship between brain function, mental processes and behavior.
 
 PsyNeuLink can be used as a "block modeling environment", in which to construct, simulate, document, and exchange
@@ -95,10 +96,10 @@ These packages are good for elaborate and detailed models of a particular form.
 In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
 possible, with the ability to integrate components constructed in other packages (including some of the ones listed
 above) into a single functioning system.  These are characteristics that are often (at least in the initial
-stages of development) in tension with efficiency (think:  interpreted vs. compiled).  Two priorities for continued
-development are the accleration of PsyNeuLink using just-in-time compilation methods, parallelization and adaptation
-to FPGA hardware; and the implementation of a graphic interface for the construction of models and realtime display
-of their execution.
+stages of development) in tension with efficiency (think:  interpreted vs. compiled).  Three priorities for continued
+development are the acceleration of PsyNeuLink, using just-in-time compilation methods, parallelization and adaptation
+to FPGA hardware; integration of tools for model analysis (such as those implemented in HDDM); and the implementation
+ of a graphic interface for the construction of models and realtime display of their execution.
 
 .. _Overview:
 
@@ -109,8 +110,8 @@ PsyNeuLink is written in Python, and conforms to the syntax, coding standards an
 most Python packages.  `BasicsAndSampler` provides an orientation to PsyNeuLinks Components, some examples of what
 PsyNeuLink models look like, and some of its capabilities. `QuickReference` provides an overview of how PsyNeuLink is
 organized and some of its basic principles of operation.  The `Tutorial <Tutorial>` provides an interactive guide to the
-construction of models using PsyNeuLink.  `Core` contains the fundamental constructs out of which PsyNeuLink models
-are built, and `Library` contains extensions, including speciality components and implemented models.
+construction of models using PsyNeuLink.  `Core` contains the fundamental objects used to build PsyNeuLink models, and
+`Library` contains extensions, including speciality components, implemented compositions, and published models.
 
 .. _Installation:
 
@@ -189,9 +190,11 @@ Contributors
 * **Allie Burton**, Princeton Neuroscience Institute, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
+* **Justin Junge**, Department of Psychology, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
-* **K. Mantel**, Princeton Neuroscience Institute, Princeton University
-* **Ted Willke**, Intel Labs, Intel Corporation
+* **Katherine Mantel**, Princeton Neuroscience Institute, Princeton University
+* **Markus Spitzer**, Princeton Neuroscience Institute, Princeton University
+* **Jan Vesely**, Department of Computer Science, Rutgers University
 * **Changyan Wang**, Princeton Neuroscience Institute, Princeton University
 * **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
 
@@ -205,7 +208,7 @@ With substantial and greatly appreciated assistance from:
 * **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
 * **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
-* **Jan Vesely**, Department of Computer Science, Rutgers University
+* **Ted Willke**, Intel Labs, Intel Corporation
 
 
 Table of Contents

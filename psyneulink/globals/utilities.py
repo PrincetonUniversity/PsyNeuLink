@@ -75,13 +75,13 @@ OTHER
 
 """
 
-import collections
 import inspect
+import logging
 import numbers
 import warnings
-
 from enum import Enum, EnumMeta, IntEnum
 
+import collections
 import numpy as np
 
 from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE
@@ -98,6 +98,8 @@ __all__ = [
     'parameter_spec', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError',
 ]
+
+logger = logging.getLogger(__name__)
 
 
 class UtilitiesError(Exception):
@@ -505,7 +507,7 @@ def iscompatible(candidate, reference=None, **kargs):
 
 def get_args(frame):
     """Gets dictionary of arguments and their values for a function
-    Frame should be assigned as follows in the funciton itself:  frame = inspect.currentframe()
+    Frame should be assigned as follows in the function itself:  frame = inspect.currentframe()
     """
     args, _, _, values = inspect.getargvalues(frame)
     return dict((key, value) for key, value in values.items() if key in args)
@@ -1068,6 +1070,15 @@ def is_component(val):
     from psyneulink.components.component import Component
     return isinstance(val, Component)
 
+def is_instance_or_subclass(candidate, spec):
+    """
+    Returns
+    -------
+
+    True if **candidate** is a subclass of **spec** or an instance thereof, False otherwise
+    """
+    return isinstance(candidate, spec) or (inspect.isclass(candidate) and issubclass(candidate, spec))
+
 
 def make_readonly_property(val):
     """Return property that provides read-only access to its value
@@ -1155,3 +1166,74 @@ def safe_len(arr, fallback=1):
         return len(arr)
     except TypeError:
         return fallback
+
+
+import typecheck as tc
+@tc.typecheck
+def _get_arg_from_stack(arg_name:str):
+    # Get arg from the stack
+
+    import inspect
+
+    curr_frame = inspect.currentframe()
+    prev_frame = inspect.getouterframes(curr_frame, 2)
+    i = 1
+    # Search stack for first frame (most recent call) with a arg_val specification
+    arg_val = None
+    while arg_val is None:
+        try:
+            arg_val = inspect.getargvalues(prev_frame[i][0]).locals[arg_name]
+        except KeyError:
+            # Try earlier frame
+            i += 1
+        except IndexError:
+            # Ran out of frames, so just set arg_val to empty string
+            arg_val = ""
+        else:
+            break
+
+    # No arg_val was specified in any frame
+    if arg_val is None: # cxt-done
+        raise UtilitiesError("PROGRAM ERROR: arg_name not found in any frame")
+
+    return arg_val
+
+
+def prune_unused_args(func, args, kwargs):
+    # use the func signature to filter out arguments that aren't compatible
+    sig = inspect.signature(func)
+
+    args_to_pass = list(args)
+    kwargs_to_pass = dict(kwargs)
+
+    has_args_param = False
+    has_kwargs_param = False
+    count_positional = 0
+    func_kwargs_names = set()
+
+    for name, param in sig.parameters.items():
+        if param.kind is inspect.Parameter.VAR_POSITIONAL:
+            has_args_param = True
+        elif param.kind is inspect.Parameter.VAR_KEYWORD:
+            has_kwargs_param = True
+        elif param.kind is inspect.Parameter.POSITIONAL_OR_KEYWORD or param.kind is inspect.Parameter.KEYWORD_ONLY:
+            if param.default is inspect.Parameter.empty:
+                count_positional += 1
+            func_kwargs_names.add(name)
+
+    if not has_args_param:
+        num_extra_args = len(args_to_pass) - count_positional
+        if num_extra_args > 0:
+            logger.info('{1} extra arguments specified to function {0}, will be ignored (values: {2})'.format(func, num_extra_args, args_to_pass[-num_extra_args:]))
+        args = args[:count_positional+1]
+
+    if not has_kwargs_param:
+        filtered = set()
+        for kw in kwargs_to_pass:
+            if kw not in func_kwargs_names:
+                filtered.add(kw)
+        logger.info('{1} extra keyword arguments specified to function {0}, will be ignored (values: {2})'.format(func, len(filtered), filtered))
+        for kw in filtered:
+            del kwargs_to_pass[kw]
+
+    return args_to_pass, kwargs_to_pass

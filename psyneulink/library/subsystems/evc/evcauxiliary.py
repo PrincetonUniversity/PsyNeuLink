@@ -17,12 +17,11 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import Function_Base
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.context import ContextStatus
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch', 'EVCAuxiliaryError',
@@ -68,13 +67,11 @@ class EVCAuxiliaryFunction(Function_Base):
                                FUNCTION_OUTPUT_TYPE_CONVERSION: False,
                                PARAMETER_STATE_PARAMS: None})
 
-    # MODIFIED 11/29/16 NEW:
     classPreferences = {
         kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
         kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
-    # MODIFIED 11/29/16 END
 
     @tc.typecheck
     def __init__(self,
@@ -83,7 +80,7 @@ class EVCAuxiliaryFunction(Function_Base):
                  params=None,
                  owner=None,
                  prefs:is_pref_set=None,
-                 context=componentType+INITIALIZING):
+                 context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(params=params)
@@ -93,7 +90,9 @@ class EVCAuxiliaryFunction(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
         self.functionOutputType = None
 
@@ -126,7 +125,7 @@ class ValueFunction(EVCAuxiliaryFunction):
     def __init__(self, function=None):
         function = function or self.function
         super().__init__(function=function,
-                         context=self.componentName+INITIALIZING)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def function(
         self,
@@ -177,7 +176,7 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         """
 
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             return (np.array([0]), np.array([0]), np.array([0]))
 
         cost_function = controller.paramsCurrent[COST_FUNCTION]
@@ -258,12 +257,11 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                  default_variable=None,
                  params=None,
                  function=None,
-                 owner=None,
-                 context=None):
+                 owner=None):
         function = function or self.function
         super().__init__(function=function,
                          owner=owner,
-                         context=self.componentName+INITIALIZING)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def function(
         self,
@@ -296,7 +294,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         """
 
-        if INITIALIZING in context: # cxt-test
+        if (self.context.initialization_status == ContextFlags.INITIALIZING or
+                self.owner.context.initialization_status == ContextFlags.INITIALIZING):
             return defaultControlAllocation
 
         # Get value of, or set default for standard args
@@ -310,9 +309,11 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         controller.EVC_policies = []
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        context = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION)) # cxt-done cxt-pass
-        controller.context.status = ContextStatus.SIMULATION # FIX IS Controller correct for this, or System??
-        controller.context.string = context.replace(EXECUTING, '{0} {1} of '.format(controller.name, EVC_SIMULATION))
+        # FIX 3/30/18 - IS controller CORRECT FOR THIS, OR SHOULD IT BE System (controller.system)??
+        controller.context.execution_phase = ContextFlags.SIMULATION
+        controller.context.string = "{0} EXECUTING {1} of {2}".format(controller.name,
+                                                                      EVC_SIMULATION,
+                                                                      controller.system.name)
         # Print progress bar
         if controller.prefs.reportOutputPref:
             progress_bar_rate_str = ""
@@ -515,7 +516,7 @@ def _compute_EVC(args):
 
     """
 
-    ctlr, allocation_vector, runtime_params, context = args # cxt-set
+    ctlr, allocation_vector, runtime_params, context = args
     # # TEST PRINT:
     # print("Allocation vector: {}\nPredicted input: {}".
     #       format(allocation_vector, [mech.outputState.value for mech in ctlr.predicted_input]),
@@ -524,16 +525,12 @@ def _compute_EVC(args):
     outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
                         allocation_vector=allocation_vector,
                         runtime_params=runtime_params,
-                        context=context) # cxt-set cxt-pass
+                        context=context)
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
-                                                              # MODIFIED 5/7/17 OLD:
-                                                              # outcome=ctlr.input_values,
-                                                              # MODIFIED 5/7/17 NEW:
                                                               outcome=outcome,
-                                                              # MODIFIED 5/7/17 END
                                                               costs=ctlr.control_signal_costs,
-                                                              context=context) # cxt-set cxt-pass
+                                                              context=context)
 
 
     if PY_MULTIPROCESSING:
