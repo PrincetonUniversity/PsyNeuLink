@@ -15,8 +15,8 @@ Overview
 --------
 
 A MaskedMappingProjection is a subclass of `MappingProjection` that applies a specified mask array
-(either additively multipicatively, or exponentially) to the MappingProjection's `matrix <MappingProjection>`
-each time the MappingProjection is executed.  The mask is assigned a ParameterState and can thus be modulated
+(either additively, multiplicatively, or exponentially) to the MappingProjection's `matrix <MappingProjection.matrix>`
+each time the MappingProjection is executed.  The mask is assigned a `ParameterState` and can thus be modulated
 by a `ControlMechanism <ControlMechanism>`.
 
 .. _Masked_MappingProjection_Creation:
@@ -28,7 +28,7 @@ A MaskedMappingProjection is created in the same way as a `MappingProjection`, w
 includes **mask** and **mask_operation** arguments that can be used to configure the mask and how it is applied to the
 Projection's `matrix <MaskedMappingProjection.matrix>`.  The **mask** attribute must be an array that has the same
 shape as the the `matrix <MaskedMappingProjection.matrix>` attribute, and the **mask_operation** argument must be the
-keyword *ADD*, *MULTIPLY*, or *EXPONENTIATE* (see `Masked_MappingProjection_Execution below`).
+keyword *ADD*, *MULTIPLY*, or *EXPONENTIATE* (see `Masked_MappingProjection_Execution` below).
 
 .. _Masked_MappingProjection_Structure:
 
@@ -44,10 +44,10 @@ Execution
 ---------
 
 A MaskedMappingProjection executes in the same manner as a `MappingProjection`, with the exception that,
-each time the Projection is executed, its `mask MaskedMappingProjection.mask` is applied to its `matrix
+each time the Projection is executed, its `mask <MaskedMappingProjection.mask>` is applied to its `matrix
 <MaskedMappingProjection.matrix>` parameter as specified by its `mask_operation
 <MaskedMappingProjection.mask_operation>` attribute, before generating the Projection's `value
-<MappingProjection.value>`.
+<MaskedMappingProjection.value>`.
 
 .. _Masked_MappingProjection_Class_Reference:
 
@@ -91,7 +91,6 @@ class MaskedMappingProjectionError(Exception):
 class MaskedMappingProjection(MappingProjection):
     """
     MaskedMappingProjection(     \
-        owner=None,              \
         sender=None,             \
         receiver=None,           \
         matrix=DEFAULT_MATRIX,   \
@@ -105,10 +104,6 @@ class MaskedMappingProjection(MappingProjection):
 
     Arguments
     ---------
-
-    owner : Optional[Mechanism]
-        simply specifies both the sender and receiver of the AutoAssociativeProjection. Setting owner=myMechanism is
-        identical to setting sender=myMechanism and receiver=myMechanism.
 
     sender : Optional[OutputState or Mechanism]
         specifies the source of the Projection's input. If a Mechanism is specified, its
@@ -128,7 +123,7 @@ class MaskedMappingProjection(MappingProjection):
         specifies a mask to be applied to the `matrix <MaskedMappingProjection.matrix>` each time the Projection is
         executed, in a manner specified by the **mask_operation** argument.
 
-    mask_operation : ADD, MULTPLY or EXPONENTIATE : default MULTIPLY
+    mask_operation : ADD, MULTIPLY, or EXPONENTIATE : default MULTIPLY
         specifies the manner in which the `mask <MaskedMappingProjection.mask>` is applied to the `matrix
         <MaskedMappingProjection.matrix>` each time the Projection is executed.
 
@@ -166,7 +161,7 @@ class MaskedMappingProjection(MappingProjection):
         mask applied to the `matrix <MaskedMappingProjection.matrix>` each time the Projection is executed,
         in a manner specified by `mask_operation <MaskedMappingProjection.mask_operation>`.
 
-    mask_operation : ADD, MULTPLY or EXPONENTIATE : default MULTIPLY
+        mask_operation : ADD, MULTIPLY, or EXPONENTIATE : default MULTIPLY
         determines the manner in which the `mask <MaskedMappingProjection.mask>` is applied to the `matrix
         <MaskedMappingProjection.matrix>` when the Projection is executed.
 
@@ -195,7 +190,6 @@ class MaskedMappingProjection(MappingProjection):
 
     @tc.typecheck
     def __init__(self,
-                 owner=None,
                  sender=None,
                  receiver=None,
                  matrix=DEFAULT_MATRIX,
@@ -204,18 +198,7 @@ class MaskedMappingProjection(MappingProjection):
                  function=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
-                 context=None,
-                 ):
-
-        if owner is not None:
-            if not isinstance(owner, Mechanism):
-                raise MaskedMappingProjectionError('Owner of AutoAssociative Mechanism '
-                                                   'must either be \'None\' or a Mechanism')
-            if sender is None:
-                sender = owner
-            if receiver is None:
-                receiver = owner
+                 prefs: is_pref_set = None):
 
         params = self._assign_args_to_param_dicts(mask=mask,
                                                   mask_operation=mask_operation,
