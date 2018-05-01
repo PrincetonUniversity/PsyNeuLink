@@ -84,11 +84,11 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
 from psyneulink.components.shellclasses import Projection
-from psyneulink.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, FUNCTION_PARAMS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, OWNER_VALUE, PROJECTION, VARIABLE
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, parameter_spec
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'AutoAssociativeLearningMechanism', 'AutoAssociativeLearningMechanismError', 'DefaultTrainingMechanism',
@@ -298,8 +298,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -313,7 +312,8 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         # self.init_args['name'] = name
 
         # # Flag for deferred initialization
-        # self.init_status = InitStatus.DEFERRED_INITIALIZATION
+        # self.context.initialization_status = ContextFlags.DEFERRED_INIT
+        # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         # self._learning_rate = learning_rate
 
@@ -324,8 +324,10 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          learning_rate=learning_rate,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=self)
+                         prefs=prefs)
+
+    def _parse_function_variable(self, variable):
+        return variable
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.
@@ -342,21 +344,30 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                                                         format(self.name, variable))
         return variable
 
-    def _execute(self,
-                variable=None,
-                runtime_params=None,
-                context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Execute AutoAssociativeLearningMechanism. function and return learning_signal
 
         :return: (2D np.array) self.learning_signal
         """
 
         # COMPUTE LEARNING SIGNAL (note that function is assumed to return only one value)
-        self.learning_signal = self.function(variable=variable,
-                                             params=runtime_params,
-                                             context=context)
+        # IMPLEMENTATION NOTE:  skip LearningMechanism's implementation of _execute
+        #                       as it assumes projections from other LearningMechanisms
+        #                       which are not relevant to an autoassociative projection
+        self.learning_signal = super(LearningMechanism, self)._execute(
+            variable=variable,
+            function_variable=function_variable,
+            runtime_params=runtime_params,
+            context=context
+        )
 
-        if not INITIALIZING in context and self.reportOutputPref: # cxt-test
+        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal]

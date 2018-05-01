@@ -335,14 +335,14 @@ from psyneulink.components.mechanisms.processing import integratormechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function, System_Base
-from psyneulink.globals.keywords import COMMAND_LINE, CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, FUNCTION, \
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, FUNCTION, \
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, \
     PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
 from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'EVCControlMechanism', 'EVCError',
@@ -681,6 +681,9 @@ class EVCControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
+    class ClassDefaults(ControlMechanism.ClassDefaults):
+        function = ControlSignalGridSearch
+
     from psyneulink.components.functions.function import LinearCombination
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
@@ -696,15 +699,12 @@ class EVCControlMechanism(ControlMechanism):
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
-                 cost_function=LinearCombination(operation=SUM,
-                                                 context=componentType+COST_FUNCTION),
-                 combine_outcome_and_cost_function=LinearCombination(operation=SUM,
-                                                                     context=componentType+FUNCTION),
+                 cost_function=LinearCombination(operation=SUM),
+                 combine_outcome_and_cost_function=LinearCombination(operation=SUM),
                  save_all_values_and_policies:bool=False,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=componentType+INITIALIZING):
+                 prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
@@ -729,8 +729,8 @@ class EVCControlMechanism(ControlMechanism):
                                            modulation=modulation,
                                            params=params,
                                            name=name,
-                                           prefs=prefs,
-                                           context=self)
+                                           prefs=prefs)
+
 
     def _instantiate_input_states(self, context=None):
         """Instantiate PredictionMechanisms
@@ -794,9 +794,7 @@ class EVCControlMechanism(ControlMechanism):
                     name=origin_mech.name + " " + PREDICTION_MECHANISM,
                     default_variable=variable,
                     input_states=state_names,
-                    params = prediction_mechanism_params,
-                    context=context,
-            )
+                    params = prediction_mechanism_params)
             prediction_mechanism._role = CONTROL
             prediction_mechanism.origin_mech = origin_mech
 
@@ -866,14 +864,17 @@ class EVCControlMechanism(ControlMechanism):
                                           num_control_projections))
 
     @tc.typecheck
-    def assign_as_controller(self, system:System_Base, context=COMMAND_LINE):
+    def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
         self._instantiate_prediction_mechanisms(system=system, context=context)
         super().assign_as_controller(system=system, context=context)
 
-    def _execute(self,
-                    variable=None,
-                    runtime_params=None,
-                    context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Determine `allocation_policy <EVCControlMechanism.allocation_policy>` for next run of System
 
         Update prediction mechanisms
@@ -885,7 +886,7 @@ class EVCControlMechanism(ControlMechanism):
         Return an allocation_policy
         """
 
-        if not 'System.controller setter' in context: # cxt-test
+        if context != ContextFlags.PROPERTY:
             self._update_predicted_input()
         # self.system._cache_state()
 
@@ -912,10 +913,15 @@ class EVCControlMechanism(ControlMechanism):
         # IMPLEMENTATION NOTE:
         # self.system._store_system_state()
 
-        allocation_policy = self.function(controller=self,
-                                          variable=variable,
-                                          runtime_params=runtime_params,
-                                          context=context)
+        # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
+        allocation_policy = super(ControlMechanism, self)._execute(
+            controller=self,
+            variable=variable,
+            function_variable=function_variable,
+            runtime_params=runtime_params,
+            context=context
+        )
+
         # IMPLEMENTATION NOTE:
         # self.system._restore_system_state()
 
@@ -982,7 +988,9 @@ class EVCControlMechanism(ControlMechanism):
             self.value[i] = np.atleast_1d(allocation_vector[i])
         self._update_output_states(runtime_params=runtime_params, context=context)
 
+        self.system.context.execution_phase = ContextFlags.SIMULATION
         self.system.run(inputs=inputs, context=context)
+        self.system.context.execution_phase = ContextFlags.IDLE
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)

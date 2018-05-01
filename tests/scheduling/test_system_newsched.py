@@ -954,3 +954,66 @@ class TestBranching:
         for m in expected_output:
             for i in range(len(expected_output[m])):
                 numpy.testing.assert_allclose(expected_output[m][i], m.output_values[i])
+
+
+class TestTermination:
+
+    def test_termination_conditions_reset(self):
+        A = IntegratorMechanism(
+            name='A',
+            default_variable=[0],
+            function=SimpleIntegrator(
+                rate=.5
+            )
+        )
+
+        B = TransferMechanism(
+            name='B',
+            default_variable=[0],
+            function=Linear(slope=2.0),
+        )
+
+        p = Process(
+            default_variable=[0],
+            pathway=[A, B],
+            name='p'
+        )
+
+        s = System(
+            processes=[p],
+            name='s'
+        )
+
+        term_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
+        stim_list = {A: [[1]]}
+
+        sched = Scheduler(system=s)
+        sched.add_condition(B, EveryNCalls(A, 2))
+        s.scheduler_processing = sched
+
+        s.run(
+            inputs=stim_list,
+            termination_processing=term_conds
+        )
+
+        # A should run four times
+        terminal_mech = B
+        expected_output = [
+            numpy.array([4.]),
+        ]
+
+        for i in range(len(expected_output)):
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.output_values[i])
+
+        s.run(
+            inputs=stim_list,
+        )
+
+        # A should run an additional two times
+        terminal_mech = B
+        expected_output = [
+            numpy.array([6.]),
+        ]
+
+        for i in range(len(expected_output)):
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.output_values[i])

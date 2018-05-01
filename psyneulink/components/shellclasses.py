@@ -66,8 +66,7 @@ class System_Base(ShellClass):
                          size=size,
                          param_defaults=param_defaults,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
 
 
 # ****************************************** PROCESS *******************************************************************
@@ -79,15 +78,13 @@ class Process_Base(ShellClass):
                  size=None,
                  param_defaults=None,
                  name=None,
-                 prefs=None,
-                 context=None):
+                 prefs=None):
 
         super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=param_defaults,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
 
 # ******************************************* MECHANISM ****************************************************************
 
@@ -97,16 +94,16 @@ class Mechanism(ShellClass):
     def __init__(self,
                  default_variable=None,
                  size=None,
+                 function=None,
                  param_defaults=None,
                  name=None,
-                 prefs=None,
-                 context=None):
+                 prefs=None):
         super().__init__(default_variable=default_variable,
                          size=size,
+                         function=function,
                          param_defaults=param_defaults,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         raise ShellClassError("Must implement _validate_params in {0}".format(self))

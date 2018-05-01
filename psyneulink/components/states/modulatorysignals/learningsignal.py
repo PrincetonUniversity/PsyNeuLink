@@ -170,16 +170,14 @@ Class Reference
 
 import typecheck as tc
 
-from psyneulink.components.functions.function import Linear, LinearCombination, ModulationParam, _is_modulation_param
+from psyneulink.components.functions.function import Linear, ModulationParam, _is_modulation_param
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.components.states.outputstate import PRIMARY
 from psyneulink.components.states.state import State_Base
-from psyneulink.globals.keywords import \
-    COMMAND_LINE, LEARNED_PARAM, LEARNING_SIGNAL, LEARNING_PROJECTION, \
-    PROJECTION_TYPE, RECEIVER, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, SUM
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import COMMAND_LINE, LEARNED_PARAM, LEARNING_PROJECTION, LEARNING_SIGNAL, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_TYPE, RECEIVER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import parameter_spec
 
 __all__ = [
@@ -371,13 +369,12 @@ class LearningSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-done
-            self.context.status = ContextStatus.COMMAND_LINE
-            self.context.string = COMMAND_LINE
+        if context is None:
+            context = ContextFlags.COMMAND_LINE
+            self.context.source = ContextFlags.COMMAND_LINE
         else:
-            context = self # cxt-done
-            self.context.status = ContextStatus.CONSTRUCTOR
+            context = ContextFlags.CONSTRUCTOR
+            self.context.source = ContextFlags.CONSTRUCTOR
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -401,7 +398,9 @@ class LearningSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
     def _get_primary_state(self, projection):
         return projection.parameter_state

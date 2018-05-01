@@ -159,12 +159,11 @@ from psyneulink.components.functions.function import PredictionErrorDeltaFunctio
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.globals.keywords import INITIALIZING, LEARNING_RATE, PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
+from psyneulink.globals.keywords import INITIALIZING, PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, kwPreferenceSetName
 from psyneulink.globals.utilities import is_numeric
-from psyneulink.library.mechanisms.processing.objective.comparatormechanism \
-    import ComparatorMechanism, ComparatorMechanismError
+from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, ComparatorMechanismError
 
 __all__ = [
     'PredictionErrorMechanism',
@@ -299,15 +298,16 @@ class PredictionErrorMechanism(ComparatorMechanism):
                          prefs=prefs,
                          context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _parse_function_variable(self, variable):
         # TODO: update to take sample/reward from variable
         # sample = x(t) in Montague on first run, V(t) on subsequent runs
-
         sample = self.input_states[SAMPLE].value
         reward = self.input_states[TARGET].value
 
-        variable = [sample, reward]
-        delta = self.function(variable=variable)
+        return [sample, reward]
+
+    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
+        delta = super()._execute(variable=variable, function_variable=function_variable, runtime_params=runtime_params, context=context)
         delta = delta[1:]
         delta = np.append(delta, 0)
 

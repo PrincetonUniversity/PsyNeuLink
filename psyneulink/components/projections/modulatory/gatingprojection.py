@@ -89,14 +89,14 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import FunctionOutputType, Linear
 from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import GatingMechanism
 from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.components.shellclasses import Mechanism, Process_Base
-from psyneulink.globals.defaults import defaultGatingPolicy
-from psyneulink.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INITIALIZING, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, OUTPUT_STATE, PROJECTION_SENDER
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -262,6 +262,9 @@ class GatingProjection(ModulatoryProjection_Base):
         sender=[GATING_SIGNAL]
         receiver=[INPUT_STATE, OUTPUT_STATE]
 
+    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
+        function = Linear(params={FUNCTION_OUTPUT_TYPE:FunctionOutputType.RAW_NUMBER})
+
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_SENDER: GatingMechanism,
@@ -277,8 +280,7 @@ class GatingProjection(ModulatoryProjection_Base):
                  gating_signal_params:tc.optional(dict)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -288,7 +290,7 @@ class GatingProjection(ModulatoryProjection_Base):
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
-            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
@@ -296,10 +298,11 @@ class GatingProjection(ModulatoryProjection_Base):
                          receiver=receiver,
                          weight=weight,
                          exponent=exponent,
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _instantiate_sender(self, sender, params=None, context=None):
         """Check that sender is not a process and that, if specified as a Mechanism, it is a GatingMechanism
@@ -330,7 +333,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             from psyneulink.components.states.inputstate import InputState
             from psyneulink.components.states.outputstate import OutputState
             if not isinstance(self.receiver, (InputState, OutputState, Mechanism)):

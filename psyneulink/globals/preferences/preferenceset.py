@@ -12,8 +12,8 @@ import inspect
 from collections import namedtuple
 from enum import Enum, IntEnum
 
-from psyneulink.globals.keywords import kwPreferenceSetName, \
-    kwDefaultPreferenceSetOwner
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import kwDefaultPreferenceSetOwner, kwPreferenceSetName
 from psyneulink.globals.utilities import iscompatible, kwCompatibilityType
 
 __all__ = [
@@ -182,9 +182,9 @@ class PreferenceSet(object):
         :param context:
         """
 
-        #region VALIDATE ATTRIBUTES AND ARGS
-        # PreferenceSet is an abstract class, and so should only be initialized from a subclass
-        if not isinstance(context, type(self)): # cxt-test
+        # VALIDATE ATTRIBUTES AND ARGS
+        # PreferenceSet is an abstract class, and so should only be initialized from the constructor of a subclass
+        if context != ContextFlags.CONSTRUCTOR:
             raise PreferenceSetError("Direct call to abstract class PreferenceSet() is not allowed; "
                                      "use one of the following subclasses: {0}".
                                      format(", ".join("{!s}".format(key) for (key) in PreferenceSetRegistry.keys())))
@@ -219,9 +219,8 @@ class PreferenceSet(object):
         if not (isinstance(prefs, dict) or prefs is None):
             raise PreferenceSetError("Preferences ({0}) specified for {1} must a PreferenceSet or"
                                      " specification dict of preferences".format(prefs, owner.name))
-        #endregion
 
-        #region ASSIGN NAME
+        # ASSIGN NAME
         # ****** FIX: 9/10/16: MOVE TO REGISTRY **********
 
         # FIX: MAKE SURE DEFAULT NAMING SCHEME WORKS WITH CLASSES - 5/30/16
@@ -236,9 +235,8 @@ class PreferenceSet(object):
             # Otherwise, it belongs to an object, so append name of the owner object's class to name
             else:
                  name = name + 'Defaultsfor' + owner.__class__.__name__
-        #endregion
 
-        #region REGISTER
+        # REGISTER
         # FIX: MAKE SURE THIS MAKES SENSE
 
         from psyneulink.globals.registry import  register_category
@@ -247,9 +245,8 @@ class PreferenceSet(object):
                           name=name,
                           registry=PreferenceSetRegistry,
                           context=context)
-        #endregion
 
-        #region ASSIGN PREFS
+        # ASSIGN PREFS
         condition = 0
 
         # Get class preferences (if any) from owner's class
@@ -391,7 +388,6 @@ class PreferenceSet(object):
 
         if PreferenceSetVerbosity:
             print ("Preference assignment condition {0}".format(condition))
-        #endregion
 
 # FIX: ARE THESE NEEDED?? @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @property
@@ -489,26 +485,20 @@ class PreferenceSet(object):
         :return assignment: (PreferenceEntry)
         """
 
-        #region Setup local variables
+        # Setup local variables
 
         # Get owner's name
         if inspect.isclass(self.owner):
             owner_name = self.owner.__name__
         else:
-            # FIX: SHOULDN"T THIS BE self.owner.name??
-            # # MODIFIED 9/16/16 OLD:
-            # owner_name = self.name
-            # MODIFIED 9/16/16 NEW:
             owner_name = self.owner.name
-            # MODIFIED 9/16/16 END
 
-        #  Set all to True, so that if only one is being checked, the other does not interfere with final test
+        # Set all to True, so that if only one is being checked, the other does not interfere with final test
         level_OK = True
         setting_OK = True
         entry_OK = True
-        #endregion
 
-        #region Get/validate defaults
+        # Get/validate defaults
         # No default specified
         if default_entry is None:
             try:
@@ -529,9 +519,8 @@ class PreferenceSet(object):
             except TypeError:
                 raise PreferenceSetError("Default specification ({0}) for {1} must be a PreferenceEntry".
                                          format(default_entry, self.name))
-        #endregion
 
-        #region candidate_info is a PreferenceEntry
+        # candidate_info is a PreferenceEntry
         if (isinstance(candidate_info, PreferenceEntry)
                 or (isinstance(candidate_info, tuple) and len(candidate_info)==2)):
             # elif len(candidate_info) != 2:
@@ -546,27 +535,24 @@ class PreferenceSet(object):
                 return_val = candidate_info
             else:
                 entry_OK = False
-        #endregion
 
-        #region candidate_info is a PreferenceLevel
+        # candidate_info is a PreferenceLevel
         elif isinstance(candidate_info, PreferenceLevel):
             setattr(self, pref_ivar_name, PreferenceEntry(default_setting, candidate_info))
             return_val = PreferenceEntry(setting=None, level=candidate_info)
-        #endregion
 
-        #region candidate_info is a presumed setting
+        # candidate_info is a presumed setting
         else:
             setting_OK = self.validate_setting(candidate_info, default_setting, pref_ivar_name)
             if setting_OK:
                 setattr(self, pref_ivar_name, PreferenceEntry(candidate_info, default_level))
                 return_val = PreferenceEntry(setting=candidate_info, level=None)
-        #endregion
 
         # All is OK, so return
         if level_OK and setting_OK:
             return return_val
 
-        #region Something's amiss, so raise exception
+        # Something's amiss, so raise exception
         if not entry_OK:
 
             if not level_OK and not setting_OK:
@@ -587,7 +573,6 @@ class PreferenceSet(object):
                                      format(str(candidate_info), pref_ivar_name, self.name))
         else:
             raise PreferenceSetError("PROGRAM ERROR")
-#endregion
 
     def validate_setting(self, candidate_setting, reference_setting, pref_ivar_name):
         """Validate candidate_setting by checking against reference_setting and, if a log_entry, its type
