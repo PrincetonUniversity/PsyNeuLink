@@ -840,7 +840,7 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=SimpleIntegrator(
-                noise=NormalDist().function
+                noise=NormalDist()
             ),
         )
 
@@ -860,7 +860,7 @@ class TestIntegratorNoise:
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
             function=SimpleIntegrator(
-                noise=NormalDist().function,
+                noise=NormalDist(),
             ),
         )
 
@@ -874,7 +874,7 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=AccumulatorIntegrator(
-                noise=NormalDist().function
+                noise=NormalDist()
             ),
         )
 
@@ -889,7 +889,7 @@ class TestIntegratorNoise:
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
             function=AccumulatorIntegrator(
-                noise=NormalDist().function,
+                noise=NormalDist(),
             ),
         )
 
@@ -902,7 +902,7 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=ConstantIntegrator(
-                noise=NormalDist().function
+                noise=NormalDist()
             ),
         )
 
@@ -917,7 +917,7 @@ class TestIntegratorNoise:
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
             function=ConstantIntegrator(
-                noise=NormalDist().function,
+                noise=NormalDist(),
             ),
         )
 
@@ -931,7 +931,7 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=AdaptiveIntegrator(
-                noise=NormalDist().function
+                noise=NormalDist()
             ),
         )
 
@@ -946,7 +946,7 @@ class TestIntegratorNoise:
             name='IntegratorMechanism',
             default_variable=[0, 0, 0, 0],
             function=AdaptiveIntegrator(
-                noise=NormalDist().function,
+                noise=NormalDist(),
             ),
         )
 
