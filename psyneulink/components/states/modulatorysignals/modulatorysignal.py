@@ -205,11 +205,11 @@ Class Reference
 ---------------
 """
 
-from psyneulink.components.component import InitStatus, component_keywords
-from psyneulink.components.shellclasses import Mechanism, State
+from psyneulink.components.component import component_keywords
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.states.state import StateError, State_Base
-from psyneulink.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL, PROJECTIONS
+from psyneulink.components.states.state import State_Base
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -221,7 +221,6 @@ def _is_modulatory_spec(spec, include_matrix_spec=True):
     from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import _is_learning_spec
     from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
     from psyneulink.components.mechanisms.adaptive.gating.gatingmechanism import _is_gating_spec
-    from psyneulink.components.projections.projection import ProjectionTuple
 
     if (_is_learning_spec(spec, include_matrix_spec=include_matrix_spec)
         or _is_control_spec(spec)
@@ -398,19 +397,21 @@ class ModulatorySignal(OutputState):
                  params=None,
                  name=None,
                  prefs=None,
-                 context=None):
+                 context=None,
+                 function=None,
+                 ):
 
         # Deferred initialization
-        try:
-            if self.init_status in {InitStatus.DEFERRED_INITIALIZATION, InitStatus.INITIALIZING}:
-                # If init was deferred, it may have been because owner was not yet known (see OutputState.__init__),
-                #   and so modulation hasn't had a chance to be assigned to the owner's value
-                #   (i.e., if it was not specified in the constructor), so do it now;
-                #   however modulation has already been assigned to params, so need to assign it there
-                params[MODULATION] = self.modulation or owner.modulation
+        # if self.context.initialization_status & (ContextFlags.DEFERRED_INIT | ContextFlags.INITIALIZING):
+        if self.context.initialization_status & ContextFlags.DEFERRED_INIT:
+            # If init was deferred, it may have been because owner was not yet known (see OutputState.__init__),
+            #   and so modulation hasn't had a chance to be assigned to the owner's value
+            #   (i.e., if it was not specified in the constructor), so do it now;
+            #   however modulation has already been assigned to params, so need to assign it there
+            params[MODULATION] = self.modulation or owner.modulation
 
         # Standard initialization
-        except AttributeError:
+        else:
             # Assign args to params and functionParams dicts (kwConstants must == arg names)
             params = self._assign_args_to_param_dicts(params=params,
                                                       modulation=modulation)
@@ -425,9 +426,11 @@ class ModulatorySignal(OutputState):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
-        if self.init_status is InitStatus.INITIALIZED:
+        if self.context.initialization_status == ContextFlags.INITIALIZED:
             self._assign_default_state_name(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):

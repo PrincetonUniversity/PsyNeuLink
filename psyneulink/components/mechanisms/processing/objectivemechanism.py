@@ -321,21 +321,17 @@ Class Reference
 
 """
 import warnings
-
 from collections import Iterable
 
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import PARAMS, PROJECTION, PROJECTIONS, CONTROL, DEFAULT_MATRIX, DEFAULT_VARIABLE, \
-    EXPONENT, EXPONENTS, FUNCTION, \
-    INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
-    kwPreferenceSetName
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, PARAMS, PROJECTION, PROJECTIONS, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -539,6 +535,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
+    # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
+    # kmantel: above needs to be clarified - can ClassDefaults.variable truly be anything? or should there be some format?
+    #   if the latter, we should specify one such valid assignment here, and override _validate_default_variable accordingly
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        function = LinearCombination
+
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -558,7 +560,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
                  **kwargs):
 
         input_states = monitored_output_states
@@ -583,10 +584,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          size=size,
                          input_states=input_states,
                          output_states=output_states,
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
 
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
         #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
@@ -657,7 +659,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
         from psyneulink.components.states.inputstate import InputState
         # If call is for initialization
-        if self.init_status is InitStatus.UNSET:
+        if self.context.initialization_status == ContextFlags.UNSET:
             # Use self.input_states (containing specs from **input_states** arg of constructor) or default InputState
             input_states = self.input_states or [{STATE_TYPE: InputState, VARIABLE: [0]}]
             return super()._instantiate_input_states(input_states=input_states, context=context)
@@ -735,7 +737,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         input_states = self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
                                               reference_value=reference_value,
-                                              context='ADD_STATES')
+                                              context = ContextFlags.METHOD)
+
         output_states = [[projection.sender for projection in state.path_afferents] for state in input_states]
 
         self._instantiate_function_weights_and_exponents(context=context)
@@ -858,7 +861,7 @@ def _instantiate_monitoring_projections(owner,
         if isinstance(sender, OutputState):
             # Projection has been specified for receiver and initialization begun, so call deferred_init()
             if receiver.path_afferents:
-                if not receiver.path_afferents[0].init_status is InitStatus.DEFERRED_INITIALIZATION:
+                if not receiver.path_afferents[0].context.initialization_status == ContextFlags.DEFERRED_INIT:
                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
                                                   "implemented and initialized ({})".
                                                   format(receiver.name, owner.name, receiver.path_afferents[0].name))

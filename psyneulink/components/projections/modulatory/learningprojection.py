@@ -165,23 +165,21 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import InitStatus, parameter_keywords
-from psyneulink.components.shellclasses import ShellClass
+from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import BackPropagation, Linear, LinearCombination, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import Projection_Base, _is_projection_spec, projection_keywords
+from psyneulink.components.projections.projection import Projection_Base, projection_keywords
+from psyneulink.components.shellclasses import ShellClass
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.globals.keywords import CONTEXT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, \
-    INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, NAME, \
-    PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MATRIX, PARAMETER_STATE, PARAMETER_STATES, PROJECTION_SENDER, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.context import ContextStatus
 from psyneulink.globals.utilities import iscompatible, parameter_spec
 
 __all__ = [
@@ -406,6 +404,9 @@ class LearningProjection(ModulatoryProjection_Base):
         sender=[LEARNING_SIGNAL]
         receiver=[PARAMETER_STATE]
 
+    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
+        function = Linear
+
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
                                PARAMETER_STATES: NotImplemented, # This suppresses parameterStates
@@ -426,10 +427,10 @@ class LearningProjection(ModulatoryProjection_Base):
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
                  weight=None,
                  exponent=None,
+                 function=None,
                  params:tc.optional(dict)=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # IMPLEMENTATION NOTE:
         #     the error_function and learning_function arguments are implemented to preserve the ability to pass
@@ -450,7 +451,7 @@ class LearningProjection(ModulatoryProjection_Base):
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
             # Flag for deferred initialization
-            self.init_status = InitStatus.DEFERRED_INITIALIZATION
+            self.context.initialization_status = ContextFlags.DEFERRED_INIT
         super().__init__(sender=sender,
                          receiver=receiver,
                          weight=weight,
@@ -458,7 +459,7 @@ class LearningProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
         self.learning_enable = True
 
 
@@ -473,7 +474,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if INITIALIZING in context: # cxt-test
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
             # VALIDATE SENDER
             sender = self.sender
             if isinstance(sender, LearningMechanism):
@@ -526,11 +527,10 @@ class LearningProjection(ModulatoryProjection_Base):
         self.sender = sender
 
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
-            from psyneulink.components.mechanisms.adaptive.learning.learningauxilliary \
+            from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary \
                 import _instantiate_learning_components
             _instantiate_learning_components(learning_projection=self,
-                                             context="{0} {1}".format(context, self.name))  # cxt-done cxt-pass cxt-push
-
+                                             context=ContextFlags.METHOD)
 
         if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
@@ -592,11 +592,6 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
         #    if it does, assign it to the objective_mechanism attribute for the projection being learned
-        # # MODIFIED 9/22/17 OLD:
-        # candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
-        # if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
-        #     learned_projection.objective_mechanism = candidate_objective_mech
-        # MODIFIED 9/22/17 NEW:
         try:
             candidate_objective_mech = learning_mechanism.input_states[ERROR_SIGNAL].path_afferents[0].sender.owner
             if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
@@ -605,11 +600,10 @@ class LearningProjection(ModulatoryProjection_Base):
             # learning_mechanism does not receive from an ObjectiveMechanism
             #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
             pass
-        # MODIFIED 9/22/17 END
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = True
 
-    def _execute(self, variable, runtime_params=None, context=None):
+    def _execute(self, variable, function_variable=None, runtime_params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
@@ -617,13 +611,16 @@ class LearningProjection(ModulatoryProjection_Base):
         runtime_params = runtime_params or {}
 
         # Pass during initialization (since has not yet been fully initialized
-        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
-            return self.init_status
+        if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
+            return self.context.initialization_status
 
         # if self.learning_rate:
         #     runtime_params.update({SLOPE:self.learning_rate})
 
-        learning_signal = self.sender.value
+        if variable is not None:
+            learning_signal = variable
+        else:
+            learning_signal = self.sender.value
         matrix = self.receiver.value
         # If learning_signal is lower dimensional than matrix being trained
         #    and the latter is a diagonal matrix (square, with values only along the main diagonal)
@@ -650,30 +647,19 @@ class LearningProjection(ModulatoryProjection_Base):
                                               format(self.sender.owner.name, learning_signal,
                                                      self.receiver.owner.name, matrix))
 
-        if EXECUTING in context: # cxt-test
-            self.context.status = ContextStatus.EXECUTION
-        elif LEARNING in context: # cxt-test
-            self.context.status = ContextStatus.LEARNING
-
-        # # MODIFIED 3/20/18 OLD:
-        # self.weight_change_matrix = self.function(
-        #     variable=learning_signal,
-        #     params=runtime_params,
-        #     context=context
-        # )
-        # MODIFIED 3/20/18 NEW:
         # IMPLEMENTATION NOTE:  skip Projection._execute, as that uses self.sender.value as variable,
         #                       which undermines formatting of it (as learning_signal) above
-        self.weight_change_matrix = super(ShellClass, self)._execute(variable=learning_signal,
-                                                                     runtime_params=runtime_params,
-                                                                     context=context
-                                                                     )
-        # MODIFIED 3/20/18 END
+        self.weight_change_matrix = super(ShellClass, self)._execute(
+            variable=variable,
+            function_variable=learning_signal,
+            runtime_params=runtime_params,
+            context=context
+        )
 
         if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate
 
-        if not INITIALIZING in context and self.reportOutputPref: # cxt-test
+        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(self.weight_change_matrix)))
 
         return self.value

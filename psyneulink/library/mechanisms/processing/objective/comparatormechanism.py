@@ -126,10 +126,10 @@ Class Reference
 
 """
 
+from collections import Iterable
+
 import numpy as np
 import typecheck as tc
-
-from collections import Iterable
 
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -138,7 +138,9 @@ from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, StandardOutputStates
 from psyneulink.components.states.state import _parse_state_spec
-from psyneulink.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_STATES, NAME, SAMPLE, TARGET, VARIABLE, kwPreferenceSetName
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import CLASS_DEFAULTS, COMPARATOR_MECHANISM, FUNCTION, INPUT_STATES, NAME, SAMPLE, \
+    TARGET, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
@@ -311,13 +313,13 @@ class ComparatorMechanism(ObjectiveMechanism):
     class ClassDefaults(ObjectiveMechanism.ClassDefaults):
         # By default, ComparatorMechanism compares two 1D np.array input_states
         variable = np.array([[0], [0]])
+        function = LinearCombination(weights=[[-1], [1]], owner=CLASS_DEFAULTS)
 
     # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
 
-    from psyneulink.components.functions.function import MULTIPLICATIVE_PARAM, UserDefinedFunction
     standard_output_states.extend([{NAME: SSE,
                                     FUNCTION: lambda x: np.sum(x*x)},
                                    {NAME: MSE,
@@ -333,7 +335,6 @@ class ComparatorMechanism(ObjectiveMechanism):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
                  **input_states # IMPLEMENTATION NOTE: this is for backward compatibility
                  ):
 
@@ -362,7 +363,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible

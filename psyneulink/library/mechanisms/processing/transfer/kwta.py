@@ -150,7 +150,6 @@ Class Reference
 import logging
 import numbers
 import warnings
-
 from collections import Iterable
 
 import numpy as np
@@ -161,7 +160,6 @@ from psyneulink.globals.keywords import INITIALIZING, KWTA, K_VALUE, RATIO, RESU
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'KWTA', 'KWTAError',
@@ -461,6 +459,9 @@ class KWTA(RecurrentTransferMechanism):
 
     componentType = KWTA
 
+    class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
+        function = Logistic
+
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({'function': Logistic})  # perhaps hacky? not sure (7/10/17 CW)
 
@@ -527,13 +528,22 @@ class KWTA(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
+
+    def _parse_function_variable(self, variable):
+        if variable.dtype.char == "U":
+            raise KWTAError(
+                "input ({0}) to {1} was a string, which is not supported for {2}".format(
+                    variable, self, self.__class__.__name__
+                )
+            )
+
+        return self._kwta_scale(variable)
 
     # adds indexOfInhibitionInputState to the attributes of KWTA
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
 
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
         # this index is saved so the KWTA mechanism knows which input state represents inhibition
         # (it will be wrong if the user deletes an input state: currently, deleting input states is not supported,
@@ -636,22 +646,6 @@ class KWTA(RecurrentTransferMechanism):
                 if not (isinstance(threshold_param, (np.ndarray, list)) and len(threshold_param) == 1):
                     raise KWTAError("k-value parameter ({}) for {} must be a single number".
                                     format(threshold_param, self))
-
-    def _execute(self,
-                variable=None,
-                runtime_params=None,
-                context=None):
-
-        if variable.dtype.char == "U":
-            raise KWTAError(
-                "input ({0}) to {1} was a string, which is not supported for {2}".format(
-                    variable, self, self.__class__.__name__
-                )
-            )
-        variable = self._update_variable(self._kwta_scale(variable, context=context))
-        return super()._execute(variable=variable,
-                       runtime_params=runtime_params,
-                       context=context)
 
         # NOTE 7/10/17 CW: this version of KWTA executes scaling _before_ noise or integration is applied. This can be
         # changed, but I think it requires overriding the whole _execute function (as below),

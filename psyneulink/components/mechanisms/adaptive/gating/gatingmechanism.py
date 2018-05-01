@@ -160,17 +160,17 @@ Class Reference
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
 #                      ADD IN GENERIC CONTROL STUFF FROM DefaultGatingMechanism
 
+import warnings
+
 import numpy as np
 import typecheck as tc
 
-import warnings
-
-from psyneulink.components.component import InitStatus
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.states.modulatorysignals.gatingsignal import GatingSignal
 from psyneulink.components.states.state import State_Base, _parse_state_spec
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultGatingPolicy
 from psyneulink.globals.keywords import \
     GATING, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, \
@@ -178,7 +178,6 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'GatingMechanism', 'GatingMechanismError', 'GatingMechanismRegistry'
@@ -372,7 +371,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
         # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
         variable = np.array(defaultGatingPolicy)
 
-    from psyneulink.components.functions.function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({GATING_PROJECTIONS: None})
 
@@ -380,13 +378,12 @@ class GatingMechanism(AdaptiveMechanism_Base):
     def __init__(self,
                  default_gating_policy=None,
                  size=None,
-                 function=Linear(slope=1, intercept=0),
+                 function=None,
                  gating_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # self.system = None
 
@@ -398,10 +395,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
         super().__init__(default_variable=default_gating_policy,
                          size=size,
                          modulation=modulation,
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate items in the GATING_SIGNALS param (**gating_signals** argument of constructor)
@@ -493,7 +491,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                            owner=self,
                                            reference_value=defaultGatingPolicy,
                                            modulation=self.modulation,
-                                           state_spec=gating_signal)
+                                           state_spec=gating_signal,
+                                           context=context)
 
         # Validate index
         try:
@@ -535,7 +534,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         if GATING_PROJECTIONS in self.paramsCurrent:
             if self.paramsCurrent[GATING_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[GATING_PROJECTIONS].items():
-                    self._instantiate_gating_projection(projection, context=self.name)
+                    self._instantiate_gating_projection(projection, context=ContextFlags.METHOD)
 
     def _assign_as_gating_mechanism(self, context=None):
 
@@ -547,7 +546,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             for state in mech._input_states + mech._output_states:
                 for projection in state.mod_afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
-                    if (projection.init_status is InitStatus.DEFERRED_INITIALIZATION
+                    if (projection.context.initialization_status == ContextFlags.DEFERRED_INIT
                         and projection.init_args['sender'] is None):
                         # FIX 5/23/17: MODIFY THIS WHEN (param, GatingProjection) tuple
                         # FIX:         IS REPLACED WITH (param, GatingSignal) tuple

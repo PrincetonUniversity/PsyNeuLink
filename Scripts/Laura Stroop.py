@@ -312,7 +312,8 @@ my_Stroop.run(inputs=CN_trial_initialize_input)
 respond_green_accumulator.reinitialize(0)
 respond_red_accumulator.reinitialize(0)
 # now run test trial
-my_Stroop.show_graph(show_mechanism_structure=pnl.VALUES)
+my_Stroop.show_graph()
+# my_Stroop.show_graph(show_mechanism_structure=pnl.VALUES)
 my_Stroop.run(inputs=CN_incongruent_trial_input, termination_processing=terminate_trial)
 
 
