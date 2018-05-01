@@ -67,7 +67,7 @@ from psyneulink.components.projections.projection import projection_keywords
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import MASKED_MAPPING_PROJECTION, DEFAULT_MATRIX, MATRIX
+from psyneulink.globals.keywords import DEFAULT_MATRIX, MATRIX, FUNCTION_PARAMS, MASKED_MAPPING_PROJECTION
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -150,7 +150,7 @@ class MaskedMappingProjection(MappingProjection):
     Attributes
     ----------
 
-    componentType : AUTO_ASSOCIATIVE_PROJECTION
+    componentType : MASKED_MAPPING_PROJECTION
 
     sender : OutputState
         identifies the source of the Projection's input.
@@ -217,7 +217,10 @@ class MaskedMappingProjection(MappingProjection):
             if receiver is None:
                 receiver = owner
 
-        params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix}, params=params)
+        params = self._assign_args_to_param_dicts(mask=mask,
+                                                  mask_operation=mask_operation,
+                                                  function_params={MATRIX: matrix},
+                                                  params=params)
 
         super().__init__(sender=sender,
                          receiver=receiver,
@@ -240,14 +243,21 @@ class MaskedMappingProjection(MappingProjection):
             if isinstance(mask, (int, float)):
                 return
             mask_shape = np.array(mask).shape
-            matrix_shape = self.matrix.shape
-            if mask_shape != self.matrix_shape:
-                raise MaskedMappingProjectionError("Shape of the {} argument ({}) for {} "
-                                                   "must be the same as its {} argument ({})".
+            matrix = get_matrix(self.user_params[FUNCTION_PARAMS][MATRIX],
+                                len(self.sender.value), len(self.receiver.value))
+            matrix_shape = matrix.shape
+            if mask_shape != matrix_shape:
+                raise MaskedMappingProjectionError("Shape of the {} for {} ({}) "
+                                                   "must be the same as its {} ({})".
                                                    format(repr(MASK), self.name, mask_shape,
                                                           repr(MATRIX), matrix_shape))
 
-    def _execute(self, variable, function_variable=None, runtime_params=None, context=None):
+    # def _execute(self, variable, function_variable=None, runtime_params=None, context=None):
+    def _update_parameter_states(self, runtime_params, context):
+
+        # Update parameters first, to be sure mask that has been updated if it is being modulated
+        #  and that it is applied to the updated matrix param
+        super()._update_parameter_states(runtime_params=runtime_params, context=context)
 
         # Apply mask to matrix using mask_operation
         if self.mask:
@@ -257,5 +267,3 @@ class MaskedMappingProjection(MappingProjection):
                 self.matrix *= self.mask
             elif self.mask_operation is EXPONENTIATE:
                 self.matrix **= self.mask
-
-        return super()._execute(variable, function_variable, runtime_params=runtime_params, context=context)
