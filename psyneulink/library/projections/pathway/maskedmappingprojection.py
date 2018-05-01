@@ -72,7 +72,8 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
-    'MaskedMappingProjection', 'MASK', 'MASK_OPERATION', 'ADD', 'MULTIPLY', 'EXPONENTIATE'
+    'MaskedMappingProjection', 'MaskedMappingProjectionError',
+    'MASK', 'MASK_OPERATION', 'ADD', 'MULTIPLY', 'EXPONENTIATE'
 ]
 
 MASK = 'mask'
