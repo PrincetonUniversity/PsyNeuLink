@@ -737,44 +737,10 @@ class InputState(State_Base):
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
 
+        # If combine argument is specified, save it along with any user-specified function for _validate_params()
+        # (but don't pass to _assign_args_to_param_dicts, as it is an option not a legitimate InputState parameter)
         if combine:
-            # Make sure it doesn't conflict with any specification in **function**
-            # IMPLEMENTATION NOTE:
-            #    Need to do validation & assignment here, since specification of **combine** influences value
-            #    returned by function which is needed for validation of other attributes of InputState
-            if function:
-                owner_name = ""
-                if owner:
-                    owner_name = " for InputState of {}".format(owner.name)
-                if isinstance(function, LinearCombination):
-                    if function.operation != combine:
-                        raise InputStateError("Specification of {} argument ({}) conflicts with "
-                                              "specification of {} ({}) for LinearCombination in {} "
-                                              "argument{}".
-                                              format(repr(COMBINE), combine.upper(),
-                                                     repr(OPERATION),function.operation.upper(),
-                                                     repr(FUNCTION), owner_name))
-                    else:
-                        # Leave function intact, as it may have other parameters specified by user
-                        pass
-                elif isinstance(function, Function):
-                    raise InputStateError("Specification of {} argument ({}) conflicts with "
-                                          "Function specified in {} argument ({}){}".
-                                          format(repr(COMBINE), combine.upper(),
-                                                 repr(FUNCTION), function.name, owner_name))
-                elif isinstance(function, type):
-                    if not issubclass(function, LinearCombination):
-                        raise InputStateError("Specification of {} argument ({}) conflicts with "
-                                              "Function specified in {} argument ({}){}".
-                                              format(repr(COMBINE), combine.upper(),
-                                                     repr(FUNCTION), function.__name__, owner_name))
-                    else:
-                        function = LinearCombination(operation=combine)
-                else:
-                    raise InputStateError("PROGRAM ERROR: unrecognized specification for function argument ({}){} ".
-                                          format(function, owner_name))
-            else:
-                function=LinearCombination(operation=combine)
+            self.combine_function_args = (combine, function)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -846,6 +812,44 @@ class InputState(State_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
+        # Make sure **combine** and **function** args specified in constructor don't conflict
+        if hasattr(self, 'combine_function_args'):
+            combine, function = self.combine_function_args
+            if function:
+                owner_name = ""
+                if self.owner:
+                    owner_name = " for InputState of {}".format(self.owner.name)
+                if isinstance(function, LinearCombination):
+                    # specification of combine conflicts with operation specified for LinearCombination in function arg
+                    if function.operation != combine:
+                        raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                              "specification of {} ({}) for LinearCombination in {} "
+                                              "argument{}".
+                                              format(repr(COMBINE), combine.upper(),
+                                                     repr(OPERATION),function.operation.upper(),
+                                                     repr(FUNCTION), owner_name))
+                    else:
+                        # LinearFunction has been specified with same operation as specified for combine,
+                        # so delete combine_function_args attribute so it is not seen in _instantiate_function
+                        # in order to leave function intact (as it may have other parameters specified by user)
+                        del self.combine_function_args
+                # combine assumes LinearCombination, but Function other than LinearCombination specified for function
+                elif isinstance(function, Function):
+                    raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                          "Function specified in {} argument ({}){}".
+                                          format(repr(COMBINE), combine.upper(),
+                                                 repr(FUNCTION), function.name, owner_name))
+                # combine assumes LinearCombination, but class other than LinearCombination specified for function
+                elif isinstance(function, type):
+                    if not issubclass(function, LinearCombination):
+                        raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                              "Function specified in {} argument ({}){}".
+                                              format(repr(COMBINE), combine.upper(),
+                                                     repr(FUNCTION), function.__name__, owner_name))
+                else:
+                    raise InputStateError("PROGRAM ERROR: unrecognized specification for function argument ({}){} ".
+                                          format(function, owner_name))
+
         if WEIGHT in target_set and target_set[WEIGHT] is not None:
             if not isinstance(target_set[WEIGHT], (int, float)):
                 raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
@@ -877,6 +881,13 @@ class InputState(State_Base):
                     function.componentName
                 )
             )
+
+    def _instantiate_function(self, function, function_params=None, context=None):
+        """If combine option was specified in constructor, assign as operation argument of LinearCombination function"""
+        if hasattr(self, 'combine_function_args'):
+            function = LinearCombination(operation=self.combine_function_args[0])
+            del self.combine_function_args
+        super()._instantiate_function(function=function, context=context)
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
