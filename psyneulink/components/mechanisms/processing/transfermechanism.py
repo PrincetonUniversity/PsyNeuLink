@@ -919,7 +919,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return current_input
 
-    def _get_integrated_function_input(self, function_variable, initial_value, noise, rate, context, **kwargs):
+    def _get_integrated_function_input(self, function_variable, initial_value, noise, context, **kwargs):
+
+        smoothing_factor = self.get_current_mechanism_param("smoothing_factor")
 
         if not self.integrator_function:
 
@@ -927,7 +929,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 function_variable,
                 initializer=initial_value,
                 noise=noise,
-                rate=rate,
+                rate=smoothing_factor,
                 owner=self
             )
 
@@ -937,6 +939,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             function_variable,
             # Should we handle runtime params?
             runtime_params={
+                # FIX: 4/30/18 - SHOULDN'T THESE BE THE PARAMS PASSED IN OR RETRIEVED ABOVE??
                 INITIALIZER: self.initial_value,
                 NOISE: self.noise,
                 RATE: self.smoothing_factor
@@ -948,7 +951,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _clip_result(self, clip, current_input, runtime_params, context):
 
-        outputs = super(Mechanism, self)._execute(function_variable=current_input, runtime_params=runtime_params, context=context)
+        outputs = super(Mechanism, self)._execute(function_variable=current_input,
+                                                  runtime_params=runtime_params,
+                                                  context=context)
         if clip is not None:
             minCapIndices = np.where(outputs < clip[0])
             maxCapIndices = np.where(outputs > clip[1])
@@ -1005,16 +1010,11 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.integrator_mode
-
-        #region ASSIGN PARAMETER VALUES
-
-        smoothing_factor = self.get_current_mechanism_param("smoothing_factor")
-        clip = self.get_current_mechanism_param("clip")
         noise = self.get_current_mechanism_param("noise")
         initial_value = self.get_current_mechanism_param("initial_value")
-        #endregion
 
-        #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
+
+        # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
@@ -1024,12 +1024,12 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input = self._get_integrated_function_input(function_variable,
                                                                     initial_value,
                                                                     noise,
-                                                                    smoothing_factor,
                                                                     context)
 
         else:
-            current_input = self._get_instantaneous_function_input(function_variable,
-                                                                       noise)
+            current_input = self._get_instantaneous_function_input(function_variable, noise)
+
+        clip = self.get_current_mechanism_param("clip")
 
         if isinstance(self.function_object, NormalizingFunction):
             # Apply TransferMechanism's function to each input state separately
@@ -1042,7 +1042,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             outputs = self._clip_result(clip, current_input, runtime_params, context)
 
         return outputs
-        #endregion
 
     def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params

@@ -574,7 +574,10 @@ class LCA(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _get_integrated_function_input(self, function_variable, initial_value, noise, rate, context, time_step_size):
+    def _get_integrated_function_input(self, function_variable, initial_value, noise, context):
+
+        leak = self.get_current_mechanism_param("leak")
+        time_step_size = self.get_current_mechanism_param("time_step_size")
 
         if not self.integrator_function:
             self.integrator_function = LCAIntegrator(
@@ -582,7 +585,7 @@ class LCA(RecurrentTransferMechanism):
                 initializer=initial_value,
                 noise=noise,
                 time_step_size=time_step_size,
-                rate=rate,
+                rate=leak,
                 owner=self)
 
         current_input = self.integrator_function._execute(
@@ -591,106 +594,10 @@ class LCA(RecurrentTransferMechanism):
             runtime_params={
                 INITIALIZER: initial_value,
                 NOISE: noise,
-                RATE: rate,
+                RATE: leak,
                 TIME_STEP_SIZE: time_step_size
             },
             context=context
         )
 
         return current_input
-
-    def _execute(
-        self,
-        variable=None,
-        function_variable=None,
-        runtime_params=None,
-        context=None
-    ):
-        """Execute TransferMechanism function and return transform of input
-
-        Execute TransferMechanism function on input, and assign to output_values:
-            - Activation value for all units
-            - Mean of the activation values across units
-            - Variance of the activation values across units
-        Return:
-            value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
-            mean of items in RESULT outputState[TransferOuput.MEAN].value
-            variance of items in RESULT outputState[TransferOuput.VARIANCE].value
-
-        Arguments:
-
-        # CONFIRM:
-        variable (float): set to self.value (= self.input_value)
-        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + NOISE (float)
-            + BETA (float)
-            + RANGE ([float, float])
-        - context (str)
-
-        Returns the following values in self.value (2D np.array) and in
-            the value of the corresponding outputState in the self.output_states list:
-            - activation value (float)
-            - mean activation value (float)
-            - standard deviation of activation values (float)
-
-        :param self:
-        :param variable (float)
-        :param params: (dict)
-        :param context: (str)
-        :rtype self.outputState.value: (number)
-        """
-
-        # FIX: ??CALL check_args()??
-
-        # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
-        # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
-        # Use self.instance_defaults.variable to initialize state of input
-
-        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        integrator_mode = self.integrator_mode
-
-        #region ASSIGN PARAMETER VALUES
-
-        leak = self.get_current_mechanism_param("leak")
-        clip = self.get_current_mechanism_param("clip")
-        noise = self.get_current_mechanism_param("noise")
-        initial_value = self.get_current_mechanism_param("initial_value")
-        time_step_size = self.get_current_mechanism_param("time_step_size")
-
-        #endregion
-        #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
-
-        # FIX: NOT UPDATING self.previous_input CORRECTLY
-        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
-
-        # Update according to time-scale of integration
-        if integrator_mode:
-            current_input = self._get_integrated_function_input(function_variable,
-                                                                initial_value,
-                                                                noise,
-                                                                leak,
-                                                                context,
-                                                                time_step_size)
-        else:
-            current_input = self._get_instantaneous_function_input(function_variable, noise)
-
-        if isinstance(self.function_object, NormalizingFunction):
-            # Apply TransferMechanism's function to each input state separately
-            outputs = []
-            for elem in current_input:
-                output_item = self._clip_result(clip, elem, runtime_params, context)
-                outputs.append(output_item)
-
-        else:
-            outputs = self._clip_result(clip, current_input, runtime_params, context)
-
-
-        return outputs
-    # @property
-    # def inhibition(self):
-    #     return self.hetero
-    #
-    # @inhibition.setter
-    # def inhibition(self, setting):
-    #     self.hetero = setting
