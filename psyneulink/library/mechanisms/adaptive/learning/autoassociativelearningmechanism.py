@@ -81,7 +81,10 @@ from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.projections.projection import Projection_Base, projection_keywords
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
+from psyneulink.components.shellclasses import Projection
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -295,8 +298,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -322,8 +324,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          learning_rate=learning_rate,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=self)
+                         prefs=prefs)
 
     def _parse_function_variable(self, variable):
         return variable
@@ -366,7 +367,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             context=context
         )
 
-        if not INITIALIZING in context and self.reportOutputPref: # cxt-test
+        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal]

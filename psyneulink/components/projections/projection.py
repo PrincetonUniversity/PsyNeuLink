@@ -647,7 +647,7 @@ class Projection_Base(Projection):
         from psyneulink.components.states.parameterstate import ParameterState
         from psyneulink.components.states.state import State_Base
 
-        if not isinstance(context, Projection_Base): # cxt-test
+        if context != ContextFlags.CONSTRUCTOR:
             raise ProjectionError("Direct call to abstract class Projection() is not allowed; "
                                  "use projection() or one of the following subclasses: {0}".
                                  format(", ".join("{!s}".format(key) for (key) in ProjectionRegistry.keys())))
@@ -659,7 +659,6 @@ class Projection_Base(Projection):
         if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
             self._assign_deferred_init_name(name, context)
             self.init_args = locals().copy()
-            self.init_args[CONTEXT] = self
             self.init_args[NAME] = name
 
             # remove local imports
@@ -711,12 +710,10 @@ class Projection_Base(Projection):
        # Validate variable, function and params, and assign params to paramInstanceDefaults
         # Note: pass name of Projection (to override assignment of componentName in super.__init__)
         super(Projection_Base, self).__init__(default_variable=variable,
+                                              function=function,
                                               param_defaults=params,
                                               name=self.name,
-                                              prefs=prefs,
-                                              context=context.__class__.__name__,
-                                              function=function,
-                                              )
+                                              prefs=prefs)
 
         self._assign_default_projection_name()
 
@@ -2026,11 +2023,11 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                                       format(projection_spec.name, sender.name))
 
     output_state = _instantiate_state(owner=sender,
-                                     state_type=OutputState,
-                                     name=output_state,
-                                     reference_value=projection_spec.value,
-                                     reference_value_name='Projection_spec value for new InputState',
-context=context)
+                                      state_type=OutputState,
+                                      name=output_state,
+                                      reference_value=projection_spec.value,
+                                      reference_value_name='Projection_spec value for new InputState',
+                                      context=context)
     #  Update output_state and output_states
     try:
         sender.output_states[output_state.name] = output_state

@@ -853,9 +853,7 @@ class Process(Process_Base):
                           registry=ProcessRegistry,
                           context=context)
 
-        if not context: # cxt-test
-            # context = self.__class__.__name__
-            context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT # cxt-done
+        if not context:
             self.context.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
@@ -866,8 +864,7 @@ class Process(Process_Base):
                                       size=size,
                                       param_defaults=params,
                                       name=self.name,
-                                      prefs=prefs,
-                                      context=context)
+                                      prefs=prefs)
 
     def _parse_arg_variable(self, variable):
         if variable is None:
@@ -1697,8 +1694,7 @@ class Process(Process_Base):
                 # Create MappingProjection from Process input state to corresponding mechanism.input_state
                 MappingProjection(sender=self.process_input_states[i],
                                   receiver=mechanism.input_states[i],
-                                  name=self.name+'_Input Projection',
-                                  context=context)
+                                  name=self.name+'_Input Projection')
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
                           format(i, process_input[i], self.name, mechanism.name))
@@ -1743,8 +1739,8 @@ class Process(Process_Base):
         # Validate input
         if input is None:
             input = self.first_mechanism.instance_defaults.variable
-            if (self.prefs.verbosePref and
-                    not (not context or COMPONENT_INIT in context)): # cxt-test
+            if (self.prefs.verbosePref and not (context == ContextFlags.COMMAND_LINE or
+                                                self.context.initializaton_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
 
         else:
@@ -1873,7 +1869,7 @@ class Process(Process_Base):
                     # Initialize each Projection to the ParameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
                     for param_projection in parameter_state.mod_afferents:
-                        param_projection._deferred_init(context=context)
+                        param_projection._deferred_init()
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _learning_mechs
                             try:
@@ -2122,9 +2118,10 @@ class Process(Process_Base):
         """
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
-        if not context: # cxt-test
-            context = EXECUTING + " " + PROCESS + " " + self.name # cxt-done
+        if not context:
+            context = ContextFlags.COMPOSITION
             self.context.execution_phase = ContextFlags.PROCESSING
+            self.context.source = context
             self.context.string = EXECUTING + " " + PROCESS + " " + self.name
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
@@ -2157,7 +2154,7 @@ class Process(Process_Base):
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.context.execution_phase = ContextFlags.PROCESSING
-            mechanism.execute(context=context) # cxt-pass ? cxt-push
+            mechanism.execute(context=context)
             mechanism.context.execution_phase = ContextFlags.IDLE
 
             if report_output:
@@ -2255,7 +2252,6 @@ class Process(Process_Base):
                     #    as the ParameterStates are assigned their owner's context in their update methods
                     # Note: do this rather just calling LearningSignals directly
                     #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                    context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
                     projection.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
                     projection.context.execution_phase = ContextFlags.LEARNING
 
@@ -2270,7 +2266,7 @@ class Process(Process_Base):
 
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, context=context)
-                            parameter_state.update(context=context) # cxt-pass cxt-push
+                            parameter_state.update(context=context)
 
                     # Not all Projection subclasses instantiate ParameterStates
                     except AttributeError as e:

@@ -39,7 +39,7 @@ being created within the `pathway <Process.pathway>` of a `Process`, its InputSt
 <Process.pathway>`.  InputStates can also be specified in the **input_states** argument of a Mechanism's
 constructor (see `below <InputState_Specification>`).
 
-The `variable <variable.InputState>` of an InputState can be specified using the **variable** or **size** arguments of
+The `variable <InputState.variable>` of an InputState can be specified using the **variable** or **size** arguments of
 its constructor.  It can also be specified using the **projections** argument, if neither **variable** nor **size** is
 specified.  The **projections** argument is used to `specify Projections <State_Projections>` to the InputState. If
 neither the **variable** nor **size** arguments is specified, then the value of the `Projections(s) <Projection>` or
@@ -460,11 +460,15 @@ import collections
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
+from psyneulink.components.functions.function import Function, Linear, LinearCombination, Reduce
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CLASS_DEFAULTS, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import \
+    CLASS_DEFAULTS, COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, \
+    INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, \
+    OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
+    SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible
@@ -507,6 +511,7 @@ class InputState(State_Base):
         variable=None,                             \
         size=None,                                 \
         function=LinearCombination(operation=SUM), \
+        combine=None,                              \
         projections=None,                          \
         weight=None,                               \
         exponent=None,                             \
@@ -569,6 +574,13 @@ class InputState(State_Base):
         received by the InputState, under the possible influence of `GatingProjections <GatingProjection>` received
         by the InputState.  It must produce a result that has the same format (number and type of elements) as the
         item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been assigned.
+
+    combine : SUM or PRODUCT : default None
+        specifies the **operation** argument used by the default `LinearCombination` function, wnich determines how the
+        `value <Projection.value>` of the InputState's `projections <InputState.projections>` are combined.  This is a
+        convenience argument, that **operation** to be specified without having to specify the function's constructor;
+        accordingly, it assumes that LinearCombination (the default) is used as the InputState's function -- if it
+        conflicts with a specification of **function** an error is generated.
 
     projections : list of Projection specifications
         specifies the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
@@ -706,6 +718,7 @@ class InputState(State_Base):
                  size=None,
                  function=None,
                  projections=None,
+                 combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
                  weight=None,
                  exponent=None,
                  params=None,
@@ -713,16 +726,21 @@ class InputState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-done
+        if context is None:
+            context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
-            context = self # cxt-done
+            context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
+
+        # If combine argument is specified, save it along with any user-specified function for _validate_params()
+        # (but don't pass to _assign_args_to_param_dicts, as it is an option not a legitimate InputState parameter)
+        if combine:
+            self.combine_function_args = (combine, function)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -794,6 +812,44 @@ class InputState(State_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
+        # Make sure **combine** and **function** args specified in constructor don't conflict
+        if hasattr(self, 'combine_function_args'):
+            combine, function = self.combine_function_args
+            if function:
+                owner_name = ""
+                if self.owner:
+                    owner_name = " for InputState of {}".format(self.owner.name)
+                if isinstance(function, LinearCombination):
+                    # specification of combine conflicts with operation specified for LinearCombination in function arg
+                    if function.operation != combine:
+                        raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                              "specification of {} ({}) for LinearCombination in {} "
+                                              "argument{}".
+                                              format(repr(COMBINE), combine.upper(),
+                                                     repr(OPERATION),function.operation.upper(),
+                                                     repr(FUNCTION), owner_name))
+                    else:
+                        # LinearFunction has been specified with same operation as specified for combine,
+                        # so delete combine_function_args attribute so it is not seen in _instantiate_function
+                        # in order to leave function intact (as it may have other parameters specified by user)
+                        del self.combine_function_args
+                # combine assumes LinearCombination, but Function other than LinearCombination specified for function
+                elif isinstance(function, Function):
+                    raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                          "Function specified in {} argument ({}){}".
+                                          format(repr(COMBINE), combine.upper(),
+                                                 repr(FUNCTION), function.name, owner_name))
+                # combine assumes LinearCombination, but class other than LinearCombination specified for function
+                elif isinstance(function, type):
+                    if not issubclass(function, LinearCombination):
+                        raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                              "Function specified in {} argument ({}){}".
+                                              format(repr(COMBINE), combine.upper(),
+                                                     repr(FUNCTION), function.__name__, owner_name))
+                else:
+                    raise InputStateError("PROGRAM ERROR: unrecognized specification for function argument ({}){} ".
+                                          format(function, owner_name))
+
         if WEIGHT in target_set and target_set[WEIGHT] is not None:
             if not isinstance(target_set[WEIGHT], (int, float)):
                 raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
@@ -826,6 +882,13 @@ class InputState(State_Base):
                 )
             )
 
+    def _instantiate_function(self, function, function_params=None, context=None):
+        """If combine option was specified in constructor, assign as operation argument of LinearCombination function"""
+        if hasattr(self, 'combine_function_args'):
+            function = LinearCombination(operation=self.combine_function_args[0])
+            del self.combine_function_args
+        super()._instantiate_function(function=function, context=context)
+
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
 
@@ -842,7 +905,7 @@ class InputState(State_Base):
         """
 
         if function_variable is not None:
-            return self.function(function_variable, runtime_params, context)
+            return super()._execute(function_variable, runtime_params=runtime_params, context=context)
         # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
@@ -850,18 +913,12 @@ class InputState(State_Base):
             #       maybe safe when self.value is only passed or stateful
             variable = np.asarray(self._path_proj_values)
             self._update_variable(variable[0])
-            # # MODIFIED 3/20/18 OLD:
-            # combined_values = self.function(variable=variable,
-            #                                 params=runtime_params,
-            #                                 context=context)
-            # MODIFIED 3/20/18 NEW:
             combined_values = super()._execute(
                 variable=variable,
                 function_variable=variable,
                 runtime_params=runtime_params,
                 context=context
             )
-            # MODIFIED 3/20/18 END
             return combined_values
         # There were no Projections
         else:
@@ -1172,8 +1229,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
-    # IMPLEMENTATION NOTE: USE OF CONTEXT STRING
-    if context and 'ADD_STATES' in context: # cxt-test
+    if context & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list

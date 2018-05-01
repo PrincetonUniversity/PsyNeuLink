@@ -3,7 +3,7 @@ import pytest
 
 from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import FunctionError
-from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax
+from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax, UserDefinedFunction
 from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
@@ -336,6 +336,38 @@ class TestDistributionFunctions:
 
 
 class TestTransferMechanismFunctions:
+
+    def tests_valid_udf_1d_variable(self):
+        def double_all_elements(variable):
+            return np.array(variable)*2
+
+        T = TransferMechanism(name='T-udf',
+                              default_variable=[[0.0, 0.0]],
+                              function=UserDefinedFunction(custom_function=double_all_elements))
+        result = T.execute([[1.0, 2.0]])
+        assert np.allclose(result, [[2.0, 4.0]])
+
+    def tests_valid_udf_2d_variable(self):
+        def double_all_elements(variable):
+            return np.array(variable)*2
+
+        T = TransferMechanism(name='T-udf',
+                              default_variable=[[0.0, 0.0], [0.0, 0.0]],
+                              function=UserDefinedFunction(custom_function=double_all_elements))
+        result = T.execute([[1.0, 2.0], [3.0, 4.0]])
+        assert np.allclose(result, [[2.0, 4.0], [6.0, 8.0]])
+
+    def tests_invalid_udf(self):
+        def sum_all_elements(variable):
+            return sum(np.array(variable))
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(name='T-udf',
+                                  default_variable=[[0.0, 0.0]],
+                                  function=UserDefinedFunction(custom_function=sum_all_elements))
+        assert "value returned by the Python function, method, or UDF specified" in str(error_text.value) \
+               and "must be the same shape" in str(error_text.value) \
+               and "as its 'variable'" in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
