@@ -905,7 +905,9 @@ class InputState(State_Base):
         """
 
         if function_variable is not None:
-            return super()._execute(function_variable, runtime_params=runtime_params, context=context)
+            return super()._execute(function_variable,
+                                    runtime_params=runtime_params,
+                                    context=context)
         # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
@@ -913,12 +915,11 @@ class InputState(State_Base):
             #       maybe safe when self.value is only passed or stateful
             variable = np.asarray(self._path_proj_values)
             self._update_variable(variable[0])
-            combined_values = super()._execute(
-                variable=variable,
-                function_variable=variable,
-                runtime_params=runtime_params,
-                context=context
-            )
+            combined_values = super()._execute(variable=variable,
+                                               function_variable=variable,
+                                               runtime_params=runtime_params,
+                                               context=context
+                                               )
             return combined_values
         # There were no Projections
         else:
@@ -1018,17 +1019,22 @@ class InputState(State_Base):
             except UnboundLocalError:
                 pass
             else:
-                try:
-                    params_dict[PROJECTIONS] = _parse_connection_specs(self,
-                                                                       owner=owner,
-                                                                       connections=projections_spec)
-                    # Parse the value of all of the Projections to get/validate variable for InputState
-                    for projection_spec in params_dict[PROJECTIONS]:
-                        if state_dict[REFERENCE_VALUE] is None:
+                if state_dict[REFERENCE_VALUE] is not None:
+                    state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
+                else:
+                    try:
+                        params_dict[PROJECTIONS] = _parse_connection_specs(self,
+                                                                           owner=owner,
+                                                                           connections=projections_spec)
+                        # Parse the value of all of the Projections to get/validate variable for InputState
+                        variable = []
+                        for projection_spec in params_dict[PROJECTIONS]:
                             # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
                             # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
                             # FIX:           USING _get_state_for_socket
                             # from psyneulink.components.projections.projection import _parse_projection_spec
+
+                            # Try to get matrix for projection
                             try:
                                 sender_dim = projection_spec.state.value.ndim
                             except AttributeError:
@@ -1041,9 +1047,6 @@ class InputState(State_Base):
 
                             projection = projection_spec.projection
                             if isinstance(projection, dict):
-                                # # MODIFIED 11/25/17 OLD:
-                                # matrix = projection[MATRIX]
-                                # MODIFIED 11/25/17 NEW:
                                 # Don't try to get MATRIX from projection without checking,
                                 #    since projection is a defaultDict,
                                 #    which will add a matrix entry and assign it to None if it is not there
@@ -1051,7 +1054,6 @@ class InputState(State_Base):
                                     matrix = projection[MATRIX]
                                 else:
                                     matrix = None
-                                # MODIFIED 11/25/17 END
                             elif isinstance(projection, Projection):
                                 if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                     continue
@@ -1059,36 +1061,46 @@ class InputState(State_Base):
                             else:
                                 raise InputStateError("Unrecognized Projection specification for {} of {} ({})".
                                                       format(self.name, owner.name, projection_spec))
+
+                            # Determine length of value of projection
                             if matrix is None:
                                 # If matrix has not been specified, no worries;
-                                #    variable can be determined by value of sender
+                                #    variable_item can be determined by value of sender
                                 sender_shape = projection_spec.state.value.shape
-                                variable = np.zeros(sender_shape)
-                                # If variable HASN'T been assigned, use sender's value
+                                variable_item = np.zeros(sender_shape)
+                                # If variable_item HASN'T been assigned, use sender's value
                                 if VARIABLE not in state_dict or state_dict[VARIABLE] is None:
-                                    state_dict[VARIABLE] = variable
+                                    # state_dict[VARIABLE] = variable
+                                    variable.append(variable_item)
                                 # If variable HAS been assigned, make sure value is the same for this sender
-                                elif np.array(state_dict[VARIABLE]).shape != variable.shape:
+                                elif np.array(state_dict[VARIABLE]).shape != variable_item.shape:
                                     # If values for senders differ, assign None so that State's default is used
-                                    state_dict[VARIABLE] = None
+                                    variable = None
                                     # No need to check any more Projections
                                     break
 
                             # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
                             else:
                                 proj_val_shape = matrix.shape[sender_dim :]
-                                state_dict[VARIABLE] = np.zeros(proj_val_shape)
+                                # state_dict[VARIABLE] = np.zeros(proj_val_shape)
+                                variable.append(np.zeros(proj_val_shape))
+                        # Senders have values of different lengths, so assign #items each the length of default variable
+                        # length
+                        if variable is None:
+                            variable = np.zeros_like(self.instance_defaults.variable) * len(params_dict[PROJECTIONS])
+                        else:
+                            state_dict[VARIABLE] = variable
 
-                except InputStateError:
-                    raise InputStateError("Tuple specification in {} specification dictionary "
-                                          "for {} ({}) is not a recognized specification for one or more "
-                                          "{}s, {}s, or {}s that project to it".
-                                          format(InputState.__name__,
-                                                 owner.name,
-                                                 projections_spec,
-                                                 'Mechanism',
-                                                 OutputState.__name__,
-                                                 Projection.__name__))
+                    except InputStateError:
+                        raise InputStateError("Tuple specification in {} specification dictionary "
+                                              "for {} ({}) is not a recognized specification for one or more "
+                                              "{}s, {}s, or {}s that project to it".
+                                              format(InputState.__name__,
+                                                     owner.name,
+                                                     projections_spec,
+                                                     'Mechanism',
+                                                     OutputState.__name__,
+                                                     Projection.__name__))
 
             # GET WEIGHT AND EXPONENT IF SPECIFIED ***************************************************************
 
@@ -1186,7 +1198,7 @@ class InputState(State_Base):
         )
         ):
             variable = [variable]
-        return function.execute(variable)
+        super()._get_state_function_value(owner=owner, function=function, variable=variable)
 
 
 def _instantiate_input_states(owner, input_states=None, reference_value=None, context=None):
@@ -1225,6 +1237,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          state_param_identifier=INPUT_STATE,
                                          reference_value=reference_value if reference_value is not None
                                                                          else owner.instance_defaults.variable,
+                                         # reference_value=reference_value,
                                          reference_value_name=VARIABLE,
                                          context=context)
 

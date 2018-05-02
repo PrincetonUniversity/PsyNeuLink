@@ -1,6 +1,6 @@
 import psyneulink as pnl
 import numpy as np
-
+import pytest
 
 def clear_registry():
     from psyneulink.components.component import DeferredInitRegistry
@@ -257,21 +257,54 @@ class TestProjectionSpecificationFormats:
 
 
     def test_masked_mapping_projection(self):
+
         t1 = pnl.TransferMechanism(size=2)
         t2 = pnl.TransferMechanism(size=2)
         pnl.MaskedMappingProjection(sender=t1,
                                     receiver=t2,
                                     matrix=[[1,2],[3,4]],
                                     mask=[[1,0],[0,1]],
-                                    mask_operation=pnl.PRODUCT
+                                    mask_operation=pnl.ADD
                                     )
         p = pnl.Process(pathway=[t1, t2])
         val = p.execute(input=[1,2])
-        assert np.allclose(val, [[1, 4]])
+        assert np.allclose(val, [[8, 12]])
 
-    # def test_combine_param_conflicting_fct_operation_spec(self):
-    #     with pytest.raises(pnl.InputStateError) as error_text:
-    #         t = pnl.TransferMechanism(input_states=pnl.InputState(function=pnl.LinearCombination(operation=pnl.SUM),
-    #                                                               combine=pnl.PRODUCT))
-    #     assert "Specification of 'combine' argument (PRODUCT) conflicts with specification of 'operation' (SUM) " \
-    #            "for LinearCombination in 'function' argument for InputState" in str(error_text.value)
+        t1 = pnl.TransferMechanism(size=2)
+        t2 = pnl.TransferMechanism(size=2)
+        pnl.MaskedMappingProjection(sender=t1,
+                                    receiver=t2,
+                                    matrix=[[1,2],[3,4]],
+                                    mask=[[1,0],[0,1]],
+                                    mask_operation=pnl.MULTIPLY
+                                    )
+        p = pnl.Process(pathway=[t1, t2])
+        val = p.execute(input=[1,2])
+        assert np.allclose(val, [[1, 8]])
+
+        t1 = pnl.TransferMechanism(size=2)
+        t2 = pnl.TransferMechanism(size=2)
+        pnl.MaskedMappingProjection(sender=t1,
+                                    receiver=t2,
+                                    mask=[[1,2],[3,4]],
+                                    mask_operation=pnl.MULTIPLY
+                                    )
+        p = pnl.Process(pathway=[t1, t2])
+        val = p.execute(input=[1,2])
+        assert np.allclose(val, [[1, 8]])
+
+    def test_masked_mapping_projection_mask_conficts_with_matrix(self):
+
+        with pytest.raises(pnl.MaskedMappingProjectionError) as error_text:
+
+            t1 = pnl.TransferMechanism(size=2)
+            t2 = pnl.TransferMechanism(size=2)
+            pnl.MaskedMappingProjection(sender=t1,
+                                        receiver=t2,
+                                        mask=[[1,2,3],[4,5,6]],
+                                        mask_operation=pnl.MULTIPLY
+                                        )
+        assert "Shape of the 'mask' for MaskedMappingProjection-3 ((2, 3)) must be the same as its 'matrix' ((2, 2))" \
+               in str(error_text.value)
+
+

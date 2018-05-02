@@ -2043,11 +2043,16 @@ class State_Base(State):
     @staticmethod
     def _get_state_function_value(owner, function, variable):
         """Execute the function of a State and return its value
+        # FIX: CONSIDER INTEGRATING THIS INTO _EXECUTE FOR STATE?
 
-        This is a stub, that a State subclass can override to treat execution of its function in a State-specific manner
+        This is a stub, that a State subclass can override to treat its function in a State-specific manner.
+        Used primarily during validation, when the function may not have been fully instantiated yet
         (e.g., InputState must sometimes embed its variable in a list-- see InputState._get_state_function_value).
         """
-        return function.execute(variable)
+        if function:
+            return function.execute(variable)
+        else:
+            return
 
 
 def _instantiate_state_list(owner,
@@ -2693,7 +2698,8 @@ def _parse_state_spec(state_type=None,
 
         # Standard state specification dict
         # Warn if VARIABLE was not in dict
-        if VARIABLE not in state_dict and owner.prefs.verbosePref:
+        if ((VARIABLE not in state_dict or state_dict[VARIABLE] is None)
+                and hasattr(owner, 'prefs') and owner.prefs.verbosePref):
             print("{} missing from specification dict for {} of {};  "
                   "will be inferred from context or the default ({}) will be used".
                   format(VARIABLE, state_type, owner.name, state_dict))
@@ -2849,27 +2855,25 @@ def _parse_state_spec(state_type=None,
         spec_function = state_dict[PARAMS][FUNCTION]
         # if isinstance(spec_function, Function):
         if isinstance(spec_function, (Function, function_type, method_type)):
-            # # MODIFIED 2/21/18 OLD [KM]:
-            # spec_function_value = spec_function.execute(state_dict[VARIABLE])
-            # MODIFIED 2/21/18 NEW [JDC]:
             spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
-            # MODIFIED 2/21/18 END
         elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
             try:
                 spec_function = spec_function(**state_dict[PARAMS][FUNCTION_PARAMS])
             except (KeyError, TypeError):
                 spec_function = spec_function()
-            # # MODIFIED 2/21/18 OLD [KM]:
-            # spec_function_value = spec_function.execute(state_dict[VARIABLE])
-            # MODIFIED 2/21/18 NEW [JDC]:
             spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
-            # MODIFIED 2/21/18 END
         else:
             raise StateError('state_spec value for FUNCTION ({0}) must be a function, method, '
                              'Function class or instance of one'.
                              format(spec_function))
     except (KeyError, TypeError):
-        spec_function_value = state_dict[VARIABLE]
+        # MODIFIED 5/2/18 JDC
+        # spec_function_value = state_dict[VARIABLE]
+        raise StateError("PROGRAM ERROR:  No function found for {} of {} {}".format(state_type.__name__,
+                                                                                 owner.__class__.__name__,
+                                                                                 owner.name))
+        # MODIFIED 5/2/18 END
+
 
     # Assign value based on variable if not specified
     if state_dict[VALUE] is None:
