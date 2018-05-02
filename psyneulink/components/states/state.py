@@ -2480,7 +2480,7 @@ def _parse_state_spec(state_type=None,
             state_specific_args = state_spec[STATE_SPEC_ARG].copy()
             standard_args.update({key: state_specific_args[key]
                                   for key in state_specific_args
-                                  if key in standard_args})
+                                  if key in standard_args and state_specific_args[key] is not None})
             # Delete them from the State specification dictionary, leaving only state-specific items there
             for key in standard_args:
                 state_specific_args.pop(key, None)
