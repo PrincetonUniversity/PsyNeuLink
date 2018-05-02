@@ -1444,7 +1444,8 @@ class CombinationFunction(Function_Base):
     componentType = COMBINATION_FUNCTION_TYPE
 
     class ClassDefaults(Function_Base.ClassDefaults):
-        variable = np.array([0, 0])
+        # variable = np.array([0, 0])
+        variable = np.array([0])
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,

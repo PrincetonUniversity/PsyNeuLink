@@ -1141,7 +1141,7 @@ class InputState(State_Base):
                 overridden by a default_variable or size argument
             False - otherwise
 
-            ex: specifiying an InputState with a Mechanism allows overriding
+            ex: specifying an InputState with a Mechanism allows overriding
         '''
         from psyneulink.components.mechanisms.mechanism import Mechanism
 

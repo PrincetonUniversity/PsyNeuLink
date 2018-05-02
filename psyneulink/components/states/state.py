@@ -2867,12 +2867,10 @@ def _parse_state_spec(state_type=None,
                              'Function class or instance of one'.
                              format(spec_function))
     except (KeyError, TypeError):
-        # MODIFIED 5/2/18 JDC
+        # MODIFIED OLD 5/2/18 JDC
         # spec_function_value = state_dict[VARIABLE]
+        # MODIFIED NEW 5/2/18 FIX NEEDS TO RETURN None from OutputState._get_state_function_value if owner has no value
         spec_function_value = state_type._get_state_function_value(owner, None, state_dict[VARIABLE])
-        # raise StateError("PROGRAM ERROR:  No function found for {} of {} {}".format(state_type.__name__,
-        #                                                                          owner.__class__.__name__,
-        #                                                                          owner.name))
         # MODIFIED 5/2/18 END
 
 

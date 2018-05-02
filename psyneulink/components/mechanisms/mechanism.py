@@ -1452,10 +1452,9 @@ class Mechanism_Base(Mechanism):
                 if input_states_variable_was_specified:
                     if not iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_states):
                         raise MechanismError(
-                            'default variable determined from the specified input_states spec ({0}) '
-                            'is not compatible with the specified default variable ({1})'.format(
-                                default_variable_from_input_states,
-                                default_variable
+                            'Default variable determined from the specified input_states spec ({0}) for {1} '
+                            'is not compatible with its specified default variable ({2})'.format(
+                                default_variable_from_input_states, self.name, default_variable
                             )
                         )
                 else:
@@ -1480,71 +1479,53 @@ class Mechanism_Base(Mechanism):
             return None, False
 
         default_variable_from_input_states = []
-        variable_was_specified = False
+        input_state_variable_was_specified = None
 
         if not isinstance(input_states, Iterable):
             input_states = [input_states]
 
         for i, s in enumerate(input_states):
-            # default if not determined later
-            variable = InputState.ClassDefaults.variable
 
-            parsed_spec = _parse_state_spec(
-                owner=self,
-                state_type=InputState,
-                state_spec=s,
-                context='_handle_arg_input_states'
+            parsed_input_state_spec = _parse_state_spec(
+                    owner=self,
+                    state_type=InputState,
+                    state_spec=s,
+                    context='_handle_arg_input_states'
             )
-            variable = None
+            mech_variable_item = None
 
-            if isinstance(parsed_spec, dict):
+            if isinstance(parsed_input_state_spec, dict):
                 try:
-                    # MODIFIED 2/21/18 OLD:
-                    variable = parsed_spec[VALUE]
-                    # # MODIFIED 2/21/18 NEW [JDC - as per devel]:
-                    # variable = parsed_spec[VARIABLE]
-                    # # MODIFIED 2/21/18 END
+                    mech_variable_item = parsed_input_state_spec[VALUE]
+                    if parsed_input_state_spec[VARIABLE] is None:
+                        input_state_variable_was_specified = False
                 except KeyError:
                     pass
-            elif isinstance(parsed_spec, (Projection, Mechanism, State)):
-                if parsed_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
-                    args = parsed_spec.init_args
-                    # MODIFIED 2/21/18 OLD:
+            elif isinstance(parsed_input_state_spec, (Projection, Mechanism, State)):
+                if parsed_input_state_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                    args = parsed_input_state_spec.init_args
                     if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
-                        variable = args[REFERENCE_VALUE]
+                        mech_variable_item = args[REFERENCE_VALUE]
                     elif VALUE in args and args[VALUE] is not None:
-                        variable = args[VALUE]
+                        mech_variable_item = args[VALUE]
                     elif VARIABLE in args and args[VARIABLE] is not None:
-                        variable = args[VARIABLE]
-                    # # MODIFIED 2/21/18 NEW [JDC]:
-                    # if VARIABLE in args and args[VARIABLE] is not None:
-                    #     variable = args[VARIABLE]
-                    # elif VALUE in args and args[VALUE] is not None:
-                    #     variable = args[VALUE]
-                    # elif REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
-                    #     variable = args[REFERENCE_VALUE]
-                    # # MODIFIED 2/21/18 END
+                        mech_variable_item = args[VARIABLE]
                 else:
-                    # MODIFIED 2/21/18 OLD:
                     try:
-                        variable = parsed_spec.value
-                    # # MODIFIED 2/21/18 NEW [JDC]:
-                    # try:
-                    #     variable = parsed_spec.variable
-                    # MODIFIED 2/21/18 END
+                        mech_variable_item = parsed_input_state_spec.value
                     except AttributeError:
-                        variable = parsed_spec.instance_defaults.variable
+                        mech_variable_item = parsed_input_state_spec.instance_defaults.mech_variable_item
             else:
-                variable = parsed_spec.instance_defaults.variable
+                mech_variable_item = parsed_input_state_spec.instance_defaults.mech_variable_item
 
-            if variable is None:
-                variable = InputState.ClassDefaults.variable
-            elif not InputState._state_spec_allows_override_variable(s):
-                variable_was_specified = True
+            if mech_variable_item is None:
+                mech_variable_item = InputState.ClassDefaults.variable
+            elif input_state_variable_was_specified is None and not InputState._state_spec_allows_override_variable(s):
+                input_state_variable_was_specified = True
 
-            default_variable_from_input_states.append(variable)
+            default_variable_from_input_states.append(mech_variable_item)
 
-        return default_variable_from_input_states, variable_was_specified
+        return default_variable_from_input_states, input_state_variable_was_specified
 
     # ------------------------------------------------------------------------------------------------------------------
     # Validation methods
