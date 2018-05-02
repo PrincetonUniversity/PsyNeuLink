@@ -1174,31 +1174,28 @@ class InputState(State_Base):
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
-        """Overrided State method
+        """Put InputState's variable in a list if its function is LinearCombination and variable is >=2d
 
-        InputState variable must be embedded in a list (see InputState._get_state_function_value()).
-        so that LinearCombination (its default function) returns a variable that is >=2d intact
-        (rather than as arrays to be combined);
+        InputState variable must be embedded in a list so that LinearCombination (its default function)
+        returns a variable that is >=2d intact (rather than as arrays to be combined);
         this is normally done in State.update() (and in State._instantiate-function), but that
         can't be called by _parse_state_spec since the InputState itself may not yet have been instantiated.
 
         """
         import inspect
+
+        # if function is None, use State's default function
+        function = function or State_Base.ClassDefaults.function()
+
         if (
-                (
-                        (inspect.isclass(function) and issubclass(function, LinearCombination))
-                        or isinstance(function, LinearCombination)
-                )
-                and (
-                isinstance(variable, np.matrix)
-                or (
-                        isinstance(np.array(variable))
-                        and variable.ndim >=2
-                )
-        )
+                ((inspect.isclass(function) and issubclass(function, LinearCombination))
+                 or isinstance(function, LinearCombination))
+                and (isinstance(variable, np.matrix) or
+                     (isinstance(np.array(variable),np.ndarray) and np.array(variable).ndim>=2))
         ):
             variable = [variable]
-        super()._get_state_function_value(owner=owner, function=function, variable=variable)
+
+        return State_Base._get_state_function_value(owner=owner, function=function, variable=variable)
 
 
 def _instantiate_input_states(owner, input_states=None, reference_value=None, context=None):

@@ -2049,10 +2049,7 @@ class State_Base(State):
         Used primarily during validation, when the function may not have been fully instantiated yet
         (e.g., InputState must sometimes embed its variable in a list-- see InputState._get_state_function_value).
         """
-        if function:
-            return function.execute(variable)
-        else:
-            return
+        return function.execute(variable)
 
 
 def _instantiate_state_list(owner,
@@ -2869,9 +2866,10 @@ def _parse_state_spec(state_type=None,
     except (KeyError, TypeError):
         # MODIFIED 5/2/18 JDC
         # spec_function_value = state_dict[VARIABLE]
-        raise StateError("PROGRAM ERROR:  No function found for {} of {} {}".format(state_type.__name__,
-                                                                                 owner.__class__.__name__,
-                                                                                 owner.name))
+        spec_function_value = state_type._get_state_function_value(owner, None, state_dict[VARIABLE])
+        # raise StateError("PROGRAM ERROR:  No function found for {} of {} {}".format(state_type.__name__,
+        #                                                                          owner.__class__.__name__,
+        #                                                                          owner.name))
         # MODIFIED 5/2/18 END
 
 

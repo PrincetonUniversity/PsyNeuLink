@@ -1166,8 +1166,6 @@ class OutputState(State_Base):
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
-        # -- CALL TO GET DEFAULT VALUE AND RETURN THAT (CAN'T USE VARIABLE SINCE DON'T KNOW MECH YET)
-        #      THOUGH COULD PASS IN OWNER TO DETERMINE IT
         fct_variable = _parse_output_state_variable(owner, variable)
 
         # If variable has not been specified, assume it is the default of (OWNER_VALUE,0), and use that value
@@ -1176,12 +1174,15 @@ class OutputState(State_Base):
                 fct_variable = owner.value[0]
             # Get owner's value by calling its function
             else:
-                owner.function(owner.variable)[0]
+                fct_variable = owner.function(owner.variable)[0]
 
         fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable is PARAMS_DICT)
 
         try:
-            return fct(variable=fct_variable)
+            # return fct(variable=fct_variable)
+            return super()._get_state_function_value(owner=owner, function=fct, variable=fct_variable)
+        # FIX: 5/2/18 JDC IS THIS NEEDED?  ISN'T IT HANDLED BY SUPER (SINCE IT CALLS WITHOUT NAME OF VARIABLE ARG)?
+        # IF fct IS NOT FOUND, PASS OutputState.ClassDefault.function
         except:
             try:
                 return fct(fct_variable)
