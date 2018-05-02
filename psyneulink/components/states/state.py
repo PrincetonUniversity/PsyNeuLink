@@ -2511,8 +2511,9 @@ def _parse_state_spec(state_type=None,
     params = state_specific_args
 
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
-    if isinstance(reference_value, numbers.Number):
-        reference_value = convert_to_np_array(reference_value,1)
+    # if isinstance(reference_value, numbers.Number):
+    # FIX: 5/2/18 JDC - NOT NECESSARILY... OUTPUT_STATE FUNCTIONS CAN GENERATE ANYTHING
+    #     reference_value = convert_to_np_array(reference_value,1)
 
     # Validate that state_type is a State class
     if isinstance(state_type, str):
