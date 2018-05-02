@@ -2234,13 +2234,15 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
 
     # Parse reference value to get actual value (in case it is, itself, a specification dict)
-    reference_value_dict = _parse_state_spec(owner=owner,
-                                             state_type=state_type,
-                                             state_spec=reference_value,
-                                             value=None,
-                                             params=None)
-    # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
-    reference_value = reference_value_dict[VARIABLE]
+    from psyneulink.globals.utilities import is_numeric
+    if not is_numeric(reference_value):
+        reference_value_dict = _parse_state_spec(owner=owner,
+                                                 state_type=state_type,
+                                                 state_spec=reference_value,
+                                                 value=None,
+                                                 params=None)
+        # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
+        reference_value = reference_value_dict[VARIABLE]
 
     parsed_state_spec = _parse_state_spec(state_type=state_type,
                                           owner=owner,
@@ -3102,7 +3104,6 @@ def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
                 isinstance(state_spec[1], (Mechanism, State))
                            or (isinstance(state_spec[0], Mechanism) and
                                        state_spec[1] in state_spec[0]._parameter_states)):
-
         raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
                          "for a Mechanism, State, or Projection".
                          format(state_type_name, owner.__class__.__name__, state_spec[1]))
