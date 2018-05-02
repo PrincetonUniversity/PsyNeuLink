@@ -745,7 +745,7 @@ class Function_Base(Function):
         return tuple([])
 
     def get_input_struct_type(self):
-        default_var = self.get_current_function_param(VARIABLE)
+        default_var = self.instance_defaults.variable
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
 
@@ -2261,22 +2261,22 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     @property
     def _result_length(self):
         # Input variable should be at least 2d
-        return np.atleast_2d(self.get_current_function_param(VARIABLE)).shape[1]
+        return np.atleast_2d(self.instance_defaults.variable).shape[1]
 
     def get_input_struct_type(self):
         #FIXME this is ugly as HELL!
         if (self.owner and hasattr(self.owner, 'pathway_projections') and len(self.owner.pathway_projections) != 0):
 #            assert len(self.owner.pathway_projections) == len(default_var)
-            var = self.get_current_function_param(VARIABLE)
+            var = self.instance_defaults.variable
             default_var = np.broadcast_to(np.asfarray(var), (len(self.owner.pathway_projections), len(var)))
         else:
-            default_var = np.atleast_2d(self.get_current_function_param(VARIABLE))
+            default_var = np.atleast_2d(self.instance_defaults.variable)
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
 
 
     def get_output_struct_type(self):
-        default_var = np.atleast_2d(self.get_current_function_param(VARIABLE))
+        default_var = np.atleast_2d(self.instance_defaults.variable)
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var[0])
 
@@ -3039,7 +3039,7 @@ class TransferFunction(Function_Base):
 
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
-        if self.get_current_function_param(VARIABLE).ndim > 1:
+        if self.instance_defaults.variable.ndim > 1:
             vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
             vo = builder.bitcast(vo, ir.ArrayType(ctx.float_ty, self._result_length).as_pointer())
 
@@ -4031,6 +4031,12 @@ class SoftMax(NormalizingFunction):
 
         super()._instantiate_function(function, function_params=function_params, context=context)
 
+    def get_input_struct_type(self):
+        default_var = np.atleast_2d(self.instance_defaults.variable)
+        assert default_var.ndim == 2
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var[0])
+
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
             param_type = ir.LiteralStructType([ctx.float_ty])
@@ -4083,7 +4089,8 @@ class SoftMax(NormalizingFunction):
         params, _, vi, vo = builder.function.args
 
         # Restrict to 1d arrays
-        assert self.get_current_function_param(VARIABLE).ndim == 1
+        # We force this to 1D in get_input_struct_type
+        # assert self.instance_defaults.variable.ndim == 1
 
         exp_sum_ptr = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(0), exp_sum_ptr)
@@ -4692,7 +4699,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         params, _, vi, vo = builder.function.args
 
         # Restrict to 1d arrays
-        assert self.get_current_function_param(VARIABLE).ndim == 1
+        assert self.instance_defaults.variable.ndim == 1
 
         vec_in = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vec_out = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -6176,8 +6183,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         params, state, vi, vo = builder.function.args
 
         # Eliminate one dimension for 2d variable
-        if self.get_current_function_param(VARIABLE).ndim > 1:
-            assert self.get_current_function_param(VARIABLE).shape[0] == 1
+        if self.instance_defaults.variable.ndim > 1:
+            assert self.instance_defaults.variable.shape[0] == 1
             vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
             vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
 

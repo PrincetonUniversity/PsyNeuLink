@@ -1075,7 +1075,7 @@ class Component(object):
                 return sum(nested_len(y) for y in x)
             except:
                 return 1
-        default_var = self.get_current_function_param(VARIABLE)
+        default_var = self.instance_defaults.variable
         return nested_len(default_var)
 
     @property
