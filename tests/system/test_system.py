@@ -683,11 +683,17 @@ class TestRuntimeParams:
 
     def test_mechanism_execute(self):
         T = TransferMechanism()
-        print(T.input_states)
+
+        print(" - - - - - after construction - - - - - ")
+        print("function attr value = ", T.function_object.slope)
+        print("parameter state value = ", T.parameter_states['slope'].value)
         T.execute(runtime_params={"slope": 10.0}, input=2.0)
-        print(T.function_object.slope)
-        print(T.parameter_states['slope'].value)
-        print(T.value)
-        print(T.input_states)
+        print(" - - - - - after running with runtime params - - - - - ")
+        print("function attr value = ", T.function_object.slope)
+        print("parameter state value = ", T.parameter_states['slope'].value)
+        print("mechanism value = \n\n", T.value)
         T.execute(input=2.0)
-        print(T.value)
+        print(" - - - - - after executing again without runtime params - - - - - ")
+        print("function attr value = ", T.function_object.slope)
+        print("parameter state value = ", T.parameter_states['slope'].value)
+        print("mechanism value = \n\n", T.value)
