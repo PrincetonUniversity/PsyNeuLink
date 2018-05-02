@@ -1019,88 +1019,86 @@ class InputState(State_Base):
             except UnboundLocalError:
                 pass
             else:
-                if state_dict[REFERENCE_VALUE] is not None:
-                    state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
-                else:
-                    try:
-                        params_dict[PROJECTIONS] = _parse_connection_specs(self,
-                                                                           owner=owner,
-                                                                           connections=projections_spec)
-                        # Parse the value of all of the Projections to get/validate variable for InputState
-                        variable = []
-                        for projection_spec in params_dict[PROJECTIONS]:
-                            # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
-                            # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
-                            # FIX:           USING _get_state_for_socket
-                            # from psyneulink.components.projections.projection import _parse_projection_spec
+                try:
+                    params_dict[PROJECTIONS] = _parse_connection_specs(self,
+                                                                       owner=owner,
+                                                                       connections=projections_spec)
+                    # Parse the value of all of the Projections to get/validate variable for InputState
+                    variable = []
+                    for projection_spec in params_dict[PROJECTIONS]:
+                        # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
+                        # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
+                        # FIX:           USING _get_state_for_socket
+                        # from psyneulink.components.projections.projection import _parse_projection_spec
 
-                            # Try to get matrix for projection
-                            try:
-                                sender_dim = projection_spec.state.value.ndim
-                            except AttributeError:
-                                if projection_spec.state.context.initialization_status == ContextFlags.DEFERRED_INIT:
-                                    continue
-                                else:
-                                    raise StateError("PROGRAM ERROR: indeterminate value for {} "
-                                                     "specified to project to {} of {}".
-                                                     format(projection_spec.state.name, self.__name__, owner.name))
-
-                            projection = projection_spec.projection
-                            if isinstance(projection, dict):
-                                # Don't try to get MATRIX from projection without checking,
-                                #    since projection is a defaultDict,
-                                #    which will add a matrix entry and assign it to None if it is not there
-                                if MATRIX in projection:
-                                    matrix = projection[MATRIX]
-                                else:
-                                    matrix = None
-                            elif isinstance(projection, Projection):
-                                if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
-                                    continue
-                                matrix = projection.matrix
+                        # Try to get matrix for projection
+                        try:
+                            sender_dim = projection_spec.state.value.ndim
+                        except AttributeError:
+                            if projection_spec.state.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                                continue
                             else:
-                                raise InputStateError("Unrecognized Projection specification for {} of {} ({})".
-                                                      format(self.name, owner.name, projection_spec))
+                                raise StateError("PROGRAM ERROR: indeterminate value for {} "
+                                                 "specified to project to {} of {}".
+                                                 format(projection_spec.state.name, self.__name__, owner.name))
 
-                            # Determine length of value of projection
-                            if matrix is None:
-                                # If matrix has not been specified, no worries;
-                                #    variable_item can be determined by value of sender
-                                sender_shape = projection_spec.state.value.shape
-                                variable_item = np.zeros(sender_shape)
-                                # If variable_item HASN'T been assigned, use sender's value
-                                if VARIABLE not in state_dict or state_dict[VARIABLE] is None:
-                                    # state_dict[VARIABLE] = variable
-                                    variable.append(variable_item)
-                                # If variable HAS been assigned, make sure value is the same for this sender
-                                elif np.array(state_dict[VARIABLE]).shape != variable_item.shape:
-                                    # If values for senders differ, assign None so that State's default is used
-                                    variable = None
-                                    # No need to check any more Projections
-                                    break
-
-                            # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
+                        projection = projection_spec.projection
+                        if isinstance(projection, dict):
+                            # Don't try to get MATRIX from projection without checking,
+                            #    since projection is a defaultDict,
+                            #    which will add a matrix entry and assign it to None if it is not there
+                            if MATRIX in projection:
+                                matrix = projection[MATRIX]
                             else:
-                                proj_val_shape = matrix.shape[sender_dim :]
-                                # state_dict[VARIABLE] = np.zeros(proj_val_shape)
-                                variable.append(np.zeros(proj_val_shape))
-                        # Senders have values of different lengths, so assign #items each the length of default variable
-                        # length
-                        if variable is None:
-                            variable = np.zeros_like(self.instance_defaults.variable) * len(params_dict[PROJECTIONS])
+                                matrix = None
+                        elif isinstance(projection, Projection):
+                            if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                                continue
+                            matrix = projection.matrix
                         else:
-                            state_dict[VARIABLE] = variable
+                            raise InputStateError("Unrecognized Projection specification for {} of {} ({})".
+                                                  format(self.name, owner.name, projection_spec))
 
-                    except InputStateError:
-                        raise InputStateError("Tuple specification in {} specification dictionary "
-                                              "for {} ({}) is not a recognized specification for one or more "
-                                              "{}s, {}s, or {}s that project to it".
-                                              format(InputState.__name__,
-                                                     owner.name,
-                                                     projections_spec,
-                                                     'Mechanism',
-                                                     OutputState.__name__,
-                                                     Projection.__name__))
+                        # Determine length of value of projection
+                        if matrix is None:
+                            # If matrix has not been specified, no worries;
+                            #    variable_item can be determined by value of sender
+                            sender_shape = projection_spec.state.value.shape
+                            variable_item = np.zeros(sender_shape)
+                            # If variable_item HASN'T been assigned, use sender's value
+                            if VARIABLE not in state_dict or state_dict[VARIABLE] is None:
+                                # state_dict[VARIABLE] = variable
+                                variable.append(variable_item)
+                            # If variable HAS been assigned, make sure value is the same for this sender
+                            elif np.array(state_dict[VARIABLE]).shape != variable_item.shape:
+                                # If values for senders differ, assign None so that State's default is used
+                                variable = None
+                                # No need to check any more Projections
+                                break
+
+                        # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
+                        else:
+                            proj_val_shape = matrix.shape[sender_dim :]
+                            # state_dict[VARIABLE] = np.zeros(proj_val_shape)
+                            variable.append(np.zeros(proj_val_shape))
+                    # Senders have values of different lengths,
+                    #     so assign a number of items = number of pojections, each with default variable length
+                    if variable is None:
+                        state_dict[VARIABLE] = np.zeros_like(self.instance_defaults.variable) * \
+                                               len(params_dict[PROJECTIONS])
+                    else:
+                        state_dict[VARIABLE] = variable
+
+                except InputStateError:
+                    raise InputStateError("Tuple specification in {} specification dictionary "
+                                          "for {} ({}) is not a recognized specification for one or more "
+                                          "{}s, {}s, or {}s that project to it".
+                                          format(InputState.__name__,
+                                                 owner.name,
+                                                 projections_spec,
+                                                 'Mechanism',
+                                                 OutputState.__name__,
+                                                 Projection.__name__))
 
             # GET WEIGHT AND EXPONENT IF SPECIFIED ***************************************************************
 
@@ -1184,9 +1182,6 @@ class InputState(State_Base):
         """
         import inspect
 
-        # if function is None, use State's default function
-        function = function or State_Base.ClassDefaults.function()
-
         if (
                 ((inspect.isclass(function) and issubclass(function, LinearCombination))
                  or isinstance(function, LinearCombination))
@@ -1194,6 +1189,9 @@ class InputState(State_Base):
                      (isinstance(np.array(variable),np.ndarray) and np.array(variable).ndim>=2))
         ):
             variable = [variable]
+
+        # if function is None, use State's default function
+        function = function or InputState.ClassDefaults.function
 
         return State_Base._get_state_function_value(owner=owner, function=function, variable=variable)
 

@@ -2888,6 +2888,11 @@ def _parse_state_spec(state_type=None,
                 )
             )
 
+    if state_dict[REFERENCE_VALUE] is not None and not iscompatible(state_dict[VALUE], state_dict[REFERENCE_VALUE]):
+    # if state_dict[REFERENCE_VALUE] is not None and not (state_dict[VALUE] == state_dict[REFERENCE_VALUE]):
+        raise StateError("PROGRAM ERROR: State value ({}) does not match reference_value ({}) for {} of {})".
+                         format(state_dict[VALUE], state_dict[REFERENCE_VALUE], state_type.__name__, owner.name))
+
     return state_dict
 
 
