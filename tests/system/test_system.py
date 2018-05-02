@@ -681,19 +681,90 @@ class TestInitialize:
 
 class TestRuntimeParams:
 
-    def test_mechanism_execute(self):
+    def test_mechanism_execute_function_param(self):
+
+        # Construction
+        T = TransferMechanism()
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+
+        # Runtime param used for slope
+        T.execute(runtime_params={"slope": 10.0}, input=2.0)
+        assert T.function_object.slope == 10.0
+        assert T.parameter_states['slope'].value == 10.0
+        assert T.value == 20.0
+
+        # Runtime param NOT used for slope
+        T.execute(input=2.0)
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+        assert T.value == 2.0
+
+    def test_mechanism_execute_mechanism_param(self):
+
+        # Construction
+        T = TransferMechanism()
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+
+        # Runtime param used for noise
+        T.execute(runtime_params={"noise": 10.0}, input=2.0)
+        assert T.noise == 10.0
+        assert T.parameter_states['noise'].value == 10.0
+        assert T.value == 12.0
+
+        # Runtime param NOT used for noise
+        T.execute(input=2.0)
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+        assert T.value == 2.0
+
+    def test_runtime_params_reset_isolated(self):
+
         T = TransferMechanism()
 
-        print(" - - - - - after construction - - - - - ")
-        print("function attr value = ", T.function_object.slope)
-        print("parameter state value = ", T.parameter_states['slope'].value)
+        # Intercept attr updated
+        T.function_object.intercept = 2.0
+        assert T.function_object.intercept == 2.0
+
+        # Runtime param used for slope
         T.execute(runtime_params={"slope": 10.0}, input=2.0)
-        print(" - - - - - after running with runtime params - - - - - ")
-        print("function attr value = ", T.function_object.slope)
-        print("parameter state value = ", T.parameter_states['slope'].value)
-        print("mechanism value = \n\n", T.value)
+        assert T.function_object.slope == 10.0
+        assert T.parameter_states['slope'].value == 10.0
+
+        # Intercept attr NOT affected by runtime params
+        assert T.function_object.intercept == 2.0
+        assert T.value == 22.0
+
+        # Runtime param NOT used for slope
         T.execute(input=2.0)
-        print(" - - - - - after executing again without runtime params - - - - - ")
-        print("function attr value = ", T.function_object.slope)
-        print("parameter state value = ", T.parameter_states['slope'].value)
-        print("mechanism value = \n\n", T.value)
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+
+        # Intercept attr NOT affected by runtime params reset
+        assert T.function_object.intercept == 2.0
+        assert T.value == 4.0
+
+    def test_runtime_params_reset_to_most_recent_val(self):
+        # NOT instance defaults
+
+        # Construction
+        T = TransferMechanism()
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+
+        # Set slope attribute value directly
+        T.function_object.slope = 2.0
+        assert T.function_object.slope == 2.0
+
+        # Runtime param used for slope
+        T.execute(runtime_params={"slope": 10.0}, input=2.0)
+        assert T.function_object.slope == 10.0
+        assert T.parameter_states['slope'].value == 10.0
+        assert T.value == 20.0
+
+        # Runtime param NOT used for slope - reset to most recent slope value (2.0)
+        T.execute(input=2.0)
+        assert T.function_object.slope == 2.0
+        assert T.value == 4.0
+
