@@ -1197,7 +1197,6 @@ class OutputState(State_Base):
     def variable(self):
         return _parse_output_state_variable(self.owner, self._variable)
 
-
     @variable.setter
     def variable(self, variable):
         self._variable = variable
@@ -1213,6 +1212,9 @@ class OutputState(State_Base):
             self._variable = value
             return self.variable
 
+    @property
+    def socket_width(self):
+        return self.value.shape[-1]
 
     @property
     def owner_value_index(self):
