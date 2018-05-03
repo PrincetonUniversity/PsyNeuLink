@@ -768,3 +768,46 @@ class TestRuntimeParams:
         assert T.function_object.slope == 2.0
         assert T.value == 4.0
 
+    def test_system_run_function_param(self):
+
+        # Construction
+        T = TransferMechanism()
+        P = Process(pathway=[T])
+        S = System(processes=[P])
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+
+        # Runtime param used for slope
+        # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
+        S.run(inputs={T: 2.0}, runtime_params={T: {"slope": 10.0}})
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+        assert T.value == 20.0
+
+        # Runtime param NOT used for slope
+        S.run(inputs={T: 2.0})
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+        assert T.value == 2.0
+
+    def test_system_run_mechanism_param(self):
+
+        # Construction
+        T = TransferMechanism()
+        P = Process(pathway=[T])
+        S = System(processes=[P])
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+
+        # Runtime param used for noise
+        # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
+        S.run(inputs={T: 2.0}, runtime_params={T: {"noise": 10.0}})
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+        assert T.value == 12.0
+
+        # Runtime param NOT used for noise
+        S.run(inputs={T: 2.0}, )
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+        assert T.value == 2.0

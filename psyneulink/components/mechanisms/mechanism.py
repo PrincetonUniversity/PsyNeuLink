@@ -2148,25 +2148,26 @@ class Mechanism_Base(Mechanism):
         # Insure that param set is for a States:
         if self.prefs.paramValidationPref:
             if runtime_params:
-                # runtime_params can have entries for any of the the Mechanism's params, or
-                #    one or more state keys, each of which should be for a params dictionary for the corresponding
-                #    state type, and each of can contain only parameters relevant to that state
-                state_keys = [INPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, OUTPUT_STATE_PARAMS]
-                param_names = list({**self.user_params, **self.function_params})
-                if not all(key in state_keys + param_names for key in runtime_params):
-                        raise MechanismError("There is an invalid specification for a runtime parameter of {}".
-                                             format(self.name))
-                # for state_key in runtime_params:
-                for state_key in [entry for entry in runtime_params if entry in state_keys]:
-                    state_dict = runtime_params[state_key]
-                    if not isinstance(state_dict, dict):
-                        raise MechanismError("runtime_params entry for {} is not a dict".
-                                             format(self.name, state_key))
-                    for param_name in state_dict:
-                        if not param_name in param_names:
-                            raise MechanismError("{} entry in runtime_params for {} "
-                                                 "contains an unrecognized parameter: {}".
-                                                 format(state_key, self.name, param_name))
+                pass
+                # # runtime_params can have entries for any of the the Mechanism's params, or
+                # #    one or more state keys, each of which should be for a params dictionary for the corresponding
+                # #    state type, and each of can contain only parameters relevant to that state
+                # state_keys = [INPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, OUTPUT_STATE_PARAMS]
+                # param_names = list({**self.user_params, **self.function_params})
+                # if not all(key in state_keys + param_names for key in runtime_params):
+                #         raise MechanismError("There is an invalid specification for a runtime parameter of {}".
+                #                              format(self.name))
+                # # for state_key in runtime_params:
+                # for state_key in [entry for entry in runtime_params if entry in state_keys]:
+                #     state_dict = runtime_params[state_key]
+                #     if not isinstance(state_dict, dict):
+                #         raise MechanismError("runtime_params entry for {} is not a dict".
+                #                              format(self.name, state_key))
+                #     for param_name in state_dict:
+                #         if not param_name in param_names:
+                #             raise MechanismError("{} entry in runtime_params for {} "
+                #                                  "contains an unrecognized parameter: {}".
+                #                                  format(state_key, self.name, param_name))
 
 
         # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
