@@ -7,11 +7,12 @@ from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import ProjectionError
-from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.inputstate import InputState, InputStateError
 from psyneulink.components.states.state import StateError
 from psyneulink.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
 
-mismatches_default_variable_error_text = 'not compatible with the specified default variable'
+# mismatches_default_variable_error_text = 'not compatible with the specified default variable'
+mismatches_default_variable_error_text = 'is not compatible with its expected format'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
 belongs_to_another_mechanism_error_text = 'that belongs to another Mechanism'
 
@@ -43,7 +44,7 @@ class TestInputStateSpec:
 
     def test_mismatch_with_default_variable_error(self):
 
-        with pytest.raises(MechanismError) as error_text:
+        with pytest.raises(InputStateError) as error_text:
             TransferMechanism(
                 default_variable=[[0], [0]],
                 input_states=[[32, 24], 'HELLO']
