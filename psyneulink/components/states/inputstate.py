@@ -486,15 +486,10 @@ state_type_keywords = state_type_keywords.update({INPUT_STATE})
 #                                                          level=PreferenceLevel.TYPE,
 #                                                          name='InputStateClassPreferenceSet')
 
-# class InputStateLog(IntEnum):
-#     NONE            = 0
-#     TIME_STAMP      = 1 << 0
-#     ALL = TIME_STAMP
-#     DEFAULTS = NONE
-
-# STATE_SPEC_INDEX = 0 <- DECLARED IN State
 WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
+
+DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputState variable not yet defined, defer to Mechanism"
 
 class InputStateError(Exception):
     def __init__(self, error_value):
@@ -1075,8 +1070,10 @@ class InputState(State_Base):
                             #    variable_item can be determined by value of sender
                             sender_shape = projection_spec.state.value.shape
                             variable_item = np.zeros(sender_shape)
-                            # If variable_item HASN'T been assigned, use sender's value
-                            if VARIABLE not in state_dict or state_dict[VARIABLE] is None:
+                            # If variable_item HASN'T been specified, or it is same shape as any previous ones,
+                            #     use sender's value
+                            if ((VARIABLE not in state_dict or state_dict[VARIABLE] is None) and
+                                    (not variable or variable_item.shape == variable[0].shape)):
                                 # state_dict[VARIABLE] = variable
                                 variable.append(variable_item)
                             # If variable HAS been assigned, make sure value is the same for this sender
@@ -1091,11 +1088,21 @@ class InputState(State_Base):
                             proj_val_shape = matrix.shape[sender_dim :]
                             # state_dict[VARIABLE] = np.zeros(proj_val_shape)
                             variable.append(np.zeros(proj_val_shape))
-                    # Senders have values of different lengths,
-                    #     so assign a number of items = number of pojections, each with default variable length
+                    # Sender's value has not been defined or senders have values of different lengths,
                     if variable is None:
-                        state_dict[VARIABLE] = np.zeros_like(self.instance_defaults.variable) * \
-                                               len(params_dict[PROJECTIONS])
+                        # Try to assign number of items = number of projections, each with default variable length
+                        try:
+                            state_dict[VARIABLE] = np.zeros_like(self.instance_defaults.variable) * \
+                                                   len(params_dict[PROJECTIONS])
+                        # InputState's default variable has not yet been defined
+                        except AttributeError:
+                            # If reference_value was provided, use that as the InputState's variable
+                            #    (i.e., assume its function won't transform it)
+                            if REFERENCE_VALUE in state_dict and state_dict[REFERENCE_VALUE] is not None:
+                                state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
+                            # Nothing to use as variable, so raise exception and allow it to be handled "above"
+                            else:
+                                raise AttributeError(DEFER_VARIABLE_SPEC_TO_MECH_MSG)
                     else:
                         state_dict[VARIABLE] = variable
 

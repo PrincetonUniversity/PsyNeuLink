@@ -863,7 +863,7 @@ import typecheck as tc
 from psyneulink.components.component import Component, function_type, method_type
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
-from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.inputstate import InputState, DEFER_VARIABLE_SPEC_TO_MECH_MSG
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
@@ -1421,13 +1421,21 @@ class Mechanism_Base(Mechanism):
 
         # handle specifying through params dictionary
         try:
-            default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(params[INPUT_STATES])
+            default_variable_from_input_states, input_states_variable_was_specified = \
+                self._handle_arg_input_states(params[INPUT_STATES])
         except (TypeError, KeyError):
             pass
+        except AttributeError as e:
+            if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
+                pass
 
         if default_variable_from_input_states is None:
             # fallback to standard arg specification
-            default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(input_states)
+            try:
+                default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(input_states)
+            except AttributeError as e:
+                if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
+                    pass
 
         if default_variable_from_input_states is not None:
             if default_variable is None:
@@ -1686,8 +1694,12 @@ class Mechanism_Base(Mechanism):
 
         # INPUT_STATES is specified, so validate:
         if INPUT_STATES in params and params[INPUT_STATES] is not None:
-            for state_spec in params[INPUT_STATES]:
-                _parse_state_spec(owner=self, state_type=InputState, state_spec=state_spec)
+            try:
+                for state_spec in params[INPUT_STATES]:
+                    _parse_state_spec(owner=self, state_type=InputState, state_spec=state_spec)
+            except AttributeError as e:
+                if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
+                    pass
         # INPUT_STATES is not specified and call is from constructor (i.e., not assign_params):
         elif context & ContextFlags.CONSTRUCTOR:
             # - set to None, so it is set to default (self.instance_defaults.variable) in instantiate_inputState

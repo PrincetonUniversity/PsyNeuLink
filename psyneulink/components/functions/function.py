@@ -1997,9 +1997,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                 else:
                     new_length = len(variable[i])
                 if old_length != new_length:
-                    raise FunctionError("Length of all arrays in variable {0} "
-                                        "for {1} must be the same".format(variable,
-                                                                          self.__class__.__name__))
+                    raise FunctionError("Length of all arrays in variable for {0} must be the same; variable: {1}".
+                                        format(self.__class__.__name__, variable))
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):

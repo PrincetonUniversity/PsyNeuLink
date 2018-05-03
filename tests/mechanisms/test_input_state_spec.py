@@ -11,8 +11,8 @@ from psyneulink.components.states.inputstate import InputState, InputStateError
 from psyneulink.components.states.state import StateError
 from psyneulink.globals.keywords import FUNCTION, INPUT_STATES, MECHANISM, NAME, OUTPUT_STATES, PROJECTIONS, RESULTS, VARIABLE
 
-# mismatches_default_variable_error_text = 'not compatible with the specified default variable'
-mismatches_default_variable_error_text = 'is not compatible with its expected format'
+mismatches_specified_default_variable_error_text = 'not compatible with its specified default variable'
+mismatches_default_variable_format_error_text = 'is not compatible with its expected format'
 mismatches_size_error_text = 'not compatible with the default variable determined from size parameter'
 belongs_to_another_mechanism_error_text = 'that belongs to another Mechanism'
 
@@ -49,7 +49,7 @@ class TestInputStateSpec:
                 default_variable=[[0], [0]],
                 input_states=[[32, 24], 'HELLO']
             )
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_default_variable_format_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
@@ -383,7 +383,7 @@ class TestInputStateSpec:
                 default_variable=[[0]],
                 input_states=[{NAME: 'FIRST', VARIABLE: [0, 0]}]
             )
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 23
@@ -397,7 +397,7 @@ class TestInputStateSpec:
                     {NAME: 'SECOND', VARIABLE: [0]}
                 ]
             )
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 24
@@ -481,7 +481,7 @@ class TestInputStateSpec:
         with pytest.raises(MechanismError) as error_text:
             i = InputState(reference_value=[0, 0, 0])
             TransferMechanism(default_variable=[0, 0], input_states=[i])
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 31
@@ -502,7 +502,7 @@ class TestInputStateSpec:
             m = TransferMechanism(size=2)
             p = MappingProjection(sender=m, matrix=[[0, 0, 0], [0, 0, 0]])
             TransferMechanism(default_variable=[0, 0], input_states=[p])
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 33
@@ -552,7 +552,7 @@ class TestInputStateSpec:
         with pytest.raises(MechanismError) as error_text:
             p = MappingProjection()
             TransferMechanism(default_variable=[0, 0], input_states=[{VARIABLE: [0, 0, 0], PROJECTIONS: [p]}])
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 38
@@ -561,7 +561,7 @@ class TestInputStateSpec:
         with pytest.raises(MechanismError) as error_text:
             p = MappingProjection()
             TransferMechanism(default_variable=[0, 0], input_states=[{VARIABLE: [0, 0, 0], PROJECTIONS: [p]}])
-        assert mismatches_default_variable_error_text in str(error_text.value)
+        assert mismatches_specified_default_variable_error_text in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 26
@@ -643,15 +643,15 @@ class TestInputStateSpec:
     def test_2_item_tuple_with_state_name_list_and_mechanism(self):
 
         # T1 has OutputStates of with same lengths,
-        #    so T2 should use that length for its InputState (since it is not otherwise specified
+        #    so T2 should use that length for its InputState variable (since it is not otherwise specified)
         T1 = TransferMechanism(input_states=[[0,0],[0,0]])
         T2 = TransferMechanism(input_states=[(['RESULT', 'RESULT-1'], T1)])
         assert len(T2.input_states[0].value) == 2
         assert T2.input_states[0].path_afferents[0].sender.name == 'RESULT'
         assert T2.input_states[0].path_afferents[1].sender.name == 'RESULT-1'
 
-        # T1 has OutputStates with different lengths,
-        #    so T2 should use its variable default to as format for its InputStates (since it is not otherwise specified
+        # T1 has OutputStates with different lengths both of which are specified by T2 to project to a singe InputState,
+        #    so T2 should use its variable default as format for the InputState (since it is not otherwise specified)
         T1 = TransferMechanism(input_states=[[0,0],[0,0,0]])
         T2 = TransferMechanism(input_states=[(['RESULT', 'RESULT-1'], T1)])
         assert len(T2.input_states[0].value) == 1
