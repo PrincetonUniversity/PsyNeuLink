@@ -1032,7 +1032,8 @@ class InputState(State_Base):
                             sender_dim = projection_spec.state.value.ndim
                             # sender_dim = len(projection_spec.state.value)
                         except AttributeError:
-                            if projection_spec.state.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                            if (isinstance(projection_spec.state, type) or
+                                    projection_spec.state.context.initialization_status == ContextFlags.DEFERRED_INIT):
                                 continue
                             else:
                                 raise StateError("PROGRAM ERROR: indeterminate value for {} "
@@ -1089,7 +1090,7 @@ class InputState(State_Base):
                             # state_dict[VARIABLE] = np.zeros(proj_val_shape)
                             variable.append(np.zeros(proj_val_shape))
                     # Sender's value has not been defined or senders have values of different lengths,
-                    if variable is None:
+                    if not variable:
                         # Try to assign number of items = number of projections, each with default variable length
                         try:
                             state_dict[VARIABLE] = np.zeros_like(self.instance_defaults.variable) * \

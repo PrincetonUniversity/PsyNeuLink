@@ -1494,12 +1494,19 @@ class Mechanism_Base(Mechanism):
 
         for i, s in enumerate(input_states):
 
-            parsed_input_state_spec = _parse_state_spec(
-                    owner=self,
-                    state_type=InputState,
-                    state_spec=s,
-                    context='_handle_arg_input_states'
-            )
+
+            try:
+                parsed_input_state_spec = _parse_state_spec(owner=self,
+                                                            state_type=InputState,
+                                                            state_spec=s,
+                                                            context='_handle_arg_input_states')
+            except AttributeError as e:
+                if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
+                    default_variable_from_input_states.append(InputState.ClassDefaults.variable)
+                    continue
+                else:
+                    assert True
+
             mech_variable_item = None
 
             if isinstance(parsed_input_state_spec, dict):
