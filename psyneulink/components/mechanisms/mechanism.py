@@ -863,7 +863,7 @@ import typecheck as tc
 from psyneulink.components.component import Component, function_type, method_type
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.shellclasses import Function, Mechanism, Projection, State
-from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.states.inputstate import InputState, DEFER_VARIABLE_SPEC_TO_MECH_MSG
 from psyneulink.components.states.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
@@ -1421,13 +1421,21 @@ class Mechanism_Base(Mechanism):
 
         # handle specifying through params dictionary
         try:
-            default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(params[INPUT_STATES])
+            default_variable_from_input_states, input_states_variable_was_specified = \
+                self._handle_arg_input_states(params[INPUT_STATES])
         except (TypeError, KeyError):
             pass
+        except AttributeError as e:
+            if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
+                pass
 
         if default_variable_from_input_states is None:
             # fallback to standard arg specification
-            default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(input_states)
+            try:
+                default_variable_from_input_states, input_states_variable_was_specified = self._handle_arg_input_states(input_states)
+            except AttributeError as e:
+                if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
+                    pass
 
         if default_variable_from_input_states is not None:
             if default_variable is None:
@@ -1452,10 +1460,9 @@ class Mechanism_Base(Mechanism):
                 if input_states_variable_was_specified:
                     if not iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_states):
                         raise MechanismError(
-                            'default variable determined from the specified input_states spec ({0}) '
-                            'is not compatible with the specified default variable ({1})'.format(
-                                default_variable_from_input_states,
-                                default_variable
+                            'Default variable determined from the specified input_states spec ({0}) for {1} '
+                            'is not compatible with its specified default variable ({2})'.format(
+                                default_variable_from_input_states, self.name, default_variable
                             )
                         )
                 else:
@@ -1480,71 +1487,61 @@ class Mechanism_Base(Mechanism):
             return None, False
 
         default_variable_from_input_states = []
-        variable_was_specified = False
+        input_state_variable_was_specified = None
 
         if not isinstance(input_states, Iterable):
             input_states = [input_states]
 
         for i, s in enumerate(input_states):
-            # default if not determined later
-            variable = InputState.ClassDefaults.variable
 
-            parsed_spec = _parse_state_spec(
-                owner=self,
-                state_type=InputState,
-                state_spec=s,
-                context='_handle_arg_input_states'
-            )
-            variable = None
 
-            if isinstance(parsed_spec, dict):
+            try:
+                parsed_input_state_spec = _parse_state_spec(owner=self,
+                                                            state_type=InputState,
+                                                            state_spec=s,
+                                                            context='_handle_arg_input_states')
+            except AttributeError as e:
+                if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
+                    default_variable_from_input_states.append(InputState.ClassDefaults.variable)
+                    continue
+                else:
+                    raise MechanismError("PROGRAM ERROR: Problem parsing {} specification ({}) for {}".
+                                         format(InputState.__name__, s, self.name))
+
+            mech_variable_item = None
+
+            if isinstance(parsed_input_state_spec, dict):
                 try:
-                    # MODIFIED 2/21/18 OLD:
-                    variable = parsed_spec[VALUE]
-                    # # MODIFIED 2/21/18 NEW [JDC - as per devel]:
-                    # variable = parsed_spec[VARIABLE]
-                    # # MODIFIED 2/21/18 END
+                    mech_variable_item = parsed_input_state_spec[VALUE]
+                    if parsed_input_state_spec[VARIABLE] is None:
+                        input_state_variable_was_specified = False
                 except KeyError:
                     pass
-            elif isinstance(parsed_spec, (Projection, Mechanism, State)):
-                if parsed_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
-                    args = parsed_spec.init_args
-                    # MODIFIED 2/21/18 OLD:
+            elif isinstance(parsed_input_state_spec, (Projection, Mechanism, State)):
+                if parsed_input_state_spec.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                    args = parsed_input_state_spec.init_args
                     if REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
-                        variable = args[REFERENCE_VALUE]
+                        mech_variable_item = args[REFERENCE_VALUE]
                     elif VALUE in args and args[VALUE] is not None:
-                        variable = args[VALUE]
+                        mech_variable_item = args[VALUE]
                     elif VARIABLE in args and args[VARIABLE] is not None:
-                        variable = args[VARIABLE]
-                    # # MODIFIED 2/21/18 NEW [JDC]:
-                    # if VARIABLE in args and args[VARIABLE] is not None:
-                    #     variable = args[VARIABLE]
-                    # elif VALUE in args and args[VALUE] is not None:
-                    #     variable = args[VALUE]
-                    # elif REFERENCE_VALUE in args and args[REFERENCE_VALUE] is not None:
-                    #     variable = args[REFERENCE_VALUE]
-                    # # MODIFIED 2/21/18 END
+                        mech_variable_item = args[VARIABLE]
                 else:
-                    # MODIFIED 2/21/18 OLD:
                     try:
-                        variable = parsed_spec.value
-                    # # MODIFIED 2/21/18 NEW [JDC]:
-                    # try:
-                    #     variable = parsed_spec.variable
-                    # MODIFIED 2/21/18 END
+                        mech_variable_item = parsed_input_state_spec.value
                     except AttributeError:
-                        variable = parsed_spec.instance_defaults.variable
+                        mech_variable_item = parsed_input_state_spec.instance_defaults.mech_variable_item
             else:
-                variable = parsed_spec.instance_defaults.variable
+                mech_variable_item = parsed_input_state_spec.instance_defaults.mech_variable_item
 
-            if variable is None:
-                variable = InputState.ClassDefaults.variable
-            elif not InputState._state_spec_allows_override_variable(s):
-                variable_was_specified = True
+            if mech_variable_item is None:
+                mech_variable_item = InputState.ClassDefaults.variable
+            elif input_state_variable_was_specified is None and not InputState._state_spec_allows_override_variable(s):
+                input_state_variable_was_specified = True
 
-            default_variable_from_input_states.append(variable)
+            default_variable_from_input_states.append(mech_variable_item)
 
-        return default_variable_from_input_states, variable_was_specified
+        return default_variable_from_input_states, input_state_variable_was_specified
 
     # ------------------------------------------------------------------------------------------------------------------
     # Validation methods
@@ -1705,8 +1702,12 @@ class Mechanism_Base(Mechanism):
 
         # INPUT_STATES is specified, so validate:
         if INPUT_STATES in params and params[INPUT_STATES] is not None:
-            for state_spec in params[INPUT_STATES]:
-                _parse_state_spec(owner=self, state_type=InputState, state_spec=state_spec)
+            try:
+                for state_spec in params[INPUT_STATES]:
+                    _parse_state_spec(owner=self, state_type=InputState, state_spec=state_spec)
+            except AttributeError as e:
+                if DEFER_VARIABLE_SPEC_TO_MECH_MSG in e.args[0]:
+                    pass
         # INPUT_STATES is not specified and call is from constructor (i.e., not assign_params):
         elif context & ContextFlags.CONSTRUCTOR:
             # - set to None, so it is set to default (self.instance_defaults.variable) in instantiate_inputState
@@ -2312,20 +2313,15 @@ class Mechanism_Base(Mechanism):
                 raise SystemError("Number of inputs ({0}) to {1} does not match "
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
-        for i, input_state in enumerate(self.input_states):
-            # input_state = list(self.input_states.values())[i]
-            input_state = self.input_states[i]
-            # input_item = np.ndarray(input[i])
-            input_item = input[i]
-
-            if len(input_state.instance_defaults.variable) == len(input_item):
+        for input_item, input_state in zip(input, self.input_states):
+            if len(input_state.value) == len(input_item):
                 input_state.value = input_item
             else:
                 raise MechanismError(
                     "Length ({}) of input ({}) does not match "
                     "required length ({}) for input to {} of {}".format(
                         len(input_item),
-                        input[i],
+                        input_item,
                         len(input_state.instance_defaults.variable),
                         input_state.name,
                         self.name
