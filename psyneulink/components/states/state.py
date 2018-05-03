@@ -1496,7 +1496,8 @@ class State_Base(State):
                 # PathwayProjection:
                 #    - check that projection's value is compatible with the State's variable
                 if isinstance(projection, PathwayProjection_Base):
-                    if not iscompatible(projection.value, self.instance_defaults.variable):
+                    if not iscompatible(projection.value, self.instance_defaults.variable[0]):
+                    # if len(projection.value) != self.instance_defaults.variable.shape[-1]:
                         raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
                                          format(projection.name, projection.value, self.name, self.value))
 
@@ -2043,8 +2044,10 @@ class State_Base(State):
     @staticmethod
     def _get_state_function_value(owner, function, variable):
         """Execute the function of a State and return its value
+        # FIX: CONSIDER INTEGRATING THIS INTO _EXECUTE FOR STATE?
 
-        This is a stub, that a State subclass can override to treat execution of its function in a State-specific manner
+        This is a stub, that a State subclass can override to treat its function in a State-specific manner.
+        Used primarily during validation, when the function may not have been fully instantiated yet
         (e.g., InputState must sometimes embed its variable in a list-- see InputState._get_state_function_value).
         """
         return function.execute(variable)
@@ -2232,13 +2235,15 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
 
     # Parse reference value to get actual value (in case it is, itself, a specification dict)
-    reference_value_dict = _parse_state_spec(owner=owner,
-                                             state_type=state_type,
-                                             state_spec=reference_value,
-                                             value=None,
-                                             params=None)
-    # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
-    reference_value = reference_value_dict[VARIABLE]
+    from psyneulink.globals.utilities import is_numeric
+    if not is_numeric(reference_value):
+        reference_value_dict = _parse_state_spec(owner=owner,
+                                                 state_type=state_type,
+                                                 state_spec=reference_value,
+                                                 value=None,
+                                                 params=None)
+        # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
+        reference_value = reference_value_dict[VARIABLE]
 
     parsed_state_spec = _parse_state_spec(state_type=state_type,
                                           owner=owner,
@@ -2478,7 +2483,7 @@ def _parse_state_spec(state_type=None,
             state_specific_args = state_spec[STATE_SPEC_ARG].copy()
             standard_args.update({key: state_specific_args[key]
                                   for key in state_specific_args
-                                  if key in standard_args})
+                                  if key in standard_args and state_specific_args[key] is not None})
             # Delete them from the State specification dictionary, leaving only state-specific items there
             for key in standard_args:
                 state_specific_args.pop(key, None)
@@ -2507,8 +2512,9 @@ def _parse_state_spec(state_type=None,
     params = state_specific_args
 
     #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
-    if isinstance(reference_value, numbers.Number):
-        reference_value = convert_to_np_array(reference_value,1)
+    # if isinstance(reference_value, numbers.Number):
+    # FIX: 5/2/18 JDC - NOT NECESSARILY... OUTPUT_STATE FUNCTIONS CAN GENERATE ANYTHING
+    #     reference_value = convert_to_np_array(reference_value,1)
 
     # Validate that state_type is a State class
     if isinstance(state_type, str):
@@ -2693,7 +2699,8 @@ def _parse_state_spec(state_type=None,
 
         # Standard state specification dict
         # Warn if VARIABLE was not in dict
-        if VARIABLE not in state_dict and owner.prefs.verbosePref:
+        if ((VARIABLE not in state_dict or state_dict[VARIABLE] is None)
+                and hasattr(owner, 'prefs') and owner.prefs.verbosePref):
             print("{} missing from specification dict for {} of {};  "
                   "will be inferred from context or the default ({}) will be used".
                   format(VARIABLE, state_type, owner.name, state_dict))
@@ -2849,27 +2856,22 @@ def _parse_state_spec(state_type=None,
         spec_function = state_dict[PARAMS][FUNCTION]
         # if isinstance(spec_function, Function):
         if isinstance(spec_function, (Function, function_type, method_type)):
-            # # MODIFIED 2/21/18 OLD [KM]:
-            # spec_function_value = spec_function.execute(state_dict[VARIABLE])
-            # MODIFIED 2/21/18 NEW [JDC]:
             spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
-            # MODIFIED 2/21/18 END
         elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
             try:
                 spec_function = spec_function(**state_dict[PARAMS][FUNCTION_PARAMS])
             except (KeyError, TypeError):
                 spec_function = spec_function()
-            # # MODIFIED 2/21/18 OLD [KM]:
-            # spec_function_value = spec_function.execute(state_dict[VARIABLE])
-            # MODIFIED 2/21/18 NEW [JDC]:
             spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
-            # MODIFIED 2/21/18 END
         else:
             raise StateError('state_spec value for FUNCTION ({0}) must be a function, method, '
                              'Function class or instance of one'.
                              format(spec_function))
     except (KeyError, TypeError):
-        spec_function_value = state_dict[VARIABLE]
+        # MODIFIED NEW 5/2/18 FIX: NEEDS TO RETURN None from OutputState._get_state_function_value if owner has no value
+        spec_function_value = state_type._get_state_function_value(owner, None, state_dict[VARIABLE])
+        # MODIFIED 5/2/18 END
+
 
     # Assign value based on variable if not specified
     if state_dict[VALUE] is None:
@@ -2885,6 +2887,10 @@ def _parse_state_spec(state_type=None,
                     spec_function
                 )
             )
+
+    if state_dict[REFERENCE_VALUE] is not None and not iscompatible(state_dict[VALUE], state_dict[REFERENCE_VALUE]):
+        raise StateError("PROGRAM ERROR: State value ({}) does not match reference_value ({}) for {} of {})".
+                         format(state_dict[VALUE], state_dict[REFERENCE_VALUE], state_type.__name__, owner.name))
 
     return state_dict
 
@@ -3095,7 +3101,6 @@ def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
                 isinstance(state_spec[1], (Mechanism, State))
                            or (isinstance(state_spec[0], Mechanism) and
                                        state_spec[1] in state_spec[0]._parameter_states)):
-
         raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
                          "for a Mechanism, State, or Projection".
                          format(state_type_name, owner.__class__.__name__, state_spec[1]))

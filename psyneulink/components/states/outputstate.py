@@ -1166,22 +1166,26 @@ class OutputState(State_Base):
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
-        # -- CALL TO GET DEFAULT VALUE AND RETURN THAT (CAN'T USE VARIABLE SINCE DON'T KNOW MECH YET)
-        #      THOUGH COULD PASS IN OWNER TO DETERMINE IT
         fct_variable = _parse_output_state_variable(owner, variable)
 
         # If variable has not been specified, assume it is the default of (OWNER_VALUE,0), and use that value
         if fct_variable is None:
-            if owner.value is not None:
-                fct_variable = owner.value[0]
-            # Get owner's value by calling its function
-            else:
-                owner.function(owner.variable)[0]
+            try:
+                if owner.value is not None:
+                    fct_variable = owner.value[0]
+                # Get owner's value by calling its function
+                else:
+                    fct_variable = owner.function(owner.variable)[0]
+            except AttributeError:
+                fct_variable = None
 
         fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable is PARAMS_DICT)
 
         try:
-            return fct(variable=fct_variable)
+            # return fct(variable=fct_variable)
+            return State_Base._get_state_function_value(owner=owner, function=fct, variable=fct_variable)
+        # FIX: 5/2/18 JDC IS THIS NEEDED?  ISN'T IT HANDLED BY SUPER (SINCE IT CALLS WITHOUT NAME OF VARIABLE ARG)?
+        # IF fct IS NOT FOUND, PASS OutputState.ClassDefault.function
         except:
             try:
                 return fct(fct_variable)
@@ -1360,6 +1364,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                                                                output_state[VARIABLE])
                 else:
                     output_state_value = _parse_output_state_variable(owner, output_state[VARIABLE])
+                output_state[VALUE] = output_state_value
 
             output_states[i] = output_state
             reference_value.append(output_state_value)
