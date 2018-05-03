@@ -4349,7 +4349,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if isinstance(obj.receiver.instance_defaults.variable, numbers.Number):
                 cols = 1
             else:
-                cols = len(obj.receiver.instance_defaults.variable)
+                # cols = len(obj.receiver.instance_defaults.variable)
+                cols = obj.receiver.instance_defaults.variable.shape[-1]
         matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:

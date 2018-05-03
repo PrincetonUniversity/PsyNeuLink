@@ -2294,7 +2294,7 @@ class Mechanism_Base(Mechanism):
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
         for input_item, input_state in zip(input, self.input_states):
-            if len(input_state.instance_defaults.variable) == len(input_item):
+            if len(input_state.value) == len(input_item):
                 input_state.value = input_item
             else:
                 raise MechanismError(

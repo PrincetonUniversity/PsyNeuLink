@@ -1033,7 +1033,9 @@ class InputState(State_Base):
 
                         # Try to get matrix for projection
                         try:
-                            sender_dim = projection_spec.state.value.ndim
+                            # FIX: 5/2/18 - ??SHOULDN'T THIS BE  len(projection_spec.state.value)
+                            # sender_dim = projection_spec.state.value.ndim
+                            sender_dim = len(projection_spec.state.value)
                         except AttributeError:
                             if projection_spec.state.context.initialization_status == ContextFlags.DEFERRED_INIT:
                                 continue

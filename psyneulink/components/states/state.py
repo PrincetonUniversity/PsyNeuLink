@@ -1496,7 +1496,8 @@ class State_Base(State):
                 # PathwayProjection:
                 #    - check that projection's value is compatible with the State's variable
                 if isinstance(projection, PathwayProjection_Base):
-                    if not iscompatible(projection.value, self.instance_defaults.variable):
+                    if not iscompatible(projection.value, self.instance_defaults.variable[0]):
+                    # if len(projection.value) != self.instance_defaults.variable.shape[-1]:
                         raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
                                          format(projection.name, projection.value, self.name, self.value))
 
