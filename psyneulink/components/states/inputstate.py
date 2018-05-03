@@ -1030,11 +1030,7 @@ class InputState(State_Base):
                         try:
                             # FIX: 5/2/18 - ??SHOULDN'T THIS BE  len(projection_spec.state.value)
                             sender_dim = projection_spec.state.value.ndim
-                            # sender_dim = len(projection_spec.state.value)
                         except AttributeError as e:
-                            # if ('value' in e.args[0] and
-                            #         (isinstance(projection_spec.state, type) or
-                            #          projection_spec.state.context.initialization_status==ContextFlags.DEFERRED_INIT)):
                             if (isinstance(projection_spec.state, type) or
                                      projection_spec.state.context.initialization_status==ContextFlags.DEFERRED_INIT):
                                 continue
