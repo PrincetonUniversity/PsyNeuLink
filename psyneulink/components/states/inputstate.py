@@ -462,8 +462,7 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import Function, Linear, LinearCombination, Reduce
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.states.state import \
-    StateError, State_Base, _instantiate_state_list, state_type_keywords, SOCKET
+from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
     CLASS_DEFAULTS, COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, \
@@ -682,7 +681,6 @@ class InputState(State_Base):
                     LEARNING_SIGNAL,
                     GATING_SIGNAL]
     connectsWithAttribute = [OUTPUT_STATES]
-    # SOCKET = 'instance_defaults'
     projectionSocket = SENDER
     modulators = [GATING_SIGNAL]
 

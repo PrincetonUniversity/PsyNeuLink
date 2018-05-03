@@ -755,7 +755,7 @@ from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_to_np_array, get_args, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match
 
 __all__ = [
-    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry', 'SOCKET'
+    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry'
 ]
 
 state_keywords = component_keywords.copy()
@@ -779,13 +779,11 @@ STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAM
 STATE_SPEC = 'state_spec'
 REMOVE_STATES = 'REMOVE_STATES'
 
-SOCKET = 'socket'
 
 def _is_state_class(spec):
     if inspect.isclass(spec) and issubclass(spec, State):
         return True
     return False
-
 
 
 # Note:  This is created only for assignment of default projection types for each State subclass (see .__init__.py)
@@ -2040,10 +2038,6 @@ class State_Base(State):
     def all_afferents(self):
         return self.path_afferents + self.mod_afferents
 
-    # @property
-    # def socket(self):
-    #     return getattr(self, self.__class__.SOCKET)
-    #
     def _assign_default_state_name(self, context=None):
         return False
 
