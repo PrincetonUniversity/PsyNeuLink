@@ -1028,7 +1028,6 @@ class InputState(State_Base):
 
                         # Try to get matrix for projection
                         try:
-                            # FIX: 5/2/18 - ??SHOULDN'T THIS BE  len(projection_spec.state.value)
                             sender_dim = projection_spec.state.value.ndim
                         except AttributeError as e:
                             if (isinstance(projection_spec.state, type) or
