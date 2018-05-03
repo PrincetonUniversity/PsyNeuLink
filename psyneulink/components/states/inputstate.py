@@ -1031,9 +1031,12 @@ class InputState(State_Base):
                             # FIX: 5/2/18 - ??SHOULDN'T THIS BE  len(projection_spec.state.value)
                             sender_dim = projection_spec.state.value.ndim
                             # sender_dim = len(projection_spec.state.value)
-                        except AttributeError:
+                        except AttributeError as e:
+                            # if ('value' in e.args[0] and
+                            #         (isinstance(projection_spec.state, type) or
+                            #          projection_spec.state.context.initialization_status==ContextFlags.DEFERRED_INIT)):
                             if (isinstance(projection_spec.state, type) or
-                                    projection_spec.state.context.initialization_status == ContextFlags.DEFERRED_INIT):
+                                     projection_spec.state.context.initialization_status==ContextFlags.DEFERRED_INIT):
                                 continue
                             else:
                                 raise StateError("PROGRAM ERROR: indeterminate value for {} "
@@ -1051,8 +1054,8 @@ class InputState(State_Base):
                                 matrix = None
                         elif isinstance(projection, Projection):
                             if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
-                                # FIX: 5/2/18 - ??CORRECT:
-                                variable = None
+                                # # FIX: 5/2/18 - ??CORRECT:
+                                # variable = None
                                 continue
                             matrix = projection.matrix
                         else:

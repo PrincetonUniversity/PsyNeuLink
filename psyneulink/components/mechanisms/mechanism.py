@@ -1505,7 +1505,8 @@ class Mechanism_Base(Mechanism):
                     default_variable_from_input_states.append(InputState.ClassDefaults.variable)
                     continue
                 else:
-                    assert True
+                    raise MechanismError("PROGRAM ERROR: Problem parsing {} specification ({}) for {}".
+                                         format(InputState.__name__, s, self.name))
 
             mech_variable_item = None
 
