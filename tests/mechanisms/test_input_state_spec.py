@@ -210,7 +210,7 @@ class TestInputStateSpec:
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
         assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
-        assert len(T.input_state.instance_defaults.variable) == 2
+        assert len(T.input_state.instance_defaults.variable[0]) == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------

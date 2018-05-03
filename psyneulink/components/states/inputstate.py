@@ -468,7 +468,7 @@ from psyneulink.globals.keywords import \
     CLASS_DEFAULTS, COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, \
     INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, \
     OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
-    SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
+    SENDER, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible
@@ -1061,6 +1061,12 @@ class InputState(State_Base):
 
                         # Determine length of value of projection
                         if matrix is None:
+                            # If a reference_value has been specified, it presumably represents the item of the
+                            #    owner Mechanism's default_variable to which the InputState corresponds,
+                            #    so use that to constrain the InputState's variable
+                            if state_dict[REFERENCE_VALUE] is not None:
+                                variable.append(state_dict[REFERENCE_VALUE])
+                                continue
                             # If matrix has not been specified, no worries;
                             #    variable_item can be determined by value of sender
                             sender_shape = projection_spec.state.value.shape
@@ -1233,7 +1239,7 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          reference_value=reference_value if reference_value is not None
                                                                          else owner.instance_defaults.variable,
                                          # reference_value=reference_value,
-                                         reference_value_name=VARIABLE,
+                                         reference_value_name=VALUE,
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
