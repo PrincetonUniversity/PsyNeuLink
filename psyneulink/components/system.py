@@ -456,7 +456,7 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
-from psyneulink.scheduling.scheduler import Scheduler
+from psyneulink.scheduling.scheduler import Scheduler, Condition, Always
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
@@ -2433,6 +2433,14 @@ class System(System_Base):
                         raise SystemError("A parameter controlled by a ControlSignal of a controller "
                                           "being assigned to {} is not in that System".format(self.name))
 
+    def _parse_runtime_params(self, runtime_params):
+        if runtime_params is None:
+            return {}
+        for mechanism in runtime_params:
+            for param in runtime_params[mechanism]:
+                if not isinstance(runtime_params[mechanism][param], tuple):
+                    runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
+        return runtime_params
     def initialize(self):
         """Assign `initial_values <System.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
         contained in recurrent_init_mechanisms.
@@ -2499,6 +2507,8 @@ class System(System_Base):
 
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
+
+        runtime_params = self._parse_runtime_params(runtime_params)
 
         if not context:
             context = ContextFlags.COMPOSITION
@@ -2658,7 +2668,9 @@ class System(System_Base):
 
                 execution_runtime_params = {}
                 if mechanism in runtime_params:
-                    execution_runtime_params = runtime_params[mechanism]
+                    for param in runtime_params[mechanism]:
+                        if runtime_params[mechanism][param][1].is_satisfied():
+                            execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
                 mechanism.context.execution_phase = ContextFlags.PROCESSING
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
