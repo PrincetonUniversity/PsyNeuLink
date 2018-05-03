@@ -2293,12 +2293,7 @@ class Mechanism_Base(Mechanism):
                 raise SystemError("Number of inputs ({0}) to {1} does not match "
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
-        for i, input_state in enumerate(self.input_states):
-            # input_state = list(self.input_states.values())[i]
-            input_state = self.input_states[i]
-            # input_item = np.ndarray(input[i])
-            input_item = input[i]
-
+        for input_item, input_state in zip(input, self.input_states):
             if len(input_state.instance_defaults.variable) == len(input_item):
                 input_state.value = input_item
             else:
@@ -2306,7 +2301,7 @@ class Mechanism_Base(Mechanism):
                     "Length ({}) of input ({}) does not match "
                     "required length ({}) for input to {} of {}".format(
                         len(input_item),
-                        input[i],
+                        input_item,
                         len(input_state.instance_defaults.variable),
                         input_state.name,
                         self.name
