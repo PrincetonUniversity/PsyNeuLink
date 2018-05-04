@@ -319,6 +319,21 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only or
         s.run(inputs=input_list)
 ..
 
+.. _Run_Runtime_Parameters:
+
+Runtime_Parameters
+~~~~~~~~~~~~~~~~~~
+
+Runtime parameters are specified as a nested dictionary of (value, condition) tuples for parameters of mechanisms of the Composition. At the outer
+layer of the dictionary, keys are Mechanisms and values are runtime parameter specification dictionaries. Inside
+of those dictionaries, keys are keywords corresponding to Parameters of the Mechanism and values are tuples, the
+index 0 item of which is the runtime parameter value, and the index 1 item of which is a `Condition`. Runtime
+parameter values are subject to the same type, value, and shape requirements as the parameter in question. If a
+runtime parameter is meant to be used throughout the run, then the `Condition` may be omitted and the "Always"
+`Condition` will be assigned by default. See `RuntimeParameters` for examples of valid dictionaries.
+
+
+
 COMMENT:
 .. _Run_Initial_Values:
 
@@ -614,7 +629,7 @@ def run(object,
         phase of execution <System_Execution_Learning>`
 
     runtime_params : Dict[Mechanism: Dict[Param: Tuple(Value, Condition)]]
-        a nested dictionary of value + condition tuples for parameters of mechanisms of the Composition. At the outer
+        a nested dictionary of (value, condition) tuples for parameters of mechanisms of the Composition. At the outer
         layer of the dictionary, keys are Mechanisms and values are runtime parameter specification dictionaries. Inside
         of those dictionaries, keys are keywords corresponding to Parameters of the Mechanism and values are tuples, the
         index 0 item of which is the runtime parameter value, and the index 1 item of which is a `Condition`. Runtime
