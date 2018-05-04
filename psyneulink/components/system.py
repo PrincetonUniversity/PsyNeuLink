@@ -2438,9 +2438,20 @@ class System(System_Base):
             return {}
         for mechanism in runtime_params:
             for param in runtime_params[mechanism]:
-                if not isinstance(runtime_params[mechanism][param], tuple):
+                if isinstance(runtime_params[mechanism][param], tuple):
+                    if len(runtime_params[mechanism][param]) == 1:
+                        runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
+                    elif len(runtime_params[mechanism][param]) != 2:
+                        raise SystemError("Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
+                                          "Must be a tuple of the form (parameter value, condition), or simply the "
+                                          "parameter value. ".format(runtime_params[mechanism][param],
+                                                                     mechanism.name,
+                                                                     param,
+                                                                     self.name))
+                else:
                     runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
         return runtime_params
+    
     def initialize(self):
         """Assign `initial_values <System.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
         contained in recurrent_init_mechanisms.
