@@ -684,6 +684,7 @@ class InputState(State_Base):
     projectionSocket = SENDER
     modulators = [GATING_SIGNAL]
 
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
@@ -909,12 +910,17 @@ class InputState(State_Base):
             # TODO: stateful - this seems dangerous with statefulness,
             #       maybe safe when self.value is only passed or stateful
             variable = np.asarray(self._path_proj_values)
-            self._update_variable(variable[0])
+            # MODIFIED 5/4/18 OLD:
+            # self._update_variable(variable[0])
+            # MODIFIED 5/4/18 NEW:
+            self._update_variable(variable)
+            # MODIFIED 5/4/18 END
             combined_values = super()._execute(variable=variable,
                                                function_variable=variable,
                                                runtime_params=runtime_params,
                                                context=context
                                                )
+
             return combined_values
         # There were no Projections
         else:
@@ -1049,8 +1055,6 @@ class InputState(State_Base):
                                 matrix = None
                         elif isinstance(projection, Projection):
                             if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
-                                # # FIX: 5/2/18 - ??CORRECT:
-                                # variable = None
                                 continue
                             matrix = projection.matrix
                         else:
@@ -1185,6 +1189,14 @@ class InputState(State_Base):
     @pathway_projections.setter
     def pathway_projections(self, assignment):
         self.path_afferents = assignment
+
+    @property
+    def socket_width(self):
+        return self.instance_defaults.variable.shape[-1]
+
+    @property
+    def socket_template(self):
+        return np.zeros(self.socket_width)
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
