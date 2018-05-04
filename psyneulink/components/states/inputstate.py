@@ -1050,8 +1050,6 @@ class InputState(State_Base):
                                 matrix = None
                         elif isinstance(projection, Projection):
                             if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
-                                # # FIX: 5/2/18 - ??CORRECT:
-                                # variable = None
                                 continue
                             matrix = projection.matrix
                         else:

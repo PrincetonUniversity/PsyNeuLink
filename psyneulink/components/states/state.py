@@ -2511,11 +2511,6 @@ def _parse_state_spec(state_type=None,
     variable = state_dict[VARIABLE]
     params = state_specific_args
 
-    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
-    # if isinstance(reference_value, numbers.Number):
-    # FIX: 5/2/18 JDC - NOT NECESSARILY... OUTPUT_STATE FUNCTIONS CAN GENERATE ANYTHING
-    #     reference_value = convert_to_np_array(reference_value,1)
-
     # Validate that state_type is a State class
     if isinstance(state_type, str):
         try:
@@ -2868,9 +2863,7 @@ def _parse_state_spec(state_type=None,
                              'Function class or instance of one'.
                              format(spec_function))
     except (KeyError, TypeError):
-        # MODIFIED NEW 5/2/18 FIX: NEEDS TO RETURN None from OutputState._get_state_function_value if owner has no value
         spec_function_value = state_type._get_state_function_value(owner, None, state_dict[VARIABLE])
-        # MODIFIED 5/2/18 END
 
 
     # Assign value based on variable if not specified
