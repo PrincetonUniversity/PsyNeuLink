@@ -1889,7 +1889,7 @@ class State_Base(State):
         gating_projection_params = merge_param_dicts(self.stateParams, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
-        self._path_proj_values = []
+        # self._path_proj_values = []
         for value in self._mod_proj_values:
             self._mod_proj_values[value] = []
 
@@ -1919,6 +1919,9 @@ class State_Base(State):
         modulatory_override = False
 
         # Get values of all Projections
+        # MODIFIED 5/4/18 NEW:
+        variable = []
+        # MODIFIED 5/4/18 END
         for projection in self.all_afferents:
 
             # Only update if sender has also executed in this round
@@ -1974,7 +1977,11 @@ class State_Base(State):
 
             if isinstance(projection, PathwayProjection_Base):
                 # Add projection_value to list of PathwayProjection values (for aggregation below)
-                self._path_proj_values.append(projection_value)
+                # # MODIFIED 5/4/18 OLD:
+                # self._path_proj_values.append(projection_value)
+                # MODIFIED 5/4/18 NEW:
+                variable.append(projection_value)
+                # MODIFIED 5/4/18 END
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
@@ -2028,7 +2035,12 @@ class State_Base(State):
             function_params = self.stateParams[FUNCTION_PARAMS]
         except (KeyError, TypeError):
             function_params = None
-        self.value = self.execute(runtime_params=function_params, context=context)
+
+        # # MODIFIED 5/4/18 OLD:
+        # self.value = self.execute(runtime_params=function_params, context=context)
+        # MODIFIED 5/4/18 NEW:
+        self.value = self._execute(variable=variable, runtime_params=function_params, context=context)
+        # MODIFIED 5/4/18 END
 
     @property
     def owner(self):

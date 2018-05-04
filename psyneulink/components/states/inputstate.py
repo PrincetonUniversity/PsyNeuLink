@@ -916,6 +916,7 @@ class InputState(State_Base):
                                                runtime_params=runtime_params,
                                                context=context
                                                )
+
             return combined_values
         # There were no Projections
         else:
