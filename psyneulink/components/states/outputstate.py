@@ -1184,8 +1184,6 @@ class OutputState(State_Base):
         try:
             # return fct(variable=fct_variable)
             return State_Base._get_state_function_value(owner=owner, function=fct, variable=fct_variable)
-        # FIX: 5/2/18 JDC IS THIS NEEDED?  ISN'T IT HANDLED BY SUPER (SINCE IT CALLS WITHOUT NAME OF VARIABLE ARG)?
-        # IF fct IS NOT FOUND, PASS OutputState.ClassDefault.function
         except:
             try:
                 return fct(fct_variable)
@@ -1196,7 +1194,6 @@ class OutputState(State_Base):
     @property
     def variable(self):
         return _parse_output_state_variable(self.owner, self._variable)
-
 
     @variable.setter
     def variable(self, variable):
@@ -1213,6 +1210,9 @@ class OutputState(State_Base):
             self._variable = value
             return self.variable
 
+    @property
+    def socket_width(self):
+        return self.value.shape[-1]
 
     @property
     def owner_value_index(self):

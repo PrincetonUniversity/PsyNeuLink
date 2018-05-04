@@ -738,7 +738,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, ComponentError, component_keywords, function_type, method_type
-from psyneulink.components.functions.function import Function, Linear, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
+from psyneulink.components.functions.function import CombinationFunction, Function, Linear, LinearCombination, \
+    ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, \
@@ -755,7 +756,7 @@ from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_to_np_array, get_args, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match
 
 __all__ = [
-    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry',
+    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry'
 ]
 
 state_keywords = component_keywords.copy()
@@ -779,11 +780,11 @@ STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAM
 STATE_SPEC = 'state_spec'
 REMOVE_STATES = 'REMOVE_STATES'
 
+
 def _is_state_class(spec):
     if inspect.isclass(spec) and issubclass(spec, State):
         return True
     return False
-
 
 
 # Note:  This is created only for assignment of default projection types for each State subclass (see .__init__.py)
@@ -1522,9 +1523,20 @@ class State_Base(State):
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
             if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
-                self.path_afferents.append(projection)
+                projs = self.path_afferents
+                variable = self.instance_defaults.variable
+                projs.append(projection)
+                # if len(projs)>1:
+                if len(projs)>1 and isinstance(self.function_object, CombinationFunction):
+                    if variable.ndim == 1:
+                        variable = np.atleast_2d(variable)
+                    self.instance_defaults.variable = np.append(variable, np.atleast_2d(projection.value), axis=0)
+                    # self.instance_defaults.variable = np.append(variable, projection.value, axis=0)
+                    self._update_variable(self.instance_defaults.variable)
+
             elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                 self.mod_afferents.append(projection)
+
 
 
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):
@@ -1777,7 +1789,7 @@ class State_Base(State):
                     # PathwayProjection:
                     #    - check that projection's value is compatible with the receiver's variable
                     if isinstance(projection, PathwayProjection_Base):
-                        if not iscompatible(projection.value, receiver.instance_defaults.variable):
+                        if not iscompatible(projection.value, receiver.socket_template):
                             raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
                                              "the State to which it is supposed to project ({}).".
                                              format(projection.name, projection.value,
@@ -1877,7 +1889,9 @@ class State_Base(State):
         gating_projection_params = merge_param_dicts(self.stateParams, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
+        # MODIFIED 5/4/18 OLD:
         self._path_proj_values = []
+        # MODIFIED 5/4/18 END
         for value in self._mod_proj_values:
             self._mod_proj_values[value] = []
 
@@ -1907,6 +1921,9 @@ class State_Base(State):
         modulatory_override = False
 
         # Get values of all Projections
+        # MODIFIED 5/4/18 NEW:
+        variable = []
+        # MODIFIED 5/4/18 END
         for projection in self.all_afferents:
 
             # Only update if sender has also executed in this round
@@ -1962,7 +1979,11 @@ class State_Base(State):
 
             if isinstance(projection, PathwayProjection_Base):
                 # Add projection_value to list of PathwayProjection values (for aggregation below)
+                # MODIFIED 5/4/18 OLD:
                 self._path_proj_values.append(projection_value)
+                # MODIFIED 5/4/18 NEW:
+                variable.append(projection_value)
+                # MODIFIED 5/4/18 END
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
@@ -2016,7 +2037,12 @@ class State_Base(State):
             function_params = self.stateParams[FUNCTION_PARAMS]
         except (KeyError, TypeError):
             function_params = None
+
+        # # MODIFIED 5/4/18 OLD:
         self.value = self.execute(runtime_params=function_params, context=context)
+        # # MODIFIED 5/4/18 NEW:
+        # self.value = self._execute(function_variable=variable, runtime_params=function_params, context=context)
+        # MODIFIED 5/4/18 END
 
     @property
     def owner(self):
@@ -2511,11 +2537,6 @@ def _parse_state_spec(state_type=None,
     variable = state_dict[VARIABLE]
     params = state_specific_args
 
-    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
-    # if isinstance(reference_value, numbers.Number):
-    # FIX: 5/2/18 JDC - NOT NECESSARILY... OUTPUT_STATE FUNCTIONS CAN GENERATE ANYTHING
-    #     reference_value = convert_to_np_array(reference_value,1)
-
     # Validate that state_type is a State class
     if isinstance(state_type, str):
         try:
@@ -2868,9 +2889,7 @@ def _parse_state_spec(state_type=None,
                              'Function class or instance of one'.
                              format(spec_function))
     except (KeyError, TypeError):
-        # MODIFIED NEW 5/2/18 FIX: NEEDS TO RETURN None from OutputState._get_state_function_value if owner has no value
         spec_function_value = state_type._get_state_function_value(owner, None, state_dict[VARIABLE])
-        # MODIFIED 5/2/18 END
 
 
     # Assign value based on variable if not specified

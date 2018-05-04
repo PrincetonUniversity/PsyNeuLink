@@ -223,8 +223,7 @@ class TestInputStateSpec:
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
         assert len(T.input_state.path_afferents[0].sender.instance_defaults.variable) == 3
-        # assert len(T.input_state.instance_defaults.variable[]) == 2
-        assert T.input_state.instance_defaults.variable.shape[-1] == 2
+        assert T.input_state.socket_width == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -236,8 +235,8 @@ class TestInputStateSpec:
         T = TransferMechanism(input_states=[([0,0], R2)])
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
-        assert T.input_state.path_afferents[0].sender.instance_defaults.variable.shape[-1] == 3
-        assert T.input_state.instance_defaults.variable.shape[-1] == 2
+        assert T.input_state.path_afferents[0].sender.socket_width == 3
+        assert T.input_state.socket_width == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -250,7 +249,7 @@ class TestInputStateSpec:
         np.testing.assert_array_equal(T.instance_defaults.variable, np.array([[0, 0]]))
         assert len(T.input_states) == 1
         assert T.input_state.path_afferents[0].sender.instance_defaults.variable.shape[-1] == 3
-        assert T.input_state.instance_defaults.variable.shape[-1] == 2
+        assert T.input_state.socket_width == 2
         T.execute()
 
     # ------------------------------------------------------------------------------------------------
@@ -760,5 +759,5 @@ class TestInputStateSpec:
             size=size,
             input_states=input_states
         )
-        assert T.input_states[0].instance_defaults.variable.shape[-1] == variable_len_state
+        assert T.input_states[0].socket_width == variable_len_state
         assert T.instance_defaults.variable.shape[-1] == variable_len_mech

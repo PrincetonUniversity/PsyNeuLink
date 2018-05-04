@@ -30,6 +30,7 @@ class TestMatrixSpec:
             results.append(recurrent_mech.value)
         s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
               call_after_trial=record_trial)
+        assert True
 
     def test_recurrent_mech_auto_associative_projection(self):
 
