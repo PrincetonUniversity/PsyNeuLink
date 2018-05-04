@@ -2067,7 +2067,7 @@ class Process(Process_Base):
 
         self.input = self._assign_input_values(input=input, context=context)
 
-        self._check_args(self.input,runtime_params)
+        self._check_args(self.input, runtime_params)
 
         # Use Process self.input as input to first Mechanism in Pathway
         variable = self._update_variable(self.input)

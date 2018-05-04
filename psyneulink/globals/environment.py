@@ -538,7 +538,11 @@ def run(object,
     call_before_trial=None,      \
     call_after_trial=None,       \
     call_before_time_step=None,  \
-    call_after_time_step=None,   \)
+    call_after_time_step=None,   \
+    termination_processing=None, \
+    termination_learning=None,   \
+    runtime_params=None,         \
+    )
 
     Run a sequence of executions for a `Process` or `System`.
 
@@ -608,6 +612,16 @@ def run(object,
     termination_learning : Dict[TimeScale: Condition]
         a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
         phase of execution <System_Execution_Learning>`
+
+    runtime_params : Dict[Mechanism: Dict[Param: Tuple(Value, Condition)]]
+        a nested dictionary of value + condition tuples for parameters of mechanisms of the Composition. At the outer
+        layer of the dictionary, keys are Mechanisms and values are runtime parameter specification dictionaries. Inside
+        of those dictionaries, keys are keywords corresponding to Parameters of the Mechanism and values are tuples, the
+        index 0 item of which is the runtime parameter value, and the index 1 item of which is a `Condition`. Runtime
+        parameter values are subject to the same type, value, and shape requirements as the parameter in question. If a
+        runtime parameter is meant to be used throughout the run, then the `Condition` may be omitted and the "Always"
+        `Condition` will be assigned by default. See `RuntimeParameters` for examples of valid dictionaries.
+
 
    Returns
    -------
