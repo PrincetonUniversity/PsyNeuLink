@@ -1684,9 +1684,7 @@ class Process(Process_Base):
         if num_process_inputs == num_mechanism_input_states:
             for i in range(num_mechanism_input_states):
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
-                # MODIFIED 4/3/17 NEW:
-                input_state_variable = mechanism.input_states[i].instance_defaults.variable
-                # MODIFIED 4/3/17 END
+                input_state_variable = mechanism.input_states[i].socket_template
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                        "variable for corresponding inputState of {3}".

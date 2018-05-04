@@ -738,7 +738,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, ComponentError, component_keywords, function_type, method_type
-from psyneulink.components.functions.function import Function, Linear, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
+from psyneulink.components.functions.function import CombinationFunction, Function, Linear, LinearCombination, \
+    ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, \
@@ -1525,7 +1526,8 @@ class State_Base(State):
                 projs = self.path_afferents
                 variable = self.instance_defaults.variable
                 projs.append(projection)
-                if len(projs)>1:
+                # if len(projs)>1:
+                if len(projs)>1 and isinstance(self.function_object, CombinationFunction):
                     if variable.ndim == 1:
                         variable = np.atleast_2d(variable)
                     self.instance_defaults.variable = np.append(variable, np.atleast_2d(projection.value), axis=0)
@@ -1787,7 +1789,7 @@ class State_Base(State):
                     # PathwayProjection:
                     #    - check that projection's value is compatible with the receiver's variable
                     if isinstance(projection, PathwayProjection_Base):
-                        if not iscompatible(projection.value, receiver.instance_defaults.variable):
+                        if not iscompatible(projection.value, receiver.socket_template):
                             raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
                                              "the State to which it is supposed to project ({}).".
                                              format(projection.name, projection.value,

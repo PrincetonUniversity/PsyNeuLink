@@ -1189,6 +1189,10 @@ class InputState(State_Base):
     def socket_width(self):
         return self.instance_defaults.variable.shape[-1]
 
+    @property
+    def socket_template(self):
+        return np.zeros(self.socket_width)
+
     @staticmethod
     def _get_state_function_value(owner, function, variable):
         """Put InputState's variable in a list if its function is LinearCombination and variable is >=2d
