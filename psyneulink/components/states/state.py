@@ -1522,9 +1522,18 @@ class State_Base(State):
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
             if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
-                self.path_afferents.append(projection)
+                projs = self.path_afferents
+                variable = self.instance_defaults.variable
+                projs.append(projection)
+                if len(projs)>1:
+                    if variable.ndim==1:
+                        variable = np.atleast_2d(variable)
+                    self.instance_defaults.variable = np.append(variable, np.atleast_2d(projection.value), axis=0)
+                    self._update_value(context=context)
+
             elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                 self.mod_afferents.append(projection)
+
 
 
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):
