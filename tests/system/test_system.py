@@ -10,7 +10,7 @@ from psyneulink.globals.keywords import ALLOCATION_SAMPLES
 from psyneulink.globals.keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
 from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
-
+from psyneulink.scheduling.condition import Any, AtTrial, AfterTrial
 
 def test_danglingControlledMech():
     #
@@ -768,7 +768,7 @@ class TestRuntimeParams:
         assert T.function_object.slope == 2.0
         assert T.value == 4.0
 
-    def test_system_run_function_param(self):
+    def test_system_run_function_param_no_condition(self):
 
         # Construction
         T = TransferMechanism()
@@ -790,7 +790,7 @@ class TestRuntimeParams:
         assert T.parameter_states['slope'].value == 1.0
         assert T.value == 2.0
 
-    def test_system_run_mechanism_param(self):
+    def test_system_run_mechanism_param_no_condition(self):
 
         # Construction
         T = TransferMechanism()
@@ -812,4 +812,72 @@ class TestRuntimeParams:
         assert T.parameter_states['noise'].value == 0.0
         assert T.value == 2.0
 
+    def test_system_run_with_condition(self):
+
+        # Construction
+        T = TransferMechanism()
+        P = Process(pathway=[T])
+        S = System(processes=[P])
+
+        # Runtime param used for noise
+        # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
+        S.run(inputs={T: 2.0},
+              runtime_params={T: {"noise": (10.0, AtTrial(1))}},
+              num_trials=4)
+
+        # Runtime param NOT used for noise
+        S.run(inputs={T: 2.0})
+
+        assert np.allclose(S.results, [[np.array([2.])],     # Trial 0 - condition not satisfied yet
+                                       [np.array([12.])],    # Trial 1 - condition satisfied
+                                       [np.array([2.])],     # Trial 2 - condition no longer satisfied (not sticky)
+                                       [np.array([2.])],     # Trial 3 - condition no longer satisfied (not sticky)
+                                       [np.array([2.])]])    # New run (runtime param no longer applies)
+
+    def test_system_run_with_sticky_condition(self):
+
+        # Construction
+        T = TransferMechanism()
+        P = Process(pathway=[T])
+        S = System(processes=[P])
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+
+        # Runtime param used for noise
+        # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
+        S.run(inputs={T: 2.0},
+              runtime_params={T: {"noise": (10.0, AfterTrial(1))}},
+              num_trials=4)
+
+        # Runtime param NOT used for noise
+        S.run(inputs={T: 2.0})
+
+        assert np.allclose(S.results, [[np.array([2.])],      # Trial 0 - condition not satisfied yet
+                                       [np.array([2.])],      # Trial 1 - condition not satisfied yet
+                                       [np.array([12.])],     # Trial 2 - condition satisfied
+                                       [np.array([12.])],     # Trial 3 - condition satisfied (sticky)
+                                       [np.array([2.])]])     # New run (runtime param no longer applies)
+
+    def test_system_run_with_combined_condition(self):
+
+        # Construction
+        T = TransferMechanism()
+        P = Process(pathway=[T])
+        S = System(processes=[P])
+
+        # Runtime param used for noise
+        # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
+        S.run(inputs={T: 2.0},
+              runtime_params={T: {"noise": (10.0, Any(AtTrial(1), AfterTrial(2)))}},
+              num_trials=5)
+
+        # Runtime param NOT used for noise
+        S.run(inputs={T: 2.0})
+
+        assert np.allclose(S.results, [[np.array([2.])],      # Trial 0 - NOT condition 0, NOT condition 1
+                                       [np.array([12.])],     # Trial 1 - condition 0, NOT condition 1
+                                       [np.array([2.])],      # Trial 2 - NOT condition 0, NOT condition 1
+                                       [np.array([12.])],     # Trial 3 - NOT condition 0, condition 1
+                                       [np.array([12.])],     # Trial 4 - NOT condition 0, condition 1
+                                       [np.array([2.])]])     # New run (runtime param no longer applies)
 
