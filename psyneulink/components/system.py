@@ -3242,7 +3242,6 @@ class System(System_Base):
         # For Mechanisms, show length of each InputState and OutputState
         if isinstance(item, Mechanism):
             if show_dimensions in {ALL, MECHANISMS}:
-                # input_str = "in ({})".format(",".join(str(len(input_state.variable))
                 input_str = "in ({})".format(",".join(str(input_state.socket_width)
                                                       for input_state in item.input_states))
                 output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
