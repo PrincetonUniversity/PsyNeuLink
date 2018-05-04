@@ -1693,9 +1693,8 @@ class Component(object):
 
         # If params have been passed, treat as runtime params and assign to paramsCurrent
         #   (relabel params as runtime_params for clarity)
-        if not self.runtimeParamStickyAssignmentPref:
-            for key in self._runtime_params_reset:
-                self._set_parameter_value(key, self._runtime_params_reset[key])
+        for key in self._runtime_params_reset:
+            self._set_parameter_value(key, self._runtime_params_reset[key])
         self._runtime_params_reset = {}
 
         runtime_params = params
@@ -2911,14 +2910,6 @@ class Component(object):
     @runtimeParamModulationPref.setter
     def runtimeParamModulationPref(self, setting):
         self.prefs.runtimeParamModulationPref = setting
-
-    @property
-    def runtimeParamStickyAssignmentPref(self):
-        return self.prefs.runtimeParamStickyAssignmentPref
-
-    @runtimeParamStickyAssignmentPref.setter
-    def runtimeParamStickyAssignmentPref(self, setting):
-        self.prefs.runtimeParamStickyAssignmentPref = setting
 
     @property
     def context(self):

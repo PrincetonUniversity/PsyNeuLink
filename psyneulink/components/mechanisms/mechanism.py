@@ -783,8 +783,7 @@ dictionary <ParameterState_Specification>` assigned to the **runtime_param** arg
 <Mechanism_Base.execute>` method, or in a `tuple with the Mechanism <Process_Mechanism_Specification>` in the `pathway`
 of a `Process`.  Any value assigned to a parameter in a **runtime_params** dictionary will override the current value of
 that parameter for the (and *only* the) current execution of the Mechanism; the value will return to its previous value
-following that execution, unless the `runtimeParamStickyAssignmentPref` is set for the component to which the parameter
-belongs.
+following that execution.
 
 The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of which
 is for a parameter of the Mechanism or its  `function <Mechanism_Base.function>`, or for one of the `Mechanism's States
@@ -2071,9 +2070,7 @@ class Mechanism_Base(Mechanism):
             a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism,
             its function, or `Projection(s) to any of its States <State_Projections>`.  Any value assigned to a
             parameter will override the current value of that parameter for the (and only the current) execution of
-            the Mechanism, and will return to its previous value following execution (unless the
-            `runtimeParamStickyAssignmentPref` is set for the Component to which the parameter belongs).  See
-            `runtime_params <Mechanism_Runtime_Parameters>` above for details concerning specification.
+            the Mechanism.
 
         Returns
         -------
