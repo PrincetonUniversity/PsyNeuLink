@@ -1549,13 +1549,15 @@ class System(System_Base):
             # that the length of the corresponding item of self.instance_defaults.variable matches the length of the
             #  ORIGIN inputState's instance_defaults.variable attribute
             for j in range(len(origin_mech.input_states)):
-                if len(self.instance_defaults.variable[i][j]) != \
-                        len(origin_mech.input_states[j].instance_defaults.variable):
+                # if len(self.instance_defaults.variable[i][j]) != \
+                        # len(origin_mech.input_states[j].instance_defaults.variable):
+                if len(self.instance_defaults.variable[i][j]) != origin_mech.input_states[j].socket_width:
                     raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
                                       "corresponding ORIGIN Mechanism ()".
                                       format(i,
                                              len(self.instance_defaults.variable[i][j]),
-                                             len(origin_mech.input_states[j].instance_defaults.variable),
+                                             # len(origin_mech.input_states[j].instance_defaults.variable),
+                                             origin_mech.input_states[j].socket_width,
                                              origin_mech.name))
                 stimulus_input_state = SystemInputState(owner=self,
                                                         variable=origin_mech.input_states[j].instance_defaults.variable,

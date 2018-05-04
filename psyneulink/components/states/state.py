@@ -1526,10 +1526,11 @@ class State_Base(State):
                 variable = self.instance_defaults.variable
                 projs.append(projection)
                 if len(projs)>1:
-                    if variable.ndim==1:
+                    if variable.ndim == 1:
                         variable = np.atleast_2d(variable)
                     self.instance_defaults.variable = np.append(variable, np.atleast_2d(projection.value), axis=0)
-                    self._update_value(context=context)
+                    # self.instance_defaults.variable = np.append(variable, projection.value, axis=0)
+                    self._update_variable(self.instance_defaults.variable)
 
             elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                 self.mod_afferents.append(projection)
