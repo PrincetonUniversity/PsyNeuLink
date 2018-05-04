@@ -910,7 +910,11 @@ class InputState(State_Base):
             # TODO: stateful - this seems dangerous with statefulness,
             #       maybe safe when self.value is only passed or stateful
             variable = np.asarray(self._path_proj_values)
-            self._update_variable(variable[0])
+            # MODIFIED 5/4/18 OLD:
+            # self._update_variable(variable[0])
+            # MODIFIED 5/4/18 NEW:
+            self._update_variable(variable)
+            # MODIFIED 5/4/18 END
             combined_values = super()._execute(variable=variable,
                                                function_variable=variable,
                                                runtime_params=runtime_params,
