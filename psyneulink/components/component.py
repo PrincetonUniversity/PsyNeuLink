@@ -1647,7 +1647,8 @@ class Component(object):
         Does the following:
         - instantiate variable (if missing or callable)
         - validate variable if PARAM_VALIDATION is set
-        - assign runtime params to paramsCurrent
+        - resets leftover runtime params back to original values (only if execute method was called directly)
+        - sets runtime params
         - validate params if PARAM_VALIDATION is set
 
         :param variable: (anything but a dict) - variable to validate
@@ -1691,20 +1692,25 @@ class Component(object):
         #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
-        # If params have been passed, treat as runtime params and assign to paramsCurrent
-        #   (relabel params as runtime_params for clarity)
+        # reset any runtime params that were leftover from a direct call to .execute (atypical)
         for key in self._runtime_params_reset:
             self._set_parameter_value(key, self._runtime_params_reset[key])
         self._runtime_params_reset = {}
 
+        # If params have been passed, treat as runtime params
         runtime_params = params
-        if runtime_params:
+        if isinstance(runtime_params, dict):
             for param_name in runtime_params:
+                # (1) store current attribute value in _runtime_params_reset so that it can be reset later
+                # (2) assign runtime param values to attributes (which calls validation via properties)
+                # (3) update parameter states if needed
                 if hasattr(self, param_name):
                     if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
                         continue
                     self._runtime_params_reset[param_name] = getattr(self, param_name)
                     self._set_parameter_value(param_name, runtime_params[param_name])
+        elif runtime_params:    # not None
+            raise ComponentError("Invalid specification of runtime parameters for {}".format(self.name))
 
         return variable
 
