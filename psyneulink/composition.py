@@ -1185,7 +1185,7 @@ class Composition(object):
                 m_in = builder.alloca(m_function.args[2].type.pointee)
 
             # Run all incoming projections
-            for i, par in enumerate(self.graph.get_parents_from_component(mech)):
+            for par in self.graph.get_parents_from_component(mech):
                 assert not mech in self.input_mechanisms.keys()
                 # Get projection
                 par_proj = par.component
@@ -1201,13 +1201,17 @@ class Composition(object):
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_function = ctx.get_llvm_function(par_proj.llvmSymbolName)
 
-                # This should use proper input state index instead of 0
-                target_input_state = ctx.int32_ty(0)
-                proj_vo = builder.gep(m_in, [ctx.int32_ty(0), target_input_state, ctx.int32_ty(i)])
+                input_s = par_proj.receiver
+                assert input_s in input_s.owner.input_states
+                target_input_state = input_s.owner.input_states.index(input_s)
+                assert par_proj in input_s.pathway_projections
+                input_projection_idx = input_s.pathway_projections.index(par_proj)
+                proj_vo = builder.gep(m_in, [ctx.int32_ty(0), ctx.int32_ty(target_input_state), ctx.int32_ty(input_projection_idx)])
 
-                # This should use proper output state instead of 0
-                consume_output_state = ctx.int32_ty(0)
-                proj_vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(vi_idx), consume_output_state])
+                output_s = par_proj.sender
+                assert output_s in output_s.owner.output_states
+                consume_output_state = output_s.owner.output_states.index(output_s)
+                proj_vi = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(vi_idx), ctx.int32_ty(consume_output_state)])
 
                 builder.call(proj_function, [proj_params, proj_context, proj_vi, proj_vo])
 
