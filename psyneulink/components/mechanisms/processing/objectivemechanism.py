@@ -765,14 +765,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         if hasattr(self.function_object, WEIGHTS):
             if any(weight is not None for weight in weights):
-                # MODIFIED 5/6/18 OLD:
-                # self.function_object.weights = [weight or DEFAULT_WEIGHT for weight in weights]
-                # MODIFIED 5/6/18 NEW:
                 self.function_object.weights = [[weight or DEFAULT_WEIGHT] for weight in weights]
-                # MODIFIED 5/6/18 END
         if hasattr(self.function_object, EXPONENTS):
             if any(exponent is not None for exponent in exponents):
-                self.function_object.exponents = [exponent or DEFAULT_EXPONENT for exponent in exponents]
+                self.function_object.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
 
     @property
