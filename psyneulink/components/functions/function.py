@@ -17,7 +17,7 @@ Combination Functions:
   * `Reduce`
   * `LinearCombination`
   * `CombineMeans`
-  * `PredictionErrorDelta`
+  * `PredictionErrorDeltaFunction`
 
 TransferMechanism Functions:
   * `Linear`
@@ -1965,8 +1965,9 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        if self.weights is not None:
-            self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
+        # MODIFIED 5/6/18 OLD:
+        # if self.weights is not None:
+        #     self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
         if self.exponents is not None:
             self.exponents = np.atleast_2d(self.exponents).reshape(-1, 1)
 
@@ -2020,9 +2021,11 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
-            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
+            # MODIFIED 5/6/18 OLD:
+            # target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
-                if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
+                # if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
+                if np.array(target_set[WEIGHTS]).shape != self.instance_defaults.variable.shape:
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
 
