@@ -246,7 +246,7 @@ def test_DDM_noise_0_5():
 
     val = float(T.execute(stim)[0])
 
-    assert val == 9.308960184035778
+    assert val == 11.320562919094161
 
 # ------------------------------------------------------------------------------------------------
 # TEST 3
@@ -264,7 +264,7 @@ def test_DDM_noise_2_0():
         )
     )
     val = float(T.execute(stim)[0])
-    assert val == 8.617920368071555
+    assert val == 12.641125838188323
 
 # ------------------------------------------------------------------------------------------------
 
@@ -302,7 +302,7 @@ def test_DDM_noise_fn():
             name='DDM',
             function=DriftDiffusionIntegrator(
 
-                noise=NormalDist().function,
+                noise=NormalDist(),
                 rate=1.0,
                 time_step_size=1.0
             ),
@@ -405,7 +405,7 @@ def test_DDM_input_list_len_2():
 
 def test_DDM_input_fn():
     with pytest.raises(TypeError) as error_text:
-        stim = NormalDist().function
+        stim = NormalDist()
         T = DDM(
             name='DDM',
             function=DriftDiffusionIntegrator(

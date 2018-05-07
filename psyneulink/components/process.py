@@ -456,23 +456,21 @@ from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism_
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.components.projections.projection import Projection_Base
 from psyneulink.components.projections.projection import _add_projection_to, _is_projection_spec
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, System_Base
 from psyneulink.components.states.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state, _instantiate_state_list
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SEPARATOR_BAR, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SINGLETON, TARGET, TERMINAL, kwProcessComponentCategory, kwReceiverArg, kwSeparator
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.utilities import append_type_to_name, convert_to_np_array, iscompatible
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'DEFAULT_PHASE_SPEC', 'DEFAULT_PROJECTION_MATRIX', 'defaultInstanceCount', 'kwProcessInputState', 'kwTarget',
-    'Process', 'ProcessError', 'ProcessInputState', 'ProcessList', 'ProcessRegistry', 'ProcessTuple',
+    'Process', 'proc', 'ProcessError', 'ProcessInputState', 'ProcessList', 'ProcessRegistry', 'ProcessTuple',
 ]
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -505,21 +503,31 @@ from psyneulink.components.states.outputstate import OutputState
 #            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
 
 
+def proc(*args, **kwargs):
+    """Factory method
+
+    **args** can be `Mechanisms <Mechanism>` with our without `Projections <Projection>`, or a list of them,
+    that conform to the format for the `pathway <Process.pathway>` argument of a `Process`.
+
+    **kwargs** can be any arguments of the `Process` constructor.
+    """
+    return Process(pathway=list(args), **kwargs)
+
+
 class Process(Process_Base):
     """
-    Process(process_spec=None,                         \
+    Process(process_spec=None,                           \
     default_variable=None,                               \
-    pathway=None,                                           \
-    initial_values={},                                      \
-    clamp_input:=None,                                      \
-    default_projection_matrix=DEFAULT_PROJECTION_MATRIX,    \
-    learning=None,                                          \
-    learning_rate=None                                      \
-    target=None,                                            \
-    params=None,                                            \
-    name=None,                                              \
-    prefs=None,                                             \
-    context=None)
+    pathway=None,                                        \
+    initial_values={},                                   \
+    clamp_input:=None,                                   \
+    default_projection_matrix=DEFAULT_PROJECTION_MATRIX, \
+    learning=None,                                       \
+    learning_rate=None                                   \
+    target=None,                                         \
+    params=None,                                         \
+    name=None,                                           \
+    prefs=None
 
     Base class for Process.
 
@@ -821,13 +829,11 @@ class Process(Process_Base):
         '_isControllerProcess': False
     })
 
-    default_pathway = []
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 pathway=default_pathway,
+                 pathway=None,
                  initial_values=None,
                  clamp_input=None,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
@@ -839,6 +845,8 @@ class Process(Process_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
+        pathway = pathway or []
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(pathway=pathway,
                                                   initial_values=initial_values,
@@ -848,7 +856,6 @@ class Process(Process_Base):
                                                   learning_rate=learning_rate,
                                                   target=target,
                                                   params=params)
-        self.function = self.execute
 
         register_category(entry=self,
                           base_class=Process,
@@ -856,9 +863,7 @@ class Process(Process_Base):
                           registry=ProcessRegistry,
                           context=context)
 
-        if not context: # cxt-test
-            # context = self.__class__.__name__
-            context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT # cxt-done
+        if not context:
             self.context.initialization_status = ContextFlags.INITIALIZING
             self.context.string = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
@@ -869,8 +874,7 @@ class Process(Process_Base):
                                       size=size,
                                       param_defaults=params,
                                       name=self.name,
-                                      prefs=prefs,
-                                      context=context)
+                                      prefs=prefs)
 
     def _parse_arg_variable(self, variable):
         if variable is None:
@@ -895,19 +899,19 @@ class Process(Process_Base):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Call methods that must be run before function method is instantiated
 
         Need to do this before _instantiate_function as mechanisms in pathway must be instantiated
             in order to assign input Projection and self.outputState to first and last mechanisms, respectively
 
+        :param function:
         :param context:
         :return:
         """
         self._instantiate_pathway(context=context)
-        # super(Process, self)._instantiate_function(context=context)
 
-    def _instantiate_function(self, context=None):
+    def _instantiate_function(self, function, function_params=None, context=None):
         """Override Function._instantiate_function:
 
         This is necessary to:
@@ -921,12 +925,6 @@ class Process(Process_Base):
             print("Process object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
                 format(self.name, self.paramsCurrent[FUNCTION], FUNCTION)
             self.paramsCurrent[FUNCTION] = self.execute
-        # If validation pref is set, instantiate and execute the Process
-        if self.prefs.paramValidationPref:
-            super(Process, self)._instantiate_function(context=context)
-        # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
-        else:
-            self.value = self.pathway[-1].output_state.value
 
 # DOCUMENTATION:
 
@@ -1027,6 +1025,20 @@ class Process(Process_Base):
         self._all_mechanisms = MechanismList(self, self._mechs)
         self.learning_mechanisms = MechanismList(self, self._learning_mechs)
         self.target_mechanisms = MechanismList(self, self._target_mechs)
+
+    def _instantiate_value(self, context=None):
+        # If validation pref is set, execute the Process
+        if self.prefs.paramValidationPref:
+            super()._instantiate_value(context=context)
+        # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
+        else:
+            value = self.pathway[-1].output_state.value
+            try:
+                # Could be mutable, so assign copy
+                self.instance_defaults.value = value.copy()
+            except AttributeError:
+                # Immutable, so just assign value
+                self.instance_defaults.value = value
 
     def _standardize_config_entries(self, pathway, context=None):
 
@@ -1682,9 +1694,7 @@ class Process(Process_Base):
         if num_process_inputs == num_mechanism_input_states:
             for i in range(num_mechanism_input_states):
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
-                # MODIFIED 4/3/17 NEW:
-                input_state_variable = mechanism.input_states[i].instance_defaults.variable
-                # MODIFIED 4/3/17 END
+                input_state_variable = mechanism.input_states[i].socket_template
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                        "variable for corresponding inputState of {3}".
@@ -1692,8 +1702,7 @@ class Process(Process_Base):
                 # Create MappingProjection from Process input state to corresponding mechanism.input_state
                 MappingProjection(sender=self.process_input_states[i],
                                   receiver=mechanism.input_states[i],
-                                  name=self.name+'_Input Projection',
-                                  context=context)
+                                  name=self.name+'_Input Projection')
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
                           format(i, process_input[i], self.name, mechanism.name))
@@ -1738,8 +1747,8 @@ class Process(Process_Base):
         # Validate input
         if input is None:
             input = self.first_mechanism.instance_defaults.variable
-            if (self.prefs.verbosePref and
-                    not (not context or COMPONENT_INIT in context)): # cxt-test
+            if (self.prefs.verbosePref and not (context == ContextFlags.COMMAND_LINE or
+                                                self.context.initializaton_status == ContextFlags.INITIALIZING)):
                 print("- No input provided;  default will be used: {0}")
 
         else:
@@ -1868,7 +1877,7 @@ class Process(Process_Base):
                     # Initialize each Projection to the ParameterState (learning or control)
                     # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
                     for param_projection in parameter_state.mod_afferents:
-                        param_projection._deferred_init(context=context)
+                        param_projection._deferred_init()
                         if isinstance(param_projection, LearningProjection):
                             # Get ObjectiveMechanism if there is one, and add to _learning_mechs
                             try:
@@ -2117,9 +2126,10 @@ class Process(Process_Base):
         """
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
 
-        if not context: # cxt-test
-            context = EXECUTING + " " + PROCESS + " " + self.name # cxt-done
+        if not context:
+            context = ContextFlags.COMPOSITION
             self.context.execution_phase = ContextFlags.PROCESSING
+            self.context.source = context
             self.context.string = EXECUTING + " " + PROCESS + " " + self.name
         from psyneulink.globals.environment import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
@@ -2127,7 +2137,7 @@ class Process(Process_Base):
             mech._execution_id = self._execution_id
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and context and (c in context for c in {EXECUTING, LEARNING}) # cxt-test
+        report_output = self.prefs.reportOutputPref and self.context.initialization_status == ContextFlags.INITIALIZED
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
@@ -2152,7 +2162,7 @@ class Process(Process_Base):
             # Execute Mechanism
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.context.execution_phase = ContextFlags.PROCESSING
-            mechanism.execute(context=context) # cxt-pass ? cxt-push
+            mechanism.execute(context=context)
             mechanism.context.execution_phase = ContextFlags.IDLE
 
             if report_output:
@@ -2216,8 +2226,11 @@ class Process(Process_Base):
                     target_input_state.value *= 0
 
         # THEN, execute ComparatorMechanism and LearningMechanism
+
         for mechanism in self._learning_mechs:
+            mechanism.context.execution_phase = ContextFlags.LEARNING
             mechanism.execute(context=context)
+            mechanism.context.execution_phase = ContextFlags.IDLE
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for mech in self._mechs:
@@ -2242,6 +2255,14 @@ class Process(Process_Base):
                     if isinstance(sender, Process) or not self in (sender.processes):
                         continue
 
+                    # Call parameter_state.update with LEARNING in context to update LearningSignals
+                    # Note: context is set on the projection,
+                    #    as the ParameterStates are assigned their owner's context in their update methods
+                    # Note: do this rather just calling LearningSignals directly
+                    #       since parameter_state.update() handles parsing of LearningProjection-specific params
+                    projection.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
+                    projection.context.execution_phase = ContextFlags.LEARNING
+
                     # For each parameter_state of the Projection
                     try:
                         for parameter_state in projection._parameter_states:
@@ -2251,19 +2272,9 @@ class Process(Process_Base):
                                    for projection in parameter_state.mod_afferents):
                                 continue
 
-                            # Call parameter_state.update with LEARNING in context to update LearningSignals
-                            # Note: do this rather just calling LearningSignals directly
-                            #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                            context = context.replace(EXECUTING, LEARNING + ' ') # cxt-done cxt-pass ? cxt-push
-                            parameter_state.context.execution_phase = ContextFlags.LEARNING
-                            parameter_state.context.string = self.context.string.replace(EXECUTING, LEARNING + ' ')
-
                             # NOTE: This will need to be updated when runtime params are re-enabled
                             # parameter_state.update(params=params, context=context)
-                            parameter_state.update(context=context) # cxt-pass cxt-push
-
-                            parameter_state.context.execution_phase = ContextFlags.IDLE
-                            parameter_state.context.string = self.context.string.replace(LEARNING, EXECUTING)
+                            parameter_state.update(context=context)
 
                     # Not all Projection subclasses instantiate ParameterStates
                     except AttributeError as e:
@@ -2274,6 +2285,9 @@ class Process(Process_Base):
                                                "while attempting to update {} {} of {}".
                                                format(e.args[0], parameter_state.name, ParameterState.__name__,
                                                       projection.name))
+
+                    projection.context.execution_phase = ContextFlags.IDLE
+
             mech.context.execution_phase = ContextFlags.IDLE
             mech.context.string = self.context.string.replace(LEARNING, EXECUTING)
 
@@ -2475,7 +2489,9 @@ class Process(Process_Base):
 
         print ("\n---------------------------------------------------------")
 
-
+    @property
+    def function(self):
+        return self.execute
 
     @property
     def mechanisms(self):

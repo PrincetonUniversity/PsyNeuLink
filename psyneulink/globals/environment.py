@@ -483,7 +483,6 @@ Class Reference
 
 import datetime
 import warnings
-
 from collections import Iterable
 from numbers import Number
 
@@ -491,12 +490,11 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import function_type
-from psyneulink.components.process import ProcessInputState
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
-from psyneulink.globals.keywords import EVC_SIMULATION, INPUT_LABELS_DICT, MECHANISM, \
-    OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET, TARGET_LABELS_DICT
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import INPUT_LABELS_DICT, MECHANISM, \
+    PROCESS, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.globals.log import LogCondition
-from psyneulink.globals.utilities import append_type_to_name, iscompatible
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
@@ -528,7 +526,7 @@ def run(object,
         call_after_time_step:tc.optional(callable)=None,
         termination_processing=None,
         termination_learning=None,
-        context=None):
+        context=ContextFlags.COMMAND_LINE):
     """run(                      \
     inputs,                      \
     num_trials=None,             \
@@ -617,7 +615,6 @@ def run(object,
         list of the values, for each `TRIAL`, of the OutputStates for a Mechanism run directly,
         or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
-
     from psyneulink.globals.context import ContextFlags
 
     # small version of 'sequence' format in the once case where it was still working (single origin mechanism)
@@ -703,7 +700,6 @@ def run(object,
                     projection.function_object.learning_rate = object.learning_rate
 
     # Class-specific validation:
-    context = context or RUN + "validating " + object.name # cxt-done ? cxt-pass
     if not object.context.flags:
         object.context.initialization_status = ContextFlags.VALIDATING
         object.context.string = RUN + "validating " + object.name
@@ -755,20 +751,16 @@ def run(object,
                         object.target = execution_targets
                         object.current_targets = execution_targets
 
-
-            if RUN in context and not EVC_SIMULATION in context: # cxt-test
-                context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name # cxt-done ? cxt-pass
-                # FIX: 3/30/18:  SHOULDN'T NEED THIS IF ContextFlags.INITIALIZED GETS SET AT END OF INITIALIZATION
-                # object.context.initialization_status &= ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING)
-                # object.context.initialization_status = ContextFlags.INITIALIZED
-                object.context.execution_phase = ContextFlags.EXECUTING
+            if context == ContextFlags.COMMAND_LINE and not object.context.execution_phase == ContextFlags.SIMULATION:
+                object.context.execution_phase = ContextFlags.PROCESSING
                 object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
+
             result = object.execute(
                 input=execution_inputs,
                 execution_id=execution_id,
                 termination_processing=termination_processing,
                 termination_learning=termination_learning,
-                context=context # cxt-pass
+                context=context
             )
 
             if call_after_time_step:
@@ -807,7 +799,7 @@ def run(object,
     else:
         object._learning_enabled = learning_state_buffer
 
-    from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
+    from psyneulink.globals.log import _log_trials_and_runs
     _log_trials_and_runs(composition=object,
                          curr_condition=LogCondition.RUN,
                          context=context)
@@ -960,7 +952,7 @@ def _adjust_target_dict(component, target_dict):
     num_targets = -1
     for mech, target_list in target_dict.items():
         if isinstance(target_list, (float, list, np.ndarray)):
-            input_state_variable = mech.output_state.efferents[0].receiver.owner.input_states[TARGET].instance_defaults.variable
+            input_state_variable = mech.output_state.efferents[0].receiver.owner.input_states[TARGET].socket_template
             num_targets = -1
 
             # first check if only one target was provided:
@@ -1075,13 +1067,8 @@ def _parse_input_labels(obj, stimuli, mechanisms_to_parse):
                         elif isinstance(item, str): # format of stimuli dict is [[label]...]
                             # inputs[i][j] = get_input_for_label(mech, item, stim)
                             inputs[i][j] = get_input_for_label(mech, item)
-                        else:
-                            raise RunError("Unrecognized specification ({}) in stimulus {} of entry "
-                                           "for {} in inputs dictionary specified for {}".
-                                           format(item, i, mech.name, obj.name))
                 elif isinstance(stim, str):
                     inputs[i] = get_input_for_label(mech, stim)
-
         return stimuli
 
 def _parse_target_labels(obj, target_dict, mechanisms_to_parse):
@@ -1152,7 +1139,7 @@ def _parse_target_labels(obj, target_dict, mechanisms_to_parse):
 def _validate_target_function(target_function, target_mechanism, sample_mechanism):
 
     generated_targets = np.atleast_1d(target_function())
-    expected_shape = target_mechanism.input_states[TARGET].instance_defaults.variable
+    expected_shape = target_mechanism.input_states[TARGET].socket_template
     if np.shape(generated_targets) != np.shape(expected_shape):
             raise RunError("Target values generated by target function ({}) are not compatible with TARGET input state "
                            "of {} ({}). See {} entry in target specification dictionary. "

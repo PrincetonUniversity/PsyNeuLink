@@ -312,14 +312,14 @@ from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.shellclasses import System_Base
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.components.states.outputstate import SEQUENTIAL
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTROL, CONTROLLER, CONTROL_PROJECTION, \
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTROL, CONTROL_PROJECTION, \
     CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, \
     OBJECTIVE_MECHANISM, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'ALLOCATION_POLICY', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -558,7 +558,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     class InstanceDefaults(AdaptiveMechanism_Base.InstanceDefaults, _DefaultsAliases):
         pass
 
-    from psyneulink.components.functions.function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OBJECTIVE_MECHANISM: None,
@@ -570,13 +569,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  size=None,
                  system:tc.optional(System_Base)=None,
                  objective_mechanism=None,
-                 function = Linear(slope=1, intercept=0),
+                 function=None,
                  control_signals=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
@@ -591,8 +589,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                     modulation=modulation,
                                                     params=params,
                                                     name=name,
+                                                    function=function,
                                                     prefs=prefs,
-                                                    context=self)
+                                                    context=ContextFlags.CONSTRUCTOR)
 
         try:
             self.monitored_output_states
@@ -861,7 +860,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                             variable=defaultControlAllocation,
                                             reference_value=ControlSignal.ClassDefaults.allocation,
                                             modulation=self.modulation,
-                                            state_spec=control_signal)
+                                            state_spec=control_signal,
+                                            context=context)
         control_signal.owner = self
 
         # Update control_signal_costs to accommodate instantiated Projection
@@ -905,10 +905,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         return control_signal
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
+    def _execute(
+        self,
+        variable=None,
+        function_variable=None,
+        runtime_params=None,
+        context=None
+    ):
         """Updates ControlSignals based on inputs
 
         Must be overriden by subclass
@@ -972,7 +975,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             self.system._validate_monitored_states_in_system(output_states, context=context)
 
     @tc.typecheck
-    def assign_as_controller(self, system:System_Base, context=COMMAND_LINE):
+    def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
         """Assign ControlMechanism as `controller <System.controller>` for a `System`.
 
         **system** must be a System for which the ControlMechanism should be assigned as the `controller
@@ -1005,7 +1008,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         COMMENT
         """
 
-        if context==COMMAND_LINE: # cxt-test
+        if context == ContextFlags.COMMAND_LINE:
             system.controller = self
             return
 
@@ -1080,7 +1083,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
         self._objective_mechanism.controller = True
 
-        if context != 'System.controller setter': # cxt-test
+        if context != ContextFlags.PROPERTY:
             system._controller = self
 
     @property

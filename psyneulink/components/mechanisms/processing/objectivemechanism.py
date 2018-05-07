@@ -321,7 +321,6 @@ Class Reference
 
 """
 import warnings
-
 from collections import Iterable
 
 import typecheck as tc
@@ -332,10 +331,7 @@ from psyneulink.components.mechanisms.processing.processingmechanism import Proc
 from psyneulink.components.states.outputstate import OutputState, PRIMARY, standard_output_states
 from psyneulink.components.states.state import _parse_state_spec
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import PARAMS, PROJECTION, PROJECTIONS, CONTROL, DEFAULT_MATRIX, DEFAULT_VARIABLE, \
-    EXPONENT, EXPONENTS, FUNCTION, \
-    INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, \
-    kwPreferenceSetName
+from psyneulink.globals.keywords import CONTROL, DEFAULT_MATRIX, EXPONENT, EXPONENTS, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, PARAMS, PROJECTION, PROJECTIONS, SENDER, STATE_TYPE, VARIABLE, WEIGHT, WEIGHTS, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -539,6 +535,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
+    # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
+    # kmantel: above needs to be clarified - can ClassDefaults.variable truly be anything? or should there be some format?
+    #   if the latter, we should specify one such valid assignment here, and override _validate_default_variable accordingly
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        function = LinearCombination
+
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -558,7 +560,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None,
                  **kwargs):
 
         input_states = monitored_output_states
@@ -583,10 +584,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          size=size,
                          input_states=input_states,
                          output_states=output_states,
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
 
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
         #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
@@ -735,7 +737,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         input_states = self._instantiate_input_states(monitored_output_states_specs=monitored_output_states_specs,
                                               reference_value=reference_value,
-                                              context='ADD_STATES')
+                                              context = ContextFlags.METHOD)
+
         output_states = [[projection.sender for projection in state.path_afferents] for state in input_states]
 
         self._instantiate_function_weights_and_exponents(context=context)
@@ -762,10 +765,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         if hasattr(self.function_object, WEIGHTS):
             if any(weight is not None for weight in weights):
-                self.function_object.weights = [weight or DEFAULT_WEIGHT for weight in weights]
+                self.function_object.weights = [[weight or DEFAULT_WEIGHT] for weight in weights]
         if hasattr(self.function_object, EXPONENTS):
             if any(exponent is not None for exponent in exponents):
-                self.function_object.exponents = [exponent or DEFAULT_EXPONENT for exponent in exponents]
+                self.function_object.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
         assert True
 
     @property

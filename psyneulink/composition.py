@@ -48,7 +48,6 @@ Class Reference
 
 import logging
 import uuid
-
 from collections import Iterable, OrderedDict
 from enum import Enum
 
@@ -57,6 +56,7 @@ import numpy as np
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Mechanism, Projection
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import EXECUTING
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
@@ -862,7 +862,10 @@ class Composition(object):
             # execute each mechanism with EXECUTING in context
             for mechanism in next_execution_set:
                 if isinstance(mechanism, Mechanism):
-                    num = mechanism.execute(context=EXECUTING + "composition")
+                    mechanism.context.execution_phase = ContextFlags.PROCESSING
+                    # num = mechanism.execute(context=EXECUTING + "composition")
+                    num = mechanism.execute(context=ContextFlags.COMPOSITION)
+                    mechanism.context.execution_phase = ContextFlags.IDLE
                     print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
                     print("result = ", num)
                     print()

@@ -139,15 +139,12 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next
+from psyneulink.components.mechanisms.mechanism import Mechanism
+from psyneulink.components.functions.function import LCAIntegrator, Logistic, max_vs_avg, max_vs_next, NormalizingFunction
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.globals.keywords import \
-    BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, INITIALIZING, LCA, MEAN, \
-    MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
+from psyneulink.globals.keywords import BETA, ENERGY, ENTROPY, FUNCTION, INITIALIZER, INITIALIZING, LCA, MEAN, MEDIAN, NAME, NOISE, RATE, RESULT, STANDARD_DEVIATION, TIME_STEP_SIZE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.globals.utilities import is_numeric_or_none
 from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
     'LCA', 'LCA_OUTPUT', 'LCAError', 'MAX_VS_AVG', 'MAX_VS_NEXT',
@@ -503,6 +500,8 @@ class LCA(RecurrentTransferMechanism):
         # RATE: None,
         BETA: None
     })
+    class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
+        function = Logistic
 
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
@@ -530,8 +529,7 @@ class LCA(RecurrentTransferMechanism):
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=componentType+INITIALIZING):
+                 prefs:is_pref_set=None):
         """Instantiate LCA
         """
 
@@ -574,120 +572,32 @@ class LCA(RecurrentTransferMechanism):
                          output_states=output_states,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=context)
+                         prefs=prefs)
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
-        """Execute TransferMechanism function and return transform of input
-
-        Execute TransferMechanism function on input, and assign to output_values:
-            - Activation value for all units
-            - Mean of the activation values across units
-            - Variance of the activation values across units
-        Return:
-            value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
-            mean of items in RESULT outputState[TransferOuput.MEAN].value
-            variance of items in RESULT outputState[TransferOuput.VARIANCE].value
-
-        Arguments:
-
-        # CONFIRM:
-        variable (float): set to self.value (= self.input_value)
-        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + NOISE (float)
-            + BETA (float)
-            + RANGE ([float, float])
-        - context (str)
-
-        Returns the following values in self.value (2D np.array) and in
-            the value of the corresponding outputState in the self.output_states list:
-            - activation value (float)
-            - mean activation value (float)
-            - standard deviation of activation values (float)
-
-        :param self:
-        :param variable (float)
-        :param params: (dict)
-        :param context: (str)
-        :rtype self.outputState.value: (number)
-        """
-
-        # FIX: ??CALL check_args()??
-
-        # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
-        # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
-        # Use self.instance_defaults.variable to initialize state of input
-
-        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        integrator_mode = self.integrator_mode
-
-        #region ASSIGN PARAMETER VALUES
+    def _get_integrated_function_input(self, function_variable, initial_value, noise, context):
 
         leak = self.get_current_mechanism_param("leak")
-        clip = self.get_current_mechanism_param("clip")
-        noise = self.get_current_mechanism_param("noise")
-        initial_value = self.get_current_mechanism_param("initial_value")
         time_step_size = self.get_current_mechanism_param("time_step_size")
 
-        #endregion
-        #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
+        if not self.integrator_function:
+            self.integrator_function = LCAIntegrator(
+                function_variable,
+                initializer=initial_value,
+                noise=noise,
+                time_step_size=time_step_size,
+                rate=leak,
+                owner=self)
 
-        # FIX: NOT UPDATING self.previous_input CORRECTLY
-        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
+        current_input = self.integrator_function._execute(
+            function_variable,
+            # Should we handle runtime params?
+            runtime_params={
+                INITIALIZER: initial_value,
+                NOISE: noise,
+                RATE: leak,
+                TIME_STEP_SIZE: time_step_size
+            },
+            context=context
+        )
 
-        # Update according to time-scale of integration
-        if integrator_mode:
-            if not self.integrator_function:
-
-                self.integrator_function = LCAIntegrator(
-                                            variable,
-                                            initializer=initial_value,
-                                            noise=noise,
-                                            time_step_size=time_step_size,
-                                            rate=leak,
-                                            owner=self)
-
-            current_input = self.integrator_function.execute(
-                variable,
-                # Should we handle runtime params?
-                runtime_params={
-                    INITIALIZER: initial_value,
-                    NOISE: noise,
-                    RATE: leak,
-                    TIME_STEP_SIZE: time_step_size
-                },
-                context=context
-            )
-        else:
-        # elif time_scale is TimeScale.TRIAL:
-            noise = self._try_execute_param(noise, variable)
-            # formerly: current_input = self.input_state.value + noise
-            # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
-            # when the input is given as a string.
-            if (np.array(noise) != 0).any():
-                current_input = variable + noise
-            else:
-
-                current_input = variable
-
-        # Apply TransferMechanism function
-        output_vector = self.function(variable=current_input, params=runtime_params)
-
-        if clip is not None:
-            minCapIndices = np.where(output_vector < clip[0])
-            maxCapIndices = np.where(output_vector > clip[1])
-            output_vector[minCapIndices] = np.min(clip)
-            output_vector[maxCapIndices] = np.max(clip)
-
-        return output_vector
-    # @property
-    # def inhibition(self):
-    #     return self.hetero
-    #
-    # @inhibition.setter
-    # def inhibition(self, setting):
-    #     self.hetero = setting
+        return current_input

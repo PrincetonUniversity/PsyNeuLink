@@ -110,6 +110,7 @@ test_linear_combination_data = [
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_S, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_S + RAND2_V),
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_S, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_S),
 #    (Function.LinearCombination, test_var2, {'scale':RAND1_V, 'offset':RAND2_V, 'operation':pnl.PRODUCT}, np.product(test_var2, axis=0) * RAND1_V + RAND2_V),
+    (Function.LinearCombination, test_var2, {'exponents': -1., 'operation': pnl.SUM}, 1 / test_var2[0] + 1 / test_var2[1]),
 ]
 
 # pytest naming function produces ugly names
@@ -219,7 +220,7 @@ linear_comb_names_2 = [
 @pytest.mark.parametrize("operation, input, size, input_states, scale, offset, expected", test_linear_comb_data_2, ids=linear_comb_names_2)
 @pytest.mark.benchmark
 def test_linear_combination_function_in_mechanism(operation, input, size, input_states, scale, offset, expected, benchmark):
-    f = pnl.LinearCombination(default_variable=np.zeros(size), operation=operation, scale=scale, offset=offset)
+    f = pnl.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
     p = pnl.ProcessingMechanism(size=[size] * len(input_states), function=f, input_states=input_states)
     benchmark.group = "CombinationFunction " + pnl.LinearCombination.componentName + "in Mechanism"
     res = benchmark(f.execute, input)

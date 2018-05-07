@@ -229,15 +229,13 @@ Class Reference
 
 import typecheck as tc
 
-from psyneulink.components.functions.function import Linear, LinearCombination, _is_modulation_param
-from psyneulink.components.mechanisms.mechanism import Mechanism
-from psyneulink.components.states.inputstate import InputState
+from psyneulink.components.functions.function import Linear, _is_modulation_param
 from psyneulink.components.states.modulatorysignals.modulatorysignal import ModulatorySignal, modulatory_signal_keywords
-from psyneulink.components.states.outputstate import OutputState, PRIMARY, SEQUENTIAL
-from psyneulink.components.states.state import State_Base, _get_state_for_socket, _parse_state_type
-from psyneulink.globals.keywords import COMMAND_LINE, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER, SUM
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.components.states.outputstate import PRIMARY, SEQUENTIAL
+from psyneulink.components.states.state import State_Base
 from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import COMMAND_LINE, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATES, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -426,12 +424,11 @@ class GatingSignal(ModulatorySignal):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-done
+        if context is None:
+            context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
-            self.context.string = COMMAND_LINE
         else:
-            context = self # cxt-done
+            context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
         # Note: assign is not currently used by GatingSignal;
@@ -463,7 +460,9 @@ class GatingSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
             """Get connections specified in a ParameterState specification tuple

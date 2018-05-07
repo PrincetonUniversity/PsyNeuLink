@@ -75,14 +75,13 @@ OTHER
 
 """
 
-import collections
 import inspect
 import logging
 import numbers
 import warnings
-
 from enum import Enum, EnumMeta, IntEnum
 
+import collections
 import numpy as np
 
 from psyneulink.globals.keywords import DISTANCE_METRICS, MATRIX_KEYWORD_VALUES, NAME, VALUE
@@ -508,7 +507,7 @@ def iscompatible(candidate, reference=None, **kargs):
 
 def get_args(frame):
     """Gets dictionary of arguments and their values for a function
-    Frame should be assigned as follows in the funciton itself:  frame = inspect.currentframe()
+    Frame should be assigned as follows in the function itself:  frame = inspect.currentframe()
     """
     args, _, _, values = inspect.getargvalues(frame)
     return dict((key, value) for key, value in values.items() if key in args)
@@ -1071,6 +1070,15 @@ def is_component(val):
     from psyneulink.components.component import Component
     return isinstance(val, Component)
 
+def is_instance_or_subclass(candidate, spec):
+    """
+    Returns
+    -------
+
+    True if **candidate** is a subclass of **spec** or an instance thereof, False otherwise
+    """
+    return isinstance(candidate, spec) or (inspect.isclass(candidate) and issubclass(candidate, spec))
+
 
 def make_readonly_property(val):
     """Return property that provides read-only access to its value
@@ -1158,6 +1166,37 @@ def safe_len(arr, fallback=1):
         return len(arr)
     except TypeError:
         return fallback
+
+
+import typecheck as tc
+@tc.typecheck
+def _get_arg_from_stack(arg_name:str):
+    # Get arg from the stack
+
+    import inspect
+
+    curr_frame = inspect.currentframe()
+    prev_frame = inspect.getouterframes(curr_frame, 2)
+    i = 1
+    # Search stack for first frame (most recent call) with a arg_val specification
+    arg_val = None
+    while arg_val is None:
+        try:
+            arg_val = inspect.getargvalues(prev_frame[i][0]).locals[arg_name]
+        except KeyError:
+            # Try earlier frame
+            i += 1
+        except IndexError:
+            # Ran out of frames, so just set arg_val to empty string
+            arg_val = ""
+        else:
+            break
+
+    # No arg_val was specified in any frame
+    if arg_val is None: # cxt-done
+        raise UtilitiesError("PROGRAM ERROR: arg_name not found in any frame")
+
+    return arg_val
 
 
 def prune_unused_args(func, args, kwargs):
