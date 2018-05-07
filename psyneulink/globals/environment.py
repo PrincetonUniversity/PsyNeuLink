@@ -493,17 +493,13 @@ from psyneulink.components.component import function_type
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import INPUT_LABELS_DICT, MECHANISM, \
-    PROCESS, RUN, SAMPLE, SYSTEM, TARGET
+    PROCESS, RUN, SAMPLE, SYSTEM, TARGET, OUTPUT_LABELS_DICT
 from psyneulink.globals.log import LogCondition
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
-    'EXECUTION_SET_DIM', 'MECHANISM_DIM', 'RunError', 'STATE_DIM', 'run'
+    'RunError', 'run'
 ]
-
-EXECUTION_SET_DIM = 0
-MECHANISM_DIM = 2
-STATE_DIM = 3  # Note: only meaningful if mechanisms are homnogenous (i.e., all have the same number of states -- see chart below):
 
 class RunError(Exception):
      def __init__(object, error_value):

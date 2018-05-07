@@ -684,16 +684,59 @@ OutputState(s):
     * *OUTPUT_LABELS_DICT* -- used to specify labels for values of the OutputState(s) of the Mechanism;  if specified,
       the dictionary is contained in the Mechanism's `output_labels_dict <Mechanism_Base.output_labels_dict>` attribute.
 
-The labels specified in these dictionaries can be used to specify items in the `inputs <Run_Inputs>` and `targets
-<Run_Targets>` arguments of the `run <System.run>` method of a `System`, and to report the values of the InputState(s)
-and OutputState(s) of a Mechanism in a System's `show_graph <System.show_graph>` method (using its **use_values**
-option).  If they are used to specify `targets <Run_Targets>`, they must be included in the `output_labels_dict
-<Mechanism_Base.output_labels_dict>` of the Mechanism that projects to the `TARGET` Mechanism (see `TARGET Mechanisms
-<LearningMechanism_Targets>`,  the last one in a `learning sequence <Process_Learning_Sequence>`.
+The labels specified in these dictionaries can be used to:
+
+    - specify items in the `inputs <Run_Inputs>` and `targets <Run_Targets>` arguments of the `run <System.run>` method
+      of a `System`
+    - report the values of the InputState(s) and OutputState(s) of a Mechanism
+    - visualize the inputs and outputs of the System's Mechanisms
+
+When using labels to specify items in the `inputs <Run_Inputs>` and `targets <Run_Targets>` arguments of the `run
+<System.run>` method, labels may directly replace or all of the values in an input or target dictionary, provided
+that the label is specified in the appropriate label dictionary, and maps to a value that would have been valid in that
+position of the input or target dictionary.
+
+        >>> import psyneulink as pnl
+        >>> input_labels_dict = {"red": [[1, 0, 0]],
+        ...                      "green": [[0, 1, 0]],
+        ...                      "blue": [[0, 0, 1]]}
+        >>> M = pnl.ProcessingMechanism(default_variable=[[0, 0, 0]],
+        ...                             params={pnl.INPUT_LABELS_DICT: input_labels_dict})
+        >>> P = pnl.Process(pathway=[M])
+        >>> S = pnl.System(processes=[P])
+        >>> input_dictionary = {M: ['red', 'green', 'blue', 'red']}
+        (equivalent to {M: [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]]]}, which is a valid input specification)
+        >>> S.run(inputs=input_dictionary)
+
+If labels are used to specify `targets <Run_Targets>` of a pathway with learning, they must be included in the
+`output_labels_dict <Mechanism_Base.output_labels_dict>` of the Mechanism that projects to the `TARGET` Mechanism (see
+`TARGET Mechanisms <LearningMechanism_Targets>`), or in other words, the last Mechanism in the `learning sequence
+<Process_Learning_Sequence>`. This is the same Mechanism used to specify targets in the `targets dictionary
+<Run_Targets>`.
+
+        >>> input_labels_dict_M1 = {"red": [[1]],
+        ...                         "green": [[0]]}
+        >>> output_labels_dict_M2 = {"red": [0],
+        ...                         "green": [1]}
+        >>> M1 = pnl.ProcessingMechanism(params={pnl.INPUT_LABELS_DICT: input_labels_dict_M1})
+        >>> M2 = pnl.ProcessingMechanism(params={pnl.OUTPUT_LABELS_DICT: output_labels_dict_M2})
+        >>> P = pnl.Process(pathway=[M1, M2],
+        ...                 learning=pnl.ENABLED,
+        ...                 learning_rate=0.25)
+        >>> S = pnl.System(processes=[P])
+        >>> input_dictionary = {M1: ['red', 'green', 'green', 'red']}
+        (equivalent to {M1: [[[1]], [[0]], [[0]], [[1]]]}, which is a valid input specification)
+        >>> target_dictionary = {M2: ['red', 'green', 'green', 'red']}
+        (equivalent to {M2: [[0], [1], [1], [0]]}, which is a valid target specification)
+        >>> S.run(inputs=input_dictionary,
+        ...       targets=target_dictionary))
 
 The labels for the current value(s) of the Mechanism's InputState(s) and OutputState(s) are listed in its
 `input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>` attributes,
 respectively.
+
+Labels may be used to visualize the input and outputs of Mechanisms in a System via the **show_structure** and
+**use_labels** options of the System's `show_graph <System.show_graph>` method.
 
 *Specifying label dictionaries*
 
@@ -723,6 +766,23 @@ of which use *only one* of the two following formats for the *key:value* pair of
           ADD EXAMPLE HERE
       COMMENT
 
+.. note:
+
+    A given label dictionary only applies to the Mechanism to which it belongs, and a given label only applies to its
+    corresponding InputState. That is to say, a given label, such as 'red', may translate to different values on
+    different input states of the same Mechanism and on different Mechanisms of a System.
+
+        >>> import psyneulink as pnl
+        >>> output_labels_dict = {"red": [1, 0, 0],
+        ...                      "green": [0, 1, 0],
+        ...                      "blue": [0, 0, 1]}
+        >>> M = pnl.ProcessingMechanism(default_variable=[[0, 0, 0]],
+        ...                             params={pnl.OUTPUT_LABELS_DICT: output_labels_dict})
+        >>> P = pnl.Process(pathway=[M])
+        >>> S = pnl.System(processes=[P])
+        >>> input_dictionary =  {M: [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0]]}
+        >>> S.run(inputs=input_dictionary)
+        returns
 
 .. Mechanism_Attribs_Dicts:
 
@@ -2828,35 +2888,55 @@ class Mechanism_Base(Mechanism):
         elif state_type is OutputState:
             states = self.output_states
             labels_dict = self.output_labels_dict
+
+        labels = []
+
         subdicts = False
         if isinstance(list(labels_dict.values())[0], dict):
             subdicts = True
-        labels = []
 
-        for i, item in enumerate(states):
-            # There is a subdict for each state, so use that
-            if subdicts:
-                try:
-                    state_label_dict = labels_dict[item.name]
-                except KeyError:
-                    try:
-                        state_label_dict = labels_dict[i]
-                    except:
-                        label = item.value
-                except:
-                    raise MechanismError("Unidentified key () in labels_dict for {} of {}".
-                                         format(state_type.__name__, self.name))
-                for label, value in state_label_dict.items():
-                    if np.array_equal(np.array(item.value), np.array(value)):
-                        labels.append(label)
-                    labels.append(item.value)
-            # There are no subdicts, so use same dict for only (or all) State(s)
-            else:
-                for label, value in labels_dict.items():
-                    if np.array_equal(np.array(item.value), np.array(value)):
-                        labels.append(label)
-                    labels.append(item.value)
+        if not subdicts:
+            for state in states:
+                new_value = state.value
+                for label in labels_dict:
+                    if np.allclose(labels_dict[label], state.value):
+                        new_value = label
+                labels.append(new_value)
             return labels
+        #
+        # labels = []
+        # for state in states:
+        #     if state in labels_dict:
+        #
+        # subdicts = False
+        # if isinstance(list(labels_dict.values())[0], dict):
+        #     subdicts = True
+        # labels = []
+        #
+        # for i, item in enumerate(states):
+        #     # There is a subdict for each state, so use that
+        #     if subdicts:
+        #         try:
+        #             state_label_dict = labels_dict[item.name]
+        #         except KeyError:
+        #             try:
+        #                 state_label_dict = labels_dict[i]
+        #             except:
+        #                 label = item.value
+        #         except:
+        #             raise MechanismError("Unidentified key () in labels_dict for {} of {}".
+        #                                  format(state_type.__name__, self.name))
+        #         for label, value in state_label_dict.items():
+        #             if np.array_equal(np.array(item.value), np.array(value)):
+        #                 labels.append(label)
+        #             labels.append(item.value)
+        #     # There are no subdicts, so use same dict for only (or all) State(s)
+        #     else:
+        #         for label, value in labels_dict.items():
+        #             if np.array_equal(np.array(item.value), np.array(value)):
+        #                 labels.append(label)
+        #             labels.append(item.value)
+        #     return labels
 
     @property
     def is_finished(self):

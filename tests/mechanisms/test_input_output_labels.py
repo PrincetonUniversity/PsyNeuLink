@@ -219,4 +219,4 @@ class TestMechanismOutputLabels:
         S.run(inputs=[1, 'green', 0, 'red'])
         assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
         print(M.output_labels)
-        # S.show_graph(show_values=True)
+
