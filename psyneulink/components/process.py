@@ -470,7 +470,7 @@ from psyneulink.globals.utilities import append_type_to_name, convert_to_np_arra
 
 __all__ = [
     'DEFAULT_PHASE_SPEC', 'DEFAULT_PROJECTION_MATRIX', 'defaultInstanceCount', 'kwProcessInputState', 'kwTarget',
-    'Process', 'ProcessError', 'ProcessInputState', 'ProcessList', 'ProcessRegistry', 'ProcessTuple',
+    'Process', 'proc', 'ProcessError', 'ProcessInputState', 'ProcessList', 'ProcessRegistry', 'ProcessTuple',
 ]
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -503,7 +503,7 @@ from psyneulink.components.states.outputstate import OutputState
 #            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
 
 
-def process(*args, **kwargs):
+def proc(*args, **kwargs):
     """Factory method
     args can be a Mechanism or a list of Mechanisms and Projections that conform to the format for the `pathway
     <Process_Base.pathway>` argument of a `Process`
