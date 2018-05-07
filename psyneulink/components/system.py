@@ -532,10 +532,9 @@ def sys(*args, **kwargs):
 
     **args** can be Mechanisms, Projections and/or lists containing either, but must conform to the format for the
     specification of the `pathway <Process.pathway>` argument of a `Process`.  If none of the args is a list,
-    then all are treated as a single Process (i.e., pathway specification);
-
-    If any args are lists, each is treated as a pathway specification for a Process; any other args not in a
-    list *must be Mechanisms* (i.e., none can be Projections), and each is treated as singleton Process.
+    then all are treated as a single Process (i.e., pathway specification). If any args are lists, each is treated as
+    a pathway specification for a Process; any other args not in a list *must be Mechanisms* (i.e., none can be
+    Projections), and each is used to create a singleton Process.
 
     **kwargs** must be a dictionary with argument:specification entries for the arguments of the `System` constructor
     """
