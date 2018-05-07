@@ -503,21 +503,30 @@ from psyneulink.components.states.outputstate import OutputState
 #            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
 
 
+def process(*args, **kwargs):
+    """Factory method
+    args can be a Mechanism or a list of Mechanisms and Projections that conform to the format for the `pathway
+    <Process_Base.pathway>` argument of a `Process`
+
+    kwargs must be a dictionary with argument:specification entries for the arguments of the `Process` constructor
+    """
+    return Process(pathway=list(args), **kwargs)
+
+
 class Process(Process_Base):
     """
-    Process(process_spec=None,                         \
+    Process(process_spec=None,                           \
     default_variable=None,                               \
-    pathway=None,                                           \
-    initial_values={},                                      \
-    clamp_input:=None,                                      \
-    default_projection_matrix=DEFAULT_PROJECTION_MATRIX,    \
-    learning=None,                                          \
-    learning_rate=None                                      \
-    target=None,                                            \
-    params=None,                                            \
-    name=None,                                              \
-    prefs=None,                                             \
-    context=None)
+    pathway=None,                                        \
+    initial_values={},                                   \
+    clamp_input:=None,                                   \
+    default_projection_matrix=DEFAULT_PROJECTION_MATRIX, \
+    learning=None,                                       \
+    learning_rate=None                                   \
+    target=None,                                         \
+    params=None,                                         \
+    name=None,                                           \
+    prefs=None
 
     Base class for Process.
 
@@ -819,13 +828,11 @@ class Process(Process_Base):
         '_isControllerProcess': False
     })
 
-    default_pathway = []
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 pathway=default_pathway,
+                 pathway=None,
                  initial_values=None,
                  clamp_input=None,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
@@ -836,6 +843,8 @@ class Process(Process_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
+
+        pathway = pathway or []
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(pathway=pathway,
