@@ -675,13 +675,10 @@ class TestInitialize:
         assert np.allclose(C.log.nparray_dictionary('value')['value'], [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]])
 
 
-
-
 from psyneulink.components.process import process
 from psyneulink.components.system import system
 
 class TestFactoryMethods:
-
 
     T1 = TransferMechanism()
     T2 = TransferMechanism()
