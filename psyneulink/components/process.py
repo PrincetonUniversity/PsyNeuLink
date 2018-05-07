@@ -505,10 +505,11 @@ from psyneulink.components.states.outputstate import OutputState
 
 def proc(*args, **kwargs):
     """Factory method
-    args can be Mechanisms and Projections, or a list of them, that conform to the format for the `pathway
-    <Process_Base.pathway>` argument of a `Process`.
 
-    kwargs must be a dictionary with argument:specification entries for the arguments of the `Process` constructor
+    **args** can be `Mechanisms <Mechanism>` with our without `Projections <Projection>`, or a list of them,
+    that conform to the format for the `pathway <Process.pathway>` argument of a `Process`.
+
+    **kwargs** can be any arguments of the `Process` constructor.
     """
     return Process(pathway=list(args), **kwargs)
 
