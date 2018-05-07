@@ -461,9 +461,9 @@ from psyneulink.scheduling.scheduler import Scheduler
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
     'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple',
-    'NUM_PHASES_PER_TRIAL', 'ORIGIN_MECHANISMS',
-    'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY', 'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS', 'SCHEDULER',
-    'System', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
+    'NUM_PHASES_PER_TRIAL', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
+    'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS',
+    'SCHEDULER', 'System', 'sys', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
     'SystemWarning', 'TARGET_MECHANISMS', 'TERMINAL_MECHANISMS',
 ]
 
@@ -518,12 +518,38 @@ class SystemWarning(Warning):
      def __init__(self, error_value):
          self.error_value = error_value
 
+
 class SystemError(Exception):
      def __init__(self, error_value):
          self.error_value = error_value
 
      def __str__(self):
          return repr(self.error_value)
+
+
+def sys(*args, **kwargs):
+    """Factory method
+
+    **args** can be Mechanisms, Projections and/or lists containing either, but must conform to the format for the
+    specification of the `pathway <Process.pathway>` argument of a `Process`.  If none of the args is a list,
+    then all are treated as a single Process (i.e., pathway specification);
+
+    If any args are lists, each is treated as a pathway specification for a Process; any other args not in a
+    list *must be Mechanisms* (i.e., none can be Projections), and each is treated as singleton Process.
+
+    **kwargs** must be a dictionary with argument:specification entries for the arguments of the `System` constructor
+    """
+
+    processes = []
+    if not any(isinstance(arg, list) for arg in args):
+        processes = Process(pathway=list(args))
+    else:
+        for arg in args:
+            if not isinstance(arg, list):
+                arg = [arg]
+            processes.append(Process(pathway=arg))
+
+    return System(processes=processes, **kwargs)
 
 
 # FIX:  IMPLEMENT DEFAULT PROCESS
@@ -3968,3 +3994,4 @@ class SystemInputState(OutputState):
         self.efferents = []
         self.owner = owner
         self.value = variable
+
