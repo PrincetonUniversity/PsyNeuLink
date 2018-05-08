@@ -3263,18 +3263,23 @@ class System(System_Base):
         else:
             return self.controller.control_signals
 
-    def _get_label(self, item, show_dimensions):
+    def _get_label(self, item, show_dimensions, show_role):
 
         # For Mechanisms, show length of each InputState and OutputState
         if isinstance(item, Mechanism):
+            if show_role:
+                name = "{}\n{}".format(item.name, item.systems[self])
+            else:
+                name = item.name
+
             if show_dimensions in {ALL, MECHANISMS}:
                 input_str = "in ({})".format(",".join(str(input_state.socket_width)
                                                       for input_state in item.input_states))
                 output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
                                                         for output_state in item.output_states))
-                return "{}\n{}\n{}".format(output_str, item.name, input_str)
+                return "{}\n{}\n{}".format(output_str, name, input_str)
             else:
-                return item.name
+                return name
 
         # For Projection, show dimensions of matrix
         elif isinstance(item, Projection):
@@ -3304,6 +3309,7 @@ class System(System_Base):
     def show_graph(self,
                    show_learning = False,
                    show_control = False,
+                   show_role = False,
                    show_dimensions = False,
                    show_mechanism_structure=False,
                    show_headers=True,
@@ -3589,7 +3595,7 @@ class System(System_Base):
                        color=rcvr_color,
                        penwidth=rcvr_penwidth)
             else:
-                rcvr_label = self._get_label(rcvr, show_dimensions)
+                rcvr_label = self._get_label(rcvr, show_dimensions, show_role)
                 G.node(rcvr_label, shape=mechanism_shape, color=rcvr_color, penwidth=rcvr_penwidth)
 
             # handle auto-recurrent projections
@@ -3603,7 +3609,7 @@ class System(System_Base):
                     else:
                         sndr_proj_label = rcvr_proj_label = rcvr_label
                     if show_projection_labels:
-                        edge_label = self._get_label(proj, show_dimensions)
+                        edge_label = self._get_label(proj, show_dimensions, show_role)
                     else:
                         edge_label = ''
                     try:
@@ -3631,7 +3637,7 @@ class System(System_Base):
                 if show_mechanism_structure:
                     sndr_label = sndr.name
                 else:
-                    sndr_label = self._get_label(sndr, show_dimensions)
+                    sndr_label = self._get_label(sndr, show_dimensions, show_role)
                 if sndr is active_item:
                     sndr_color = active_color
                 else:
@@ -3648,7 +3654,7 @@ class System(System_Base):
                             else:
                                 sndr_proj_label = sndr_label
                                 rcvr_proj_label = rcvr_label
-                            edge_name = self._get_label(proj, show_dimensions)
+                            edge_name = self._get_label(proj, show_dimensions, show_role)
                             # edge_shape = proj.matrix.shape
                             try:
                                 has_learning = proj.has_learning_projection
@@ -3694,7 +3700,7 @@ class System(System_Base):
                 if show_mechanism_structure:
                     rcvr_label=rcvr.name
                 else:
-                    rcvr_label = self._get_label(rcvr, show_dimensions)
+                    rcvr_label = self._get_label(rcvr, show_dimensions, show_role)
                 if rcvr is active_item:
                     rcvr_color = active_color
                 else:
@@ -3711,12 +3717,12 @@ class System(System_Base):
                             edge_label = ''
                         if show_mechanism_structure:
                             G.edge(sndr.name + ':' + OutputState.__name__ + '-' + 'LearningSignal',
-                                   self._get_label(rcvr, show_dimensions),
+                                   self._get_label(rcvr, show_dimensions, show_role),
                                    label=edge_label,
                                    color=rcvr_color)
                         else:
-                            G.edge(self._get_label(sndr, show_dimensions),
-                                   self._get_label(rcvr, show_dimensions),
+                            G.edge(self._get_label(sndr, show_dimensions, show_role),
+                                   self._get_label(rcvr, show_dimensions, show_role),
                                    label = edge_label,
                                    color=rcvr_color)
 
@@ -3736,7 +3742,9 @@ class System(System_Base):
                                rcvr.show_structure(**mech_struct_args),
                                color=rcvr_color)
                     else:
-                        G.node(self._get_label(rcvr, show_dimensions), color=rcvr_color, shape=mechanism_shape)
+                        G.node(self._get_label(rcvr, show_dimensions, show_role),
+                               color=rcvr_color,
+                               shape=mechanism_shape)
 
                     # Implement edges for Projections to LearningMechanism
                     #    from other LearningMechanisms and from ProcessingMechanisms if 'ALL' is set
@@ -3771,7 +3779,7 @@ class System(System_Base):
                                            sndr.show_structure(**mech_struct_args),
                                            color=sndr_color)
                                 else:
-                                    G.node(self._get_label(sndr, show_dimensions),
+                                    G.node(self._get_label(sndr, show_dimensions, show_role),
                                            color=sndr_color, shape=mechanism_shape)
                             else:
                                 if not show_learning is ALL:
@@ -3814,7 +3822,7 @@ class System(System_Base):
                                             else:
                                                 smpl_or_trgt_src_color = system_color
 
-                                            G.node(self._get_label(smpl_or_trgt_src, show_dimensions),
+                                            G.node(self._get_label(smpl_or_trgt_src, show_dimensions, show_role),
                                                    color=smpl_or_trgt_src_color,
                                                    penwidth='3')
 
@@ -3836,8 +3844,8 @@ class System(System_Base):
                                                    label=edge_label,
                                                    color=learning_proj_color)
                                         else:
-                                            G.edge(self._get_label(smpl_or_trgt_src, show_dimensions),
-                                                   self._get_label(sndr, show_dimensions),
+                                            G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_role),
+                                                   self._get_label(sndr, show_dimensions, show_role),
                                                    color=learning_proj_color,
                                                    label=edge_label)
 
@@ -3881,8 +3889,8 @@ class System(System_Base):
                        objmech.show_structure(**mech_struct_args),
                        color=objmech_color)
             else:
-                ctlr_label = self._get_label(controller, show_dimensions)
-                objmech_label = self._get_label(objmech, show_dimensions)
+                ctlr_label = self._get_label(controller, show_dimensions, show_role)
+                objmech_label = self._get_label(objmech, show_dimensions, show_role)
                 G.node(ctlr_label, color=ctlr_color, shape=mechanism_shape)
                 G.node(objmech_label, color=objmech_color, shape=mechanism_shape)
 
@@ -3915,7 +3923,7 @@ class System(System_Base):
                                           ParameterState.__name__ + '-' + projection.receiver.name
                     else:
                         ctlr_proj_label = ctlr_label
-                        rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions)
+                        rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_role)
                     if show_projection_labels:
                         edge_label = projection.name
                     else:
@@ -3937,8 +3945,8 @@ class System(System_Base):
                         # objmech_proj_label = projection.receiver.owner.name + ':' + projection.receiver.name
                         objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
                     else:
-                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions)
-                        objmech_proj_label = self._get_label(objmech, show_dimensions)
+                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_role)
+                        objmech_proj_label = self._get_label(objmech, show_dimensions, show_role)
                     if show_projection_labels:
                         edge_label = projection.name
                     else:
@@ -3972,10 +3980,10 @@ class System(System_Base):
                                label=' prediction assignment',
                                color=pred_proj_color)
                     else:
-                        G.node(self._get_label(mech, show_dimensions),
+                        G.node(self._get_label(mech, show_dimensions, show_role),
                                color=pred_mech_color, shape=mechanism_shape)
-                        G.edge(self._get_label(mech, show_dimensions),
-                               self._get_label(recvr, show_dimensions),
+                        G.edge(self._get_label(mech, show_dimensions, show_role),
+                               self._get_label(recvr, show_dimensions, show_role),
                                label=' prediction assignment',
                                color=prediction_mechanism_color)
                     pass
