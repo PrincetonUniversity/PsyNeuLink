@@ -2044,6 +2044,25 @@ class State_Base(State):
         # self.value = self._execute(function_variable=variable, runtime_params=function_params, context=context)
         # MODIFIED 5/4/18 END
 
+    def _get_value_label(self, labels_dict):
+        value_label = self.value
+        subdicts = False
+        if labels_dict != {}:
+            if isinstance(list(labels_dict.values())[0], dict):
+                subdicts = True
+
+        if not subdicts:
+            for label in labels_dict:
+                if np.allclose(labels_dict[label], self.value):
+                    value_label = label
+            return value_label
+
+        for state in labels_dict:
+            if state is self:
+                for label in labels_dict[state]:
+                    if np.allclose(labels_dict[label], self.value):
+                        return value_label
+
     @property
     def owner(self):
         return self._owner

@@ -1252,6 +1252,10 @@ class OutputState(State_Base):
     def calculate(self):
         return self.assign
 
+    @property
+    def label(self):
+        return self._get_value_label(self.owner.output_labels_dict)
+
 
 def _instantiate_output_states(owner, output_states=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputState(s)
@@ -1729,5 +1733,3 @@ def _maintain_backward_compatibility(d:dict, name, owner):
                       "it will still work, but should be changed in {} specification of {} for future compatibility.".
                       format(OUTPUT_STATES, owner.name))
         assert False
-
-

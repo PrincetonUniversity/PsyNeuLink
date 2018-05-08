@@ -2890,53 +2890,9 @@ class Mechanism_Base(Mechanism):
             labels_dict = self.output_labels_dict
 
         labels = []
-
-        subdicts = False
-        if isinstance(list(labels_dict.values())[0], dict):
-            subdicts = True
-
-        if not subdicts:
-            for state in states:
-                new_value = state.value
-                for label in labels_dict:
-                    if np.allclose(labels_dict[label], state.value):
-                        new_value = label
-                labels.append(new_value)
-            return labels
-        #
-        # labels = []
-        # for state in states:
-        #     if state in labels_dict:
-        #
-        # subdicts = False
-        # if isinstance(list(labels_dict.values())[0], dict):
-        #     subdicts = True
-        # labels = []
-        #
-        # for i, item in enumerate(states):
-        #     # There is a subdict for each state, so use that
-        #     if subdicts:
-        #         try:
-        #             state_label_dict = labels_dict[item.name]
-        #         except KeyError:
-        #             try:
-        #                 state_label_dict = labels_dict[i]
-        #             except:
-        #                 label = item.value
-        #         except:
-        #             raise MechanismError("Unidentified key () in labels_dict for {} of {}".
-        #                                  format(state_type.__name__, self.name))
-        #         for label, value in state_label_dict.items():
-        #             if np.array_equal(np.array(item.value), np.array(value)):
-        #                 labels.append(label)
-        #             labels.append(item.value)
-        #     # There are no subdicts, so use same dict for only (or all) State(s)
-        #     else:
-        #         for label, value in labels_dict.items():
-        #             if np.array_equal(np.array(item.value), np.array(value)):
-        #                 labels.append(label)
-        #             labels.append(item.value)
-        #     return labels
+        for state in states:
+            labels.append(state.label)
+        return labels
 
     @property
     def is_finished(self):
