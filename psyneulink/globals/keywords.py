@@ -587,6 +587,7 @@ CONROLLER_PHASE_SPEC = 'ControllerPhaseSpec'
 RUN = 'run'
 TRIAL = 'trial'
 
+ROLES = 'roles'
 VALUES = 'values'
 FUNCTIONS = 'functions'
 

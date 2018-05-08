@@ -451,7 +451,10 @@ from psyneulink.components.shellclasses import Mechanism, Process_Base, System_B
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTIONS, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
+    EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTIONS, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, \
+    INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, \
+    SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -3309,7 +3312,7 @@ class System(System_Base):
     def show_graph(self,
                    show_learning = False,
                    show_control = False,
-                   show_role = False,
+                   show_roles = False,
                    show_dimensions = False,
                    show_mechanism_structure=False,
                    show_headers=True,
@@ -3414,6 +3417,9 @@ class System(System_Base):
             * *FUNCTIONS* -- shows the `function <Mechanism_Base.function>` of the Mechanism and the `function
               <State_Base.function>` of its InputStates and OutputStates.
 
+            * *ROLES* -- shows the `role <System_Mechanisms>` of the Mechanism in the System in square brackets
+              (but not any of the other information;  use *ALL* to show ROLES with other information).
+
             * *ALL* -- shows both `value <Component.value>` and `function <Component.function>` of the Mechanism and
               its States (using labels for the values, if specified;  see above).
 
@@ -3431,11 +3437,12 @@ class System(System_Base):
         COMMENT:
         show_functions : bool : default False
             specifies whether or not to show `function <Component.function>` of Mechanisms and their States in the
-            graph;  this requires **show_mechanism_structure** to be specified as `True` to take effect.
+            graph (enclosed by parentheses);  this requires **show_mechanism_structure** to be specified as `True`
+            to take effect.
 
         show_values : bool : default False
-            specifies whether or not to show `value <Component.value>` of Mechanisms and their States in the
-            graph;  this requires **show_mechanism_structure** to be specified as `True` to take effect.
+            specifies whether or not to show `value <Component.value>` of Mechanisms and their States in the graph
+            (prefixed by "=");  this requires **show_mechanism_structure** to be specified as `True` to take effect.
         COMMENT
 
         show_projection_labels : bool : default False
@@ -3452,6 +3459,11 @@ class System(System_Base):
         show_control :  bool : default False
             specifies whether or not to show the control components of the system;
             they will all be displayed in the color specified for **control_color**.
+
+        show_roles : bool : default False
+            specifies whether or not to include the `role <System_Mechanisms>` that each Mechanism plays in the System
+            (enclosed by square brackets); 'ORIGIN' and 'TERMINAL' Mechanisms are also displayed in a color specified
+            by the **origin_color**, **terminal_color** and **origin_and_terminal_color** arguments (see below).
 
         show_dimensions : bool, MECHANISMS, PROJECTIONS or ALL : default False
             specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
@@ -3528,7 +3540,9 @@ class System(System_Base):
             show_dimensions = ALL
 
         # Argument values used to call Mechanism.show_structure()
-        mech_struct_args = {'show_functions':show_mechanism_structure in {FUNCTIONS, ALL},
+        mech_struct_args = {'system':self,
+                            'show_role':show_mechanism_structure in {ROLES, ALL},
+                            'show_functions':show_mechanism_structure in {FUNCTIONS, ALL},
                             'show_values':show_mechanism_structure in {VALUES, LABELS, ALL},
                             'use_labels':show_mechanism_structure in {LABELS, ALL},
                             'show_headers':show_headers,
@@ -3565,7 +3579,7 @@ class System(System_Base):
                 }
         )
 
-        # work with system graph
+        # parse system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
@@ -3588,15 +3602,12 @@ class System(System_Base):
                 rcvr_penwidth = default_width
 
             # Implement rcvr node
+            rcvr_label = self._get_label(rcvr, show_dimensions, show_roles)
             if show_mechanism_structure:
-                rcvr_label=rcvr.name
-                G.node(rcvr_label,
-                       rcvr.show_structure(**mech_struct_args),
-                       color=rcvr_color,
-                       penwidth=rcvr_penwidth)
+                shape = rcvr.show_structure(**mech_struct_args)
             else:
-                rcvr_label = self._get_label(rcvr, show_dimensions, show_role)
-                G.node(rcvr_label, shape=mechanism_shape, color=rcvr_color, penwidth=rcvr_penwidth)
+                shape = mechanism_shape
+            G.node(rcvr_label, shape, color=rcvr_color, penwidth=rcvr_penwidth)
 
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
@@ -3609,7 +3620,7 @@ class System(System_Base):
                     else:
                         sndr_proj_label = rcvr_proj_label = rcvr_label
                     if show_projection_labels:
-                        edge_label = self._get_label(proj, show_dimensions, show_role)
+                        edge_label = self._get_label(proj, show_dimensions, show_roles)
                     else:
                         edge_label = ''
                     try:
@@ -3634,10 +3645,7 @@ class System(System_Base):
             for sndr in sndrs:
 
                 # Set sndr info
-                if show_mechanism_structure:
-                    sndr_label = sndr.name
-                else:
-                    sndr_label = self._get_label(sndr, show_dimensions, show_role)
+                sndr_label = self._get_label(sndr, show_dimensions, show_roles)
                 if sndr is active_item:
                     sndr_color = active_color
                 else:
@@ -3654,7 +3662,7 @@ class System(System_Base):
                             else:
                                 sndr_proj_label = sndr_label
                                 rcvr_proj_label = rcvr_label
-                            edge_name = self._get_label(proj, show_dimensions, show_role)
+                            edge_name = self._get_label(proj, show_dimensions, show_roles)
                             # edge_shape = proj.matrix.shape
                             try:
                                 has_learning = proj.has_learning_projection
@@ -3697,10 +3705,7 @@ class System(System_Base):
             for rcvr in rcvrs:
 
                 # Get rcvr info
-                if show_mechanism_structure:
-                    rcvr_label=rcvr.name
-                else:
-                    rcvr_label = self._get_label(rcvr, show_dimensions, show_role)
+                rcvr_label = self._get_label(rcvr, show_dimensions, show_roles)
                 if rcvr is active_item:
                     rcvr_color = active_color
                 else:
@@ -3717,12 +3722,12 @@ class System(System_Base):
                             edge_label = ''
                         if show_mechanism_structure:
                             G.edge(sndr.name + ':' + OutputState.__name__ + '-' + 'LearningSignal',
-                                   self._get_label(rcvr, show_dimensions, show_role),
+                                   self._get_label(rcvr, show_dimensions, show_roles),
                                    label=edge_label,
                                    color=rcvr_color)
                         else:
-                            G.edge(self._get_label(sndr, show_dimensions, show_role),
-                                   self._get_label(rcvr, show_dimensions, show_role),
+                            G.edge(self._get_label(sndr, show_dimensions, show_roles),
+                                   self._get_label(rcvr, show_dimensions, show_roles),
                                    label = edge_label,
                                    color=rcvr_color)
 
@@ -3742,7 +3747,7 @@ class System(System_Base):
                                rcvr.show_structure(**mech_struct_args),
                                color=rcvr_color)
                     else:
-                        G.node(self._get_label(rcvr, show_dimensions, show_role),
+                        G.node(self._get_label(rcvr, show_dimensions, show_roles),
                                color=rcvr_color,
                                shape=mechanism_shape)
 
@@ -3758,10 +3763,7 @@ class System(System_Base):
 
                             # Get sndr info
                             sndr = proj.sender.owner
-                            if show_mechanism_structure:
-                                sndr_label = sndr.name
-                            else:
-                                sndr_label = self._get_label(sndr, show_dimensions)
+                            sndr_label = self._get_label(sndr, show_dimensions, show_roles)
                             if sndr is active_item:
                                 sndr_color = active_color
                             else:
@@ -3775,12 +3777,10 @@ class System(System_Base):
                                  and self in sndr.systems)):
 
                                 if show_mechanism_structure:
-                                    G.node(sndr_label,
-                                           sndr.show_structure(**mech_struct_args),
-                                           color=sndr_color)
+                                    shape = sndr.show_structure(**mech_struct_args)
                                 else:
-                                    G.node(self._get_label(sndr, show_dimensions, show_role),
-                                           color=sndr_color, shape=mechanism_shape)
+                                    shape = mechanism_shape
+                                G.node(self._get_label(sndr,show_dimensions,show_roles), shape=shape, color=sndr_color)
                             else:
                                 if not show_learning is ALL:
                                     continue
@@ -3822,7 +3822,7 @@ class System(System_Base):
                                             else:
                                                 smpl_or_trgt_src_color = system_color
 
-                                            G.node(self._get_label(smpl_or_trgt_src, show_dimensions, show_role),
+                                            G.node(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
                                                    color=smpl_or_trgt_src_color,
                                                    penwidth='3')
 
@@ -3844,8 +3844,8 @@ class System(System_Base):
                                                    label=edge_label,
                                                    color=learning_proj_color)
                                         else:
-                                            G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_role),
-                                                   self._get_label(sndr, show_dimensions, show_role),
+                                            G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
+                                                   self._get_label(sndr, show_dimensions, show_roles),
                                                    color=learning_proj_color,
                                                    label=edge_label)
 
@@ -3889,8 +3889,8 @@ class System(System_Base):
                        objmech.show_structure(**mech_struct_args),
                        color=objmech_color)
             else:
-                ctlr_label = self._get_label(controller, show_dimensions, show_role)
-                objmech_label = self._get_label(objmech, show_dimensions, show_role)
+                ctlr_label = self._get_label(controller, show_dimensions, show_roles)
+                objmech_label = self._get_label(objmech, show_dimensions, show_roles)
                 G.node(ctlr_label, color=ctlr_color, shape=mechanism_shape)
                 G.node(objmech_label, color=objmech_color, shape=mechanism_shape)
 
@@ -3923,7 +3923,7 @@ class System(System_Base):
                                           ParameterState.__name__ + '-' + projection.receiver.name
                     else:
                         ctlr_proj_label = ctlr_label
-                        rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_role)
+                        rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
                     if show_projection_labels:
                         edge_label = projection.name
                     else:
@@ -3945,8 +3945,8 @@ class System(System_Base):
                         # objmech_proj_label = projection.receiver.owner.name + ':' + projection.receiver.name
                         objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
                     else:
-                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_role)
-                        objmech_proj_label = self._get_label(objmech, show_dimensions, show_role)
+                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
+                        objmech_proj_label = self._get_label(objmech, show_dimensions, show_roles)
                     if show_projection_labels:
                         edge_label = projection.name
                     else:
@@ -3980,10 +3980,10 @@ class System(System_Base):
                                label=' prediction assignment',
                                color=pred_proj_color)
                     else:
-                        G.node(self._get_label(mech, show_dimensions, show_role),
+                        G.node(self._get_label(mech, show_dimensions, show_roles),
                                color=pred_mech_color, shape=mechanism_shape)
-                        G.edge(self._get_label(mech, show_dimensions, show_role),
-                               self._get_label(recvr, show_dimensions, show_role),
+                        G.edge(self._get_label(mech, show_dimensions, show_roles),
+                               self._get_label(recvr, show_dimensions, show_roles),
                                label=' prediction assignment',
                                color=prediction_mechanism_color)
                     pass

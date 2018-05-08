@@ -2456,6 +2456,8 @@ class Mechanism_Base(Mechanism):
                        show_values=False,
                        use_labels=False,
                        show_headers=False,
+                       show_role=False,
+                       system=None,
                        output_fmt='pdf'
                        ):
         """Generate a detailed display of a the structure of a Mechanism.
@@ -2473,11 +2475,11 @@ class Mechanism_Base(Mechanism):
 
         show_functions : bool : default False
             specifies whether or not to show the `function <Component.function>` of the Mechanism and each of its
-            States in the record.
+            States in the record (enclosed in parentheses).
 
         show_values : bool : default False
             specifies whether or not to show the `value <Component.value>` of the Mechanism and each of its States
-            in the record.
+            in the record (prefixed by "=").
 
         use_labels : bool : default False
             specifies whether or not to use labels for values if **show_values** is `True`; labels must be specified
@@ -2485,7 +2487,17 @@ class Mechanism_Base(Mechanism):
             `output_labels_dict <Mechanism.output_labels_dict>` (for OutputState values), otherwise the value is used.
 
         show_headers : bool : default False
-            specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers.
+            specifies whether or not to show the Mechanism, InputState, ParameterState and OutputState headers
+            (shown in caps).
+
+        show_role : bool : default False
+            specifies whether or not to show the `role <System_Mechanisms>` of the Mechanism in the `System` specified
+            in the **system** argument (shown in caps and enclosed in square brackets);
+            if **system** is not specified, show_roles is ignored.
+
+        system : System : default None
+            specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
+            if this is not specified, the **show_role** argument is ignored.
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;\n
@@ -2507,19 +2519,22 @@ class Mechanism_Base(Mechanism):
 
         def mech_string(mech):
             '''Return string with name of mechanism possibly with function and/or value
-            Inclusion of function and value is determined by arguments of call to show_structure '''
+            Inclusion of role, function and/or value is determined by arguments of call to show_structure '''
             if show_headers:
                 mech_header = mechanism_header
             else:
                 mech_header = ''
             mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
+            mech_role = ''
+            if system and show_role:
+                mech_role = r'\n[{}]'.format(self.systems[system])
             mech_function = ''
             if show_functions:
                 mech_function = r'\n({})'.format(mech.function_object.__class__.__name__)
             mech_value = ''
             if show_values:
                 mech_value = r'\n={}'.format(mech.value)
-            return mech_name + mech_function + mech_value
+            return mech_name + mech_role + mech_function + mech_value
 
         def states_string(state_list:ContentAddressableList,
                           state_type,
