@@ -3754,7 +3754,7 @@ class System(System_Base):
                                rcvr.show_structure(**mech_struct_args),
                                color=rcvr_color)
                     else:
-                        G.node(self._get_label(rcvr, show_dimensions, show_roles),
+                        G.node(rcvr_label,
                                color=rcvr_color,
                                shape=mechanism_shape)
 
@@ -3784,10 +3784,13 @@ class System(System_Base):
                                  and self in sndr.systems)):
 
                                 if show_mechanism_structure:
-                                    shape = sndr.show_structure(**mech_struct_args)
+                                    G.node(self._get_label(sndr,show_dimensions,show_roles),
+                                           sndr.show_structure(**mech_struct_args),
+                                           color=sndr_color)
                                 else:
-                                    shape = mechanism_shape
-                                G.node(self._get_label(sndr,show_dimensions,show_roles), shape=shape, color=sndr_color)
+                                    G.node(self._get_label(sndr,show_dimensions,show_roles),
+                                           shape=mechanism_shape,
+                                           color=sndr_color)
                             else:
                                 if not show_learning is ALL:
                                     continue
