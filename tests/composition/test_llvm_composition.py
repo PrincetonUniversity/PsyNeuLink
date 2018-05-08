@@ -111,3 +111,32 @@ def test_5_mechanisms_2_origins_1_terminal(benchmark, mode):
     sched = Scheduler(composition=comp)
     output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
     assert 250 == output[0][0]
+
+
+@pytest.mark.composition
+@pytest.mark.benchmark(group="Merge composition scalar")
+@pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+def test_3_mechanisms_2_origins_1_terminal(benchmark, mode):
+    # C --
+    #              ==> E
+    # D --
+
+    # 5 x 5 = 25 --
+    #                25 + 25 = 50  ==> 50 * 5 = 250
+    # 5 x 5 = 25 --
+
+    comp = Composition()
+    C = TransferMechanism(name="C", function=Linear(slope=5.0))
+    D = TransferMechanism(name="D", function=Linear(slope=5.0))
+    E = TransferMechanism(name="E", function=Linear(slope=5.0))
+    comp.add_mechanism(C)
+    comp.add_mechanism(D)
+    comp.add_mechanism(E)
+    comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
+    comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
+    comp._analyze_graph()
+    inputs_dict = {C: [5.0],
+                   D: [5.0]}
+    sched = Scheduler(composition=comp)
+    output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+    assert 250 == output[0][0]
