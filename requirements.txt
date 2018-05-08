@@ -1,4 +1,5 @@
 toposort==1.4
 numpy
 typecheck-decorator==1.2
+llvmlite
 
