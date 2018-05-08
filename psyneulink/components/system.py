@@ -3932,7 +3932,11 @@ class System(System_Base):
                     # rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
                     if show_mechanism_structure:
                         ctlr_proj_label = ctlr_label
-                        rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
+                        # rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
+                        proj_recvr_label = self._get_label(projection.receiver.owner, show_dimensions,
+                                                           show_roles)
+                        rcvr_proj_label = proj_recvr_label + ':' + \
+                                          ParameterState.__name__ + '-' + proj_recvr_label
                     else:
                         ctlr_proj_label = ctlr_label
                         rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
