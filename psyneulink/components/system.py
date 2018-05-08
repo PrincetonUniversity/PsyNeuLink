@@ -3894,6 +3894,8 @@ class System(System_Base):
                        objmech.show_structure(**mech_struct_args),
                        color=objmech_color)
             else:
+                ctlr_label = self._get_label(controller, show_dimensions, show_roles)
+                objmech_label = self._get_label(objmech, show_dimensions, show_roles)
                 G.node(ctlr_label, color=ctlr_color, shape=mechanism_shape)
                 G.node(objmech_label, color=objmech_color, shape=mechanism_shape)
 
@@ -3928,12 +3930,9 @@ class System(System_Base):
                         proj_color = active_color
                     else:
                         proj_color = control_color
-                    # ctlr_proj_label = ctlr_label
-                    # rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
                     if show_mechanism_structure:
-                        ctlr_proj_label = ctlr_label
-                        proj_recvr_label = self._get_label(projection.receiver.owner, show_dimensions,
-                                                           show_roles)
+                        ctlr_proj_label = ctlr_label + ':' + OutputState.__name__ + '-' + output_state.name
+                        proj_recvr_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
                         rcvr_proj_label = proj_recvr_label + ':' + \
                                           ParameterState.__name__ + '-' + projection.receiver.name
                     else:
