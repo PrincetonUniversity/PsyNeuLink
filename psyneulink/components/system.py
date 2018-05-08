@@ -3366,6 +3366,10 @@ class System(System_Base):
                                    monitor_for_control=[(pnl.MEAN, mech_1)],
                                    enable_controller=True)
 
+        .. _System_show_graph_figure:
+
+        **Output of show_graph using different options**
+
         .. figure:: _static/show_graph_figure.svg
            :alt: System graph examples
            :scale: 150 %
