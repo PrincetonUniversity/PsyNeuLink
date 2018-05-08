@@ -126,6 +126,7 @@ The Components of a System are shown in the figure below and summarized in the s
    Projections responsible for learning and control belong to the System and can monitor and/or control Mechanisms
    belonging to more than one Process (as shown for control in this figure).
 
+
 .. _System_Mechanisms:
 
 Mechanisms
@@ -461,9 +462,9 @@ from psyneulink.scheduling.scheduler import Scheduler
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
     'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple',
-    'NUM_PHASES_PER_TRIAL', 'ORIGIN_MECHANISMS',
-    'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY', 'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS', 'SCHEDULER',
-    'System', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
+    'NUM_PHASES_PER_TRIAL', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
+    'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS',
+    'SCHEDULER', 'System', 'sys', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
     'SystemWarning', 'TARGET_MECHANISMS', 'TERMINAL_MECHANISMS',
 ]
 
@@ -518,12 +519,37 @@ class SystemWarning(Warning):
      def __init__(self, error_value):
          self.error_value = error_value
 
+
 class SystemError(Exception):
      def __init__(self, error_value):
          self.error_value = error_value
 
      def __str__(self):
          return repr(self.error_value)
+
+
+def sys(*args, **kwargs):
+    """Factory method
+
+    **args** can be `Mechanisms <Mechanism>`, `Projections <Projection>` and/or lists containing either, but must
+    conform to the format for the specification of the `pathway <Process.pathway>` argument of a `Process`.  If none
+    of the args is a list, then all are treated as a single Process (i.e., pathway specification). If any args are
+    lists, each is treated as a pathway specification for a Process; any other args not in a list **must be Mechanisms**
+    (i.e., none can be Projections), and each is used to create a singleton Process.
+
+    **kwargs** can be any arguments of the `System` constructor.
+    """
+
+    processes = []
+    if not any(isinstance(arg, list) for arg in args):
+        processes = Process(pathway=list(args))
+    else:
+        for arg in args:
+            if not isinstance(arg, list):
+                arg = [arg]
+            processes.append(Process(pathway=arg))
+
+    return System(processes=processes, **kwargs)
 
 
 # FIX:  IMPLEMENT DEFAULT PROCESS
@@ -1549,16 +1575,15 @@ class System(System_Base):
             # that the length of the corresponding item of self.instance_defaults.variable matches the length of the
             #  ORIGIN inputState's instance_defaults.variable attribute
             for j in range(len(origin_mech.input_states)):
-                if len(self.instance_defaults.variable[i][j]) != \
-                        len(origin_mech.input_states[j].instance_defaults.variable):
+                if len(self.instance_defaults.variable[i][j]) != origin_mech.input_states[j].socket_width:
                     raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
                                       "corresponding ORIGIN Mechanism ()".
                                       format(i,
                                              len(self.instance_defaults.variable[i][j]),
-                                             len(origin_mech.input_states[j].instance_defaults.variable),
+                                             origin_mech.input_states[j].socket_width,
                                              origin_mech.name))
                 stimulus_input_state = SystemInputState(owner=self,
-                                                        variable=origin_mech.input_states[j].instance_defaults.variable,
+                                                        variable=origin_mech.input_states[j].socket_template,
                                                         prefs=self.prefs,
                                                         name="System Input State to Mechansism {}, Input State {}".
                                                         format(origin_mech.name,j),
@@ -3243,7 +3268,7 @@ class System(System_Base):
         # For Mechanisms, show length of each InputState and OutputState
         if isinstance(item, Mechanism):
             if show_dimensions in {ALL, MECHANISMS}:
-                input_str = "in ({})".format(",".join(str(len(input_state.variable))
+                input_str = "in ({})".format(",".join(str(input_state.socket_width)
                                                       for input_state in item.input_states))
                 output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
                                                         for output_state in item.output_states))
@@ -3277,7 +3302,6 @@ class System(System_Base):
             raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
 
     def show_graph(self,
-                   active_item = None,
                    show_learning = False,
                    show_control = False,
                    show_dimensions = False,
@@ -3285,6 +3309,7 @@ class System(System_Base):
                    show_headers=True,
                    show_projection_labels=False,
                    direction = 'BT',
+                   active_item = None,
                    active_color = 'yellow',
                    origin_color = 'green',
                    terminal_color = 'red',
@@ -3323,11 +3348,43 @@ class System(System_Base):
         colors: https://graphviz.gitlab.io/_pages/doc/info/colors.html
         COMMENT
 
+
+        Examples
+        --------
+
+        The figure below shows different renderings of the following System that can be generated using its
+        show_graph method::
+
+            import psyneulink as pnl
+            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_states=[pnl.RESULTS, pnl.MEAN])
+            mech_2 = pnl.TransferMechanism(name='Mech 2', size=5)
+            mech_3 = pnl.TransferMechanism(name='Mech 3', size=2, function=pnl.Logistic(gain=pnl.CONTROL))
+            my_process_A = pnl.Process(pathway=[mech_1, mech_3], learning=pnl.ENABLED)
+            my_process_B = pnl.Process(pathway=[mech_2, mech_3])
+            my_system = pnl.System(processes=[my_process_A, my_process_B],
+                                   controller=pnl.ControlMechanism(name='my_system Controller'),
+                                   monitor_for_control=[(pnl.MEAN, mech_1)],
+                                   enable_controller=True)
+
+        .. figure:: _static/show_graph_figure.svg
+           :alt: System graph examples
+           :scale: 150 %
+
+           Examples of renderings generated by the show_graph method with different options specified, and the call
+           to the show_graph method used to generate each rendering shown below each example. **Panel A** shows the
+           simplest rendering, with just Processing Components displayed; `ORIGIN` Mechanisms are shown in red,
+           and the `TERMINAL` Mechanism in green.  **Panel B** shows the same graph with `MappingProjection` names
+           and Component dimensions displayed.  **Panel C** shows the learning Components of the System displayed (in
+           orange).  **Panel D** shows the control Components of the System displayed (in blue).  **Panel E** shows
+           both learning and control Components;  the learning components are shown with all `LearningProjections
+           <LearningProjection>` shown (by specifying show_learning=pnl.ALL).  **Panel F** shows a detailed view of
+           the Processing Components, using the show_mechanism_structure option, that includes Component labels and
+           values.  **Panel G** show a simpler rendering using the show_mechanism_structure, that only shows
+           Component names, but includes the control Components (using the show_control option).
+
+
         Arguments
         ---------
-
-        active_item : Component : default None
-            specifies the item in the graph to display in the color specified by *active_color**.
 
         show_mechanism_structure : bool, VALUES, FUNCTIONS or ALL : default False
             specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
@@ -3405,6 +3462,9 @@ class System(System_Base):
 
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
+
+        active_item : Component : default None
+            specifies the item in the graph to display in the color specified by *active_color**.
 
         active_color : keyword : default 'yellow'
             specifies the color in which to display the item specified in *active_item**.
@@ -3969,3 +4029,4 @@ class SystemInputState(OutputState):
         self.efferents = []
         self.owner = owner
         self.value = variable
+

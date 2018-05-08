@@ -307,7 +307,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import AdaptiveIntegrator, Linear, NormalizingFunction, UserDefinedFunction
+from psyneulink.components.functions.function import Function, TransferFunction, AdaptiveIntegrator, Linear, NormalizingFunction, DistributionFunction, UserDefinedFunction
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -745,8 +745,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         """Validate FUNCTION and Mechanism params
 
         """
-        from psyneulink.components.functions.function import \
-            Function, TransferFunction, NormalizingFunction, DistributionFunction
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -805,7 +803,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
-                target_set[NOISE] = noise.function
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
 
         # Validate SMOOTHING_FACTOR:
@@ -848,11 +846,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                     " as a float, a function, or an array of the appropriate shape ({})."
                     .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(self.instance_defaults.variable))))
             else:
-                for noise_item in noise:
-                    if not isinstance(noise_item, (float, int)) and not callable(noise_item):
-                        raise MechanismError(
-                            "The elements of a noise list or array must be floats or functions. {} is not a valid noise"
-                            " element for {}".format(noise_item, self.name))
+                for i in range(len(noise)):
+                    if isinstance(noise[i], DistributionFunction):
+                        noise[i] = noise[i]._execute
+                    if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
+                        raise MechanismError("The elements of a noise list or array must be floats or functions. "
+                            "{} is not a valid noise element for {}".format(noise[i], self.name))
 
         elif _is_control_spec(noise):
             pass
@@ -930,27 +929,20 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if not self.integrator_function:
 
-            self.integrator_function = AdaptiveIntegrator(
-                function_variable,
-                initializer=initial_value,
-                noise=noise,
-                rate=smoothing_factor,
-                owner=self
-            )
+            self.integrator_function = AdaptiveIntegrator(function_variable,
+                                                          initializer=initial_value,
+                                                          noise=noise,
+                                                          rate=smoothing_factor,
+                                                          owner=self)
 
             self.original_integrator_function = self.integrator_function
 
-        current_input = self.integrator_function.execute(
-            function_variable,
-            # Should we handle runtime params?
-            runtime_params={
-                # FIX: 4/30/18 - SHOULDN'T THESE BE THE PARAMS PASSED IN OR RETRIEVED ABOVE??
-                INITIALIZER: self.initial_value,
-                NOISE: self.noise,
-                RATE: self.smoothing_factor
-            },
-            context=context
-        )
+        current_input = self.integrator_function.execute(function_variable,
+                                                         # Should we handle runtime params?
+                                                         runtime_params={INITIALIZER: self.initial_value,
+                                                                         NOISE: self.noise,
+                                                                         RATE: self.smoothing_factor},
+                                                         context=context)
 
         return current_input
 
@@ -1125,13 +1117,11 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return builder
 
-    def _execute(
-        self,
-        variable=None,
-        function_variable=None,
-        runtime_params=None,
-        context=None
-    ):
+    def _execute(self,
+                 variable=None,
+                 function_variable=None,
+                 runtime_params=None,
+                 context=None):
         """Execute TransferMechanism function and return transform of input
 
         Execute TransferMechanism function on input, and assign to output_values:

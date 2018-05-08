@@ -11,6 +11,8 @@ Functions
              UserDefinedFunction,
              Reduce,
              LinearCombination,
+             CombineMeans,
+             PredictionErrorDeltaFunction,
              TransferFunction,
              Linear,
              Exponential,

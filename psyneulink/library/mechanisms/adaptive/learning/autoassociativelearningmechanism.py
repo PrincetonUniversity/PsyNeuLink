@@ -24,7 +24,7 @@ Creating an AutoAssociativeLearningMechanism
 
 An AutoAssociativeLearningMechanism can be created directly by calling its constructor, but most commonly it is
 created automatically when a RecurrentTransferMechanism is `configure for learning <Recurrent_Transfer_Learning>`,
-(identified in its activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
+(identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
 
 .. _AutoAssociativeLearningMechanism_Structure:
 
@@ -133,28 +133,29 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     Arguments
     ---------
 
-    variable : List or 2d np.array
+    variable : List or 2d np.array : default None
         it must have a single item that corresponds to the value required by the AutoAssociativeLearningMechanism's
         `function <AutoAssociativeLearningMechanism..function>`;  it must each be compatible (in number and type)
         with the `value <InputState.value>` of the Mechanism's `InputState <LearningMechanism_InputStates>` (see
         `variable <AutoAssociativeLearningMechanism..variable>` for additional details).
 
-    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict]
+    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] \
+    : default None
         specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
         <LearningMechanism.learning_signals>` for details of specification).
 
-    modulation : ModulationParam : ModulationParam.ADDITIVE
+    modulation : ModulationParam : default ModulationParam.ADDITIVE
         specifies the default form of modulation used by the AutoAssociativeLearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
-    function : LearningFunction or function
+    function : LearningFunction or function : default Hebbian
         specifies the function used to calculate the AutoAssociativeLearningMechanism's `learning_signal
         <AutoAssociativeLearningMechanism.learning_signal>` attribute.  It must take as its **variable** argument a
         list or 1d array of numeric values (the "activity vector") and return a list, 2d np.array or np.matrix
         representing a square matrix with dimensions that equal the length of its variable (the "weight change
         matrix").
 
-    learning_rate : float
+    learning_rate : float : default None
         specifies the learning rate for the AutoAssociativeLearningMechanism. (see `learning_rate
         <AutoAssociativeLearningMechanism.learning_rate>` for details).
 

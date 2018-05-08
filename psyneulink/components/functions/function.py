@@ -17,7 +17,7 @@ Combination Functions:
   * `Reduce`
   * `LinearCombination`
   * `CombineMeans`
-  * `PredictionErrorDelta`
+  * `PredictionErrorDeltaFunction`
 
 TransferMechanism Functions:
   * `Linear`
@@ -674,6 +674,10 @@ class Function_Base(Function):
                                 format(param, param_name, self.__class__.__name__, owner_name))
 
     def get_current_function_param(self, param_name):
+        if param_name == "variable":
+            raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
+                                "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
+                                "default variable, try {}.instance_defaults.variable.".format(self.name, self.name))
         try:
             return self.owner._parameter_states[param_name].value
         except (AttributeError, TypeError):
@@ -1497,7 +1501,8 @@ class CombinationFunction(Function_Base):
     componentType = COMBINATION_FUNCTION_TYPE
 
     class ClassDefaults(Function_Base.ClassDefaults):
-        variable = np.array([0, 0])
+        # variable = np.array([0, 0])
+        variable = np.array([0])
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
@@ -2017,11 +2022,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        if self.weights is not None:
-            self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
-        if self.exponents is not None:
-            self.exponents = np.atleast_2d(self.exponents).reshape(-1, 1)
-
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
 
@@ -2049,9 +2049,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                 else:
                     new_length = len(variable[i])
                 if old_length != new_length:
-                    raise FunctionError("Length of all arrays in variable {0} "
-                                        "for {1} must be the same".format(variable,
-                                                                          self.__class__.__name__))
+                    raise FunctionError("Length of all arrays in variable for {0} must be the same; variable: {1}".
+                                        format(self.__class__.__name__, variable))
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2073,17 +2072,15 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
-            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
-                if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
+                if np.array(target_set[WEIGHTS]).shape != self.instance_defaults.variable.shape:
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
-            target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
+                if np.array(target_set[EXPONENTS]).shape != self.instance_defaults.variable.shape:
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
 
@@ -2342,18 +2339,20 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         pow_f = ctx.module.declare_intrinsic("llvm.pow", [ctx.float_ty])
 
         for i in range(vi.type.pointee.count):
-            if len(exponent_type) > 1:
+            # No exponent
+            if isinstance(exponent_type, ir.LiteralStructType):
+                exponent = ctx.float_ty(1.0)
+            # Vector exponent
+            elif isinstance(exponent_type, ir.ArrayType):
+                assert len(exponent_type) > 1
                 assert exponent_type.pointee.count == vo.type.pointee.count * vi.type.pointee.count
                 exponent_index = ctx.int32_ty(vo.type.pointee.count * (i - 1))
                 exponent_index = builder.add(exponent_index, index)
-            else:
-                exponent_index = ctx.int32_ty(0)
-
-            if isinstance(exponent_type, ir.LiteralStructType):
-                exponent = ctx.float_ty(1.0)
-            else:
                 exponent_ptr = builder.gep(exponent_param_ptr, [ctx.int32_ty(0), exponent_index])
                 exponent = builder.load(exponent_ptr)
+            # Scalar exponent
+            else:
+                exponent = builder.load(exponent_param_ptr)
 
             ptri = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(i), index])
             in_val = builder.load(ptri)
@@ -4758,7 +4757,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if isinstance(obj.receiver.instance_defaults.variable, numbers.Number):
                 cols = 1
             else:
-                cols = len(obj.receiver.instance_defaults.variable)
+                cols = obj.receiver.socket_width
         matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:
@@ -5090,6 +5089,10 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         #     self._validate_initializer(target_set[INITIALIZER])
 
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
 
     def _validate_rate(self, rate):
@@ -5156,11 +5159,12 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                         "must be specified as a float, a function, or an array of the appropriate shape ({})."
                             .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(self.instance_defaults.variable))))
             else:
-                for noise_item in noise:
-                    if not isinstance(noise_item, (float, int)) and not callable(noise_item):
-                        raise FunctionError(
-                            "The elements of a noise list or array must be floats or functions. "
-                            "{} is not a valid noise element for {}".format(noise_item, self.name))
+                for i in range(len(noise)):
+                    if isinstance(noise[i], DistributionFunction):
+                        noise[i] = noise[i]._execute
+                    if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
+                        raise FunctionError("The elements of a noise list or array must be floats or functions. "
+                                            "{} is not a valid noise element for {}".format(noise[i], self.name))
 
         # Otherwise, must be a float, int or function
         elif not isinstance(noise, (float, int)) and not callable(noise):
@@ -6098,6 +6102,10 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                     raise FunctionError(rate_value_msg.format(rate, self.name))
 
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
         # if INITIALIZER in target_set:
         #     self._validate_initializer(target_set[INITIALIZER])
@@ -8154,6 +8162,10 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                         "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])

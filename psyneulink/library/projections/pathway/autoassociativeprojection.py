@@ -62,8 +62,8 @@ arguments for a RecurrentTransferMechanism:
 Execution
 ---------
 
-An AutoAssociativeProjection uses its `matrix <AutoAssociativeProjection.matrix>` parameter to transform the value of its
-`sender <AutoAssociativeProjection.sender>`, and provide the result as input for its
+An AutoAssociativeProjection uses its `matrix <AutoAssociativeProjection.matrix>` parameter to transform the value of
+its `sender <AutoAssociativeProjection.sender>`, and provide the result as input for its
 `receiver <AutoAssociativeProjection.receiver>`, the primary input state of the RecurrentTransferMechanism.
 
 .. note::
