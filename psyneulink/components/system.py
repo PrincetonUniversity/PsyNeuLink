@@ -3884,18 +3884,20 @@ class System(System_Base):
             else:
                 objmech_color = control_color
 
-            # ctlr and objmech nodes
-            ctlr_label = self._get_label(controller, show_dimensions, show_roles)
-            objmech_label = self._get_label(objmech, show_dimensions, show_roles)
-
             if show_mechanism_structure:
-                ctlr_shape = controller.show_structure(**mech_struct_args)
-                objmech_shape = objmech.show_structure(**mech_struct_args)
+                ctlr_label = controller.name
+                objmech_label = objmech.name
+                G.node(ctlr_label,
+                       controller.show_structure(**mech_struct_args),
+                       color=ctlr_color)
+                G.node(objmech_label,
+                       objmech.show_structure(**mech_struct_args),
+                       color=objmech_color)
             else:
-                ctlr_shape = mechanism_shape
-                objmech_shape = mechanism_shape
-            G.node(ctlr_label, shape=ctlr_shape, color=ctlr_color)
-            G.node(objmech_label, shape=objmech_shape, color=objmech_color)
+                ctlr_label = self._get_label(controller, show_dimensions, show_roles)
+                objmech_label = self._get_label(objmech, show_dimensions, show_roles)
+                G.node(ctlr_label, color=ctlr_color, shape=mechanism_shape)
+                G.node(objmech_label, color=objmech_color, shape=mechanism_shape)
 
             # objmech to controller edge
             if show_projection_labels:
