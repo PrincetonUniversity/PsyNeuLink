@@ -3606,7 +3606,7 @@ class System(System_Base):
 
             # Implement rcvr node
             if show_mechanism_structure:
-                rcvr_label=rcvr.name
+                rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
                 G.node(rcvr_label,
                        rcvr.show_structure(**mech_struct_args),
                        color=rcvr_color,
@@ -3621,8 +3621,8 @@ class System(System_Base):
                     if proj.sender.owner is not rcvr:
                         continue
                     if show_mechanism_structure:
-                        sndr_proj_label = '{}:{}-{}'.format(rcvr.name, OutputState.__name__, proj.sender.name)
-                        rcvr_proj_label = '{}:{}-{}'.format(rcvr.name, InputState.__name__, proj.receiver.name)
+                        sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputState.__name__, proj.sender.name)
+                        rcvr_proj_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
                     else:
                         sndr_proj_label = rcvr_proj_label = rcvr_label
                     if show_projection_labels:
@@ -3727,7 +3727,7 @@ class System(System_Base):
                         else:
                             edge_label = ''
                         if show_mechanism_structure:
-                            G.edge(sndr.name + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                            G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
                                    self._get_label(rcvr, show_dimensions, show_roles),
                                    label=edge_label,
                                    color=rcvr_color)
@@ -3749,7 +3749,7 @@ class System(System_Base):
                         rcvr_color = learning_color
 
                     if show_mechanism_structure:
-                        G.node(rcvr.name,
+                        G.node(rcvr_label,
                                rcvr.show_structure(**mech_struct_args),
                                color=rcvr_color)
                     else:
@@ -3884,9 +3884,9 @@ class System(System_Base):
             else:
                 objmech_color = control_color
 
+            ctlr_label = self._get_label(controller, show_dimensions, show_roles)
+            objmech_label = self._get_label(objmech, show_dimensions, show_roles)
             if show_mechanism_structure:
-                ctlr_label = controller.name
-                objmech_label = objmech.name
                 G.node(ctlr_label,
                        controller.show_structure(**mech_struct_args),
                        color=ctlr_color)
@@ -3894,8 +3894,6 @@ class System(System_Base):
                        objmech.show_structure(**mech_struct_args),
                        color=objmech_color)
             else:
-                ctlr_label = self._get_label(controller, show_dimensions, show_roles)
-                objmech_label = self._get_label(objmech, show_dimensions, show_roles)
                 G.node(ctlr_label, color=ctlr_color, shape=mechanism_shape)
                 G.node(objmech_label, color=objmech_color, shape=mechanism_shape)
 
@@ -3905,8 +3903,12 @@ class System(System_Base):
             else:
                 edge_label = ''
             if show_mechanism_structure:
-                G.edge(objmech_label + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name,
-                       ctlr_label + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name,
+                # G.edge(objmech_label + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name,
+                #        ctlr_label + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name,
+                #        label=edge_label,
+                #        color=objmech_ctlr_proj_color)
+                G.edge(objmech_label,
+                       ctlr_label,
                        label=edge_label,
                        color=objmech_ctlr_proj_color)
             else:
@@ -3923,9 +3925,11 @@ class System(System_Base):
                     else:
                         proj_color = control_color
                     if show_mechanism_structure:
-                        ctlr_proj_label = ctlr_label + ':' + OutputState.__name__ + '-' + output_state.name
-                        rcvr_proj_label = projection.receiver.owner.name + ':' + \
-                                          ParameterState.__name__ + '-' + projection.receiver.name
+                        # ctlr_proj_label = ctlr_label + ':' + OutputState.__name__ + '-' + output_state.name
+                        # rcvr_proj_label = projection.receiver.owner.name + ':' + \
+                        #                   ParameterState.__name__ + '-' + projection.receiver.name
+                        ctlr_proj_label = ctlr_label
+                        rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
                     else:
                         ctlr_proj_label = ctlr_label
                         rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
@@ -3946,7 +3950,8 @@ class System(System_Base):
                     else:
                         proj_color = control_color
                     if show_mechanism_structure:
-                        sndr_proj_label = projection.sender.owner.name + ':' + OutputState.__name__ + '-' + projection.sender.name
+                        # sndr_proj_label = projection.sender.owner.name + ':' + OutputState.__name__ + '-' + projection.sender.name
+                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
                         # objmech_proj_label = projection.receiver.owner.name + ':' + projection.receiver.name
                         objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
                     else:
@@ -3981,7 +3986,7 @@ class System(System_Base):
 
 
                         G.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
-                               rcvr.name + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                               rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
                                label=' prediction assignment',
                                color=pred_proj_color)
                     else:
