@@ -991,20 +991,21 @@ def _parse_input_labels(obj, stimuli, mechanisms_to_parse):
 
     def get_input_for_label(mech, key):
         """check mech.input_labels_dict for key"""
-
         try:
             return mech.input_labels_dict[key]
         except KeyError:
             raise RunError("No entry \'{}\' found for input to {} in {} for mech.name".
                            format(key, obj.name, INPUT_LABELS_DICT, mech.name))
+
     if len(mechanisms_to_parse) == 1:
         if isinstance(stimuli, float):
             return stimuli
         elif isinstance(stimuli, str):
             stimuli = {mechanisms_to_parse[0]: [stimuli]}
-    # for mech, inputs in stimuli.items():
+
     for mech in mechanisms_to_parse:
         inputs = stimuli[mech]
+
         # Check for subdicts
         subdicts = False
         for k in mech.input_labels_dict:

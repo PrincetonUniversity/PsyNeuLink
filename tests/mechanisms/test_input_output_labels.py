@@ -227,8 +227,7 @@ class TestMechanismTargetLabels:
         S.run(inputs=['red', 'green', 'green', 'red'],
               targets=['red', 'green', 'green', 'red'],
               call_after_trial=record_matrix_after_trial)
-        print(S.results)
-        print(learned_matrix)
+
         assert np.allclose(S.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
         assert np.allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
@@ -246,11 +245,47 @@ class TestMechanismOutputLabels:
         P = Process(pathway=[M])
         S = System(processes=[P])
 
-        S.run(inputs=['red', 'green', 'green', 'red'])
-        assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
+        store_output_labels = []
 
-        S.run(inputs=[1, 'green', 0, 'red'])
+        def call_after_trial():
+            store_output_labels.append(M.output_labels)
+
+        S.run(inputs=['red', 'green', 'green', 'red'],
+              call_after_trial=call_after_trial)
+        assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
+        assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
+
+        store_output_labels = []
+        S.run(inputs=[1, 'green', 0, 'red'],
+              call_after_trial=call_after_trial)
         assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
-        print(M.output_labels)
+        assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
+
+    def test_dict_of_arrays(self):
+        input_labels_dict = {"red": [1.0, 0.0],
+                             "green": [0.0, 1.0]}
+        output_labels_dict = {"red": [1.0, 0.0],
+                              "green": [0.0, 1.0]}
+        M = ProcessingMechanism(size=2,
+                                params={INPUT_LABELS_DICT: input_labels_dict,
+                                        OUTPUT_LABELS_DICT: output_labels_dict})
+        P = Process(pathway=[M])
+        S = System(processes=[P])
+
+        store_output_labels = []
+
+        def call_after_trial():
+            store_output_labels.append(M.output_labels)
+
+        S.run(inputs=['red', 'green', 'green', 'red'],
+              call_after_trial=call_after_trial)
+        assert np.allclose(S.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
+        assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
+
+        store_output_labels = []
+        S.run(inputs=[[1.0, 0.0], 'green', [0.0, 1.0], 'red'],
+              call_after_trial=call_after_trial)
+        assert np.allclose(S.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]], [[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
+        assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
 
 
