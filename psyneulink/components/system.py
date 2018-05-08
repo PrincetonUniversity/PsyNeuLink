@@ -3848,10 +3848,16 @@ class System(System_Base):
 
                                         if show_mechanism_structure and not isinstance(smpl_or_trgt_src, System):
                                             # G.edge(proj.sender.owner.name + ':'
-                                            G.edge(self._get_label(proj.sender.owner, show_dimensions, show_roles) + ':'
-                                                       + OutputState.__name__ + '-' + proj.sender.name,
-                                                   proj.receiver.owner.name + ':'
-                                                       + InputState.__name__ + '-' + proj.receiver.name,
+                                            # G.edge(self._get_label(proj.sender.owner, show_dimensions, show_roles) + ':'
+                                            #            + OutputState.__name__ + '-' + proj.sender.name,
+                                            #        proj.receiver.owner.name + ':'
+                                            #            + InputState.__name__ + '-' + proj.receiver.name,
+                                            G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
+                                                       + ':' + OutputState.__name__ + '-' + proj.sender.name,
+                                                   self._get_label(proj.receiver.owner, show_dimensions, show_roles)
+                                                       + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                                                   # proj.receiver.owner.name + ':'
+                                                   #     + InputState.__name__ + '-' + proj.receiver.name,
                                                    label=edge_label,
                                                    color=learning_proj_color)
                                         else:
