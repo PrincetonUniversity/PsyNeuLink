@@ -3902,32 +3902,35 @@ class System(System_Base):
                 edge_label = objmech_ctlr_proj.name
             else:
                 edge_label = ''
-            if show_mechanism_structure:
-                # G.edge(objmech_label + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name,
-                #        ctlr_label + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name,
-                #        label=edge_label,
-                #        color=objmech_ctlr_proj_color)
-                G.edge(objmech_label,
-                       ctlr_label,
-                       label=edge_label,
-                       color=objmech_ctlr_proj_color)
-            else:
-                G.edge(objmech_label,
-                       ctlr_label,
-                       label=edge_label,
-                       color=objmech_ctlr_proj_color)
+            G.edge(objmech_label,
+                   ctlr_label,
+                   label=edge_label,
+                   color=objmech_ctlr_proj_color)
+            # if show_mechanism_structure:
+            #     # G.edge(objmech_label + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name,
+            #     #        ctlr_label + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name,
+            #     #        label=edge_label,
+            #     #        color=objmech_ctlr_proj_color)
+            #     G.edge(objmech_label,
+            #            ctlr_label,
+            #            label=edge_label,
+            #            color=objmech_ctlr_proj_color)
+            # else:
+            #     G.edge(objmech_label,
+            #            ctlr_label,
+            #            label=edge_label,
+            #            color=objmech_ctlr_proj_color)
 
-            # outgoing edges
+            # outgoing edges (from controller to processing mechs)
             for output_state in controller.control_signals:
                 for projection in output_state.efferents:
                     if projection is active_item:
                         proj_color = active_color
                     else:
                         proj_color = control_color
+                    # ctlr_proj_label = ctlr_label
+                    # rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
                     if show_mechanism_structure:
-                        # ctlr_proj_label = ctlr_label + ':' + OutputState.__name__ + '-' + output_state.name
-                        # rcvr_proj_label = projection.receiver.owner.name + ':' + \
-                        #                   ParameterState.__name__ + '-' + projection.receiver.name
                         ctlr_proj_label = ctlr_label
                         rcvr_proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
                     else:
@@ -3942,20 +3945,18 @@ class System(System_Base):
                            label=edge_label,
                            color=proj_color)
 
-            # incoming edges
+            # incoming edges (from monitored mechs to objective mechanism
             for input_state in objmech.input_states:
                 for projection in input_state.path_afferents:
                     if projection is active_item:
                         proj_color = active_color
                     else:
                         proj_color = control_color
+                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
                     if show_mechanism_structure:
-                        # sndr_proj_label = projection.sender.owner.name + ':' + OutputState.__name__ + '-' + projection.sender.name
-                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
-                        # objmech_proj_label = projection.receiver.owner.name + ':' + projection.receiver.name
                         objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
+                        # objmech_proj_label = self._get_label(objmech, show_dimensions, show_roles)
                     else:
-                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
                         objmech_proj_label = self._get_label(objmech, show_dimensions, show_roles)
                     if show_projection_labels:
                         edge_label = projection.name
