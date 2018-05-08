@@ -3852,6 +3852,14 @@ class System(System_Base):
                                             #            + OutputState.__name__ + '-' + proj.sender.name,
                                             #        proj.receiver.owner.name + ':'
                                             #            + InputState.__name__ + '-' + proj.receiver.name,
+                                            # FROM DEVEL:
+                                            # G.edge(proj.sender.owner.name + ':'
+                                            #            + OutputState.__name__ + '-' + proj.sender.name,
+                                            #        proj.receiver.owner.name + ':'
+                                            #            + InputState.__name__ + '-' + proj.receiver.name,
+                                            #        label=edge_label,
+                                            #        color=learning_proj_color)
+
                                             G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
                                                        + ':' + OutputState.__name__ + '-' + proj.sender.name,
                                                    self._get_label(proj.receiver.owner, show_dimensions, show_roles)
