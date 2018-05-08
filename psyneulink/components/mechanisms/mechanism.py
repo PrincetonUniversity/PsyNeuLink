@@ -2885,6 +2885,7 @@ class Mechanism_Base(Mechanism):
         if state_type is InputState:
             states = self.input_states
             labels_dict = self.input_labels_dict
+
         elif state_type is OutputState:
             states = self.output_states
             labels_dict = self.output_labels_dict
@@ -2915,13 +2916,16 @@ class Mechanism_Base(Mechanism):
 
     @property
     def input_labels(self):
-        """If Mechanism has an input_labels_dict, return list of labels for each value in input_values;
-        For items of input_values that have no label, use its valiue.
         """
+        Returns a list with as many items as there are InputStates of the Mechanism. Each list item represents the value
+        of the corresponding InputState, and is populated by a string label (from the input_labels_dict) when one
+        exists, and the numeric value otherwise.
+        """
+
         if self.input_labels_dict:
             return self._get_state_value_labels(InputState)
         else:
-            return None
+            return self.input_values
 
     @property
     def parameter_states(self):
@@ -2943,13 +2947,15 @@ class Mechanism_Base(Mechanism):
 
     @property
     def output_labels(self):
-        """If Mechanism has an output_labels_dict, return list of labels for each value in output_values;
-        For items of input_values that have no label, use its valiue.
+        """
+        Returns a list with as many items as there are OutputStates of the Mechanism. Each list item represents the
+        value of the corresponding OutputState, and is populated by a string label (from the output_labels_dict) when
+        one exists, and the numeric value otherwise.
         """
         if self.output_labels_dict:
             return self._get_state_value_labels(OutputState)
         else:
-            return None
+            return self.output_values
 
     @property
     def status(self):

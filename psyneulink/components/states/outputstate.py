@@ -1254,7 +1254,7 @@ class OutputState(State_Base):
 
     @property
     def label(self):
-        return self._get_value_label(self.owner.output_labels_dict)
+        return self._get_value_label(self.owner.output_labels_dict, self.owner.output_states)
 
 
 def _instantiate_output_states(owner, output_states=None, context=None):

@@ -1200,7 +1200,7 @@ class InputState(State_Base):
 
     @property
     def label(self):
-        return self._get_value_label(self.owner.input_labels_dict)
+        return self._get_value_label(self.owner.input_labels_dict, self.owner.input_states)
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
