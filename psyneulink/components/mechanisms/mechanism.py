@@ -2527,7 +2527,10 @@ class Mechanism_Base(Mechanism):
             mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
             mech_role = ''
             if system and show_role:
-                mech_role = r'\n[{}]'.format(self.systems[system])
+                try:
+                    mech_role = r'\n[{}]'.format(self.systems[system])
+                except KeyError:
+                    mech_role = r'\n[{}]'.format(self.system)
             mech_function = ''
             if show_functions:
                 mech_function = r'\n({})'.format(mech.function_object.__class__.__name__)

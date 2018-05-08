@@ -3271,7 +3271,10 @@ class System(System_Base):
         # For Mechanisms, show length of each InputState and OutputState
         if isinstance(item, Mechanism):
             if show_role:
-                name = "{}\n{}".format(item.name, item.systems[self])
+                try:
+                    name = "{}\n{}".format(item.name, item.systems[self])
+                except KeyError:
+                    name = "{}\n{}".format(item.name, item.system)
             else:
                 name = item.name
 
@@ -3604,10 +3607,13 @@ class System(System_Base):
             # Implement rcvr node
             rcvr_label = self._get_label(rcvr, show_dimensions, show_roles)
             if show_mechanism_structure:
-                shape = rcvr.show_structure(**mech_struct_args)
+                attr = rcvr.show_structure(**mech_struct_args)
+                shape = ''
             else:
+                attr = None
                 shape = mechanism_shape
-            G.node(rcvr_label, shape, color=rcvr_color, penwidth=rcvr_penwidth)
+            # G.node(rcvr_label, shape=shape, color=rcvr_color, penwidth=rcvr_penwidth)
+            G.node(rcvr_label, _attributes=attr, shape=shape, color=rcvr_color, penwidth=rcvr_penwidth)
 
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
@@ -3744,7 +3750,7 @@ class System(System_Base):
 
                     if show_mechanism_structure:
                         G.node(rcvr.name,
-                               rcvr.show_structure(**mech_struct_args),
+                               shape=rcvr.show_structure(**mech_struct_args),
                                color=rcvr_color)
                     else:
                         G.node(self._get_label(rcvr, show_dimensions, show_roles),
@@ -3878,21 +3884,18 @@ class System(System_Base):
             else:
                 objmech_color = control_color
 
+            # ctlr and objmech nodes
+            ctlr_label = self._get_label(controller, show_dimensions, show_roles)
+            objmech_label = self._get_label(objmech, show_dimensions, show_roles)
 
             if show_mechanism_structure:
-                ctlr_label = controller.name
-                objmech_label = objmech.name
-                G.node(ctlr_label,
-                       controller.show_structure(**mech_struct_args),
-                       color=ctlr_color)
-                G.node(objmech_label,
-                       objmech.show_structure(**mech_struct_args),
-                       color=objmech_color)
+                ctlr_shape = controller.show_structure(**mech_struct_args)
+                objmech_shape = objmech.show_structure(**mech_struct_args)
             else:
-                ctlr_label = self._get_label(controller, show_dimensions, show_roles)
-                objmech_label = self._get_label(objmech, show_dimensions, show_roles)
-                G.node(ctlr_label, color=ctlr_color, shape=mechanism_shape)
-                G.node(objmech_label, color=objmech_color, shape=mechanism_shape)
+                ctlr_shape = mechanism_shape
+                objmech_shape = mechanism_shape
+            G.node(ctlr_label, shape=ctlr_shape, color=ctlr_color)
+            G.node(objmech_label, shape=objmech_shape, color=objmech_color)
 
             # objmech to controller edge
             if show_projection_labels:
@@ -3900,8 +3903,8 @@ class System(System_Base):
             else:
                 edge_label = ''
             if show_mechanism_structure:
-                G.edge(objmech.name + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name,
-                       controller.name + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name,
+                G.edge(objmech_label + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name,
+                       ctlr_label + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name,
                        label=edge_label,
                        color=objmech_ctlr_proj_color)
             else:
@@ -3971,7 +3974,7 @@ class System(System_Base):
                         else:
                             pred_proj_color = prediction_mechanism_color
                         G.node(mech.name,
-                               mech.show_structure(**mech_struct_args),
+                               shape=mech.show_structure(**mech_struct_args),
                                color=pred_mech_color)
 
 
