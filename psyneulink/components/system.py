@@ -452,7 +452,7 @@ from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
-    EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTIONS, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, \
+    EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, \
     INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, \
     SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
@@ -3548,10 +3548,10 @@ class System(System_Base):
         # Argument values used to call Mechanism.show_structure()
         if isinstance(show_mechanism_structure, (list, tuple, set)):
             mech_struct_args = {'system':self,
-                                'show_role': any(key in show_mechanism_structure for key in {ROLES, ALL}),
-                                'show_functions': any(key in show_mechanism_structure for key in {FUNCTIONS, ALL}),
-                                'show_values': any(key in show_mechanism_structure for key in {VALUES, ALL}),
-                                'use_labels': any(key in show_mechanism_structure for key in {LABELS, ALL}),
+                                'show_role':any(key in show_mechanism_structure for key in {ROLES, ALL}),
+                                'show_functions':any(key in show_mechanism_structure for key in {FUNCTIONS, ALL}),
+                                'show_values':any(key in show_mechanism_structure for key in {VALUES, ALL}),
+                                'use_labels':any(key in show_mechanism_structure for key in {LABELS, ALL}),
                                 'show_headers':show_headers,
                                 'output_fmt':'struct'}
         else:
@@ -3992,7 +3992,6 @@ class System(System_Base):
                         G.node(mech.name,
                                shape=mech.show_structure(**mech_struct_args),
                                color=pred_mech_color)
-
 
                         G.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
                                rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
