@@ -3605,15 +3605,15 @@ class System(System_Base):
                 rcvr_penwidth = default_width
 
             # Implement rcvr node
-            rcvr_label = self._get_label(rcvr, show_dimensions, show_roles)
             if show_mechanism_structure:
-                attr = rcvr.show_structure(**mech_struct_args)
-                shape = ''
+                rcvr_label=rcvr.name
+                G.node(rcvr_label,
+                       rcvr.show_structure(**mech_struct_args),
+                       color=rcvr_color,
+                       penwidth=rcvr_penwidth)
             else:
-                attr = None
-                shape = mechanism_shape
-            # G.node(rcvr_label, shape=shape, color=rcvr_color, penwidth=rcvr_penwidth)
-            G.node(rcvr_label, _attributes=attr, shape=shape, color=rcvr_color, penwidth=rcvr_penwidth)
+                rcvr_label = self._get_label(rcvr, show_dimensions, show_roles)
+                G.node(rcvr_label, shape=mechanism_shape, color=rcvr_color, penwidth=rcvr_penwidth)
 
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
@@ -3750,7 +3750,7 @@ class System(System_Base):
 
                     if show_mechanism_structure:
                         G.node(rcvr.name,
-                               shape=rcvr.show_structure(**mech_struct_args),
+                               rcvr.show_structure(**mech_struct_args),
                                color=rcvr_color)
                     else:
                         G.node(self._get_label(rcvr, show_dimensions, show_roles),
