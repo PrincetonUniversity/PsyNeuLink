@@ -3426,6 +3426,9 @@ class System(System_Base):
             * *ALL* -- shows both `value <Component.value>` and `function <Component.function>` of the Mechanism and
               its States (using labels for the values, if specified;  see above).
 
+            Any combination of the settings above can also be specified in a list that is assigned to
+            show_mechanism_structure
+
         COMMENT:
              and, optionally, the `function <Component.function>` and `value <Component.value>` of each
             (these can be specified using the **show_functions** and **show_values** arguments.  If this option
@@ -3543,13 +3546,22 @@ class System(System_Base):
             show_dimensions = ALL
 
         # Argument values used to call Mechanism.show_structure()
-        mech_struct_args = {'system':self,
-                            'show_role':show_mechanism_structure in {ROLES, ALL},
-                            'show_functions':show_mechanism_structure in {FUNCTIONS, ALL},
-                            'show_values':show_mechanism_structure in {VALUES, LABELS, ALL},
-                            'use_labels':show_mechanism_structure in {LABELS, ALL},
-                            'show_headers':show_headers,
-                            'output_fmt':'struct'}
+        if isinstance(show_mechanism_structure, (list, tuple, set)):
+            mech_struct_args = {'system':self,
+                                'show_role': any(key in show_mechanism_structure for key in {ROLES, ALL}),
+                                'show_functions': any(key in show_mechanism_structure for key in {FUNCTIONS, ALL}),
+                                'show_values': any(key in show_mechanism_structure for key in {VALUES, ALL}),
+                                'use_labels': any(key in show_mechanism_structure for key in {LABELS, ALL}),
+                                'show_headers':show_headers,
+                                'output_fmt':'struct'}
+        else:
+            mech_struct_args = {'system':self,
+                                'show_role':show_mechanism_structure in {ROLES, ALL},
+                                'show_functions':show_mechanism_structure in {FUNCTIONS, ALL},
+                                'show_values':show_mechanism_structure in {VALUES, LABELS, ALL},
+                                'use_labels':show_mechanism_structure in {LABELS, ALL},
+                                'show_headers':show_headers,
+                                'output_fmt':'struct'}
 
         default_node_color = 'black'
         mechanism_shape = 'oval'
