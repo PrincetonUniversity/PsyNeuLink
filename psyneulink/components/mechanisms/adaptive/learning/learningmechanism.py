@@ -398,7 +398,7 @@ is created or assigned to the LearningMechanism's *ERROR_SIGNAL* `OutputState <L
 
     .. figure:: _static/LearningMechanism_Single_Layer_Learning_fig.svg
        :alt: Schematic of Mechanisms and Projections involved in learning for a single MappingProjection
-       :scale: 50%
+       :scale: 150 %
 
        ComparatorMechanism, LearningMechanism and associated Projections created for the `primary_learned_projection`
        and `output_source`.  Each Mechanism is labeled by its type (upper line, in bold) and its designated
