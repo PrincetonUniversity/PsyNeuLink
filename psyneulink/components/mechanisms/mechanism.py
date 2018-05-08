@@ -2537,7 +2537,7 @@ class Mechanism_Base(Mechanism):
                 value = ''
                 # FIX: SHOW LABELS HERE
                 if include_value:
-                    if use_label:
+                    if use_label and self.input_labels:
                         value = self.input_labels[i]
                     else:
                         value = r'\n={}'.format(state.value)
