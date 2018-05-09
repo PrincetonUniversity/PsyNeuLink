@@ -2028,11 +2028,11 @@ class Process(Process_Base):
             target = np.atleast_1d(target)
 
             # Check that length of process' target input matches length of TARGET Mechanism's target input
-            if len(target) != len(target_mech_target.instance_defaults.variable):
+            if len(target) != len(target_mech_target.value):
                 raise ProcessError("Length of target ({}) does not match length of input for TARGET Mechanism {} ({})".
                                    format(len(target),
                                           target_mech.name,
-                                          len(target_mech_target.instance_defaults.variable)))
+                                          len(target_mech_target.value)))
 
             target_input_state = ProcessInputState(owner=self,
                                                     variable=target,

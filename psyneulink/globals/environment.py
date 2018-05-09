@@ -948,7 +948,11 @@ def _adjust_target_dict(component, target_dict):
     num_targets = -1
     for mech, target_list in target_dict.items():
         if isinstance(target_list, (float, list, np.ndarray)):
-            input_state_variable = mech.output_state.efferents[0].receiver.owner.input_states[TARGET].socket_template
+            for efferent_projection in mech.output_state.efferents:
+                for input_state in efferent_projection.receiver.owner.input_states:
+                    if input_state.name == TARGET:
+                        input_state_variable = input_state.socket_template
+                        break
             num_targets = -1
 
             # first check if only one target was provided:
