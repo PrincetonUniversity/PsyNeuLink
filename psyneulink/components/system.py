@@ -3998,7 +3998,8 @@ class System(System_Base):
                     else:
                         proj_color = control_color
                     if show_mechanism_structure:
-                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles) + ':' + OutputState.__name__ + '-' + projection.sender.name
+                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles) +\
+                                          ':' + OutputState.__name__ + '-' + projection.sender.name
                         objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
                     else:
                         sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
