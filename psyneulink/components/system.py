@@ -3313,6 +3313,7 @@ class System(System_Base):
             raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
 
     def show_graph(self,
+                   show_processes = False,
                    show_learning = False,
                    show_control = False,
                    show_roles = False,
@@ -3401,6 +3402,8 @@ class System(System_Base):
 
         Arguments
         ---------
+
+        show_processes : bool : False
 
         show_mechanism_structure : bool, VALUES, FUNCTIONS or ALL : default False
             specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
@@ -3600,143 +3603,153 @@ class System(System_Base):
                 },
         )
 
+
+        def _assign_nodes(sg, process=None):
+
+            if not process or process in rcvr.processes:
+                rcvr_rank = 'same'
+                # Set rcvr color and penwidth info
+                if rcvr is active_item:
+                    rcvr_color = active_color
+                    rcvr_penwidth = bold_width
+                elif ORIGIN in rcvr.systems[self] and TERMINAL in rcvr.systems[self]:
+                    rcvr_color = origin_and_terminal_color
+                    rcvr_penwidth = bold_width
+                elif ORIGIN in rcvr.systems[self]:
+                    rcvr_color = origin_color
+                    rcvr_penwidth = bold_width
+                    rcvr_rank = "source"
+                elif TERMINAL in rcvr.systems[self]:
+                    rcvr_color = terminal_color
+                    rcvr_penwidth = bold_width
+                else:
+                    rcvr_color = default_node_color
+                    rcvr_penwidth = default_width
+
+                # Implement rcvr node
+                rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
+                if show_mechanism_structure:
+                    sg.node(rcvr_label,
+                            rcvr.show_structure(**mech_struct_args),
+                            color=rcvr_color,
+                            rank=rcvr_rank,
+                            penwidth=rcvr_penwidth)
+                else:
+                    sg.node(rcvr_label,
+                            shape=mechanism_shape,
+                            color=rcvr_color,
+                            rank=rcvr_rank,
+                            penwidth=rcvr_penwidth)
+                # handle auto-recurrent projections
+                for input_state in rcvr.input_states:
+                    for proj in input_state.path_afferents:
+                        if proj.sender.owner is not rcvr:
+                            continue
+                        if show_mechanism_structure:
+                            sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputState.__name__, proj.sender.name)
+                            rcvr_proj_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                        else:
+                            sndr_proj_label = rcvr_proj_label = rcvr_label
+                        if show_projection_labels:
+                            edge_label = self._get_label(proj, show_dimensions, show_roles)
+                        else:
+                            edge_label = ''
+                        try:
+                            has_learning = proj.has_learning_projection
+                        except AttributeError:
+                            has_learning = None
+                        if show_learning and has_learning:
+                            # show projection as node
+                            if proj is active_item:
+                                proj_color = active_color
+                            else:
+                                proj_color = default_node_color
+                            sg.node(edge_label, shape=projection_shape, color=proj_color)
+                            sg.edge(sndr_proj_label, edge_label, arrowhead='none')
+                            sg.edge(edge_label, rcvr_proj_label)
+                        else:
+                            # show projection as edge
+                            sg.edge(sndr_proj_label, rcvr_proj_label, label=edge_label)
+
+                # loop through senders to implment edges
+                sndrs = system_graph[rcvr]
+                for sndr in sndrs:
+                    if not process or process in sndr.processes:
+
+                        # Set sndr info
+                        sndr_label = self._get_label(sndr, show_dimensions, show_roles)
+                        if sndr is active_item:
+                            sndr_color = active_color
+                        else:
+                            sndr_color = default_node_color
+
+                        # find edge name
+                        for output_state in sndr.output_states:
+                            projs = output_state.efferents
+                            for proj in projs:
+                                if proj.receiver.owner == rcvr:
+                                    if show_mechanism_structure:
+                                        sndr_proj_label = '{}:{}-{}'.format(sndr_label, OutputState.__name__, proj.sender.name)
+                                        rcvr_proj_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                    else:
+                                        sndr_proj_label = sndr_label
+                                        rcvr_proj_label = rcvr_label
+                                    edge_name = self._get_label(proj, show_dimensions, show_roles)
+                                    # edge_shape = proj.matrix.shape
+                                    try:
+                                        has_learning = proj.has_learning_projection
+                                    except AttributeError:
+                                        has_learning = None
+                        edge_label = edge_name
+
+                        # if rcvr is a LearningMechanism or an ObjectiveMechanism used for control:
+                        #    break, as those handled below
+                        if isinstance(rcvr, LearningMechanism):
+                            break
+                        # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
+                        if isinstance(rcvr, ObjectiveMechanism) and rcvr.controller is True:
+                            break
+
+                        # Render projections
+                        if proj is active_item:
+                            proj_color = active_color
+                        else:
+                            proj_color = default_node_color
+
+                        if show_learning and has_learning:
+                            # Render Projection as node
+                            # Note: Projections can't yet use structured nodes:
+                            sg.node(edge_label, shape=projection_shape, color=proj_color)
+                            # Edges to and from Projection node
+                            sg.edge(sndr_proj_label, edge_label, arrowhead='none', color=proj_color)
+                            sg.edge(edge_label, rcvr_proj_label, color=proj_color)
+                        else:
+                            # Render Projection normally (as edge)
+                            if show_projection_labels:
+                                label = edge_label
+                            else:
+                                label = ''
+                            sg.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
+
+
         # get ProcessingMechanisms in System to graph
         rcvrs = list(system_graph.keys())
 
-        # create subgraphs for each Process belonging to the System
-        for p in self.processes:
-            with G.subgraph(name='cluster_'+p.name) as sg:
+        # if processes option is selected, create subgraphs for each Process belonging to the System
+        if show_processes:
+            for p in self.processes:
+                with G.subgraph(name='cluster_'+p.name) as sg:
 
-                # sg.attr(style='filled')
-                # sg.attr(color='lightgrey')
-                sg.attr(label=p.name)
+                    # sg.attr(style='filled')
+                    # sg.attr(color='lightgrey')
+                    sg.attr(label=p.name)
 
-                # loop through receivers and assign any that belong the current Process to its subgraph
-                for rcvr in rcvrs:
-                    if p in rcvr.processes:
-                        rcvr_rank = 'same'
-                        # Set rcvr color and penwidth info
-                        if rcvr is active_item:
-                            rcvr_color = active_color
-                            rcvr_penwidth = bold_width
-                        elif ORIGIN in rcvr.systems[self] and TERMINAL in rcvr.systems[self]:
-                            rcvr_color = origin_and_terminal_color
-                            rcvr_penwidth = bold_width
-                        elif ORIGIN in rcvr.systems[self]:
-                            rcvr_color = origin_color
-                            rcvr_penwidth = bold_width
-                            rcvr_rank = "source"
-                        elif TERMINAL in rcvr.systems[self]:
-                            rcvr_color = terminal_color
-                            rcvr_penwidth = bold_width
-                        else:
-                            rcvr_color = default_node_color
-                            rcvr_penwidth = default_width
-
-                        # Implement rcvr node
-                        rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
-                        if show_mechanism_structure:
-                            sg.node(rcvr_label,
-                                    rcvr.show_structure(**mech_struct_args),
-                                    color=rcvr_color,
-                                    rank=rcvr_rank,
-                                    penwidth=rcvr_penwidth)
-                        else:
-                            sg.node(rcvr_label,
-                                    shape=mechanism_shape,
-                                    color=rcvr_color,
-                                    rank=rcvr_rank,
-                                    penwidth=rcvr_penwidth)
-                        # handle auto-recurrent projections
-                        for input_state in rcvr.input_states:
-                            for proj in input_state.path_afferents:
-                                if proj.sender.owner is not rcvr:
-                                    continue
-                                if show_mechanism_structure:
-                                    sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputState.__name__, proj.sender.name)
-                                    rcvr_proj_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
-                                else:
-                                    sndr_proj_label = rcvr_proj_label = rcvr_label
-                                if show_projection_labels:
-                                    edge_label = self._get_label(proj, show_dimensions, show_roles)
-                                else:
-                                    edge_label = ''
-                                try:
-                                    has_learning = proj.has_learning_projection
-                                except AttributeError:
-                                    has_learning = None
-                                if show_learning and has_learning:
-                                    # show projection as node
-                                    if proj is active_item:
-                                        proj_color = active_color
-                                    else:
-                                        proj_color = default_node_color
-                                    sg.node(edge_label, shape=projection_shape, color=proj_color)
-                                    sg.edge(sndr_proj_label, edge_label, arrowhead='none')
-                                    sg.edge(edge_label, rcvr_proj_label)
-                                else:
-                                    # show projection as edge
-                                    sg.edge(sndr_proj_label, rcvr_proj_label, label=edge_label)
-
-                        # loop through senders to implment edges
-                        sndrs = system_graph[rcvr]
-                        for sndr in sndrs:
-                            if p in sndr.processes:
-
-                                # Set sndr info
-                                sndr_label = self._get_label(sndr, show_dimensions, show_roles)
-                                if sndr is active_item:
-                                    sndr_color = active_color
-                                else:
-                                    sndr_color = default_node_color
-
-                                # find edge name
-                                for output_state in sndr.output_states:
-                                    projs = output_state.efferents
-                                    for proj in projs:
-                                        if proj.receiver.owner == rcvr:
-                                            if show_mechanism_structure:
-                                                sndr_proj_label = '{}:{}-{}'.format(sndr_label, OutputState.__name__, proj.sender.name)
-                                                rcvr_proj_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
-                                            else:
-                                                sndr_proj_label = sndr_label
-                                                rcvr_proj_label = rcvr_label
-                                            edge_name = self._get_label(proj, show_dimensions, show_roles)
-                                            # edge_shape = proj.matrix.shape
-                                            try:
-                                                has_learning = proj.has_learning_projection
-                                            except AttributeError:
-                                                has_learning = None
-                                edge_label = edge_name
-
-                                # if rcvr is a LearningMechanism or an ObjectiveMechanism used for control:
-                                #    break, as those handled below
-                                if isinstance(rcvr, LearningMechanism):
-                                    break
-                                # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
-                                if isinstance(rcvr, ObjectiveMechanism) and rcvr.controller is True:
-                                    break
-
-                                # Render projections
-                                if proj is active_item:
-                                    proj_color = active_color
-                                else:
-                                    proj_color = default_node_color
-
-                                if show_learning and has_learning:
-                                    # Render Projection as node
-                                    # Note: Projections can't yet use structured nodes:
-                                    sg.node(edge_label, shape=projection_shape, color=proj_color)
-                                    # Edges to and from Projection node
-                                    sg.edge(sndr_proj_label, edge_label, arrowhead='none', color=proj_color)
-                                    sg.edge(edge_label, rcvr_proj_label, color=proj_color)
-                                else:
-                                    # Render Projection normally (as edge)
-                                    if show_projection_labels:
-                                        label = edge_label
-                                    else:
-                                        label = ''
-                                    sg.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
+                    # loop through receivers and assign any that belong the current Process to its subgraph
+                    for rcvr in rcvrs:
+                        _assign_nodes(sg, p)
+        else:
+            for rcvr in rcvrs:
+                _assign_nodes(G)
 
         # Add learning-related Components to graph if show_learning
         if show_learning:
