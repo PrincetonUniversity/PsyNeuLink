@@ -520,6 +520,7 @@ class Context():
         """
         return ContextFlags._get_context_string(self.owner.context.flags, string=string)
 
+
 @tc.typecheck
 def _get_context(context:tc.any(ContextFlags, str)):
     """Set flags based on a string of ContextFlags keywords
@@ -547,6 +548,7 @@ def _get_context(context:tc.any(ContextFlags, str)):
     if context == ContextFlags.COMMAND_LINE.name:
         context_flag |= ContextFlags.COMMAND_LINE
     return context_flag
+
 
 def _get_time(component, context_flags):
 

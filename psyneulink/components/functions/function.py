@@ -17,7 +17,7 @@ Combination Functions:
   * `Reduce`
   * `LinearCombination`
   * `CombineMeans`
-  * `PredictionErrorDelta`
+  * `PredictionErrorDeltaFunction`
 
 TransferMechanism Functions:
   * `Linear`
@@ -668,6 +668,10 @@ class Function_Base(Function):
                                 format(param, param_name, self.__class__.__name__, owner_name))
 
     def get_current_function_param(self, param_name):
+        if param_name == "variable":
+            raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
+                                "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
+                                "default variable, try {}.instance_defaults.variable.".format(self.name, self.name))
         try:
             return self.owner._parameter_states[param_name].value
         except (AttributeError, TypeError):
@@ -1440,7 +1444,8 @@ class CombinationFunction(Function_Base):
     componentType = COMBINATION_FUNCTION_TYPE
 
     class ClassDefaults(Function_Base.ClassDefaults):
-        variable = np.array([0, 0])
+        # variable = np.array([0, 0])
+        variable = np.array([0])
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
@@ -1748,9 +1753,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
 
 class LinearCombination(CombinationFunction):  # ------------------------------------------------------------------------
-    # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
-    # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
-    # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMILARLY FOR NP.ARRAY
     """
     LinearCombination(     \
          default_variable, \
@@ -1815,19 +1817,19 @@ class LinearCombination(CombinationFunction):  # -------------------------------
     variable : 1d or 2d np.array : default ClassDefaults.variable
         specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.
 
-    weights : 1d or 2d np.array : default None
-        specifies values used to multiply the elements of each array in `variable  <LinearCombination.variable>`.
+    weights : scalar or 1d or 2d np.array : default None
+        specifies values used to multiply the elements of each array in **variable**.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
         if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
-        (see `weights <LinearCombination.weights>` for details)
+        (see `weights <LinearCombination.weights>` for details of how weights are applied).
 
-    exponents : 1d or 2d np.array : default None
+    exponents : scalar or 1d or 2d np.array : default None
         specifies values used to exponentiate the elements of each array in `variable  <LinearCombination.variable>`.
         If it is 1d, its length must equal the number of items in `variable <LinearCombination.variable>`;
         if it is 2d, the length of each item must be the same as those in `variable <LinearCombination.variable>`,
         and there must be the same number of items as there are in `variable <LinearCombination.variable>`
-        (see `exponents <LinearCombination.exponents>` for details)
+        (see `exponents <LinearCombination.exponents>` for details of how exponents are applied).
 
     operation : SUM or PRODUCT : default SUM
         specifies whether the `function <LinearCombination.function>` takes the elementwise (Hadamarad)
@@ -1865,18 +1867,20 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         specified by `weights <LinearCombination.weights>` and/or `exponents <LinearCombination.exponents>`
         and then combined as specified by `operation <LinearCombination.operation>`.
 
-    weights : 1d or 2d np.array
-        if it is 1d, each element is used to multiply all elements in the corresponding array of
-        `variable <LinearCombination.variable>`;    if it is 2d, then each array is multiplied elementwise
-        (i.e., the Hadamard Product is taken) with the corresponding array of `variable <LinearCombinations.variable>`.
-        All :keyword:`weights` are applied before any exponentiation (if it is specified).
+    weights : scalar or 1d or 2d np.array
+        if it is a scalar, the value is used to multiply all elements of all arrays in `variable
+        <LinearCombination.variable>`; if it is a 1d array, each element is used to multiply all elements in the
+        corresponding array of `variable <LinearCombination.variable>`;  if it is a 2d array, then each array is
+        multiplied elementwise (i.e., the Hadamard Product is taken) with the corresponding array of `variable
+        <LinearCombinations.variable>`. All `weights` are applied before any exponentiation (if it is specified).
 
-    exponents : 1d or 2d np.array
-        if it is 1d, each element is used to exponentiate the elements of the corresponding array of
-        `variable <LinearCombinations.variable>`;  if it is 2d, the element of each array is used to exponentiate
-        the correspnding element of the corresponding array of `variable <LinearCombination.variable>`.
-        In either case, exponentiating is applied after application of the `weights <LinearCombination.weights>`
-        (if any are specified).
+    exponents : scalar or 1d or 2d np.array
+        if it is a scalar, the value is used to exponentiate all elements of all arrays in `variable
+        <LinearCombination.variable>`; if it is a 1d array, each element is used to exponentiate the elements of the
+        corresponding array of `variable <LinearCombinations.variable>`;  if it is a 2d array, the element of each
+        array is used to exponentiate the corresponding element of the corresponding array of `variable
+        <LinearCombination.variable>`. In either case, all exponents are applied after application of the `weights
+        <LinearCombination.weights>` (if any are specified).
 
     operation : SUM or PRODUCT
         determines whether the `function <LinearCombination.function>` takes the elementwise (Hadamard) sum or
@@ -1961,11 +1965,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        if self.weights is not None:
-            self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
-        if self.exponents is not None:
-            self.exponents = np.atleast_2d(self.exponents).reshape(-1, 1)
-
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
 
@@ -1993,9 +1992,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                 else:
                     new_length = len(variable[i])
                 if old_length != new_length:
-                    raise FunctionError("Length of all arrays in variable {0} "
-                                        "for {1} must be the same".format(variable,
-                                                                          self.__class__.__name__))
+                    raise FunctionError("Length of all arrays in variable for {0} must be the same; variable: {1}".
+                                        format(self.__class__.__name__, variable))
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2017,17 +2015,15 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
-            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
-                if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
+                if np.array(target_set[WEIGHTS]).shape != self.instance_defaults.variable.shape:
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
-            target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
+                if np.array(target_set[EXPONENTS]).shape != self.instance_defaults.variable.shape:
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
 
@@ -2121,6 +2117,11 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         weights = self.get_current_function_param(WEIGHTS)
         exponents = self.get_current_function_param(EXPONENTS)
+        # if self.context.initialization_status == ContextFlags.INITIALIZED:
+        #     if weights is not None and weights.shape != variable.shape:
+        #         weights = weights.reshape(variable.shape)
+        #     if exponents is not None and exponents.shape != variable.shape:
+        #         exponents = exponents.reshape(variable.shape)
         operation = self.get_current_function_param(OPERATION)
         scale = self.get_current_function_param(SCALE)
         offset = self.get_current_function_param(OFFSET)
@@ -4340,7 +4341,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if isinstance(obj.receiver.instance_defaults.variable, numbers.Number):
                 cols = 1
             else:
-                cols = len(obj.receiver.instance_defaults.variable)
+                cols = obj.receiver.socket_width
         matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:
@@ -4672,6 +4673,10 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         #     self._validate_initializer(target_set[INITIALIZER])
 
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
 
     def _validate_rate(self, rate):
@@ -4738,11 +4743,12 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                         "must be specified as a float, a function, or an array of the appropriate shape ({})."
                             .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(self.instance_defaults.variable))))
             else:
-                for noise_item in noise:
-                    if not isinstance(noise_item, (float, int)) and not callable(noise_item):
-                        raise FunctionError(
-                            "The elements of a noise list or array must be floats or functions. "
-                            "{} is not a valid noise element for {}".format(noise_item, self.name))
+                for i in range(len(noise)):
+                    if isinstance(noise[i], DistributionFunction):
+                        noise[i] = noise[i]._execute
+                    if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
+                        raise FunctionError("The elements of a noise list or array must be floats or functions. "
+                                            "{} is not a valid noise element for {}".format(noise[i], self.name))
 
         # Otherwise, must be a float, int or function
         elif not isinstance(noise, (float, int)) and not callable(noise):
@@ -5680,6 +5686,10 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                     raise FunctionError(rate_value_msg.format(rate, self.name))
 
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
         # if INITIALIZER in target_set:
         #     self._validate_initializer(target_set[INITIALIZER])
@@ -7641,6 +7651,10 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                         "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
         if NOISE in target_set:
+            noise = target_set[NOISE]
+            if isinstance(noise, DistributionFunction):
+                noise.owner = self
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])

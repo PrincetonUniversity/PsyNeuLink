@@ -85,7 +85,7 @@ arguments **smoothing_factor** and/or **initial_value** in the mechanism's const
     **initial_value** are ignored, because the mechanism does not have an `integrator_function
     <TransferMechanism.integrator_function>` to construct.
 
-Finally, the TransferMechanism has two arguments which can adjust the final result of the mechanism: **clip** and
+Finally, the TransferMechanism has two arguments that can adjust the final result of the mechanism: **clip** and
 **noise**. If `integrator_mode <TransferMechanism.integrator_mode>` is False, `clip <TransferMechanism.clip>` and
 `noise <TransferMechanism.noise>` modify the value returned by the mechanism's `function <TransferMechanism.function>`
 before setting it as the mechanism's value. If `integrator_mode <TransferMechanism.integrator_mode>` is True,
@@ -116,8 +116,11 @@ modulated by one or more `GatingSignals <GatingSignal_Modulation>` prior to tran
 Function
 ~~~~~~~~
 
-*Function*.  The `function <TransferMechanism.function>` can be selected from one of four standard PsyNeuLink
-`Functions <Function>`: `Linear`, `Logistic`, `Exponential` or `SoftMax`.
+*Function*.  The default function for a TransferMechanism is `Linear`.  A custom function can be specified in the
+**function** argument of the constructor.  This can be any PsyNeuLink `Function <Function>` that is a subtype of
+either `TransferFunction` or `NormalizationFunction.` It can also be any python function or method, with the constraint
+that it returns an output that is identical in shape to its input;  the function or method is "wrapped" as
+`UserDefinedFunction`, and assigned as the TransferMechanism's `function <TransferMechanism.function>` attribute.
 
 The result of the `function <TransferMechanism.function>` applied to the `value <InputState.value>` of each InputState
 is:
@@ -304,7 +307,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, function_type, method_type
-from psyneulink.components.functions.function import AdaptiveIntegrator, Linear, TransferFunction
+from psyneulink.components.functions.function import Function, TransferFunction, AdaptiveIntegrator, Linear, NormalizingFunction, DistributionFunction, UserDefinedFunction
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import _is_control_spec
 from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -737,29 +740,43 @@ class TransferMechanism(ProcessingMechanism_Base):
         """Validate FUNCTION and Mechanism params
 
         """
-        from psyneulink.components.functions.function import DistributionFunction
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # Validate FUNCTION
         if FUNCTION in target_set:
             transfer_function = target_set[FUNCTION]
+            transfer_function_class = None
+
             # FUNCTION is a Function
-            if isinstance(transfer_function, Component):
+            if isinstance(transfer_function, Function):
                 transfer_function_class = transfer_function.__class__
-                transfer_function_name = transfer_function.__class__.__name__
-            # FUNCTION is a function or method
-            elif isinstance(transfer_function, (function_type, method_type)):
-                transfer_function_class = transfer_function.__self__.__class__
-                transfer_function_name = transfer_function.__self__.__class__.__name__
             # FUNCTION is a class
             elif inspect.isclass(transfer_function):
                 transfer_function_class = transfer_function
-                transfer_function_name = transfer_function.__name__
 
-            if not transfer_function_class.componentType is TRANSFER_FUNCTION_TYPE and not transfer_function_class.componentType is NORMALIZING_FUNCTION_TYPE:
-                raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
-                                    format(transfer_function_name, self.name, TRANSFER_FUNCTION_TYPE))
+            if issubclass(transfer_function_class, Function):
+                if not issubclass(transfer_function_class, (TransferFunction, NormalizingFunction, UserDefinedFunction)):
+                    raise TransferError("Function type specified as {} param of {} ({}) must be a {}".
+                                        format(repr(FUNCTION), self.name, transfer_function_class.__name__,
+                                               TRANSFER_FUNCTION_TYPE + ' or ' + NORMALIZING_FUNCTION_TYPE))
+            elif not isinstance(transfer_function, (function_type, method_type)):
+                raise TransferError("Unrecognized specification for {} param of {} ({})".
+                                    format(repr(FUNCTION), self.name, transfer_function))
+
+            # FUNCTION is a function or method, so test that shape of output = shape of input
+            if isinstance(transfer_function, (function_type, method_type, UserDefinedFunction)):
+                var_shape = self.instance_defaults.variable.shape
+                if isinstance(transfer_function, UserDefinedFunction):
+                    val_shape = transfer_function._execute(self.instance_defaults.variable).shape
+                else:
+                    val_shape = np.array(transfer_function(self.instance_defaults.variable)).shape
+
+                if val_shape != var_shape:
+                    raise TransferError("The shape ({}) of the value returned by the Python function, method, or UDF "
+                                        "specified as the {} param of {} must be the same shape ({}) as its {}".
+                                        format(val_shape, repr(FUNCTION), self.name, var_shape, repr(VARIABLE)))
+
 
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set:
@@ -781,7 +798,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
             if isinstance(noise, DistributionFunction):
                 noise.owner = self
-                target_set[NOISE] = noise.function
+                target_set[NOISE] = noise._execute
             self._validate_noise(target_set[NOISE])
 
         # Validate SMOOTHING_FACTOR:
@@ -824,11 +841,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                     " as a float, a function, or an array of the appropriate shape ({})."
                     .format(noise, self.instance_defaults.variable, self.name, np.shape(np.array(self.instance_defaults.variable))))
             else:
-                for noise_item in noise:
-                    if not isinstance(noise_item, (float, int)) and not callable(noise_item):
-                        raise MechanismError(
-                            "The elements of a noise list or array must be floats or functions. {} is not a valid noise"
-                            " element for {}".format(noise_item, self.name))
+                for i in range(len(noise)):
+                    if isinstance(noise[i], DistributionFunction):
+                        noise[i] = noise[i]._execute
+                    if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
+                        raise MechanismError("The elements of a noise list or array must be floats or functions. "
+                            "{} is not a valid noise element for {}".format(noise[i], self.name))
 
         elif _is_control_spec(noise):
             pass
@@ -890,13 +908,56 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.output_states.append({NAME: RESULT, VARIABLE: (OWNER_VALUE, i)})
         super()._instantiate_output_states(context=context)
 
-    def _execute(
-        self,
-        variable=None,
-        function_variable=None,
-        runtime_params=None,
-        context=None
-    ):
+    def _get_instantaneous_function_input(self, function_variable, noise):
+
+        noise = self._try_execute_param(noise, function_variable)
+        if (np.array(noise) != 0).any():
+            current_input = function_variable + noise
+        else:
+            current_input = function_variable
+
+        return current_input
+
+    def _get_integrated_function_input(self, function_variable, initial_value, noise, context, **kwargs):
+
+        smoothing_factor = self.get_current_mechanism_param("smoothing_factor")
+
+        if not self.integrator_function:
+
+            self.integrator_function = AdaptiveIntegrator(function_variable,
+                                                          initializer=initial_value,
+                                                          noise=noise,
+                                                          rate=smoothing_factor,
+                                                          owner=self)
+
+            self.original_integrator_function = self.integrator_function
+
+        current_input = self.integrator_function.execute(function_variable,
+                                                         # Should we handle runtime params?
+                                                         runtime_params={INITIALIZER: self.initial_value,
+                                                                         NOISE: self.noise,
+                                                                         RATE: self.smoothing_factor},
+                                                         context=context)
+
+        return current_input
+
+    def _clip_result(self, clip, current_input, runtime_params, context):
+
+        outputs = super(Mechanism, self)._execute(function_variable=current_input,
+                                                  runtime_params=runtime_params,
+                                                  context=context)
+        if clip is not None:
+            minCapIndices = np.where(outputs < clip[0])
+            maxCapIndices = np.where(outputs > clip[1])
+            outputs[minCapIndices] = np.min(clip)
+            outputs[maxCapIndices] = np.max(clip)
+        return outputs
+
+    def _execute(self,
+                 variable=None,
+                 function_variable=None,
+                 runtime_params=None,
+                 context=None):
         """Execute TransferMechanism function and return transform of input
 
         Execute TransferMechanism function on input, and assign to output_values:
@@ -939,75 +1000,38 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.integrator_mode
-
-        #region ASSIGN PARAMETER VALUES
-
-        smoothing_factor = self.get_current_mechanism_param("smoothing_factor")
-        clip = self.get_current_mechanism_param("clip")
         noise = self.get_current_mechanism_param("noise")
         initial_value = self.get_current_mechanism_param("initial_value")
-        #endregion
 
-        #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
+
+        # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
 
         # Update according to time-scale of integration
         if integrator_mode:
+            current_input = self._get_integrated_function_input(function_variable,
+                                                                    initial_value,
+                                                                    noise,
+                                                                    context)
 
-            if not self.integrator_function:
-
-                self.integrator_function = AdaptiveIntegrator(
-                    function_variable,
-                    initializer=initial_value,
-                    noise=noise,
-                    rate=smoothing_factor,
-                    owner=self
-                )
-                self.original_integrator_function = self.integrator_function
-            current_input = self.integrator_function.execute(
-                function_variable,
-                # Should we handle runtime params?
-                runtime_params={
-                    INITIALIZER: self.initial_value,
-                    NOISE: self.noise,
-                    RATE: self.smoothing_factor
-                },
-                context=context
-            )
         else:
-            noise = self._try_execute_param(self.noise, function_variable)
-            # formerly: current_input = self.input_state.value + noise
-            # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
-            # when the input is given as a string.
-            if (np.array(noise) != 0).any():
-                current_input = function_variable + noise
-            else:
-                current_input = function_variable
+            current_input = self._get_instantaneous_function_input(function_variable, noise)
 
-        if isinstance(self.function_object, TransferFunction):
+        clip = self.get_current_mechanism_param("clip")
 
-            outputs = super()._execute(function_variable=current_input, runtime_params=runtime_params, context=context)
-            if clip is not None:
-                minCapIndices = np.where(outputs < clip[0])
-                maxCapIndices = np.where(outputs > clip[1])
-                outputs[minCapIndices] = np.min(clip)
-                outputs[maxCapIndices] = np.max(clip)
-        else:
+        if isinstance(self.function_object, NormalizingFunction):
             # Apply TransferMechanism's function to each input state separately
             outputs = []
             for elem in current_input:
-                output_item = super()._execute(function_variable=elem, runtime_params=runtime_params, context=context)
-                if clip is not None:
-                    minCapIndices = np.where(output_item < clip[0])
-                    maxCapIndices = np.where(output_item > clip[1])
-                    output_item[minCapIndices] = np.min(clip)
-                    output_item[maxCapIndices] = np.max(clip)
+                output_item = self._clip_result(clip, elem, runtime_params, context)
                 outputs.append(output_item)
 
+        else:
+            outputs = self._clip_result(clip, current_input, runtime_params, context)
+
         return outputs
-        #endregion
 
     def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params

@@ -787,7 +787,8 @@ class EVCControlMechanism(ControlMechanism):
             variable = []
             for state_name in origin_mech.input_states.names:
                 state_names.append(state_name)
-                variable.append(origin_mech.input_states[state_name].instance_defaults.variable)
+                # variable.append(origin_mech.input_states[state_name].instance_defaults.variable)
+                variable.append(origin_mech.input_states[state_name].value)
 
             # Instantiate PredictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](

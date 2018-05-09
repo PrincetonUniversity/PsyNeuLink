@@ -41,21 +41,25 @@ community.
 PsyNeuLink is:
 
  - *open source*, freeing users of the costs or restrictions associated with proprietary software.
+
  ..
+
  - *computationally general* -- it can be used to implement, seamlessly integrate, and simulate interactions among
    disparate components that vary in their granularity of representation and function (from individual neurons or
    neural populations to functional subsystems and abstract cognitive functions) and at any time scale of execution.
+
  ..
+
  - *integrative* -- it provides a standard and accessible environment for model comparison, sharing, and documentation;
+
  ..
+
  - *extensible* -- it has an interface (API) that allows it to be used with other powerful tools for implementing
    individual components, such as:
    * Neuron (biophysically realistic models of neuronal function)
    * TensorFlow (ODE's, deep learning);
    * Emergent (broad class of neurally-plausible connectionist models);
    * ACT-R (symbolic, production system models).
-
-.. _What_PsyNeuLink_is_NOT:
 
 What PsyNeuLink is **NOT**
 --------------------------
@@ -111,8 +115,6 @@ stored in pip-style `requirements.txt`, `dev_requirements.txt`, and `tutorial_re
 
 If you have trouble installing the package, or run into other problems, please contact psyneulinkhelp@princeton.edu.
 
-.. _Tutorial:
-
 Tutorial
 --------
 
@@ -159,7 +161,7 @@ Contributors
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Justin Junge**, Department of Psychology, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
-* **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
+* **Katherine Mantel**, Princeton Neuroscience Institute, Princeton University
 * **Markus Spitzer**, Princeton Neuroscience Institute, Princeton University
 * **Jan Vesely**, Department of Computer Science, Rutgers University
 * **Changyan Wang**, Princeton Neuroscience Institute, Princeton University
