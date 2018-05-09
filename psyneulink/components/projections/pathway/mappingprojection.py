@@ -536,7 +536,7 @@ class MappingProjection(PathwayProjection_Base):
         except TypeError:
             mapping_input_len = 1
         try:
-            receiver_len = len(self.receiver.instance_defaults.variable)
+            receiver_len = self.receiver.socket_width
         except TypeError:
             receiver_len = 1
 

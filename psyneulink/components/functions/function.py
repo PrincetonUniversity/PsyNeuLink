@@ -17,7 +17,7 @@ Combination Functions:
   * `Reduce`
   * `LinearCombination`
   * `CombineMeans`
-  * `PredictionErrorDelta`
+  * `PredictionErrorDeltaFunction`
 
 TransferMechanism Functions:
   * `Linear`
@@ -1444,7 +1444,8 @@ class CombinationFunction(Function_Base):
     componentType = COMBINATION_FUNCTION_TYPE
 
     class ClassDefaults(Function_Base.ClassDefaults):
-        variable = np.array([0, 0])
+        # variable = np.array([0, 0])
+        variable = np.array([0])
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, default_variable,
@@ -1964,11 +1965,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-        if self.weights is not None:
-            self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
-        if self.exponents is not None:
-            self.exponents = np.atleast_2d(self.exponents).reshape(-1, 1)
-
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
 
@@ -1996,9 +1992,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                 else:
                     new_length = len(variable[i])
                 if old_length != new_length:
-                    raise FunctionError("Length of all arrays in variable {0} "
-                                        "for {1} must be the same".format(variable,
-                                                                          self.__class__.__name__))
+                    raise FunctionError("Length of all arrays in variable for {0} must be the same; variable: {1}".
+                                        format(self.__class__.__name__, variable))
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2020,17 +2015,15 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             self._validate_parameter_spec(target_set[WEIGHTS], WEIGHTS, numeric_only=True)
-            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.EXECUTING | ContextFlags.LEARNING):
-                if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
+                if np.array(target_set[WEIGHTS]).shape != self.instance_defaults.variable.shape:
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                         format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             self._validate_parameter_spec(target_set[EXPONENTS], EXPONENTS, numeric_only=True)
-            target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
             if self.context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
+                if np.array(target_set[EXPONENTS]).shape != self.instance_defaults.variable.shape:
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                         format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable)))
 
@@ -4348,7 +4341,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             if isinstance(obj.receiver.instance_defaults.variable, numbers.Number):
                 cols = 1
             else:
-                cols = len(obj.receiver.instance_defaults.variable)
+                cols = obj.receiver.socket_width
         matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:
