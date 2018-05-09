@@ -3572,10 +3572,15 @@ class System(System_Base):
         bold_width = '3'
         default_width = '1'
 
+        pos = None
+
         # build graph and configure visualisation settings
         G = gv.Digraph(
                 name = self.name,
                 engine = "dot",
+                # engine = "fdp",
+                # engine = "neato",
+                # engine = "circo",
                 node_attr  = {
                     'fontsize':'12',
                     'fontname':'arial',
@@ -3590,15 +3595,32 @@ class System(System_Base):
                     'fontname': 'arial'
                 },
                 graph_attr = {
-                    "rankdir" : direction
-                }
+                    "rankdir" : direction,
+                    'overlap' : "False"
+                },
         )
+
+        # with G.subgraph(name='cluster_0') as c:
+        #     c.attr(style='filled')
+        #     c.attr(color='lightgrey')
+        #     c.node_attr.update(style='filled', color='white')
+        #     c.edges([('a0', 'a1'), ('a1', 'a2'), ('a2', 'a3')])
+        #     c.attr(label='process #1')
+
+        # generate process subgraphs
+        # proc_graphs = {}
+        # for i, p in enumerate(self.processes):
+        #     proc_graphs[p] = gv.Digraph(name='cluster_'+p.name)
+        #     G.subgraph(proc_graphs[p])
+        # origin_cluster = gv.Digraph(name='cluster_ORIGIN')
+        # G.subgraph(origin_cluster)
 
         # parse system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
 
+            rcvr_rank = 'same'
             # Set rcvr color and penwidth info
             if rcvr is active_item:
                 rcvr_color = active_color
@@ -3609,6 +3631,7 @@ class System(System_Base):
             elif ORIGIN in rcvr.systems[self]:
                 rcvr_color = origin_color
                 rcvr_penwidth = bold_width
+                rcvr_rank = "source"
             elif TERMINAL in rcvr.systems[self]:
                 rcvr_color = terminal_color
                 rcvr_penwidth = bold_width
@@ -3617,16 +3640,29 @@ class System(System_Base):
                 rcvr_penwidth = default_width
 
             # Implement rcvr node
+            rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
             if show_mechanism_structure:
-                rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
                 G.node(rcvr_label,
                        rcvr.show_structure(**mech_struct_args),
                        color=rcvr_color,
+                       rank=rcvr_rank,
                        penwidth=rcvr_penwidth)
+                # proc_graphs[next(p for p in rcvr.processes if p in self.processes)].node(rcvr_label,
+                #                                                                          rcvr.show_structure(**mech_struct_args),
+                #                                                                          color=rcvr_color,
+                #                                                                          rank=rcvr_rank,
+                #                                                                          penwidth=rcvr_penwidth)
             else:
-                rcvr_label = self._get_label(rcvr, show_dimensions, show_roles)
-                G.node(rcvr_label, shape=mechanism_shape, color=rcvr_color, penwidth=rcvr_penwidth)
-
+                G.node(rcvr_label,
+                       shape=mechanism_shape,
+                       color=rcvr_color,
+                       rank=rcvr_rank,
+                       penwidth=rcvr_penwidth)
+                # proc_graphs[next(p for p in rcvr.processes if p in self.processes)].node(rcvr_label,
+                #                                                                          shape=mechanism_shape,
+                #                                                                          color=rcvr_color,
+                #                                                                          rank=rcvr_rank,
+                #                                                                          penwidth=rcvr_penwidth)
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
                 for proj in input_state.path_afferents:
@@ -3961,10 +3997,11 @@ class System(System_Base):
                         proj_color = active_color
                     else:
                         proj_color = control_color
-                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
                     if show_mechanism_structure:
+                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
                         objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
                     else:
+                        sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
                         objmech_proj_label = self._get_label(objmech, show_dimensions, show_roles)
                     if show_projection_labels:
                         edge_label = projection.name
