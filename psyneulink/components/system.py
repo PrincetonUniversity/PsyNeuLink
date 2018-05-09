@@ -3682,7 +3682,7 @@ class System(System_Base):
             # loop through senders to implement edges
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
-                if not processes or any(p in processes for p in sndr.processes):
+                if not processes or any(p in processes for p in sndr.processes.keys()):
 
                     # Set sndr info
                     sndr_label = self._get_label(sndr, show_dimensions, show_roles)
@@ -3760,7 +3760,7 @@ class System(System_Base):
                         # Don't use set to find intersection as need it to be ordered for naming
                         # intersection = set(r.processes.keys()).intersection(processes)
                         intersection = [p for p in processes if p in r.processes]
-                        # If the rcvr is in only one process, add it to that process
+                        # If the rcvr is in only one process, add it to the subgraph for that process
                         if len(intersection)==1:
                             if p in intersection:
                                 _assign_nodes(sg, r, [p])
@@ -3770,13 +3770,15 @@ class System(System_Base):
                             if not intersection_name in process_intersections:
                                 process_intersections[intersection_name] = [r]
                             else:
-                                process_intersections[intersection_name].append(r)
+                                if r not in process_intersections[intersection_name]:
+                                    process_intersections[intersection_name].append(r)
 
             # Create a process for each unique intersection and assign rcvrs to that
             for intersection_name, mech_list in process_intersections.items():
                 with G.subgraph(name='cluster_'+intersection_name) as sg:
                     sg.attr(label=intersection_name)
-                    processes = [p for p.name in [p.name for p in self.processes]]
+                    # get list of processes in the intersection (to pass to _assign_nodes)
+                    processes = [p for p in self.processes if p.name in intersection_name]
                     # loop through receivers and assign to the subgraph any that belong to the current Process
                     for r in mech_list:
                         _assign_nodes(sg, r, processes)
