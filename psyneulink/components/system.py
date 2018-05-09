@@ -3600,21 +3600,6 @@ class System(System_Base):
                 },
         )
 
-        # with G.subgraph(name='cluster_0') as c:
-        #     c.attr(style='filled')
-        #     c.attr(color='lightgrey')
-        #     c.node_attr.update(style='filled', color='white')
-        #     c.edges([('a0', 'a1'), ('a1', 'a2'), ('a2', 'a3')])
-        #     c.attr(label='process #1')
-
-        # generate process subgraphs
-        # proc_graphs = {}
-        # for i, p in enumerate(self.processes):
-        #     proc_graphs[p] = gv.Digraph(name='cluster_'+p.name)
-        #     G.subgraph(proc_graphs[p])
-        # origin_cluster = gv.Digraph(name='cluster_ORIGIN')
-        # G.subgraph(origin_cluster)
-
         # parse system graph
         rcvrs = list(system_graph.keys())
         # loop through receivers
@@ -3647,22 +3632,13 @@ class System(System_Base):
                        color=rcvr_color,
                        rank=rcvr_rank,
                        penwidth=rcvr_penwidth)
-                # proc_graphs[next(p for p in rcvr.processes if p in self.processes)].node(rcvr_label,
-                #                                                                          rcvr.show_structure(**mech_struct_args),
-                #                                                                          color=rcvr_color,
-                #                                                                          rank=rcvr_rank,
-                #                                                                          penwidth=rcvr_penwidth)
             else:
                 G.node(rcvr_label,
                        shape=mechanism_shape,
                        color=rcvr_color,
                        rank=rcvr_rank,
                        penwidth=rcvr_penwidth)
-                # proc_graphs[next(p for p in rcvr.processes if p in self.processes)].node(rcvr_label,
-                #                                                                          shape=mechanism_shape,
-                #                                                                          color=rcvr_color,
-                #                                                                          rank=rcvr_rank,
-                #                                                                          penwidth=rcvr_penwidth)
+
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
                 for proj in input_state.path_afferents:
