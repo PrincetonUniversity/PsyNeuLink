@@ -1597,8 +1597,8 @@ class System(System_Base):
                 # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
                 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
                 MappingProjection(sender=stimulus_input_state,
-                        receiver=origin_mech.input_states[j],
-                        name=self.name+' Input Projection to '+origin_mech.name+' Input State '+str(j))
+                                  receiver=origin_mech.input_states[j],
+                                  name=self.name+' Input Projection to '+origin_mech.name+' Input State '+str(j))
 
     def _instantiate_learning_graph(self, context=None):
         """Build graph of LearningMechanism and LearningProjections
@@ -1954,7 +1954,7 @@ class System(System_Base):
 
                 system_target_input_state = SystemInputState(
                     owner=self,
-                    variable=target_mech_TARGET_input_state.instance_defaults.variable,
+                    variable=target_mech_TARGET_input_state.value,
                     prefs=self.prefs,
                     name="System Target {}".format(i),
                     context=context)
