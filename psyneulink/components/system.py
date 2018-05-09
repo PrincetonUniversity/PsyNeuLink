@@ -1597,8 +1597,8 @@ class System(System_Base):
                 # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
                 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
                 MappingProjection(sender=stimulus_input_state,
-                        receiver=origin_mech.input_states[j],
-                        name=self.name+' Input Projection to '+origin_mech.name+' Input State '+str(j))
+                                  receiver=origin_mech.input_states[j],
+                                  name=self.name+' Input Projection to '+origin_mech.name+' Input State '+str(j))
 
     def _instantiate_learning_graph(self, context=None):
         """Build graph of LearningMechanism and LearningProjections
@@ -1893,13 +1893,13 @@ class System(System_Base):
                 sample_mechanism = target_mech.input_states[SAMPLE].path_afferents[0].sender.owner
                 TARGET_input_state = target_mech.input_states[TARGET]
 
-                if len(self.targets[sample_mechanism]) != len(TARGET_input_state.instance_defaults.variable):
+                if len(self.targets[sample_mechanism]) != len(TARGET_input_state.value):
                             raise SystemError("Length {} of target ({}, {}) does not match the length ({}) of the target "
                                               "expected for its TARGET Mechanism {}".
                                                format(len(self.targets[sample_mechanism]),
                                                       sample_mechanism.name,
                                                       self.targets[sample_mechanism],
-                                                      len(TARGET_input_state.instance_defaults.variable),
+                                                      len(TARGET_input_state.value),
                                                       target_mech.name))
 
                 system_target_input_state = SystemInputState(owner=self,
@@ -1944,17 +1944,17 @@ class System(System_Base):
 
                 # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
                 #    of the TARGET (ComparatorMechanism) target inputState's instance_defaults.variable attribute
-                if len(self.targets[i]) != len(target_mech_TARGET_input_state.instance_defaults.variable):
+                if len(self.targets[i]) != len(target_mech_TARGET_input_state.value):
                     raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
                                       "expected for its TARGET Mechanism {}".
                                       format(len(self.targets[i]),
                                              self.targets[i],
-                                             len(target_mech_TARGET_input_state.instance_defaults.variable),
+                                             len(target_mech_TARGET_input_state.value),
                                              target_mech.name))
 
                 system_target_input_state = SystemInputState(
                     owner=self,
-                    variable=target_mech_TARGET_input_state.instance_defaults.variable,
+                    variable=target_mech_TARGET_input_state.value,
                     prefs=self.prefs,
                     name="System Target {}".format(i),
                     context=context)
