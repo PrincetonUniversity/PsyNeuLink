@@ -3608,12 +3608,11 @@ class System(System_Base):
         #     c.attr(label='process #1')
 
         # generate process subgraphs
-        # proc_graphs = {}
-        # for i, p in enumerate(self.processes):
-        #     proc_graphs[p] = gv.Digraph(name='cluster_'+p.name)
-        #     G.subgraph(proc_graphs[p])
-        # origin_cluster = gv.Digraph(name='cluster_ORIGIN')
-        # G.subgraph(origin_cluster)
+        proc_graphs = {}
+        for i, p in enumerate(self.processes):
+            sg = p.name
+            proc_graphs[sg] = gv.Digraph(name='cluster_'+sg)
+            G.subgraph(proc_graphs[sg])
 
         # parse system graph
         rcvrs = list(system_graph.keys())
@@ -3642,27 +3641,41 @@ class System(System_Base):
             # Implement rcvr node
             rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
             if show_mechanism_structure:
-                G.node(rcvr_label,
-                       rcvr.show_structure(**mech_struct_args),
-                       color=rcvr_color,
-                       rank=rcvr_rank,
-                       penwidth=rcvr_penwidth)
-                # proc_graphs[next(p for p in rcvr.processes if p in self.processes)].node(rcvr_label,
+                # G.node(rcvr_label,
+                #        rcvr.show_structure(**mech_struct_args),
+                #        color=rcvr_color,
+                #        rank=rcvr_rank,
+                #        penwidth=rcvr_penwidth)
+                # proc_graphs[next(p for p in rcvr.processes if p in self.processes).name].node(rcvr_label,
                 #                                                                          rcvr.show_structure(**mech_struct_args),
                 #                                                                          color=rcvr_color,
                 #                                                                          rank=rcvr_rank,
                 #                                                                          penwidth=rcvr_penwidth)
+                for proc in rcvr.processes:
+                    if proc in self.processes:
+                        proc_graphs[proc.name].node(rcvr_label,
+                                                    rcvr.show_structure(**mech_struct_args),
+                                                    color=rcvr_color,
+                                                    rank=rcvr_rank,
+                                                    penwidth=rcvr_penwidth)
             else:
-                G.node(rcvr_label,
-                       shape=mechanism_shape,
-                       color=rcvr_color,
-                       rank=rcvr_rank,
-                       penwidth=rcvr_penwidth)
-                # proc_graphs[next(p for p in rcvr.processes if p in self.processes)].node(rcvr_label,
+                # G.node(rcvr_label,
+                #        shape=mechanism_shape,
+                #        color=rcvr_color,
+                #        rank=rcvr_rank,
+                #        penwidth=rcvr_penwidth)
+                # proc_graphs[next(p for p in rcvr.processes if p in self.processes).name].node(rcvr_label,
                 #                                                                          shape=mechanism_shape,
                 #                                                                          color=rcvr_color,
                 #                                                                          rank=rcvr_rank,
                 #                                                                          penwidth=rcvr_penwidth)
+                for proc in rcvr.processes:
+                    if proc in self.processes:
+                        proc_graphs[proc.name].node(rcvr_label,
+                                                    shape=mechanism_shape,
+                                                    color=rcvr_color,
+                                                    rank=rcvr_rank,
+                                                    penwidth=rcvr_penwidth)
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
                 for proj in input_state.path_afferents:
