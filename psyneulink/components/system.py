@@ -3266,7 +3266,7 @@ class System(System_Base):
         else:
             return self.controller.control_signals
 
-    def _get_label(self, item, show_dimensions, show_role):
+    def _get_label(self, item, show_dimensions=False, show_role=False):
 
         # For Mechanisms, show length of each InputState and OutputState
         if isinstance(item, Mechanism):
