@@ -2614,8 +2614,8 @@ class Mechanism_Base(Mechanism):
                     function = r'\n({})'.format(state.function_object.__class__.__name__)
                 value = ''
                 if include_value:
-                    if use_label and self.input_labels:
-                        value = self.input_labels[i]
+                    if use_label:
+                        value = r'\n={}'.format(state.label)
                     else:
                         value = r'\n={}'.format(state.value)
                 states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,

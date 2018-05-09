@@ -235,6 +235,7 @@ class TestMechanismTargetLabels:
                                             np.array([[0.625, -0.375], [-0.375,  0.625]])])
 
 class TestMechanismOutputLabels:
+
     def test_dict_of_floats(self):
         input_labels_dict = {"red": 1,
                               "green": 0}
@@ -287,5 +288,31 @@ class TestMechanismOutputLabels:
               call_after_trial=call_after_trial)
         assert np.allclose(S.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]], [[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
         assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
+        # S.show_graph(show_mechanism_structure="labels")
+        
+    def test_not_all_output_state_values_have_label(self):
+        input_labels_dict = {"red": [1.0, 0.0],
+                             "green": [0.0, 1.0],
+                             "blue": [2.0, 2.0]}
+        output_labels_dict = {"red": [1.0, 0.0],
+                              "green": [0.0, 1.0]}
+        M = ProcessingMechanism(size=2,
+                                params={INPUT_LABELS_DICT: input_labels_dict,
+                                        OUTPUT_LABELS_DICT: output_labels_dict})
+        P = Process(pathway=[M])
+        S = System(processes=[P])
 
+        store_output_labels = []
+
+        def call_after_trial():
+            store_output_labels.append(M.output_labels)
+
+        S.run(inputs=['red', 'blue', 'green', 'blue'],
+              call_after_trial=call_after_trial)
+        assert np.allclose(S.results, [[[1.0, 0.0]], [[2.0, 2.0]], [[0.0, 1.0]], [[2.0, 2.0]]])
+
+        assert store_output_labels[0] == ['red']
+        assert np.allclose(store_output_labels[1], [[2.0, 2.0]])
+        assert store_output_labels[2] == ['green']
+        assert np.allclose(store_output_labels[3], [[2.0, 2.0]])
 
