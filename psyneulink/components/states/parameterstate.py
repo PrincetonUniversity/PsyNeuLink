@@ -630,7 +630,6 @@ class ParameterState(State_Base):
 
         self._instantiate_projections_to_state(projections=projections, context=context)
 
-
     @tc.typecheck
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
         """Get connections specified in a ParameterState specification tuple
@@ -813,6 +812,11 @@ class ParameterState(State_Base):
                                   format(self.__class__.__name__, state_specific_spec))
 
         return state_spec, params_dict
+
+    @staticmethod
+    def _get_state_function_value(owner, function, variable):
+        """Return parameter variable (since ParameterState's function never changes the form of its variable"""
+        return variable
 
     def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
         """Call self.function with current parameter value as the variable

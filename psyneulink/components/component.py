@@ -2671,6 +2671,7 @@ class Component(object):
     def execute(self, variable=None, runtime_params=None, context=None):
         function_variable = self._parse_function_variable(variable)
         return self._execute(variable=variable, function_variable=function_variable, runtime_params=runtime_params, context=context)
+        # return self._execute(variable=variable, runtime_params=runtime_params, context=context)
 
     def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None, **kwargs):
 

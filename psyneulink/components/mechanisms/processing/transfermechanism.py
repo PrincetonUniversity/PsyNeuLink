@@ -923,27 +923,20 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if not self.integrator_function:
 
-            self.integrator_function = AdaptiveIntegrator(
-                function_variable,
-                initializer=initial_value,
-                noise=noise,
-                rate=smoothing_factor,
-                owner=self
-            )
+            self.integrator_function = AdaptiveIntegrator(function_variable,
+                                                          initializer=initial_value,
+                                                          noise=noise,
+                                                          rate=smoothing_factor,
+                                                          owner=self)
 
             self.original_integrator_function = self.integrator_function
 
-        current_input = self.integrator_function.execute(
-            function_variable,
-            # Should we handle runtime params?
-            runtime_params={
-                # FIX: 4/30/18 - SHOULDN'T THESE BE THE PARAMS PASSED IN OR RETRIEVED ABOVE??
-                INITIALIZER: self.initial_value,
-                NOISE: self.noise,
-                RATE: self.smoothing_factor
-            },
-            context=context
-        )
+        current_input = self.integrator_function.execute(function_variable,
+                                                         # Should we handle runtime params?
+                                                         runtime_params={INITIALIZER: self.initial_value,
+                                                                         NOISE: self.noise,
+                                                                         RATE: self.smoothing_factor},
+                                                         context=context)
 
         return current_input
 
@@ -959,13 +952,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             outputs[maxCapIndices] = np.max(clip)
         return outputs
 
-    def _execute(
-        self,
-        variable=None,
-        function_variable=None,
-        runtime_params=None,
-        context=None
-    ):
+    def _execute(self,
+                 variable=None,
+                 function_variable=None,
+                 runtime_params=None,
+                 context=None):
         """Execute TransferMechanism function and return transform of input
 
         Execute TransferMechanism function on input, and assign to output_values:
