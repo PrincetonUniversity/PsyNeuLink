@@ -4052,6 +4052,7 @@ class System(System_Base):
 
         # get System's ProcessingMechanisms
         rcvrs = list(system_graph.keys())
+        learning_rcvrs = list(learning_graph.keys())
 
         # MANAGE ProcessMechanisms
 
@@ -4090,6 +4091,31 @@ class System(System_Base):
                                     process_intersections[intersection_name].append(r)
 
 
+                    if show_learning:
+                        for r in learning_rcvrs:
+                            # Don't use set to find intersection as need it to be ordered for naming
+                            # intersection = set(r.processes.keys()).intersection(processes)
+                            if isinstance(r, Projection):
+                                processes = r.sender.owner.processes
+                            else:
+                                processes = r.processes
+
+                            intersection = [p for p in processes if p in processes]
+                            # If the rcvr is in only one process, add it to the subgraph for that process
+                            if len(intersection)==1:
+                                if p in intersection:
+                                    _assign_learning_components(sg, r, [p])
+                            # Otherwise, assign rcvr to entry in dict for process intersection (subgraph is created below)
+                            else:
+                                intersection_name = ' and '.join([p.name for p in intersection])
+                                if not intersection_name in process_intersections:
+                                    process_intersections[intersection_name] = [r]
+                                else:
+                                    if r not in process_intersections[intersection_name]:
+                                        process_intersections[intersection_name].append(r)
+
+
+
                     # subgraphs[subgraph_name] = r_label
             # Connect subgraphs invisible to show them together
             # if len(subgraphs)>1:
@@ -4125,11 +4151,10 @@ class System(System_Base):
 
         # MANAGE LEARNING Components
 
-        # Add learning-related Components to graph if show_learning
-        if show_learning:
-            rcvrs = list(learning_graph.keys())
-            for rcvr in rcvrs:
-                _assign_learning_components(G, rcvr)
+            # Add learning-related Components to graph if show_learning
+            if show_learning:
+                for rcvr in learning_rcvrs:
+                    _assign_learning_components(G, rcvr)
                 
         # MANAGE CONTROL Components
 
