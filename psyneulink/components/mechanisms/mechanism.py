@@ -669,60 +669,138 @@ appending ``.names`` to the property.  For examples, the names of all of the Mec
 Value Label Dictionaries
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Mechanisms also have two attributes that can be used to specify labels for the values of its InputState(s) and
+*Overview*
+
+Mechanisms have two attributes that can be used to specify labels for the values of its InputState(s) and
 OutputState(s):
 
     * *INPUT_LABELS_DICT* -- used to specify labels for values of the InputState(s) of the Mechanism;  if specified,
       the dictionary is contained in the Mechanism's `input_labels_dict <Mechanism_Base.input_labels_dict>` attribute.
 
-    COMMENT:
-    * *TARGET_LABELS_DICT* -- used to specify labels for values of the InputState(s) of the Mechanism if it is a
-      `TARGET` Mechanism used in `learning <LearningMechanism_Targets>`;  if specified, the dictionary is contained in
-      the Mechanism's `target_labels_dict <Mechanism_Base.target_labels_dict>` attribute.
-    COMMENT
-    ..
     * *OUTPUT_LABELS_DICT* -- used to specify labels for values of the OutputState(s) of the Mechanism;  if specified,
       the dictionary is contained in the Mechanism's `output_labels_dict <Mechanism_Base.output_labels_dict>` attribute.
 
-The labels specified in these dictionaries can be used to specify items in the `inputs <Run_Inputs>` and `targets
-<Run_Targets>` arguments of the `run <System.run>` method of a `System`, and to report the values of the InputState(s)
-and OutputState(s) of a Mechanism in a System's `show_graph <System.show_graph>` method (using its **use_values**
-option).  If they are used to specify `targets <Run_Targets>`, they must be included in the `output_labels_dict
-<Mechanism_Base.output_labels_dict>` of the Mechanism that projects to the `TARGET` Mechanism (see `TARGET Mechanisms
-<LearningMechanism_Targets>`,  the last one in a `learning sequence <Process_Learning_Sequence>`.
+The labels specified in these dictionaries can be used to:
 
-The labels for the current value(s) of the Mechanism's InputState(s) and OutputState(s) are listed in its
-`input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>` attributes,
-respectively.
+    - specify items in the `inputs <Run_Inputs>` and `targets <Run_Targets>` arguments of the `run <System.run>` method
+      of a `System`
+    - report the values of the InputState(s) and OutputState(s) of a Mechanism
+    - visualize the inputs and outputs of the System's Mechanisms
 
-*Specifying label dictionaries*
+*Specifying Label Dictionaries*
 
 Label dictionaries can only be specified in a parameters dictionary assigned to the **params** argument of the
-Mechanism's constructor, using the keywords described above.  A given label dictionary must contain entries *all*
-of which use *only one* of the two following formats for the *key:value* pair of each entry:
+Mechanism's constructor, using the keywords described above.  A standard label dictionary contains key:value pairs of
+the following form:
 
-    * *label:value* -- the *label* is a string to be associated with the specified value of the State. If the
-      Mechanism has more than one State of the type corresponding to the dictionary, then the label will be used for
-      the specified value of any State of that type.  For example, if `input_labels_dict
-      <Mechanism_Base.input_labels_dict>` has *label_value* entries, and the Mechanism has more than one InputState,
-      then a specified label will be associated with the corresponding `value <InputState.value>` for any of the
-      Mechanism's InputStates.
-      COMMENT:
-          ADD EXAMPLE HERE
-      COMMENT
-    ..
     * *<state name or index>:<sub-dictionary>* -- this is used to specify labels that are specific to individual States
-      of the type corresponding to the dictionary;  the key of each entry must be either the name of a State of that
-      type, or its index in the list of States of that type (i.e, `input_states <Mechanism_Base.input_states>` or
-      `output_states <Mechanism_Base.output_states>`), and the value a subdictionary containing *label:value* entries
-      to be used for that State.  For example, if a Mechanism has two InputStates, named *SAMPLE* and *TARGET*, then
-      *INPUT_LABELS_DICT* could be assigned two entries, *SAMPLE*:<dict> and *TARGET*:<dict> or, correspondingly,
-      0:<dict> and 1:<dict>, in which each dict contained separate *label:value* entries for the *SAMPLE* and *TARGET*
-      InputStates.
-      COMMENT:
-          ADD EXAMPLE HERE
-      COMMENT
+      of the type corresponding to the dictionary;
+        - *key* - either the name of a State of that type, or its index in the list of States of that type (i.e,
+          `input_states <Mechanism_Base.input_states>` or `output_states <Mechanism_Base.output_states>`);
+        - *value* - a dictionary containing *label:value* entries to be used for that State, where the label is a string
+          and the shape of the value matches the shape of the `InputState value <InputState.value>` or `OutputState
+          value <OutputState.value>` for which it is providing a *label:value* mapping.
 
+      For example, if a Mechanism has two InputStates, named *SAMPLE* and *TARGET*, then *INPUT_LABELS_DICT* could be
+      assigned two entries, *SAMPLE*:<dict> and *TARGET*:<dict> or, correspondingly, 0:<dict> and 1:<dict>, in which
+      each dictionary contains separate *label:value* entries for the *SAMPLE* and *TARGET* InputStates.
+
+>>> input_labels_dictionary = {pnl.SAMPLE: {"red": [0],
+...                                         "green": [1]},
+...                            pnl.TARGET: {"red": [0],
+...                                         "green": [1]}}
+
+In the following two cases, a shorthand notation is allowed:
+
+    - a Mechanism has only one state of a particular type (only one InputState or only one OutputState)
+    - only the index zero InputState or index zero OutputState needs labels
+
+In these cases, a label dictionary for that type of state may simply contain the *label:value* entries described above.
+The *label:value* mapping will **only** apply to the index zero state of the state type for which this option is used.
+Any additional states of that type will not have value labels. For example, if the input_labels_dictionary below were
+applied to a Mechanism with multiple InputState, only the index zero InputState would use the labels "red" and "green".
+
+>>> input_labels_dictionary = {"red": [0],
+...                            "green": [1]}
+
+*Using Label Dictionaries*
+
+When using labels to specify items in the `inputs <Run_Inputs>` arguments of the `run <System.run>` method, labels may
+directly replace any or all of the `InputState values <InputState.value>` in an input specification dictionary. Keep in
+mind that each label must be specified in the `input_labels_dict <Mechanism_Base.input_labels_dict>` of the Origin
+Mechanism to which inputs are being specified, and must map to a value that would have been valid in that position of
+the input dictionary.
+
+        >>> import psyneulink as pnl
+        >>> input_labels_dict = {"red": [[1, 0, 0]],
+        ...                      "green": [[0, 1, 0]],
+        ...                      "blue": [[0, 0, 1]]}
+        >>> M = pnl.ProcessingMechanism(default_variable=[[0, 0, 0]],
+        ...                             params={pnl.INPUT_LABELS_DICT: input_labels_dict})
+        >>> P = pnl.Process(pathway=[M])
+        >>> S = pnl.System(processes=[P])
+        >>> input_dictionary = {M: ['red', 'green', 'blue', 'red']}
+        >>> # (equivalent to {M: [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]]]}, which is a valid input specification)
+        >>> results = S.run(inputs=input_dictionary)
+
+The same general rules apply when using labels to specify `target values <Run_Targets>` for a pathway with learning.
+With target values, however, the labels must be included in the `output_labels_dict <Mechanism_Base.output_labels_dict>`
+of the Mechanism that projects to the `TARGET` Mechanism (see `TARGET Mechanisms <LearningMechanism_Targets>`), or in
+other words, the last Mechanism in the `learning sequence <Process_Learning_Sequence>`. This is the same Mechanism used
+to specify target values for a particular learning sequence in the `targets dictionary <Run_Targets>`.
+
+        >>> input_labels_dict_M1 = {"red": [[1]],
+        ...                         "green": [[0]]}
+        >>> output_labels_dict_M2 = {"red": [1],
+        ...                         "green": [0]}
+        >>> M1 = pnl.ProcessingMechanism(params={pnl.INPUT_LABELS_DICT: input_labels_dict_M1})
+        >>> M2 = pnl.ProcessingMechanism(params={pnl.OUTPUT_LABELS_DICT: output_labels_dict_M2})
+        >>> P = pnl.Process(pathway=[M1, M2],
+        ...                 learning=pnl.ENABLED,
+        ...                 learning_rate=0.25)
+        >>> S = pnl.System(processes=[P])
+        >>> input_dictionary = {M1: ['red', 'green', 'green', 'red']}
+        >>> # (equivalent to {M1: [[[1]], [[0]], [[0]], [[1]]]}, which is a valid input specification)
+        >>> target_dictionary = {M2: ['red', 'green', 'green', 'red']}
+        >>> # (equivalent to {M2: [[1], [0], [0], [1]]}, which is a valid target specification)
+        >>> results = S.run(inputs=input_dictionary,
+        ...                 targets=target_dictionary)
+
+Several attributes are available for viewing the labels for the current value(s) of a Mechanism's InputState(s) and
+OutputState(s).
+
+    - The `label <InputState.label>` attribute of an InputState or OutputState returns the current label of
+      its value, if one exists, and its value otherwise.
+
+    - The `input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>` attributes of
+      Mechanisms return a list containing the labels corresponding to the value(s) of the InputState(s) or
+      OutputState(s) of the Mechanism, respectively. If the current value of a state does not have a corresponding
+      label, then its numeric value is used instead.
+
+>>> output_labels_dict = {"red": [1, 0, 0],
+...                      "green": [0, 1, 0],
+...                      "blue": [0, 0, 1]}
+>>> M = pnl.ProcessingMechanism(default_variable=[[0, 0, 0]],
+...                             params={pnl.OUTPUT_LABELS_DICT: output_labels_dict})
+>>> P = pnl.Process(pathway=[M])
+>>> S = pnl.System(processes=[P])
+>>> input_dictionary =  {M: [[1, 0, 0]]}
+>>> results = S.run(inputs=input_dictionary)
+>>> M.output_labels
+['red']
+>>> M.output_states[0].label
+'red'
+
+Labels may be used to visualize the input and outputs of Mechanisms in a System via the **show_structure** option of the
+System's `show_graph <System.show_graph>` method with the keyword **LABELS**.
+
+        >>> S.show_graph(show_mechanism_structure=pnl.LABELS)
+
+.. note::
+
+    A given label dictionary only applies to the Mechanism to which it belongs, and a given label only applies to its
+    corresponding InputState. For example, the label 'red', may translate to different values on different InputStates
+    of the same Mechanism, and on different Mechanisms of a System.
 
 .. Mechanism_Attribs_Dicts:
 
@@ -1023,11 +1101,8 @@ class Mechanism_Base(Mechanism):
         Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
     input_labels : list
-        contains the labels corresponding to the value(s) of the InputState(s) of the Mechanism listed in
-        `input_values <Mechanism_Base.input_values>` if `input_labels_dict <Mechanism_Base.input_labels>` has been
-        assigned, otherwise returns `None`.  If `input_labels_dict <Mechanism_Base.input_labels>` has been
-        assigned, but does not contain a label for the current `value <InputState.value>` of an InputState,
-        then its value assigned as the corresponding entry in the list in place of a label.
+        contains the labels corresponding to the value(s) of the InputState(s) of the Mechanism. If the current value
+        of an InputState does not have a corresponding label, then its numeric value is used instead.
 
     COMMENT:
     target_labels_dict : dict
@@ -1118,11 +1193,8 @@ class Mechanism_Base(Mechanism):
         Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
     output_labels : list
-        contains the labels corresponding to the value(s) of the OutputState(s) of the Mechanism listed in
-        `output_values <Mechanism_Base.output_values>` if `output_labels_dict <Mechanism_Base.output_labels>` has been
-        assigned, otherwise returns `None`.  If `output_labels_dict <Mechanism_Base.output_labels>` has been
-        assigned, but does not contain a label for the current `value <OutputState.value>` of an OutputState,
-        then its value assigned as the corresponding entry in the list in place of a label.
+        contains the labels corresponding to the value(s) of the OutputState(s) of the Mechanism. If the current value
+        of an OutputState does not have a corresponding label, then its numeric value is used instead.
 
     is_finished : bool : default False
         set by a Mechanism to signal completion of its `execution <Mechanism_Execution>`; used by `Component-based
@@ -2554,8 +2626,8 @@ class Mechanism_Base(Mechanism):
                     function = r'\n({})'.format(state.function_object.__class__.__name__)
                 value = ''
                 if include_value:
-                    if use_label and self.input_labels:
-                        value = self.input_labels[i]
+                    if use_label:
+                        value = r'\n={}'.format(state.label)
                     else:
                         value = r'\n={}'.format(state.value)
                 states += r'<{0}-{1}> {1}{2}{3}'.format(state_type.__name__,
@@ -2839,41 +2911,17 @@ class Mechanism_Base(Mechanism):
         If the labels_dict has subdicts (one for each State), get label for the value of each State from its subdict.
         If the labels dict does not have subdicts, then use the same dict for the only (or all) State(s)
         """
+
         if state_type is InputState:
             states = self.input_states
-            labels_dict = self.input_labels_dict
+
         elif state_type is OutputState:
             states = self.output_states
-            labels_dict = self.output_labels_dict
-        subdicts = False
-        if isinstance(list(labels_dict.values())[0], dict):
-            subdicts = True
-        labels = []
 
-        for i, item in enumerate(states):
-            # There is a subdict for each state, so use that
-            if subdicts:
-                try:
-                    state_label_dict = labels_dict[item.name]
-                except KeyError:
-                    try:
-                        state_label_dict = labels_dict[i]
-                    except:
-                        label = item.value
-                except:
-                    raise MechanismError("Unidentified key () in labels_dict for {} of {}".
-                                         format(state_type.__name__, self.name))
-                for label, value in state_label_dict.items():
-                    if np.array_equal(np.array(item.value), np.array(value)):
-                        labels.append(label)
-                    labels.append(item.value)
-            # There are no subdicts, so use same dict for only (or all) State(s)
-            else:
-                for label, value in labels_dict.items():
-                    if np.array_equal(np.array(item.value), np.array(value)):
-                        labels.append(label)
-                    labels.append(item.value)
-            return labels
+        labels = []
+        for state in states:
+            labels.append(state.label)
+        return labels
 
     @property
     def is_finished(self):
@@ -2896,13 +2944,16 @@ class Mechanism_Base(Mechanism):
 
     @property
     def input_labels(self):
-        """If Mechanism has an input_labels_dict, return list of labels for each value in input_values;
-        For items of input_values that have no label, use its valiue.
         """
+        Returns a list with as many items as there are InputStates of the Mechanism. Each list item represents the value
+        of the corresponding InputState, and is populated by a string label (from the input_labels_dict) when one
+        exists, and the numeric value otherwise.
+        """
+
         if self.input_labels_dict:
             return self._get_state_value_labels(InputState)
         else:
-            return None
+            return self.input_values
 
     @property
     def parameter_states(self):
@@ -2924,13 +2975,15 @@ class Mechanism_Base(Mechanism):
 
     @property
     def output_labels(self):
-        """If Mechanism has an output_labels_dict, return list of labels for each value in output_values;
-        For items of input_values that have no label, use its valiue.
+        """
+        Returns a list with as many items as there are OutputStates of the Mechanism. Each list item represents the
+        value of the corresponding OutputState, and is populated by a string label (from the output_labels_dict) when
+        one exists, and the numeric value otherwise.
         """
         if self.output_labels_dict:
             return self._get_state_value_labels(OutputState)
         else:
-            return None
+            return self.output_values
 
     @property
     def status(self):
