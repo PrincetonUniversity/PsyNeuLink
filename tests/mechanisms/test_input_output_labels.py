@@ -7,6 +7,7 @@ from psyneulink.globals.keywords import INPUT_LABELS_DICT, OUTPUT_LABELS_DICT, E
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 
+
 class TestMechanismInputLabels:
     def test_dict_of_floats(self):
         input_labels_dict = {"red": 1,
@@ -146,6 +147,24 @@ class TestMechanismInputLabels:
         S.run(inputs=[['red', [1, 0]], ['green', 'red'], [[0,1], 'green']])
         assert np.allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]], [[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
 
+    def test_3_input_states_2_label_dicts(self):
+        input_labels_dict = {0: {"red": [1, 0],
+                                 "green": [0, 1]},
+                             2: {"red": [0, 1],
+                                 "green": [1, 0]}}
+
+
+        M = TransferMechanism(default_variable=[[0, 0], [0, 0], [0, 0]],
+                              params={INPUT_LABELS_DICT: input_labels_dict})
+        P = Process(pathway=[M])
+        S = System(processes=[P])
+
+        S.run(inputs=[['red', [0, 0], 'green'], ['green', [1, 1], 'red'], ['green', [2, 2], 'green']])
+        assert np.allclose(S.results, [[[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]]])
+
+        S.run(inputs=[['red', [0, 0], [1, 0]], ['green', [1, 1], 'red'], [[0,1], [2, 2], 'green']])
+        assert np.allclose(S.results, [[[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]], [[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]]])
+
 class TestMechanismTargetLabels:
     def test_dict_of_floats(self):
         input_labels_dict_M1 = {"red": 1,
@@ -234,6 +253,7 @@ class TestMechanismTargetLabels:
                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
                                             np.array([[0.625, -0.375], [-0.375,  0.625]])])
 
+
 class TestMechanismOutputLabels:
 
     def test_dict_of_floats(self):
@@ -289,7 +309,7 @@ class TestMechanismOutputLabels:
         assert np.allclose(S.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]], [[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
         assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
         # S.show_graph(show_mechanism_structure="labels")
-        
+
     def test_not_all_output_state_values_have_label(self):
         input_labels_dict = {"red": [1.0, 0.0],
                              "green": [0.0, 1.0],

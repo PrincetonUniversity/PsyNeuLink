@@ -2056,7 +2056,7 @@ class State_Base(State):
                 for label in labels_dict:
                     if np.allclose(labels_dict[label], self.value):
                         return label
-            # if this isn't the index 0 state, then just return the original value
+            # if this isn't the index 0 state OR a label was not found then just return the original value
             return self.value
 
         for state in labels_dict:

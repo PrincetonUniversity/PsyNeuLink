@@ -812,6 +812,12 @@ class OutputState(State_Base):
         assigned the result of `function <OutputState.function>`;  the same value is assigned to the corresponding item
         of the owner Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
 
+    label : string or number
+        the string label that represents the current `value <OutputState.value>` of the OutputState, according to the
+        owner mechanism's `output_labels_dict <Mechanism.output_labels_dict>`. If the current
+        `value <OutputState.value>` of the OutputState does not have a corresponding label, then the numeric
+        `value <OutputState.value>` is returned.
+
     efferents : List[MappingProjection]
         `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState
         is a `sender <Projection_Base.sender>`).
@@ -1254,7 +1260,10 @@ class OutputState(State_Base):
 
     @property
     def label(self):
-        return self._get_value_label(self.owner.output_labels_dict, self.owner.output_states)
+        label_dictionary = {}
+        if hasattr(self.owner, "output_labels_dict"):
+            label_dictionary = self.owner.output_labels_dict
+        return self._get_value_label(label_dictionary, self.owner.output_states)
 
 
 def _instantiate_output_states(owner, output_states=None, context=None):

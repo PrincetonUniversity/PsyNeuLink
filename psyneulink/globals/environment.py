@@ -1019,18 +1019,19 @@ def _parse_input_labels(obj, stimuli, mechanisms_to_parse):
                 break
 
         if subdicts:    # If there are subdicts, validate
-            if len(mech.input_labels_dict) != len(mech.input_states):
-                raise RunError("If input labels are specified at the level of input states, then one input state label "
-                               "sub-dictionary must be provided for each input state. {} has {} input state label "
-                               "sub-dictionaries, but {} input states.".format(mech.name,
-                                                                               len(mech.input_labels_dict),
-                                                                               len(mech.input_states)))
+            # if len(mech.input_labels_dict) != len(mech.input_states):
+            #     raise RunError("If input labels are specified at the level of input states, then one input state label "
+            #                    "sub-dictionary must be provided for each input state. {} has {} input state label "
+            #                    "sub-dictionaries, but {} input states.".format(mech.name,
+            #                                                                    len(mech.input_labels_dict),
+            #                                                                    len(mech.input_states)))
             for k in mech.input_labels_dict:
                 value = mech.input_labels_dict[k]
                 if not isinstance(value, dict):
-                    raise RunError("If input labels are specified at the level of input states, then one input state "
-                                   "label sub-dictionary must be provided for each input state. A sub-dictionary was "
-                                   "not specified for the input state {} of {}".format(k, mech.name))
+                    raise RunError("A sub-dictionary  of label:value pairs was not specified for the input state {} of "
+                                   "{}. If input labels are specified at the level of InputStates, then a sub-dictionary"
+                                   " must be provided for each InputState in the input labels dictionary"
+                                   .format(k, mech.name))
 
             # If there is only one subdict, then we already know that we are in the correct input state
             num_input_labels = len(mech.input_labels_dict)
@@ -1038,9 +1039,10 @@ def _parse_input_labels(obj, stimuli, mechanisms_to_parse):
                 # there is only one key, but we don't know what it is
                 for k in mech.input_labels_dict:
                     for i in range(len(inputs)):
+                        # if the whole input spec is a string, look up its value
                         if isinstance(inputs[i], str):
                             inputs[i] = mech.input_labels_dict[k][inputs[i]]
-                        # we can use [0] because we know that there is only one input state
+                        # otherwise, index into [0] because we know that this label is for the primary input state
                         elif isinstance(inputs[i][0], str):
                             inputs[i][0] = mech.input_labels_dict[k][inputs[i][0]]
 
