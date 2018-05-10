@@ -321,17 +321,54 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only or
 
 .. _Run_Runtime_Parameters:
 
-Runtime_Parameters
+Runtime Parameters
 ~~~~~~~~~~~~~~~~~~
 
-Runtime parameters are specified as a nested dictionary of (value, condition) tuples for parameters of mechanisms of the Composition. At the outer
-layer of the dictionary, keys are Mechanisms and values are runtime parameter specification dictionaries. Inside
-of those dictionaries, keys are keywords corresponding to Parameters of the Mechanism and values are tuples, the
-index 0 item of which is the runtime parameter value, and the index 1 item of which is a `Condition`. Runtime
-parameter values are subject to the same type, value, and shape requirements as the parameter in question. If a
-runtime parameter is meant to be used throughout the run, then the `Condition` may be omitted and the "Always"
-`Condition` will be assigned by default. See `RuntimeParameters` for examples of valid dictionaries.
+Runtime parameters are alternate parameter values that a Mechanism only uses under certain conditions. They are
+specified in a nested dictionary of (value, condition) tuples for parameters and Function parameters of Mechanisms of
+the Composition.
 
+Outer dictionary:
+    - *key* - Mechanism
+    - *value* - Runtime Parameter Specification Dictionary
+
+Runtime Parameter Specification Dictionary:
+    - *key* - keyword corresponding to a parameter of the Mechanism or its Function
+    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a `Condition`
+
+Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter value.
+
+If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the "Always"
+`Condition` will be assigned by default:
+
+>>> import psyneulink as pnl
+>>> T = pnl.TransferMechanism()
+>>> P = pnl.Process(pathway=[T])
+>>> S = pnl.System(processes=[P])
+>>> T.function_object.slope  # slope starts out at 1.0
+1.0
+>>> # During the following run, 10.0 will be used as the slope
+>>> S.run(inputs={T: 2.0},
+...       runtime_params={T: {"slope": 10.0}})
+[ 20.]
+>>> T.function_object.slope  # After the run, T.slope resets to 1.0
+
+Otherwise, the runtime parameter value will be used on all executions of the
+`Run` during which the `Condition` is True:
+
+>>> T = pnl.TransferMechanism()
+>>> P = pnl.Process(pathway=[T])
+>>> S = pnl.System(processes=[P])
+>>> T.function_object.intercept     # intercept starts out at 0.0
+>>> T.function_object.slope         # slope starts out at 1.0
+>>> S.run(inputs={T: 2.0},
+...       runtime_params={T: {"intercept": (5.0, pnl.AfterTrial(1)),
+...                           "slope": (2.0, pnl.AtTrial(3))}},
+...       num_trials=5)
+[[np.array([2.])], [np.array([2.])], [np.array([7.])], [np.array([9.])], [np.array([7.])]]
+>>> # original parameters were used on trials 0 and 1
+>>> # runtime intercept was used on trials 2, 3, and 4
+>>> # runtime slope was used on trial 3
 
 
 COMMENT:
@@ -625,13 +662,25 @@ def run(object,
         phase of execution <System_Execution_Learning>`
 
     runtime_params : Dict[Mechanism: Dict[Param: Tuple(Value, Condition)]]
-        a nested dictionary of (value, condition) tuples for parameters of mechanisms of the Composition. At the outer
-        layer of the dictionary, keys are Mechanisms and values are runtime parameter specification dictionaries. Inside
-        of those dictionaries, keys are keywords corresponding to Parameters of the Mechanism and values are tuples, the
-        index 0 item of which is the runtime parameter value, and the index 1 item of which is a `Condition`. Runtime
-        parameter values are subject to the same type, value, and shape requirements as the parameter in question. If a
-        runtime parameter is meant to be used throughout the run, then the `Condition` may be omitted and the "Always"
-        `Condition` will be assigned by default. See `RuntimeParameters` for examples of valid dictionaries.
+        nested dictionary of (value, condition) tuples for parameters of Mechanisms of the Composition, which specifies
+        alternate parameter values that a Mechanism only uses under certain conditions.
+
+        Outer dictionary:
+            - *key* - Mechanism
+            - *value* - Runtime Parameter Specification Dictionary
+
+        Runtime Parameter Specification Dictionary:
+            - *key* - keyword corresponding to a parameter of the Mechanism
+            - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a `Condition`
+
+        See `Run_Runtime_Parameters` for examples of valid dictionaries.
+
+If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the "Always"
+`Condition` will be assigned by default. Otherwise, the runtime parameter value will be used on all executions of the
+`Run` during which the `Condition` is True.
+
+Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter value.
+
 
 
    Returns
