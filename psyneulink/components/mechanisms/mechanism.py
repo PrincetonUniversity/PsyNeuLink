@@ -721,7 +721,7 @@ Any additional states of that type will not have value labels. For example, if t
 applied to a Mechanism with multiple InputState, only the index zero InputState would use the labels "red" and "green".
 
 >>> input_labels_dictionary = {"red": [0],
-...                            "green": [1]}}
+...                            "green": [1]}
 
 *Using Label Dictionaries*
 
@@ -801,7 +801,7 @@ System's `show_graph <System.show_graph>` method with the keyword **LABELS**.
     A given label dictionary only applies to the Mechanism to which it belongs, and a given label only applies to its
     corresponding InputState. For example, the label 'red', may translate to different values on different InputStates
     of the same Mechanism, and on different Mechanisms of a System.
-    
+
 .. Mechanism_Attribs_Dicts:
 
 Attribute Dictionary
