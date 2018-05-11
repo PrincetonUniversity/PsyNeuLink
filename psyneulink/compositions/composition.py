@@ -62,6 +62,7 @@ from psyneulink.globals.keywords import SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAM
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import EXECUTING
 from psyneulink.scheduling.scheduler import Scheduler
+from psyneulink.scheduling.condition import Always
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.context import ContextFlags, ContextStatus
 
@@ -915,6 +916,26 @@ class Composition(object):
         else:
             return []
 
+    def _parse_runtime_params(self, runtime_params):
+        if runtime_params is None:
+            return {}
+        for mechanism in runtime_params:
+            for param in runtime_params[mechanism]:
+                if isinstance(runtime_params[mechanism][param], tuple):
+                    if len(runtime_params[mechanism][param]) == 1:
+                        runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
+                    elif len(runtime_params[mechanism][param]) != 2:
+                        raise SystemError("Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
+                                          "Must be a tuple of the form (parameter value, condition), or simply the "
+                                          "parameter value. ".format(runtime_params[mechanism][param],
+                                                                     mechanism.name,
+                                                                     param,
+                                                                     self.name))
+                else:
+                    runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
+        return runtime_params
+
+
     def execute(
         self,
         inputs,
@@ -928,7 +949,8 @@ class Composition(object):
         call_after_pass=None,
         execution_id=None,
         clamp_input=SOFT_CLAMP,
-        targets=None
+        targets=None,
+        runtime_params=None,
     ):
         '''
             Passes inputs to any Mechanisms receiving inputs directly from the user, then coordinates with the Scheduler
@@ -969,6 +991,8 @@ class Composition(object):
 
             output value of the final Mechanism executed in the Composition : various
         '''
+
+        runtime_params = self._parse_runtime_params(runtime_params)
 
         if targets is None:
             targets = {}
@@ -1038,10 +1062,29 @@ class Composition(object):
                             # self.input_mechanisms[mechanism]._output_states[0].value = 0.0
 
                 if isinstance(mechanism, Mechanism):
-                    current_context = EXECUTING + "composition "
+
+                    execution_runtime_params = {}
+
+                    if mechanism in runtime_params:
+                        for param in runtime_params[mechanism]:
+                            if runtime_params[mechanism][param][1].is_satisfied(scheduler=execution_scheduler):
+                                execution_runtime_params[param] = runtime_params[mechanism][param][0]
+
                     mechanism.context.execution_phase = ContextFlags.PROCESSING
-                    num = mechanism.execute(context=ContextFlags.COMPOSITION)
+                    num = mechanism.execute(runtime_params=execution_runtime_params,
+                                            context=ContextFlags.COMPOSITION)
+
+                    for key in mechanism._runtime_params_reset:
+                        mechanism._set_parameter_value(key, mechanism._runtime_params_reset[key])
+                    mechanism._runtime_params_reset = {}
+
+                    for key in mechanism.function_object._runtime_params_reset:
+                        mechanism.function_object._set_parameter_value(key,
+                                                                       mechanism.function_object._runtime_params_reset[
+                                                                           key])
+                    mechanism.function_object._runtime_params_reset = {}
                     mechanism.context.execution_phase = ContextFlags.IDLE
+
                 if mechanism in origin_mechanisms:
                     if clamp_input:
                         if mechanism in pulse_clamp_inputs:
@@ -1074,7 +1117,8 @@ class Composition(object):
         call_before_trial=None,
         call_after_trial=None,
         clamp_input=SOFT_CLAMP,
-        targets=None
+        targets=None,
+        runtime_params=None
     ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
@@ -1121,6 +1165,21 @@ class Composition(object):
 
             call_after_trial : callable
                 will be called after each `TRIAL` is executed.
+
+            runtime_params : Dict[Mechanism: Dict[Param: Tuple(Value, Condition)]]
+                nested dictionary of (value, `Condition`) tuples for parameters of Mechanisms of the Composition; specifies
+                alternate parameter values to be used only during this `Run` when the specified `Condition` is met.
+
+                Outer dictionary:
+                    - *key* - Mechanism
+                    - *value* - Runtime Parameter Specification Dictionary
+
+                Runtime Parameter Specification Dictionary:
+                    - *key* - keyword corresponding to a parameter of the Mechanism
+                    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a
+                      `Condition`
+
+                See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
 
             Returns
             ---------
@@ -1208,7 +1267,8 @@ class Composition(object):
                                         call_after_time_step=call_after_time_step,
                                         call_after_pass=call_after_pass,
                                         execution_id=execution_id,
-                                        clamp_input=clamp_input)
+                                        clamp_input=clamp_input,
+                                        runtime_params=runtime_params)
 
         # ---------------------------------------------------------------------------------
             # store the result of this execute in case it will be the final result
