@@ -4052,6 +4052,7 @@ class System(System_Base):
 
         # get System's ProcessingMechanisms
         rcvrs = list(system_graph.keys())
+        learning_rcvrs = list(learning_graph.keys())
 
         # MANAGE ProcessMechanisms
 
@@ -4060,11 +4061,10 @@ class System(System_Base):
 
             # Manage Processes
             process_intersections = {}
-            processes = set(self.processes)
             subgraphs = {}
-            for p in self.processes:
-                subgraph_name = 'cluster_'+p.name
-                subgraph_label = p.name
+            for process in self.processes:
+                subgraph_name = 'cluster_'+process.name
+                subgraph_label = process.name
                 with G.subgraph(name=subgraph_name) as sg:
                     sg.attr(label=subgraph_label)
                     sg.attr(rank = 'same')
@@ -4073,13 +4073,12 @@ class System(System_Base):
 
                     # loop through receivers and assign to the subgraph any that belong to the current Process
                     for r in rcvrs:
-                        # Don't use set to find intersection as need it to be ordered for naming
-                        # intersection = set(r.processes.keys()).intersection(processes)
-                        intersection = [p for p in processes if p in r.processes]
-                        # If the rcvr is in only one process, add it to the subgraph for that process
+                        intersection = [p for p in self.processes if p in r.processes]
+                        # If the rcvr is in only one Process, add it to the subgraph for that Process
                         if len(intersection)==1:
-                            if p in intersection:
-                                _assign_processing_components(sg, r, [p])
+                            # If the rcvr is in the current Process, assign it to the subgraph
+                            if process in intersection:
+                                _assign_processing_components(sg, r, [process])
                         # Otherwise, assign rcvr to entry in dict for process intersection (subgraph is created below)
                         else:
                             intersection_name = ' and '.join([p.name for p in intersection])
@@ -4089,25 +4088,32 @@ class System(System_Base):
                                 if r not in process_intersections[intersection_name]:
                                     process_intersections[intersection_name].append(r)
 
+                    # loop through learning Components and assign to the subgraph any that belong to the current Process
+                    if show_learning:
+                        for l in learning_rcvrs:
+                            if isinstance(l, Projection):
+                                processes = l.sender.owner.processes
+                            else:
+                                processes = l.processes
+                            # if [p for p in self.processes if p in processes]:
+                            if process in processes:
+                                _assign_learning_components(sg, l, [process])
 
-                    # subgraphs[subgraph_name] = r_label
-            # Connect subgraphs invisible to show them together
-            # if len(subgraphs)>1:
-            #     sg_list = list(subgraphs.items())
-            #     for i in range(len(sg_list)-1):
-            #         sg_name = sg_list[i][0]
-            #         sg_last_node = sg_list[i][1]
-            #         next_sg_name = sg_list[i+1][0]
-            #         next_sg_last_node = sg_list[i+1][1]
-            #         # G.edge(sg_label, next_sg_label, style='invisible')
-            #         G.edge(sg_last_node, next_sg_last_node, lhead=sg_name, ltail=next_sg_name, style='invisible')
-                #     G.edge(sg_name, next_sg_name, ltail=sg_name, lhead=next_sg_name, style='invisible')
-                # for i in range(len(subgraphs)-1):
-                #     sg = subgraphs[i]
-                #     sg_name = subgraphs[i+1]
-                #     next_sg = subgraphs[i+1][1]
-                #     # G.edge(sg, next_sg, ltail=sg_name, lhead=next_sg_name, style='invisible')
-                #     G.edge(sg_name, next_sg_name, ltail=sg_name, lhead=next_sg_name, style='invisible')
+                        # # Don't use set to find intersection as need it to be ordered for naming
+                        # # intersection = set(r.processes.keys()).intersection(processes)
+                        # intersection = [p for p in processes if p in processes]
+                        # # If the rcvr is in only one process, add it to the subgraph for that process
+                        # if len(intersection)==1:
+                        #     if p in intersection:
+                        #         _assign_learning_components(sg, r, [p])
+                        # # Otherwise, assign rcvr to entry in dict for process intersection (subgraph is created below)
+                        # else:
+                        #     intersection_name = ' and '.join([p.name for p in intersection])
+                        #     if not intersection_name in process_intersections:
+                        #         process_intersections[intersection_name] = [r]
+                        #     else:
+                        #         if r not in process_intersections[intersection_name]:
+                        #             process_intersections[intersection_name].append(r)
 
             # Create a process for each unique intersection and assign rcvrs to that
             for intersection_name, mech_list in process_intersections.items():
@@ -4122,14 +4128,18 @@ class System(System_Base):
         else:
             for r in rcvrs:
                 _assign_processing_components(G, r)
+            # Add learning-related Components to graph if show_learning
+            if show_learning:
+                for rcvr in learning_rcvrs:
+                    _assign_learning_components(G, rcvr)
 
         # MANAGE LEARNING Components
 
-        # Add learning-related Components to graph if show_learning
-        if show_learning:
-            rcvrs = list(learning_graph.keys())
-            for rcvr in rcvrs:
-                _assign_learning_components(G, rcvr)
+        # # Add learning-related Components to graph if show_learning
+        # if show_learning:
+        #     rcvrs = list(learning_graph.keys())
+        #     for rcvr in rcvrs:
+        #         _assign_learning_components(G, rcvr)
                 
         # MANAGE CONTROL Components
 
