@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.4.7.1+40.g7e61f44 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.4.7.1+62.g7a27a4a documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1+40.g7e61f44 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.7.1+62.g7a27a4a documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Log" href="Log.html"/>
         <link rel="prev" title="Time" href="Time.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.7.1+40
+                0.4.7.1+62
               </div>
             
           
@@ -260,11 +260,11 @@ five inputs are provided for each origin mechanism, and num_trials is not specif
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Trial #</td>
+<td>0</td>
 <td>1</td>
 <td>2</td>
 <td>3</td>
 <td>4</td>
-<td>5</td>
 </tr>
 <tr class="row-even"><td>Input to Mechanism a</td>
 <td>1.0</td>
@@ -291,7 +291,7 @@ five inputs are provided for each origin mechanism, and num_trials is not specif
 </div>
 <p>If num_trials is in use, <a class="reference internal" href="#environment.run" title="environment.run"><code class="xref any py py-func docutils literal"><span class="pre">run</span></code></a> will iterate over the inputs until num_trials is reached. For example, if five inputs
 are provided for each <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and num_trials = 7, the system will execute seven times. The first two
-items in the list of inputs will be used on the 6th and 7th trials, respectively.</p>
+items in the list of inputs will be used on trial 5 and trial 6, respectively.</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="34%" />
@@ -305,13 +305,13 @@ items in the list of inputs will be used on the 6th and 7th trials, respectively
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Trial #</td>
+<td>0</td>
 <td>1</td>
 <td>2</td>
 <td>3</td>
 <td>4</td>
 <td>5</td>
 <td>6</td>
-<td>7</td>
 </tr>
 <tr class="row-even"><td>Input to Mechanism a</td>
 <td>1.0</td>
@@ -355,11 +355,11 @@ situations:</p>
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Trial #</td>
+<td>0</td>
 <td>1</td>
 <td>2</td>
 <td>3</td>
 <td>4</td>
-<td>5</td>
 </tr>
 <tr class="row-even"><td>Input to <strong>Mechanism a</strong></td>
 <td>1.0</td>
@@ -407,7 +407,7 @@ situations:</p>
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Trial #</td>
-<td>1</td>
+<td>0</td>
 </tr>
 <tr class="row-even"><td>Input to <strong>Mechanism a</strong></td>
 <td>[[1.0], [2.0]]</td>
@@ -450,11 +450,11 @@ situations:</p>
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Trial #</td>
+<td>0</td>
 <td>1</td>
 <td>2</td>
 <td>3</td>
 <td>4</td>
-<td>5</td>
 </tr>
 <tr class="row-even"><td>Input to <strong>Mechanism a</strong></td>
 <td>[[1.0], [2.0]]</td>
@@ -499,8 +499,8 @@ situations:</p>
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Trial #</td>
+<td>0</td>
 <td>1</td>
-<td>2</td>
 </tr>
 <tr class="row-even"><td>Input to <strong>Mechanism a</strong></td>
 <td>[1.0, 2.0, 3.0]</td>
@@ -531,6 +531,116 @@ situations:</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="runtime-parameters">
+<span id="run-runtime-parameters"></span><h3>Runtime Parameters<a class="headerlink" href="#runtime-parameters" title="Permalink to this headline">¶</a></h3>
+<p>Runtime parameters are alternate parameter values that a Mechanism only uses under certain conditions. They are
+specified in a nested dictionary containing (value, condition) tuples that correspond to parameters and Function
+parameters of Mechanisms, which is passed into the <code class="xref any docutils literal"><span class="pre">runtime_params</span></code> argument of <a class="reference internal" href="#"><span class="doc">Run</span></a>.</p>
+<dl class="docutils">
+<dt>Outer dictionary:</dt>
+<dd><ul class="first last simple">
+<li><em>key</em> - Mechanism</li>
+<li><em>value</em> - Runtime Parameter Specification Dictionary</li>
+</ul>
+</dd>
+<dt>Runtime Parameter Specification Dictionary:</dt>
+<dd><ul class="first last simple">
+<li><em>key</em> - keyword corresponding to a parameter of the Mechanism or its Function</li>
+<li><em>value</em> - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a></li>
+</ul>
+</dd>
+</dl>
+<p>If a runtime parameter is meant to be used throughout the <a class="reference internal" href="#"><span class="doc">Run</span></a>, then the <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> may be omitted and the <a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.Always" title="psyneulink.scheduling.condition.Always"><code class="xref any py py-class docutils literal"><span class="pre">Always</span></code></a>
+<a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> will be assigned by default:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">T</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">T</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">P</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function_object</span><span class="o">.</span><span class="n">slope</span>  <span class="c1"># slope starts out at 1.0</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># During the following run, 10.0 will be used as the slope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">T</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">},</span>
+<span class="gp">... </span>      <span class="n">runtime_params</span><span class="o">=</span><span class="p">{</span><span class="n">T</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;slope&quot;</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">}})</span>
+<span class="go">[ 20.]</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function_object</span><span class="o">.</span><span class="n">slope</span>  <span class="c1"># After the run, T.slope resets to 1.0</span>
+</pre></div>
+</div>
+<p>Otherwise, the runtime parameter value will be used on all executions of the
+<a class="reference internal" href="#"><span class="doc">Run</span></a> during which the <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is True:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">T</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">T</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">P</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function_object</span><span class="o">.</span><span class="n">intercept</span>     <span class="c1"># intercept starts out at 0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function_object</span><span class="o">.</span><span class="n">slope</span>         <span class="c1"># slope starts out at 1.0</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">T</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">},</span>
+<span class="gp">... </span>      <span class="n">runtime_params</span><span class="o">=</span><span class="p">{</span><span class="n">T</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;intercept&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AfterTrial</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
+<span class="gp">... </span>                          <span class="s2">&quot;slope&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AtTrial</span><span class="p">(</span><span class="mi">3</span><span class="p">))}},</span>
+<span class="gp">... </span>      <span class="n">num_trials</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">[[np.array([2.])], [np.array([2.])], [np.array([7.])], [np.array([9.])], [np.array([7.])]]</span>
+</pre></div>
+</div>
+<p>The table below shows how runtime parameters were applied to the intercept and slope parameters of Mechanism T in the
+example above.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="15%" />
+<col width="15%" />
+<col width="15%" />
+<col width="15%" />
+<col width="15%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">&#160;</th>
+<th class="head">Trial 0</th>
+<th class="head">Trial 1</th>
+<th class="head">Trial 2</th>
+<th class="head">Trial 3</th>
+<th class="head">Trial 4</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Intercept</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>5.0</td>
+<td>5.0</td>
+<td>5.0</td>
+</tr>
+<tr class="row-odd"><td>Slope</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>2.0</td>
+<td>0.0</td>
+</tr>
+<tr class="row-even"><td>Value</td>
+<td>2.0</td>
+<td>2.0</td>
+<td>7.0</td>
+<td>9.0</td>
+<td>7.0</td>
+</tr>
+</tbody>
+</table>
+<p>as indicated by the results of S.run(), the original parameter values were used on trials 0 and 1,
+the runtime intercept was used on trials 2, 3, and 4, and the runtime slope was used on trial 3.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
+value.</p>
+</div>
+</div>
 <div class="section" id="targets">
 <span id="run-targets"></span><h3>Targets<a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h3>
 <p>If learning is specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>, then
@@ -555,8 +665,8 @@ list will be cycled until the number of <a class="reference internal" href="Log.
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Trial #</td>
+<td>0</td>
 <td>1</td>
-<td>2</td>
 </tr>
 <tr class="row-even"><td>Target value for the learning sequence
 containing <strong>Mechanism b</strong></td>
@@ -643,11 +753,11 @@ rather than a dictionary.</p>
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Trial #</td>
+<td>0</td>
 <td>1</td>
 <td>2</td>
 <td>3</td>
 <td>4</td>
-<td>5</td>
 </tr>
 <tr class="row-even"><td>Target corresponding to  <strong>Mechanism b</strong></td>
 <td>1.0</td>
@@ -688,7 +798,7 @@ rather than a dictionary.</p>
 <span id="run-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="environment.run">
-<code class="descclassname">environment.</code><code class="descname">run</code><span class="sig-paren">(</span><em>inputs</em>, <em>num_trials=None</em>, <em>initialize=False</em>, <em>intial_values=None</em>, <em>targets=None</em>, <em>learning=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em><span class="sig-paren">)</span><a class="headerlink" href="#environment.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">environment.</code><code class="descname">run</code><span class="sig-paren">(</span><em>inputs</em>, <em>num_trials=None</em>, <em>initialize=False</em>, <em>intial_values=None</em>, <em>targets=None</em>, <em>learning=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>termination_processing=None</em>, <em>termination_learning=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#environment.run" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div>Run a sequence of executions for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
@@ -715,6 +825,25 @@ If it is <code class="xref any docutils literal"><span class="pre">True</span></
 phase of execution</span></a></li>
 <li><strong>termination_learning</strong> (<em>Dict</em><em>[</em><em>TimeScale: Condition</em><em>]</em>) – a dictionary containing <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that signal the end of the associated <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale" title="psyneulink.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a> within the <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">learning
 phase of execution</span></a></li>
+<li><strong>runtime_params</strong> (<em>Dict</em><em>[</em><em>Mechanism: Dict</em><em>[</em><em>Param: Tuple</em><em>(</em><em>Value</em><em>, </em><a class="reference internal" href="Condition.html#psyneulink.scheduling.condition.Condition" title="psyneulink.scheduling.condition.Condition"><em>Condition</em></a><em>)</em><em>]</em><em>]</em>) – <p>nested dictionary of (value, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>) tuples for parameters of Mechanisms of the Composition; specifies
+alternate parameter values to be used only during this <a class="reference internal" href="#"><span class="doc">Run</span></a> when the specified <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is met.</p>
+<dl class="docutils">
+<dt>Outer dictionary:</dt>
+<dd><ul class="first last">
+<li><em>key</em> - Mechanism</li>
+<li><em>value</em> - Runtime Parameter Specification Dictionary</li>
+</ul>
+</dd>
+<dt>Runtime Parameter Specification Dictionary:</dt>
+<dd><ul class="first last">
+<li><em>key</em> - keyword corresponding to a parameter of the Mechanism</li>
+<li><em>value</em> - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a
+<a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a></li>
+</ul>
+</dd>
+</dl>
+<p>See <a class="reference internal" href="#run-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a> for more details and examples of valid dictionaries.</p>
+</li>
 </ul>
 </td>
 </tr>
@@ -776,7 +905,7 @@ or of the OutputStates of the <a class="reference internal" href="Keywords.html#
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1+40.g7e61f44',
+            VERSION:'0.4.7.1+62.g7a27a4a',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
