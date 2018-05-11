@@ -383,8 +383,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # self.system = None
 
@@ -396,12 +395,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
         super().__init__(default_variable=default_gating_policy,
                          size=size,
                          modulation=modulation,
+                         function=function,
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self,
-                         function=function,
-                         )
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate items in the GATING_SIGNALS param (**gating_signals** argument of constructor)
@@ -493,7 +491,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                            owner=self,
                                            reference_value=defaultGatingPolicy,
                                            modulation=self.modulation,
-                                           state_spec=gating_signal)
+                                           state_spec=gating_signal,
+                                           context=context)
 
         # Validate index
         try:
@@ -535,7 +534,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         if GATING_PROJECTIONS in self.paramsCurrent:
             if self.paramsCurrent[GATING_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[GATING_PROJECTIONS].items():
-                    self._instantiate_gating_projection(projection, context=self.name)
+                    self._instantiate_gating_projection(projection, context=ContextFlags.METHOD)
 
     def _assign_as_gating_mechanism(self, context=None):
 

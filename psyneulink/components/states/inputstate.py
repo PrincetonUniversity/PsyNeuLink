@@ -39,7 +39,7 @@ being created within the `pathway <Process.pathway>` of a `Process`, its InputSt
 <Process.pathway>`.  InputStates can also be specified in the **input_states** argument of a Mechanism's
 constructor (see `below <InputState_Specification>`).
 
-The `variable <variable.InputState>` of an InputState can be specified using the **variable** or **size** arguments of
+The `variable <InputState.variable>` of an InputState can be specified using the **variable** or **size** arguments of
 its constructor.  It can also be specified using the **projections** argument, if neither **variable** nor **size** is
 specified.  The **projections** argument is used to `specify Projections <State_Projections>` to the InputState. If
 neither the **variable** nor **size** arguments is specified, then the value of the `Projections(s) <Projection>` or
@@ -460,11 +460,15 @@ import collections
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Linear, LinearCombination, Reduce
+from psyneulink.components.functions.function import Function, Linear, LinearCombination, Reduce
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.state import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CLASS_DEFAULTS, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import \
+    CLASS_DEFAULTS, COMBINE, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, \
+    INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OPERATION, \
+    OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
+    SENDER, SUM, SYSTEM_INPUT_STATE, VALUE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible
@@ -482,15 +486,10 @@ state_type_keywords = state_type_keywords.update({INPUT_STATE})
 #                                                          level=PreferenceLevel.TYPE,
 #                                                          name='InputStateClassPreferenceSet')
 
-# class InputStateLog(IntEnum):
-#     NONE            = 0
-#     TIME_STAMP      = 1 << 0
-#     ALL = TIME_STAMP
-#     DEFAULTS = NONE
-
-# STATE_SPEC_INDEX = 0 <- DECLARED IN State
 WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
+
+DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputState variable not yet defined, defer to Mechanism"
 
 class InputStateError(Exception):
     def __init__(self, error_value):
@@ -507,6 +506,7 @@ class InputState(State_Base):
         variable=None,                             \
         size=None,                                 \
         function=LinearCombination(operation=SUM), \
+        combine=None,                              \
         projections=None,                          \
         weight=None,                               \
         exponent=None,                             \
@@ -569,6 +569,13 @@ class InputState(State_Base):
         received by the InputState, under the possible influence of `GatingProjections <GatingProjection>` received
         by the InputState.  It must produce a result that has the same format (number and type of elements) as the
         item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been assigned.
+
+    combine : SUM or PRODUCT : default None
+        specifies the **operation** argument used by the default `LinearCombination` function, wnich determines how the
+        `value <Projection.value>` of the InputState's `projections <InputState.projections>` are combined.  This is a
+        convenience argument, that **operation** to be specified without having to specify the function's constructor;
+        accordingly, it assumes that LinearCombination (the default) is used as the InputState's function -- if it
+        conflicts with a specification of **function** an error is generated.
 
     projections : list of Projection specifications
         specifies the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
@@ -633,6 +640,11 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attribute).  The result (whether a value or an ndarray) is
         assigned to an item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
 
+    label : string or number
+        the string label that represents the current `value <InputState.value>` of the InputState, according to the
+        owner mechanism's `input_labels_dict <Mechanism.input_labels_dict>`. If the current `value <InputState.value>`
+        of the InputState does not have a corresponding label, then the numeric `value <InputState.value>` is returned.
+
     weight : number
         see `weight and exponent <InputState_Weights_And_Exponents>` for description.
 
@@ -677,6 +689,7 @@ class InputState(State_Base):
     projectionSocket = SENDER
     modulators = [GATING_SIGNAL]
 
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
@@ -706,6 +719,7 @@ class InputState(State_Base):
                  size=None,
                  function=None,
                  projections=None,
+                 combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
                  weight=None,
                  exponent=None,
                  params=None,
@@ -713,16 +727,21 @@ class InputState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context is None: # cxt-test
-            context = COMMAND_LINE # cxt-done
+        if context is None:
+            context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
-            context = self # cxt-done
+            context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
         if variable is None and size is None and projections is not None:
             variable = self._assign_variable_from_projection(variable, size, projections)
+
+        # If combine argument is specified, save it along with any user-specified function for _validate_params()
+        # (but don't pass to _assign_args_to_param_dicts, as it is an option not a legitimate InputState parameter)
+        if combine:
+            self.combine_function_args = (combine, function)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -794,6 +813,44 @@ class InputState(State_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
+        # Make sure **combine** and **function** args specified in constructor don't conflict
+        if hasattr(self, 'combine_function_args'):
+            combine, function = self.combine_function_args
+            if function:
+                owner_name = ""
+                if self.owner:
+                    owner_name = " for InputState of {}".format(self.owner.name)
+                if isinstance(function, LinearCombination):
+                    # specification of combine conflicts with operation specified for LinearCombination in function arg
+                    if function.operation != combine:
+                        raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                              "specification of {} ({}) for LinearCombination in {} "
+                                              "argument{}".
+                                              format(repr(COMBINE), combine.upper(),
+                                                     repr(OPERATION),function.operation.upper(),
+                                                     repr(FUNCTION), owner_name))
+                    else:
+                        # LinearFunction has been specified with same operation as specified for combine,
+                        # so delete combine_function_args attribute so it is not seen in _instantiate_function
+                        # in order to leave function intact (as it may have other parameters specified by user)
+                        del self.combine_function_args
+                # combine assumes LinearCombination, but Function other than LinearCombination specified for function
+                elif isinstance(function, Function):
+                    raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                          "Function specified in {} argument ({}){}".
+                                          format(repr(COMBINE), combine.upper(),
+                                                 repr(FUNCTION), function.name, owner_name))
+                # combine assumes LinearCombination, but class other than LinearCombination specified for function
+                elif isinstance(function, type):
+                    if not issubclass(function, LinearCombination):
+                        raise InputStateError("Specification of {} argument ({}) conflicts with "
+                                              "Function specified in {} argument ({}){}".
+                                              format(repr(COMBINE), combine.upper(),
+                                                     repr(FUNCTION), function.__name__, owner_name))
+                else:
+                    raise InputStateError("PROGRAM ERROR: unrecognized specification for function argument ({}){} ".
+                                          format(function, owner_name))
+
         if WEIGHT in target_set and target_set[WEIGHT] is not None:
             if not isinstance(target_set[WEIGHT], (int, float)):
                 raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
@@ -826,6 +883,13 @@ class InputState(State_Base):
                 )
             )
 
+    def _instantiate_function(self, function, function_params=None, context=None):
+        """If combine option was specified in constructor, assign as operation argument of LinearCombination function"""
+        if hasattr(self, 'combine_function_args'):
+            function = LinearCombination(operation=self.combine_function_args[0])
+            del self.combine_function_args
+        super()._instantiate_function(function=function, context=context)
+
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
 
@@ -842,26 +906,26 @@ class InputState(State_Base):
         """
 
         if function_variable is not None:
-            return self.function(function_variable, runtime_params, context)
+            return super()._execute(function_variable,
+                                    runtime_params=runtime_params,
+                                    context=context)
         # If there were any PathwayProjections:
         elif self._path_proj_values:
             # Combine Projection values
             # TODO: stateful - this seems dangerous with statefulness,
             #       maybe safe when self.value is only passed or stateful
             variable = np.asarray(self._path_proj_values)
-            self._update_variable(variable[0])
-            # # MODIFIED 3/20/18 OLD:
-            # combined_values = self.function(variable=variable,
-            #                                 params=runtime_params,
-            #                                 context=context)
-            # MODIFIED 3/20/18 NEW:
-            combined_values = super()._execute(
-                variable=variable,
-                function_variable=variable,
-                runtime_params=runtime_params,
-                context=context
-            )
-            # MODIFIED 3/20/18 END
+            # MODIFIED 5/4/18 OLD:
+            # self._update_variable(variable[0])
+            # MODIFIED 5/4/18 NEW:
+            self._update_variable(variable)
+            # MODIFIED 5/4/18 END
+            combined_values = super()._execute(variable=variable,
+                                               function_variable=variable,
+                                               runtime_params=runtime_params,
+                                               context=context
+                                               )
+
             return combined_values
         # There were no Projections
         else:
@@ -966,61 +1030,89 @@ class InputState(State_Base):
                                                                        owner=owner,
                                                                        connections=projections_spec)
                     # Parse the value of all of the Projections to get/validate variable for InputState
+                    variable = []
                     for projection_spec in params_dict[PROJECTIONS]:
-                        if state_dict[REFERENCE_VALUE] is None:
-                            # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
-                            # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
-                            # FIX:           USING _get_state_for_socket
-                            # from psyneulink.components.projections.projection import _parse_projection_spec
-                            try:
-                                sender_dim = projection_spec.state.value.ndim
-                            except AttributeError:
-                                if projection_spec.state.context.initialization_status == ContextFlags.DEFERRED_INIT:
-                                    continue
-                                else:
-                                    raise StateError("PROGRAM ERROR: indeterminate value for {} "
-                                                     "specified to project to {} of {}".
-                                                     format(projection_spec.state.name, self.__name__, owner.name))
+                        # FIX: 10/3/17 - PUTTING THIS HERE IS A HACK...
+                        # FIX:           MOVE TO _parse_state_spec UNDER PROCESSING OF ProjectionTuple SPEC
+                        # FIX:           USING _get_state_for_socket
+                        # from psyneulink.components.projections.projection import _parse_projection_spec
 
-                            projection = projection_spec.projection
-                            if isinstance(projection, dict):
-                                # # MODIFIED 11/25/17 OLD:
-                                # matrix = projection[MATRIX]
-                                # MODIFIED 11/25/17 NEW:
-                                # Don't try to get MATRIX from projection without checking,
-                                #    since projection is a defaultDict,
-                                #    which will add a matrix entry and assign it to None if it is not there
-                                if MATRIX in projection:
-                                    matrix = projection[MATRIX]
-                                else:
-                                    matrix = None
-                                # MODIFIED 11/25/17 END
-                            elif isinstance(projection, Projection):
-                                if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
-                                    continue
-                                matrix = projection.matrix
+                        # Try to get matrix for projection
+                        try:
+                            sender_dim = projection_spec.state.value.ndim
+                        except AttributeError as e:
+                            if (isinstance(projection_spec.state, type) or
+                                     projection_spec.state.context.initialization_status==ContextFlags.DEFERRED_INIT):
+                                continue
                             else:
-                                raise InputStateError("Unrecognized Projection specification for {} of {} ({})".
-                                                      format(self.name, owner.name, projection_spec))
-                            if matrix is None:
-                                # If matrix has not been specified, no worries;
-                                #    variable can be determined by value of sender
-                                sender_shape = projection_spec.state.value.shape
-                                variable = np.zeros(sender_shape)
-                                # If variable HASN'T been assigned, use sender's value
-                                if VARIABLE not in state_dict or state_dict[VARIABLE] is None:
-                                    state_dict[VARIABLE] = variable
-                                # If variable HAS been assigned, make sure value is the same for this sender
-                                elif np.array(state_dict[VARIABLE]).shape != variable.shape:
-                                    # If values for senders differ, assign None so that State's default is used
-                                    state_dict[VARIABLE] = None
-                                    # No need to check any more Projections
-                                    break
+                                raise StateError("PROGRAM ERROR: indeterminate value for {} "
+                                                 "specified to project to {} of {}".
+                                                 format(projection_spec.state.name, self.__name__, owner.name))
 
-                            # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
+                        projection = projection_spec.projection
+                        if isinstance(projection, dict):
+                            # Don't try to get MATRIX from projection without checking,
+                            #    since projection is a defaultDict,
+                            #    which will add a matrix entry and assign it to None if it is not there
+                            if MATRIX in projection:
+                                matrix = projection[MATRIX]
                             else:
-                                proj_val_shape = matrix.shape[sender_dim :]
-                                state_dict[VARIABLE] = np.zeros(proj_val_shape)
+                                matrix = None
+                        elif isinstance(projection, Projection):
+                            if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
+                                continue
+                            matrix = projection.matrix
+                        else:
+                            raise InputStateError("Unrecognized Projection specification for {} of {} ({})".
+                                                  format(self.name, owner.name, projection_spec))
+
+                        # Determine length of value of projection
+                        if matrix is None:
+                            # If a reference_value has been specified, it presumably represents the item of the
+                            #    owner Mechanism's default_variable to which the InputState corresponds,
+                            #    so use that to constrain the InputState's variable
+                            if state_dict[REFERENCE_VALUE] is not None:
+                                variable.append(state_dict[REFERENCE_VALUE])
+                                continue
+                            # If matrix has not been specified, no worries;
+                            #    variable_item can be determined by value of sender
+                            sender_shape = projection_spec.state.value.shape
+                            variable_item = np.zeros(sender_shape)
+                            # If variable_item HASN'T been specified, or it is same shape as any previous ones,
+                            #     use sender's value
+                            if ((VARIABLE not in state_dict or state_dict[VARIABLE] is None) and
+                                    (not variable or variable_item.shape == variable[0].shape)):
+                                # state_dict[VARIABLE] = variable
+                                variable.append(variable_item)
+                            # If variable HAS been assigned, make sure value is the same for this sender
+                            elif np.array(state_dict[VARIABLE]).shape != variable_item.shape:
+                                # If values for senders differ, assign None so that State's default is used
+                                variable = None
+                                # No need to check any more Projections
+                                break
+
+                        # Remove dimensionality of sender OutputState, and assume that is what receiver will receive
+                        else:
+                            proj_val_shape = matrix.shape[sender_dim :]
+                            # state_dict[VARIABLE] = np.zeros(proj_val_shape)
+                            variable.append(np.zeros(proj_val_shape))
+                    # Sender's value has not been defined or senders have values of different lengths,
+                    if not variable:
+                        # Try to assign number of items = number of projections, each with default variable length
+                        try:
+                            state_dict[VARIABLE] = np.zeros_like(self.instance_defaults.variable) * \
+                                                   len(params_dict[PROJECTIONS])
+                        # InputState's default variable has not yet been defined
+                        except AttributeError:
+                            # If reference_value was provided, use that as the InputState's variable
+                            #    (i.e., assume its function won't transform it)
+                            if REFERENCE_VALUE in state_dict and state_dict[REFERENCE_VALUE] is not None:
+                                state_dict[VARIABLE] = state_dict[REFERENCE_VALUE]
+                            # Nothing to use as variable, so raise exception and allow it to be handled "above"
+                            else:
+                                raise AttributeError(DEFER_VARIABLE_SPEC_TO_MECH_MSG)
+                    else:
+                        state_dict[VARIABLE] = variable
 
                 except InputStateError:
                     raise InputStateError("Tuple specification in {} specification dictionary "
@@ -1074,7 +1166,7 @@ class InputState(State_Base):
                 overridden by a default_variable or size argument
             False - otherwise
 
-            ex: specifiying an InputState with a Mechanism allows overriding
+            ex: specifying an InputState with a Mechanism allows overriding
         '''
         from psyneulink.components.mechanisms.mechanism import Mechanism
 
@@ -1103,33 +1195,45 @@ class InputState(State_Base):
     def pathway_projections(self, assignment):
         self.path_afferents = assignment
 
+    @property
+    def socket_width(self):
+        return self.instance_defaults.variable.shape[-1]
+
+    @property
+    def socket_template(self):
+        return np.zeros(self.socket_width)
+
+    @property
+    def label(self):
+        label_dictionary = {}
+        if hasattr(self.owner, "input_labels_dict"):
+            label_dictionary = self.owner.input_labels_dict
+        return self._get_value_label(label_dictionary, self.owner.input_states)
+
     @staticmethod
     def _get_state_function_value(owner, function, variable):
-        """Overrided State method
+        """Put InputState's variable in a list if its function is LinearCombination and variable is >=2d
 
-        InputState variable must be embedded in a list (see InputState._get_state_function_value()).
-        so that LinearCombination (its default function) returns a variable that is >=2d intact
-        (rather than as arrays to be combined);
+        InputState variable must be embedded in a list so that LinearCombination (its default function)
+        returns a variable that is >=2d intact (rather than as arrays to be combined);
         this is normally done in State.update() (and in State._instantiate-function), but that
         can't be called by _parse_state_spec since the InputState itself may not yet have been instantiated.
 
         """
         import inspect
+
         if (
-                (
-                        (inspect.isclass(function) and issubclass(function, LinearCombination))
-                        or isinstance(function, LinearCombination)
-                )
-                and (
-                isinstance(variable, np.matrix)
-                or (
-                        isinstance(np.array(variable))
-                        and variable.ndim >=2
-                )
-        )
+                ((inspect.isclass(function) and issubclass(function, LinearCombination))
+                 or isinstance(function, LinearCombination))
+                and (isinstance(variable, np.matrix) or
+                     (isinstance(np.array(variable),np.ndarray) and np.array(variable).ndim>=2))
         ):
             variable = [variable]
-        return function.execute(variable)
+
+        # if function is None, use State's default function
+        function = function or InputState.ClassDefaults.function
+
+        return State_Base._get_state_function_value(owner=owner, function=function, variable=variable)
 
 
 def _instantiate_input_states(owner, input_states=None, reference_value=None, context=None):
@@ -1168,12 +1272,12 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
                                          state_param_identifier=INPUT_STATE,
                                          reference_value=reference_value if reference_value is not None
                                                                          else owner.instance_defaults.variable,
-                                         reference_value_name=VARIABLE,
+                                         # reference_value=reference_value,
+                                         reference_value_name=VALUE,
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
-    # IMPLEMENTATION NOTE: USE OF CONTEXT STRING
-    if context and 'ADD_STATES' in context: # cxt-test
+    if context & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list
@@ -1204,3 +1308,4 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
             )
 
     return state_list
+

@@ -48,6 +48,7 @@ import typecheck as tc
 
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -139,8 +140,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                  function=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         if default_variable is None and size is None:
             default_variable = self.ClassDefaults.variable
@@ -149,12 +149,12 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                                                   params=params)
 
         super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,
-                                                            size=size,
-                                                            params=params,
-                                                            name=name,
-                                                            prefs=prefs,
-                                                            context=self,
-                                                            function=function)
+                                                  size=size,
+                                                  params=params,
+                                                  function=function,
+                                                  name=name,
+                                                  prefs=prefs,
+                                                  context=ContextFlags.CONSTRUCTOR)
 
 
 

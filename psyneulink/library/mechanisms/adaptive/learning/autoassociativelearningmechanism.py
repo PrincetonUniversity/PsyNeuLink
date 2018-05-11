@@ -24,7 +24,7 @@ Creating an AutoAssociativeLearningMechanism
 
 An AutoAssociativeLearningMechanism can be created directly by calling its constructor, but most commonly it is
 created automatically when a RecurrentTransferMechanism is `configure for learning <Recurrent_Transfer_Learning>`,
-(identified in its activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
+(identified in its `activity_source <AutoAssociativeLearningMechanism.activity_source>` attribute).
 
 .. _AutoAssociativeLearningMechanism_Structure:
 
@@ -81,7 +81,10 @@ from psyneulink.components.component import parameter_keywords
 from psyneulink.components.functions.function import Hebbian, ModulationParam, _is_modulation_param, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LearningMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.components.projections.projection import Projection_Base, projection_keywords
+from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
+from psyneulink.components.shellclasses import Projection
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INITIALIZING, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -130,28 +133,29 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     Arguments
     ---------
 
-    variable : List or 2d np.array
+    variable : List or 2d np.array : default None
         it must have a single item that corresponds to the value required by the AutoAssociativeLearningMechanism's
         `function <AutoAssociativeLearningMechanism..function>`;  it must each be compatible (in number and type)
         with the `value <InputState.value>` of the Mechanism's `InputState <LearningMechanism_InputStates>` (see
         `variable <AutoAssociativeLearningMechanism..variable>` for additional details).
 
-    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict]
+    learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict] \
+    : default None
         specifies the `matrix <AutoAssociativeProjection.matrix>` to be learned (see `learning_signals
         <LearningMechanism.learning_signals>` for details of specification).
 
-    modulation : ModulationParam : ModulationParam.ADDITIVE
+    modulation : ModulationParam : default ModulationParam.ADDITIVE
         specifies the default form of modulation used by the AutoAssociativeLearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
-    function : LearningFunction or function
+    function : LearningFunction or function : default Hebbian
         specifies the function used to calculate the AutoAssociativeLearningMechanism's `learning_signal
         <AutoAssociativeLearningMechanism.learning_signal>` attribute.  It must take as its **variable** argument a
         list or 1d array of numeric values (the "activity vector") and return a list, 2d np.array or np.matrix
         representing a square matrix with dimensions that equal the length of its variable (the "weight change
         matrix").
 
-    learning_rate : float
+    learning_rate : float : default None
         specifies the learning rate for the AutoAssociativeLearningMechanism. (see `learning_rate
         <AutoAssociativeLearningMechanism.learning_rate>` for details).
 
@@ -295,8 +299,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None):
+                 prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -322,8 +325,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
                          learning_rate=learning_rate,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=self)
+                         prefs=prefs)
 
     def _parse_function_variable(self, variable):
         return variable
@@ -366,7 +368,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             context=context
         )
 
-        if not INITIALIZING in context and self.reportOutputPref: # cxt-test
+        if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
         self.value = [self.learning_signal]

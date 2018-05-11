@@ -39,6 +39,7 @@ import typecheck as tc
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.states.inputstate import InputState
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultControlAllocation
 from psyneulink.globals.keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, NAME, OBJECTIVE_MECHANISM, SLOPE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -115,12 +116,11 @@ class DefaultControlMechanism(ControlMechanism):
                                                     # size=size,
                                                     objective_mechanism=objective_mechanism,
                                                     control_signals=control_signals,
+                                                    function=function,
                                                     params=params,
                                                     name=name,
                                                     prefs=prefs,
-                                                    context=self,
-                                                    function=function,
-                                                    )
+                                                    context=ContextFlags.CONSTRUCTOR)
 
     def _instantiate_input_states(self, context=None):
         """Instantiate input_value attribute

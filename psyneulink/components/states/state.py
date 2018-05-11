@@ -101,6 +101,15 @@ its OutputStates) and its `function <Mechanism_Base.function>` (for example, see
 regarding InputStates). Parameter States **cannot** on their own; they are always and only created when the Component
 to which a parameter belongs is created.
 
+COMMENT:
+    IMPLEMENTATION NOTE:
+    If the constructor for a State is called programmatically other than on the command line (e.g., within a method)
+    the **context** argument must be specified (by convention, as ContextFlags.METHOD); otherwise, it is assumed that
+    it is being created on the command line.  This is taken care of when it is created automatically (e.g., as part
+    of the construction of a Mechanism or Projection) by the _instantiate_state method that specifies a context
+    when it calls the relevant State constructor methods.
+COMMENT
+
 .. _State_Specification:
 
 Specifying a State
@@ -729,7 +738,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component, ComponentError, component_keywords, function_type, method_type
-from psyneulink.components.functions.function import Function, Linear, LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_keyword
+from psyneulink.components.functions.function import CombinationFunction, Function, Linear, LinearCombination, \
+    ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEXT, CONTROL_PROJECTION_PARAMS, \
@@ -746,7 +756,7 @@ from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_to_np_array, get_args, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match
 
 __all__ = [
-    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry',
+    'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry'
 ]
 
 state_keywords = component_keywords.copy()
@@ -768,14 +778,13 @@ state_type_keywords = {STATE_TYPE}
 
 STANDARD_STATE_ARGS = {STATE_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 STATE_SPEC = 'state_spec'
-ADD_STATES = 'ADD_STATES'
 REMOVE_STATES = 'REMOVE_STATES'
+
 
 def _is_state_class(spec):
     if inspect.isclass(spec) and issubclass(spec, State):
         return True
     return False
-
 
 
 # Note:  This is created only for assignment of default projection types for each State subclass (see .__init__.py)
@@ -1082,7 +1091,8 @@ class State_Base(State):
 
         # Enforce that only called from subclass
         if (not isinstance(context, State_Base) and
-                not any(key in context for key in {INITIALIZING, ADD_STATES, COMMAND_LINE})): # cxt-test
+                not (self.context.initialization_status == ContextFlags.INITIALIZING or
+                     context & (ContextFlags.COMMAND_LINE | ContextFlags.CONSTRUCTOR))):
             raise StateError("Direct call to abstract class State() is not allowed; "
                                       "use state() or one of the following subclasses: {0}".
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
@@ -1127,17 +1137,16 @@ class State_Base(State):
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(default_variable=variable,
                                          size=size,
+                                         function=function,
                                          param_defaults=params,
                                          name=name,
-                                         prefs=prefs,
-                                         context=context.__class__.__name__,  # cxt-done cxt-pass
-                                         function=function,
-                                         )
+                                         prefs=prefs
+        )
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
-            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context) # cxt-pass cxt-push
+            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -1146,19 +1155,10 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
-        # # MODIFIED 4/15/18 OLD:
-        if context is COMMAND_LINE: # cxt-test
-        # # MODIFIED 4/15/18 NEW:
-        #     assert self.context.source == ContextFlags.COMMAND_LINE
-        # MODIFIED 4/15/18 END
+        if context & ContextFlags.COMMAND_LINE:
             state_list = getattr(owner, owner.stateListAttr[self.__class__])
             if state_list and not self in state_list:
                 owner.add_states(self)
-        # # MODIFIED 4/15/18 NEW:
-        # else:
-        #     assert self.context.source != ContextFlags.COMMAND_LINE
-        # MODIFIED 4/15/18 END
-
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
@@ -1497,7 +1497,8 @@ class State_Base(State):
                 # PathwayProjection:
                 #    - check that projection's value is compatible with the State's variable
                 if isinstance(projection, PathwayProjection_Base):
-                    if not iscompatible(projection.value, self.instance_defaults.variable):
+                    if not iscompatible(projection.value, self.instance_defaults.variable[0]):
+                    # if len(projection.value) != self.instance_defaults.variable.shape[-1]:
                         raise StateError("Output of function for {} ({}) is not compatible with value of {} ({}).".
                                          format(projection.name, projection.value, self.name, self.value))
 
@@ -1522,9 +1523,20 @@ class State_Base(State):
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
             if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
-                self.path_afferents.append(projection)
+                projs = self.path_afferents
+                variable = self.instance_defaults.variable
+                projs.append(projection)
+                # if len(projs)>1:
+                if len(projs)>1 and isinstance(self.function_object, CombinationFunction):
+                    if variable.ndim == 1:
+                        variable = np.atleast_2d(variable)
+                    self.instance_defaults.variable = np.append(variable, np.atleast_2d(projection.value), axis=0)
+                    # self.instance_defaults.variable = np.append(variable, projection.value, axis=0)
+                    self._update_variable(self.instance_defaults.variable)
+
             elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                 self.mod_afferents.append(projection)
+
 
 
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):
@@ -1777,7 +1789,7 @@ class State_Base(State):
                     # PathwayProjection:
                     #    - check that projection's value is compatible with the receiver's variable
                     if isinstance(projection, PathwayProjection_Base):
-                        if not iscompatible(projection.value, receiver.instance_defaults.variable):
+                        if not iscompatible(projection.value, receiver.socket_template):
                             raise StateError("Output of {} ({}) is not compatible with the variable ({}) of "
                                              "the State to which it is supposed to project ({}).".
                                              format(projection.name, projection.value,
@@ -1877,7 +1889,9 @@ class State_Base(State):
         gating_projection_params = merge_param_dicts(self.stateParams, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
+        # MODIFIED 5/4/18 OLD:
         self._path_proj_values = []
+        # MODIFIED 5/4/18 END
         for value in self._mod_proj_values:
             self._mod_proj_values[value] = []
 
@@ -1907,6 +1921,9 @@ class State_Base(State):
         modulatory_override = False
 
         # Get values of all Projections
+        # MODIFIED 5/4/18 NEW:
+        variable = []
+        # MODIFIED 5/4/18 END
         for projection in self.all_afferents:
 
             # Only update if sender has also executed in this round
@@ -1952,11 +1969,9 @@ class State_Base(State):
             if isinstance(projection, LearningProjection) and self.context.execution_phase != ContextFlags.LEARNING:
                 projection_value = projection.value * 0.0
             else:
-                projection_value = projection.execute(
-                    variable=projection.sender.value,
-                    runtime_params=projection_params,
-                    context=context  # cxt-pass cxt-push
-                )
+                projection_value = projection.execute(variable=projection.sender.value,
+                                                      runtime_params=projection_params,
+                                                      context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
             if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
@@ -1964,7 +1979,11 @@ class State_Base(State):
 
             if isinstance(projection, PathwayProjection_Base):
                 # Add projection_value to list of PathwayProjection values (for aggregation below)
+                # MODIFIED 5/4/18 OLD:
                 self._path_proj_values.append(projection_value)
+                # MODIFIED 5/4/18 NEW:
+                variable.append(projection_value)
+                # MODIFIED 5/4/18 END
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             elif isinstance(projection, ModulatoryProjection_Base):
@@ -2018,7 +2037,43 @@ class State_Base(State):
             function_params = self.stateParams[FUNCTION_PARAMS]
         except (KeyError, TypeError):
             function_params = None
+
+        # # MODIFIED 5/4/18 OLD:
         self.value = self.execute(runtime_params=function_params, context=context)
+        # # MODIFIED 5/4/18 NEW:
+        # self.value = self._execute(function_variable=variable, runtime_params=function_params, context=context)
+        # MODIFIED 5/4/18 END
+
+    def _get_value_label(self, labels_dict, all_states):
+        subdicts = False
+        if labels_dict != {}:
+            if isinstance(list(labels_dict.values())[0], dict):
+                subdicts = True
+
+        if not subdicts:    # Labels are specified at the mechanism level - not individual states
+            # label dict only applies to index 0 state
+            if all_states.index(self) == 0:
+                for label in labels_dict:
+                    if np.allclose(labels_dict[label], self.value):
+                        return label
+            # if this isn't the index 0 state OR a label was not found then just return the original value
+            return self.value
+
+        for state in labels_dict:
+            if state is self:
+                return self.find_label_value_match(state, labels_dict)
+            elif state == self.name:
+                return self.find_label_value_match(self.name, labels_dict)
+            elif state == all_states.index(self):
+                return self.find_label_value_match(all_states.index(self), labels_dict)
+
+        return self.value
+
+    def find_label_value_match(self, key, labels_dict):
+        for label in labels_dict[key]:
+            if np.allclose(labels_dict[key][label], self.value):
+                return label
+        return self.value
 
     @property
     def owner(self):
@@ -2046,8 +2101,10 @@ class State_Base(State):
     @staticmethod
     def _get_state_function_value(owner, function, variable):
         """Execute the function of a State and return its value
+        # FIX: CONSIDER INTEGRATING THIS INTO _EXECUTE FOR STATE?
 
-        This is a stub, that a State subclass can override to treat execution of its function in a State-specific manner
+        This is a stub, that a State subclass can override to treat its function in a State-specific manner.
+        Used primarily during validation, when the function may not have been fully instantiated yet
         (e.g., InputState must sometimes embed its variable in a list-- see InputState._get_state_function_value).
         """
         return function.execute(variable)
@@ -2235,13 +2292,15 @@ def _instantiate_state(state_type:_is_state_class,           # State's type
 
 
     # Parse reference value to get actual value (in case it is, itself, a specification dict)
-    reference_value_dict = _parse_state_spec(owner=owner,
-                                             state_type=state_type,
-                                             state_spec=reference_value,
-                                             value=None,
-                                             params=None)
-    # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
-    reference_value = reference_value_dict[VARIABLE]
+    from psyneulink.globals.utilities import is_numeric
+    if not is_numeric(reference_value):
+        reference_value_dict = _parse_state_spec(owner=owner,
+                                                 state_type=state_type,
+                                                 state_spec=reference_value,
+                                                 value=None,
+                                                 params=None)
+        # Its value is assigned to the VARIABLE entry (including if it was originally just a value)
+        reference_value = reference_value_dict[VARIABLE]
 
     parsed_state_spec = _parse_state_spec(state_type=state_type,
                                           owner=owner,
@@ -2481,7 +2540,7 @@ def _parse_state_spec(state_type=None,
             state_specific_args = state_spec[STATE_SPEC_ARG].copy()
             standard_args.update({key: state_specific_args[key]
                                   for key in state_specific_args
-                                  if key in standard_args})
+                                  if key in standard_args and state_specific_args[key] is not None})
             # Delete them from the State specification dictionary, leaving only state-specific items there
             for key in standard_args:
                 state_specific_args.pop(key, None)
@@ -2502,16 +2561,12 @@ def _parse_state_spec(state_type=None,
         state_specific_args.update(state_spec)
 
     state_dict = standard_args
-    context = state_dict.pop(CONTEXT, None) # cxt-set
+    context = state_dict.pop(CONTEXT, None)
     owner = state_dict[OWNER]
     state_type = state_dict[STATE_TYPE]
     reference_value = state_dict[REFERENCE_VALUE]
     variable = state_dict[VARIABLE]
     params = state_specific_args
-
-    #  Convert reference_value to np.array to match state_variable (which, as output of function, will be an np.array)
-    if isinstance(reference_value, numbers.Number):
-        reference_value = convert_to_np_array(reference_value,1)
 
     # Validate that state_type is a State class
     if isinstance(state_type, str):
@@ -2696,7 +2751,8 @@ def _parse_state_spec(state_type=None,
 
         # Standard state specification dict
         # Warn if VARIABLE was not in dict
-        if VARIABLE not in state_dict and owner.prefs.verbosePref:
+        if ((VARIABLE not in state_dict or state_dict[VARIABLE] is None)
+                and hasattr(owner, 'prefs') and owner.prefs.verbosePref):
             print("{} missing from specification dict for {} of {};  "
                   "will be inferred from context or the default ({}) will be used".
                   format(VARIABLE, state_type, owner.name, state_dict))
@@ -2852,27 +2908,20 @@ def _parse_state_spec(state_type=None,
         spec_function = state_dict[PARAMS][FUNCTION]
         # if isinstance(spec_function, Function):
         if isinstance(spec_function, (Function, function_type, method_type)):
-            # # MODIFIED 2/21/18 OLD [KM]:
-            # spec_function_value = spec_function.execute(state_dict[VARIABLE])
-            # MODIFIED 2/21/18 NEW [JDC]:
             spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
-            # MODIFIED 2/21/18 END
         elif inspect.isclass(spec_function) and issubclass(spec_function, Function):
             try:
                 spec_function = spec_function(**state_dict[PARAMS][FUNCTION_PARAMS])
             except (KeyError, TypeError):
                 spec_function = spec_function()
-            # # MODIFIED 2/21/18 OLD [KM]:
-            # spec_function_value = spec_function.execute(state_dict[VARIABLE])
-            # MODIFIED 2/21/18 NEW [JDC]:
             spec_function_value = state_type._get_state_function_value(owner, spec_function, state_dict[VARIABLE])
-            # MODIFIED 2/21/18 END
         else:
             raise StateError('state_spec value for FUNCTION ({0}) must be a function, method, '
                              'Function class or instance of one'.
                              format(spec_function))
     except (KeyError, TypeError):
-        spec_function_value = state_dict[VARIABLE]
+        spec_function_value = state_type._get_state_function_value(owner, None, state_dict[VARIABLE])
+
 
     # Assign value based on variable if not specified
     if state_dict[VALUE] is None:
@@ -2888,6 +2937,10 @@ def _parse_state_spec(state_type=None,
                     spec_function
                 )
             )
+
+    if state_dict[REFERENCE_VALUE] is not None and not iscompatible(state_dict[VALUE], state_dict[REFERENCE_VALUE]):
+        raise StateError("PROGRAM ERROR: State value ({}) does not match reference_value ({}) for {} of {})".
+                         format(state_dict[VALUE], state_dict[REFERENCE_VALUE], state_type.__name__, owner.name))
 
     return state_dict
 
@@ -3098,7 +3151,6 @@ def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
                 isinstance(state_spec[1], (Mechanism, State))
                            or (isinstance(state_spec[0], Mechanism) and
                                        state_spec[1] in state_spec[0]._parameter_states)):
-
         raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
                          "for a Mechanism, State, or Projection".
                          format(state_type_name, owner.__class__.__name__, state_spec[1]))

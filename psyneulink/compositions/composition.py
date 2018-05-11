@@ -57,7 +57,10 @@ from psyneulink.components.mechanisms.processing.compositioninterfacemechanism i
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.shellclasses import Mechanism, Projection
+
 from psyneulink.globals.keywords import SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAMP, PULSE_CLAMP, NO_CLAMP, IDENTITY_MATRIX
+from psyneulink.globals.context import ContextFlags
+from psyneulink.globals.keywords import EXECUTING
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.context import ContextFlags, ContextStatus
@@ -779,7 +782,7 @@ class Composition(object):
                 # Then, check that each input_state is receiving the right size of input
                 for i, value in enumerate(timestep):
                     val_length = len(value)
-                    state_length = len(mech.input_state.instance_defaults.variable)
+                    state_length = len(mech.input_state.instance_defaults.value)
                     if val_length != state_length:
                         raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
                                          "{!s} where the InputState takes values of length {!s}".
@@ -805,8 +808,8 @@ class Composition(object):
                 # if there is not a corresponding CIM output state, add one
                 if input_state not in set(self.input_CIM_output_states.keys()):
                     interface_output_state = OutputState(owner=self.input_CIM,
-                                                         variable=input_state.variable,
-                                                         reference_value= input_state.variable,
+                                                         variable=input_state.value,
+                                                         reference_value= input_state.value,
                                                          name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
                     # self.input_CIM.add_states(interface_output_state)
                     self.input_CIM_output_states[input_state] = interface_output_state
@@ -840,8 +843,8 @@ class Composition(object):
                 # if there is not a corresponding CIM output state, add one
                 if output_state not in set(self.output_CIM_output_states.keys()):
                     interface_output_state = OutputState(owner=self.output_CIM,
-                                                         variable=output_state.variable,
-                                                         reference_value=output_state.variable,
+                                                         variable=output_state.value,
+                                                         reference_value=output_state.value,
                                                          name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
 
                     self.output_CIM_output_states[output_state] = interface_output_state
@@ -871,7 +874,7 @@ class Composition(object):
         # is stored -- the point is that if an input is not supplied for an origin mechanism, the mechanism should use
         # its default variable value
         for mech in origins.difference(set(current_mechanisms)):
-            self.input_CIM_output_states[mech.input_state].value = mech.instance_defaults.variable
+            self.input_CIM_output_states[mech.input_state].value = mech.instance_defaults.value
 
 
     def _assign_execution_ids(self, execution_id=None):
@@ -1037,8 +1040,8 @@ class Composition(object):
                 if isinstance(mechanism, Mechanism):
                     current_context = EXECUTING + "composition "
                     mechanism.context.execution_phase = ContextFlags.PROCESSING
-                    num = mechanism.execute(context=current_context)
-
+                    num = mechanism.execute(context=ContextFlags.COMPOSITION)
+                    mechanism.context.execution_phase = ContextFlags.IDLE
                 if mechanism in origin_mechanisms:
                     if clamp_input:
                         if mechanism in pulse_clamp_inputs:
@@ -1302,7 +1305,7 @@ class Composition(object):
 
         for mech, stim_list in stimuli.items():
 
-            check_spec_type = self._input_matches_variable(stim_list, mech.instance_defaults.variable)
+            check_spec_type = self._input_matches_variable(stim_list, mech.instance_defaults.value)
             # If a mechanism provided a single input, wrap it in one more list in order to represent trials
             if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
                 if check_spec_type == "homogeneous":
@@ -1322,11 +1325,11 @@ class Composition(object):
             else:
                 adjusted_stimuli[mech] = []
                 for stim in stimuli[mech]:
-                    check_spec_type = self._input_matches_variable(stim, mech.instance_defaults.variable)
+                    check_spec_type = self._input_matches_variable(stim, mech.instance_defaults.value)
                     # loop over each input to verify that it matches variable
                     if check_spec_type == False:
                         err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
-                            format(stim, mech.name, mech.instance_defaults.variable)
+                            format(stim, mech.name, mech.instance_defaults.value)
                         # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
                         # for "functionality" but rather a hack for user clarity
                         if "KWTA" in str(type(mech)):

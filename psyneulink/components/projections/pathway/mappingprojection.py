@@ -467,12 +467,10 @@ class MappingProjection(PathwayProjection_Base):
                  weight=None,
                  exponent=None,
                  matrix=DEFAULT_MATRIX,
+                 function=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None,
-                 function=None,
-                 ):
+                 prefs:is_pref_set=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
@@ -492,17 +490,15 @@ class MappingProjection(PathwayProjection_Base):
             self.context.initialization_status = ContextFlags.DEFERRED_INIT
 
         # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
-        super().__init__(
-            sender=sender,
-            receiver=receiver,
-            weight=weight,
-            exponent=exponent,
-            params=params,
-            name=name,
-            prefs=prefs,
-            context=self,
-            function=function,
-        )
+        super().__init__(sender=sender,
+                         receiver=receiver,
+                         weight=weight,
+                         exponent=exponent,
+                         function=function,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
 
     def _instantiate_parameter_states(self, function=None, context=None):
 
@@ -540,7 +536,7 @@ class MappingProjection(PathwayProjection_Base):
         except TypeError:
             mapping_input_len = 1
         try:
-            receiver_len = len(self.receiver.instance_defaults.variable)
+            receiver_len = self.receiver.socket_width
         except TypeError:
             receiver_len = 1
 

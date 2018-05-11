@@ -3,7 +3,7 @@ import pytest
 
 from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import FunctionError
-from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax
+from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax, UserDefinedFunction
 from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
@@ -141,7 +141,7 @@ class TestTransferMechanismNoise:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=NormalDist().function,
+            noise=NormalDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -156,7 +156,7 @@ class TestTransferMechanismNoise:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=[NormalDist().function, NormalDist().function, NormalDist().function, NormalDist().function],
+            noise=[NormalDist(), NormalDist(), NormalDist(), NormalDist()],
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -224,7 +224,7 @@ class TestDistributionFunctions:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=NormalDist().function,
+            noise=NormalDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -240,7 +240,7 @@ class TestDistributionFunctions:
                 name="T",
                 default_variable=[0, 0, 0, 0],
                 function=Linear(),
-                noise=NormalDist(standard_dev=standard_deviation).function,
+                noise=NormalDist(standard_dev=standard_deviation),
                 smoothing_factor=1.0,
                 integrator_mode=True
             )
@@ -255,7 +255,7 @@ class TestDistributionFunctions:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=ExponentialDist().function,
+            noise=ExponentialDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -271,7 +271,7 @@ class TestDistributionFunctions:
                 name='T',
                 default_variable=[0, 0, 0, 0],
                 function=Linear(),
-                noise=UniformToNormalDist().function,
+                noise=UniformToNormalDist(),
                 smoothing_factor=1.0
             )
             np.random.seed(22)
@@ -283,7 +283,7 @@ class TestDistributionFunctions:
                     name='T',
                     default_variable=[0, 0, 0, 0],
                     function=Linear(),
-                    noise=UniformToNormalDist().function,
+                    noise=UniformToNormalDist(),
                     smoothing_factor=1.0
                 )
             assert "The UniformToNormalDist function requires the SciPy package." in str(error_text)
@@ -297,7 +297,7 @@ class TestDistributionFunctions:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=UniformDist().function,
+            noise=UniformDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -312,7 +312,7 @@ class TestDistributionFunctions:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=GammaDist().function,
+            noise=GammaDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -327,7 +327,7 @@ class TestDistributionFunctions:
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            noise=WaldDist().function,
+            noise=WaldDist(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
@@ -336,6 +336,38 @@ class TestDistributionFunctions:
 
 
 class TestTransferMechanismFunctions:
+
+    def tests_valid_udf_1d_variable(self):
+        def double_all_elements(variable):
+            return np.array(variable)*2
+
+        T = TransferMechanism(name='T-udf',
+                              default_variable=[[0.0, 0.0]],
+                              function=UserDefinedFunction(custom_function=double_all_elements))
+        result = T.execute([[1.0, 2.0]])
+        assert np.allclose(result, [[2.0, 4.0]])
+
+    def tests_valid_udf_2d_variable(self):
+        def double_all_elements(variable):
+            return np.array(variable)*2
+
+        T = TransferMechanism(name='T-udf',
+                              default_variable=[[0.0, 0.0], [0.0, 0.0]],
+                              function=UserDefinedFunction(custom_function=double_all_elements))
+        result = T.execute([[1.0, 2.0], [3.0, 4.0]])
+        assert np.allclose(result, [[2.0, 4.0], [6.0, 8.0]])
+
+    def tests_invalid_udf(self):
+        def sum_all_elements(variable):
+            return sum(np.array(variable))
+
+        with pytest.raises(TransferError) as error_text:
+            T = TransferMechanism(name='T-udf',
+                                  default_variable=[[0.0, 0.0]],
+                                  function=UserDefinedFunction(custom_function=sum_all_elements))
+        assert "value returned by the Python function, method, or UDF specified" in str(error_text.value) \
+               and "must be the same shape" in str(error_text.value) \
+               and "as its 'variable'" in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -871,7 +903,7 @@ class TestTransferMechanismMultipleInputStates:
         T = TransferMechanism(
             name='T',
             function=Linear(slope=2.0, intercept=1.0),
-            noise=NormalDist().function,
+            noise=NormalDist(),
             default_variable=[[0.0, 0.0], [0.0, 0.0]]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])

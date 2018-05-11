@@ -592,7 +592,7 @@ import typecheck as tc
 from psyneulink.components.component import Component
 from psyneulink.components.functions.function import Function, OneHot, function_type, method_type
 from psyneulink.components.shellclasses import Mechanism
-from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
+from psyneulink.components.states.state import State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM_VALUE, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -812,6 +812,12 @@ class OutputState(State_Base):
         assigned the result of `function <OutputState.function>`;  the same value is assigned to the corresponding item
         of the owner Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
 
+    label : string or number
+        the string label that represents the current `value <OutputState.value>` of the OutputState, according to the
+        owner mechanism's `output_labels_dict <Mechanism.output_labels_dict>`. If the current
+        `value <OutputState.value>` of the OutputState does not have a corresponding label, then the numeric
+        `value <OutputState.value>` is returned.
+
     efferents : List[MappingProjection]
         `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState
         is a `sender <Projection_Base.sender>`).
@@ -880,25 +886,12 @@ class OutputState(State_Base):
                  context=None,
                  **kwargs):
 
-        # from psyneulink.globals.utilities import get_args
-        # import inspect
-
-        # curr_frame = inspect.currentframe()
-        # args = get_args(curr_frame)
-        # prev_frame = inspect.getouterframes(inspect.currentframe(),2)
-        #
-        # try:
-        #     prev_args = get_args(prev_frame)
-        # except:
-        #     prev_args = None
-
-        if context is None: # cxt-test
-        # if not (self.context.source or prev_args):
-            context = COMMAND_LINE # cxt-done
+        if context is None:
+            context = ContextFlags.COMMAND_LINE
             self.context.source = ContextFlags.COMMAND_LINE
             self.context.string = COMMAND_LINE
         else:
-            context = self # cxt-done
+            context = ContextFlags.CONSTRUCTOR
             self.context.source = ContextFlags.CONSTRUCTOR
 
         # For backward compatibility with CALCULATE, ASSIGN and INDEX
@@ -1179,22 +1172,24 @@ class OutputState(State_Base):
 
     @staticmethod
     def _get_state_function_value(owner, function, variable):
-        # -- CALL TO GET DEFAULT VALUE AND RETURN THAT (CAN'T USE VARIABLE SINCE DON'T KNOW MECH YET)
-        #      THOUGH COULD PASS IN OWNER TO DETERMINE IT
         fct_variable = _parse_output_state_variable(owner, variable)
 
         # If variable has not been specified, assume it is the default of (OWNER_VALUE,0), and use that value
         if fct_variable is None:
-            if owner.value is not None:
-                fct_variable = owner.value[0]
-            # Get owner's value by calling its function
-            else:
-                owner.function(owner.variable)[0]
+            try:
+                if owner.value is not None:
+                    fct_variable = owner.value[0]
+                # Get owner's value by calling its function
+                else:
+                    fct_variable = owner.function(owner.variable)[0]
+            except AttributeError:
+                fct_variable = None
 
         fct = _parse_output_state_function(owner, OutputState.__name__, function, fct_variable is PARAMS_DICT)
 
         try:
-            return fct(variable=fct_variable)
+            # return fct(variable=fct_variable)
+            return State_Base._get_state_function_value(owner=owner, function=fct, variable=fct_variable)
         except:
             try:
                 return fct(fct_variable)
@@ -1205,7 +1200,6 @@ class OutputState(State_Base):
     @property
     def variable(self):
         return _parse_output_state_variable(self.owner, self._variable)
-
 
     @variable.setter
     def variable(self, variable):
@@ -1222,6 +1216,9 @@ class OutputState(State_Base):
             self._variable = value
             return self.variable
 
+    @property
+    def socket_width(self):
+        return self.value.shape[-1]
 
     @property
     def owner_value_index(self):
@@ -1260,6 +1257,13 @@ class OutputState(State_Base):
     @property
     def calculate(self):
         return self.assign
+
+    @property
+    def label(self):
+        label_dictionary = {}
+        if hasattr(self.owner, "output_labels_dict"):
+            label_dictionary = self.owner.output_labels_dict
+        return self._get_value_label(label_dictionary, self.owner.output_states)
 
 
 def _instantiate_output_states(owner, output_states=None, context=None):
@@ -1373,6 +1377,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                                                                output_state[VARIABLE])
                 else:
                     output_state_value = _parse_output_state_variable(owner, output_state[VARIABLE])
+                output_state[VALUE] = output_state_value
 
             output_states[i] = output_state
             reference_value.append(output_state_value)
@@ -1394,8 +1399,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                          context=context)
 
     # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
-    # if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}): # cxt-test
-    if any(keyword in context for keyword in {COMMAND_LINE, ADD_STATES}): # cxt-test
+    if context & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
         owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list
@@ -1738,5 +1742,3 @@ def _maintain_backward_compatibility(d:dict, name, owner):
                       "it will still work, but should be changed in {} specification of {} for future compatibility.".
                       format(OUTPUT_STATES, owner.name))
         assert False
-
-

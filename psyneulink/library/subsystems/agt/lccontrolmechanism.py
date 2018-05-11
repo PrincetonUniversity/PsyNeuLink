@@ -355,6 +355,7 @@ from psyneulink.components.mechanisms.adaptive.control.controlmechanism import C
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.shellclasses import Mechanism, System_Base
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -777,8 +778,7 @@ class LCControlMechanism(ControlMechanism):
                          modulation=modulation,
                          params=params,
                          name=name,
-                         prefs=prefs,
-                         context=self)
+                         prefs=prefs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS

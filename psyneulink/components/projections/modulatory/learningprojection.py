@@ -427,12 +427,10 @@ class LearningProjection(ModulatoryProjection_Base):
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
                  weight=None,
                  exponent=None,
+                 function=None,
                  params:tc.optional(dict)=None,
                  name=None,
-                 prefs:is_pref_set=None,
-                 context=None,
-                 function=None,
-                 ):
+                 prefs:is_pref_set=None):
 
         # IMPLEMENTATION NOTE:
         #     the error_function and learning_function arguments are implemented to preserve the ability to pass
@@ -461,7 +459,7 @@ class LearningProjection(ModulatoryProjection_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=ContextFlags.CONSTRUCTOR)
         self.learning_enable = True
 
 
@@ -532,8 +530,7 @@ class LearningProjection(ModulatoryProjection_Base):
             from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary \
                 import _instantiate_learning_components
             _instantiate_learning_components(learning_projection=self,
-                                             context="{0} {1}".format(context, self.name))  # cxt-done cxt-pass cxt-push
-
+                                             context=ContextFlags.METHOD)
 
         if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
@@ -616,9 +613,6 @@ class LearningProjection(ModulatoryProjection_Base):
         # Pass during initialization (since has not yet been fully initialized
         if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
             return self.context.initialization_status
-
-        # if self.learning_rate:
-        #     runtime_params.update({SLOPE:self.learning_rate})
 
         if variable is not None:
             learning_signal = variable
