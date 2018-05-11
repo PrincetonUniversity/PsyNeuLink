@@ -325,8 +325,8 @@ Runtime Parameters
 ~~~~~~~~~~~~~~~~~~
 
 Runtime parameters are alternate parameter values that a Mechanism only uses under certain conditions. They are
-specified in a nested dictionary of (value, condition) tuples for parameters and Function parameters of Mechanisms of
-the Composition.
+specified in a nested dictionary containing (value, condition) tuples that correspond to parameters and Function
+parameters of Mechanisms, which is passed into the `runtime_params <Run.runtime_params>` argument of `Run`.
 
 Outer dictionary:
     - *key* - Mechanism
@@ -335,8 +335,6 @@ Outer dictionary:
 Runtime Parameter Specification Dictionary:
     - *key* - keyword corresponding to a parameter of the Mechanism or its Function
     - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a `Condition`
-
-Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter value.
 
 If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the "Always"
 `Condition` will be assigned by default:
@@ -370,6 +368,9 @@ Otherwise, the runtime parameter value will be used on all executions of the
 >>> # runtime intercept was used on trials 2, 3, and 4
 >>> # runtime slope was used on trial 3
 
+.. note::
+    Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
+    value.
 
 COMMENT:
 .. _Run_Initial_Values:
@@ -662,8 +663,8 @@ def run(object,
         phase of execution <System_Execution_Learning>`
 
     runtime_params : Dict[Mechanism: Dict[Param: Tuple(Value, Condition)]]
-        nested dictionary of (value, condition) tuples for parameters of Mechanisms of the Composition, which specifies
-        alternate parameter values that a Mechanism only uses under certain conditions.
+        nested dictionary of (value, `Condition`) tuples for parameters of Mechanisms of the Composition; specifies
+        alternate parameter values to be used only during this `Run` when the specified `Condition` is met.
 
         Outer dictionary:
             - *key* - Mechanism
@@ -671,17 +672,10 @@ def run(object,
 
         Runtime Parameter Specification Dictionary:
             - *key* - keyword corresponding to a parameter of the Mechanism
-            - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a `Condition`
+            - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a
+              `Condition`
 
-        See `Run_Runtime_Parameters` for examples of valid dictionaries.
-
-If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the "Always"
-`Condition` will be assigned by default. Otherwise, the runtime parameter value will be used on all executions of the
-`Run` during which the `Condition` is True.
-
-Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter value.
-
-
+        See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
 
    Returns
    -------

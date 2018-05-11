@@ -2140,10 +2140,13 @@ class Mechanism_Base(Mechanism):
             specification formats).
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
-            a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism,
-            its function, or `Projection(s) to any of its States <State_Projections>`.  Any value assigned to a
-            parameter will override the current value of that parameter for the (and only the current) execution of
-            the Mechanism.
+            a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism or
+            its function. Any value assigned to a parameter will override the current value of that parameter for *only
+            the current* execution of the Mechanism. When runtime_params are passed down from the `Composition` level
+            `Run` method, parameters reset to their original values immediately following the execution during which
+            runtime_params were used. When `execute <Mechanism.execute>` is called directly, (such as for debugging),
+            runtime_params exhibit "lazy updating": parameter values will not reset to their original values until the
+            beginning of the next execution.
 
         Returns
         -------

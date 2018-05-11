@@ -2479,6 +2479,7 @@ class System(System_Base):
                 else:
                     runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
         return runtime_params
+
     def initialize(self):
         """Assign `initial_values <System.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
         contained in recurrent_init_mechanisms.

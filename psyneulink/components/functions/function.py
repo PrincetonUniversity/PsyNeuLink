@@ -171,8 +171,10 @@ Functions are not executable objects, but their `function <Function_Base.functio
 directly.  More commonly, however, they are called when their `owner <Function_Base.owner>` is executed.  The parameters
 of the `function <Function_Base.function>` can be modified when it is executed, by assigning a
 `parameter specification dictionary <ParameterState_Specification>` to the **params** argument in the
-call to the `function <Function_Base.function>`.  For `Mechanisms <Mechanism>`, this can also be done by specifying
-`runtime_params <Mechanism_Runtime_Parameters>` for the Mechanism when it is `executed <Mechanism_Base.execute>`.
+call to the `function <Function_Base.function>`.
+
+For `Mechanisms <Mechanism>`, this can also be done by specifying `runtime_params <Run_Runtime_Parameters>` in the `Run`
+method of their `Composition`.
 
 Class Reference
 ---------------
