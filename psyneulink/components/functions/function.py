@@ -226,7 +226,7 @@ from psyneulink.globals.keywords import DEFAULT_VARIABLE, INITIAL_V, INITIAL_W, 
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
+from psyneulink.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM',
@@ -1451,7 +1451,7 @@ class UserDefinedFunction(Function_Base):
 
         try:
             # Try calling with full list of args (including context and params)
-            return self.custom_function(**kwargs)
+            return call_with_pruned_args(self.custom_function, **kwargs)
         except TypeError:
             # Try calling with just variable and cust_fct_params
             return self.custom_function(kwargs[VARIABLE], **self.cust_fct_params)
