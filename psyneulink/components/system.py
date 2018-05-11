@@ -3619,7 +3619,7 @@ class System(System_Base):
         # G.attr(compound = 'True')
 
         tc.typecheck
-        def _assign_processing_components(G, g, rcvr, processes:tc.optional(list)=None):
+        def _assign_processing_components(G, sg, rcvr, processes:tc.optional(list)=None):
             '''Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** '''
 
             rcvr_rank = 'same'
@@ -3645,13 +3645,13 @@ class System(System_Base):
             # Implement rcvr node
             rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
             if show_mechanism_structure:
-                g.node(rcvr_label,
+                sg.node(rcvr_label,
                         rcvr.show_structure(**mech_struct_args),
                         color=rcvr_color,
                         rank=rcvr_rank,
                         penwidth=rcvr_penwidth)
             else:
-                g.node(rcvr_label,
+                sg.node(rcvr_label,
                         shape=mechanism_shape,
                         color=rcvr_color,
                         rank=rcvr_rank,
@@ -3680,7 +3680,7 @@ class System(System_Base):
                             proj_color = active_color
                         else:
                             proj_color = default_node_color
-                        g.node(edge_label, shape=projection_shape, color=proj_color)
+                        sg.node(edge_label, shape=projection_shape, color=proj_color)
                         G.edge(sndr_proj_label, edge_label, arrowhead='none')
                         G.edge(edge_label, rcvr_proj_label)
                     else:
@@ -3745,7 +3745,7 @@ class System(System_Base):
                     if show_learning and has_learning:
                         # Render Projection as node
                         # Note: Projections can't yet use structured nodes:
-                        g.node(edge_label, shape=projection_shape, color=proj_color)
+                        sg.node(edge_label, shape=projection_shape, color=proj_color)
                         # Edges to and from Projection node
                         G.edge(sndr_proj_label, edge_label, arrowhead='none', color=proj_color)
                         G.edge(edge_label, rcvr_proj_label, color=proj_color)
@@ -3758,7 +3758,7 @@ class System(System_Base):
                         G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
 
         tc.typecheck
-        def _assign_learning_components(G, g, rcvr, processes:tc.optional(list)=None):
+        def _assign_learning_components(G, sg, rcvr, processes:tc.optional(list)=None):
             '''Assign learning nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
 
             # Get rcvr info
@@ -3807,11 +3807,11 @@ class System(System_Base):
                     rcvr_color = learning_color
 
                 if show_mechanism_structure:
-                    g.node(rcvr_label,
+                    sg.node(rcvr_label,
                            rcvr.show_structure(**mech_struct_args),
                            color=rcvr_color)
                 else:
-                    g.node(rcvr_label,
+                    sg.node(rcvr_label,
                            color=rcvr_color,
                            shape=mechanism_shape)
 
@@ -3841,11 +3841,11 @@ class System(System_Base):
                              and self in sndr.systems)):
 
                             if show_mechanism_structure:
-                                g.node(self._get_label(sndr, show_dimensions, show_roles),
+                                sg.node(self._get_label(sndr, show_dimensions, show_roles),
                                        sndr.show_structure(**mech_struct_args),
                                        color=sndr_color)
                             else:
-                                g.node(self._get_label(sndr, show_dimensions, show_roles),
+                                sg.node(self._get_label(sndr, show_dimensions, show_roles),
                                        shape=mechanism_shape,
                                        color=sndr_color)
                         else:
@@ -3889,7 +3889,7 @@ class System(System_Base):
                                         else:
                                             smpl_or_trgt_src_color = system_color
 
-                                        g.node(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
+                                        sg.node(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
                                                color=smpl_or_trgt_src_color,
                                                penwidth='3')
 
@@ -3917,7 +3917,7 @@ class System(System_Base):
                                                color=learning_proj_color,
                                                label=edge_label)
 
-        def _assign_control_components(g):
+        def _assign_control_components(G, sg):
             '''Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
 
             controller = self.controller
@@ -3948,12 +3948,12 @@ class System(System_Base):
             ctlr_label = self._get_label(controller, show_dimensions, show_roles)
             objmech_label = self._get_label(objmech, show_dimensions, show_roles)
             if show_mechanism_structure:
-                g.node(ctlr_label,
+                sg.node(ctlr_label,
                        controller.show_structure(**mech_struct_args),
                        color=ctlr_color,
                        rank = control_rank
                        )
-                g.node(objmech_label,
+                sg.node(objmech_label,
                        objmech.show_structure(**mech_struct_args),
                        color=objmech_color,
                        rank = control_rank
@@ -3961,8 +3961,8 @@ class System(System_Base):
             else:
                 ctlr_label = self._get_label(controller, show_dimensions, show_roles)
                 objmech_label = self._get_label(objmech, show_dimensions, show_roles)
-                g.node(ctlr_label, color=ctlr_color, shape=mechanism_shape, rank=control_rank)
-                g.node(objmech_label, color=objmech_color, shape=mechanism_shape, rank=control_rank)
+                sg.node(ctlr_label, color=ctlr_color, shape=mechanism_shape, rank=control_rank)
+                sg.node(objmech_label, color=objmech_color, shape=mechanism_shape, rank=control_rank)
 
             # objmech to controller edge
             if show_projection_labels:
@@ -3975,7 +3975,7 @@ class System(System_Base):
             else:
                 obj_to_ctrl_label = objmech_label
                 ctlr_from_obj_label = ctlr_label
-            g.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label, color=objmech_ctlr_proj_color)
+            G.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label, color=objmech_ctlr_proj_color)
 
 
             # outgoing edges (from controller to processing mechs)
@@ -3997,7 +3997,7 @@ class System(System_Base):
                         edge_label = projection.name
                     else:
                         edge_label = ''
-                    g.edge(ctlr_proj_label,
+                    G.edge(ctlr_proj_label,
                            rcvr_proj_label,
                            label=edge_label,
                            color=proj_color)
@@ -4020,7 +4020,7 @@ class System(System_Base):
                         edge_label = projection.name
                     else:
                         edge_label = ''
-                    g.edge(sndr_proj_label, objmech_proj_label ,color=proj_color, label=edge_label)
+                    G.edge(sndr_proj_label, objmech_proj_label ,color=proj_color, label=edge_label)
 
             # prediction mechanisms
             for mech in self.execution_list:
@@ -4030,7 +4030,7 @@ class System(System_Base):
                     pred_mech_color = prediction_mechanism_color
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
                     recvr = mech.origin_mech
-
+                    recvr_label = self._get_label(recvr, show_dimensions, show_roles)
                     # IMPLEMENTATION NOTE:
                     #     THIS IS HERE FOR FUTURE COMPATIBILITY WITH FULL IMPLEMENTATION OF PredictionMechanisms
                     if show_mechanism_structure and False:
@@ -4039,19 +4039,19 @@ class System(System_Base):
                             pred_proj_color = active_color
                         else:
                             pred_proj_color = prediction_mechanism_color
-                        g.node(mech.name,
+                        sg.node(mech.name,
                                shape=mech.show_structure(**mech_struct_args),
                                color=pred_mech_color)
 
-                        g.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
-                               rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                        G.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
+                               recvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
                                label=' prediction assignment',
                                color=pred_proj_color)
                     else:
-                        g.node(self._get_label(mech, show_dimensions, show_roles),
+                        sg.node(self._get_label(mech, show_dimensions, show_roles),
                                color=pred_mech_color, shape=mechanism_shape)
-                        g.edge(self._get_label(mech, show_dimensions, show_roles),
-                               self._get_label(recvr, show_dimensions, show_roles),
+                        G.edge(self._get_label(mech, show_dimensions, show_roles),
+                               recvr_label,
                                label=' prediction assignment',
                                color=prediction_mechanism_color)
                     pass
