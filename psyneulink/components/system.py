@@ -3743,27 +3743,72 @@ class System(System_Base):
                         proj_color = active_color
                     else:
                         proj_color = default_node_color
+                    proj_label = edge_label
 
                     if show_learning and has_learning:
                         # Render Projection as node
                         # Note: Projections can't yet use structured nodes:
-                        # FIX: SHOULD BE ASSIGNED TO SAME PROCESS AS PROJECTION'S sender
+
+                        # # MODIFIED 5/11/18 OLD:
+                        # sg.node(proj_label, shape=projection_shape, color=proj_color)
+                        # # Edges to and from Projection node
+                        # G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
+                        # G.edge(proj_label, rcvr_proj_label, color=proj_color)
+
+                        # MODIFIED 5/11/18 NEW:
+                        # # FIX: SHOULD BE ASSIGNED TO SAME PROCESS AS PROJECTION'S sender
+                        # proc = list(set(proj.sender.owner.processes.keys()).intersection(processes))
+                        # if len(proc)==1 and subgraphs is not None:
+                        #     proj_sg = subgraphs[proc[0].name]
+                        # else:
+                        #     proj_sg = sg
+                        # proj_sg.node(proj_label, shape=projection_shape, color=proj_color)
+                        # G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
+                        # G.edge(proj_label, rcvr_proj_label, color=proj_color)
+
+                        # MODIFIED 5/11/18 NEWER:
+                        # # FIX: SHOULD BE ASSIGNED TO SAME PROCESS AS PROJECTION'S sender;
+                        #        SHOULD TEST OR IT BEING FOR LAST OF A LEARNING SEQUENCE RATHER THAN TERMINAL
+                        # Get current Process
                         proc = list(set(proj.sender.owner.processes.keys()).intersection(processes))
-                        if len(proc)==1 and subgraphs is not None:
-                            proj_sg = subgraphs[proc[0].name]
-                        else:
-                            proj_sg = sg
-                        proj_sg.node(edge_label, shape=projection_shape, color=proj_color)
-                        # Edges to and from Projection node
-                        G.edge(sndr_proj_label, edge_label, arrowhead='none', color=proj_color)
-                        G.edge(edge_label, rcvr_proj_label, color=proj_color)
+                        # If the receiver of the Projection is not a TERMINAL Mechanism of the Process,
+                        #     include in current Process
+                        # (if it is a TERMINAL Mecchanism, defer to below to assign to sender's Process)
+                        if proj.receiver.owner.processes[proc[0]] != TERMINAL: # CHANGE TO TEST FOR PROJ TO COMPARATOR
+                                                                               # THAT IS USED FOR LEARNING
+                            proj_label = self._get_label(proj, show_dimensions, show_roles)
+                            sndr_label = rcvr_label
+                            rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
+                            sg.node(proj_label, shape=projection_shape, color=learning_color)
+                            G.edge(sndr_label, proj_label, arrowhead='none', color=learning_color)
+                            G.edge(proj_label, rcvr_label, color=learning_color)
+                        # MODIFIED 5/11/18 END
+
+
                     else:
                         # Render Projection normally (as edge)
                         if show_projection_labels:
-                            label = edge_label
+                            label = proj_label
                         else:
                             label = ''
                         G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
+            # FIX:
+            # projects to TERMINAL Mechanism
+            # (really: projects to one that projects to Comparator used for learning)
+            # then assign Projection as sg.node
+            if show_learning:
+                proc = list(set(rcvr.processes.keys()).intersection(processes))
+                if len(proc) != 1:
+                    pass
+                for proj in rcvr.efferents:
+                    try:
+                        if proj.receiver.owner.processes[proc[0]]==TERMINAL:
+                            proj_label = edge_label
+                            sg.node(proj_label, shape=projection_shape, color=proj_color)
+                            G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
+                            G.edge(proj_label, rcvr_proj_label, color=proj_color)
+                    except KeyError:
+                        pass
 
         tc.typecheck
         def _assign_learning_components(G, sg, rcvr, processes:tc.optional(list)=None):
