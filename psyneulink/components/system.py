@@ -3728,16 +3728,6 @@ class System(System_Base):
                                     has_learning = None
                     edge_label = edge_name
 
-                    # MOVED TO ABOVE
-                    # # if rcvr is a LearningMechanism or an ObjectiveMechanism used for control:
-                    # #    break, as those handled below
-                    # if isinstance(rcvr, LearningMechanism):
-                    #     break
-                    # # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
-                    # if isinstance(rcvr, ObjectiveMechanism) and rcvr.controller is True:
-                    #     break
-
-
                     # Render projections
                     if proj is active_item:
                         proj_color = active_color
@@ -3755,8 +3745,8 @@ class System(System_Base):
                         # G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
                         # G.edge(proj_label, rcvr_proj_label, color=proj_color)
 
+                        # FIX: SHOULD BE ASSIGNED TO SAME PROCESS AS PROJECTION'S sender
                         # MODIFIED 5/11/18 NEW:
-                        # # FIX: SHOULD BE ASSIGNED TO SAME PROCESS AS PROJECTION'S sender
                         # proc = list(set(proj.sender.owner.processes.keys()).intersection(processes))
                         # if len(proc)==1 and subgraphs is not None:
                         #     proj_sg = subgraphs[proc[0].name]
@@ -3766,22 +3756,30 @@ class System(System_Base):
                         # G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
                         # G.edge(proj_label, rcvr_proj_label, color=proj_color)
 
-                        # MODIFIED 5/11/18 NEWER:
-                        # # FIX: SHOULD BE ASSIGNED TO SAME PROCESS AS PROJECTION'S sender;
-                        #        SHOULD TEST OR IT BEING FOR LAST OF A LEARNING SEQUENCE RATHER THAN TERMINAL
-                        # Get current Process
+                        # # MODIFIED 5/11/18 NEWER:
+                        # #        SHOULD TEST OR IT BEING FOR LAST OF A LEARNING SEQUENCE RATHER THAN TERMINAL
+                        # # Get current Process
+                        # proc = list(set(proj.sender.owner.processes.keys()).intersection(processes))
+                        # # If the receiver of the Projection is not a TERMINAL Mechanism of the Process,
+                        # #     include in current Process
+                        # # (if it is a TERMINAL Mechanism, defer to below to assign to sender's Process)
+                        # if proj.receiver.owner.processes[proc[0]] != TERMINAL: # CHANGE TO TEST FOR PROJ TO COMPARATOR
+                        #                                                        # THAT IS USED FOR LEARNING
+                        #     proj_label = self._get_label(proj, show_dimensions, show_roles)
+                        #     sndr_label = rcvr_label
+                        #     rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
+                        #     sg.node(proj_label, shape=projection_shape, color=learning_color)
+                        #     G.edge(sndr_label, proj_label, arrowhead='none', color=learning_color)
+                        #     G.edge(proj_label, rcvr_label, color=learning_color)
+                        # MODIFIED 5/11/18 NEWEST:
                         proc = list(set(proj.sender.owner.processes.keys()).intersection(processes))
-                        # If the receiver of the Projection is not a TERMINAL Mechanism of the Process,
-                        #     include in current Process
-                        # (if it is a TERMINAL Mecchanism, defer to below to assign to sender's Process)
-                        if proj.receiver.owner.processes[proc[0]] != TERMINAL: # CHANGE TO TEST FOR PROJ TO COMPARATOR
-                                                                               # THAT IS USED FOR LEARNING
-                            proj_label = self._get_label(proj, show_dimensions, show_roles)
-                            sndr_label = rcvr_label
-                            rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
-                            sg.node(proj_label, shape=projection_shape, color=learning_color)
-                            G.edge(sndr_label, proj_label, arrowhead='none', color=learning_color)
-                            G.edge(proj_label, rcvr_label, color=learning_color)
+                        if (rcvr.processes[proc[0]]==TERMINAL and # CHANGE TO TEST FOR PROJ TO COMPARATOR
+                            len(processes)>1):                                   # THAT IS USED FOR LEARNING
+                            continue
+                        sg.node(proj_label, shape=projection_shape, color=proj_color)
+                        # Edges to and from Projection node
+                        G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
+                        G.edge(proj_label, rcvr_proj_label, color=proj_color)
                         # MODIFIED 5/11/18 END
 
 
@@ -3794,7 +3792,7 @@ class System(System_Base):
                         G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
             # FIX:
             # projects to TERMINAL Mechanism
-            # (really: projects to one that projects to Comparator used for learning)
+            # (really should be: projects to one that projects to Comparator used for learning)
             # then assign Projection as sg.node
             if show_learning:
                 proc = list(set(rcvr.processes.keys()).intersection(processes))
@@ -3803,10 +3801,12 @@ class System(System_Base):
                 for proj in rcvr.efferents:
                     try:
                         if proj.receiver.owner.processes[proc[0]]==TERMINAL:
-                            proj_label = edge_label
+                            proj_label = self._get_label(proj, show_dimensions, show_roles)
+                            sndr_label = self._get_label(proj.sender.owner, show_dimensions, show_roles)
+                            rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
                             sg.node(proj_label, shape=projection_shape, color=proj_color)
-                            G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
-                            G.edge(proj_label, rcvr_proj_label, color=proj_color)
+                            G.edge(sndr_label, proj_label, arrowhead='none', color=proj_color)
+                            G.edge(proj_label, rcvr_label, color=proj_color)
                     except KeyError:
                         pass
 
