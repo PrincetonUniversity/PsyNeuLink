@@ -3619,7 +3619,9 @@ class System(System_Base):
         # G.attr(compound = 'True')
 
         tc.typecheck
-        def _assign_processing_components(G, sg, rcvr, processes:tc.optional(list)=None):
+        def _assign_processing_components(G, sg, rcvr,
+                                          processes:tc.optional(list)=None,
+                                          subgraphs:tc.optional(dict)=None):
             '''Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** '''
 
             rcvr_rank = 'same'
@@ -3745,7 +3747,13 @@ class System(System_Base):
                     if show_learning and has_learning:
                         # Render Projection as node
                         # Note: Projections can't yet use structured nodes:
-                        sg.node(edge_label, shape=projection_shape, color=proj_color)
+                        # FIX: SHOULD BE ASSIGNED TO SAME PROCESS AS PROJECTION'S sender
+                        proc = list(set(proj.sender.owner.processes.keys()).intersection(processes))
+                        if len(proc)==1 and subgraphs is not None:
+                            proj_sg = subgraphs[proc[0].name]
+                        else:
+                            proj_sg = sg
+                        proj_sg.node(edge_label, shape=projection_shape, color=proj_color)
                         # Edges to and from Projection node
                         G.edge(sndr_proj_label, edge_label, arrowhead='none', color=proj_color)
                         G.edge(edge_label, rcvr_proj_label, color=proj_color)
@@ -4002,7 +4010,7 @@ class System(System_Base):
                            label=edge_label,
                            color=proj_color)
 
-            # incoming edges (from monitored mechs to objective mechanism
+            # incoming edges (from monitored mechs to objective mechanism)
             for input_state in objmech.input_states:
                 for projection in input_state.path_afferents:
                     if projection is active_item:
@@ -4049,7 +4057,7 @@ class System(System_Base):
                                color=pred_proj_color)
                     else:
                         sg.node(self._get_label(mech, show_dimensions, show_roles),
-                               color=pred_mech_color, shape=mechanism_shape)
+                                color=pred_mech_color, shape=mechanism_shape)
                         G.edge(self._get_label(mech, show_dimensions, show_roles),
                                recvr_label,
                                label=' prediction assignment',
@@ -4067,11 +4075,12 @@ class System(System_Base):
 
             # Manage Processes
             process_intersections = {}
-            subgraphs = {}
+            subgraphs = {}  # Entries: Process:sg
             for process in self.processes:
                 subgraph_name = 'cluster_'+process.name
                 subgraph_label = process.name
                 with G.subgraph(name=subgraph_name) as sg:
+                    subgraphs[process.name]=sg
                     sg.attr(label=subgraph_label)
                     sg.attr(rank = 'same')
                     # sg.attr(style='filled')
@@ -4114,7 +4123,7 @@ class System(System_Base):
                     processes = [p for p in self.processes if p.name in intersection_name]
                     # loop through receivers and assign to the subgraph any that belong to the current Process
                     for r in mech_list:
-                        _assign_processing_components(G, sg, r, processes)
+                        _assign_processing_components(G, sg, r, processes, subgraphs)
 
         else:
             for r in rcvrs:
