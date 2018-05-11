@@ -3619,7 +3619,7 @@ class System(System_Base):
         # G.attr(compound = 'True')
 
         tc.typecheck
-        def _assign_processing_components(g, rcvr, processes:tc.optional(list)=None):
+        def _assign_processing_components(G, g, rcvr, processes:tc.optional(list)=None):
             '''Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** '''
 
             rcvr_rank = 'same'
@@ -3681,11 +3681,11 @@ class System(System_Base):
                         else:
                             proj_color = default_node_color
                         g.node(edge_label, shape=projection_shape, color=proj_color)
-                        g.edge(sndr_proj_label, edge_label, arrowhead='none')
-                        g.edge(edge_label, rcvr_proj_label)
+                        G.edge(sndr_proj_label, edge_label, arrowhead='none')
+                        G.edge(edge_label, rcvr_proj_label)
                     else:
                         # show projection as edge
-                        g.edge(sndr_proj_label, rcvr_proj_label, label=edge_label)
+                        G.edge(sndr_proj_label, rcvr_proj_label, label=edge_label)
 
             # if rcvr is a LearningMechanism or an ObjectiveMechanism used for control:
             #    break, as those handled below
@@ -3747,18 +3747,18 @@ class System(System_Base):
                         # Note: Projections can't yet use structured nodes:
                         g.node(edge_label, shape=projection_shape, color=proj_color)
                         # Edges to and from Projection node
-                        g.edge(sndr_proj_label, edge_label, arrowhead='none', color=proj_color)
-                        g.edge(edge_label, rcvr_proj_label, color=proj_color)
+                        G.edge(sndr_proj_label, edge_label, arrowhead='none', color=proj_color)
+                        G.edge(edge_label, rcvr_proj_label, color=proj_color)
                     else:
                         # Render Projection normally (as edge)
                         if show_projection_labels:
                             label = edge_label
                         else:
                             label = ''
-                        g.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
+                        G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
 
         tc.typecheck
-        def _assign_learning_components(g, rcvr, processes:tc.optional(list)=None):
+        def _assign_learning_components(G, g, rcvr, processes:tc.optional(list)=None):
             '''Assign learning nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
 
             # Get rcvr info
@@ -3778,13 +3778,19 @@ class System(System_Base):
                         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
                     else:
                         edge_label = ''
+                    # # Assign edge to subgraph or current Process if its sender and receiver are both in the same Process
+                    # if set(sndr.processes).intersection(rcvr.sender.owner.processes):
+                    #     graph = g
+                    # # Otherwise, assign it to the main graph
+                    # else:
+                    #     graph = G
                     if show_mechanism_structure:
-                        g.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                        G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
                                self._get_label(rcvr, show_dimensions, show_roles),
                                label=edge_label,
                                color=rcvr_color)
                     else:
-                        g.edge(self._get_label(sndr, show_dimensions, show_roles),
+                        G.edge(self._get_label(sndr, show_dimensions, show_roles),
                                self._get_label(rcvr, show_dimensions, show_roles),
                                label = edge_label,
                                color=rcvr_color)
@@ -3835,11 +3841,11 @@ class System(System_Base):
                              and self in sndr.systems)):
 
                             if show_mechanism_structure:
-                                g.node(self._get_label(sndr,show_dimensions,show_roles),
+                                g.node(self._get_label(sndr, show_dimensions, show_roles),
                                        sndr.show_structure(**mech_struct_args),
                                        color=sndr_color)
                             else:
-                                g.node(self._get_label(sndr,show_dimensions,show_roles),
+                                g.node(self._get_label(sndr, show_dimensions, show_roles),
                                        shape=mechanism_shape,
                                        color=sndr_color)
                         else:
@@ -3852,12 +3858,12 @@ class System(System_Base):
                             else:
                                 edge_label = ''
                             if show_mechanism_structure:
-                                g.edge(sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
+                                G.edge(sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
                                        rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
                                        label=edge_label,
                                        color=learning_proj_color)
                             else:
-                                g.edge(sndr_label, rcvr_label, label=edge_label, color=learning_proj_color)
+                                G.edge(sndr_label, rcvr_label, label=edge_label, color=learning_proj_color)
 
                         # Get Projections to ComparatorMechanism as well
                         if (isinstance(sndr, ObjectiveMechanism)
@@ -3898,14 +3904,14 @@ class System(System_Base):
                                         edge_label = ''
 
                                     if show_mechanism_structure and not isinstance(smpl_or_trgt_src, System):
-                                        g.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
+                                        G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
                                                    + ':' + OutputState.__name__ + '-' + proj.sender.name,
                                                self._get_label(proj.receiver.owner, show_dimensions, show_roles)
                                                    + ':' + InputState.__name__ + '-' + proj.receiver.name,
                                                label=edge_label,
                                                color=learning_proj_color)
                                     else:
-                                        g.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
+                                        G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
                                                self._get_label(proj.receiver.owner, show_dimensions, show_roles)
                                                    + ':' + InputState.__name__ + '-' + proj.receiver.name,
                                                color=learning_proj_color,
@@ -4078,7 +4084,7 @@ class System(System_Base):
                         if len(intersection)==1:
                             # If the rcvr is in the current Process, assign it to the subgraph
                             if process in intersection:
-                                _assign_processing_components(sg, r, [process])
+                                _assign_processing_components(G, sg, r, [process])
                         # Otherwise, assign rcvr to entry in dict for process intersection (subgraph is created below)
                         else:
                             intersection_name = ' and '.join([p.name for p in intersection])
@@ -4097,23 +4103,8 @@ class System(System_Base):
                                 processes = l.processes
                             # if [p for p in self.processes if p in processes]:
                             if process in processes:
-                                _assign_learning_components(sg, l, [process])
-
-                        # # Don't use set to find intersection as need it to be ordered for naming
-                        # # intersection = set(r.processes.keys()).intersection(processes)
-                        # intersection = [p for p in processes if p in processes]
-                        # # If the rcvr is in only one process, add it to the subgraph for that process
-                        # if len(intersection)==1:
-                        #     if p in intersection:
-                        #         _assign_learning_components(sg, r, [p])
-                        # # Otherwise, assign rcvr to entry in dict for process intersection (subgraph is created below)
-                        # else:
-                        #     intersection_name = ' and '.join([p.name for p in intersection])
-                        #     if not intersection_name in process_intersections:
-                        #         process_intersections[intersection_name] = [r]
-                        #     else:
-                        #         if r not in process_intersections[intersection_name]:
-                        #             process_intersections[intersection_name].append(r)
+                                _assign_learning_components(G, sg, l, [process])
+                                assert True
 
             # Create a process for each unique intersection and assign rcvrs to that
             for intersection_name, mech_list in process_intersections.items():
@@ -4123,15 +4114,15 @@ class System(System_Base):
                     processes = [p for p in self.processes if p.name in intersection_name]
                     # loop through receivers and assign to the subgraph any that belong to the current Process
                     for r in mech_list:
-                        _assign_processing_components(sg, r, processes)
+                        _assign_processing_components(G, sg, r, processes)
 
         else:
             for r in rcvrs:
-                _assign_processing_components(G, r)
+                _assign_processing_components(G, G, r)
             # Add learning-related Components to graph if show_learning
             if show_learning:
                 for rcvr in learning_rcvrs:
-                    _assign_learning_components(G, rcvr)
+                    _assign_learning_components(G, G, rcvr)
 
         # MANAGE LEARNING Components
 
