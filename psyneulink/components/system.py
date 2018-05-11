@@ -3578,6 +3578,7 @@ class System(System_Base):
         default_node_color = 'black'
         mechanism_shape = 'oval'
         projection_shape = 'diamond'
+        # projection_shape = 'point'
         # projection_shape = 'Mdiamond'
         # projection_shape = 'hexagon'
 
@@ -3748,17 +3749,17 @@ class System(System_Base):
                             if (rcvr.processes[proc[0]]==TERMINAL and len(processes)>1):
                                 continue
                             sg.node(proj_label, shape=projection_shape, color=proj_color)
+                            # sg.node(proj_label, shape=None, size='0,0', style='invisible')
                             # Edges to and from Projection node
                             G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
                             G.edge(proj_label, rcvr_proj_label, color=proj_color)
                             # MODIFIED 5/11/18 END
                         else:
                             sg.node(proj_label, shape=projection_shape, color=proj_color)
+                            # sg.node(proj_label, shape=None, size='0,0', style='invisble')
                             # Edges to and from Projection node
                             G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
                             G.edge(proj_label, rcvr_proj_label, color=proj_color)
-
-
 
                     else:
                         # Render Projection normally (as edge)
@@ -3767,19 +3768,22 @@ class System(System_Base):
                         else:
                             label = ''
                         G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
-            # FIX:
-            # projects to TERMINAL Mechanism
-            # (really should be: projects to one that projects to Comparator used for learning)
-            # then assign Projection as sg.node
+
+            # Include node for Projection to last Mechanism in a learning sequence in its originating Process
+            # (i.e., the Process to which its sender belongs)
             if show_learning and processes:
+                # Get Processes to which rcvr belongs
+                # Note: this assumes there should only be one process associated with the current (sub)graph
                 proc = list(set(rcvr.processes.keys()).intersection(processes))
-                # FIX: DOESN"T WORK IF THERE IS ONLY ONE PROCESS
-                if len(proc) != 1:
+                if len(proc) > 1:
+                    # raise SystemError("PROGRAM ERROR: expected {} is in only one Process".format(rcvr.name))
                     pass
+                proc = proc.pop()
+                # Check whether the rcvr projects to any Mechanism that is the last in a learning sequence
                 for proj in rcvr.efferents:
                     try:
-                        # FIX: CHANGE BELOW TO TEST FOR PROJ TO COMPARATOR THAT IS USED FOR LEARNING
-                        if proj.receiver.owner.processes[proc[0]]==TERMINAL:
+                        # FIX: CHANGE BELOW TO TEST FOR PROJ TO COMPARATOR IN THE SAME PROCESS THAT IS USED FOR LEARNING
+                        if proj.receiver.owner.processes[proc]==TERMINAL:
                             proj_label = self._get_label(proj, show_dimensions, show_roles)
                             sndr_label = self._get_label(proj.sender.owner, show_dimensions, show_roles)
                             rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
