@@ -101,7 +101,7 @@ Parameters can be specified in one of several places:
     ..
     * In the `assign_params <Component.assign_params>` method for the Component.
     ..
-    * In the **runtime_params** argument of a call to component's `execute <Mechanism_Base.execute>` method.
+    * In the **runtime_params** argument of a call to a Composition's `Run` method
 
 .. _ParameterState_Value_Specification:
 

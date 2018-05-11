@@ -460,7 +460,7 @@ from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
-from psyneulink.scheduling.scheduler import Scheduler
+from psyneulink.scheduling.scheduler import Scheduler, Condition, Always
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
@@ -2461,6 +2461,25 @@ class System(System_Base):
                         raise SystemError("A parameter controlled by a ControlSignal of a controller "
                                           "being assigned to {} is not in that System".format(self.name))
 
+    def _parse_runtime_params(self, runtime_params):
+        if runtime_params is None:
+            return {}
+        for mechanism in runtime_params:
+            for param in runtime_params[mechanism]:
+                if isinstance(runtime_params[mechanism][param], tuple):
+                    if len(runtime_params[mechanism][param]) == 1:
+                        runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
+                    elif len(runtime_params[mechanism][param]) != 2:
+                        raise SystemError("Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
+                                          "Must be a tuple of the form (parameter value, condition), or simply the "
+                                          "parameter value. ".format(runtime_params[mechanism][param],
+                                                                     mechanism.name,
+                                                                     param,
+                                                                     self.name))
+                else:
+                    runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
+        return runtime_params
+
     def initialize(self):
         """Assign `initial_values <System.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
         contained in recurrent_init_mechanisms.
@@ -2479,6 +2498,7 @@ class System(System_Base):
                 execution_id=None,
                 termination_processing=None,
                 termination_learning=None,
+                runtime_params=None,
                 context=None):
         """Execute mechanisms in System at specified :ref:`phases <System_Execution_Phase>` in order \
         specified by the :py:data:`execution_graph <System.execution_graph>` attribute.
@@ -2526,6 +2546,8 @@ class System(System_Base):
 
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
+
+        runtime_params = self._parse_runtime_params(runtime_params)
 
         if not context:
             context = ContextFlags.COMPOSITION
@@ -2618,7 +2640,7 @@ class System(System_Base):
         # sorted_list = list(object_item[0].name for object_item in self.execution_list)
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
-        self._execute_processing(context=context)
+        self._execute_processing(runtime_params=runtime_params, context=context)
 
         # EXECUTE LEARNING FOR EACH PROCESS
 
@@ -2660,7 +2682,7 @@ class System(System_Base):
 
         return self.terminal_mechanisms.outputStateValues
 
-    def _execute_processing(self, context=None):
+    def _execute_processing(self, runtime_params, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
         # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update())
@@ -2674,11 +2696,6 @@ class System(System_Base):
             i = 0
             for mechanism in next_execution_set:
                 logger.debug('\tRunning Mechanism {0}'.format(mechanism))
-                for p in self.processes:
-                    try:
-                        rt_params = p.runtime_params_dict[mechanism]
-                    except:
-                        rt_params = None
 
                 processes = list(mechanism.processes.keys())
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
@@ -2688,8 +2705,21 @@ class System(System_Base):
                 mechanism.context.string = "Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
                 mechanism.context.composition = self
 
+                execution_runtime_params = {}
+                if mechanism in runtime_params:
+                    for param in runtime_params[mechanism]:
+                        if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing):
+                            execution_runtime_params[param] = runtime_params[mechanism][param][0]
+
                 mechanism.context.execution_phase = ContextFlags.PROCESSING
-                mechanism.execute(runtime_params=rt_params, context=context)
+                mechanism.execute(runtime_params=execution_runtime_params, context=context)
+                for key in mechanism._runtime_params_reset:
+                    mechanism._set_parameter_value(key, mechanism._runtime_params_reset[key])
+                mechanism._runtime_params_reset = {}
+
+                for key in mechanism.function_object._runtime_params_reset:
+                    mechanism.function_object._set_parameter_value(key, mechanism.function_object._runtime_params_reset[key])
+                mechanism.function_object._runtime_params_reset = {}
                 mechanism.context.execution_phase = ContextFlags.IDLE
 
                 if self._report_system_output and  self._report_process_output:
@@ -2857,6 +2887,7 @@ class System(System_Base):
             call_after_time_step=None,
             termination_processing=None,
             termination_learning=None,
+            runtime_params=None,
             context=None):
         """Run a sequence of executions
 
@@ -2920,6 +2951,9 @@ class System(System_Base):
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph)
 
+        if runtime_params is None:
+            runtime_params = {}
+
         self.initial_values = initial_values
 
         logger.debug(inputs)
@@ -2938,6 +2972,7 @@ class System(System_Base):
                    call_after_time_step=call_after_time_step,
                    termination_processing=termination_processing,
                    termination_learning=termination_learning,
+                   runtime_params=runtime_params,
                    context=ContextFlags.COMPOSITION)
 
     def _report_system_initiation(self):

@@ -849,12 +849,14 @@ class Projection_Base(Projection):
             state_name = state.name
             state.update(params=runtime_params, context=context)
 
-            # Assign ParameterState's value to parameter value in runtime_params
-            if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
-                param = param_template = runtime_params
-            # Otherwise use paramsCurrent
-            else:
-                param = param_template = self.paramsCurrent
+            # # Assign ParameterState's value to parameter value in runtime_params
+            # if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
+            #     param = param_template = runtime_params
+            # # Otherwise use paramsCurrent
+            # else:
+            #     param = param_template = self.paramsCurrent
+
+            param = param_template = self.paramsCurrent
 
             # Determine whether template (param to type-match) is at top level or in a function_params dictionary
             try:

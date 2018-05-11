@@ -116,7 +116,7 @@ If num_trials is not in use, the number of inputs provided determines the number
 five inputs are provided for each origin mechanism, and num_trials is not specified, the system will execute five times.
 
 +----------------------+-------+------+------+------+------+
-| Trial #              |1      |2     |3     |4     |5     |
+| Trial #              |0      |1     |2     |3     |4     |
 +----------------------+-------+------+------+------+------+
 | Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |
 +----------------------+-------+------+------+------+------+
@@ -138,10 +138,10 @@ five inputs are provided for each origin mechanism, and num_trials is not specif
 
 If num_trials is in use, `run` will iterate over the inputs until num_trials is reached. For example, if five inputs
 are provided for each `ORIGIN` mechanism, and num_trials = 7, the system will execute seven times. The first two
-items in the list of inputs will be used on the 6th and 7th trials, respectively.
+items in the list of inputs will be used on trial 5 and trial 6, respectively.
 
 +----------------------+-------+------+------+------+------+------+------+
-| Trial #              |1      |2     |3     |4     |5     |6     |7     |
+| Trial #              |0      |1     |2     |3     |4     |5     |6     |
 +----------------------+-------+------+------+------+------+------+------+
 | Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |1.0   |2.0   |
 +----------------------+-------+------+------+------+------+------+------+
@@ -169,7 +169,7 @@ situations:
 
 * **Case 1: Origin mechanism has only one input state**
 +--------------------------+-------+------+------+------+------+
-| Trial #                  |1      |2     |3     |4     |5     |
+| Trial #                  |0      |1     |2     |3     |4     |
 +--------------------------+-------+------+------+------+------+
 | Input to **Mechanism a** |1.0    |2.0   |3.0   |4.0   |5.0   |
 +--------------------------+-------+------+------+------+------+
@@ -213,7 +213,7 @@ Shorthand - drop the remaining list on each input because **Mechanism a**'s vari
 * **Case 2: Only one input is provided for the mechanism**
 
 +--------------------------+------------------+
-| Trial #                  |1                 |
+| Trial #                  |0                 |
 +--------------------------+------------------+
 | Input to **Mechanism a** |[[1.0], [2.0]]    |
 +--------------------------+------------------+
@@ -249,7 +249,7 @@ Shorthand - drop the outer list on **Mechanism a**'s input specification because
 * **Case 3: The same input is used on all trials**
 
 +--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
-| Trial #                  |1                  |2                  |3                  |4                  |5                  |
+| Trial #                  |0                  |1                  |2                  |3                  |4                  |
 +--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
 | Input to **Mechanism a** | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    | [[1.0], [2.0]]    |
 +--------------------------+-------------------+-------------------+-------------------+-------------------+-------------------+
@@ -286,7 +286,7 @@ Shorthand - drop the outer list on **Mechanism a**'s input specification and use
 * **Case 4: There is only one origin mechanism**
 
 +--------------------------+-------------------+-------------------+
-| Trial #                  |1                  |2                  |
+| Trial #                  |0                  |1                  |
 +--------------------------+-------------------+-------------------+
 | Input to **Mechanism a** | [1.0, 2.0, 3.0]   |  [1.0, 2.0, 3.0]  |
 +--------------------------+-------------------+-------------------+
@@ -318,6 +318,77 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only or
 
         s.run(inputs=input_list)
 ..
+
+.. _Run_Runtime_Parameters:
+
+Runtime Parameters
+~~~~~~~~~~~~~~~~~~
+
+Runtime parameters are alternate parameter values that a Mechanism only uses under certain conditions. They are
+specified in a nested dictionary containing (value, condition) tuples that correspond to parameters and Function
+parameters of Mechanisms, which is passed into the `runtime_params <Run.runtime_params>` argument of `Run`.
+
+Outer dictionary:
+    - *key* - Mechanism
+    - *value* - Runtime Parameter Specification Dictionary
+
+Runtime Parameter Specification Dictionary:
+    - *key* - keyword corresponding to a parameter of the Mechanism or its Function
+    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a `Condition`
+
+If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always`
+`Condition` will be assigned by default:
+
+>>> import psyneulink as pnl
+
+>>> T = pnl.TransferMechanism()
+>>> P = pnl.Process(pathway=[T])
+>>> S = pnl.System(processes=[P])
+>>> T.function_object.slope  # slope starts out at 1.0
+1.0
+
+>>> # During the following run, 10.0 will be used as the slope
+>>> S.run(inputs={T: 2.0},
+...       runtime_params={T: {"slope": 10.0}})
+[ 20.]
+
+>>> T.function_object.slope  # After the run, T.slope resets to 1.0
+
+Otherwise, the runtime parameter value will be used on all executions of the
+`Run` during which the `Condition` is True:
+
+>>> T = pnl.TransferMechanism()
+>>> P = pnl.Process(pathway=[T])
+>>> S = pnl.System(processes=[P])
+
+>>> T.function_object.intercept     # intercept starts out at 0.0
+>>> T.function_object.slope         # slope starts out at 1.0
+
+>>> S.run(inputs={T: 2.0},
+...       runtime_params={T: {"intercept": (5.0, pnl.AfterTrial(1)),
+...                           "slope": (2.0, pnl.AtTrial(3))}},
+...       num_trials=5)
+[[np.array([2.])], [np.array([2.])], [np.array([7.])], [np.array([9.])], [np.array([7.])]]
+
+The table below shows how runtime parameters were applied to the intercept and slope parameters of Mechanism T in the
+example above.
+
++-------------+--------+--------+--------+--------+--------+
+|             |Trial 0 |Trial 1 |Trial 2 |Trial 3 |Trial 4 |
++=============+========+========+========+========+========+
+| Intercept   |0.0     |0.0     |5.0     |5.0     |5.0     |
++-------------+--------+--------+--------+--------+--------+
+| Slope       |1.0     |1.0     |1.0     |2.0     |0.0     |
++-------------+--------+--------+--------+--------+--------+
+| Value       |2.0     |2.0     |7.0     |9.0     |7.0     |
++-------------+--------+--------+--------+--------+--------+
+
+as indicated by the results of S.run(), the original parameter values were used on trials 0 and 1,
+the runtime intercept was used on trials 2, 3, and 4, and the runtime slope was used on trial 3.
+
+.. note::
+    Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
+    value.
 
 COMMENT:
 .. _Run_Initial_Values:
@@ -361,7 +432,7 @@ with **inputs**, if the number of `TRIAL` \\s specified is greater than the numb
 list will be cycled until the number of `TRIAL` \\s specified is completed.
 
 +------------------------------------------+--------------+--------------+
-| Trial #                                  |1             |   2          |
+| Trial #                                  |0             |   1          |
 +------------------------------------------+--------------+--------------+
 | Target value for the learning sequence   | [1.0, 1.0]   |   [2.0, 2.0] |
 | containing **Mechanism b**               |              |              |
@@ -440,7 +511,7 @@ Finally, for convenience, if there is only one learning sequence in a system, th
 rather than a dictionary.
 
 +------------------------------------------+-------+------+------+------+------+
-| Trial #                                  |1      |2     |3     |4     |5     |
+| Trial #                                  |0      |1     |2     |3     |4     |
 +------------------------------------------+-------+------+------+------+------+
 | Target corresponding to  **Mechanism b** |1.0    |2.0   |3.0   |4.0   |5.0   |
 +------------------------------------------+-------+------+------+------+------+
@@ -522,6 +593,7 @@ def run(object,
         call_after_time_step:tc.optional(callable)=None,
         termination_processing=None,
         termination_learning=None,
+        runtime_params=None,
         context=ContextFlags.COMMAND_LINE):
     """run(                      \
     inputs,                      \
@@ -533,7 +605,11 @@ def run(object,
     call_before_trial=None,      \
     call_after_trial=None,       \
     call_before_time_step=None,  \
-    call_after_time_step=None,   \)
+    call_after_time_step=None,   \
+    termination_processing=None, \
+    termination_learning=None,   \
+    runtime_params=None,         \
+    )
 
     Run a sequence of executions for a `Process` or `System`.
 
@@ -603,6 +679,21 @@ def run(object,
     termination_learning : Dict[TimeScale: Condition]
         a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
         phase of execution <System_Execution_Learning>`
+
+    runtime_params : Dict[Mechanism: Dict[Param: Tuple(Value, Condition)]]
+        nested dictionary of (value, `Condition`) tuples for parameters of Mechanisms of the Composition; specifies
+        alternate parameter values to be used only during this `Run` when the specified `Condition` is met.
+
+        Outer dictionary:
+            - *key* - Mechanism
+            - *value* - Runtime Parameter Specification Dictionary
+
+        Runtime Parameter Specification Dictionary:
+            - *key* - keyword corresponding to a parameter of the Mechanism
+            - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a
+              `Condition`
+
+        See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
 
    Returns
    -------
@@ -756,6 +847,7 @@ def run(object,
                 execution_id=execution_id,
                 termination_processing=termination_processing,
                 termination_learning=termination_learning,
+                runtime_params=runtime_params,
                 context=context
             )
 

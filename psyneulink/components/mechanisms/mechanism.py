@@ -861,8 +861,7 @@ dictionary <ParameterState_Specification>` assigned to the **runtime_param** arg
 <Mechanism_Base.execute>` method, or in a `tuple with the Mechanism <Process_Mechanism_Specification>` in the `pathway`
 of a `Process`.  Any value assigned to a parameter in a **runtime_params** dictionary will override the current value of
 that parameter for the (and *only* the) current execution of the Mechanism; the value will return to its previous value
-following that execution, unless the `runtimeParamStickyAssignmentPref` is set for the component to which the parameter
-belongs.
+following that execution.
 
 The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of which
 is for a parameter of the Mechanism or its  `function <Mechanism_Base.function>`, or for one of the `Mechanism's States
@@ -2141,12 +2140,13 @@ class Mechanism_Base(Mechanism):
             specification formats).
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
-            a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism,
-            its function, or `Projection(s) to any of its States <State_Projections>`.  Any value assigned to a
-            parameter will override the current value of that parameter for the (and only the current) execution of
-            the Mechanism, and will return to its previous value following execution (unless the
-            `runtimeParamStickyAssignmentPref` is set for the Component to which the parameter belongs).  See
-            `runtime_params <Mechanism_Runtime_Parameters>` above for details concerning specification.
+            a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism or
+            its function. Any value assigned to a parameter will override the current value of that parameter for *only
+            the current* execution of the Mechanism. When runtime_params are passed down from the `Composition` level
+            `Run` method, parameters reset to their original values immediately following the execution during which
+            runtime_params were used. When `execute <Mechanism.execute>` is called directly, (such as for debugging),
+            runtime_params exhibit "lazy updating": parameter values will not reset to their original values until the
+            beginning of the next execution.
 
         Returns
         -------
@@ -2215,32 +2215,6 @@ class Mechanism_Base(Mechanism):
                     context=context,
                 )
                 return np.atleast_2d(return_value)
-
-
-        # VALIDATE RUNTIME PARAMETER SETS
-        # Insure that param set is for a States:
-        if self.prefs.paramValidationPref:
-            if runtime_params:
-                # runtime_params can have entries for any of the the Mechanism's params, or
-                #    one or more state keys, each of which should be for a params dictionary for the corresponding
-                #    state type, and each of can contain only parameters relevant to that state
-                state_keys = [INPUT_STATE_PARAMS, PARAMETER_STATE_PARAMS, OUTPUT_STATE_PARAMS]
-                param_names = list({**self.user_params, **self.function_params})
-                if not all(key in state_keys + param_names for key in runtime_params):
-                        raise MechanismError("There is an invalid specification for a runtime parameter of {}".
-                                             format(self.name))
-                # for state_key in runtime_params:
-                for state_key in [entry for entry in runtime_params if entry in state_keys]:
-                    state_dict = runtime_params[state_key]
-                    if not isinstance(state_dict, dict):
-                        raise MechanismError("runtime_params entry for {} is not a dict".
-                                             format(self.name, state_key))
-                    for param_name in state_dict:
-                        if not param_name in param_names:
-                            raise MechanismError("{} entry in runtime_params for {} "
-                                                 "contains an unrecognized parameter: {}".
-                                                 format(state_key, self.name, param_name))
-
 
         # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
         # VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
