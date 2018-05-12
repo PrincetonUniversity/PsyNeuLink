@@ -614,9 +614,6 @@ class LearningProjection(ModulatoryProjection_Base):
         if self.context.initialization_status == ContextFlags.DEFERRED_INIT:
             return self.context.initialization_status
 
-        # if self.learning_rate:
-        #     runtime_params.update({SLOPE:self.learning_rate})
-
         if variable is not None:
             learning_signal = variable
         else:
