@@ -863,8 +863,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                 del self.output_states[ENTROPY]
 
         if self.has_recurrent_input_state:
-            new_input_state = InputState(name = "Recurrent Input State", variable = self.variable)
-            self.add_states(new_input_state)
+            new_input_state = InputState(owner = self, name = "Recurrent Input State", variable = self.variable[0])
+
             assert(len(new_input_state.all_afferents) == 0)  # just a sanity check
             assert(self.input_state.name != "Recurrent Input State")
             self.recurrent_projection.receiver = new_input_state  # or new_input_state
@@ -1068,12 +1068,24 @@ class RecurrentTransferMechanism(TransferMechanism):
                  function_variable=None,
                  runtime_params=None,
                  context=None):
-
+        print('variable before: ', variable)
         if self.has_recurrent_input_state:
             L = LinearCombination(default_variable = self.variable)
             variable = L.execute(variable = variable)
-
-        return super._execute(variable=variable,
+        print('variable after: ', variable)
+        return super()._execute(variable=variable,
                               function_variable=function_variable,
                               runtime_params=runtime_params,
                               context=context)
+
+    def _get_variable_from_input(self, input):
+        if self.has_recurrent_input_state:
+            input = np.atleast_2d(input)
+            input_len = len(input[0])
+            num_inputs = np.size(input, 0)
+            num_input_states = len(self.input_states)
+            if num_inputs != num_input_states:
+                z = np.zeros((1, input_len))
+                input = np.concatenate((input, z))
+
+        return super()._get_variable_from_input(input)
