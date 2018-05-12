@@ -166,7 +166,8 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Hebbian, Linear, Stability, get_matrix, is_function_type
+from psyneulink.components.functions.function import Hebbian, Linear, LinearCombination,\
+    Stability, get_matrix, is_function_type
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import \
     ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
@@ -174,6 +175,7 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.outputstate import PRIMARY, StandardOutputStates
+from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import _instantiate_state
 from psyneulink.globals.keywords import \
@@ -615,6 +617,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULT,
+                 has_recurrent_input_state=False,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None):
@@ -643,7 +646,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   params=params,
                                                   noise=noise,
                                                   auto=auto,
-                                                  hetero=hetero)
+                                                  hetero=hetero,
+                                                  has_recurrent_input_state=has_recurrent_input_state)
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -858,6 +862,13 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 del self.output_states[ENTROPY]
 
+        if self.has_recurrent_input_state:
+            new_input_state = InputState(name = "Recurrent Input State", variable = self.variable)
+            self.add_states(new_input_state)
+            assert(len(new_input_state.all_afferents) == 0)  # just a sanity check
+            assert(self.input_state.name != "Recurrent Input State")
+            self.recurrent_projection.receiver = new_input_state  # or new_input_state
+
     def _update_parameter_states(self, runtime_params=None, context=None):
         for state in self._parameter_states:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
@@ -980,7 +991,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
 
         from psyneulink.library.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
-
         if isinstance(matrix, str):
             size = len(mech.instance_defaults.variable[0])
             matrix = get_matrix(matrix, size, size)
@@ -1052,3 +1062,18 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                        context=context)
         if self.learning_mechanism is None:
             self.learning_enabled = False
+
+    def _execute(self,
+                 variable=None,
+                 function_variable=None,
+                 runtime_params=None,
+                 context=None):
+
+        if self.has_recurrent_input_state:
+            L = LinearCombination(default_variable = self.variable)
+            variable = L.execute(variable = variable)
+
+        return super._execute(variable=variable,
+                              function_variable=function_variable,
+                              runtime_params=runtime_params,
+                              context=context)
