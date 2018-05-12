@@ -3663,6 +3663,8 @@ class System(System_Base):
                                           subgraphs:tc.optional(dict)=None):
             '''Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** '''
 
+            from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+
             rcvr_rank = 'same'
             # Set rcvr color and penwidth info
             if rcvr is active_item:
@@ -3785,9 +3787,13 @@ class System(System_Base):
                         if processes:
                             # Get any processes to which recvr belongs
                             procs = list(set(proj.sender.owner.processes.keys()).intersection(processes))
-                            # FIX: CHANGE BELOW TO TEST FOR PROJ TO COMPARATOR THAT IS USED FOR LEARNING
-                            if any(rcvr.processes[p]==TERMINAL for p in procs):
+                            # If recvr projects to any ComparatorMechanism used for learning in the same Process as rcvr
+                            if (any(isinstance(proj.receiver.owner, ComparatorMechanism)
+                                   and proj.receiver.owner._role == LEARNING
+                                   and set(procs).intersection(proj.receiver.owner.processes)
+                                   for proj in rcvr.efferents)):
                                 continue
+
                         sg.node(proj_label, shape=projection_shape, color=proj_color)
                         # Edges to and from Projection node
                         G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
@@ -3813,8 +3819,11 @@ class System(System_Base):
                 # Check whether the rcvr projects to any Mechanism that is the last in a learning sequence
                 for proj in rcvr.efferents:
                     try:
-                        # FIX: CHANGE BELOW TO TEST FOR PROJ TO COMPARATOR IN THE SAME PROCESS THAT IS USED FOR LEARNING
-                        if proj.receiver.owner.processes[proc]==TERMINAL:
+                        # If recvr projects to a ComparatorMecchanism used for Learning in the same Process as the recvr
+                        if (any(isinstance(p.receiver.owner, ComparatorMechanism)
+                               and p.receiver.owner._role == LEARNING
+                               and proc in p.receiver.owner.processes
+                               for p in proj.receiver.owner.efferents)):
                             proj_label = self._get_label(proj, show_dimensions, show_roles)
                             sndr_label = self._get_label(proj.sender.owner, show_dimensions, show_roles)
                             rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
