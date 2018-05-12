@@ -441,9 +441,11 @@ from toposort import toposort, toposort_flatten
 from psyneulink.components.component import Component
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
 from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
-from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
+from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
 from psyneulink.components.mechanisms.mechanism import MechanismList
-from psyneulink.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import \
+    DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, OUTCOME, \
+    ObjectiveMechanism
 from psyneulink.components.process import Process, ProcessList, ProcessTuple
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.projections.projection import Projection
@@ -1688,7 +1690,11 @@ class System(System_Base):
                     #    - obj_mech should NOT be included in the learning_execution_graph and
                     #    - should be replaced with appropriate projections to sample_mechs's afferent LearningMechanisms
                     elif not sample_mech.systems[self] is TERMINAL:
-                        _assign_error_signal_projections(sample_mech, self, obj_mech)
+                        # MODIFIED 5/12/18 OLD:
+                        # _assign_error_signal_projections(sample_mech, system=self, objective_mech=obj_mech)
+                        # MODIFIED 5/12/18 NEW:
+                        _assign_error_signal_projections(sample_mech, system=self, scope=self, objective_mech=obj_mech)
+                        # MODIFIED 5/12/18 END
                         # Don't process ObjectiveMechanism any further (since its been replaced)
                         return
 
@@ -1715,6 +1721,15 @@ class System(System_Base):
                                                sample_mech.output_state.efferents if
                                                isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
                         sender_mech = other_obj_mech
+                        # MODIFIED 5/12/18 NEW:
+                        obj_mech_replaced = TERMINAL
+                        # Move error_signal Projections from old obj_mech to new one (now sender_mech)
+                        for error_signal_proj in obj_mech.output_states[OUTCOME].efferents:
+                            # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION WHEN THAT HAS BEEN IMPLEMENTED
+                            MappingProjection(sender=sender_mech, receiver=error_signal_proj.receiver)
+                            _assign_error_signal_projections(sample_mech, self, scope=process, objective_mech=obj_mech)
+                            # sender_mech.output_states[OUTCOME].efferents.append(error_signal_proj)
+                        # MODIFIED 5/12/18 END
 
                     # INTERNAL CONVERGENCE
                     # None of the mechanisms that project to it are a TERMINAL mechanism
@@ -1725,12 +1740,14 @@ class System(System_Base):
                           and any(proj.has_learning_projection and self in proj.receiver.owner.systems
                                   for proj in sample_mech.output_state.efferents)
                     ):
-                        _assign_error_signal_projections(sample_mech, self, obj_mech)
-                    # MODIFIED 5/12/18 OLD:
+                        _assign_error_signal_projections(processing_mech=sample_mech,
+                                                         system=self,
+                                                         objective_mech=obj_mech)
+                        # # MODIFIED 5/12/18 OLD:
                         # obj_mech_replaced = True
-                    # MODIFIED 5/12/18 NEW:
-                    obj_mech_replaced = True
-                    # MODIFIED 5/12/18 END
+                        # MODIFIED 5/12/18 NEW:
+                        obj_mech_replaced = INTERNAL
+                        # MODIFIED 5/12/18 END
 
             # FIX: TEST FOR CROSSING:
             # FIX:  (LEARNINGMECHANISM FOR INTERNAL MECHANISM THAT HAS >1 PROJECTION TO MECHANISMS IN THE SAME SYSTEM
@@ -1748,7 +1765,11 @@ class System(System_Base):
                     #    make sure that the LearningMechanisms for all of its afferent Projections being learned
                     #    receive error_signals from the LearningMechanisms of all it afferent Projections being learned.
                     if processing_mech.systems[self] == INTERNAL:
+                        # MODIFIED 5/12/18 OLD:
                         _assign_error_signal_projections(processing_mech, self)
+                        # # MODIFIED 5/12/18 NEW:
+                        # _assign_error_signal_projections(processing_mech)
+                        # MODIFIED 5/12/18 END
 
             # If sender_mech has no Projections left, raise exception
             if not any(any(projection for projection in input_state.path_afferents)
@@ -1763,12 +1784,14 @@ class System(System_Base):
                 for projection in output_state.efferents:
                     receiver = projection.receiver.owner
 
-                    if obj_mech_replaced:
-                        # MODIFIED 5/12/18 OLD:
-                        # ignore, senders = _get_learning_mechanisms(sample_mech, self)
-                        # MODIFIED 5/12/18 NEW:
+                    # # MODIFIED 5/12/18 OLD:
+                    # if obj_mech_replaced:
+                    #     ignore, senders = _get_learning_mechanisms(sample_mech, self)
+                    # MODIFIED 5/12/18 NEW:
+                    if obj_mech_replaced == INTERNAL:
                         ignore, senders = _get_learning_mechanisms(sample_mech, process)
-                        # MODIFIED 5/12/18 END
+                        # senders=[sender_mech]
+                    # MODIFIED 5/12/18 END
                     else:
                         senders = [sender_mech]
 
@@ -3882,7 +3905,7 @@ class System(System_Base):
 
             # rcvr is a LearningMechanism or ComparatorMechanism
             else:
-                if self not in rcvr.systems:
+                if self not in rcvr.systems and process not in rcvr.processes:
                     return
 
                 # Implement node for LearningMechanism
@@ -4187,6 +4210,7 @@ class System(System_Base):
                                 processes = l.sender.owner.processes
                             else:
                                 processes = l.processes
+                                l_intersection = [p for p in self.processes if p in processes]
                             # if [p for p in self.processes if p in processes]:
                             if process in processes:
                                 _assign_learning_components(G, sg, l, [process])

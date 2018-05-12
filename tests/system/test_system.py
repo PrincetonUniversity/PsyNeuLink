@@ -105,7 +105,6 @@ def test_danglingControlledMech():
 
     # no assert, should only complete without error
 
-
 class TestInputSpecsDocumentationExamples:
 
     def test_example_1(self):
@@ -430,7 +429,6 @@ class TestInputSpecsDocumentationExamples:
 
         p1.execute(input_dictionary)
 
-
 class TestInputSpecsHeterogeneousVariables:
 
     def test_heterogeneous_variables_drop_outer_list(self):
@@ -460,7 +458,6 @@ class TestInputSpecsHeterogeneousVariables:
         inputs = {a: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]}
 
         s.run(inputs)
-
 
 class TestGraphAndInput:
 
@@ -647,6 +644,63 @@ class TestGraphAndInput:
         assert d.systems[s] == TERMINAL
         assert e.systems[s] == ORIGIN
         assert f.systems[s] == INITIALIZE_CYCLE
+
+# class TestConvergentLearning:
+#
+#     def test_branch(self):
+#         from psyneulink.globals.keywords import ENABLED
+#         mech_1 = TransferMechanism(name='ProcessingMechanism', size=3)
+#         mech_2 = TransferMechanism(name='ProcessingMechanism', size=5)
+#         mech_3 = TransferMechanism(name='ProcessingMechanism', size=5)
+#         mech_4 = TransferMechanism(name='ProcessingMechanism', size=5)
+#         mech_5 = TransferMechanism(name='ProcessingMechanism', size=5)
+#         mech_6 = TransferMechanism(name='ProcessingMechanism', size=5)
+#         process_A = Process(pathway=[mech_1, mech_2, mech_3, mech_4], learning=ENABLED, name='Process A')
+#         process_B = Process(pathway=[mech_5, mech_6, mech_4], learning=ENABLED, name='Process B')
+#
+#         S = System(processes=[process_A, process_B])
+#
+#         assert 'ProcessingMechanism-3 ComparatorMechanism' in \
+#                [m.name for m in S.learningGraph['LearningMechanism for MappingProjection from ProcessingMechanism-2 to ProcessingMechanism-3']]
+#
+#     #     assert [m.name for m in S.learningGraph['LearningMechanism for MappingProjection from' \
+#     #                            ' ProcessingMechanism-1 to ProcessingMechanism-2']]=,
+#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-2 to ProcessingMechanism-3')}),
+#     #
+#     #     assert [m.name for m in S.learningGraph['LearningMechanism for MappingProjection from' \
+#     #                            ' ProcessingMechanism to ProcessingMechanism-1']]=,
+#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-1 to ProcessingMechanism-2')}),
+#     #
+#     #
+#     #     assert [m.name for m in S.learningGraph['MappingProjection from ProcessingMechanism to ProcessingMechanism-1']]
+#     # =
+#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism to ProcessingMechanism-1')})],
+#     #
+#     #     assert [m.name for m in S.learningGraph['MappingProjection from ProcessingMechanism-1 to ' \
+#     #                                             'ProcessingMechanism-2']]=
+#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-1 to ProcessingMechanism-2')}),
+#     #
+#     #     assert [m.name for m in S.learningGraph['MappingProjection from ProcessingMechanism-2 to ' \
+#     #                                             'ProcessingMechanism-3']]=
+#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-2 to ProcessingMechanism-3')}),
+#     #
+#     #     assert [m.name for m in S.learningGraph['LearningMechanism for MappingProjection from' \
+#     #                            ' ProcessingMechanism-5 to ProcessingMechanism-3']]=,
+#     #         {'ProcessingMechanism-3 ComparatorMechanism')}),
+#     #
+#     #     assert [m.name for m in S.learningGraph['LearningMechanism for MappingProjection from' \
+#     #                            ' ProcessingMechanism-4 to ProcessingMechanism-5']]=,
+#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-5 to ProcessingMechanism-3')}),
+#     #
+#     #     assert [m.name for m in S.learningGraph['MappingProjection from ProcessingMechanism-4 to ' \
+#     #                                             'ProcessingMechanism-5']]=
+#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-4 to ProcessingMechanism-5')}),
+#     #
+#     #     assert [m.name for m in S.learningGraph['MappingProjection from ProcessingMechanism-5 to ' \
+#     #                                             'ProcessingMechanism-3']]=
+#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-5 to ProcessingMechanism-3')})])
+#     #
+
 
 class TestInitialize:
 
@@ -882,7 +936,6 @@ class TestRuntimeParams:
 
 from psyneulink.components.process import proc
 from psyneulink.components.system import sys
-
 class TestFactoryMethods:
 
     def test_process_factory_method(self):
