@@ -1658,7 +1658,7 @@ class System(System_Base):
                 # For clarity, rename as obj_mech
                 obj_mech = sender_mech
 
-                # Get the LearningMechanism to which the obj_mech projected
+                # Get the LearningMechanism to which the obj_mech projects
                 try:
                     learning_mech = obj_mech.output_state.efferents[0].receiver.owner
                     if not isinstance(learning_mech, LearningMechanism):
@@ -1667,9 +1667,19 @@ class System(System_Base):
                     raise SystemError("{} in {} does not project to a LearningMechanism".
                                       format(obj_mech.name, process.name))
 
+                # MODIFIED 5/11/18 OLD:
                 sample_mech = obj_mech.input_states[SAMPLE].path_afferents[0].sender.owner
                 if sample_mech != learning_mech.output_source:
                     assert False
+                # # MODIFIED 5/11/18 NEW:
+                # sample_mech = next((proj.sender.owner for proj in obj_mech.input_states[SAMPLE].path_afferents
+                #                    if process in proj.sender.owner.processes), None)
+                # if (sample_mech is None
+                #         or sample_mech not in [proj.receiver.owner.output_source for proj in
+                #                                obj_mech.output_state.efferents]):
+                #         # or sample_mech != learning_mech.output_source:
+                #     assert False
+                # # MODIFIED 5/11/18 END
 
                 # ObjectiveMechanism the 1st item in the learning_execution_graph, so could be for:
                 #    - the last Mechanism in a learning sequence, or
@@ -3562,11 +3572,11 @@ class System(System_Base):
 
         control_color : keyword : default `blue`
             specifies the color in which the learning components are displayed (note: if the System's
-            `controller <System.controller>`) is an `EVCControlMechanism`, then a link is shown in red from the
+            `controller <System.controller>` is an `EVCControlMechanism`, then a link is shown in pink from the
             `prediction Mechanisms <EVCControlMechanism_Prediction_Mechanisms>` it creates to the corresponding
             `ORIGIN` Mechanisms of the System, to indicate that although no projection are created for these,
             the prediction Mechanisms determine the input to the `ORIGIN` Mechanisms when the EVCControlMechanism
-            `simulates execution <EVCControlMechanism_Execution>` of the System.
+            `simulates execution <EVCControlMechanism_Execution>` of the System).
 
         prediction_mechanism_color : keyword : default `pink`
             specifies the color in which the `prediction_mechanisms
