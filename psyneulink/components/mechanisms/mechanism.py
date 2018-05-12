@@ -2600,7 +2600,7 @@ class Mechanism_Base(Mechanism):
                     function = r'\n({})'.format(state.function_object.__class__.__name__)
                 value = ''
                 if include_value:
-                    if use_label and self.input_labels:
+                    if use_label:
                         value = r'\n={}'.format(state.label)
                     else:
                         value = r'\n={}'.format(state.value)
