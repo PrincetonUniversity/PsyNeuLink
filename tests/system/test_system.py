@@ -10,7 +10,7 @@ from psyneulink.globals.keywords import ALLOCATION_SAMPLES
 from psyneulink.globals.keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
 from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
-
+from psyneulink.scheduling.condition import Any, AtTrial, AfterTrial
 
 def test_danglingControlledMech():
     #
@@ -104,6 +104,7 @@ def test_danglingControlledMech():
     )
 
     # no assert, should only complete without error
+
 
 class TestInputSpecsDocumentationExamples:
 
@@ -429,6 +430,7 @@ class TestInputSpecsDocumentationExamples:
 
         p1.execute(input_dictionary)
 
+
 class TestInputSpecsHeterogeneousVariables:
 
     def test_heterogeneous_variables_drop_outer_list(self):
@@ -458,6 +460,8 @@ class TestInputSpecsHeterogeneousVariables:
         inputs = {a: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]}
 
         s.run(inputs)
+
+
 class TestGraphAndInput:
 
     def test_branch(self):
@@ -674,6 +678,207 @@ class TestInitialize:
         # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
         assert np.allclose(C.log.nparray_dictionary('value')['value'], [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]])
 
+class TestRuntimeParams:
+
+    def test_mechanism_execute_function_param(self):
+
+        # Construction
+        T = TransferMechanism()
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+
+        # Runtime param used for slope
+        T.execute(runtime_params={"slope": 10.0}, input=2.0)
+        assert T.function_object.slope == 10.0
+        assert T.parameter_states['slope'].value == 10.0
+        assert T.value == 20.0
+
+        # Runtime param NOT used for slope
+        T.execute(input=2.0)
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+        assert T.value == 2.0
+
+    def test_mechanism_execute_mechanism_param(self):
+
+        # Construction
+        T = TransferMechanism()
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+
+        # Runtime param used for noise
+        T.execute(runtime_params={"noise": 10.0}, input=2.0)
+        assert T.noise == 10.0
+        assert T.parameter_states['noise'].value == 10.0
+        assert T.value == 12.0
+
+        # Runtime param NOT used for noise
+        T.execute(input=2.0)
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+        assert T.value == 2.0
+
+    def test_runtime_params_reset_isolated(self):
+
+        T = TransferMechanism()
+
+        # Intercept attr updated
+        T.function_object.intercept = 2.0
+        assert T.function_object.intercept == 2.0
+
+        # Runtime param used for slope
+        T.execute(runtime_params={"slope": 10.0}, input=2.0)
+        assert T.function_object.slope == 10.0
+        assert T.parameter_states['slope'].value == 10.0
+
+        # Intercept attr NOT affected by runtime params
+        assert T.function_object.intercept == 2.0
+        assert T.value == 22.0
+
+        # Runtime param NOT used for slope
+        T.execute(input=2.0)
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+
+        # Intercept attr NOT affected by runtime params reset
+        assert T.function_object.intercept == 2.0
+        assert T.value == 4.0
+
+    def test_runtime_params_reset_to_most_recent_val(self):
+        # NOT instance defaults
+
+        # Construction
+        T = TransferMechanism()
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+
+        # Set slope attribute value directly
+        T.function_object.slope = 2.0
+        assert T.function_object.slope == 2.0
+
+        # Runtime param used for slope
+        T.execute(runtime_params={"slope": 10.0}, input=2.0)
+        assert T.function_object.slope == 10.0
+        assert T.parameter_states['slope'].value == 10.0
+        assert T.value == 20.0
+
+        # Runtime param NOT used for slope - reset to most recent slope value (2.0)
+        T.execute(input=2.0)
+        assert T.function_object.slope == 2.0
+        assert T.value == 4.0
+
+    def test_system_run_function_param_no_condition(self):
+
+        # Construction
+        T = TransferMechanism()
+        P = Process(pathway=[T])
+        S = System(processes=[P])
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+
+        # Runtime param used for slope
+        # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
+        S.run(inputs={T: 2.0}, runtime_params={T: {"slope": 10.0}})
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+        assert T.value == 20.0
+
+        # Runtime param NOT used for slope
+        S.run(inputs={T: 2.0})
+        assert T.function_object.slope == 1.0
+        assert T.parameter_states['slope'].value == 1.0
+        assert T.value == 2.0
+
+    def test_system_run_mechanism_param_no_condition(self):
+
+        # Construction
+        T = TransferMechanism()
+        P = Process(pathway=[T])
+        S = System(processes=[P])
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+
+        # Runtime param used for noise
+        # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
+        S.run(inputs={T: 2.0}, runtime_params={T: {"noise": 10.0}})
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+        assert T.value == 12.0
+
+        # Runtime param NOT used for noise
+        S.run(inputs={T: 2.0}, )
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+        assert T.value == 2.0
+
+    def test_system_run_with_condition(self):
+
+        # Construction
+        T = TransferMechanism()
+        P = Process(pathway=[T])
+        S = System(processes=[P])
+
+        # Runtime param used for noise
+        # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
+        S.run(inputs={T: 2.0},
+              runtime_params={T: {"noise": (10.0, AtTrial(1))}},
+              num_trials=4)
+
+        # Runtime param NOT used for noise
+        S.run(inputs={T: 2.0})
+
+        assert np.allclose(S.results, [[np.array([2.])],     # Trial 0 - condition not satisfied yet
+                                       [np.array([12.])],    # Trial 1 - condition satisfied
+                                       [np.array([2.])],     # Trial 2 - condition no longer satisfied (not sticky)
+                                       [np.array([2.])],     # Trial 3 - condition no longer satisfied (not sticky)
+                                       [np.array([2.])]])    # New run (runtime param no longer applies)
+
+    def test_system_run_with_sticky_condition(self):
+
+        # Construction
+        T = TransferMechanism()
+        P = Process(pathway=[T])
+        S = System(processes=[P])
+        assert T.noise == 0.0
+        assert T.parameter_states['noise'].value == 0.0
+
+        # Runtime param used for noise
+        # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
+        S.run(inputs={T: 2.0},
+              runtime_params={T: {"noise": (10.0, AfterTrial(1))}},
+              num_trials=4)
+
+        # Runtime param NOT used for noise
+        S.run(inputs={T: 2.0})
+
+        assert np.allclose(S.results, [[np.array([2.])],      # Trial 0 - condition not satisfied yet
+                                       [np.array([2.])],      # Trial 1 - condition not satisfied yet
+                                       [np.array([12.])],     # Trial 2 - condition satisfied
+                                       [np.array([12.])],     # Trial 3 - condition satisfied (sticky)
+                                       [np.array([2.])]])     # New run (runtime param no longer applies)
+
+    def test_system_run_with_combined_condition(self):
+
+        # Construction
+        T = TransferMechanism()
+        P = Process(pathway=[T])
+        S = System(processes=[P])
+
+        # Runtime param used for noise
+        # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
+        S.run(inputs={T: 2.0},
+              runtime_params={T: {"noise": (10.0, Any(AtTrial(1), AfterTrial(2)))}},
+              num_trials=5)
+
+        # Runtime param NOT used for noise
+        S.run(inputs={T: 2.0})
+
+        assert np.allclose(S.results, [[np.array([2.])],      # Trial 0 - NOT condition 0, NOT condition 1
+                                       [np.array([12.])],     # Trial 1 - condition 0, NOT condition 1
+                                       [np.array([2.])],      # Trial 2 - NOT condition 0, NOT condition 1
+                                       [np.array([12.])],     # Trial 3 - NOT condition 0, condition 1
+                                       [np.array([12.])],     # Trial 4 - NOT condition 0, condition 1
+                                       [np.array([2.])]])     # New run (runtime param no longer applies)
 
 from psyneulink.components.process import proc
 from psyneulink.components.system import sys

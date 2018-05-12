@@ -2044,6 +2044,37 @@ class State_Base(State):
         # self.value = self._execute(function_variable=variable, runtime_params=function_params, context=context)
         # MODIFIED 5/4/18 END
 
+    def _get_value_label(self, labels_dict, all_states):
+        subdicts = False
+        if labels_dict != {}:
+            if isinstance(list(labels_dict.values())[0], dict):
+                subdicts = True
+
+        if not subdicts:    # Labels are specified at the mechanism level - not individual states
+            # label dict only applies to index 0 state
+            if all_states.index(self) == 0:
+                for label in labels_dict:
+                    if np.allclose(labels_dict[label], self.value):
+                        return label
+            # if this isn't the index 0 state OR a label was not found then just return the original value
+            return self.value
+
+        for state in labels_dict:
+            if state is self:
+                return self.find_label_value_match(state, labels_dict)
+            elif state == self.name:
+                return self.find_label_value_match(self.name, labels_dict)
+            elif state == all_states.index(self):
+                return self.find_label_value_match(all_states.index(self), labels_dict)
+
+        return self.value
+
+    def find_label_value_match(self, key, labels_dict):
+        for label in labels_dict[key]:
+            if np.allclose(labels_dict[key][label], self.value):
+                return label
+        return self.value
+
     @property
     def owner(self):
         return self._owner
