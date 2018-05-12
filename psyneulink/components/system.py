@@ -3809,10 +3809,10 @@ class System(System_Base):
             # (i.e., the Process to which its sender belongs)
             if show_learning and processes:
                 # Get Processes to which rcvr belongs
+                # Note: this assumes there should only be one process associated with the current (sub)graph
                 proc = list(set(rcvr.processes.keys()).intersection(processes))
-                # If rcvr belongs to more than one Process, it is in an intersection subgraph, so skip it
-                # (since the whole point is to assign the Projection to the Process to which it belongs)
                 if len(proc) > 1:
+                    # raise SystemError("PROGRAM ERROR: expected {} is in only one Process".format(rcvr.name))
                     pass
                 proc = proc.pop()
                 # Check whether the rcvr projects to any Mechanism that is the last in a learning sequence
