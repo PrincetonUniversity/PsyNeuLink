@@ -1667,21 +1667,13 @@ class System(System_Base):
                     raise SystemError("{} in {} does not project to a LearningMechanism".
                                       format(obj_mech.name, process.name))
 
-                # MODIFIED 5/11/18 OLD:
+                # Make sure sample_mech is refference by learning_mech as is output_source
                 sample_mech = obj_mech.input_states[SAMPLE].path_afferents[0].sender.owner
                 if sample_mech != learning_mech.output_source:
-                    assert False
-                # # MODIFIED 5/11/18 NEW:
-                # sample_mech = next((proj.sender.owner for proj in obj_mech.input_states[SAMPLE].path_afferents
-                #                    if process in proj.sender.owner.processes), None)
-                # if (sample_mech is None
-                #         or sample_mech not in [proj.receiver.owner.output_source for proj in
-                #                                obj_mech.output_state.efferents]):
-                #         # or sample_mech != learning_mech.output_source:
-                #     assert False
-                # # MODIFIED 5/11/18 END
+                    raise SystemError("PROGRAM ERROR: learning_mecch ({}) does not properly reference sample_mech ({})"
+                                      "in {} of {}".format(learning_mech.name,sample_mech.name,process.name,self.name))
 
-                # ObjectiveMechanism the 1st item in the learning_execution_graph, so could be for:
+                # ObjectiveMechanism is the 1st item in the learning_execution_graph, so could be for:
                 #    - the last Mechanism in a learning sequence, or
                 #    - a TERMINAL Mechanism of the System
                 if len(self.learning_execution_graph) == 0:
@@ -1733,9 +1725,12 @@ class System(System_Base):
                           and any(proj.has_learning_projection and self in proj.receiver.owner.systems
                                   for proj in sample_mech.output_state.efferents)
                     ):
-
                         _assign_error_signal_projections(sample_mech, self, obj_mech)
-                        obj_mech_replaced = True
+                    # MODIFIED 5/12/18 OLD:
+                        # obj_mech_replaced = True
+                    # MODIFIED 5/12/18 NEW:
+                    obj_mech_replaced = True
+                    # MODIFIED 5/12/18 END
 
             # FIX: TEST FOR CROSSING:
             # FIX:  (LEARNINGMECHANISM FOR INTERNAL MECHANISM THAT HAS >1 PROJECTION TO MECHANISMS IN THE SAME SYSTEM
@@ -1769,7 +1764,11 @@ class System(System_Base):
                     receiver = projection.receiver.owner
 
                     if obj_mech_replaced:
-                        ignore, senders = _get_learning_mechanisms(sample_mech, self)
+                        # MODIFIED 5/12/18 OLD:
+                        # ignore, senders = _get_learning_mechanisms(sample_mech, self)
+                        # MODIFIED 5/12/18 NEW:
+                        ignore, senders = _get_learning_mechanisms(sample_mech, process)
+                        # MODIFIED 5/12/18 END
                     else:
                         senders = [sender_mech]
 
