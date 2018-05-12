@@ -3384,16 +3384,19 @@ class System(System_Base):
         However, the **show_mechanism_structure** argument can be used to display more detailed information about
         each Mechanism, including its States and, optionally, the `function <Component.function>` and `value
         <Component.value>` of the Mechanism and each of its States (using the **show_functions** and **show_values**
-        arguments, respectively).  In addition, the **show_learning** and **show_control** arguments can be used to
+        arguments, respectively).  The **show_dimension** argument can be used to display the dimensions of each
+        Mechanism and Projection.  The **show_processes** argument arranges Mechanisms and Projections into the
+        Processes to which they belong. The **show_learning** and **show_control** arguments can be used to
         show the Components associated with `learning <LearningMechanism>` and those associated with the
-        System's `controller <System_Control>`. `Mechanisms <Mechanism>` are always displayed as nodes.  If
-        **show_mechanism_structure** is `True`, Mechanism nodes are subdivided into sections for its States with
-        information about each determined by the **show_values** and **show_functions** specifications.  Otherwise,
-        Mechanism nodes are simple ovals.  `ORIGIN` and  `TERMINAL` Mechanisms of the System are displayed with
-        thicker borders in a colors specified for each. `Projections <Projection>` are displayed as labelled arrows,
-        unless **show_learning** is assigned **True**, in which case MappingProjections that receive a
-        `LearningProjection` are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism
-        node indicate its dimensionality.
+        System's `controller <System_Control>`.
+
+        `Mechanisms <Mechanism>` are always displayed as nodes.  If **show_mechanism_structure** is `True`,
+        Mechanism nodes are subdivided into sections for its States with information about each determined by the
+        **show_values** and **show_functions** specifications.  Otherwise, Mechanism nodes are simple ovals.
+        `ORIGIN` and  `TERMINAL` Mechanisms of the System are displayed with thicker borders in a colors specified
+        for each. `Projections <Projection>` are displayed as labelled arrows, unless **show_learning** is specified,
+        in which case `MappingProjections <MappingProjection> are displayed as diamond-shaped nodes, and any
+        `LearningProjections <LearningProjecction>` as labelled arrows that point to them.
 
         COMMENT:
         node shapes: https://graphviz.gitlab.io/_pages/doc/info/shapes.html
