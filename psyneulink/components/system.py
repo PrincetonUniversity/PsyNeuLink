@@ -3301,15 +3301,20 @@ class System(System_Base):
         else:
             return self.controller.control_signals
 
-    def _get_label(self, item, show_dimensions=False, show_role=False):
+    def _get_label(self, item, show_dimensions=None, show_role=None):
 
         # For Mechanisms, show length of each InputState and OutputState
         if isinstance(item, Mechanism):
             if show_role:
                 try:
-                    name = "{}\n{}".format(item.name, item.systems[self])
+                    role = item.systems[self]
+                    role = role or ""
                 except KeyError:
-                    name = "{}\n{}".format(item.name, item.system)
+                    if isinstance(item, ControlMechanism) and hasattr(item, 'system'):
+                        role = 'CONTROLLER'
+                    else:
+                        role = ""
+                name = "{}\n{}".format(item.name, role)
             else:
                 name = item.name
 
@@ -3348,6 +3353,7 @@ class System(System_Base):
             raise SystemError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
 
     def show_graph(self,
+                   show_processes = False,
                    show_learning = False,
                    show_control = False,
                    show_roles = False,
@@ -3378,16 +3384,19 @@ class System(System_Base):
         However, the **show_mechanism_structure** argument can be used to display more detailed information about
         each Mechanism, including its States and, optionally, the `function <Component.function>` and `value
         <Component.value>` of the Mechanism and each of its States (using the **show_functions** and **show_values**
-        arguments, respectively).  In addition, the **show_learning** and **show_control** arguments can be used to
+        arguments, respectively).  The **show_dimension** argument can be used to display the dimensions of each
+        Mechanism and Projection.  The **show_processes** argument arranges Mechanisms and Projections into the
+        Processes to which they belong. The **show_learning** and **show_control** arguments can be used to
         show the Components associated with `learning <LearningMechanism>` and those associated with the
-        System's `controller <System_Control>`. `Mechanisms <Mechanism>` are always displayed as nodes.  If
-        **show_mechanism_structure** is `True`, Mechanism nodes are subdivided into sections for its States with
-        information about each determined by the **show_values** and **show_functions** specifications.  Otherwise,
-        Mechanism nodes are simple ovals.  `ORIGIN` and  `TERMINAL` Mechanisms of the System are displayed with
-        thicker borders in a colors specified for each. `Projections <Projection>` are displayed as labelled arrows,
-        unless **show_learning** is assigned **True**, in which case MappingProjections that receive a
-        `LearningProjection` are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism
-        node indicate its dimensionality.
+        System's `controller <System_Control>`.
+
+        `Mechanisms <Mechanism>` are always displayed as nodes.  If **show_mechanism_structure** is `True`,
+        Mechanism nodes are subdivided into sections for its States with information about each determined by the
+        **show_values** and **show_functions** specifications.  Otherwise, Mechanism nodes are simple ovals.
+        `ORIGIN` and  `TERMINAL` Mechanisms of the System are displayed with thicker borders in a colors specified
+        for each. `Projections <Projection>` are displayed as labelled arrows, unless **show_learning** is specified,
+        in which case `MappingProjections <MappingProjection> are displayed as diamond-shaped nodes, and any
+        `LearningProjections <LearningProjecction>` as labelled arrows that point to them.
 
         COMMENT:
         node shapes: https://graphviz.gitlab.io/_pages/doc/info/shapes.html
@@ -3436,6 +3445,12 @@ class System(System_Base):
 
         Arguments
         ---------
+
+        show_processes : bool : False
+            specifies whether to organize the `ProcessingMechanisms <ProcessMechanism>` into the `Processes <Process>`
+            to which they belong, with each Process shown in its own box.  If a Component belongs to more than one
+            Process, it is shown in a separate box along with any others that belong to the same combination of
+            Processes;  these represent intersections of Processes within the System.
 
         show_mechanism_structure : bool, VALUES, FUNCTIONS or ALL : default False
             specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
@@ -3601,6 +3616,7 @@ class System(System_Base):
         default_node_color = 'black'
         mechanism_shape = 'oval'
         projection_shape = 'diamond'
+        # projection_shape = 'point'
         # projection_shape = 'Mdiamond'
         # projection_shape = 'hexagon'
 
@@ -3608,6 +3624,11 @@ class System(System_Base):
         default_width = '1'
 
         pos = None
+
+        origin_rank = 'source'
+        control_rank = 'min'
+        terminal_rank = 'max'
+        learning_rank = 'sink'
 
         # build graph and configure visualisation settings
         G = gv.Digraph(
@@ -3634,11 +3655,15 @@ class System(System_Base):
                     'overlap' : "False"
                 },
         )
+        # G.attr(compound = 'True')
 
-        # parse system graph
-        rcvrs = list(system_graph.keys())
-        # loop through receivers
-        for rcvr in rcvrs:
+        tc.typecheck
+        def _assign_processing_components(G, sg, rcvr,
+                                          processes:tc.optional(list)=None,
+                                          subgraphs:tc.optional(dict)=None):
+            '''Assign nodes to graph, or subgraph for rcvr in any of the specified **processes** '''
+
+            from psyneulink.library.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
             rcvr_rank = 'same'
             # Set rcvr color and penwidth info
@@ -3651,10 +3676,11 @@ class System(System_Base):
             elif ORIGIN in rcvr.systems[self]:
                 rcvr_color = origin_color
                 rcvr_penwidth = bold_width
-                rcvr_rank = "source"
+                rcvr_rank = origin_rank
             elif TERMINAL in rcvr.systems[self]:
                 rcvr_color = terminal_color
                 rcvr_penwidth = bold_width
+                rcvr_rank = terminal_rank
             else:
                 rcvr_color = default_node_color
                 rcvr_penwidth = default_width
@@ -3662,18 +3688,17 @@ class System(System_Base):
             # Implement rcvr node
             rcvr_label=self._get_label(rcvr, show_dimensions, show_roles)
             if show_mechanism_structure:
-                G.node(rcvr_label,
-                       rcvr.show_structure(**mech_struct_args),
-                       color=rcvr_color,
-                       rank=rcvr_rank,
-                       penwidth=rcvr_penwidth)
+                sg.node(rcvr_label,
+                        rcvr.show_structure(**mech_struct_args),
+                        color=rcvr_color,
+                        rank=rcvr_rank,
+                        penwidth=rcvr_penwidth)
             else:
-                G.node(rcvr_label,
-                       shape=mechanism_shape,
-                       color=rcvr_color,
-                       rank=rcvr_rank,
-                       penwidth=rcvr_penwidth)
-
+                sg.node(rcvr_label,
+                        shape=mechanism_shape,
+                        color=rcvr_color,
+                        rank=rcvr_rank,
+                        penwidth=rcvr_penwidth)
             # handle auto-recurrent projections
             for input_state in rcvr.input_states:
                 for proj in input_state.path_afferents:
@@ -3698,230 +3723,278 @@ class System(System_Base):
                             proj_color = active_color
                         else:
                             proj_color = default_node_color
-                        G.node(edge_label, shape=projection_shape, color=proj_color)
+                        sg.node(edge_label, shape=projection_shape, color=proj_color)
                         G.edge(sndr_proj_label, edge_label, arrowhead='none')
                         G.edge(edge_label, rcvr_proj_label)
                     else:
                         # show projection as edge
                         G.edge(sndr_proj_label, rcvr_proj_label, label=edge_label)
 
-            # loop through senders to implment edges
+            # if rcvr is a LearningMechanism or an ObjectiveMechanism used for control:
+            #    break, as those handled below
+            if isinstance(rcvr, LearningMechanism):
+                return
+            # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
+            if isinstance(rcvr, ObjectiveMechanism) and rcvr.controller is True:
+                return
+
+            # loop through senders to implement edges
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
+                if not processes or any(p in processes for p in sndr.processes.keys()):
 
                 # Set sndr info
-                sndr_label = self._get_label(sndr, show_dimensions, show_roles)
+
+                    sndr_label = self._get_label(sndr, show_dimensions, show_roles)
                 if sndr is active_item:
                     sndr_color = active_color
                 else:
                     sndr_color = default_node_color
 
-                # find edge name
-                for output_state in sndr.output_states:
-                    projs = output_state.efferents
-                    for proj in projs:
-                        if proj.receiver.owner == rcvr:
-                            if show_mechanism_structure:
-                                sndr_proj_label = '{}:{}-{}'.format(sndr_label, OutputState.__name__, proj.sender.name)
-                                rcvr_proj_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
-                            else:
-                                sndr_proj_label = sndr_label
-                                rcvr_proj_label = rcvr_label
-                            edge_name = self._get_label(proj, show_dimensions, show_roles)
-                            # edge_shape = proj.matrix.shape
-                            try:
-                                has_learning = proj.has_learning_projection
-                            except AttributeError:
-                                has_learning = None
-                edge_label = edge_name
+                    # find edge name
+                    for output_state in sndr.output_states:
+                        projs = output_state.efferents
+                        for proj in projs:
+                            if proj.receiver.owner == rcvr:
+                                if show_mechanism_structure:
+                                    sndr_proj_label = '{}:{}-{}'.format(sndr_label, OutputState.__name__, proj.sender.name)
+                                    rcvr_proj_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                else:
+                                    sndr_proj_label = sndr_label
+                                    rcvr_proj_label = rcvr_label
+                                edge_name = self._get_label(proj, show_dimensions, show_roles)
+                                # edge_shape = proj.matrix.shape
+                                try:
+                                    has_learning = proj.has_learning_projection
+                                except AttributeError:
+                                    has_learning = None
+                    edge_label = edge_name
 
-                # if rcvr is a LearningMechanism or an ObjectiveMechanism used for control:
-                #    break, as those handled below
-                if isinstance(rcvr, LearningMechanism):
-                    break
-                # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
-                if isinstance(rcvr, ObjectiveMechanism) and rcvr.controller is True:
-                    break
-
-                # Render projections
-                if proj is active_item:
-                    proj_color = active_color
-                else:
-                    proj_color = default_node_color
-
-                if show_learning and has_learning:
-                    # Render Projection as node
-                    # Note: Projections can't yet use structured nodes:
-                    G.node(edge_label, shape=projection_shape, color=proj_color)
-                    # Edges to and from Projection node
-                    G.edge(sndr_proj_label, edge_label, arrowhead='none', color=proj_color)
-                    G.edge(edge_label, rcvr_proj_label, color=proj_color)
-                else:
-                    # Render Projection normally (as edge)
-                    if show_projection_labels:
-                        label = edge_label
+                    # Render projections
+                    if proj is active_item:
+                        proj_color = active_color
                     else:
-                        label = ''
-                    G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
+                        proj_color = default_node_color
+                    proj_label = edge_label
 
-        # Add learning-related Components to graph if show_learning
-        if show_learning:
-            rcvrs = list(learning_graph.keys())
-            for rcvr in rcvrs:
+                    if show_learning and has_learning:
+                        # Render Projection as node
+                        # Note: Projections can't yet use structured nodes:
 
-                # Get rcvr info
-                rcvr_label = self._get_label(rcvr, show_dimensions, show_roles)
+                        # If the recvr is the last Mechanism in a learning sequence in any of the processes passed in,
+                        #     assignment of nodes for Projections to it will be taken care of below
+                        #     to insure that they are assigned to the Process(es) from which they originate
+                        if processes:
+                            # Get any processes to which recvr belongs
+                            procs = list(set(proj.sender.owner.processes.keys()).intersection(processes))
+                            # If recvr projects to any ComparatorMechanism used for learning in the same Process as rcvr
+                            if (any(isinstance(proj.receiver.owner, ComparatorMechanism)
+                                   and proj.receiver.owner._role == LEARNING
+                                   and set(procs).intersection(proj.receiver.owner.processes)
+                                   for proj in rcvr.efferents)):
+                                continue
+
+                        sg.node(proj_label, shape=projection_shape, color=proj_color)
+                        # Edges to and from Projection node
+                        G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
+                        G.edge(proj_label, rcvr_proj_label, color=proj_color)
+
+                    else:
+                        # Render Projection normally (as edge)
+                        if show_projection_labels:
+                            label = proj_label
+                        else:
+                            label = ''
+                        G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
+
+            # Add node for Projection to the last Mechanism in a learning sequence in its originating Process
+            # (i.e., the Process to which its sender belongs)
+            if show_learning and processes:
+                # If the subgraph is for more than one Process (i.e., it is an intersection of Processes)
+                #    then skip, as the point is to assign the Projection node to the single Process to which it belongs
+                if len(processes)>1:
+                    return
+                # Get current Process of ones to which rcvr belongs
+                proc = set(rcvr.processes.keys()).intersection(processes).pop()
+                # Check whether the rcvr projects to any Mechanism that is the last in a learning sequence
+                for proj in rcvr.efferents:
+                    try:
+                        # If recvr projects to a ComparatorMecchanism used for Learning in the same Process as the recvr
+                        if (any(isinstance(p.receiver.owner, ComparatorMechanism)
+                               and p.receiver.owner._role == LEARNING
+                               and proc in p.receiver.owner.processes
+                               for p in proj.receiver.owner.efferents)):
+                            proj_label = self._get_label(proj, show_dimensions, show_roles)
+                            sndr_label = self._get_label(proj.sender.owner, show_dimensions, show_roles)
+                            rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
+                            sg.node(proj_label, shape=projection_shape)
+                            G.edge(sndr_label, proj_label, arrowhead='none')
+                            G.edge(proj_label, rcvr_label)
+                    except KeyError:
+                        pass
+
+        tc.typecheck
+        def _assign_learning_components(G, sg, rcvr, processes:tc.optional(list)=None):
+            '''Assign learning nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
+
+            # Get rcvr info
+            rcvr_label = self._get_label(rcvr, show_dimensions, show_roles)
+            if rcvr is active_item:
+                rcvr_color = active_color
+            else:
+                rcvr_color = learning_color
+
+            # if rcvr is projection (i.e., recipient of a LearningProjection)
+            if isinstance(rcvr, MappingProjection):
+                # for each sndr of rcvr
+                sndrs = learning_graph[rcvr]
+                for sndr in sndrs:
+                    sndr_label = self._get_label(sndr, show_dimensions, show_roles)
+                    if show_projection_labels:
+                        edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
+                    else:
+                        edge_label = ''
+                    # # Assign edge to subgraph or current Process if its sender and receiver are both in the same Process
+                    # if set(sndr.processes).intersection(rcvr.sender.owner.processes):
+                    #     graph = g
+                    # # Otherwise, assign it to the main graph
+                    # else:
+                    #     graph = G
+                    if show_mechanism_structure:
+                        G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                               self._get_label(rcvr, show_dimensions, show_roles),
+                               label=edge_label,
+                               color=rcvr_color)
+                    else:
+                        G.edge(self._get_label(sndr, show_dimensions, show_roles),
+                               self._get_label(rcvr, show_dimensions, show_roles),
+                               label = edge_label,
+                               color=rcvr_color)
+
+            # rcvr is a LearningMechanism or ComparatorMechanism
+            else:
+                if self not in rcvr.systems:
+                    return
+
+                # Implement node for LearningMechanism
                 if rcvr is active_item:
                     rcvr_color = active_color
                 else:
                     rcvr_color = learning_color
 
-                # if rcvr is projection (i.e., recipient of a LearningProjection)
-                if isinstance(rcvr, MappingProjection):
-                    # for each sndr of rcvr
-                    sndrs = learning_graph[rcvr]
-                    for sndr in sndrs:
-                        sndr_label = self._get_label(sndr, show_dimensions, show_roles)
-                        if show_projection_labels:
-                            edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
-                        else:
-                            edge_label = ''
-                        if show_mechanism_structure:
-                            G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
-                                   self._get_label(rcvr, show_dimensions, show_roles),
-                                   label=edge_label,
-                                   color=rcvr_color)
-                        else:
-                            G.edge(self._get_label(sndr, show_dimensions, show_roles),
-                                   self._get_label(rcvr, show_dimensions, show_roles),
-                                   label = edge_label,
-                                   color=rcvr_color)
-
-                # rcvr is a LearningMechanism or ComparatorMechanism
+                if show_mechanism_structure:
+                    sg.node(rcvr_label,
+                           rcvr.show_structure(**mech_struct_args),
+                           color=rcvr_color)
                 else:
-                    if self not in rcvr.systems:
-                        continue
+                    sg.node(rcvr_label,
+                           color=rcvr_color,
+                           shape=mechanism_shape)
 
-                    # Implement node for LearningMechanism
-                    if rcvr is active_item:
-                        rcvr_color = active_color
-                    else:
-                        rcvr_color = learning_color
+                # Implement edges for Projections to LearningMechanism
+                #    from other LearningMechanisms and from ProcessingMechanisms if 'ALL' is set
+                for input_state in rcvr.input_states:
+                    for proj in input_state.path_afferents:
 
-                    if show_mechanism_structure:
-                        G.node(rcvr_label,
-                               rcvr.show_structure(**mech_struct_args),
-                               color=rcvr_color)
-                    else:
-                        G.node(rcvr_label,
-                               color=rcvr_color,
-                               shape=mechanism_shape)
+                        if proj is active_item:
+                            learning_proj_color = active_color
+                        else:
+                            learning_proj_color = learning_color
 
-                    # Implement edges for Projections to LearningMechanism
-                    #    from other LearningMechanisms and from ProcessingMechanisms if 'ALL' is set
-                    for input_state in rcvr.input_states:
-                        for proj in input_state.path_afferents:
+                        # Get sndr info
+                        sndr = proj.sender.owner
+                        sndr_label = self._get_label(sndr, show_dimensions, show_roles)
+                        if sndr is active_item:
+                            sndr_color = active_color
+                        else:
+                            sndr_color = learning_color
 
-                            if proj is active_item:
-                                learning_proj_color = active_color
+                        # If Projection is not from another learning component
+                        #    only show if ALL is set, and don't color
+                        if (isinstance(sndr, LearningMechanism) or
+                            (isinstance(sndr, ObjectiveMechanism)
+                             and sndr._role is LEARNING
+                             and self in sndr.systems)):
+
+                            if show_mechanism_structure:
+                                sg.node(self._get_label(sndr, show_dimensions, show_roles),
+                                       sndr.show_structure(**mech_struct_args),
+                                       color=sndr_color)
                             else:
-                                learning_proj_color = learning_color
+                                sg.node(self._get_label(sndr, show_dimensions, show_roles),
+                                       shape=mechanism_shape,
+                                       color=sndr_color)
+                        else:
+                            if not show_learning is ALL:
+                                continue
 
-                            # Get sndr info
-                            sndr = proj.sender.owner
-                            sndr_label = self._get_label(sndr, show_dimensions, show_roles)
-                            if sndr is active_item:
-                                sndr_color = active_color
+                        if self in sndr.systems:
+                            if show_projection_labels:
+                                edge_label = proj.name
                             else:
-                                sndr_color = learning_color
-
-                            # If Projection is not from another learning component
-                            #    only show if ALL is set, and don't color
-                            if (isinstance(sndr, LearningMechanism) or
-                                (isinstance(sndr, ObjectiveMechanism)
-                                 and sndr._role is LEARNING
-                                 and self in sndr.systems)):
-
-                                if show_mechanism_structure:
-                                    G.node(self._get_label(sndr,show_dimensions,show_roles),
-                                           sndr.show_structure(**mech_struct_args),
-                                           color=sndr_color)
-                                else:
-                                    G.node(self._get_label(sndr,show_dimensions,show_roles),
-                                           shape=mechanism_shape,
-                                           color=sndr_color)
+                                edge_label = ''
+                            if show_mechanism_structure:
+                                G.edge(sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
+                                       rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                                       label=edge_label,
+                                       color=learning_proj_color)
                             else:
-                                if not show_learning is ALL:
-                                    continue
+                                G.edge(sndr_label, rcvr_label, label=edge_label, color=learning_proj_color)
 
-                            if self in sndr.systems:
-                                if show_projection_labels:
-                                    edge_label = proj.name
-                                else:
-                                    edge_label = ''
-                                if show_mechanism_structure:
-                                    G.edge(sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
-                                           rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
-                                           label=edge_label,
-                                           color=learning_proj_color)
-                                else:
-                                    G.edge(sndr_label, rcvr_label, label=edge_label, color=learning_proj_color)
+                        # Get Projections to ComparatorMechanism as well
+                        if (isinstance(sndr, ObjectiveMechanism)
+                                and self in sndr.systems
+                                and sndr._role is LEARNING
+                                and show_learning is ALL):
+                            for input_state in sndr.input_states:
+                                for proj in input_state.path_afferents:
 
-                            # Get Projections to ComparatorMechanism as well
-                            if (isinstance(sndr, ObjectiveMechanism)
-                                    and self in sndr.systems
-                                    and sndr._role is LEARNING
-                                    and show_learning is ALL):
-                                for input_state in sndr.input_states:
-                                    for proj in input_state.path_afferents:
+                                    smpl_or_trgt_src = proj.sender.owner
 
-                                        smpl_or_trgt_src = proj.sender.owner
+                                    # Skip any Projections from ProcesInputStates
+                                    if isinstance(smpl_or_trgt_src, Process):
+                                        continue
 
-                                        # Skip any Projections from ProcesInputStates
-                                        if isinstance(smpl_or_trgt_src, Process):
-                                            continue
+                                    # Projection is from System
+                                    # Create node for System "targets" input
+                                    # Note: Mechanism.show_structure is not called for SystemInterfaceMechanism
+                                    elif isinstance(smpl_or_trgt_src, System):
 
-                                        # Projection is from System
-                                        # Create node for System "targets" input
-                                        # Note: Mechanism.show_structure is not called for SystemInterfaceMechanism
-                                        elif isinstance(smpl_or_trgt_src, System):
-
-                                            if smpl_or_trgt_src is active_item:
-                                                smpl_or_trgt_src_color = active_color
-                                            else:
-                                                smpl_or_trgt_src_color = system_color
-
-                                            G.node(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
-                                                   color=smpl_or_trgt_src_color,
-                                                   penwidth='3')
-
-                                        if proj is active_item:
-                                            learning_proj_color = active_item
+                                        if smpl_or_trgt_src is active_item:
+                                            smpl_or_trgt_src_color = active_color
                                         else:
-                                            learning_proj_color = learning_color
+                                            smpl_or_trgt_src_color = system_color
 
-                                        if show_projection_labels:
-                                            edge_label = proj.name
-                                        else:
-                                            edge_label = ''
+                                        sg.node(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
+                                               color=smpl_or_trgt_src_color,
+                                               penwidth='3')
 
-                                        if show_mechanism_structure and not isinstance(smpl_or_trgt_src, System):
-                                            G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
-                                                       + ':' + OutputState.__name__ + '-' + proj.sender.name,
-                                                   self._get_label(proj.receiver.owner, show_dimensions, show_roles)
-                                                       + ':' + InputState.__name__ + '-' + proj.receiver.name,
-                                                   label=edge_label,
-                                                   color=learning_proj_color)
-                                        else:
-                                            G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
-                                                   self._get_label(proj.receiver.owner, show_dimensions, show_roles)
-                                                       + ':' + InputState.__name__ + '-' + proj.receiver.name,
-                                                   color=learning_proj_color,
-                                                   label=edge_label)
+                                    if proj is active_item:
+                                        learning_proj_color = active_item
+                                    else:
+                                        learning_proj_color = learning_color
 
+                                    if show_projection_labels:
+                                        edge_label = proj.name
+                                    else:
+                                        edge_label = ''
 
-        # Add control-related Components to graph if show_control
-        if show_control:
+                                    if show_mechanism_structure and not isinstance(smpl_or_trgt_src, System):
+                                        G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
+                                                   + ':' + OutputState.__name__ + '-' + proj.sender.name,
+                                               self._get_label(proj.receiver.owner, show_dimensions, show_roles)
+                                                   + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                                               label=edge_label,
+                                               color=learning_proj_color)
+                                    else:
+                                        G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
+                                               self._get_label(proj.receiver.owner, show_dimensions, show_roles)
+                                                   + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                                               color=learning_proj_color,
+                                               label=edge_label)
+
+        def _assign_control_components(G, sg):
+            '''Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
 
             controller = self.controller
             if controller is active_item:
@@ -3951,17 +4024,21 @@ class System(System_Base):
             ctlr_label = self._get_label(controller, show_dimensions, show_roles)
             objmech_label = self._get_label(objmech, show_dimensions, show_roles)
             if show_mechanism_structure:
-                G.node(ctlr_label,
+                sg.node(ctlr_label,
                        controller.show_structure(**mech_struct_args),
-                       color=ctlr_color)
-                G.node(objmech_label,
+                       color=ctlr_color,
+                       rank = control_rank
+                       )
+                sg.node(objmech_label,
                        objmech.show_structure(**mech_struct_args),
-                       color=objmech_color)
+                       color=objmech_color,
+                       rank = control_rank
+                       )
             else:
                 ctlr_label = self._get_label(controller, show_dimensions, show_roles)
                 objmech_label = self._get_label(objmech, show_dimensions, show_roles)
-                G.node(ctlr_label, color=ctlr_color, shape=mechanism_shape)
-                G.node(objmech_label, color=objmech_color, shape=mechanism_shape)
+                sg.node(ctlr_label, color=ctlr_color, shape=mechanism_shape, rank=control_rank)
+                sg.node(objmech_label, color=objmech_color, shape=mechanism_shape, rank=control_rank)
 
             # objmech to controller edge
             if show_projection_labels:
@@ -4001,7 +4078,7 @@ class System(System_Base):
                            label=edge_label,
                            color=proj_color)
 
-            # incoming edges (from monitored mechs to objective mechanism
+            # incoming edges (from monitored mechs to objective mechanism)
             for input_state in objmech.input_states:
                 for projection in input_state.path_afferents:
                     if projection is active_item:
@@ -4029,7 +4106,7 @@ class System(System_Base):
                     pred_mech_color = prediction_mechanism_color
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
                     recvr = mech.origin_mech
-
+                    recvr_label = self._get_label(recvr, show_dimensions, show_roles)
                     # IMPLEMENTATION NOTE:
                     #     THIS IS HERE FOR FUTURE COMPATIBILITY WITH FULL IMPLEMENTATION OF PredictionMechanisms
                     if show_mechanism_structure and False:
@@ -4038,22 +4115,113 @@ class System(System_Base):
                             pred_proj_color = active_color
                         else:
                             pred_proj_color = prediction_mechanism_color
-                        G.node(mech.name,
+                        sg.node(mech.name,
                                shape=mech.show_structure(**mech_struct_args),
                                color=pred_mech_color)
 
                         G.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
-                               rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                               recvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
                                label=' prediction assignment',
                                color=pred_proj_color)
                     else:
-                        G.node(self._get_label(mech, show_dimensions, show_roles),
-                               color=pred_mech_color, shape=mechanism_shape)
+                        sg.node(self._get_label(mech, show_dimensions, show_roles),
+                                color=pred_mech_color, shape=mechanism_shape)
                         G.edge(self._get_label(mech, show_dimensions, show_roles),
-                               self._get_label(recvr, show_dimensions, show_roles),
+                               recvr_label,
                                label=' prediction assignment',
                                color=prediction_mechanism_color)
                     pass
+
+        # get System's ProcessingMechanisms
+        rcvrs = list(system_graph.keys())
+        learning_rcvrs = list(learning_graph.keys())
+
+        # MANAGE ProcessMechanisms
+
+        # if show_processes is specified, create subgraphs for each Process
+        if show_processes:
+
+            # Manage Processes
+            process_intersections = {}
+            subgraphs = {}  # Entries: Process:sg
+            for process in self.processes:
+                subgraph_name = 'cluster_'+process.name
+                subgraph_label = process.name
+                with G.subgraph(name=subgraph_name) as sg:
+                    subgraphs[process.name]=sg
+                    sg.attr(label=subgraph_label)
+                    sg.attr(rank = 'same')
+                    # sg.attr(style='filled')
+                    # sg.attr(color='lightgrey')
+
+                    # loop through receivers and assign to the subgraph any that belong to the current Process
+                    for r in rcvrs:
+                        intersection = [p for p in self.processes if p in r.processes]
+                        # If the rcvr is in only one Process, add it to the subgraph for that Process
+                        if len(intersection)==1:
+                            # If the rcvr is in the current Process, assign it to the subgraph
+                            if process in intersection:
+                                _assign_processing_components(G, sg, r, [process])
+                        # Otherwise, assign rcvr to entry in dict for process intersection (subgraph is created below)
+                        else:
+                            intersection_name = ' and '.join([p.name for p in intersection])
+                            if not intersection_name in process_intersections:
+                                process_intersections[intersection_name] = [r]
+                            else:
+                                if r not in process_intersections[intersection_name]:
+                                    process_intersections[intersection_name].append(r)
+
+                    # loop through learning Components and assign to the subgraph any that belong to the current Process
+                    if show_learning:
+                        for l in learning_rcvrs:
+                            if isinstance(l, Projection):
+                                processes = l.sender.owner.processes
+                            else:
+                                processes = l.processes
+                            # if [p for p in self.processes if p in processes]:
+                            if process in processes:
+                                _assign_learning_components(G, sg, l, [process])
+                                assert True
+
+            # Create a process for each unique intersection and assign rcvrs to that
+            for intersection_name, mech_list in process_intersections.items():
+                with G.subgraph(name='cluster_'+intersection_name) as sg:
+                    sg.attr(label=intersection_name)
+                    # get list of processes in the intersection (to pass to _assign_processing_components)
+                    processes = [p for p in self.processes if p.name in intersection_name]
+                    # loop through receivers and assign to the subgraph any that belong to the current Process
+                    for r in mech_list:
+                        _assign_processing_components(G, sg, r, processes, subgraphs)
+
+        else:
+            for r in rcvrs:
+                _assign_processing_components(G, G, r)
+            # Add learning-related Components to graph if show_learning
+            if show_learning:
+                for rcvr in learning_rcvrs:
+                    _assign_learning_components(G, G, rcvr)
+
+        # MANAGE LEARNING Components
+
+        # # Add learning-related Components to graph if show_learning
+        # if show_learning:
+        #     rcvrs = list(learning_graph.keys())
+        #     for rcvr in rcvrs:
+        #         _assign_learning_components(G, rcvr)
+
+        # MANAGE CONTROL Components
+
+        # Add control-related Components to graph if show_control
+        if show_control:
+            if show_processes:
+                with G.subgraph(name='cluster_CONTROLLER') as sg:
+                    sg.attr(label='CONTROLLER')
+                    sg.attr(rank='top')
+                    _assign_control_components(G, sg)
+                    # sg.attr(style='filled')
+                    # sg.attr(color='lightgrey')
+            else:
+                _assign_control_components(G)
 
         # return
         if output_fmt == 'pdf':
