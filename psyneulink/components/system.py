@@ -3410,8 +3410,8 @@ class System(System_Base):
 
         show_processes : bool : False
             specifies whether to organize the `ProcessingMechanisms <ProcessMechanism>` into the `Processes <Process>`
-            to which they belong, with each Process shown in its own box.  If one or more Components belongs to more
-            than one Process they are shown in a separate box, one for each unique combination of processes;
+            to which they belong, with each Process shown in its own box.  Any Components that belong to more than
+            one Process are shown in a separate box (along with any others that belong to the same set of Processes);
             these represent intersections of Processes within the System.
 
         show_mechanism_structure : bool, VALUES, FUNCTIONS or ALL : default False
