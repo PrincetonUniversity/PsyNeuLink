@@ -3740,13 +3740,12 @@ class System(System_Base):
                         # Render Projection as node
                         # Note: Projections can't yet use structured nodes:
                         if processes:
-                            # If rcvr is the final one in a learning sequence but it is in an intersection subgraph
-                            #    (len(processes)>1) don't assign the projections to it, as they should already have
+                            # If rcvr is the final one in a learning sequence
+                            #    don't assign the projections to it, as they should already have
                             #    been assigned to their originating Processes (see below)
                             proc = list(set(proj.sender.owner.processes.keys()).intersection(processes))
                             # FIX: CHANGE BELOW TO TEST FOR PROJ TO COMPARATOR THAT IS USED FOR LEARNING
-                            if (rcvr.processes[proc[0]]==TERMINAL and len(processes)>1):
-                            # if rcvr.processes[proc[0]]==TERMINAL:
+                            if rcvr.processes[proc[0]]==TERMINAL:
                                 continue
                         sg.node(proj_label, shape=projection_shape, color=proj_color)
                         # Edges to and from Projection node
