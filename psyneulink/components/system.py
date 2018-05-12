@@ -3739,27 +3739,20 @@ class System(System_Base):
                     if show_learning and has_learning:
                         # Render Projection as node
                         # Note: Projections can't yet use structured nodes:
-
-                        # If the receiver of the Projection is not a TERMINAL Mechanism of the Process,
-                        #     include in current Process
-                        # (if it is a TERMINAL Mechanism, defer to below to assign to sender's Process)
                         if processes:
+                            # If rcvr is the final one in a learning sequence but it is in an intersection subgraph
+                            #    (len(processes)>1) don't assign the projections to it, as they should already have
+                            #    been assigned to their originating Processes (see below)
                             proc = list(set(proj.sender.owner.processes.keys()).intersection(processes))
                             # FIX: CHANGE BELOW TO TEST FOR PROJ TO COMPARATOR THAT IS USED FOR LEARNING
                             if (rcvr.processes[proc[0]]==TERMINAL and len(processes)>1):
+                            # if rcvr.processes[proc[0]]==TERMINAL:
                                 continue
-                            sg.node(proj_label, shape=projection_shape, color=proj_color)
-                            # sg.node(proj_label, shape=None, size='0,0', style='invisible')
-                            # Edges to and from Projection node
-                            G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
-                            G.edge(proj_label, rcvr_proj_label, color=proj_color)
-                            # MODIFIED 5/11/18 END
-                        else:
-                            sg.node(proj_label, shape=projection_shape, color=proj_color)
-                            # sg.node(proj_label, shape=None, size='0,0', style='invisble')
-                            # Edges to and from Projection node
-                            G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
-                            G.edge(proj_label, rcvr_proj_label, color=proj_color)
+                        sg.node(proj_label, shape=projection_shape, color=proj_color)
+                        # Edges to and from Projection node
+                        G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
+                        G.edge(proj_label, rcvr_proj_label, color=proj_color)
+
 
                     else:
                         # Render Projection normally (as edge)
