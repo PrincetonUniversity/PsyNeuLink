@@ -3959,8 +3959,7 @@ class System(System_Base):
                                            color=learning_proj_color)
                                 else:
                                     G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
-                                           self._get_label(proj.receiver.owner, show_dimensions, show_roles)
-                                               + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                                           self._get_label(proj.receiver.owner, show_dimensions, show_roles),
                                            color=learning_proj_color,
                                            label=edge_label)
                     return
