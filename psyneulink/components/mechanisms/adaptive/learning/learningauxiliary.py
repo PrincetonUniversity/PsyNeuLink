@@ -666,7 +666,6 @@ def _instantiate_error_signal_projection(sender, receiver):
 
 
 @tc.typecheck
-# MODIFIED 5/12/18 OLD:
 def _get_learning_mechanisms(mech:Mechanism, composition=None):
     """Return LearningMechanisms for all Projections to and from the specified Mechanism.
 
@@ -687,12 +686,10 @@ def _get_learning_mechanisms(mech:Mechanism, composition=None):
         raise LearningAuxiliaryError("composition argument for _get_learing_mechanisms ({}) must be a {} or {}".
                                      format(composition, Process.__name__, System.__name__))
 
-    # MODIFIED 5/12/18 NEW:
     if isinstance(composition, Process):
         composition_attrib = 'processes'
     elif isinstance(composition, System):
         composition_attrib = 'systems'
-    # MODIFIED 5/12/18 END
 
     for projection in mech.path_afferents:
         if projection.has_learning_projection and (composition is None
@@ -702,10 +699,8 @@ def _get_learning_mechanisms(mech:Mechanism, composition=None):
             aff.extend([learning_projection.sender.owner
                         for learning_projection in projection.parameter_states[MATRIX].mod_afferents
                         if isinstance(learning_projection, LearningProjection)
-                        # MODIFIED 5/12/18 NEW:
                         and (not composition or composition in getattr(learning_projection.sender.owner,
                                                                        composition_attrib))
-                        # MODIFIED 5/12/18 END
                         ])
 
     for projection in mech.efferents:
@@ -715,22 +710,16 @@ def _get_learning_mechanisms(mech:Mechanism, composition=None):
             eff.extend([learning_projection.sender.owner
                         for learning_projection in projection.parameter_states[MATRIX].mod_afferents
                         if isinstance(learning_projection, LearningProjection)
-                        # MODIFIED 5/12/18 NEW:
                         and (not composition or composition in getattr(learning_projection.sender.owner,
                                                                        composition_attrib))
-                        # MODIFIED 5/12/18 END
                        ])
     return aff, eff
 
 
-# # MODIFIED 5/12/18 OLD:
-# def _assign_error_signal_projections(processing_mech, system=None, process=None, objective_mech=None):
-# MODIFIED 5/12/18 NEW:
 def _assign_error_signal_projections(processing_mech:Mechanism,
                                      system,
                                      scope=None,
                                      objective_mech:tc.optional(ObjectiveMechanism)=None):
-# MODIFIED 5/12/18 END
     """Assign appropriate error_signal Projections to LearningMechanisms for processing_mechanism's afferents.
 
     Assign an error_signal Projection to the LearningMechanism for each afferent Projection of processing_mechanism
@@ -763,16 +752,7 @@ def _assign_error_signal_projections(processing_mech:Mechanism,
     composition = scope
 
     # Get all LearningMechanisms for Projection to and from sample_mech (processing_mechanism)
-    # # MODIFIED 5/12/18 OLD:
-    # afferent_learning_mechs, efferent_learning_mechs = _get_learning_mechanisms(processing_mech, system)
-    # # MODIFIED 5/12/18 NEW:
-    # if process:
-    #     afferent_learning_mechs, efferent_learning_mechs = _get_learning_mechanisms(processing_mech, process)
-    # else:
-    #     afferent_learning_mechs, efferent_learning_mechs = _get_learning_mechanisms(processing_mech, system)
-    # MODIFIED 5/12/18 NEW:
     afferent_learning_mechs, efferent_learning_mechs = _get_learning_mechanisms(processing_mech, scope)
-    # MODIFIED 5/12/18 END
 
     # For the LearningMechanism of each Projection to sample_mech that is being learned
     for aff_lm in afferent_learning_mechs:

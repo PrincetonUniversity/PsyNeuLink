@@ -1690,11 +1690,7 @@ class System(System_Base):
                     #    - obj_mech should NOT be included in the learning_execution_graph and
                     #    - should be replaced with appropriate projections to sample_mechs's afferent LearningMechanisms
                     elif not sample_mech.systems[self] is TERMINAL:
-                        # MODIFIED 5/12/18 OLD:
-                        # _assign_error_signal_projections(sample_mech, system=self, objective_mech=obj_mech)
-                        # MODIFIED 5/12/18 NEW:
                         _assign_error_signal_projections(sample_mech, system=self, scope=self, objective_mech=obj_mech)
-                        # MODIFIED 5/12/18 END
                         # Don't process ObjectiveMechanism any further (since its been replaced)
                         return
 
@@ -1722,7 +1718,6 @@ class System(System_Base):
                                                isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
                         sender_mech = other_obj_mech
                         sender_mech.processes[process]=TARGET
-                        # MODIFIED 5/12/18 NEW:
                         obj_mech_replaced = TERMINAL
                         # Move error_signal Projections from old obj_mech to new one (now sender_mech)
                         for error_signal_proj in obj_mech.output_states[OUTCOME].efferents:
@@ -1730,7 +1725,6 @@ class System(System_Base):
                             MappingProjection(sender=sender_mech, receiver=error_signal_proj.receiver)
                             _assign_error_signal_projections(sample_mech, self, scope=process, objective_mech=obj_mech)
                             # sender_mech.output_states[OUTCOME].efferents.append(error_signal_proj)
-                        # MODIFIED 5/12/18 END
 
                     # INTERNAL CONVERGENCE
                     # None of the mechanisms that project to it are a TERMINAL mechanism
@@ -1744,15 +1738,9 @@ class System(System_Base):
                         _assign_error_signal_projections(processing_mech=sample_mech,
                                                          system=self,
                                                          objective_mech=obj_mech)
-                        # # MODIFIED 5/12/18 OLD:
-                        # obj_mech_replaced = True
-                        # MODIFIED 5/12/18 NEW:
                         obj_mech_replaced = INTERNAL
-                        # MODIFIED 5/12/18 END
 
-                # MODIFIED 5/12/18 NEW:
                 self.learningGraph[sender_mech]=None
-                # MODIFIED 5/12/18 OLD
 
             # FIX: TEST FOR CROSSING:
             # FIX:  (LEARNINGMECHANISM FOR INTERNAL MECHANISM THAT HAS >1 PROJECTION TO MECHANISMS IN THE SAME SYSTEM
@@ -1770,11 +1758,7 @@ class System(System_Base):
                     #    make sure that the LearningMechanisms for all of its afferent Projections being learned
                     #    receive error_signals from the LearningMechanisms of all it afferent Projections being learned.
                     if processing_mech.systems[self] == INTERNAL:
-                        # MODIFIED 5/12/18 OLD:
                         _assign_error_signal_projections(processing_mech, self)
-                        # # MODIFIED 5/12/18 NEW:
-                        # _assign_error_signal_projections(processing_mech)
-                        # MODIFIED 5/12/18 END
 
             # If sender_mech has no Projections left, raise exception
             if not any(any(projection for projection in input_state.path_afferents)
@@ -1789,14 +1773,8 @@ class System(System_Base):
                 for projection in output_state.efferents:
                     receiver = projection.receiver.owner
 
-                    # # MODIFIED 5/12/18 OLD:
-                    # if obj_mech_replaced:
-                    #     ignore, senders = _get_learning_mechanisms(sample_mech, self)
-                    # MODIFIED 5/12/18 NEW:
                     if obj_mech_replaced == INTERNAL:
                         ignore, senders = _get_learning_mechanisms(sample_mech, process)
-                        # senders=[sender_mech]
-                    # MODIFIED 5/12/18 END
                     else:
                         senders = [sender_mech]
 
@@ -3933,7 +3911,6 @@ class System(System_Base):
                             rank=obj_mech_rank,
                             shape=mechanism_shape)
 
-                # MODIFIED 5/12/18 NEW:
                 # Projections to and from ObjectiveMechanism
                 if isinstance(rcvr, ObjectiveMechanism):
                     if (self in rcvr.systems
@@ -3987,7 +3964,6 @@ class System(System_Base):
                                            color=learning_proj_color,
                                            label=edge_label)
                     return
-                # MODIFIED 5/12/18 END
 
                 # Implement edges for Projections to LearningMechanism
                 #    from other LearningMechanisms and from ProcessingMechanisms if 'ALL' is set
@@ -4001,11 +3977,6 @@ class System(System_Base):
 
                         # Get sndr info
                         sndr = proj.sender.owner
-                        # # MODIFIED 5/12/18 NEW:
-                        # if isinstance(sndr, (Process, System)):
-                        #     # ComparatorMechanism, so pass
-                        #     continue
-                        # # MODIFIED 5/12/18 END
                         sndr_label = self._get_label(sndr, show_dimensions, show_roles)
                         if sndr is active_item:
                             sndr_color = active_color
@@ -4044,58 +4015,6 @@ class System(System_Base):
                                        color=learning_proj_color)
                             else:
                                 G.edge(sndr_label, rcvr_label, label=edge_label, color=learning_proj_color)
-
-                        # # Get Projections to ComparatorMechanism as well
-                        # if (isinstance(sndr, ObjectiveMechanism)
-                        #         and self in sndr.systems
-                        #         and sndr._role is LEARNING
-                        #         and show_learning is ALL):
-                        #     for input_state in sndr.input_states:
-                        #         for proj in input_state.path_afferents:
-                        #
-                        #             smpl_or_trgt_src = proj.sender.owner
-                        #
-                        #             # Skip any Projections from ProcesInputStates
-                        #             if isinstance(smpl_or_trgt_src, Process):
-                        #                 continue
-                        #
-                        #             # Projection is from System
-                        #             # Create node for System "targets" input
-                        #             # Note: Mechanism.show_structure is not called for SystemInterfaceMechanism
-                        #             elif isinstance(smpl_or_trgt_src, System):
-                        #
-                        #                 if smpl_or_trgt_src is active_item:
-                        #                     smpl_or_trgt_src_color = active_color
-                        #                 else:
-                        #                     smpl_or_trgt_src_color = system_color
-                        #
-                        #                 sg.node(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
-                        #                        color=smpl_or_trgt_src_color,
-                        #                        penwidth='3')
-                        #
-                        #             if proj is active_item:
-                        #                 learning_proj_color = active_item
-                        #             else:
-                        #                 learning_proj_color = learning_color
-                        #
-                        #             if show_projection_labels:
-                        #                 edge_label = proj.name
-                        #             else:
-                        #                 edge_label = ''
-                        #
-                        #             if show_mechanism_structure and not isinstance(smpl_or_trgt_src, System):
-                        #                 G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
-                        #                            + ':' + OutputState.__name__ + '-' + proj.sender.name,
-                        #                        self._get_label(proj.receiver.owner, show_dimensions, show_roles)
-                        #                            + ':' + InputState.__name__ + '-' + proj.receiver.name,
-                        #                        label=edge_label,
-                        #                        color=learning_proj_color)
-                        #             else:
-                        #                 G.edge(self._get_label(smpl_or_trgt_src, show_dimensions, show_roles),
-                        #                        self._get_label(proj.receiver.owner, show_dimensions, show_roles)
-                        #                            + ':' + InputState.__name__ + '-' + proj.receiver.name,
-                        #                        color=learning_proj_color,
-                        #                        label=edge_label)
 
         def _assign_control_components(G, sg):
             '''Assign control nodes and edges to graph, or subgraph for rcvr in any of the specified **processes** '''
