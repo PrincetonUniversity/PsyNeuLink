@@ -674,8 +674,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     # classPreferences = {
     #     kwPreferenceSetName: 'TransferCustomClassPreferences',
     #     # kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-    #     kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
-    # }
+    #     }
 
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = ProcessingMechanism_Base.paramClassDefaults.copy()

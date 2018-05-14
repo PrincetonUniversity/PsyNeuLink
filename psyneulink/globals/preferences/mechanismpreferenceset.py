@@ -13,14 +13,13 @@
 import inspect
 
 from psyneulink.globals.keywords import NAME, kwPrefLevel, kwPrefsOwner
-from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpLogPref, kpParamValidationPref, kpReportOutputPref, kpRuntimeParamModulationPref, kpRuntimeParamStickyAssignmentPref, kpVerbosePref
+from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpLogPref, kpParamValidationPref, kpReportOutputPref, kpRuntimeParamModulationPref, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import Modulation
 
 __all__ = [
     'MechanismPreferenceSet', 'runtimeParamModulationPrefCategoryDefault', 'runtimeParamModulationPrefInstanceDefault',
-    'runtimeParamModulationPrefTypeDefault', 'runtimeParamStickyAssignmentPrefCategoryDefault',
-    'runtimeParamStickyAssignmentPrefInstanceDefault', 'runtimeParamStickyAssignmentPrefTypeDefault',
+    'runtimeParamModulationPrefTypeDefault'
 ]
 
 # MODIFIED 11/29/16 OLD:
@@ -33,10 +32,6 @@ runtimeParamModulationPrefInstanceDefault = PreferenceEntry(Modulation.OVERRIDE,
 runtimeParamModulationPrefTypeDefault = PreferenceEntry(Modulation.ADD, PreferenceLevel.TYPE)
 # runtimeParamModulationPrefCategoryDefault = PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.CATEGORY)
 runtimeParamModulationPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.CATEGORY)
-
-runtimeParamStickyAssignmentPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-runtimeParamStickyAssignmentPrefTypeDefault = PreferenceEntry(False, PreferenceLevel.TYPE)
-runtimeParamStickyAssignmentPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.CATEGORY)
 
 reportOutputPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 logPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -67,22 +62,6 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
             assigns PreferenceEntry to runtimeParamModulationPref attribute of the owner's Preference object
         - runtimeParamModulationPrefEntry(entry=<PreferenceEntry>):
             returns PreferenceEntry for the runtimeParamModulationPref attribute of the owner's Preference object
-        - RuntimeParamStickyAssignmentPref():
-            returns setting for runtimeParamStickyAssignment preference at level specified in
-            runtimeParamStickyAssignment
-            PreferenceEntry of owner's Preference object
-        - RuntimeParamStickyAssignmentPref(setting=<value>):
-            assigns the value of the setting item in the RuntimeParamStickyAssignmentPref PreferenceEntry of the
-            owner's Preference object
-        - RuntimeParamStickyAssignmentPrefLevel()
-            returns level in the RuntimeParamStickyAssignmentPref PreferenceEntry of the owner's Preference object
-        - RuntimeParamStickyAssignmentPrefLevel(level=<PreferenceLevel>):
-            assigns the value of the level item in the RuntimeParamStickyAssignmentPref PreferenceEntry of the
-            owner's Preference object
-        - RuntimeParamStickyAssignmentPrefEntry():
-            assigns PreferenceEntry to RuntimeParamStickyAssignmentPref attribute of the owner's Preference object
-        - RuntimeParamStickyAssignmentPrefEntry(entry=<PreferenceEntry>):
-            returns PreferenceEntry for the RuntimeParamStickyAssignmentPref attribute of the owner's Preference object
     """
     def __init__(self,
                  owner=None,
@@ -105,10 +84,6 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
                 pass
             try:
                 runtime_param_modulation_pref = kargs[kpRuntimeParamModulationPref]
-            except (KeyError, NameError):
-                pass
-            try:
-                runtime_param_sticky_assignment_pref = kargs[kpRuntimeParamStickyAssignmentPref]
             except (KeyError, NameError):
                 pass
             try:
@@ -141,7 +116,6 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
                                                      name=name)
         # self._report_output_pref = reportOutput_pref
         self._runtime_param_modulation_pref = runtime_param_modulation_pref
-        self._runtime_param_sticky_assignment_pref = runtime_param_sticky_assignment_pref
 
     # runtimeParamModulation entry ------------------------------------------------------------------------------------
 
@@ -216,84 +190,5 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
                   format(entry, self._runtime_param_modulation_pref))
             return
         self._runtime_param_modulation_pref = entry
-
-
-
-    # runtimeParamStickyAssignment entry -------------------------------------------------------------------------------
-
-    @property
-    def runtimeParamStickyAssignmentPref(self):
-        """Returns setting of owner's runtimeParamStickyAssignment pref at level specified in its PreferenceEntry.level
-        :param level:
-        :return:
-        """
-        # If the level of the object is below the Preference level,
-        #    recursively calls base (super) classes to get preference at specified level
-        return self.get_pref_setting_for_level(kpRuntimeParamStickyAssignmentPref,
-                                               self._runtime_param_sticky_assignment_pref.level)[0]
-
-
-    @runtimeParamStickyAssignmentPref.setter
-    def runtimeParamStickyAssignmentPref(self, setting):
-        """Assigns setting to owner's runtimeParamStickyAssignment pref
-        :param setting:
-        :return:
-        """
-        if isinstance(setting, PreferenceEntry):
-            self._runtime_param_sticky_assignment_pref = setting
-
-        # elif not iscompatible(setting, runtimeParamStickyAssignmentPrefInstanceDefault.setting):
-        elif not inspect.isfunction(runtimeParamStickyAssignmentPrefInstanceDefault.setting):
-            print("setting of runtimeParamStickyAssignment preference ({0}) must be a {1} or a function;"
-                  " it will remain unchanged ({2})".
-                  format(setting,
-                         Modulation.__class__.__name__,
-                         self._runtime_param_sticky_assignment_pref.setting))
-            return
-
-        else:
-            self._runtime_param_sticky_assignment_pref = \
-                self._runtime_param_sticky_assignment_pref._replace(setting=setting)
-
-    @property
-    def runtimeParamStickyAssignmentPrefLevel(self):
-        """Returns level for owner's runtimeParamStickyAssignment pref
-        :return:
-        """
-        return self._runtime_param_sticky_assignment_pref.level
-
-    @runtimeParamStickyAssignmentPrefLevel.setter
-    def runtimeParamStickyAssignmentPrefLevel(self, level):
-        """Sets level for owner's runtimeParamStickyAssignment pref
-        :param level:
-        :return:
-        """
-        if not isinstance(level, PreferenceLevel):
-            print("Level of runtimeParamStickyAssignment preference ({0}) must be a PreferenceLevel setting; "
-                  "it will remain unchanged ({1})".
-                  format(level, self._runtime_param_sticky_assignment_pref.setting))
-            return
-        self._runtime_param_sticky_assignment_pref = self._runtime_param_sticky_assignment_pref._replace(level=level)
-
-    @property
-    def runtimeParamStickyAssignmentPrefEntry(self):
-        """Returns owner's runtimeParamStickyAssignment PreferenceEntry tuple (setting, level)
-        :return:
-        """
-        return self._runtime_param_sticky_assignment_pref
-
-    @runtimeParamStickyAssignmentPrefEntry.setter
-    def runtimeParamStickyAssignmentPrefEntry(self, entry):
-        """Assigns runtimeParamStickyAssignment PreferenceEntry to owner
-        :param entry:
-        :return:
-        """
-        if not isinstance(entry, PreferenceEntry):
-            print("runtimeParamStickyAssignmentPrefEntry ({0}) must be a PreferenceEntry; "
-                  "it will remain unchanged ({1})".
-                  format(entry, self._runtime_param_sticky_assignment_pref))
-            return
-        self._runtime_param_sticky_assignment_pref = entry
-
 
 

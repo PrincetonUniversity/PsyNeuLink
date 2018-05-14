@@ -640,6 +640,11 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attribute).  The result (whether a value or an ndarray) is
         assigned to an item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
 
+    label : string or number
+        the string label that represents the current `value <InputState.value>` of the InputState, according to the
+        owner mechanism's `input_labels_dict <Mechanism.input_labels_dict>`. If the current `value <InputState.value>`
+        of the InputState does not have a corresponding label, then the numeric `value <InputState.value>` is returned.
+
     weight : number
         see `weight and exponent <InputState_Weights_And_Exponents>` for description.
 
@@ -1198,6 +1203,13 @@ class InputState(State_Base):
     def socket_template(self):
         return np.zeros(self.socket_width)
 
+    @property
+    def label(self):
+        label_dictionary = {}
+        if hasattr(self.owner, "input_labels_dict"):
+            label_dictionary = self.owner.input_labels_dict
+        return self._get_value_label(label_dictionary, self.owner.input_states)
+
     @staticmethod
     def _get_state_function_value(owner, function, variable):
         """Put InputState's variable in a list if its function is LinearCombination and variable is >=2d
@@ -1296,3 +1308,4 @@ def _instantiate_input_states(owner, input_states=None, reference_value=None, co
             )
 
     return state_list
+
