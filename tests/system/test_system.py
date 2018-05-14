@@ -645,61 +645,34 @@ class TestGraphAndInput:
         assert e.systems[s] == ORIGIN
         assert f.systems[s] == INITIALIZE_CYCLE
 
-# class TestConvergentLearning:
-#
-#     def test_branch(self):
-#         from psyneulink.globals.keywords import ENABLED
-#         mech_1 = TransferMechanism(name='ProcessingMechanism', size=3)
-#         mech_2 = TransferMechanism(name='ProcessingMechanism', size=5)
-#         mech_3 = TransferMechanism(name='ProcessingMechanism', size=5)
-#         mech_4 = TransferMechanism(name='ProcessingMechanism', size=5)
-#         mech_5 = TransferMechanism(name='ProcessingMechanism', size=5)
-#         mech_6 = TransferMechanism(name='ProcessingMechanism', size=5)
-#         process_A = Process(pathway=[mech_1, mech_2, mech_3, mech_4], learning=ENABLED, name='Process A')
-#         process_B = Process(pathway=[mech_5, mech_6, mech_4], learning=ENABLED, name='Process B')
-#
-#         S = System(processes=[process_A, process_B])
-#
-#         assert 'ProcessingMechanism-3 ComparatorMechanism' in \
-#                [m.name for m in S.learningGraph['LearningMechanism for MappingProjection from ProcessingMechanism-2 to ProcessingMechanism-3']]
-#
-#     #     assert [m.name for m in S.learningGraph['LearningMechanism for MappingProjection from' \
-#     #                            ' ProcessingMechanism-1 to ProcessingMechanism-2']]=,
-#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-2 to ProcessingMechanism-3')}),
-#     #
-#     #     assert [m.name for m in S.learningGraph['LearningMechanism for MappingProjection from' \
-#     #                            ' ProcessingMechanism to ProcessingMechanism-1']]=,
-#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-1 to ProcessingMechanism-2')}),
-#     #
-#     #
-#     #     assert [m.name for m in S.learningGraph['MappingProjection from ProcessingMechanism to ProcessingMechanism-1']]
-#     # =
-#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism to ProcessingMechanism-1')})],
-#     #
-#     #     assert [m.name for m in S.learningGraph['MappingProjection from ProcessingMechanism-1 to ' \
-#     #                                             'ProcessingMechanism-2']]=
-#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-1 to ProcessingMechanism-2')}),
-#     #
-#     #     assert [m.name for m in S.learningGraph['MappingProjection from ProcessingMechanism-2 to ' \
-#     #                                             'ProcessingMechanism-3']]=
-#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-2 to ProcessingMechanism-3')}),
-#     #
-#     #     assert [m.name for m in S.learningGraph['LearningMechanism for MappingProjection from' \
-#     #                            ' ProcessingMechanism-5 to ProcessingMechanism-3']]=,
-#     #         {'ProcessingMechanism-3 ComparatorMechanism')}),
-#     #
-#     #     assert [m.name for m in S.learningGraph['LearningMechanism for MappingProjection from' \
-#     #                            ' ProcessingMechanism-4 to ProcessingMechanism-5']]=,
-#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-5 to ProcessingMechanism-3')}),
-#     #
-#     #     assert [m.name for m in S.learningGraph['MappingProjection from ProcessingMechanism-4 to ' \
-#     #                                             'ProcessingMechanism-5']]=
-#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-4 to ProcessingMechanism-5')}),
-#     #
-#     #     assert [m.name for m in S.learningGraph['MappingProjection from ProcessingMechanism-5 to ' \
-#     #                                             'ProcessingMechanism-3']]=
-#     #         {'LearningMechanism for MappingProjection from ProcessingMechanism-5 to ProcessingMechanism-3')})])
-#     #
+class TestConvergentLearning:
+
+    def test_branch(self):
+        from psyneulink.globals.keywords import ENABLED
+        mech_1 = TransferMechanism(name='M1', size=1)
+        mech_2 = TransferMechanism(name='M2', size=2)
+        mech_3 = TransferMechanism(name='M3', size=3)
+        mech_4 = TransferMechanism(name='M4', size=4)
+        mech_5 = TransferMechanism(name='M5', size=5)
+        mech_6 = TransferMechanism(name='M6', size=6)
+        process_A = Process(pathway=[mech_1, mech_2, mech_3, mech_4], learning=ENABLED, name='Process A')
+        process_B = Process(pathway=[mech_5, mech_6, mech_4], learning=ENABLED, name='Process B')
+        S = System(processes=[process_A, process_B])
+
+        lm = mech_1.efferents[0].learning_mechanism
+        assert 'LearningMechanism for MappingProjection from M2 to M3' in [m.name for m in S.learningGraph[lm]]
+        lm = mech_2.efferents[0].learning_mechanism
+        assert 'LearningMechanism for MappingProjection from M3 to M4' in [m.name for m in S.learningGraph[lm]]
+        lm = mech_3.efferents[0].learning_mechanism
+        assert 'M4 ComparatorMechanism' in [m.name for m in S.learningGraph[lm]]
+        cm = mech_4.efferents[0].receiver.owner
+        assert cm in S.learningGraph.keys()
+        lm = mech_5.efferents[0].learning_mechanism
+        assert 'LearningMechanism for MappingProjection from M6 to M4' in [m.name for m in S.learningGraph[lm]]
+        lm = mech_6.efferents[0].learning_mechanism
+        assert 'M4 ComparatorMechanism' in [m.name for m in S.learningGraph[lm]]
+
+
 
 
 class TestInitialize:

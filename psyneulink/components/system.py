@@ -3420,6 +3420,8 @@ class System(System_Base):
         colors: https://graphviz.gitlab.io/_pages/doc/info/colors.html
         COMMENT
 
+        .. _System_Projection_Arrow_Corruption:
+
         .. note::
            There are two unresolved anomalies associated with show_graph (it is uncertain whether they are bugs in
            PsyNeuLink, Graphviz, or an interaction between the two):
@@ -3431,6 +3433,10 @@ class System(System_Base):
 
            2) Specifying **show_processes** but not setting **show_headers** to `False` raises a GraphViz exception;
               to deal with this, if **show_processes** is specified, **show_headers** is automatically set to `False`.
+
+           COMMENT:
+               See IMPLEMENTATION NOTE under _assign_control_components() for description of the problem
+           COMMENT
 
         Examples
         --------
@@ -4035,6 +4041,18 @@ class System(System_Base):
                 obj_to_ctrl_label = objmech_label
                 ctlr_from_obj_label = ctlr_label
             G.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label, color=objmech_ctlr_proj_color)
+
+            # IMPLEMENTATION NOTE:
+            #   When two (or more?) Processes (e.g., A and B) have homologous constructions, and a ControlProjection is
+            #   assigned to a ProcessingMechanism in one Process (e.g., the 1st one in Process A) and a
+            #   ProcessingMechanism in the other Process corresponding to the next in the sequence (e.g., the 2nd one
+            #   in Process B) the Projection arrow for the first one get corrupted and sometimes one or more of the
+            #   following warning/error messages appear in the console:
+            # Warning: Arrow type "arial" unknown - ignoring
+            # Warning: Unable to reclaim box space in spline routing for edge "ProcessingMechanism4 ComparatorMechanism
+            # [LEARNING]" -> "LearningMechanism for MappingProjection from ProcessingMechanism3 to ProcessingMechanism4
+            # [LEARNING]". Something is probably seriously wrong.
+            # These do not appear to reflect corruptions of the graph structure and/or execution.
 
             # outgoing edges (from controller to ProcessingMechanisms)
             for control_signal in controller.control_signals:
