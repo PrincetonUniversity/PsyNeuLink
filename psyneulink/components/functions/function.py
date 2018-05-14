@@ -2180,21 +2180,18 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                 format(operation.self.Operation.SUM))
         if isinstance(scale, numbers.Number):
+            # scalar scale
             product = combination * scale
-            # Scalar scale and offset
-            if isinstance(offset, numbers.Number):
-                result = product + offset
-            # Scalar scale and Hadamard offset
-            else:
-                result = np.sum([product, offset], axis=0)
         else:
-            hadamard_product = np.product([combination, scale], axis=0)
-            # Hadamard scale, scalar offset
-            if isinstance(offset, numbers.Number):
-                result = hadamard_product + offset
-            # Hadamard scale and offset
-            else:
-                result = np.sum([hadamard_product, offset], axis=0)
+            # Hadamard scale
+            product = np.product([combination, scale], axis=0)
+
+        if isinstance(offset, numbers.Number):
+            # scalar offset
+            result = product + offset
+        else:
+            # Hadamard offset
+            result = np.sum([product, offset], axis=0)
 
         return result
 
