@@ -912,7 +912,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
         Must be overriden by subclass
         """
         # if self.verbosePref:
-        warnings.warn("No function has been specified for {};  default value ({}) was returned".
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
+            warnings.warn("No function has been specified for {};  default value ({}) was returned".
                       format(self.name, list(self.instance_defaults.value)))
         return self.instance_defaults.value
 
