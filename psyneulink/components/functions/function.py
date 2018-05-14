@@ -2262,9 +2262,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         return result
 
-    @property
-    def _result_length(self):
-        return len(self.instance_defaults.value)
 
     def get_input_struct_type(self):
         #FIXME this is ugly as HELL!
@@ -3038,6 +3035,13 @@ class TransferFunction(Function_Base):
     @additive.setter
     def additive(self, val):
         setattr(self, self.additive_param, val)
+
+    @property
+    def _result_length(self):
+        # By default same vector as input
+        # TODO: This should correspond to default value,
+        # but it fails in one test
+        return self._variable_length
 
     def _gen_llvm_function_body(self, ctx, builder):
         params, _, vi, vo = builder.function.args

@@ -1080,8 +1080,13 @@ class Component(object):
 
     @property
     def _result_length(self):
-        # By default same vector as input
-        return self._variable_length
+        def nested_len(x):
+            try:
+                return sum(nested_len(y) for y in x)
+            except:
+                return 1
+        default_val = self.instance_defaults.value
+        return nested_len(default_val)
 
     @property
     def llvmSymbolName(self):
