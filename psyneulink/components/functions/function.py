@@ -2264,8 +2264,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
     @property
     def _result_length(self):
-        # Input variable should be at least 2d
-        return np.atleast_2d(self.instance_defaults.variable).shape[1]
+        return len(self.instance_defaults.value)
 
     def get_input_struct_type(self):
         #FIXME this is ugly as HELL!
@@ -4683,7 +4682,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     @property
     def _result_length(self):
-        return self.matrix.shape[1]
+        return len(self.instance_defaults.value)
 
 
     def get_output_struct_type(self):
