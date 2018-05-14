@@ -2236,6 +2236,12 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         else:
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                 format(operation.self.Operation.SUM))
+
+        # HACK to reduce dimensionality
+        if combination.ndim > 1:
+            assert combination.shape[0] == 1
+            combination = combination[0]
+
         if isinstance(scale, numbers.Number):
             # scalar scale
             product = combination * scale
@@ -2243,12 +2249,16 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             # Hadamard scale
             product = np.product([combination, scale], axis=0)
 
+        assert product.ndim == 1
+
         if isinstance(offset, numbers.Number):
             # scalar offset
             result = product + offset
         else:
             # Hadamard offset
             result = np.sum([product, offset], axis=0)
+
+        assert result.ndim == 1
 
         return result
 
