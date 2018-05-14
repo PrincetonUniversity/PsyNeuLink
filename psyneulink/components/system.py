@@ -3330,7 +3330,7 @@ class System(System_Base):
                         role = 'CONTROLLER'
                     else:
                         role = ""
-                name = "{}\n{}".format(item.name, role)
+                name = "{}\n[{}]".format(item.name, role)
             else:
                 name = item.name
 
@@ -3420,6 +3420,17 @@ class System(System_Base):
         colors: https://graphviz.gitlab.io/_pages/doc/info/colors.html
         COMMENT
 
+        .. note::
+           There are two unresolved anomalies associated with show_graph (it is uncertain whether they are bugs in
+           PsyNeuLink, Graphviz, or an interaction between the two):
+
+           1) When both **show_mechanism_structure** and **show_processes** are specified together with
+              **show_learning** and/or **show_control**, under some arcane conditions Projection arrows can be
+              distorted and/or orphaned.  We have confirmed that this does not reflect a corruption of the underlying
+              graph structure, and the System should execute normally.
+
+           2) Specifying **show_processes** but not setting **show_headers** to `False` raises a GraphViz exception;
+              to deal with this, if **show_processes** is specified, **show_headers** is automatically set to `False`.
 
         Examples
         --------
@@ -3661,9 +3672,9 @@ class System(System_Base):
                         continue
                     if show_mechanism_structure:
                         sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputState.__name__, proj.sender.name)
-                        rcvr_proj_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                        proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
                     else:
-                        sndr_proj_label = rcvr_proj_label = rcvr_label
+                        sndr_proj_label = proc_mech_rcvr_label = rcvr_label
                     if show_projection_labels:
                         edge_label = self._get_label(proj, show_dimensions, show_roles)
                     else:
@@ -3680,10 +3691,10 @@ class System(System_Base):
                             proj_color = default_node_color
                         sg.node(edge_label, shape=projection_shape, color=proj_color)
                         G.edge(sndr_proj_label, edge_label, arrowhead='none')
-                        G.edge(edge_label, rcvr_proj_label)
+                        G.edge(edge_label, proc_mech_rcvr_label)
                     else:
                         # show projection as edge
-                        G.edge(sndr_proj_label, rcvr_proj_label, label=edge_label)
+                        G.edge(sndr_proj_label, proc_mech_rcvr_label, label=edge_label)
 
             # if rcvr is a LearningMechanism or an ObjectiveMechanism used for control:
             #    break, as those handled below
@@ -3714,10 +3725,10 @@ class System(System_Base):
                             if proj.receiver.owner == rcvr:
                                 if show_mechanism_structure:
                                     sndr_proj_label = '{}:{}-{}'.format(sndr_label, OutputState.__name__, proj.sender.name)
-                                    rcvr_proj_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                    proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
                                 else:
                                     sndr_proj_label = sndr_label
-                                    rcvr_proj_label = rcvr_label
+                                    proc_mech_rcvr_label = rcvr_label
                                 edge_name = self._get_label(proj, show_dimensions, show_roles)
                                 # edge_shape = proj.matrix.shape
                                 try:
@@ -3731,7 +3742,7 @@ class System(System_Base):
                         proj_color = active_color
                     else:
                         proj_color = default_node_color
-                    proj_label = edge_label
+                    proc_mech_label = edge_label
 
                     if show_learning and has_learning:
                         # Render Projection as node
@@ -3750,18 +3761,18 @@ class System(System_Base):
                                    for proj in rcvr.efferents)):
                                 continue
 
-                        sg.node(proj_label, shape=projection_shape, color=proj_color)
+                        sg.node(proc_mech_label, shape=projection_shape, color=proj_color)
                         # Edges to and from Projection node
-                        G.edge(sndr_proj_label, proj_label, arrowhead='none', color=proj_color)
-                        G.edge(proj_label, rcvr_proj_label, color=proj_color)
+                        G.edge(sndr_proj_label, proc_mech_label, arrowhead='none', color=proj_color)
+                        G.edge(proc_mech_label, proc_mech_rcvr_label, color=proj_color)
 
                     else:
                         # Render Projection normally (as edge)
                         if show_projection_labels:
-                            label = proj_label
+                            label = proc_mech_label
                         else:
                             label = ''
-                        G.edge(sndr_proj_label, rcvr_proj_label, label=label, color=proj_color)
+                        G.edge(sndr_proj_label, proc_mech_rcvr_label, label=label, color=proj_color)
 
             # Add node for Projection to the last Mechanism in a learning sequence in its originating Process
             # (i.e., the Process to which its sender belongs)
@@ -3781,21 +3792,21 @@ class System(System_Base):
                                and proc in p.receiver.owner.processes
                                for p in proj.receiver.owner.efferents)):
                             # FIX: HANDLE show_mechanism_structure label assignment here
-                            proj_label = self._get_label(proj, show_dimensions, show_roles)
+                            proc_mech_label = self._get_label(proj, show_dimensions, show_roles)
                             sndr_label = self._get_label(proj.sender.owner, show_dimensions, show_roles)
                             rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
                             if show_mechanism_structure:
-                                sg.node(proj_label, shape=projection_shape)
-                                # G.edge(sndr_label, proj_label, arrowhead='none')
-                                # G.edge(proj_label, rcvr_label)
+                                sg.node(proc_mech_label, shape=projection_shape)
+                                # G.edge(sndr_label, proc_mech_label, arrowhead='none')
+                                # G.edge(proc_mech_label, rcvr_label)
                                 sndr_proj_label = '{}:{}-{}'.format(sndr_label, OutputState.__name__, proj.sender.name)
-                                rcvr_proj_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
-                                G.edge(sndr_proj_label, proj_label, arrowhead='none')
-                                G.edge(proj_label, rcvr_proj_label)
+                                proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                G.edge(sndr_proj_label, proc_mech_label, arrowhead='none')
+                                G.edge(proc_mech_label, proc_mech_rcvr_label)
                             else:
-                                sg.node(proj_label, shape=projection_shape)
-                                G.edge(sndr_label, proj_label, arrowhead='none')
-                                G.edge(proj_label, rcvr_label)
+                                sg.node(proc_mech_label, shape=projection_shape)
+                                G.edge(sndr_label, proc_mech_label, arrowhead='none')
+                                G.edge(proc_mech_label, rcvr_label)
                     except KeyError:
                         pass
 
@@ -3897,11 +3908,11 @@ class System(System_Base):
                                 sndr_label = self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
                                 rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
                                 if show_mechanism_structure:
-                                    rcvr_proj_label = rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name
+                                    proc_mech_rcvr_label = rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name
                                 else:
-                                    rcvr_proj_label = rcvr_label
+                                    proc_mech_rcvr_label = rcvr_label
 
-                                G.edge(sndr_label, rcvr_proj_label, label=edge_label, color=learning_proj_color)
+                                G.edge(sndr_label, proc_mech_rcvr_label, label=edge_label, color=learning_proj_color)
                     return
 
                 # Implement edges for Projections to LearningMechanism
@@ -4025,29 +4036,29 @@ class System(System_Base):
                 ctlr_from_obj_label = ctlr_label
             G.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label, color=objmech_ctlr_proj_color)
 
-
             # outgoing edges (from controller to ProcessingMechanisms)
-            for output_state in controller.control_signals:
-                for projection in output_state.efferents:
-                    proj_label = self._get_label(projection.receiver.owner, show_dimensions, show_roles)
-                    if projection is active_item:
-                        proj_color = active_color
+            for control_signal in controller.control_signals:
+                for ctl_proj in control_signal.efferents:
+                    proc_mech_label = self._get_label(ctl_proj.receiver.owner, show_dimensions, show_roles)
+                    if ctl_proj is active_item:
+                        ctl_proj_color = active_color
                     else:
-                        proj_color = control_color
+                        ctl_proj_color = control_color
                     if show_projection_labels:
-                        edge_label = projection.name
+                        edge_label = ctl_proj.name
                     else:
                         edge_label = ''
                     if show_mechanism_structure:
-                        ctlr_proj_label = ctlr_label + ':' + OutputState.__name__ + '-' + output_state.name
-                        rcvr_proj_label = proj_label + ':' + ParameterState.__name__ + '-' + projection.receiver.name
+                        ctl_sndr_label = ctlr_label + ':' + OutputState.__name__ + '-' + control_signal.name
+                        proc_mech_rcvr_label = \
+                            proc_mech_label + ':' + ParameterState.__name__ + '-' + ctl_proj.receiver.name
                     else:
-                        ctlr_proj_label = ctlr_label
-                        rcvr_proj_label = proj_label
-                    G.edge(ctlr_proj_label,
-                           rcvr_proj_label,
+                        ctl_sndr_label = ctlr_label
+                        proc_mech_rcvr_label = proc_mech_label
+                    G.edge(ctl_sndr_label,
+                           proc_mech_rcvr_label,
                            label=edge_label,
-                           color=proj_color)
+                           color=ctl_proj_color)
 
             # incoming edges (from monitored mechs to objective mechanism)
             for input_state in objmech.input_states:
@@ -4103,7 +4114,7 @@ class System(System_Base):
                                color=prediction_mechanism_color)
                     pass
 
-        # MAIN BODY METHOD:
+        # MAIN BODY OFF METHOD:
 
         import graphviz as gv
 
@@ -4111,6 +4122,8 @@ class System(System_Base):
         learning_graph=self.learningGraph
         if show_dimensions == True:
             show_dimensions = ALL
+        if show_processes:
+            show_headers = False
 
         # Argument values used to call Mechanism.show_structure()
         if isinstance(show_mechanism_structure, (list, tuple, set)):
