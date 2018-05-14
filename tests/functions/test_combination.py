@@ -73,9 +73,9 @@ SIZE=5
 test_var = np.random.rand(1, SIZE)
 test_var2 = np.random.rand(2, SIZE)
 
-RAND1_V = np.random.rand(1, SIZE)
-RAND2_V = np.random.rand(1, SIZE)
-RAND3_V = np.random.rand(1, SIZE)
+RAND1_V = np.random.rand(SIZE)
+RAND2_V = np.random.rand(SIZE)
+RAND3_V = np.random.rand(SIZE)
 
 RAND1_S = np.random.rand()
 RAND2_S = np.random.rand()
