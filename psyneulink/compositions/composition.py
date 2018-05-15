@@ -150,7 +150,6 @@ class MechanismRole(Enum):
     TARGET = 8
     RECURRENT_INIT = 9
 
-
 class CompositionError(Exception):
 
     def __init__(self, error_value):
@@ -209,7 +208,6 @@ class Vertex(object):
 
     def __repr__(self):
         return '(Vertex {0} {1})'.format(id(self), self.component)
-
 
 class Graph(object):
     '''
@@ -317,7 +315,6 @@ class Graph(object):
             A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component** : list[`Vertex`]
         '''
         return self.comp_to_vertex[component].children
-
 
 class Composition(object):
     '''
@@ -489,6 +486,7 @@ class Composition(object):
             self.needs_update_graph_processing = True
             self.needs_update_scheduler_processing = True
             self.needs_update_scheduler_learning = True
+
     def add_pathway(self, path):
         '''
             Adds an existing Pathway to the current Composition
@@ -1067,7 +1065,9 @@ class Composition(object):
 
                     if mechanism in runtime_params:
                         for param in runtime_params[mechanism]:
-                            if runtime_params[mechanism][param][1].is_satisfied(scheduler=execution_scheduler):
+                            if runtime_params[mechanism][param][1].is_satisfied(scheduler=execution_scheduler,
+                                               # KAM 5/15/18 - not sure if this will always be the correct execution id:
+                                                                                execution_id=self._execution_id):
                                 execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
                     mechanism.context.execution_phase = ContextFlags.PROCESSING
@@ -1190,6 +1190,7 @@ class Composition(object):
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
 
+        # TBI: Learning
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
