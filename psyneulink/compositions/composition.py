@@ -377,8 +377,12 @@ class Composition(object):
         self.all_output_mechanisms = []
         self.target_mechanisms = []  # Do not need to track explicit as they mush be explicit
 
+        # Reporting
+        self.results = []
+
         # TBI: update self.sched whenever something is added to the composition
         self.sched = Scheduler(composition=self)
+
 
     @property
     def graph_processing(self):
@@ -1234,7 +1238,6 @@ class Composition(object):
 
         scheduler_processing._reset_counts_total(TimeScale.RUN, execution_id)
 
-        # TBI: Handle runtime params?
         result = None
 
         # --- RESET FOR NEXT TRIAL ---
@@ -1273,6 +1276,20 @@ class Composition(object):
 
         # ---------------------------------------------------------------------------------
             # store the result of this execute in case it will be the final result
+
+            terminal_mechanisms = self.get_mechanisms_by_role(MechanismRole.TERMINAL)
+            for terminal_mechanism in terminal_mechanisms:
+                for terminal_output_state in terminal_mechanism.output_states:
+                    CIM_output_state = self.output_CIM_output_states[terminal_output_state]
+                    CIM_output_state.value = terminal_output_state.value
+
+            # object.results.append(result)
+            if isinstance(trial_output, Iterable):
+                result_copy = trial_output.copy()
+            else:
+                result_copy = trial_output
+            self.results.append(result_copy)
+
             if trial_output is not None:
                 result = trial_output
 
@@ -1313,15 +1330,8 @@ class Composition(object):
                 call_after_trial()
 
         scheduler_processing.clocks[execution_id]._increment_time(TimeScale.RUN)
-        terminal_mechanisms = self.get_mechanisms_by_role(MechanismRole.TERMINAL)
 
-        for terminal_mechanism in terminal_mechanisms:
-            for terminal_output_state in terminal_mechanism.output_states:
-                CIM_output_state = self.output_CIM_output_states[terminal_output_state]
-                CIM_output_state.value = terminal_output_state.value
-
-        # return the output of the LAST mechanism executed in the composition
-        return result
+        return self.results
 
     def _input_matches_variable(self, input_value, var):
         # input_value states are uniform

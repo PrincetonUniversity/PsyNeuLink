@@ -776,7 +776,7 @@ class TestRun:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        assert 125 == output[0][0]
+        assert np.allclose(125, output[0][0])
 
     def test_projection_assignment_mistake_swap(self):
 
@@ -847,7 +847,7 @@ class TestRun:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        assert 250 == output[0][0]
+        assert np.allclose(250,output[0][0])
 
     def test_run_2_mechanisms_with_scheduling_AAB_integrator(self):
         comp = Composition()
@@ -868,7 +868,7 @@ class TestRun:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        assert 50.0 == output[0][0]
+        assert np.allclose(50.0, output[0][0])
 
     def test_run_2_mechanisms_with_scheduling_AAB_transfer(self):
         comp = Composition()
@@ -890,7 +890,7 @@ class TestRun:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        assert 50.0 == output[0][0]
+        assert np.allclose(50.0, output[0][0])
 
     def test_run_2_mechanisms_with_multiple_trials_of_input_values(self):
         comp = Composition()
@@ -908,7 +908,7 @@ class TestRun:
             scheduler_processing=sched
         )
 
-        assert 40.0 == output[0][0]
+        assert np.allclose([[[10.0]], [[20.0]], [[30.0]], [[40.0]]], output)
 
     def test_sender_receiver_not_specified(self):
         comp = Composition()
@@ -926,7 +926,8 @@ class TestRun:
             scheduler_processing=sched
         )
 
-        assert 40.0 == output[0][0]
+        assert np.allclose([[[10.0]], [[20.0]], [[30.0]], [[40.0]]], output)
+
 
     def test_run_2_mechanisms_reuse_input(self):
         comp = Composition()
@@ -960,7 +961,8 @@ class TestRun:
             scheduler_processing=sched,
             num_trials=3
         )
-        assert 75 == output[0][0]
+
+        assert np.allclose([np.array([[125.]]), np.array([[100.]]), np.array([[75.]])], output)
 
     def test_execute_composition(self):
         comp = Composition()
@@ -994,7 +996,7 @@ class TestRun:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        assert 32 == output[0][0]
+        assert np.allclose(32., output)
 
     def test_LPP_with_projections(self):
         comp = Composition()
@@ -1013,7 +1015,7 @@ class TestRun:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        assert 32 == output[0][0]
+        assert np.allclose(32., output)
 
     def test_LPP_end_with_projection(self):
         comp = Composition()
@@ -1682,7 +1684,7 @@ class TestSystemComposition:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        assert 125 == output[0][0]
+        assert np.allclose(125, output[0][0])
 
     def test_call_beforeafter_values_onepass(self):
 
@@ -2395,7 +2397,7 @@ class TestNestedCompositions:
             inputs=stimulus,
             # scheduler_processing=schedule
         )
-        assert 16 == output[0][0]
+        assert np.allclose(16, output)
 
     def test_two_paths_in_series_one_system(self):
 
@@ -2440,7 +2442,7 @@ class TestNestedCompositions:
             inputs=stimulus,
             # scheduler_processing=schedule
         )
-        assert 64 == output[0][0]
+        assert np.allclose(64, output)
 
     def test_two_paths_converge_one_system_scheduling_matters(self):
 
@@ -2487,7 +2489,7 @@ class TestNestedCompositions:
             inputs=stimulus,
             # scheduler_processing=schedule
         )
-        assert 16 == output[0][0]
+        assert np.allclose(16, output)
 
 
 class TestCompositionInterface:
@@ -2540,7 +2542,7 @@ class TestCompositionInterface:
             scheduler_processing=sched
         )
 
-        assert 250 == output[0][0]
+        assert np.allclose(250, output)
 
     def test_updating_input_values_for_second_execution(self):
         # 5 -#1-> A --^ --> C --
@@ -2580,6 +2582,7 @@ class TestCompositionInterface:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
+        assert np.allclose(250, output)
 
         inputs_dict2 = {
             A: [[2.]],
@@ -2601,6 +2604,8 @@ class TestCompositionInterface:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
+
+        assert np.allclose([np.array([[250.]]), np.array([[250.]])], output)
 
         # add a new branch to the composition
         F = TransferMechanism(name="composition-pytests-F", function=Linear(slope=2.0))
@@ -2626,8 +2631,7 @@ class TestCompositionInterface:
             scheduler_processing=sched
         )
 
-        assert 250 == output[0][0]
-        assert 135 == output2[0][0]
+        assert np.allclose([np.array([[250.]]), np.array([[250.]]), np.array([[135.]])], output)
 
     def test_changing_origin_for_second_execution(self):
 
@@ -2652,7 +2656,7 @@ class TestCompositionInterface:
             scheduler_processing=sched
         )
 
-        assert 25 == output[0][0]
+        assert np.allclose(25, output)
 
         # add a new origin to the composition
         F = TransferMechanism(name="composition-pytests-F", function=Linear(slope=2.0))
@@ -2678,7 +2682,7 @@ class TestCompositionInterface:
                 connections_to_A.append((p_a.sender, p_a.receiver))
 
         assert connections_to_A == expected_connections_to_A
-        assert 30 == output2[0][0]
+        assert np.allclose([np.array([[25.]]), np.array([[30.]])], output2)
 
     def test_two_input_states_new_inputs_second_trial(self):
 
@@ -2700,14 +2704,14 @@ class TestCompositionInterface:
         inputs_dict = {A: [[5.], [5.]]}
 
         sched = Scheduler(composition=comp)
-        output = comp.run(
+        comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched
         )
 
         inputs_dict2 = {A: [[2.], [4.]]}
 
-        output2 = comp.run(
+        output = comp.run(
             inputs=inputs_dict2,
             scheduler_processing=sched
         )
@@ -2715,8 +2719,7 @@ class TestCompositionInterface:
         assert np.allclose(A.input_states[0].value, [2.])
         assert np.allclose(A.input_states[1].value, [4.])
         assert np.allclose(A.variable, [[2.], [4.]])
-        assert np.allclose(output, [[5.], [5.]])
-        assert np.allclose(output2, [[2.], [4.]])
+        assert np.allclose(output, [np.array([[5.], [5.]]), np.array([[2.], [4.]])])
 
     def test_two_input_states_new_origin_second_trial(self):
 
@@ -2792,7 +2795,7 @@ class TestCompositionInterface:
         assert np.allclose(D.input_states[1].value, [4.])
         assert np.allclose(D.variable, [[2.], [4.]])
 
-        assert np.allclose(output2, [[40]])
+        assert np.allclose([np.array([[50.]]), np.array([[40.]])], output2)
 
     def test_output_cim_one_terminal_mechanism_multiple_output_states(self):
 
@@ -3085,7 +3088,8 @@ class TestInputSpecifications:
             inputs=inputs,
             scheduler_processing=sched
         )
-        assert 12 == output[0][0]
+
+        assert np.allclose([np.array([[0.]]), np.array([[6.]]), np.array([[12.]])], output)
 
     def test_2_mechanisms_input_5(self):
         comp = Composition()
