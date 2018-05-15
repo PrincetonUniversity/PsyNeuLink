@@ -7,7 +7,6 @@
 import psyneulink as pnl
 import numpy as np
 
-
 # In[2]:
 
 
@@ -134,4 +133,3 @@ for epoch in range(epochs):
     minus_x, minus_y, plus_x, plus_y = statistical()
     TSP.run(inputs={ECin:minus_x}, targets={ECout:minus_y})
     ## Running the above line of code causes weights to get too large
-

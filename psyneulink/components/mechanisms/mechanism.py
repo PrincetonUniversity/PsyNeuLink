@@ -2576,7 +2576,18 @@ class Mechanism_Base(Mechanism):
                 try:
                     mech_role = r'\n[{}]'.format(self.systems[system])
                 except KeyError:
-                    mech_role = r'\n[{}]'.format(self.system)
+                    # # mech_role = r'\n[{}]'.format(self.system)
+                    # mech_role = r'\n[CONTROLLER]'
+                    from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+                    from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+                    if isinstance(mech, ControlMechanism) and hasattr(mech, 'system'):
+                        mech_role = r'\n[CONTROLLER]'
+                    elif isinstance(mech, ObjectiveMechanism) and hasattr(mech, '_role'):
+                        mech_role = r'\n[{}]'.format(mech._role)
+                    else:
+                        mech_role = ""
+
+
             mech_function = ''
             if show_functions:
                 mech_function = r'\n({})'.format(mech.function_object.__class__.__name__)
