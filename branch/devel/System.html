@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.4.7.1+64.gc95fb24 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.4.7.1+65.g6cafc88 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1+64.gc95fb24 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.7.1+65.g6cafc88 documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Compositions" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.7.1+64
+                0.4.7.1+65
               </div>
             
           
@@ -275,7 +275,7 @@ belonging to more than one Process (as shown for control in this figure).</span>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>: sends a Projection that closes a recurrent loop; can be assigned an initial value.</p>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.CYCLE" title="psyneulink.globals.keywords.MechanismRoles.CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">CYCLE</span></code></a>: receives a Projection that closes a recurrent loop.</p>
 <p><a class="reference internal" href="Context.html#psyneulink.globals.context.ContextFlags.CONTROL" title="psyneulink.globals.context.ContextFlags.CONTROL"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROL</span></code></a>: monitors the value of another Mechanism for use in controlling parameter values.</p>
-<p><a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.LEARNING" title="psyneulink.globals.log.LogCondition.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
+<p><a class="reference internal" href="Context.html#psyneulink.globals.context.ContextFlags.LEARNING" title="psyneulink.globals.context.ContextFlags.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TARGET" title="psyneulink.globals.keywords.MechanismRoles.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>: ComparatorMechanism that monitors a <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of a Process and compares it to a corresponding
 value provided in the <a class="reference internal" href="#psyneulink.components.system.System.execute" title="psyneulink.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#psyneulink.components.system.System.run" title="psyneulink.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INTERNAL" title="psyneulink.globals.keywords.MechanismRoles.INTERNAL"><code class="xref any py py-attr docutils literal"><span class="pre">INTERNAL</span></code></a>: ProcessingMechanism that does not fall into any of the categories above.</p>
@@ -825,6 +825,19 @@ Mechanism nodes are subdivided into sections for its States with information abo
 <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and  <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms of the System are displayed with thicker borders in a colors specified
 for each. <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> are displayed as labelled arrows, unless <strong>show_learning</strong> is specified,
 in which case <code class="xref any docutils literal"><span class="pre">MappingProjections</span></code> as labelled arrows that point to them.</p>
+<div class="admonition note" id="system-projection-arrow-corruption">
+<p class="first admonition-title">Note</p>
+<p>There are two unresolved anomalies associated with show_graph (it is uncertain whether they are bugs in
+PsyNeuLink, Graphviz, or an interaction between the two):</p>
+<ol class="last arabic simple">
+<li>When both <strong>show_mechanism_structure</strong> and <strong>show_processes</strong> are specified together with
+<strong>show_learning</strong> and/or <strong>show_control</strong>, under some arcane conditions Projection arrows can be
+distorted and/or orphaned.  We have confirmed that this does not reflect a corruption of the underlying
+graph structure, and the System should execute normally.</li>
+<li>Specifying <strong>show_processes</strong> but not setting <strong>show_headers</strong> to <code class="xref any docutils literal"><span class="pre">False</span></code> raises a GraphViz exception;
+to deal with this, if <strong>show_processes</strong> is specified, <strong>show_headers</strong> is automatically set to <code class="xref any docutils literal"><span class="pre">False</span></code>.</li>
+</ol>
+</div>
 <p class="rubric">Examples</p>
 <p>The figure below shows different renderings of the following System that can be generated using its
 show_graph method:</p>
@@ -917,11 +930,11 @@ formats).</li>
 an <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and a <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> of the System are displayed.</li>
 <li><strong>learning_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">green</span></code>) – specifies the color in which the learning components are displayed.</li>
 <li><strong>control_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">blue</span></code>) – specifies the color in which the learning components are displayed (note: if the System’s
-<a class="reference internal" href="#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>) is an <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>, then a link is shown in red from the
+<a class="reference internal" href="#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is an <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>, then a link is shown in pink from the
 <a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-prediction-mechanisms"><span class="std std-ref">prediction Mechanisms</span></a> it creates to the corresponding
 <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms of the System, to indicate that although no projection are created for these,
 the prediction Mechanisms determine the input to the <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms when the EVCControlMechanism
-<a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-execution"><span class="std std-ref">simulates execution</span></a> of the System.</li>
+<a class="reference internal" href="EVCControlMechanism.html#evccontrolmechanism-execution"><span class="std std-ref">simulates execution</span></a> of the System).</li>
 <li><strong>prediction_mechanism_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">pink</span></code>) – specifies the color in which the <a class="reference internal" href="EVCControlMechanism.html#psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.prediction_mechanisms" title="psyneulink.library.subsystems.evc.evccontrolmechanism.EVCControlMechanism.prediction_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">prediction_mechanisms</span></code></a> are displayed for a System using an <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a></li>
 <li><strong>system_color</strong> (keyword : default <code class="xref any docutils literal"><span class="pre">purple</span></code>) – specifies the color in which the node representing input from the System is displayed.</li>
 <li><strong>output_fmt</strong> (<em>keyword : default 'pdf'</em>) – ‘pdf’: generate and open a pdf with the visualization;
@@ -1002,7 +1015,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1+64.gc95fb24',
+            VERSION:'0.4.7.1+65.g6cafc88',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
