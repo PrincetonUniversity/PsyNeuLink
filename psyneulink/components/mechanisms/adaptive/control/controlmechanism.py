@@ -820,8 +820,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
             self._output_states = []
             self.instance_defaults.value = None
 
-            # for i, control_signal in enumerate(self.control_signals):
-            #     self._instantiate_control_signal(control_signal, index=i, context=context)
             for control_signal in self.control_signals:
                 self._instantiate_control_signal(control_signal, context=context)
 
@@ -846,8 +844,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                  format(ControlSignal.__name__, self.name, len(self.control_signals),
                                         ALLOCATION_POLICY, len(self.value)))
 
-
-    # def _instantiate_control_signal(self, control_signal, index=0, context=None):
     def _instantiate_control_signal(self, control_signal, context=None):
         from psyneulink.components.states.state import _instantiate_state
         # Parses control_signal specifications (in call to State._parse_state_spec)
@@ -885,8 +881,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                  for i in range(len(self._output_states))])
         self.value = self.instance_defaults.value
 
-        # Assign ControlSignal's variable to index appended item of owner's value
-        # if control_signal.owner_value_index is None:
+        # Assign ControlSignal's variable to index of owner's value
         control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
         if not isinstance(control_signal.owner_value_index, int):
             raise ControlMechanismError(
@@ -916,8 +911,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         Must be overriden by subclass
         """
-        # raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
-        return self.input_values or [defaultControlAllocation]
+        # if self.verbosePref:
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
+            warnings.warn("No function has been specified for {};  default value ({}) was returned".
+                      format(self.name, list(self.instance_defaults.value)))
+        return self.instance_defaults.value
 
     def show(self):
         """Display the OutputStates monitored by ControlMechanism's `objective_mechanism

@@ -1605,8 +1605,13 @@ def _parse_output_state_variable(owner, variable, output_state_name=None):
                 if owner.attributes_dict[spec[0]] is None:
                     return None
                 else:
-                    raise OutputStateError("Can't parse variable ({}) for {} of {}".
-                                           format(spec, output_state_name or OutputState.__name__, owner.name))
+                    # raise OutputStateError("Can't parse variable ({}) for {} of {}".
+                    #                        format(spec, output_state_name or OutputState.__name__, owner.name))
+                    raise Exception
+            except:
+                raise OutputStateError("Can't parse variable ({}) for {} of {}".
+                                       format(spec, output_state_name or OutputState.__name__, owner.name))
+
         elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
             return owner.attributes_dict
