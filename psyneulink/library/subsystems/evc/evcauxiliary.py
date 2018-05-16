@@ -17,10 +17,11 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import Function_Base
+from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
@@ -43,7 +44,6 @@ kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
 kwValueFunction = "EVC VALUE FUNCTION"
 CONTROL_SIGNAL_GRID_SEARCH_FUNCTION = "EVC CONTROL SIGNAL GRID SEARCH FUNCTION"
 CONTROLLER = 'controller'
-OUTCOME = 'outcome'
 
 
 class EVCAuxiliaryError(Exception):
@@ -70,8 +70,7 @@ class EVCAuxiliaryFunction(Function_Base):
     classPreferences = {
         kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
-    }
+       }
 
     @tc.typecheck
     def __init__(self,
@@ -186,15 +185,15 @@ class ValueFunction(EVCAuxiliaryFunction):
 
         # Aggregate costs
         if isinstance(cost_function, UserDefinedFunction):
-            cost = cost_function.function(controller=controller, costs=costs)
+            cost = cost_function._execute(controller=controller, costs=costs)
         else:
-            cost = cost_function.function(variable=costs, context=context)
+            cost = cost_function._execute(variable=costs, context=context)
 
         # Combine outcome and cost to determine value
         if isinstance(combine_function, UserDefinedFunction):
-            value = combine_function.function(controller=controller, outcome=outcome, cost=cost)
+            value = combine_function._execute(controller=controller, outcome=outcome, cost=cost)
         else:
-            value = combine_function.function(variable=[outcome, -cost])
+            value = combine_function._execute(variable=[outcome, -cost])
 
         return (value, outcome, cost)
 

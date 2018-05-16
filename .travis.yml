@@ -1,10 +1,20 @@
 language: python
+
 python:
     - 3.5
     - 3.6
+
 install:
-  pip install -e .[dev]
+  - pip install git+https://github.com/benureau/leabra.git@master
+  - pip install -e .[dev]
+
 os:
   - linux
+
+addons:
+  apt:
+    packages:
+      - graphviz
+
 script:
   - python -m pytest -p no:logging tests/

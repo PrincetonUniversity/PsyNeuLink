@@ -470,7 +470,7 @@ from psyneulink.globals.utilities import append_type_to_name, convert_to_np_arra
 
 __all__ = [
     'DEFAULT_PHASE_SPEC', 'DEFAULT_PROJECTION_MATRIX', 'defaultInstanceCount', 'kwProcessInputState', 'kwTarget',
-    'Process', 'ProcessError', 'ProcessInputState', 'ProcessList', 'ProcessRegistry', 'ProcessTuple',
+    'Process', 'proc', 'ProcessError', 'ProcessInputState', 'ProcessList', 'ProcessRegistry', 'ProcessTuple',
 ]
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -503,21 +503,31 @@ from psyneulink.components.states.outputstate import OutputState
 #            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
 
 
+def proc(*args, **kwargs):
+    """Factory method
+
+    **args** can be `Mechanisms <Mechanism>` with our without `Projections <Projection>`, or a list of them,
+    that conform to the format for the `pathway <Process.pathway>` argument of a `Process`.
+
+    **kwargs** can be any arguments of the `Process` constructor.
+    """
+    return Process(pathway=list(args), **kwargs)
+
+
 class Process(Process_Base):
     """
-    Process(process_spec=None,                         \
+    Process(process_spec=None,                           \
     default_variable=None,                               \
-    pathway=None,                                           \
-    initial_values={},                                      \
-    clamp_input:=None,                                      \
-    default_projection_matrix=DEFAULT_PROJECTION_MATRIX,    \
-    learning=None,                                          \
-    learning_rate=None                                      \
-    target=None,                                            \
-    params=None,                                            \
-    name=None,                                              \
-    prefs=None,                                             \
-    context=None)
+    pathway=None,                                        \
+    initial_values={},                                   \
+    clamp_input:=None,                                   \
+    default_projection_matrix=DEFAULT_PROJECTION_MATRIX, \
+    learning=None,                                       \
+    learning_rate=None                                   \
+    target=None,                                         \
+    params=None,                                         \
+    name=None,                                           \
+    prefs=None
 
     Base class for Process.
 
@@ -819,13 +829,11 @@ class Process(Process_Base):
         '_isControllerProcess': False
     })
 
-    default_pathway = []
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 pathway=default_pathway,
+                 pathway=None,
                  initial_values=None,
                  clamp_input=None,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
@@ -836,6 +844,8 @@ class Process(Process_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
+
+        pathway = pathway or []
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(pathway=pathway,
@@ -966,8 +976,6 @@ class Process(Process_Base):
         self._learning_mechs = []
         self._target_mechs = []
 
-        self._standardize_config_entries(pathway=pathway, context=context)
-
         # VALIDATE PATHWAY THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
         self._parse_and_instantiate_mechanism_entries(pathway=pathway, context=context)
 
@@ -1029,73 +1037,6 @@ class Process(Process_Base):
             except AttributeError:
                 # Immutable, so just assign value
                 self.instance_defaults.value = value
-
-    def _standardize_config_entries(self, pathway, context=None):
-
-        from psyneulink.components.mechanisms.mechanism import _is_mechanism_spec
-# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
-        self.runtime_params_dict = {}
-
-        # Kristen modified 5/24
-        # in  ALL mechanism tuples, the middle entry is set to zero (formerly used for specifying runtime params)
-        # rightmost entry is set to zero (formerly phase spec)
-        # if _is_mechanism_spec, runtime_params_dict[mechanism] is set to actual runtime params
-
-        for i in range(len(pathway)):
-            config_item = pathway[i]
-            # if this element of the pathway is a tuple
-            if isinstance(config_item, tuple):
-                # and the tuple has 1 item
-                if len(config_item) is 1:
-                    # if the tuple contains either a Mechanism or a Projection
-                    if _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
-
-                        # Replace it with just the mech or proj
-                        pathway[i] = config_item
-                        # if it's a mechanism, set the runtime params to None
-                        if _is_mechanism_spec(config_item[0]):
-                            self.runtime_params_dict[config_item[0]] = None
-                    # otherwise the tuple is not valid
-                    else:
-                        raise ProcessError("First item of tuple ({}) in entry {} of pathway for {}"
-                                           " is neither a Mechanism nor a Projection specification".
-                                           format(config_item[0], i, self.name))
-                # If the tuple has two items
-                if len(config_item) is 2:
-
-                    # Replace it with just the mech or proj
-                    pathway[i] = config_item[0]
-
-                    # If it's a mechanism
-                    if _is_mechanism_spec(config_item[0]):
-                        # and its second element is a dict
-                        if isinstance(config_item[1], dict):
-                            # set the mechanism's runtime params to be the second element
-                            self.runtime_params_dict[config_item[0]] = config_item[1]
-                        # if the second element is not a dict, then it's not valid
-                        else:
-                            raise ProcessError("Second item of tuple ({}) in item {} of pathway for {}"
-                                               " is not a params dict.".
-                                               format(config_item[1], i, self.name))
-                    # if the first element is not a mechanism, then it's not valid
-                    else:
-                        raise ProcessError("Projection cannot have a runtime params dict".format(config_item[0],
-                                                                                                 i, self.name))
-                # config_item should not have more than 2 elements
-                if len(config_item) > 2:
-                    raise ProcessError("The tuple for item {} of pathway for {} has more than two items {}".
-                                       format(i, self.name, config_item))
-            else:
-                # If the item is a Mechanism or a Projection
-                if _is_mechanism_spec(pathway[i]) or _is_projection_spec(pathway[i]):
-                    # if it's a mechanism, set runtime params to None
-                    if _is_mechanism_spec(pathway[i]):
-                        self.runtime_params_dict[pathway[i]] = None
-
-                else:
-                    raise ProcessError("Item of {} of pathway for {}"
-                                       " is neither a Mechanism nor a Projection specification".
-                                       format(i, self.name))
 
     def _parse_and_instantiate_mechanism_entries(self, pathway, context=None):
 
@@ -1684,9 +1625,7 @@ class Process(Process_Base):
         if num_process_inputs == num_mechanism_input_states:
             for i in range(num_mechanism_input_states):
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
-                # MODIFIED 4/3/17 NEW:
-                input_state_variable = mechanism.input_states[i].instance_defaults.variable
-                # MODIFIED 4/3/17 END
+                input_state_variable = mechanism.input_states[i].socket_template
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                        "variable for corresponding inputState of {3}".
@@ -2020,11 +1959,11 @@ class Process(Process_Base):
             target = np.atleast_1d(target)
 
             # Check that length of process' target input matches length of TARGET Mechanism's target input
-            if len(target) != len(target_mech_target.instance_defaults.variable):
+            if len(target) != len(target_mech_target.value):
                 raise ProcessError("Length of target ({}) does not match length of input for TARGET Mechanism {} ({})".
                                    format(len(target),
                                           target_mech.name,
-                                          len(target_mech_target.instance_defaults.variable)))
+                                          len(target_mech_target.value)))
 
             target_input_state = ProcessInputState(owner=self,
                                                     variable=target,
@@ -2136,7 +2075,7 @@ class Process(Process_Base):
 
         self.input = self._assign_input_values(input=input, context=context)
 
-        self._check_args(self.input,runtime_params)
+        self._check_args(self.input, runtime_params)
 
         # Use Process self.input as input to first Mechanism in Pathway
         variable = self._update_variable(self.input)

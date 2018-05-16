@@ -30,6 +30,7 @@ class TestMatrixSpec:
             results.append(recurrent_mech.value)
         s.run(inputs=[[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]],
               call_after_trial=record_trial)
+        assert True
 
     def test_recurrent_mech_auto_associative_projection(self):
 
@@ -957,3 +958,18 @@ class TestClip:
                               clip=[-2.0, 2.0])
         assert np.allclose(R.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
+
+class TestRecurrentInputState:
+    def test_ris_simple(self):
+        R2 = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
+                                            matrix=[[1.0, 2.0, 3.0],
+                                                    [2.0, 1.0, 2.0],
+                                                    [3.0, 2.0, 1.0]],
+                                            has_recurrent_input_state=True)
+        R2.execute(input=[1, 3, 2])
+        p2 = Process(pathway=[R2])
+        s2 = System(processes=[p2])
+        s2.run(inputs=[[1, 3, 2], [0, 0, 0]])
+        np.testing.assert_allclose(R2.value, [[14., 12., 13.]])
+        assert len(R2.input_states) == 2
+        assert "Recurrent Input State" not in R2.input_state.name  # make sure recurrent input state isn't primary

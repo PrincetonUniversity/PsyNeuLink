@@ -398,7 +398,7 @@ is created or assigned to the LearningMechanism's *ERROR_SIGNAL* `OutputState <L
 
     .. figure:: _static/LearningMechanism_Single_Layer_Learning_fig.svg
        :alt: Schematic of Mechanisms and Projections involved in learning for a single MappingProjection
-       :scale: 50%
+       :scale: 150 %
 
        ComparatorMechanism, LearningMechanism and associated Projections created for the `primary_learned_projection`
        and `output_source`.  Each Mechanism is labeled by its type (upper line, in bold) and its designated
@@ -1175,7 +1175,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
         current_error_signal_inputs = [s for s in self.error_signal_input_states if
-                                       s.path_afferents[0].sender.owner._execution_id == self._execution_id]
+                                       any(p.sender.owner._execution_id==self._execution_id for p in s.path_afferents)]
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
         error_signal_inputs = variable[curr_indices]
         error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]

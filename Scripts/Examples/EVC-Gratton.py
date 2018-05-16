@@ -146,7 +146,9 @@ mySystem.controller.show()
 # Show graph of system (with control components)
 # mySystem.show_graph(show_dimensions=pnl.ALL, show_projection_labels=True)
 mySystem.show_graph(show_control=True, show_projection_labels=False)
+# mySystem.show_graph(show_control=True, show_processes=True, show_headers=False)
 # mySystem.show_graph(show_control=True, show_mechanism_structure=True, show_headers=False)
+# mySystem.show_graph(show_control=True, show_mechanism_structure=True, show_headers=False, show_processes=True)
 
 # configure EVC components
 mySystem.controller.control_signals[0].intensity_cost_function = pnl.Exponential(rate=0.8046).function
