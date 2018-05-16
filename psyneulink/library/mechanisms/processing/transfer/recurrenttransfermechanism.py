@@ -833,15 +833,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
-
-        # [9/23/17 JDC: WHY IS THIS GETTING DONE HERE RATHER THAN IN _instantiate_attributes_before_function ??]
-
-        # if self.auto is None and self.hetero is None:
-        #     self.matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
-        #     if self.matrix is None:
-        #         raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
-        #                                      format(self.__class__.__name__))
-
         # (7/19/17 CW) this line of code is now questionable, given the changes to matrix and the recurrent projection
         if isinstance(self.matrix, AutoAssociativeProjection):
             self.recurrent_projection = self.matrix
