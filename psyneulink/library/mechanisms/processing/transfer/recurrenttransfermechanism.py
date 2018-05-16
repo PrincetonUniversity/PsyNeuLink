@@ -103,11 +103,15 @@ COMMENT
 Structure
 ---------
 
-The distinguishing feature of a RecurrentTransferMechanism is a self-projecting `AutoAssociativeProjection` -- that
-is, one that projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
+The distinguishing feature of a RecurrentTransferMechanism is a self-projecting `AutoAssociativeProjection`.
+By default, this recurrent projection projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
 InputState <InputState_Primary>`.  This can be parameterized using its `matrix <RecurrentTransferMechanism.matrix>`,
 `auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is
-stored in its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` attribute.
+stored in its `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` attribute.  Using the
+`has_recurrent_input_state <RecurrentTransferMechanism.has_recurrent_input_state>` attribute, the recurrent
+projection can also be made to point to a separate input state rather than the primary one.  In this case, the input
+states' results will be combined using `LinearCombination <function.LinearCombination>` *before* being passed to the
+RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
 A RecurrentTransferMechanism also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its
 `function <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
@@ -418,6 +422,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         takes a list or 1d array of numeric values as its `variable <Function_Base.variable>` and returns a sqaure
         matrix of numeric values with the same dimensions as the length of the input.
 
+    has_recurrent_input_state : boolean : default False
+        specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
+        points to a separate input state. By default, if False, the recurrent_projection points to its `primary
+        InputState <InputState_Primary>`. If True, the recurrent_projection points to a separate input state, and
+        the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
+        being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
@@ -573,6 +584,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **variance** of the result (``value`` of TRANSFER_VARIANCE OutputState);
         * **energy** of the result (``value`` of ENERGY OutputState);
         * **entropy** of the result (if the ENTROPY OutputState is present).
+
+    has_recurrent_input_state : boolean
+        specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
+        points to a separate input state. If False, the recurrent_projection points to its `primary
+        InputState <InputState_Primary>`. If True, the recurrent_projection points to a separate input state, and
+        the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
+        being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
 
     name : str
         the name of the RecurrentTransferMechanism; if it is not specified in the **name** argument of the constructor,
