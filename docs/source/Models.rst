@@ -9,3 +9,5 @@ illustrate principles of neural and/or psychological function.
 • `MontagueModel`
 
 • `NieuwenhuisModel`
+
+• `PCTC_model`
