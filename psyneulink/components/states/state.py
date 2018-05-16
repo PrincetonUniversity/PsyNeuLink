@@ -737,7 +737,7 @@ from collections import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import Component, ComponentError, component_keywords, function_type, method_type
+from psyneulink.components.component import Component, ComponentError, DefaultsFlexibility, component_keywords, function_type, method_type
 from psyneulink.components.functions.function import CombinationFunction, Function, Linear, LinearCombination, \
     ModulationParam, _get_modulated_param, get_param_value_for_keyword
 from psyneulink.components.shellclasses import Mechanism, Process_Base, Projection, State
@@ -753,7 +753,7 @@ from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEX
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_to_np_array, get_args, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match
+from psyneulink.globals.utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, convert_all_elements_to_np_array, convert_to_np_array, get_args, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match
 
 __all__ = [
     'State_Base', 'state_keywords', 'state_type_keywords', 'StateError', 'StateRegistry'
@@ -1517,27 +1517,48 @@ class State_Base(State):
                 #                                            sender_name=projection.sender.name,
                 #                                            receiver_name=self.name)
 
-
             # ASSIGN TO STATE
 
             # Avoid duplicates, since instantiation of projection may have already called this method
             #    and assigned Projection to self.path_afferents or mod_afferents lists
+
+            # reassign default variable shape to this state and its function
             if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
                 projs = self.path_afferents
                 variable = self.instance_defaults.variable
                 projs.append(projection)
-                # if len(projs)>1:
-                if len(projs)>1 and isinstance(self.function_object, CombinationFunction):
+                if len(projs) > 1:
+                    # KDM 5/16/18: Why are we casting this to 2d? I expect this to make the input state variable
+                    # 2d, so its owner's 3d, but that does not appear to be happening.
+                    # Removing this cast can cause an AutoAssignMatrix to interpret the entire InputState's variable
+                    # as its target - ex: two incoming projections -> [0, 0]; third sees socket_width of len 2, so
+                    # creates a projection with value length 2, so variable becomes [0, 0, 0, 0]
                     if variable.ndim == 1:
                         variable = np.atleast_2d(variable)
-                    self.instance_defaults.variable = np.append(variable, np.atleast_2d(projection.value), axis=0)
-                    # self.instance_defaults.variable = np.append(variable, projection.value, axis=0)
+                    self.instance_defaults.variable = np.append(variable, np.atleast_2d(projection.instance_defaults.value), axis=0)
                     self._update_variable(self.instance_defaults.variable)
+
+                # assign identical default variable to function_object if it can be modified
+                if self.function_object._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    self.function_object.instance_defaults.variable = self.instance_defaults.variable.copy()
+                    self.function_object._update_variable(self.function_object.instance_defaults.variable)
+                elif (
+                    self.function_object._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
+                    and np.array([self.function_object.instance_defaults.variable]).shape == self.instance_defaults.variable.shape
+                ):
+                    self.function_object.instance_defaults.variable = np.array([self.instance_defaults.variable])
+                    self.function_object._update_variable(self.function_object.instance_defaults.variable)
+                else:
+                    warnings.warn(
+                        'Adding a projection to {0}, but its function_object {1} instance_defaults.variable '
+                        'cannot be modified to accomodate the new projection'.format(
+                            self,
+                            self.function_object
+                        )
+                    )
 
             elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
                 self.mod_afferents.append(projection)
-
-
 
     def _instantiate_projection_from_state(self, projection_spec, receiver=None, context=None):
         """Instantiate outgoing projection from a State and assign it to self.efferents
