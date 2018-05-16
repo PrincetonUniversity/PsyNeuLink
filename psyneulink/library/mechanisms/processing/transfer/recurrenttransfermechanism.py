@@ -816,6 +816,10 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 raise RecurrentTransferError("Failed to create ParameterState for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
+
+        if self.has_recurrent_input_state:
+            self._linear_combin_func = LinearCombination(default_variable=self.variable)
+
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputStates
         """
@@ -861,13 +865,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                 self.output_states[ENTROPY]._calculate = entropy.function
             else:
                 del self.output_states[ENTROPY]
-
-        if self.has_recurrent_input_state:
-            new_input_state = InputState(owner = self, name = "Recurrent Input State", variable = self.variable[0])
-
-            assert(len(new_input_state.all_afferents) == 0)  # just a sanity check
-            assert(self.input_state.name != "Recurrent Input State")
-            self.recurrent_projection.receiver = new_input_state  # or new_input_state
 
     def _update_parameter_states(self, runtime_params=None, context=None):
         for state in self._parameter_states:
@@ -996,6 +993,15 @@ class RecurrentTransferMechanism(TransferMechanism):
             matrix = get_matrix(matrix, size, size)
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
+        if self.has_recurrent_input_state:
+            new_input_state = InputState(owner=self, name="Recurrent Input State", variable=self.variable[0])
+            assert (len(new_input_state.all_afferents) == 0)  # just a sanity check
+            assert(self.input_state.name != "Recurrent Input State")
+            return AutoAssociativeProjection(owner=mech,
+                                             receiver=new_input_state,
+                                             matrix=matrix,
+                                             name=mech.name + ' recurrent projection')
+
         return AutoAssociativeProjection(owner=mech,
                                          matrix=matrix,
                                          name=mech.name + ' recurrent projection')
@@ -1068,11 +1074,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                  function_variable=None,
                  runtime_params=None,
                  context=None):
-        print('variable before: ', variable)
         if self.has_recurrent_input_state:
-            L = LinearCombination(default_variable = self.variable)
-            variable = L.execute(variable = variable)
-        print('variable after: ', variable)
+            function_variable = self._linear_combin_func.execute(variable = function_variable)
+            variable = self._linear_combin_func.execute(variable=variable)
         return super()._execute(variable=variable,
                               function_variable=function_variable,
                               runtime_params=runtime_params,
