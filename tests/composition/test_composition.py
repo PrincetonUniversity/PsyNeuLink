@@ -272,237 +272,237 @@ class TestAnalyzeGraph:
         assert C in comp.get_mechanisms_by_role(MechanismRole.RECURRENT_INIT)
 
 
-class TestValidateFeedDict:
-
-    def test_empty_feed_dicts(self):
-        comp = Composition()
-        A = TransferMechanism(name='composition-pytests-A')
-        B = TransferMechanism(name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {}
-        feed_dict_terminal = {}
-        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
-
-    def test_origin_and_terminal_with_mapping(self):
-        comp = Composition()
-        A = TransferMechanism(name='composition-pytests-A')
-        B = TransferMechanism(name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[0]]}
-        feed_dict_terminal = {B: [[0]]}
-        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
-
-    def test_origin_and_terminal_with_swapped_feed_dicts_1(self):
-        comp = Composition()
-        A = TransferMechanism(name='composition-pytests-A')
-        B = TransferMechanism(name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {B: [[0]]}
-        feed_dict_terminal = {A: [[0]]}
-        with pytest.raises(ValueError):
-            comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-
-    def test_origin_and_terminal_with_swapped_feed_dicts_2(self):
-        comp = Composition()
-        A = TransferMechanism(name='composition-pytests-A')
-        B = TransferMechanism(name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {B: [[0]]}
-        feed_dict_terminal = {A: [[0]]}
-        with pytest.raises(ValueError):
-            comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
-
-    def test_multiple_origin_mechs(self):
-        comp = Composition()
-        A = TransferMechanism(name='composition-pytests-A')
-        B = TransferMechanism(name='composition-pytests-B')
-        C = TransferMechanism(name='composition-pytests-C')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_mechanism(C)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[0]], B: [[0]]}
-        feed_dict_terminal = {C: [[0]]}
-        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
-
-    def test_multiple_origin_mechs_only_one_in_feed_dict(self):
-        comp = Composition()
-        A = TransferMechanism(name='composition-pytests-A')
-        B = TransferMechanism(name='composition-pytests-B')
-        C = TransferMechanism(name='composition-pytests-C')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_mechanism(C)
-        comp.add_projection(A, MappingProjection(), C)
-        comp.add_projection(B, MappingProjection(), C)
-        comp._analyze_graph()
-        feed_dict_origin = {B: [[0]]}
-        feed_dict_terminal = {C: [[0]]}
-        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
-
-    def test_input_state_len_3(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
-        B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[0, 1, 2]]}
-        feed_dict_terminal = {B: [[0, 1, 2]]}
-        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
-
-    def test_input_state_len_3_feed_dict_len_2(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
-        B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[0, 1]]}
-        feed_dict_terminal = {B: [[0]]}
-        with pytest.raises(ValueError):
-            comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-
-    def test_input_state_len_2_feed_dict_len_3(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[0, 1], name='composition-pytests-A')
-        B = TransferMechanism(default_variable=[0, 1], name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[0, 1, 2]]}
-        feed_dict_terminal = {B: [[0]]}
-        with pytest.raises(ValueError):
-            comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-
-    def test_feed_dict_includes_mechs_of_correct_and_incorrect_types(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[0], name='composition-pytests-A')
-        B = TransferMechanism(default_variable=[0], name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[0]], B: [[0]]}
-        with pytest.raises(ValueError):
-            comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-
-    def test_input_state_len_3_brackets_extra_1(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
-        B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[[0, 1, 2]]]}
-        feed_dict_terminal = {B: [[[0, 1, 2]]]}
-        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
-
-    def test_input_state_len_3_brackets_missing_1(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
-        B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {A:  [0, 1, 2]}
-        feed_dict_terminal = {B: [[0]]}
-        with pytest.raises(TypeError):
-            comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-
-    def test_empty_feed_dict_for_empty_type(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[0], name='composition-pytests-A')
-        B = TransferMechanism(default_variable=[0], name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[0]]}
-        feed_dict_monitored = {}
-        comp._validate_feed_dict(feed_dict_monitored, comp.get_mechanisms_by_role(MechanismRole.MONITORED), "monitored")
-
-    def test_mech_in_feed_dict_for_empty_type(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[0])
-        B = TransferMechanism(name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[0]]}
-        feed_dict_monitored = {B: [[0]]}
-        with pytest.raises(ValueError):
-            comp._validate_feed_dict(feed_dict_monitored, comp.get_mechanisms_by_role(MechanismRole.MONITORED), "monitored")
-
-    def test_one_mech_1(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[0])
-        comp.add_mechanism(A)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[0]]}
-        feed_dict_terminal = {A: [[0]]}
-        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-
-    def test_one_mech_2(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[0])
-        comp.add_mechanism(A)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[0]]}
-        feed_dict_terminal = {A: [[0]]}
-        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
-
-    def test_multiple_time_steps_1(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-A')
-        B = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[0, 1, 2], [0, 1, 2]]}
-        feed_dict_terminal = {B: [[0, 1, 2]]}
-        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
-
-    def test_multiple_time_steps_2(self):
-        comp = Composition()
-        A = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-A')
-        B = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-B')
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(), B)
-        comp._analyze_graph()
-        feed_dict_origin = {A: [[[0, 1, 2]], [[0, 1, 2]]]}
-        feed_dict_terminal = {B: [[0, 1, 2]]}
-        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+# class TestValidateFeedDict:
+#
+#     def test_empty_feed_dicts(self):
+#         comp = Composition()
+#         A = TransferMechanism(name='composition-pytests-A')
+#         B = TransferMechanism(name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {}
+#         feed_dict_terminal = {}
+#         comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#         comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+#
+#     def test_origin_and_terminal_with_mapping(self):
+#         comp = Composition()
+#         A = TransferMechanism(name='composition-pytests-A')
+#         B = TransferMechanism(name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[0]]}
+#         feed_dict_terminal = {B: [[0]]}
+#         comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#         comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+#
+#     def test_origin_and_terminal_with_swapped_feed_dicts_1(self):
+#         comp = Composition()
+#         A = TransferMechanism(name='composition-pytests-A')
+#         B = TransferMechanism(name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {B: [[0]]}
+#         feed_dict_terminal = {A: [[0]]}
+#         with pytest.raises(ValueError):
+#             comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#
+#     def test_origin_and_terminal_with_swapped_feed_dicts_2(self):
+#         comp = Composition()
+#         A = TransferMechanism(name='composition-pytests-A')
+#         B = TransferMechanism(name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {B: [[0]]}
+#         feed_dict_terminal = {A: [[0]]}
+#         with pytest.raises(ValueError):
+#             comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+#
+#     def test_multiple_origin_mechs(self):
+#         comp = Composition()
+#         A = TransferMechanism(name='composition-pytests-A')
+#         B = TransferMechanism(name='composition-pytests-B')
+#         C = TransferMechanism(name='composition-pytests-C')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_mechanism(C)
+#         comp.add_projection(A, MappingProjection(), C)
+#         comp.add_projection(B, MappingProjection(), C)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[0]], B: [[0]]}
+#         feed_dict_terminal = {C: [[0]]}
+#         comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#         comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+#
+#     def test_multiple_origin_mechs_only_one_in_feed_dict(self):
+#         comp = Composition()
+#         A = TransferMechanism(name='composition-pytests-A')
+#         B = TransferMechanism(name='composition-pytests-B')
+#         C = TransferMechanism(name='composition-pytests-C')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_mechanism(C)
+#         comp.add_projection(A, MappingProjection(), C)
+#         comp.add_projection(B, MappingProjection(), C)
+#         comp._analyze_graph()
+#         feed_dict_origin = {B: [[0]]}
+#         feed_dict_terminal = {C: [[0]]}
+#         comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#         comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+#
+#     def test_input_state_len_3(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
+#         B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[0, 1, 2]]}
+#         feed_dict_terminal = {B: [[0, 1, 2]]}
+#         comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#         comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+#
+#     def test_input_state_len_3_feed_dict_len_2(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
+#         B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[0, 1]]}
+#         feed_dict_terminal = {B: [[0]]}
+#         with pytest.raises(ValueError):
+#             comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#
+#     def test_input_state_len_2_feed_dict_len_3(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[0, 1], name='composition-pytests-A')
+#         B = TransferMechanism(default_variable=[0, 1], name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[0, 1, 2]]}
+#         feed_dict_terminal = {B: [[0]]}
+#         with pytest.raises(ValueError):
+#             comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#
+#     def test_feed_dict_includes_mechs_of_correct_and_incorrect_types(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[0], name='composition-pytests-A')
+#         B = TransferMechanism(default_variable=[0], name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[0]], B: [[0]]}
+#         with pytest.raises(ValueError):
+#             comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#
+#     def test_input_state_len_3_brackets_extra_1(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
+#         B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[[0, 1, 2]]]}
+#         feed_dict_terminal = {B: [[[0, 1, 2]]]}
+#         comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#         comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+#
+#     def test_input_state_len_3_brackets_missing_1(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-A')
+#         B = TransferMechanism(default_variable=[0, 1, 2], name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A:  [0, 1, 2]}
+#         feed_dict_terminal = {B: [[0]]}
+#         with pytest.raises(TypeError):
+#             comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#
+#     def test_empty_feed_dict_for_empty_type(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[0], name='composition-pytests-A')
+#         B = TransferMechanism(default_variable=[0], name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[0]]}
+#         feed_dict_monitored = {}
+#         comp._validate_feed_dict(feed_dict_monitored, comp.get_mechanisms_by_role(MechanismRole.MONITORED), "monitored")
+#
+#     def test_mech_in_feed_dict_for_empty_type(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[0])
+#         B = TransferMechanism(name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[0]]}
+#         feed_dict_monitored = {B: [[0]]}
+#         with pytest.raises(ValueError):
+#             comp._validate_feed_dict(feed_dict_monitored, comp.get_mechanisms_by_role(MechanismRole.MONITORED), "monitored")
+#
+#     def test_one_mech_1(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[0])
+#         comp.add_mechanism(A)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[0]]}
+#         feed_dict_terminal = {A: [[0]]}
+#         comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#
+#     def test_one_mech_2(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[0])
+#         comp.add_mechanism(A)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[0]]}
+#         feed_dict_terminal = {A: [[0]]}
+#         comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+#
+#     def test_multiple_time_steps_1(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-A')
+#         B = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[0, 1, 2], [0, 1, 2]]}
+#         feed_dict_terminal = {B: [[0, 1, 2]]}
+#         comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#         comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+#
+#     def test_multiple_time_steps_2(self):
+#         comp = Composition()
+#         A = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-A')
+#         B = TransferMechanism(default_variable=[[0, 1, 2]], name='composition-pytests-B')
+#         comp.add_mechanism(A)
+#         comp.add_mechanism(B)
+#         comp.add_projection(A, MappingProjection(), B)
+#         comp._analyze_graph()
+#         feed_dict_origin = {A: [[[0, 1, 2]], [[0, 1, 2]]]}
+#         feed_dict_terminal = {B: [[0, 1, 2]]}
+#         comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+#         comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
 
 class TestGetMechanismsByRole:

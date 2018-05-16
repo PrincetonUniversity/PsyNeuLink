@@ -763,33 +763,33 @@ class Composition(object):
 
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
     # feed_dict is a dictionary of the input states of each mechanism of the specified type
-    def _validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
-        for mech in feed_dict.keys():  # For each mechanism given an input
-            if mech not in mech_type_list:  # Check that it is the right kind of mechanism in the composition
-                if mech_type[0] in ['a', 'e', 'i', 'o', 'u']:  # Check for grammar
-                    article = "an"
-                else:
-                    article = "a"
-                # Throw an error informing the user that the mechanism was not found in the mech type list
-                raise ValueError("The Mechanism \"{}\" is not {} {} of the composition".format(mech.name, article, mech_type))
-            for i, timestep in enumerate(feed_dict[mech]):  # If mechanism is correct type, iterate over timesteps
-                # Check if there are multiple input states specified
-                try:
-                    timestep[0]
-                except TypeError:
-                    raise TypeError("The Mechanism  \"{}\" is incorrectly formatted at time step {!s}. "
-                                    "Likely missing set of brackets.".format(mech.name, i))
-                if not isinstance(timestep[0], Iterable) or isinstance(timestep[0], str):  # Iterable imported from collections
-                    # If not, embellish the formatting to match the verbose case
-                    timestep = [timestep]
-                # Then, check that each input_state is receiving the right size of input
-                for i, value in enumerate(timestep):
-                    val_length = len(value)
-                    state_length = len(mech.input_state.instance_defaults.value)
-                    if val_length != state_length:
-                        raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
-                                         "{!s} where the InputState takes values of length {!s}".
-                                         format(i, mech.name, val_length, state_length))
+    # def _validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
+    #     for mech in feed_dict.keys():  # For each mechanism given an input
+    #         if mech not in mech_type_list:  # Check that it is the right kind of mechanism in the composition
+    #             if mech_type[0] in ['a', 'e', 'i', 'o', 'u']:  # Check for grammar
+    #                 article = "an"
+    #             else:
+    #                 article = "a"
+    #             # Throw an error informing the user that the mechanism was not found in the mech type list
+    #             raise ValueError("The Mechanism \"{}\" is not {} {} of the composition".format(mech.name, article, mech_type))
+    #         for i, timestep in enumerate(feed_dict[mech]):  # If mechanism is correct type, iterate over timesteps
+    #             # Check if there are multiple input states specified
+    #             try:
+    #                 timestep[0]
+    #             except TypeError:
+    #                 raise TypeError("The Mechanism  \"{}\" is incorrectly formatted at time step {!s}. "
+    #                                 "Likely missing set of brackets.".format(mech.name, i))
+    #             if not isinstance(timestep[0], Iterable) or isinstance(timestep[0], str):  # Iterable imported from collections
+    #                 # If not, embellish the formatting to match the verbose case
+    #                 timestep = [timestep]
+    #             # Then, check that each input_state is receiving the right size of input
+    #             for i, value in enumerate(timestep):
+    #                 val_length = len(value)
+    #                 state_length = len(mech.input_state.instance_defaults.value)
+    #                 if val_length != state_length:
+    #                     raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
+    #                                      "{!s} where the InputState takes values of length {!s}".
+    #                                      format(i, mech.name, val_length, state_length))
 
     def _create_CIM_output_states(self):
         '''
@@ -955,8 +955,9 @@ class Composition(object):
         runtime_params=None,
     ):
         '''
-            Passes inputs to any Mechanisms receiving inputs directly from the user, then coordinates with the Scheduler
-            to receive and execute sets of Mechanisms that are eligible to run until termination conditions are met.
+            Passes inputs to any Mechanisms receiving inputs directly from the user (via the "inputs" argument) then
+            coordinates with the Scheduler to receive and execute sets of Mechanisms that are eligible to run until
+            termination conditions are met.
 
             Arguments
             ---------
