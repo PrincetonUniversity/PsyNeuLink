@@ -703,7 +703,7 @@ class Component(object):
         + paramsCurrent
         # + parameter_validation
         + user_params
-        + runtime_params_in_use
+        +._runtime_params_reset
         + recording
 
     Instance methods:
@@ -1019,7 +1019,7 @@ class Component(object):
                default_set=self.paramClassDefaults,   # source set from which missing params are assigned
                context=context)
 
-        self.runtime_params_in_use = False
+        self._runtime_params_reset = {}
 
         # KDM: this is a poorly implemented hack that stops the .update call from
         # starting off a chain of assignment/validation calls that ends up
@@ -1623,6 +1623,19 @@ class Component(object):
             for arg_name, arg_value in kwargs.items():
                 setattr(self, arg_name, arg_value)
 
+    def _set_parameter_value(self, param, val):
+        setattr(self, param, val)
+        if hasattr(self, "parameter_states"):
+            if param in self.parameter_states:
+                new_state_value = self.parameter_states[param].execute(context=ContextFlags.EXECUTING)
+                self.parameter_states[param].value = new_state_value
+        elif hasattr(self, "owner"):
+            if hasattr(self.owner, "parameter_states"):
+                if param in self.owner.parameter_states:
+                    new_state_value = self.owner.parameter_states[param].execute(
+                        context=ContextFlags.EXECUTING)
+                    self.owner.parameter_states[param].value = new_state_value
+
     def _check_args(self, variable=None, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params.
 
@@ -1634,7 +1647,8 @@ class Component(object):
         Does the following:
         - instantiate variable (if missing or callable)
         - validate variable if PARAM_VALIDATION is set
-        - assign runtime params to paramsCurrent
+        - resets leftover runtime params back to original values (only if execute method was called directly)
+        - sets runtime params
         - validate params if PARAM_VALIDATION is set
 
         :param variable: (anything but a dict) - variable to validate
@@ -1678,64 +1692,25 @@ class Component(object):
         #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
-        # If params have been passed, treat as runtime params and assign to paramsCurrent
-        #   (relabel params as runtime_params for clarity)
+        # reset any runtime params that were leftover from a direct call to .execute (atypical)
+        for key in self._runtime_params_reset:
+            self._set_parameter_value(key, self._runtime_params_reset[key])
+        self._runtime_params_reset = {}
+
+        # If params have been passed, treat as runtime params
         runtime_params = params
-        if runtime_params and runtime_params is not None:
-            for param_name in self.user_params:
-                # Ignore input_states and output_states -- they should not be modified during run
-                # IMPLEMENTATION NOTE:
-                #    FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED:
-                #        At present, assignment of ``function`` as runtime param is not supported
-                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-                if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
-                    continue
-                # If param is specified in runtime_params, then assign it
-                if param_name in runtime_params:
-                    self.paramsCurrent[param_name] = runtime_params[param_name]
-                # Otherwise, (re-)assign to paramInstanceDefaults
-                #    this insures that any params that were assigned as runtime on last execution are reset here
-                #    (unless they have been assigned another runtime value)
-                elif not self.runtimeParamStickyAssignmentPref:
-                    if param_name is FUNCTION_PARAMS:
-                        for function_param in self.function_object.user_params:
-                            self.function_object.paramsCurrent[function_param] = \
-                                self.function_object.paramInstanceDefaults[function_param]
+        if isinstance(runtime_params, dict):
+            for param_name in runtime_params:
+                # (1) store current attribute value in _runtime_params_reset so that it can be reset later
+                # (2) assign runtime param values to attributes (which calls validation via properties)
+                # (3) update parameter states if needed
+                if hasattr(self, param_name):
+                    if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
                         continue
-                    self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
-            self.runtime_params_in_use = True
-
-        # CW 1/24/18: This elif block appears to be accidentally deleting self.input_states
-        # Otherwise, reset paramsCurrent to paramInstanceDefaults
-        elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
-            # Can't do the following since function could still be a class ref rather than abound method (see below)
-            # self.paramsCurrent = self.paramInstanceDefaults
-            for param_name in self.user_params:
-                # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-                #    At present, assignment of ``function`` as runtime param is not supported
-                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-                if param_name is FUNCTION:
-                    continue
-                if param_name is FUNCTION_PARAMS:
-                    for function_param in self.function_object.user_params:
-                        self.function_object.paramsCurrent[function_param] = \
-                            self.function_object.paramInstanceDefaults[function_param]
-                    continue
-                self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
-
-            self.runtime_params_in_use = False
-
-        # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
-        if self.prefs.paramValidationPref and params and not params is target_set:
-            curr_context = self.context.initialization_status
-            self.context.initialization_status = ContextFlags.VALIDATING
-            try:
-                self._validate_params(variable=variable, request_set=params, target_set=target_set, context=context)
-            except TypeError:
-                self._validate_params(request_set=params, target_set=target_set, context=context)
-            self.context.initialization_status = curr_context
+                    self._runtime_params_reset[param_name] = getattr(self, param_name)
+                    self._set_parameter_value(param_name, runtime_params[param_name])
+        elif runtime_params:    # not None
+            raise ComponentError("Invalid specification of runtime parameters for {}".format(self.name))
 
         return variable
 
@@ -2942,14 +2917,6 @@ class Component(object):
     @runtimeParamModulationPref.setter
     def runtimeParamModulationPref(self, setting):
         self.prefs.runtimeParamModulationPref = setting
-
-    @property
-    def runtimeParamStickyAssignmentPref(self):
-        return self.prefs.runtimeParamStickyAssignmentPref
-
-    @runtimeParamStickyAssignmentPref.setter
-    def runtimeParamStickyAssignmentPref(self, setting):
-        self.prefs.runtimeParamStickyAssignmentPref = setting
 
     @property
     def context(self):

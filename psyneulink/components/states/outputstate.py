@@ -597,10 +597,10 @@ from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ALL, ASSIGN, CALCULATE, COMMAND_LINE, FUNCTION, GATING_SIGNAL, INDEX, INPUT_STATE, INPUT_STATES, MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM_VALUE, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, STATE, VALUE, VARIABLE, VARIANCE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, recursive_update
+from psyneulink.globals.utilities import UtilitiesError, is_numeric, iscompatible, make_readonly_property, recursive_update
 
 __all__ = [
-    'make_readonly_property', 'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
+    'OUTPUTS', 'OutputState', 'OutputStateError', 'PRIMARY', 'SEQUENTIAL',
     'standard_output_states', 'StandardOutputStates', 'StandardOutputStatesError', 'state_type_keywords',
 ]
 
@@ -811,6 +811,12 @@ class OutputState(State_Base):
     value : number, list or np.ndarray
         assigned the result of `function <OutputState.function>`;  the same value is assigned to the corresponding item
         of the owner Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
+
+    label : string or number
+        the string label that represents the current `value <OutputState.value>` of the OutputState, according to the
+        owner mechanism's `output_labels_dict <Mechanism.output_labels_dict>`. If the current
+        `value <OutputState.value>` of the OutputState does not have a corresponding label, then the numeric
+        `value <OutputState.value>` is returned.
 
     efferents : List[MappingProjection]
         `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState
@@ -1252,6 +1258,13 @@ class OutputState(State_Base):
     def calculate(self):
         return self.assign
 
+    @property
+    def label(self):
+        label_dictionary = {}
+        if hasattr(self.owner, "output_labels_dict"):
+            label_dictionary = self.owner.output_labels_dict
+        return self._get_value_label(label_dictionary, self.owner.output_states)
+
 
 def _instantiate_output_states(owner, output_states=None, context=None):
     """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputState(s)
@@ -1541,7 +1554,7 @@ class StandardOutputStates():
                 index = state[VARIABLE]
             else:
                 continue
-            setattr(self.owner.__class__, state[NAME]+'_INDEX', make_readonly_property(index))
+            setattr(self.owner.__class__, state[NAME]+'_INDEX', make_readonly_property(index, name=state[NAME] + '_INDEX'))
 
     @tc.typecheck
     def add_state_dicts(self, output_state_dicts:list, indices:tc.optional(tc.any(int, str, list))=None):
@@ -1592,8 +1605,13 @@ def _parse_output_state_variable(owner, variable, output_state_name=None):
                 if owner.attributes_dict[spec[0]] is None:
                     return None
                 else:
-                    raise OutputStateError("Can't parse variable ({}) for {} of {}".
-                                           format(spec, output_state_name or OutputState.__name__, owner.name))
+                    # raise OutputStateError("Can't parse variable ({}) for {} of {}".
+                    #                        format(spec, output_state_name or OutputState.__name__, owner.name))
+                    raise Exception
+            except:
+                raise OutputStateError("Can't parse variable ({}) for {} of {}".
+                                       format(spec, output_state_name or OutputState.__name__, owner.name))
+
         elif isinstance(spec, str) and spec == PARAMS_DICT:
             # Specifies passing owner's params_dict as variable
             return owner.attributes_dict
@@ -1655,21 +1673,6 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     return fct
 
 
-def make_readonly_property(val):
-    """Return property that provides read-only access to its value
-    """
-
-    def getter(self):
-        return val
-
-    def setter(self, val):
-        raise UtilitiesError("{} is read-only property of {}".format(val, self.__class__.__name__))
-
-    # Create the property
-    prop = property(getter).setter(setter)
-    return prop
-
-
 @tc.typecheck
 def _maintain_backward_compatibility(d:dict, name, owner):
     """Maintain compatibility with use of INDEX, ASSIGN and CALCULATE in OutputState specification"""
@@ -1729,5 +1732,3 @@ def _maintain_backward_compatibility(d:dict, name, owner):
                       "it will still work, but should be changed in {} specification of {} for future compatibility.".
                       format(OUTPUT_STATES, owner.name))
         assert False
-
-

@@ -79,6 +79,7 @@ import inspect
 import logging
 import numbers
 import warnings
+
 from enum import Enum, EnumMeta, IntEnum
 
 import collections
@@ -1080,15 +1081,17 @@ def is_instance_or_subclass(candidate, spec):
     return isinstance(candidate, spec) or (inspect.isclass(candidate) and issubclass(candidate, spec))
 
 
-def make_readonly_property(val):
+def make_readonly_property(val, name=None):
     """Return property that provides read-only access to its value
     """
+    if name is None:
+        name = val
 
     def getter(self):
         return val
 
     def setter(self, val):
-        raise UtilitiesError("{} is read-only property of {}".format(val, self.__class__.__name__))
+        raise UtilitiesError("{} is read-only property of {}".format(name, self.__class__.__name__))
 
     # Create the property
     prop = property(getter).setter(setter)
