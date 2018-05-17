@@ -1118,18 +1118,10 @@ class Composition(object):
             call_after_pass()
 
         for proj in self.interface_projections_out:
-            # proj.receiver.owner._execution_id = self._execution_id
-            # proj.execute(variable=proj.sender.value, context=ContextFlags.PROCESSING)
 
-            proj.receiver.owner.execute(context=ContextFlags.PROCESSING)
-            print("input states = ", proj.receiver.owner.input_states)
-            print(proj.receiver.owner.path_afferents)
-            # print("rec val = ", proj.receiver.value)
-            assert self.output_CIM == proj.receiver.owner
-        # print("value = ", self.output_CIM.value)
-        # print("output values = ", self.output_CIM.output_values)
-            # proj.receiver.update(context=ContextFlags.PROCESSING)
-            # proj.execute(variable=proj.sender.value, context=ContextFlags.PROCESSING)
+            input = proj.execute(variable=proj.sender.value, context=ContextFlags.PROCESSING)
+            self.output_CIM.execute(input=input)
+
 
         # TBI - delete (or don't create) default output state instead of skipping it
         output_values = []
