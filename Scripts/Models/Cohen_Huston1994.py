@@ -152,7 +152,7 @@ colors_hidden_layer.set_log_conditions('value')
 words_hidden_layer.set_log_conditions('value')
 
 Bidirectional_Stroop.show()
-# Bidirectional_Stroop.show_graph(show_dimensions=pnl.ALL)#,show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
+Bidirectional_Stroop.show_graph(show_dimensions=pnl.ALL)#,show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
 
 # Create threshold function -------------------------------------------------------------------------------------------
 def pass_threshold(response_layer, thresh):
