@@ -2,25 +2,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import psyneulink as pnl
 
-# Define Initial Variables ----------------------------------------------------------------------------------------------------
-rate = 0.01
+# Define Variables ----------------------------------------------------------------------------------------------------
+rate = 0.1
 inhibition = -2.0
 bias = 4.0
 threshold = 0.55
 settle_trials = 50
-
-prior100 = 100
+prior120 = 100
 terminate2 = 180
 terminate3 = 200
 terminate4 = 220
 terminate5 = 240
-
-conditions = 3
-runs = 5
-runs2 = 4
-response_all = []
-response_all2 = []
-
+# terminate6 = 260
+# terminate7 = 280
 # Create mechanisms ---------------------------------------------------------------------------------------------------
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
 colors_input_layer = pnl.TransferMechanism(size=3,
@@ -38,34 +32,33 @@ task_input_layer = pnl.TransferMechanism(size=2,
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.RecurrentTransferMechanism(size=2,
                                             function=pnl.Logistic(),
-                                            hetero=inhibition,
+                                            hetero=-2,
                                             integrator_mode=True,
-                                            smoothing_factor=rate,
+                                            smoothing_factor=0.1,
                                             name='TASK')
 
 #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
 colors_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
-                                            function=pnl.Logistic(bias=4.0),
-                                            integrator_mode=True,
-                                                     hetero=inhibition,
-                                           # noise=pnl.NormalDist(mean=0.0, standard_dev=.0).function,
-                                            smoothing_factor=rate, # cohen-huston text says 0.01
-                                            name='COLORS HIDDEN')
+                                                     function=pnl.Logistic(bias=4.0),
+                                                     integrator_mode=True,
+                                                     hetero=-2.0,
+                                                     # noise=pnl.NormalDist(mean=0.0, standard_dev=.0).function,
+                                                     smoothing_factor=0.1, # cohen-huston text says 0.01
+                                                     name='COLORS HIDDEN')
 
-words_hidden_layer = pnl.RecurrentTransferMechanism(#default_variable=np.array([[1, 1, 1]]),
-                                                    size=3,
-                                           function=pnl.Logistic(bias=4.0),
-                                                    hetero=inhibition,
-                                           integrator_mode=True,
-                                          # noise=pnl.NormalDist(mean=0.0, standard_dev=.05).function,
-                                           smoothing_factor=rate,
-                                           name='WORDS HIDDEN')
+words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
+                                                    function=pnl.Logistic(bias=4.0),
+                                                    hetero=-2,
+                                                    integrator_mode=True,
+                                                    # noise=pnl.NormalDist(mean=0.0, standard_dev=.05).function,
+                                                    smoothing_factor=0.1,
+                                                    name='WORDS HIDDEN')
 #   Response layer, responses: ('red', 'green'): RecurrentTransferMechanism for self inhibition matrix
-response_layer = pnl.RecurrentTransferMechanism(size=2,  #Recurrentdefault_variable=np.array([[3.1, 3.1]]),
+response_layer = pnl.RecurrentTransferMechanism(size=2,
                                                 function=pnl.Logistic(),
-                                                hetero=inhibition,
+                                                hetero=-2.0,
                                                 integrator_mode=True,
-                                                smoothing_factor=rate,
+                                                smoothing_factor=0.1,
                                                 name='RESPONSE')
 
 # Log mechanisms ------------------------------------------------------------------------------------------------------
@@ -83,6 +76,7 @@ response_layer.set_log_conditions('value')
 response_layer.set_log_conditions('InputState-0')
 # Connect mechanisms --------------------------------------------------------------------------------------------------
 # (note that response layer projections are set to all zero first for initialization
+
 color_input_weights = pnl.MappingProjection(matrix=np.array([[1.0, 0.0, 0.0],
                                                              [0.0, 1.0, 0.0],
                                                              [0.0, 0.0, 0.0]]))
@@ -157,10 +151,10 @@ task_word_response_process = pnl.Process(pathway=[task_input_layer,
 
 # Create system -------------------------------------------------------------------------------------------------------
 Bidirectional_Stroop = pnl.System(processes=[color_response_process,
-                                             word_response_process,
-                                             task_color_response_process,
-                                             task_word_response_process],
-                                  name='FEEDFORWARD_STROOP_SYSTEM')
+                                                   word_response_process,
+                                                   task_color_response_process,
+                                                   task_word_response_process],
+                                        name='FEEDFORWARD_STROOP_SYSTEM')
 
 # LOGGING:
 colors_hidden_layer.set_log_conditions('value')
@@ -208,11 +202,13 @@ terminate_list = [terminate_trial2,
                   terminate_trial3,
                   terminate_trial4,
                   terminate_trial5]
+
 # Create test trials function -----------------------------------------------------------------------------------------
 # a BLUE word input is [1,0] to words_input_layer and GREEN word is [0,1]
 # a blue color input is [1,0] to colors_input_layer and green color is [0,1]
 # a color-naming trial is [1,0] to task_layer and a word-reading trial is [0,1]
 def trial_dict(red_color, green_color, neutral_color, red_word, green_word, neutral_word, CN, WR):
+
     trialdict = {
     colors_input_layer: [red_color, green_color, neutral_color],
     words_input_layer: [red_word, green_word, neutral_word],
@@ -221,6 +217,7 @@ def trial_dict(red_color, green_color, neutral_color, red_word, green_word, neut
     return trialdict
 
 # Define initialization trials separately
+# WR_initialize_input = trial_dict(0, 0, 0, 0, 0, 0, 0, 1)
 CN_initialize_input = trial_dict(0, 0, 0, 0, 0, 0, 1, 0)
 
 CN_incongruent_trial_input = trial_dict(1, 0, 0, 0, 1, 0, 1, 0) #red_color, green color, red_word, green word, CN, WR
@@ -230,6 +227,16 @@ CN_control_word_trial_input = trial_dict(0, 0, 0, 1, 0, 0, 1, 0) #red_color, gre
 
 CN_congruent_word_first_input = trial_dict(0, 0, 0, 1, 0, 0, 1, 0) #red_color, green color, red_word, green word, CN, WR
 CN_incongruent_word_first_input = trial_dict(0, 0, 0, 0, 1, 0, 1, 0) #red_color, green color, red_word, green word, CN, WR
+
+# WR_congruent_trial_input = trial_dict(1, 0, 0, 1, 0, 0, 0, 1) #red_color, green color, red_word, green word, CN, WR
+# WR_incongruent_trial_input = trial_dict(1, 0, 0, 0, 1, 0, 0, 1) #red_color, green color, red_word, green word, CN, WR
+# WR_control_trial_input = trial_dict(1, 0, 0, 0, 0, 0, 0, 1) #red_color, green color, red_word, green word, CN, WR
+
+conditions = 3
+runs = 5
+runs2 = 4
+response_all = []
+response_all2 = []
 
 Stimulus = [[CN_initialize_input, CN_congruent_word_first_input, CN_congruent_trial_input, CN_control_trial_input],
             [CN_initialize_input, CN_incongruent_word_first_input, CN_incongruent_trial_input, CN_control_trial_input],
@@ -256,7 +263,7 @@ for cond in range(conditions):
         response_word_weights  = pnl.MappingProjection(matrix=np.array([[2.5, 0.0, 0.0],
                                                                         [0.0, 2.5, 0.0]]))
 
-        Bidirectional_Stroop.run(inputs=Stimulus[cond][1],num_trials=prior100 - (run*20))# termination_processing=terminate_trial) # run system with congruent stimulus input until
+        Bidirectional_Stroop.run(inputs=Stimulus[cond][1],num_trials=prior120 - (run*20))# termination_processing=terminate_trial) # run system with congruent stimulus input until
         Bidirectional_Stroop.run(inputs=Stimulus[cond][2], termination_processing=terminate_trial) # run system with congruent stimulus input until
                                                                     # threshold in of of the response layer units is reached
 
@@ -288,7 +295,7 @@ for cond in range(conditions):
         response_word_weights = pnl.MappingProjection(matrix=np.array([[0.0, 0.0, 0.0],
                                                                        [0.0, 0.0, 0.0]]))
         Bidirectional_Stroop.run(inputs=Stimulus[cond][0], num_trials = settle_trials)  # run system to settle for 200 trials with congruent stimuli input
-        Bidirectional_Stroop.run(inputs=Stimulus[cond][0], num_trials = prior100)  # run system to settle for 200 trials with congruent stimuli input
+        Bidirectional_Stroop.run(inputs=Stimulus[cond][0], num_trials = prior120)  # run system to settle for 200 trials with congruent stimuli input
         response_color_weights = pnl.MappingProjection(matrix=np.array([[1.5, 0.0, 0.0],
                                                                         [0.0, 1.5, 0.0]]))
         response_word_weights = pnl.MappingProjection(matrix=np.array([[2.5, 0.0, 0.0],
@@ -313,13 +320,15 @@ for cond in range(conditions):
         response_layer.reinitialize([[0,0]])
         task_layer.reinitialize([[0,0]])
 
-# print('response_all: ', response_all)
+#compute regression for model
+reg = np.dot(response_all,2)+123 # 123 is intercept in Cohen, Dunbar & McClalland 1990 model
 plt.figure()
 # plt.plot(response_all[0:9])
 # plt.plot(response_all[9:18])
 # plt.plot(response_all[18:27])
+
+stimulus_onset_asynchrony = np.linspace(-400,400,9)
+plt.plot(stimulus_onset_asynchrony, reg[0:9], '-^')
+plt.plot(stimulus_onset_asynchrony, reg[9:18], '-s')
+plt.plot(stimulus_onset_asynchrony, reg[18:27], '-o')
 plt.show()
-# stimulus_onset_asynchrony = np.linspace(-400,400,9)
-# plt.plot(stimulus_onset_asynchrony, response_all[0:12])
-# plt.plot(stimulus_onset_asynchrony, response_all[12:24])
-# plt.plot(stimulus_onset_asynchrony, response_all[24:36])
