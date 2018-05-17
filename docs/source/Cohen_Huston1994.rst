@@ -9,27 +9,27 @@ The model aims to capute top-down effects of selective attention and the bottom-
 for the Stroop task.
 The model first aimed to simulate the standard Stroop effect, which had been modeled before in a feed forward model
 (Cohen, Dunbar, McClalland 1990). In a second step, the model aimed to capute the findings by Glaser & Glaser (1982).
-Glaser & Glaser (1982) vaired the stimulus onset asynchrony by presenting the irrelevant stimulus of the Stroop task
-in different intervals before at the same time and after the presentation of the relevant stimulus. They found that the
-irrelevant stimulus caused interferenced (measured in increased reaction times) only when the irrelevant stimulus was
+Glaser & Glaser (1982) vaired the stimulus onset asynchrony (SOA) by presenting the irrelevant stimulus of the Stroop task
+in different intervals before, at the same time, or after the presentation of the relevant stimulus. They found that the
+irrelevant stimulus caused interference (measured in increased reaction times) only when the irrelevant stimulus was
 presented in the range from 100ms before and 100ms after the presentation of the relevant stimulus. The effect was
 observed for congruent, neutral, and incongruent trials.
 
-Here we implement the GRAIN model which captures the Stroop effect (left), and plot the figure the GRAIN model produces for
-different stimulus onset asynchrony (right). The Figure below shows the simulated reaction times.
+Here we implement the GRAIN model which captures the Stroop effect (left), and plot the figure the GRAIN model produces
+for different SOA (right). The Figure below shows the simulated reaction times.
 Note that we used different regression coefficients to produce these plots.
 
 .. _GRAIN_STROOP_EFFECT_Fig:
 
 .. figure:: _static/GRAIN_STROOP_EFFECT.svg
-   :figwidth: 45 %
+   :figwidth: 30 %
    :align: left
    :alt: Cohen&Huston plot produced by PsyNeuLink
 
 .. _Horserace_Fig:
 
 .. figure:: _static/Horserace.svg
-   :figwidth: 45 %
+   :figwidth: 30 %
    :align: right
    :alt: Cohen&Huston SOA produced by PsyNeuLink
 
@@ -37,8 +37,8 @@ Note that we used different regression coefficients to produce these plots.
 The Model
 ---------
 
-Two hidden layers for colors and words each, a task layer and a response layer comprise the system of the model,
-all of which are implemented as `RecurrentTransferMechanism` and mutual inhibition weights. A response is made when one
+Two hidden layers (for colors and words each), a task layer, and a response layer comprise the system of the model,
+all of which are implemented as a `RecurrentTransferMechanism` and mutual inhibition weights. A response is made when one
 of the two units in the response layer hit a specified threshold.
 The hidden layers receive their inputs by two input layers. The layers are connected with predetermined weights (note
 that in the previous Stroop model by Cohen, Dunbar, McClalland (1990) the weights were learned).
