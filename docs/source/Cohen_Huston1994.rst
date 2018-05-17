@@ -15,19 +15,24 @@ irrelevant stimulus caused interferenced (measured in increased reaction times) 
 presented in the range from 100ms before and 100ms after the presentation of the relevant stimulus. The effect was
 observed for congruent, neutral, and incongruent trials.
 
-Here we first implement the GRAIN model which captures the Stroop effect. The Figure below shows the simulated reaction
-times.
-
-
+Here we implement the GRAIN model which captures the Stroop effect (left), and plot the figure the GRAIN model produces for
+different stimulus onset asynchrony (right). The Figure below shows the simulated reaction times.
+Note that we used different regression coefficients to produce these plots.
 
 .. _GRAIN_STROOP_EFFECT_Fig:
 
 .. figure:: _static/GRAIN_STROOP_EFFECT.svg
    :figwidth: 45 %
-   :align: center
+   :align: left
    :alt: Cohen&Huston plot produced by PsyNeuLink
 
-.. _Nieuwenhuis2005_MATLAB_Fig:
+.. _Horserace_Fig:
+
+.. figure:: _static/GRAIN_STROOP_EFFECT.svg
+   :figwidth: 45 %
+   :align: right
+   :alt: Cohen&Huston SOA produced by PsyNeuLink
+
 
 The Model
 ---------
@@ -38,7 +43,7 @@ of the two units in the response layer hit a specified threshold.
 The hidden layers receive their inputs by two input layers. The layers are connected with predetermined weights (note
 that in the previous Stroop model by Cohen, Dunbar, McClalland (1990) the weights were learned).
 Below the Graph of the model is shown.
-.. _GRAIN_STROOP_GRAPH:
+.. _GRAIN_STROOP_GRAPH_Fig:
 
 .. figure:: _static/_GRAIN_STROOP_GRAPH.svg
    :figwidth: 75 %
@@ -113,4 +118,23 @@ The `log` function is used to record the output values of the *RESPONSE LAYER*. 
 is used for the regression we used here to transfer cycles to milliseconds. We used the regression cycles*5 + 115 to
 produce the plot below.
 
-Script: :download:`Download Nieuwenhuis2005Model.py <../../Scripts/Models/Nieuwenhuis2005Model.py>`
+Execution horse race Figure
+---------------------------
+To reproduce the horse race figure, we run the system for different stimulus onset asynchronies (SOA).
+Depending on a positive or negative SOA the system is executed in different ways. For negative SOA, the system is run
+for the settling period first. Then, the system is run with the same input as in the settling period for different amount
+of times steps, depending on the SOA. For these two runs, the weights from the *RESPONSE LAYER* to the
+*HIDDEN COLOR LAYER* and the *HIDDEN WORD LAYER* are set to 0, since a response is silenced.
+Now these weights get tunred on with their values as mentioned above.
+The system is run a thrid time for the period with the irrelevant stimulus presented to the *WORD HIDDEN LAYER*,
+until the time for the relevant stimulus to be presented.
+For a forth and final time the system is run with both stimuli presented until one of the two units in the
+*RESPONSE LAYER* hits threshold.
+For the positive SOA, the system is run with the initial input to the *TASK LAYER* for the settling period, and
+a second time for the 100 cycles, since these amount of cylces represent the time for negative SOA. Then, the weights
+are turned on again and the system is run either for a certain amount of trials, of until the threshold is reached.
+stimulus is turned on.
+
+Script: :download:`Download Cohen_Huston1994.py <../../Scripts/Models/Cohen_Huston1994.py>`
+
+Script: :download:`Download Cohen_Huston1994_horse_race.py <../../Scripts/Models/Cohen_Huston1994_horse_race.py>`
