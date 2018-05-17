@@ -2059,11 +2059,7 @@ class State_Base(State):
         except (KeyError, TypeError):
             function_params = None
 
-        # # MODIFIED 5/4/18 OLD:
         self.value = self.execute(runtime_params=function_params, context=context)
-        # # MODIFIED 5/4/18 NEW:
-        # self.value = self._execute(function_variable=variable, runtime_params=function_params, context=context)
-        # MODIFIED 5/4/18 END
 
     def _get_value_label(self, labels_dict, all_states):
         subdicts = False
