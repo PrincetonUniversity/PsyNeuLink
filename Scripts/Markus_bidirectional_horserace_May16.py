@@ -2,19 +2,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 import psyneulink as pnl
 
+# This implements the horse race Figure shown in Cohen & Huston (1994).
+# Note that noise is turned off and each stimulus is only showed once for each stimulus onset asynchrony.
+
 # Define Variables ----------------------------------------------------------------------------------------------------
-rate = 0.1
-inhibition = -2.0
-bias = 4.0
-threshold = 0.55
-settle_trials = 50
-prior120 = 100
+rate = 0.1          # The integration rate was changed from 0.01 to 0.1
+inhibition = -2.0   # Mutual inhibition across each layer
+bias = 4.0          # bias for hidden layer units
+threshold = 0.55    # Threshold until a response is made, changed from 0.6 to 0.55
+settle_trials = 50  # Time for system to initialize and settle
+prior120 = 100      # Cycles needed to be added for stimulus to start
+# Different time steps at which the System should end run and start new terminate_processing run
+# This is needed for conditions in which the irrelevant condition is like a neutral trial and could already lead to
+# a correct response. This is basically the reason why with long positive stimulus onset asynchrony the three
+# condistions (congruent, incongruent, neutral) lead to the same reaction time.
 terminate2 = 180
 terminate3 = 200
 terminate4 = 220
 terminate5 = 240
-# terminate6 = 260
-# terminate7 = 280
+
 # Create mechanisms ---------------------------------------------------------------------------------------------------
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
 colors_input_layer = pnl.TransferMechanism(size=3,
@@ -64,16 +70,9 @@ response_layer = pnl.RecurrentTransferMechanism(size=2,
 # Log mechanisms ------------------------------------------------------------------------------------------------------
 #task_layer.set_log_conditions('gain')
 task_layer.set_log_conditions('value')
-task_layer.set_log_conditions('InputState-0')
-
 colors_hidden_layer.set_log_conditions('value')
-colors_hidden_layer.set_log_conditions('InputState-0')
-
 words_hidden_layer.set_log_conditions('value')
-words_hidden_layer.set_log_conditions('InputState-0')
-
 response_layer.set_log_conditions('value')
-response_layer.set_log_conditions('InputState-0')
 # Connect mechanisms --------------------------------------------------------------------------------------------------
 # (note that response layer projections are set to all zero first for initialization
 
@@ -321,7 +320,7 @@ for cond in range(conditions):
         task_layer.reinitialize([[0,0]])
 
 #compute regression for model
-reg = np.dot(response_all,2)+123 # 123 is intercept in Cohen, Dunbar & McClalland 1990 model
+reg = np.dot(response_all,2)+123
 plt.figure()
 # plt.plot(response_all[0:9])
 # plt.plot(response_all[9:18])
@@ -331,4 +330,7 @@ stimulus_onset_asynchrony = np.linspace(-400,400,9)
 plt.plot(stimulus_onset_asynchrony, reg[0:9], '-^')
 plt.plot(stimulus_onset_asynchrony, reg[9:18], '-s')
 plt.plot(stimulus_onset_asynchrony, reg[18:27], '-o')
+plt.title('stimulus onset asynchrony - horse race model ')
+plt.legend(['congruent', 'incongruent', 'neutral'])
+plt.ylabel('reaction time in ms')
 plt.show()
