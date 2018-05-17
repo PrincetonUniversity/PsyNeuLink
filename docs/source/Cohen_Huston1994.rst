@@ -43,9 +43,10 @@ of the two units in the response layer hit a specified threshold.
 The hidden layers receive their inputs by two input layers. The layers are connected with predetermined weights (note
 that in the previous Stroop model by Cohen, Dunbar, McClalland (1990) the weights were learned).
 Below the Graph of the model is shown.
+
 .. _GRAIN_STROOP_GRAPH_Fig:
 
-.. figure:: _static/_GRAIN_STROOP_GRAPH.svg
+.. figure:: _static/GRAIN_STROOP_GRAPH.svg
    :figwidth: 75 %
    :align: center
    :alt: Cohen&Huston System Graph
