@@ -903,7 +903,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def _execute(
         self,
         variable=None,
-        function_variable=None,
         runtime_params=None,
         context=None
     ):
