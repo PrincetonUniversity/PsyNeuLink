@@ -1,6 +1,6 @@
 Proactive Control & Task Control: A Stroop Model (Kalanthroff et al., 2018)
 ================================================================
-`"Task Conflict and Proactive Control: A Computational Theory of the Stroop Task" <https://www.ncbi.nlm.nih.gov/m/pubmed/25257710/`_
+`"Task Conflict and Proactive Control: A Computational Theory of the Stroop Task" <https://www.ncbi.nlm.nih.gov/m/pubmed/25257710/>`_
 
 Overview
 --------
@@ -56,43 +56,43 @@ model. A graph of the model is shown below.
 
 Network System
 ~~~~~~~~~~~~~~
-**COLOR INPUT LAYER**:  a `TransferMechanism` with **size**=2 (one unit for the input of one color, respectively
-here blue & green), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
+**COLOR INPUT LAYER**:  a `TransferMechanism` with **size**\ =2 (one unit for the input of one color, respectively
+here blue & green), and assigned a `Linear` function with **slope**\ =1.0 and **intercept**\ =0.0.
 
-**WORD INPUT LAYER**:  a `TransferMechanism` with **size**=2 (one unit for the input of one word, respectively,
-here blue & green), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
+**WORD INPUT LAYER**:  a `TransferMechanism` with **size**\ =2 (one unit for the input of one word, respectively,
+here blue & green), and assigned a `Linear` function with **slope**\ =1.0 and **intercept**\ =0.0.
 
-**BIAS INPUT LAYER**:  a `TransferMechanism` with **size**=2 (one unit for the bias of one of the hidden layers,
-which is the same in this model), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
+**BIAS INPUT LAYER**:  a `TransferMechanism` with **size**\ =2 (one unit for the bias of one of the hidden layers,
+which is the same in this model), and assigned a `Linear` function with **slope**\ =1.0 and **intercept**\ =0.0.
 
-**PROACTIVE CONTROL INPUT LAYER**:  a `TransferMechanism` with **size**=2 (one unit specified with a proactive control
-value, the other one set to zero), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
+**PROACTIVE CONTROL INPUT LAYER**:  a `TransferMechanism` with **size**\ =2 (one unit specified with a proactive control
+value, the other one set to zero), and assigned a `Linear` function with **slope**\ =1.0 and **intercept**\ =0.0.
 
-**COLOR HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**=2 (one element for each of the two colors, and
-assigned a `Logistic` function with **gain**=4.0 and **bias**=1.0. The **integrator_mode**=`True`
-and **smoothing_factor**=0.03. Both units receive mutually inhibitory weights (**hetero**=-2). A python function that
+**COLOR HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two colors, and
+assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
+and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
 sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.
 
-**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**=2 (one element for each of the two words, and
-assigned a `Logistic` function with **gain**=4.0 and **bias**=1.0. The **integrator_mode**=`True`
-and **smoothing_factor**=0.03. Both units receive mutually inhibitory weights (**hetero**=-2). A python function that
+**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two words, and
+assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
+and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
 sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.
 
-**TASK DEMAND LAYER**: a `RecurrentTransferMechanism` with **size**=2 (one element for each of the two tasks, and
-assigned a `Logistic` function with **gain**=4.0 and **bias**=1.0. The **integrator_mode**=`True`
-and **smoothing_factor**=0.03. Both units receive mutually inhibitory weights (**hetero**=-2). A python function that
+**TASK DEMAND LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two tasks, and
+assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
+and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
 sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value. A second output state is specified that computes the conflict between the two task
 units.
 
-**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**=2 (one element for each of the two responses, and
-assigned a `Logistic` function with **gain**=4.0 and **bias**=1.0. The **integrator_mode**=`True`
-and **smoothing_factor**=0.03. Both units receive mutually inhibitory weights (**hetero**=-2). A python function that
+**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**\ =2 (one element for each of the two responses, and
+assigned a `Logistic` function with **gain**\ =4.0 and **bias**\ =1.0. The **integrator_mode**\ =\ `True`
+and **smoothing_factor**\ =0.03. Both units receive mutually inhibitory weights (**hetero**\ =-2). A python function that
 sets the output of the `Logistic` function to 0 when it receives 0 as an input is specified on the `output_states`. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.
@@ -121,4 +121,4 @@ The activations of all units are updated on each time step until one of the resp
 which is set to 0.7. The `log` function is used to record the output values of the two hidden layers, the task layer,
 and the response layer. These values are used to produce the plot of the Figure.
 
-Script: :download:`Download Kalanthroff_PCTC.py <../../Scripts/Models/Kalanthroff_PCTC.py>`
+Script: :download:`Download Kalanthroff_PCTC_2018.py <../../Scripts/Models/Kalanthroff_PCTC_2018.py>`
