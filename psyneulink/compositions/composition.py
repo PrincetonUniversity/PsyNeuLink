@@ -913,6 +913,7 @@ class Composition(object):
         #     self.input_mechanisms[k]._execution_id = execution_id
 
         self.input_CIM._execution_id = execution_id
+        self.output_CIM._execution_id = execution_id
         # self.target_CIM._execution_id = execution_id
 
         self._execution_id = execution_id
@@ -1021,7 +1022,7 @@ class Composition(object):
 
         self._assign_values_to_CIM_output_states(inputs)
         # self._assign_values_to_target_CIM_output_states(targets)
-        execution_id = self._assign_execution_ids(execution_id)
+        # execution_id = self._assign_execution_ids(execution_id)
         next_pass_before = 1
         next_pass_after = 1
         if clamp_input:
@@ -1087,8 +1088,8 @@ class Composition(object):
                                 execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
                     mechanism.context.execution_phase = ContextFlags.PROCESSING
-                    num = mechanism.execute(runtime_params=execution_runtime_params,
-                                            context=ContextFlags.COMPOSITION)
+                    mechanism.execute(runtime_params=execution_runtime_params,
+                                      context=ContextFlags.COMPOSITION)
 
                     for key in mechanism._runtime_params_reset:
                         mechanism._set_parameter_value(key, mechanism._runtime_params_reset[key])
@@ -1109,6 +1110,7 @@ class Composition(object):
                             # self.input_mechanisms[mechanism]._output_states[0].value = 0
                                 self.input_CIM_output_states[input_state].value = 0
 
+
             if call_after_time_step:
                 call_after_time_step()
 
@@ -1116,10 +1118,25 @@ class Composition(object):
             call_after_pass()
 
         for proj in self.interface_projections_out:
-            proj.receiver.update(context=ContextFlags.PROCESSING)
+            # proj.receiver.owner._execution_id = self._execution_id
             # proj.execute(variable=proj.sender.value, context=ContextFlags.PROCESSING)
 
-        return num
+            proj.receiver.owner.execute(context=ContextFlags.PROCESSING)
+            print("input states = ", proj.receiver.owner.input_states)
+            print(proj.receiver.owner.path_afferents)
+            # print("rec val = ", proj.receiver.value)
+            assert self.output_CIM == proj.receiver.owner
+        # print("value = ", self.output_CIM.value)
+        # print("output values = ", self.output_CIM.output_values)
+            # proj.receiver.update(context=ContextFlags.PROCESSING)
+            # proj.execute(variable=proj.sender.value, context=ContextFlags.PROCESSING)
+
+        # TBI - delete (or don't create) default output state instead of skipping it
+        output_values = []
+        for i in range(1, len(self.output_CIM.output_states)):
+            output_values.append(self.output_CIM.output_states[i].value)
+
+        return output_values
 
     def run(
         self,
@@ -1141,7 +1158,7 @@ class Composition(object):
         runtime_params=None
     ):
         '''
-            Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
+            Passes inputs to compositions, then executes
             to receive and execute sets of mechanisms that are eligible to run until termination conditions are met.
 
             Arguments

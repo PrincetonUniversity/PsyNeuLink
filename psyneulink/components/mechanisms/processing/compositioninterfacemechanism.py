@@ -45,14 +45,19 @@ Class Reference
 """
 
 import typecheck as tc
+from collections import Iterable
 
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
+from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName, RESULTS, PRIMARY, VARIABLE
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.components.functions.function import Identity
+from psyneulink.components.states.outputstate import StandardOutputStates, standard_output_states
+from psyneulink.components.mechanisms.mechanism import Mechanism
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.inputstate import InputState
 
 __all__ = ['CompositionInterfaceMechanism']
 
@@ -133,10 +138,14 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({})
     paramNames = paramClassDefaults.keys()
 
+    standard_output_states = standard_output_states.copy()
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
+                 input_states: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
+                 # output_states: tc.optional(tc.any(str, Iterable)) = RESULTS,
                  function=Identity(),
                  params=None,
                  name=None,
@@ -145,17 +154,40 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         if default_variable is None and size is None:
             default_variable = self.ClassDefaults.variable
 
+
+        # if output_states is None or output_states is RESULTS:
+        #     output_states = [RESULTS]
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
+                                                  input_states=input_states,
+                                                  # output_states=output_states,
                                                   params=params)
 
+        # if not isinstance(self.standard_output_states, StandardOutputStates):
+        #     self.standard_output_states = StandardOutputStates(self,
+        #                                                        self.standard_output_states,
+        #                                                        indices=PRIMARY)
+
         super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,
-                                                  size=size,
-                                                  params=params,
-                                                  function=function,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=ContextFlags.CONSTRUCTOR)
+                                                            size=size,
+                                                            input_states=input_states,
+                                                            function=function,
+                                                            params=params,
+                                                            name=name,
+                                                            prefs=prefs,
+                                                            context=ContextFlags.CONSTRUCTOR)
 
 
 
+    def _execute(self,
+                 variable=None,
+                 function_variable=None,
+                 runtime_params=None,
+                 context=None):
+        """Execute CompositionInterfaceMechanism; Pass InputState values to OutputStates.
+        """
+        output = super(Mechanism, self)._execute(function_variable=function_variable,
+                                                  runtime_params=runtime_params,
+                                                  context=context)
+        return output
 

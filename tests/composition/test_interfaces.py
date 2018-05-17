@@ -44,9 +44,9 @@ class TestExecuteCIM():
     def test_one_input_state_one_output_state(self):
 
         comp = Composition()
+
         A = TransferMechanism(name="composition-pytests-A",
-                              function=Linear(slope=2.0)
-                              )
+                              function=Linear(slope=2.0))
 
         B = TransferMechanism(name="composition-pytests-B",
                               function=Linear(slope=3.0))
@@ -66,5 +66,7 @@ class TestExecuteCIM():
             inputs=inputs_dict,
             scheduler_processing=sched
         )
+        print(comp.input_CIM.output_states)
         print(output)
-        assert np.allclose(250, output)
+        print(comp.output_CIM.output_states)
+        assert np.allclose(30, output)
