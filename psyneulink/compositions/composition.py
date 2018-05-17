@@ -353,6 +353,7 @@ class Composition(object):
         self.input_CIM_output_states = {}
         self.output_CIM = CompositionInterfaceMechanism(name="Output_CIM")
         self.output_CIM_output_states = {}
+        self.interface_projections_out = []
         self.execution_ids = []
 
         self._scheduler_processing = None
@@ -817,10 +818,12 @@ class Composition(object):
                     # self.input_CIM.add_states(interface_output_state)
                     self.input_CIM_output_states[input_state] = interface_output_state
                     MappingProjection(sender=interface_output_state,
-                                      receiver=input_state,
-                                      matrix= IDENTITY_MATRIX,
-                                      name="("+interface_output_state.name + ") to ("
-                                           + input_state.owner.name + "-" + input_state.name+")")
+                                             receiver=input_state,
+                                             matrix= IDENTITY_MATRIX,
+                                             name="("+interface_output_state.name + ") to ("
+                                                   + input_state.owner.name + "-" + input_state.name+")")
+
+
 
         sends_to_input_states = set(self.input_CIM_output_states.keys())
         # For any output state still registered on the CIM that does not map to a corresponding ORIGIN mech I.S.:
@@ -851,11 +854,19 @@ class Composition(object):
                                                          name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
 
                     self.output_CIM_output_states[output_state] = interface_output_state
-                    # MappingProjection(sender=interface_output_state,
-                    #                   receiver=output_state,
-                    #                   matrix= IDENTITY_MATRIX,
-                    #                   name="("+interface_output_state.name + ") to ("
-                    #                        + output_state.owner.name + "-" + output_state.name+")")
+
+                    # REFACTOR now that both output states and input states are relevant on CIMs
+
+                    state_index = output_state.owner.output_states.index(output_state)
+                    receiver_input_state = interface_output_state.owner.input_states[state_index]
+                    proj_name = "("+ interface_output_state.name + ") to (" + receiver_input_state.owner.name + "-" + \
+                                receiver_input_state.name+")"
+
+                    proj = MappingProjection(sender=output_state,
+                                             receiver=receiver_input_state,
+                                             matrix=IDENTITY_MATRIX,
+                                             name=proj_name)
+                    self.interface_projections_out.append(proj)
 
         previous_terminal_output_states = set(self.output_CIM_output_states.keys())
         for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
@@ -1104,6 +1115,10 @@ class Composition(object):
         if call_after_pass:
             call_after_pass()
 
+        for proj in self.interface_projections_out:
+            proj.receiver.update(context=ContextFlags.PROCESSING)
+            # proj.execute(variable=proj.sender.value, context=ContextFlags.PROCESSING)
+
         return num
 
     def run(
@@ -1278,11 +1293,11 @@ class Composition(object):
         # ---------------------------------------------------------------------------------
             # store the result of this execute in case it will be the final result
 
-            terminal_mechanisms = self.get_mechanisms_by_role(MechanismRole.TERMINAL)
-            for terminal_mechanism in terminal_mechanisms:
-                for terminal_output_state in terminal_mechanism.output_states:
-                    CIM_output_state = self.output_CIM_output_states[terminal_output_state]
-                    CIM_output_state.value = terminal_output_state.value
+            # terminal_mechanisms = self.get_mechanisms_by_role(MechanismRole.TERMINAL)
+            # for terminal_mechanism in terminal_mechanisms:
+            #     for terminal_output_state in terminal_mechanism.output_states:
+            #         CIM_output_state = self.output_CIM_output_states[terminal_output_state]
+            #         CIM_output_state.value = terminal_output_state.value
 
             # object.results.append(result)
             if isinstance(trial_output, Iterable):

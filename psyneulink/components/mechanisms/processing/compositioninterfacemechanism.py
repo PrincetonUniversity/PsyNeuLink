@@ -52,6 +52,7 @@ from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.components.functions.function import Identity
 
 __all__ = ['CompositionInterfaceMechanism']
 
@@ -61,7 +62,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     CompositionInterfaceMechanism(                            \
     default_variable=None,                               \
     size=None,                                              \
-    function=Linear(slope = 1.0, intercept = 0.0), \
+    function=Identity() \
     params=None,                                            \
     name=None,                                              \
     prefs=None)
@@ -82,9 +83,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it takes precedence over the specification of **size**.
 
-    function : IntegratorFunction : default Integrator
-        specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
-        of values, and return one of the same form.
+    function : InterfaceFunction : default Identity
+        specifies the function used to transform the variable before assigning it to the Mechanism's OutputState(s)
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -137,7 +137,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 function=None,
+                 function=Identity(),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
