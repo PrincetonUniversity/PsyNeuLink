@@ -4,13 +4,13 @@ Proactive Control & Task Control: A Stroop Model (Kalanthroff et al., 2018)
 
 Overview
 --------
-A large budy of research showed that reaction times are faster on congruent trials than neutral trials. This finding
+Reaction times are usually faster on congruent trials than neutral trials. This finding
 has been refered to as the facilitation effect. Recenty Goldfarb and Henik (2007) showed that when proactive control
 (Braver, 2012) is low, subjects responded faster on neutral trials vs congruent trials, which has been refered to as
 the reverse facilitation effect.
 
-In addition, brain imaging studies showed higher activation in the anterior cingulate cortex (ACC) on congruent trials
-than neutral trials.
+In addition, brain imaging studies showed higher activation in the anterior cingulate cortex (ACC), an area
+associated with conflict, on congruent trials than neutral trials.
 
 Here, the authors hypothesize that task conflict on congruent trials, but not neutral trials can account for the
 reverse facilitation effect, under low proactive control.
@@ -18,7 +18,8 @@ reverse facilitation effect, under low proactive control.
 Conflict is measured on the task demand layer and not on the response layer as in previous models
 (e.g. see Botvinick et al., 2001). Task conflict directly inhibits the response layer, preventing a fast response when
 task conflict exists. The activation of each unit in every layers of the neural network model is plotted for low
-proactive activation. The PsyNeuLink model is identical to the plot of Figure 6b generated with MATLAB (see below).
+proactive activation. The PsyNeuLink model is identical to the plot of Figure 6b generated with MATLAB (see both Figures
+below). On the left the PsyNeuLink Figure is plotted. On the right the MATLAB figure is plotted.
 
 .. _PCTC_0_025_PNL_Fig:
 
@@ -38,12 +39,13 @@ proactive activation. The PsyNeuLink model is identical to the plot of Figure 6b
 The Model
 ---------
 The model is built as the bidirectional Stroop model by Cohen & Huston (1994): stimulus information in two hidden
-layers (color & word), and task information (color naming or word reading) are connected with each other in a
-bidirectional way. The response layer receives inputs from both hidden layers (but does not project these inputs back
-as in the previous Cohen & Huston (1994) model).
-In addition to the Cohen & Huston (1994) model, the conflict between the two tasks in the task layer gets computed and
-projected from the task layer to the response. If task conflict exists, prevents the response layer from a fast
-response. A graph of the model is shown below.
+layers (color & word), and task information (color naming or word reading) are connected with each other with
+bidirectional weights. The response layer receives input weights from both hidden layers, but does not project back to
+these the two hidden layers. This is different to the previous Cohen & Huston (1994) model).
+Conflict is computed on the output state of the task layer, and projected from the task layer to the response layer.
+If task conflict exists, prevents the response layer from a fast response.
+The conflict projection is the main difference from the Kalanthroff et al., (2018) model to the Cohen & Huston (1994)
+model. A graph of the model is shown below.
 
 .. _Kalanthroff2016_System_Graph:
 
@@ -117,6 +119,6 @@ period of 500 time steps. Then the stimulus is presented for the remaining durat
 During the settling period, the proactive control unit sends input to the color-task-demand unit.
 The activations of all units are updated on each time step until one of the response units reaches the threshold,
 which is set to 0.7. The `log` function is used to record the output values of the two hidden layers, the task layer,
-and teh response layer. These values are used to produce the plot of the Figure.
+and the response layer. These values are used to produce the plot of the Figure.
 
 Script: :download:`Download Kalanthroff_PCTC.py <../../Scripts/Models/Kalanthroff_PCTC.py>`
