@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Proactive Control &amp; Task Control: A Stroop Model (Kalanthroff et al., 2018) &mdash; PsyNeuLink 0.4.7.1+103.gd8761f6 documentation</title>
+  <title>Proactive Control &amp; Task Control: A Stroop Model (Kalanthroff et al., 2018) &mdash; PsyNeuLink 0.4.7.1+104.ga89793c documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1+103.gd8761f6 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.4.7.1+104.ga89793c documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.4.7.1+103
+                0.4.7.1+104
               </div>
             
           
@@ -203,26 +203,26 @@ value, the other one set to zero), and assigned a <a class="reference internal" 
 <p><strong>COLOR HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <a href="#id25"><span class="problematic" id="id26">**</span></a>size**=2 (one element for each of the two colors, and
 assigned a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <a href="#id27"><span class="problematic" id="id28">**</span></a>gain**=4.0 and <a href="#id29"><span class="problematic" id="id30">**</span></a>bias**=1.0. The <a href="#id31"><span class="problematic" id="id32">**</span></a>integrator_mode**=`True`
 and <a href="#id33"><span class="problematic" id="id34">**</span></a>smoothing_factor**=0.03. Both units receive mutually inhibitory weights (<a href="#id35"><span class="problematic" id="id36">**</span></a>hetero**=-2). A python function that
-sets the output of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.</p>
 <p><strong>WORD HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <a href="#id37"><span class="problematic" id="id38">**</span></a>size**=2 (one element for each of the two words, and
 assigned a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <a href="#id39"><span class="problematic" id="id40">**</span></a>gain**=4.0 and <a href="#id41"><span class="problematic" id="id42">**</span></a>bias**=1.0. The <a href="#id43"><span class="problematic" id="id44">**</span></a>integrator_mode**=`True`
 and <a href="#id45"><span class="problematic" id="id46">**</span></a>smoothing_factor**=0.03. Both units receive mutually inhibitory weights (<a href="#id47"><span class="problematic" id="id48">**</span></a>hetero**=-2). A python function that
-sets the output of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.</p>
 <p><strong>TASK DEMAND LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <a href="#id49"><span class="problematic" id="id50">**</span></a>size**=2 (one element for each of the two tasks, and
 assigned a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <a href="#id51"><span class="problematic" id="id52">**</span></a>gain**=4.0 and <a href="#id53"><span class="problematic" id="id54">**</span></a>bias**=1.0. The <a href="#id55"><span class="problematic" id="id56">**</span></a>integrator_mode**=`True`
 and <a href="#id57"><span class="problematic" id="id58">**</span></a>smoothing_factor**=0.03. Both units receive mutually inhibitory weights (<a href="#id59"><span class="problematic" id="id60">**</span></a>hetero**=-2). A python function that
-sets the output of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value. A second output state is specified that computes the conflict between the two task
 units.</p>
 <p><strong>WORD HIDDEN LAYER</strong>: a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with <a href="#id61"><span class="problematic" id="id62">**</span></a>size**=2 (one element for each of the two responses, and
 assigned a <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function with <a href="#id63"><span class="problematic" id="id64">**</span></a>gain**=4.0 and <a href="#id65"><span class="problematic" id="id66">**</span></a>bias**=1.0. The <a href="#id67"><span class="problematic" id="id68">**</span></a>integrator_mode**=`True`
 and <a href="#id69"><span class="problematic" id="id70">**</span></a>smoothing_factor**=0.03. Both units receive mutually inhibitory weights (<a href="#id71"><span class="problematic" id="id72">**</span></a>hetero**=-2). A python function that
-sets the output of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
+sets the output of the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function to 0 when it receives 0 as an input is specified on the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>. It
 simply subtracts 0.018 from the output of a logistic function and if this leads to a value below 0,
 outputs a 0 as a minimum value.</p>
 <p><strong>PROJECTIONS</strong>:  The weights of the  network are implemented as <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.
@@ -247,7 +247,7 @@ of the <em>TASK LAYER</em> is specified as the sender and the <em>RESPONSE LAYER
 period of 500 time steps. Then the stimulus is presented for the remaining duration of the trial.
 During the settling period, the proactive control unit sends input to the color-task-demand unit.
 The activations of all units are updated on each time step until one of the response units reaches the threshold,
-which is set to 0.7. The <a class="reference internal" href="Log.html#module-psyneulink.globals.log" title="psyneulink.globals.log"><code class="xref any py py-mod docutils literal"><span class="pre">log</span></code></a> function is used to record the output values of the two hidden layers, the task layer,
+which is set to 0.7. The <a class="reference internal" href="Component.html#psyneulink.components.component.Component.log" title="psyneulink.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> function is used to record the output values of the two hidden layers, the task layer,
 and teh response layer. These values are used to produce the plot of the Figure.</p>
 <p>Script: <code class="xref download docutils literal"><span class="pre">Download</span> <span class="pre">Kalanthroff_PCTC.py</span></code></p>
 </div>
@@ -288,7 +288,7 @@ and teh response layer. These values are used to produce the plot of the Figure.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1+103.gd8761f6',
+            VERSION:'0.4.7.1+104.ga89793c',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
