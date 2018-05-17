@@ -28,7 +28,7 @@ Note that we used different regression coefficients to produce these plots.
 
 .. _Horserace_Fig:
 
-.. figure:: _static/GRAIN_STROOP_EFFECT.svg
+.. figure:: _static/Horserace.svg
    :figwidth: 45 %
    :align: right
    :alt: Cohen&Huston SOA produced by PsyNeuLink
