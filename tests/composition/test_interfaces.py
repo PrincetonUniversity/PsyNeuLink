@@ -66,6 +66,9 @@ class TestExecuteCIM():
             inputs=inputs_dict,
             scheduler_processing=sched
         )
+        print("B.output_stats = ", B.output_states)
+        print(B.output_states[0].efferents)
+        print("B.value = ", B.output_values)
         print(comp.input_CIM.output_states)
         print(output)
         print(comp.output_CIM.output_states)

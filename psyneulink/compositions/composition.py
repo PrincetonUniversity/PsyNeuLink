@@ -56,6 +56,7 @@ from psyneulink.components.component import function_type
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.shellclasses import Mechanism, Projection
 
 from psyneulink.globals.keywords import SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAMP, PULSE_CLAMP, NO_CLAMP, IDENTITY_MATRIX
@@ -818,10 +819,10 @@ class Composition(object):
                     # self.input_CIM.add_states(interface_output_state)
                     self.input_CIM_output_states[input_state] = interface_output_state
                     MappingProjection(sender=interface_output_state,
-                                             receiver=input_state,
-                                             matrix= IDENTITY_MATRIX,
-                                             name="("+interface_output_state.name + ") to ("
-                                                   + input_state.owner.name + "-" + input_state.name+")")
+                                      receiver=input_state,
+                                      matrix= IDENTITY_MATRIX,
+                                      name="("+interface_output_state.name + ") to ("
+                                           + input_state.owner.name + "-" + input_state.name+")")
 
 
 
@@ -852,18 +853,18 @@ class Composition(object):
                                                          variable=output_state.value,
                                                          reference_value=output_state.value,
                                                          name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
+                    interface_input_state = InputState(owner=self.output_CIM,
+                                                       variable=output_state.value,
+                                                       reference_value=output_state.value,
+                                                       name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
 
                     self.output_CIM_output_states[output_state] = interface_output_state
 
-                    # REFACTOR now that both output states and input states are relevant on CIMs
 
-                    state_index = output_state.owner.output_states.index(output_state)
-                    receiver_input_state = interface_output_state.owner.input_states[state_index]
-                    proj_name = "("+ interface_output_state.name + ") to (" + receiver_input_state.owner.name + "-" + \
-                                receiver_input_state.name+")"
+                    proj_name = "("+ output_state.name + ") to (" + interface_input_state.name +")"
 
                     proj = MappingProjection(sender=output_state,
-                                             receiver=receiver_input_state,
+                                             receiver=interface_input_state,
                                              matrix=IDENTITY_MATRIX,
                                              name=proj_name)
                     self.interface_projections_out.append(proj)
@@ -1117,10 +1118,8 @@ class Composition(object):
         if call_after_pass:
             call_after_pass()
 
-        for proj in self.interface_projections_out:
-
-            input = proj.execute(variable=proj.sender.value, context=ContextFlags.PROCESSING)
-            self.output_CIM.execute(input=input)
+        self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
+        self.output_CIM.execute(context=ContextFlags.PROCESSING)
 
 
         # TBI - delete (or don't create) default output state instead of skipping it
