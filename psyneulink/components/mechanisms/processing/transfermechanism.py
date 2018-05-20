@@ -1059,9 +1059,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             is_out_type = main_function.args[2].type.pointee
 
 
-        # Call input states
+        # Allocate space for input state results
         is_out = builder.alloca(is_out_type, 1)
 
+        # Call input states
         for i, state in enumerate(self.input_states):
             is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
             is_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -1070,6 +1071,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             is_function = ctx.get_llvm_function(state.llvmSymbolName)
             builder.call(is_function, [is_params, is_context, is_input, is_output])
 
+        # Params and context for both integrator and main function
         f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
@@ -1086,16 +1088,16 @@ class TransferMechanism(ProcessingMechanism_Base):
         mf_params = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
         mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        if not isinstance(self.function_object, NormalizingFunction):
-            mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
-            builder.call(main_function, [mf_params, mf_context, mf_in, mf_out])
-        else:
+        if isinstance(self.function_object, NormalizingFunction):
             # Call for each input state separately
             mf_out = builder.alloca(ir.ArrayType(main_function.args[3].type.pointee, len(self.input_states)), 1)
             for i, state in enumerate(self.input_states):
                 mf_in_local = builder.gep(mf_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 builder.call(main_function, [mf_params, mf_context, mf_in_local, mf_out_local])
+        else:
+            mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
+            builder.call(main_function, [mf_params, mf_context, mf_in, mf_out])
 
         clip = self.get_current_mechanism_param("clip")
         if clip is not None:
