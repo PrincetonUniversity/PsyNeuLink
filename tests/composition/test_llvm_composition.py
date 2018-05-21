@@ -231,3 +231,34 @@ def test_3_mechanisms_2_origins_1_terminal_mimo_parallel(benchmark, mode):
     sched = Scheduler(composition=comp)
     output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
     assert np.allclose([[300], [350]], output)
+
+
+@pytest.mark.composition
+@pytest.mark.benchmark(group="Merge composition scalar")
+@pytest.mark.parametrize("mode", ['Python', 'LLVM'])
+def test_3_mechanisms_2_origins_1_terminal_mimo_all_sum(benchmark, mode):
+    # C --
+    #              ==> E
+    # D --
+
+    # [5, 6] x 5 = [25, 30] --
+    #                            [25 + 35 + 30 + 40] = 130  ==> 130 * 5 = 650
+    # [7, 8] x 5 = [35, 40] --
+
+    comp = Composition()
+    C = TransferMechanism(name="C", input_states=['a', 'b'], function=Linear(slope=5.0))
+    D = TransferMechanism(name="D", input_states=['a', 'b'], function=Linear(slope=5.0))
+    E = TransferMechanism(name="E", function=Linear(slope=5.0))
+    comp.add_mechanism(C)
+    comp.add_mechanism(D)
+    comp.add_mechanism(E)
+    comp.add_projection(C, MappingProjection(sender=C.output_states[0], receiver=E), E)
+    comp.add_projection(C, MappingProjection(sender=C.output_states[1], receiver=E), E)
+    comp.add_projection(D, MappingProjection(sender=D.output_states[0], receiver=E), E)
+    comp.add_projection(D, MappingProjection(sender=D.output_states[1], receiver=E), E)
+    comp._analyze_graph()
+    inputs_dict = {C: [[5.0], [6.0]],
+                   D: [[7.0], [8.0]]}
+    sched = Scheduler(composition=comp)
+    output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+    assert np.allclose([[650]], output)
