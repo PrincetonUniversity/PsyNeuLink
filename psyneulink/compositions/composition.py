@@ -365,15 +365,6 @@ class Composition(object):
         # helper attributes
         self.mechanisms_to_roles = collections.OrderedDict()
 
-        # Create lists to track identity of certain mechanism classes within the
-        # composition.
-        # Explicit classes:
-        self.explicit_input_mechanisms = []  # Need to track to know which to leave untouched
-        self.all_input_mechanisms = []
-        self.explicit_output_mechanisms = []  # Need to track to know which to leave untouched
-        self.all_output_mechanisms = []
-        self.target_mechanisms = []  # Do not need to track explicit as they mush be explicit
-
         # TBI: update self.sched whenever something is added to the composition
         self.sched = Scheduler(composition=self)
 
