@@ -948,6 +948,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         )
         function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
         function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
+        function_variable[ERROR_OUTPUT_INDEX] = variable[ERROR_OUTPUT_INDEX]
 
         return function_variable
 
@@ -1155,7 +1156,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _execute(
         self,
         variable=None,
-        function_variable=None,
         runtime_params=None,
         context=None
     ):
@@ -1175,7 +1175,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Get error_signals (from ERROR_SIGNAL InputStates) and error_matrices relevant for the current execution:
         current_error_signal_inputs = [s for s in self.error_signal_input_states if
-                                       s.path_afferents[0].sender.owner._execution_id == self._execution_id]
+                                       any(p.sender.owner._execution_id==self._execution_id for p in s.path_afferents)]
         curr_indices = [self.input_states.index(s) for s in current_error_signal_inputs]
         error_signal_inputs = variable[curr_indices]
         error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
@@ -1186,10 +1186,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Compute learning_signal for each error_signal (and corresponding error-Matrix:
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
 
-            function_variable[ERROR_OUTPUT_INDEX] = error_signal_input
+            variable[ERROR_OUTPUT_INDEX] = error_signal_input
             learning_signal, error_signal = super()._execute(
                 variable=variable,
-                function_variable=function_variable,
                 error_matrix=error_matrix,
                 runtime_params=runtime_params,
                 context=context

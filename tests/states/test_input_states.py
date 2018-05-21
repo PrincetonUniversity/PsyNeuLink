@@ -64,3 +64,22 @@ class TestInputStates:
             t = pnl.TransferMechanism(input_states=pnl.InputState(function=pnl.Linear, combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with Function specified " \
                "in 'function' argument (Linear) for InputState" in str(error_text.value)
+
+    def test_single_projection_variable(self):
+        a = pnl.TransferMechanism()
+        b = pnl.TransferMechanism()
+
+        pnl.MappingProjection(sender=a, receiver=b)
+
+        assert b.input_state.instance_defaults.variable.shape == np.array([0]).shape
+        assert b.input_state.function_object.instance_defaults.variable.shape == np.array([0]).shape
+
+    @pytest.mark.parametrize('num_incoming_projections', [2, 3, 4])
+    def test_adding_projections_modifies_variable(self, num_incoming_projections):
+        mechs = [pnl.TransferMechanism() for _ in range(num_incoming_projections + 1)]
+        [pnl.MappingProjection(sender=mechs[i], receiver=mechs[-1]) for i in range(num_incoming_projections)]
+
+        receiver_input_state_variable = np.array([[0] for _ in range(num_incoming_projections)])
+
+        assert mechs[-1].input_state.instance_defaults.variable.shape == receiver_input_state_variable.shape
+        assert mechs[-1].input_state.function_object.instance_defaults.variable.shape == receiver_input_state_variable.shape

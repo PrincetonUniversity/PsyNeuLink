@@ -982,7 +982,6 @@ class DDM(ProcessingMechanism_Base):
     def _execute(
         self,
         variable=None,
-        function_variable=None,
         runtime_params=None,
         context=None
     ):
@@ -1020,11 +1019,11 @@ class DDM(ProcessingMechanism_Base):
 
         # FIX: 2/5/18: PUT CODE HERE FOR input_format = ARRAY/VECTOR, TO SUBTRACT variable[1] from variable[0]
 
-        if function_variable is None or np.isnan(function_variable):
+        if variable is None or np.isnan(variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
-            function_variable = self._update_variable(self.instance_defaults.variable)
+            variable = self._update_variable(self.instance_defaults.variable)
 
-        function_variable = self._validate_variable(function_variable)
+        variable = self._validate_variable(variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if isinstance(self.function.__self__, Integrator):
@@ -1041,7 +1040,7 @@ class DDM(ProcessingMechanism_Base):
         else:
 
             result = super()._execute(
-                variable=function_variable,
+                variable=variable,
                 runtime_params=runtime_params,
                 context=context
             )

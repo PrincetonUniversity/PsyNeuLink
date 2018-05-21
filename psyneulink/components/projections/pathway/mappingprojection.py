@@ -622,7 +622,7 @@ class MappingProjection(PathwayProjection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, runtime_params=None, context=None):
         """
         If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix ParameterState:
 
@@ -643,7 +643,6 @@ class MappingProjection(PathwayProjection_Base):
 
         return super()._execute(
             variable=variable,
-            function_variable=function_variable,
             runtime_params=runtime_params,
             context=context
         )

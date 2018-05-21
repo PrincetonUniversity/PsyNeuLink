@@ -881,20 +881,16 @@ class Projection_Base(Projection):
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
-    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, runtime_params=None, context=None):
 
         if variable is None:
             variable = self.sender.value
-
-        if function_variable is None:
-            function_variable = self.sender.value
 
         self.context.execution_phase = ContextFlags.PROCESSING
         self.context.string = context
 
         self.value = super()._execute(
             variable=variable,
-            function_variable=function_variable,
             runtime_params=runtime_params,
             context=context
         )

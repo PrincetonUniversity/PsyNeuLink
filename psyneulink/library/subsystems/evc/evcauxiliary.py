@@ -17,6 +17,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import Function_Base
+from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
@@ -43,7 +44,6 @@ kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
 kwValueFunction = "EVC VALUE FUNCTION"
 CONTROL_SIGNAL_GRID_SEARCH_FUNCTION = "EVC CONTROL SIGNAL GRID SEARCH FUNCTION"
 CONTROLLER = 'controller'
-OUTCOME = 'outcome'
 
 
 class EVCAuxiliaryError(Exception):

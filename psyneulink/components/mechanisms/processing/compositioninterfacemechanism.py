@@ -53,13 +53,13 @@ from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPrefe
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
-__all__ = []
+__all__ = ['CompositionInterfaceMechanism']
 
 
 class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     """
     CompositionInterfaceMechanism(                            \
-    default_input_value=None,                               \
+    default_variable=None,                               \
     size=None,                                              \
     function=Linear(slope = 1.0, intercept = 0.0), \
     params=None,                                            \
@@ -71,7 +71,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : number, list or np.ndarray
+    default_variable : number, list or np.ndarray
         the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <CompositionInterfaceMechanism.variable>` for
@@ -79,42 +79,45 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         Mechanism.
 
     size : int, list or np.ndarray of ints
-        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
-        if **default_input_value** is specified, it takes precedence over the specification of **size**.
-        As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
 
     function : IntegratorFunction : default Integrator
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
 
-    params : Dict[param keyword: param value] : default None
+    params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
         the `Mechanism <Mechanism>`, parameters for its `function <CompositionInterfaceMechanism.function>`, and/or a
         custom function and its parameters.  Values specified for parameters in the dictionary override any assigned
         to those parameters in arguments of the constructor.
 
-    name : str : default see `name <CompositionInterfaceMechanism.name>`
-        specifies the name of the CompositionInterfaceMechanism.
+    name : str : default CompositionInterfaceMechanism-<index>
+        a string used for the name of the Mechanism.
+        If not is specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the CompositionInterfaceMechanism; see `prefs <CompositionInterfaceMechanism.prefs>` for details.
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the `PreferenceSet` for Mechanism.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
     variable : value: default
         the input to Mechanism's ``function``.
 
-    name : str
-        the name of the CompositionInterfaceMechanism; if it is not specified in the **name** argument of the
-        constructor, a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and
-        duplicate names).
+    name : str : default CompositionInterfaceMechanism-<index>
+        the name of the Mechanism.
+        Specified in the **name** argument of the constructor for the Mechanism;
+        if not is specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the CompositionInterfaceMechanism; if it is not specified in the **prefs** argument of
-        the constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the `PreferenceSet` for Mechanism.
+        Specified in the **prefs** argument of the constructor for the Mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     """
 
@@ -132,26 +135,27 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
                  function=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
-        if default_input_value is None and size is None:
-            default_input_value = self.ClassDefaults.variable
+        if default_variable is None and size is None:
+            default_variable = self.ClassDefaults.variable
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 
-        super(CompositionInterfaceMechanism, self).__init__(default_variable=default_input_value,
+        super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,
                                                   size=size,
                                                   params=params,
                                                   function=function,
                                                   name=name,
                                                   prefs=prefs,
                                                   context=ContextFlags.CONSTRUCTOR)
+
 
 
 
