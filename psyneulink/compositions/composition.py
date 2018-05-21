@@ -1380,7 +1380,8 @@ class Composition(object):
             ir.LiteralStructType(proj_ctx_type_list)])
 
     def get_data_struct_type(self):
-        input_type_list  = [m.get_input_struct_type() for m in self.input_mechanisms.keys()]
+        origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        input_type_list  = [m.get_input_struct_type() for m in origin_mechanisms]
         output_type_list = [m.get_output_struct_type() for m in self.mechanisms]
         return ir.LiteralStructType([
             ir.LiteralStructType(input_type_list),
@@ -1422,7 +1423,8 @@ class Composition(object):
     def __bin_initialize(self, inputs, reinit=False):
         #FIXME this is an ugly hack to make us work with vectors
         #FIXME converts instance default variable to arrays of floats
-        data = [inputs[m] if m in inputs else m.instance_defaults.variable.tolist()[0] for m in self.input_mechanisms.keys()]
+        origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        data = [inputs[m] if m in inputs else m.instance_defaults.variable.tolist()[0] for m in origin_mechanisms]
         c_data = pnlvm._convert_llvm_ir_to_ctype(self.get_data_struct_type())
         def tupleize(x):
             if hasattr(x, "__len__"):
@@ -1464,16 +1466,16 @@ class Composition(object):
             builder = ir.IRBuilder(block)
 
             m_function = ctx.get_llvm_function(mech.llvmSymbolName)
-            if mech in self.input_mechanisms.keys():
-                assert mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN)
-                vi_idx = list(self.input_mechanisms.keys()).index(mech)
+            origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+            if mech in origin_mechanisms:
+                vi_idx = origin_mechanisms.index(mech)
                 m_in = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(vi_idx)])
             else:
                 m_in = builder.alloca(m_function.args[2].type.pointee)
 
             # Run all incoming projections
             for par in self.graph.get_parents_from_component(mech):
-                assert not mech in self.input_mechanisms.keys()
+                assert not mech in origin_mechanisms
                 # Get projection
                 par_proj = par.component
                 proj_idx = self.projections.index(par_proj)

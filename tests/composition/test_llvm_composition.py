@@ -9,7 +9,6 @@ from itertools import product
 import numpy as np
 import pytest
 
-@pytest.mark.skip
 @pytest.mark.composition
 @pytest.mark.benchmark(group="LinearComposition")
 @pytest.mark.parametrize("llvm", ['Python', 'LLVM'])
@@ -43,7 +42,6 @@ def test_run_composition_default(benchmark, llvm):
     assert 25 == output[0][0]
 
 
-@pytest.mark.skip
 @pytest.mark.composition
 @pytest.mark.benchmark(group="LinearComposition Pathway 5")
 @pytest.mark.parametrize("llvm", ['Python', 'LLVM'])
@@ -64,7 +62,6 @@ def test_LPP(benchmark, llvm):
     assert 32 == output[0][0]
 
 
-@pytest.mark.skip
 @pytest.mark.composition
 @pytest.mark.benchmark(group="LinearComposition Vector")
 @pytest.mark.parametrize("llvm, vector_length", product(('Python', 'LLVM'), [2**x for x in range(1)]))
