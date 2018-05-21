@@ -2237,19 +2237,12 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                 format(operation.self.Operation.SUM))
 
-        # HACK to reduce dimensionality
-        if combination.ndim > 1:
-            assert combination.shape[0] == 1
-            combination = combination[0]
-
         if isinstance(scale, numbers.Number):
             # scalar scale
             product = combination * scale
         else:
             # Hadamard scale
             product = np.product([combination, scale], axis=0)
-
-        assert product.ndim == 1
 
         if isinstance(offset, numbers.Number):
             # scalar offset
@@ -2258,19 +2251,11 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             # Hadamard offset
             result = np.sum([product, offset], axis=0)
 
-        assert result.ndim == 1
-
         return result
 
 
     def get_input_struct_type(self):
-        #FIXME this is ugly as HELL!
-        if (self.owner and hasattr(self.owner, 'pathway_projections') and len(self.owner.pathway_projections) != 0):
-#            assert len(self.owner.pathway_projections) == len(default_var)
-            var = self.instance_defaults.variable
-            default_var = np.broadcast_to(np.asfarray(var), (len(self.owner.pathway_projections), len(var)))
-        else:
-            default_var = np.atleast_2d(self.instance_defaults.variable)
+        default_var = np.atleast_2d(self.instance_defaults.variable)
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var)
 

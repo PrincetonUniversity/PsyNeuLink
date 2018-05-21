@@ -79,7 +79,6 @@ def test_run_composition_vector(benchmark, llvm, vector_length):
     assert np.allclose([25.0 for x in range(vector_length)], output[0])
 
 
-@pytest.mark.skip
 @pytest.mark.composition
 @pytest.mark.benchmark(group="Merge composition scalar")
 @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
@@ -115,7 +114,6 @@ def test_5_mechanisms_2_origins_1_terminal(benchmark, mode):
     assert 250 == output[0][0]
 
 
-@pytest.mark.skip
 @pytest.mark.composition
 @pytest.mark.benchmark(group="Merge composition scalar")
 @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
@@ -145,7 +143,6 @@ def test_3_mechanisms_2_origins_1_terminal(benchmark, mode):
     assert 250 == output[0][0]
 
 
-@pytest.mark.skip
 @pytest.mark.composition
 @pytest.mark.benchmark(group="Merge composition scalar")
 @pytest.mark.parametrize("mode", ['Python', 'LLVM'])
