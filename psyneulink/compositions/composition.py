@@ -59,7 +59,7 @@ from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.shellclasses import Mechanism, Projection
 
-from psyneulink.globals.keywords import SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAMP, PULSE_CLAMP, NO_CLAMP, IDENTITY_MATRIX
+from psyneulink.globals.keywords import OWNER_VALUE, SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAMP, PULSE_CLAMP, NO_CLAMP, IDENTITY_MATRIX
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import EXECUTING
 from psyneulink.scheduling.scheduler import Scheduler
@@ -354,7 +354,6 @@ class Composition(object):
         self.input_CIM_output_states = {}
         self.output_CIM = CompositionInterfaceMechanism(name="Output_CIM")
         self.output_CIM_output_states = {}
-        self.interface_projections_out = []
         self.execution_ids = []
 
         self._scheduler_processing = None
@@ -849,25 +848,26 @@ class Composition(object):
                 current_terminal_output_states.add(output_state)
                 # if there is not a corresponding CIM output state, add one
                 if output_state not in set(self.output_CIM_output_states.keys()):
-                    interface_output_state = OutputState(owner=self.output_CIM,
-                                                         variable=output_state.value,
-                                                         reference_value=output_state.value,
-                                                         name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
                     interface_input_state = InputState(owner=self.output_CIM,
                                                        variable=output_state.value,
                                                        reference_value=output_state.value,
                                                        name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
 
+                    interface_output_state = OutputState(owner=self.output_CIM,
+                                                         variable=output_state.value,
+                                                         reference_value=output_state.value,
+                                                         name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
+                    # self.output_CIM.add_states([interface_input_state, interface_output_state])
+                    # self.output_CIM.input_state_output_state_map[interface_input_state] = interface_output_state
                     self.output_CIM_output_states[output_state] = interface_output_state
 
 
                     proj_name = "("+ output_state.name + ") to (" + interface_input_state.name +")"
 
-                    proj = MappingProjection(sender=output_state,
-                                             receiver=interface_input_state,
-                                             matrix=IDENTITY_MATRIX,
-                                             name=proj_name)
-                    self.interface_projections_out.append(proj)
+                    MappingProjection(sender=output_state,
+                                      receiver=interface_input_state,
+                                      matrix=IDENTITY_MATRIX,
+                                      name=proj_name)
 
         previous_terminal_output_states = set(self.output_CIM_output_states.keys())
         for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
@@ -890,7 +890,6 @@ class Composition(object):
         # its default variable value
         for mech in origins.difference(set(current_mechanisms)):
             self.input_CIM_output_states[mech.input_state].value = mech.instance_defaults.value
-
 
     def _assign_execution_ids(self, execution_id=None):
         '''
@@ -1022,6 +1021,7 @@ class Composition(object):
             scheduler_learning = self.scheduler_learning
 
         self._assign_values_to_CIM_output_states(inputs)
+
         # self._assign_values_to_target_CIM_output_states(targets)
         # execution_id = self._assign_execution_ids(execution_id)
         next_pass_before = 1
@@ -1033,8 +1033,6 @@ class Composition(object):
             no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, origin_mechanisms)
         # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
-        execution_scheduler._init_counts(execution_id=execution_id)
-        num = None
 
         if call_before_pass:
             call_before_pass()
@@ -1089,6 +1087,7 @@ class Composition(object):
                                 execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
                     mechanism.context.execution_phase = ContextFlags.PROCESSING
+
                     mechanism.execute(runtime_params=execution_runtime_params,
                                       context=ContextFlags.COMPOSITION)
 
