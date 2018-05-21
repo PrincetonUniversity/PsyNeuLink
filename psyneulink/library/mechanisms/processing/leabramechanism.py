@@ -503,7 +503,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
     def _execute(
         self,
         variable=None,
-        function_variable=None,
         runtime_params=None,
         time_scale=TimeScale.TRIAL,
         # ignore_execution_id=False,
@@ -517,7 +516,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
 
         return super()._execute(
             variable=variable,
-            function_variable=function_variable,
             runtime_params=runtime_params,
             # ignore_execution_id=ignore_execution_id,
             context=context

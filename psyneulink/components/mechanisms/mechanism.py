@@ -2065,7 +2065,7 @@ class Mechanism_Base(Mechanism):
                 new_input = self.integrator_function.reinitialize(*args)
                 if hasattr(self, "initial_value"):
                     self.initial_value = np.atleast_2d(*args)
-                self.value = super()._execute(function_variable=new_input, context="REINITIALIZING")
+                self.value = super()._execute(variable=new_input, context="REINITIALIZING")
                 self._update_output_states(context="REINITIALIZING")
 
             elif self.integrator_function is None:
@@ -2180,7 +2180,6 @@ class Mechanism_Base(Mechanism):
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
                 return_value =  self._execute(
                     variable=self.instance_defaults.variable,
-                    function_variable=self.instance_defaults.variable,
                     runtime_params=runtime_params,
                     context=context,
                 )
@@ -2210,7 +2209,6 @@ class Mechanism_Base(Mechanism):
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
                 return_value = super()._execute(
                     variable=self.instance_defaults.variable,
-                    function_variable=self.instance_defaults.variable,
                     runtime_params=runtime_params,
                     context=context,
                 )
@@ -2232,7 +2230,6 @@ class Mechanism_Base(Mechanism):
 
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
                                                                        context=context))
-            function_variable = self._parse_function_variable(variable)
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
@@ -2241,7 +2238,6 @@ class Mechanism_Base(Mechanism):
             if input is None:
                 input = self.instance_defaults.variable
             variable = self._update_variable(self._get_variable_from_input(input))
-            function_variable = self._parse_function_variable(variable)
 
         # UPDATE PARAMETER STATE(S)
         self._update_parameter_states(runtime_params=runtime_params, context=context)
@@ -2252,7 +2248,6 @@ class Mechanism_Base(Mechanism):
         #                      to avoid multiple calls to (and potential log entries for) self.value property
         value = self._execute(
             variable=variable,
-            function_variable=function_variable,
             runtime_params=runtime_params,
             context=context
         )
