@@ -136,6 +136,15 @@ a second time for the 100 cycles, since these amount of cylces represent the tim
 are turned on again and the system is run either for a certain amount of trials, of until the threshold is reached.
 stimulus is turned on.
 
+PLEASE NOTE:
+-----------
+Note that this implementation is slightly different than what was originally reported. The integration rate was set to
+0.1 instead of 0.01. Noise was turned of to better understand the core processes, and not having to deal with several
+runs, averaging these runs and plotting standard errors for these averages (which depend on the noise and amount of
+runs). Finally,  different SOA and a different linear regression formula was used to reproduce the figures.
+Regardless of these modifications, we were able to reproduce the core Figures with the same weights of the
+original model.
+
 Script: :download:`Download Cohen_Huston1994.py <../../Scripts/Models/Cohen_Huston1994.py>`
 
 Script: :download:`Download Cohen_Huston1994_horse_race.py <../../Scripts/Models/Cohen_Huston1994_horse_race.py>`
