@@ -72,7 +72,6 @@ class TestAddMechanism:
         comp.add_mechanism(mech)
         comp.add_mechanism(mech)
 
-
     @pytest.mark.stress
     @pytest.mark.parametrize(
         'count', [
@@ -86,26 +85,6 @@ class TestAddMechanism:
 
 from psyNeuLink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.compositions.composition import Composition
-comp = Composition()
-''',
-            number=count
-        )
-        print()
-        logger.info('completed {0} addition{2} of a Mechanism to a Composition in {1:.8f}s'.
-                    format(count, t, 's' if count != 1 else ''))
-
-    @pytest.mark.stress
-    @pytest.mark.parametrize(
-        'count', [
-            100,
-        ]
-    )
-    def test_timing_stress(self, count):
-        t = timeit(
-            'comp.add_mechanism(TransferMechanism())',
-            setup='''
-from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.composition import Composition
 comp = Composition()
 ''',
             number=count
