@@ -83,7 +83,7 @@ class TestAddMechanism:
             'comp.add_mechanism(TransferMechanism())',
             setup='''
 
-from psyNeuLink.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.compositions.composition import Composition
 comp = Composition()
 ''',
@@ -159,7 +159,7 @@ comp.add_mechanism(B)
                    setup='''
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.composition import Composition
+from psyneulink.compositions.composition import Composition
 comp = Composition()
 A = TransferMechanism(name='composition-pytests-A')
 B = TransferMechanism(name='composition-pytests-B')
