@@ -348,7 +348,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
     def _execute(
         self,
         variable=None,
-        function_variable=None,
         runtime_params=None,
         context=None
     ):
@@ -363,7 +362,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
         #                       which are not relevant to an autoassociative projection
         self.learning_signal = super(LearningMechanism, self)._execute(
             variable=variable,
-            function_variable=function_variable,
             runtime_params=runtime_params,
             context=context
         )

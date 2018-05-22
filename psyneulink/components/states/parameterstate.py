@@ -818,30 +818,28 @@ class ParameterState(State_Base):
         """Return parameter variable (since ParameterState's function never changes the form of its variable"""
         return variable
 
-    def _execute(self, variable=None, function_variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, runtime_params=None, context=None):
         """Call self.function with current parameter value as the variable
 
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
         Update its value in call to state's function.
         """
 
-        if function_variable is not None:
-            # return self.function(function_variable, runtime_params, context)
-            return super()._execute(function_variable, runtime_params=runtime_params, context=context)
+        if variable is not None:
+            return super()._execute(variable, runtime_params=runtime_params, context=context)
         else:
             # Most commonly, ParameterState is for the parameter of a function
             try:
-                param_value = getattr(self.owner.function_object, '_'+ self.name)
+                variable = getattr(self.owner.function_object, '_'+ self.name)
                 # param_value = self.owner.function_object.params[self.name]
 
            # Otherwise, should be for an attribute of the ParameterState's owner:
             except AttributeError:
                 # param_value = self.owner.params[self.name]
-                param_value = getattr(self.owner, '_'+ self.name)
+                variable = getattr(self.owner, '_'+ self.name)
 
             return super()._execute(
                 variable=variable,
-                function_variable=param_value,
                 runtime_params=runtime_params,
                 context=context
             )

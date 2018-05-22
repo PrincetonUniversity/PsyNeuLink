@@ -942,7 +942,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _clip_result(self, clip, current_input, runtime_params, context):
 
-        outputs = super(Mechanism, self)._execute(function_variable=current_input,
+        outputs = super(Mechanism, self)._execute(variable=current_input,
                                                   runtime_params=runtime_params,
                                                   context=context)
         if clip is not None:
@@ -954,7 +954,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _execute(self,
                  variable=None,
-                 function_variable=None,
                  runtime_params=None,
                  context=None):
         """Execute TransferMechanism function and return transform of input
@@ -1010,13 +1009,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Update according to time-scale of integration
         if integrator_mode:
-            current_input = self._get_integrated_function_input(function_variable,
+            current_input = self._get_integrated_function_input(variable,
                                                                     initial_value,
                                                                     noise,
                                                                     context)
 
         else:
-            current_input = self._get_instantaneous_function_input(function_variable, noise)
+            current_input = self._get_instantaneous_function_input(variable, noise)
 
         clip = self.get_current_mechanism_param("clip")
 
