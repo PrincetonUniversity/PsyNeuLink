@@ -587,7 +587,8 @@ class TestInputStateSpec:
     def test_add_input_state_with_projection_by_assigning_owner(self):
         T1 = TransferMechanism()
         T2 = TransferMechanism()
-        InputState(owner=T2, projections=[T1])
+        T2.add_states(InputState(owner=T2, projections=[T1]))
+
         assert T2.input_states[1].path_afferents[0].sender.owner is T1
 
     # ------------------------------------------------------------------------------------------------
