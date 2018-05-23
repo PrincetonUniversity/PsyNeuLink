@@ -817,6 +817,7 @@ class Composition(object):
                                                          name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
                     # self.input_CIM.add_states(interface_output_state)
                     self.input_CIM_output_states[input_state] = interface_output_state
+                    self.input_CIM.add_states(interface_output_state)
                     MappingProjection(sender=interface_output_state,
                                       receiver=input_state,
                                       matrix= IDENTITY_MATRIX,
@@ -874,9 +875,10 @@ class Composition(object):
                                                          # variable=output_state.value,
                                                          reference_value=output_state.value,
                                                          name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
+                    self.output_CIM_output_states[output_state] = interface_output_state
+
                     self.output_CIM.add_states([interface_output_state])
                     # self.output_CIM.input_state_output_state_map[interface_input_state] = interface_output_state
-                    self.output_CIM_output_states[output_state] = interface_output_state
 
 
                     proj_name_2 = "("+ output_state.name + ") to (" + interface_input_state.name +")"
