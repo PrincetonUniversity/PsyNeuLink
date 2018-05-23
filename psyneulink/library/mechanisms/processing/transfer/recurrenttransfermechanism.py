@@ -1084,14 +1084,18 @@ class RecurrentTransferMechanism(TransferMechanism):
         if self.learning_mechanism is None:
             self.learning_enabled = False
 
+    def _parse_function_variable(self, variable):
+        if self.has_recurrent_input_state:
+            return self._linear_combin_func.execute(variable = variable)
+        else:
+            return variable
+
     def _execute(self,
                  variable=None,
                  function_variable=None,
                  runtime_params=None,
                  context=None):
-        if self.has_recurrent_input_state:
-            function_variable = self._linear_combin_func.execute(variable = function_variable)
-            variable = self._linear_combin_func.execute(variable=variable)
+
         return super()._execute(variable=variable,
                               function_variable=function_variable,
                               runtime_params=runtime_params,
