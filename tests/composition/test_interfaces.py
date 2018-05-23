@@ -61,11 +61,6 @@ class TestExecuteCIM():
         processing_mech = ProcessingMechanism(default_variable=[[0.0], [0.0], [0.0]])
         processing_mech.execute([[1.0], [2.0], [3.0]])
         assert np.allclose(processing_mech.value, [[1.0], [2.0], [3.0]])
-        print(processing_mech.output_states)
-        print(processing_mech.output_states[0].value)
-        print(processing_mech.output_states[1].value)
-        print(processing_mech.output_states[0].variable)
-        print(processing_mech.output_states[1].variable)
 
 
     def test_one_input_state_one_output_state(self):
@@ -93,10 +88,16 @@ class TestExecuteCIM():
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-
-        assert np.allclose(30, output)
+        print("B.value = ", B.value)
+        print("B.output_states = ", B.output_states)
+        print("B.output_values = ", B.output_values)
+        # print("B.output_states[0].efferents[0].receiver.variable = ", B.output_states[0].efferents[0].receiver.variable)
         print("Input States: \n", comp.output_CIM.input_states)
+        print("Input Values: \n", comp.output_CIM.input_values)
         print("\n\n Output States: \n", comp.output_CIM.output_states)
+        print("Output Values: \n", comp.output_CIM.output_values)
+        print("output = ", output)
+        assert np.allclose([30], output)
 
     def test_two_input_states_two_output_states(self):
 

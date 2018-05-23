@@ -58,7 +58,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.shellclasses import Mechanism, Projection
-
+from psyneulink.components.functions.function import UserDefinedFunction
 from psyneulink.globals.keywords import OWNER_VALUE, SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAMP, PULSE_CLAMP, NO_CLAMP, IDENTITY_MATRIX
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import EXECUTING
@@ -842,32 +842,56 @@ class Composition(object):
 
         # OUTPUT CIMS
         # loop over all terminal mechanisms
+
+        def input_state_map(variable, corresponding_input_state):
+
+            all_input_states = self.output_CIM.input_states
+            ind = all_input_states.index(corresponding_input_state)
+            if len(variable) > ind:
+                return variable[ind]
+            return variable
+            # return [25.]
+
         current_terminal_output_states = set()
         for mech in self.get_mechanisms_by_role(MechanismRole.TERMINAL):
             for output_state in mech.output_states:
                 current_terminal_output_states.add(output_state)
                 # if there is not a corresponding CIM output state, add one
                 if output_state not in set(self.output_CIM_output_states.keys()):
-                    interface_input_state = InputState(owner=self.output_CIM,
-                                                       variable=output_state.value,
+                    interface_input_state = InputState(
+                        owner=self.output_CIM,
+                                                       # variable=output_state.value,
                                                        reference_value=output_state.value,
                                                        name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
 
-                    interface_output_state = OutputState(owner=self.output_CIM,
-                                                         variable=output_state.value,
+                    self.output_CIM.add_states([interface_input_state])
+
+                    interface_output_state = OutputState(
+                        owner=self.output_CIM,
+                        variable=OWNER_VALUE,
+                        function=UserDefinedFunction(custom_function=input_state_map,
+                                                                corresponding_input_state=interface_input_state),
+                                                         # variable=output_state.value,
                                                          reference_value=output_state.value,
                                                          name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
-                    # self.output_CIM.add_states([interface_input_state, interface_output_state])
+                    self.output_CIM.add_states([interface_output_state])
                     # self.output_CIM.input_state_output_state_map[interface_input_state] = interface_output_state
                     self.output_CIM_output_states[output_state] = interface_output_state
 
 
-                    proj_name = "("+ output_state.name + ") to (" + interface_input_state.name +")"
+                    proj_name_2 = "("+ output_state.name + ") to (" + interface_input_state.name +")"
+                    proj_name_1 = "(" + output_state.name + ") to (" + self.output_CIM.input_states[0].name + ")"
+                    MappingProjection(sender=output_state,
+                                      # receiver=interface_input_state,
+                                      receiver=self.output_CIM.input_states[0],
+                                      matrix=IDENTITY_MATRIX,
+                                      name=proj_name_1)
 
                     MappingProjection(sender=output_state,
                                       receiver=interface_input_state,
+                                      # receiver=self.output_CIM.input_states[0],
                                       matrix=IDENTITY_MATRIX,
-                                      name=proj_name)
+                                      name=proj_name_2)
 
         previous_terminal_output_states = set(self.output_CIM_output_states.keys())
         for output_state in previous_terminal_output_states.difference(current_terminal_output_states):

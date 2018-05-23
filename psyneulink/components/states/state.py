@@ -1155,10 +1155,11 @@ class State_Base(State):
 
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
-        if context & ContextFlags.COMMAND_LINE:
-            state_list = getattr(owner, owner.stateListAttr[self.__class__])
-            if state_list and not self in state_list:
-                owner.add_states(self)
+        # KAM commented out 5/22/18 -- causes states to be added to owner twice
+        # if context & ContextFlags.COMMAND_LINE:
+        #     state_list = getattr(owner, owner.stateListAttr[self.__class__])
+        #     if state_list and not self in state_list:
+        #         owner.add_states(self)
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
