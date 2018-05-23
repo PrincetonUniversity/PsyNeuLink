@@ -802,6 +802,15 @@ class Composition(object):
 
         #  INPUT CIMS
         # loop over all origin mechanisms
+
+        def input_CIM_input_state_map(variable, corresponding_input_state):
+
+            all_input_states = self.input_CIM.input_states
+            ind = all_input_states.index(corresponding_input_state)
+            if len(variable) > ind:
+                return variable[ind]
+            return variable
+
         current_origin_input_states = set()
         for mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN):
 
@@ -811,11 +820,18 @@ class Composition(object):
 
                 # if there is not a corresponding CIM output state, add one
                 if input_state not in set(self.input_CIM_output_states.keys()):
+                    interface_input_state = InputState(owner=self.input_CIM,
+                                                       # variable=input_state.value,
+                                                       reference_value= input_state.value,
+                                                       name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
+                    self.input_CIM.add_states(interface_input_state)
                     interface_output_state = OutputState(owner=self.input_CIM,
-                                                         variable=input_state.value,
+                                                         variable=OWNER_VALUE,
+                                                         function = UserDefinedFunction(custom_function=input_CIM_input_state_map,
+                                                                                        corresponding_input_state=interface_input_state),
                                                          reference_value= input_state.value,
                                                          name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
-                    # self.input_CIM.add_states(interface_output_state)
+
                     self.input_CIM_output_states[input_state] = interface_output_state
                     self.input_CIM.add_states(interface_output_state)
                     MappingProjection(sender=interface_output_state,
@@ -844,14 +860,13 @@ class Composition(object):
         # OUTPUT CIMS
         # loop over all terminal mechanisms
 
-        def input_state_map(variable, corresponding_input_state):
+        def output_CIM_input_state_map(variable, corresponding_input_state):
 
             all_input_states = self.output_CIM.input_states
             ind = all_input_states.index(corresponding_input_state)
             if len(variable) > ind:
                 return variable[ind]
             return variable
-            # return [25.]
 
         current_terminal_output_states = set()
         for mech in self.get_mechanisms_by_role(MechanismRole.TERMINAL):
@@ -859,8 +874,7 @@ class Composition(object):
                 current_terminal_output_states.add(output_state)
                 # if there is not a corresponding CIM output state, add one
                 if output_state not in set(self.output_CIM_output_states.keys()):
-                    interface_input_state = InputState(
-                        owner=self.output_CIM,
+                    interface_input_state = InputState(owner=self.output_CIM,
                                                        # variable=output_state.value,
                                                        reference_value=output_state.value,
                                                        name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
@@ -870,11 +884,12 @@ class Composition(object):
                     interface_output_state = OutputState(
                         owner=self.output_CIM,
                         variable=OWNER_VALUE,
-                        function=UserDefinedFunction(custom_function=input_state_map,
-                                                                corresponding_input_state=interface_input_state),
-                                                         # variable=output_state.value,
-                                                         reference_value=output_state.value,
-                                                         name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
+                        function=UserDefinedFunction(custom_function=output_CIM_input_state_map,
+                                                    corresponding_input_state=interface_input_state),
+                        # variable=output_state.value,
+                        reference_value=output_state.value,
+                        name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
+
                     self.output_CIM_output_states[output_state] = interface_output_state
 
                     self.output_CIM.add_states([interface_output_state])
