@@ -1202,12 +1202,9 @@ def _get_arg_from_stack(arg_name:str):
     return arg_val
 
 
-def prune_unused_args(func, args, kwargs):
+def prune_unused_args(func, args=None, kwargs=None):
     # use the func signature to filter out arguments that aren't compatible
     sig = inspect.signature(func)
-
-    args_to_pass = list(args)
-    kwargs_to_pass = dict(kwargs)
 
     has_args_param = False
     has_kwargs_param = False
@@ -1224,19 +1221,33 @@ def prune_unused_args(func, args, kwargs):
                 count_positional += 1
             func_kwargs_names.add(name)
 
-    if not has_args_param:
-        num_extra_args = len(args_to_pass) - count_positional
-        if num_extra_args > 0:
-            logger.info('{1} extra arguments specified to function {0}, will be ignored (values: {2})'.format(func, num_extra_args, args_to_pass[-num_extra_args:]))
-        args = args[:count_positional+1]
+    if args is not None:
+        try:
+            args = list(args)
+        except TypeError:
+            args = [args]
 
-    if not has_kwargs_param:
-        filtered = set()
-        for kw in kwargs_to_pass:
-            if kw not in func_kwargs_names:
-                filtered.add(kw)
-        logger.info('{1} extra keyword arguments specified to function {0}, will be ignored (values: {2})'.format(func, len(filtered), filtered))
-        for kw in filtered:
-            del kwargs_to_pass[kw]
+        if not has_args_param:
+            num_extra_args = len(args) - count_positional
+            if num_extra_args > 0:
+                logger.debug('{1} extra arguments specified to function {0}, will be ignored (values: {2})'.format(func, num_extra_args, args[-num_extra_args:]))
+            args = args[:count_positional]
+    else:
+        args = []
 
-    return args_to_pass, kwargs_to_pass
+    if kwargs is not None:
+        kwargs = dict(kwargs)
+
+        if not has_kwargs_param:
+            filtered = set()
+            for kw in kwargs:
+                if kw not in func_kwargs_names:
+                    filtered.add(kw)
+            if len(filtered) > 0:
+                logger.debug('{1} extra keyword arguments specified to function {0}, will be ignored (values: {2})'.format(func, len(filtered), filtered))
+            for kw in filtered:
+                del kwargs[kw]
+    else:
+        kwargs = {}
+
+    return args, kwargs

@@ -948,6 +948,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         )
         function_variable[ACTIVATION_INPUT_INDEX] = variable[ACTIVATION_INPUT_INDEX]
         function_variable[ACTIVATION_OUTPUT_INDEX] = variable[ACTIVATION_OUTPUT_INDEX]
+        function_variable[ERROR_OUTPUT_INDEX] = variable[ERROR_OUTPUT_INDEX]
 
         return function_variable
 
@@ -1155,7 +1156,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _execute(
         self,
         variable=None,
-        function_variable=None,
         runtime_params=None,
         context=None
     ):
@@ -1186,10 +1186,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Compute learning_signal for each error_signal (and corresponding error-Matrix:
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
 
-            function_variable[ERROR_OUTPUT_INDEX] = error_signal_input
+            variable[ERROR_OUTPUT_INDEX] = error_signal_input
             learning_signal, error_signal = super()._execute(
                 variable=variable,
-                function_variable=function_variable,
                 error_matrix=error_matrix,
                 runtime_params=runtime_params,
                 context=context
