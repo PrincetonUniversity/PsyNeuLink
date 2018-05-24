@@ -1092,12 +1092,10 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _execute(self,
                  variable=None,
-                 function_variable=None,
                  runtime_params=None,
                  context=None):
 
         return super()._execute(variable=variable,
-                              function_variable=function_variable,
                               runtime_params=runtime_params,
                               context=context)
 
