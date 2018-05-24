@@ -351,7 +351,7 @@ class Composition(object):
         self._graph_processing = None
         self.mechanisms = []
         self.input_CIM = CompositionInterfaceMechanism(name="Stimulus_CIM")
-        self.input_CIM_output_states = {}
+        self.input_CIM_states = {}
         self.output_CIM = CompositionInterfaceMechanism(name="Output_CIM")
         self.output_CIM_output_states = {}
         self.execution_ids = []
@@ -664,7 +664,7 @@ class Composition(object):
                         elif child not in visited:
                             next_visit_stack.append(child)
 
-        self._create_CIM_output_states()
+        self._create_CIM_states()
 
         self.needs_update_graph = False
 
@@ -792,7 +792,7 @@ class Composition(object):
     #                                      "{!s} where the InputState takes values of length {!s}".
     #                                      format(i, mech.name, val_length, state_length))
 
-    def _create_CIM_output_states(self):
+    def _create_CIM_states(self):
         '''
             builds a dictionary of { Mechanism : OutputState } pairs where each origin mechanism has at least one
             corresponding OutputState on the CompositionInterfaceMechanism
@@ -819,7 +819,7 @@ class Composition(object):
                 current_origin_input_states.add(input_state)
 
                 # if there is not a corresponding CIM output state, add one
-                if input_state not in set(self.input_CIM_output_states.keys()):
+                if input_state not in set(self.input_CIM_states.keys()):
                     interface_input_state = InputState(owner=self.input_CIM,
                                                        # variable=input_state.value,
                                                        reference_value= input_state.value,
@@ -832,7 +832,7 @@ class Composition(object):
                                                          reference_value= input_state.value,
                                                          name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
 
-                    self.input_CIM_output_states[input_state] = interface_output_state
+                    self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
                     self.input_CIM.add_states(interface_output_state)
                     MappingProjection(sender=interface_output_state,
                                       receiver=input_state,
@@ -842,20 +842,20 @@ class Composition(object):
 
 
 
-        sends_to_input_states = set(self.input_CIM_output_states.keys())
+        sends_to_input_states = set(self.input_CIM_states.keys())
         # For any output state still registered on the CIM that does not map to a corresponding ORIGIN mech I.S.:
         for input_state in sends_to_input_states.difference(current_origin_input_states):
             for projection in input_state.path_afferents:
-                if projection.sender == self.input_CIM_output_states[input_state]:
+                if projection.sender == self.input_CIM_states[input_state][1]:
                     # remove the corresponding projection from the ORIGIN mechanism's path afferents
                     input_state.path_afferents.remove(projection)
                     projection = None
 
             # remove the output state associated with this input state (this iteration) from the CIM output states
-            self.input_CIM.output_states.remove(self.input_CIM_output_states[input_state])
+            self.input_CIM.output_states.remove(self.input_CIM_states[input_state][1])
 
             # and from the dictionary of CIM output state/input state pairs
-            del self.input_CIM_output_states[input_state]
+            del self.input_CIM_states[input_state]
 
         # OUTPUT CIMS
         # loop over all terminal mechanisms
@@ -915,22 +915,36 @@ class Composition(object):
             self.output_CIM.output_states.remove(self.output_CIM_output_states[output_state])
             del self.output_CIM_output_states[output_state]
 
-    def _assign_values_to_CIM_output_states(self, inputs):
+    def _assign_values_to_input_CIM(self, inputs):
         current_mechanisms = set()
-        for key in inputs:
-            if isinstance(inputs[key], (float, int)):
-                inputs[key] = np.atleast_2d(inputs[key])
-            for i in range(len(inputs[key])):
-                self.input_CIM_output_states[key.input_states[i]].value = inputs[key][i]
-            current_mechanisms.add(key)
+        build_CIM_input = []
 
-        origins = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        for input_state in self.input_CIM.input_states:
+            for key in self.input_CIM_states:
+                if self.input_CIM_states[key][0] == input_state:
+                    origin_input_state = self.input_CIM_states
+                    origin_mechanism = key.owner
+                    index = origin_mechanism.input_states.index(origin_input_state)
+                    value = inputs[origin_mechanism][index]
+                    build_CIM_input.append(value)
+        print(build_CIM_input)
 
-        # NOTE: This may need to change from default_variable to wherever a default value of the mechanism's variable
-        # is stored -- the point is that if an input is not supplied for an origin mechanism, the mechanism should use
-        # its default variable value
-        for mech in origins.difference(set(current_mechanisms)):
-            self.input_CIM_output_states[mech.input_state].value = mech.instance_defaults.value
+        self.input_CIM.execute(build_CIM_input)
+
+        # for key in inputs:
+        #     if isinstance(inputs[key], (float, int)):
+        #         inputs[key] = np.atleast_2d(inputs[key])
+        #     for i in range(len(inputs[key])):
+        #         self.input_CIM_states[key.input_states[i]][1].value = inputs[key][i]
+        #     current_mechanisms.add(key)
+        #
+        # origins = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        #
+        # # NOTE: This may need to change from default_variable to wherever a default value of the mechanism's variable
+        # # is stored -- the point is that if an input is not supplied for an origin mechanism, the mechanism should use
+        # # its default variable value
+        # for mech in origins.difference(set(current_mechanisms)):
+        #     self.input_CIM_states[mech.input_state][1].value = mech.instance_defaults.value
 
     def _assign_execution_ids(self, execution_id=None):
         '''
@@ -1061,7 +1075,7 @@ class Composition(object):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
-        self._assign_values_to_CIM_output_states(inputs)
+        self._assign_values_to_input_CIM(inputs)
 
         # self._assign_values_to_target_CIM_output_states(targets)
         # execution_id = self._assign_execution_ids(execution_id)
@@ -1113,7 +1127,7 @@ class Composition(object):
                                 mechanism.recurrent_projection.sender.value = [0.0]
                         elif mechanism in no_clamp_inputs:
                             for input_state in mechanism.input_states:
-                                self.input_CIM_output_states[input_state].value = 0.0
+                                self.input_CIM_states[input_state][1].value = 0.0
                             # self.input_mechanisms[mechanism]._output_states[0].value = 0.0
 
                 if isinstance(mechanism, Mechanism):
@@ -1149,7 +1163,7 @@ class Composition(object):
                             for input_state in mechanism.input_states:
                             # clamp = None --> "turn off" input mechanism
                             # self.input_mechanisms[mechanism]._output_states[0].value = 0
-                                self.input_CIM_output_states[input_state].value = 0
+                                self.input_CIM_states[input_state][1].value = 0
 
 
             if call_after_time_step:

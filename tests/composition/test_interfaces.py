@@ -45,6 +45,12 @@ class TestExecuteCIM():
         cim.execute(2.0)
         assert np.allclose(cim.value, [2.0])
 
+    def test_assign_value(self):
+        cim = CompositionInterfaceMechanism()
+        cim.instance_defaults.variable = [2.0]
+        cim.execute()
+        assert np.allclose(cim.value, [2.0])
+
     def test_standalone_CIM_multiple_input_states(self):
 
         cim = CompositionInterfaceMechanism(default_variable=[[0.0], [0.0], [0.0]])
