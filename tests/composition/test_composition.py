@@ -847,6 +847,7 @@ class TestRun:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
+
         assert np.allclose(50.0, output[0][0])
 
     def test_run_2_mechanisms_with_scheduling_AAB_transfer(self):
@@ -2806,8 +2807,7 @@ class TestCompositionInterface:
         assert C.output_states[0] in comp.output_CIM_states.keys()
         assert C.output_states[1] in comp.output_CIM_states.keys()
 
-        # May change to 2 in the future if we get rid of the original primary output state
-        assert len(comp.output_CIM.output_states) == 3
+        assert len(comp.output_CIM.output_states) == 2
 
     def test_output_cim_many_terminal_mechanisms(self):
 
@@ -2847,8 +2847,7 @@ class TestCompositionInterface:
         assert E.output_states[0] in comp.output_CIM_states.keys()
         assert E.output_states[1] in comp.output_CIM_states.keys()
 
-        # May change to 4 in the future if we get rid of the original primary output state
-        assert len(comp.output_CIM.output_states) == 5
+        assert len(comp.output_CIM.output_states) == 4
 
 
 class TestInputStateSpecifications:

@@ -138,14 +138,11 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({})
     paramNames = paramClassDefaults.keys()
 
-    # standard_output_states = standard_output_states.copy()
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
                  input_states: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
-                 # output_states: tc.optional(tc.any(str, Iterable)) = RESULTS,
                  function=Identity(),
                  params=None,
                  name=None,
@@ -153,20 +150,13 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
 
         if default_variable is None and size is None:
             default_variable = self.ClassDefaults.variable
-        self.input_state_output_state_map = {}
 
-        # if output_states is None or output_states is RESULTS:
-        #     output_states = [RESULTS]
+        self.connected_to_composition = False
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   input_states=input_states,
-                                                  # output_states=output_states,
                                                   params=params)
-        #
-        # if not isinstance(self.standard_output_states, StandardOutputStates):
-        #     self.standard_output_states = StandardOutputStates(self,
-        #                                                        self.standard_output_states,
-        #                                                        indices=PRIMARY)
 
         super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,
                                                             size=size,
@@ -183,10 +173,3 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         """
         for state in self.output_states:
             state.update(params=runtime_params, context=context)
-
-        for key in self.input_state_output_state_map:
-            print(key, " --> ", self.input_state_output_state_map[key])
-            print("index = ", self.input_states.index(key))
-            print("self.value = ", self.value)
-            print("self.variable = ", self.variable)
-            self.input_state_output_state_map[key].value = self.value[self.input_states.index(key)]

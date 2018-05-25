@@ -2800,7 +2800,10 @@ class Mechanism_Base(Mechanism):
             # FIX: 11/9/17
             added_variable, added_input_state = self._handle_arg_input_states(input_states)
             if added_input_state:
-                old_variable = self.instance_defaults.variable.tolist()
+                if not isinstance(self.instance_defaults.variable, list):
+                    old_variable = self.instance_defaults.variable.tolist()
+                else:
+                    old_variable = self.instance_defaults.variable
                 old_variable.extend(added_variable)
                 self.instance_defaults.variable = np.array(old_variable)
                 self._update_variable(self.instance_defaults.variable)

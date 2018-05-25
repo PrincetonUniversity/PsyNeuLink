@@ -803,18 +803,26 @@ class Composition(object):
         #  INPUT CIMS
         # loop over all origin mechanisms
 
+        if not self.input_CIM.connected_to_composition:
+            self.input_CIM.input_states.remove(self.input_CIM.input_state)
+            self.input_CIM.output_states.remove(self.input_CIM.output_state)
+            self.input_CIM.connected_to_composition = True
+
+        if not self.output_CIM.connected_to_composition:
+            self.output_CIM.input_states.remove(self.output_CIM.input_state)
+            self.output_CIM.output_states.remove(self.output_CIM.output_state)
+            self.output_CIM.connected_to_composition = True
+
         def input_CIM_input_state_map(variable, corresponding_input_state, default_value):
 
-            all_input_states = self.input_CIM.input_states
-            ind = all_input_states.index(corresponding_input_state)
-            # if context.execution_phase == ContextFlags.INITIALIZING:
-            #     return default_value
-            if len(variable) > ind:
-                return variable[ind]
-            return default_value
-
+                all_input_states = self.input_CIM.input_states
+                ind = all_input_states.index(corresponding_input_state)
+                if len(variable) > ind:
+                    return variable[ind]
+                return default_value
 
         current_origin_input_states = set()
+
         for mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN):
 
             for input_state in mech.input_states:
@@ -840,7 +848,6 @@ class Composition(object):
                     self.input_CIM.add_states(interface_output_state)
                     MappingProjection(sender=interface_output_state,
                                       receiver=input_state,
-
                                       matrix= IDENTITY_MATRIX,
                                       name="("+interface_output_state.name + ") to ("
                                            + input_state.owner.name + "-" + input_state.name+")")
@@ -903,12 +910,12 @@ class Composition(object):
                     self.output_CIM_states[output_state] = [interface_input_state, interface_output_state]
 
                     proj_name_2 = "(" + output_state.name + ") to (" + interface_input_state.name + ")"
-                    proj_name_1 = "(" + output_state.name + ") to (" + self.output_CIM.input_states[0].name + ")"
-                    MappingProjection(sender=output_state,
-                                      # receiver=interface_input_state,
-                                      receiver=self.output_CIM.input_states[0],
-                                      matrix=IDENTITY_MATRIX,
-                                      name=proj_name_1)
+                    # proj_name_1 = "(" + output_state.name + ") to (" + self.output_CIM.input_states[0].name + ")"
+                    # MappingProjection(sender=output_state,
+                    #                   # receiver=interface_input_state,
+                    #                   receiver=self.output_CIM.input_states[0],
+                    #                   matrix=IDENTITY_MATRIX,
+                    #                   name=proj_name_1)
 
                     MappingProjection(sender=output_state,
                                       receiver=interface_input_state,
@@ -1177,10 +1184,8 @@ class Composition(object):
         self.output_CIM.context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=ContextFlags.PROCESSING)
 
-
-        # TBI - delete (or don't create) default output state instead of skipping it
         output_values = []
-        for i in range(1, len(self.output_CIM.output_states)):
+        for i in range(0, len(self.output_CIM.output_states)):
             output_values.append(self.output_CIM.output_states[i].value)
 
         return output_values
