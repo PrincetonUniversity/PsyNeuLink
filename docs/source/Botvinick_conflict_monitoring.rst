@@ -53,14 +53,14 @@ here blue & green), and assigned a `Linear` function with **slope**=1.0 and **in
 value of one, the other element set to zero), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
 
 **COLOR HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**=3 (one element for each of the two colors, one
- element for the neutral color and assigned a `Logistic` function with **gain**=4.0 and **bias**=1.0.
- The **integrator_mode**=`True` and **smoothing_factor**=0.01. Both units receive mutually inhibitory weights
- (**hetero**=-2).
+element for the neutral color and assigned a `Logistic` function with **gain**=4.0 and **bias**=1.0.
+The **integrator_mode**=`True` and **smoothing_factor**=0.01. Both units receive mutually inhibitory weights
+(**hetero**=-2).
 
 **WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**=3 (one element for each of the two colors, one
- element for the neutral color and assigned a `Logistic` function with **gain**=4.0 and **bias**=1.0.
- The **integrator_mode**=`True` and **smoothing_factor**=0.01. Both units receive mutually inhibitory weights
- (**hetero**=-2).
+element for the neutral color and assigned a `Logistic` function with **gain**=4.0 and **bias**=1.0.
+The **integrator_mode**=`True` and **smoothing_factor**=0.01. Both units receive mutually inhibitory weights
+(**hetero**=-2).
 
 **TASK DEMAND LAYER**: a `RecurrentTransferMechanism` with **size**=2 (one element for each of the two tasks, and
 assigned a `Logistic` function with **gain**=1.0 and **bias**=0.0. The **integrator_mode**=`True`
@@ -76,13 +76,13 @@ The `matrix <MappingProjection.matrix>` parameter from the *COLOR INPUT_LAYER*, 
 1.0 for the diagonal elements and all off-diagonal elements are set to 0.
 The color hidden layer projects to the *TASK LAYER* with a numpy array with a value of 4.0 on the the first column, and
 0.0 on the second column, and receive inputs from the *TASK LAYER* with a numpy array with a value of 4.0 on the first row
- and a value of 0.0 in the second row.
+and a value of 0.0 in the second row.
 The word hidden layer projects to the *TASK LAYER* with a numpy array with a value of 4.0 on the the second column, and
 0.0 on the first column, and receive inputs from the *TASK LAYER* with a numpy array with a value of 4.0 on the second row
- and a value of 0.0 in the first row.
- The *RESPONSE LAYER* receives projections from two layers:
-  the *COLOR HIDDEN LAYER* with a numpy array with a value of 1.5 on the diagonal elements and 0.0 on the off-diagonal
-  elements.
+and a value of 0.0 in the first row.
+The *RESPONSE LAYER* receives projections from two layers:
+the *COLOR HIDDEN LAYER* with a numpy array with a value of 1.5 on the diagonal elements and 0.0 on the off-diagonal
+elements.
 The *WORD HIDDEN LAYER* with a numpy array with a value of 2.5 on the diagonal elements and 0.0 on the off-diagonal
 elements.
 
@@ -92,8 +92,8 @@ All units are set to zero at the beginning of the simulation. Each simulation ru
 period of 500 time steps. Then the stimulus is presented for 1000 time steps and is presented by setting the input
 units to 1.0 for a given trial. Conflict is computed on the `output_state` of the *RESPONSE LAYER*. The figure plots
 conflict over one trial for each of the three conditions.
- The `log` function is used to record the output values of *RESPONSE LAYER*. These values are used to produce
- the plot of the Figure.
+The `log` function is used to record the output values of *RESPONSE LAYER*. These values are used to produce
+the plot of the Figure.
 
 Please note:
 ------------
