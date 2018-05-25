@@ -20,9 +20,9 @@ This script implements the system and plot from Figure 1 of the conflict monitor
    :align: left
    :alt: Botvinick et al., 2001 plot produced by PsyNeuLink
 
-.. _conflict_energy_MATLAB_Fig:
+.. _conflict_monitoring_MATLAB_Fig:
 
-.. figure:: _static/conflict_energy_MATLAB.svg
+.. figure:: _static/conflict_monitoring_MATLAB.svg
    :figwidth: 45 %
    :align: right
    :alt: Botvinick et al., 2001 plot produced by MATLAB

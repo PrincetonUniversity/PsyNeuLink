@@ -157,7 +157,7 @@ System_Conflict_Monitoring = pnl.System(processes=[color_response_process,
 response_layer.systems[System_Conflict_Monitoring] = pnl.TERMINAL
 System_Conflict_Monitoring.terminal_mechanisms.append(response_layer)
 
-System_Conflict_Monitoring.show_graph(show_dimensions=pnl.ALL)#, show_mechanism_structure=True)
+# System_Conflict_Monitoring.show_graph(show_dimensions=pnl.ALL)#, show_mechanism_structure=True)
 
 def trial_dict(red_color, green_color, neutral_color, red_word, green_word, neutral_word, CN, WR):
     trialdict = {
