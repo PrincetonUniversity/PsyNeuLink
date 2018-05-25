@@ -69,10 +69,10 @@ response_layer = pnl.RecurrentTransferMechanism(size=2,
                                                                                         [-4.0, 0.0]]))}],
                                                 name='RESPONSE',)
 
-#Log ------------------------------------------------------------------------------------------------------------------
+# Log ------------------------------------------------------------------------------------------------------------------
 response_layer.set_log_conditions('DECISION_ENERGY')
 
-#####-------- Mapping projections
+# Mapping projections---------------------------------------------------------------------------------------------------
 
 color_input_weights = pnl.MappingProjection(matrix=np.array([[1.0, 0.0, 0.0],
                                                              [0.0, 1.0, 0.0],
@@ -113,7 +113,7 @@ word_task_weights = pnl.MappingProjection(matrix=np.array([[0.0, 4.0],
 task_word_weights = pnl.MappingProjection(matrix=np.array([[0.0, 0.0, 0.0],
                                                            [4.0, 4.0, 4.0]]))
 
-# CREATE PATHWAYS ---------------------------------------------------------------------------------------------------
+# CREATE PATHWAYS -----------------------------------------------------------------------------------------------------
 color_response_process = pnl.Process(pathway=[colors_input_layer,
                                               color_input_weights,
                                               colors_hidden_layer,
@@ -154,7 +154,10 @@ System_Conflict_Monitoring = pnl.System(processes=[color_response_process,
                                                    task_word_response_process],
                                         name='CONFLICT MONITORING_SYSTEM')
 
-# System_Conflict_Monitoring.show_graph(show_dimensions=pnl.ALL)#, show_mechanism_structure=True)
+response_layer.systems[System_Conflict_Monitoring] = pnl.TERMINAL
+System_Conflict_Monitoring.terminal_mechanisms.append(response_layer)
+
+System_Conflict_Monitoring.show_graph(show_dimensions=pnl.ALL)#, show_mechanism_structure=True)
 
 def trial_dict(red_color, green_color, neutral_color, red_word, green_word, neutral_word, CN, WR):
     trialdict = {
