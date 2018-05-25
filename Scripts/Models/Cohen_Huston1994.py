@@ -146,7 +146,8 @@ Bidirectional_Stroop = pnl.System(processes=[color_response_process,
                                                    task_color_response_process,
                                                    task_word_response_process],
                                         name='Bidirectional_Stroop_SYSTEM')
-
+response_layer.systems[Bidirectional_Stroop] = pnl.TERMINAL
+Bidirectional_Stroop.terminal_mechanisms.append(response_layer)
 # LOGGING:
 colors_hidden_layer.set_log_conditions('value')
 words_hidden_layer.set_log_conditions('value')
