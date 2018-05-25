@@ -12,5 +12,5 @@ illustrate principles of neural and/or psychological function.
 
 • `PCTC_model`
 
-• `BidirectionalStroopModel`
+• `Cohen_HustonModel`
 
