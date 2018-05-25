@@ -76,11 +76,11 @@ response_layer.set_log_conditions('DECISION_ENERGY')
 
 color_input_weights = pnl.MappingProjection(matrix=np.array([[1.0, 0.0, 0.0],
                                                              [0.0, 1.0, 0.0],
-                                                             [0.0, 0.0, 0.0]]))
+                                                             [0.0, 0.0, 1.0]]))
 
 word_input_weights = pnl.MappingProjection(matrix=np.array([[1.0, 0.0, 0.0],
                                                             [0.0, 1.0, 0.0],
-                                                            [0.0, 0.0, 0.0]]))
+                                                            [0.0, 0.0, 1.0]]))
 
 task_input_weights = pnl.MappingProjection(matrix=np.array([[1.0, 0.0],
                                                             [0.0, 1.0]]))
@@ -171,7 +171,7 @@ def trial_dict(red_color, green_color, neutral_color, red_word, green_word, neut
 CN_trial_initialize_input = trial_dict(0, 0, 0, 0, 0, 0, 1, 0)#red_color, green color, red_word, green word, CN, WR
 CN_incongruent_trial_input = trial_dict(1, 0, 0, 0, 1, 0, 1, 0) #red_color, green color, red_word, green word, CN, WR
 CN_congruent_trial_input = trial_dict(1, 0, 0, 1, 0, 0, 1, 0)   #red_color, green color, red_word, green word, CN, WR
-CN_control_trial_input = trial_dict(1, 0, 0, 0, 0, 0, 1, 0)     #red_color, green color, red_word, green word, CN, WR
+CN_control_trial_input = trial_dict(1, 0, 0, 0, 0, 1, 1, 0)     #red_color, green color, red_word, green word, CN, WR
 
 Stimulus = [[CN_trial_initialize_input, CN_congruent_trial_input],
             [CN_trial_initialize_input, CN_incongruent_trial_input],

@@ -73,7 +73,7 @@ and **smoothing_factor**=0.01. Both units receive mutually inhibitory weights (*
 **PROJECTIONS**:  The weights of the  network are implemented as `MappingProjections <MappingProjection>`.
 The `matrix <MappingProjection.matrix>` parameter from the *COLOR INPUT_LAYER*, the *WORD INPUT_LAYER*, and the
 *BIAS INPUT_LAYER* to the *COLOR HIDDEN LAYER* and *WORD HIDDEN LAYER* are all set with a numpy array with a value of
-1.0 for the first two diagonal elements and the third diagonal element set to 0.0. All off-diagonal elements are set to 0.
+1.0 for the diagonal elements and all off-diagonal elements are set to 0.
 The color hidden layer projects to the *TASK LAYER* with a numpy array with a value of 4.0 on the the first column, and
 0.0 on the second column, and receive inputs from the *TASK LAYER* with a numpy array with a value of 4.0 on the first row
  and a value of 0.0 in the second row.
