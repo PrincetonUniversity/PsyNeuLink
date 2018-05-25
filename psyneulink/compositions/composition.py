@@ -920,13 +920,21 @@ class Composition(object):
         build_CIM_input = []
 
         for input_state in self.input_CIM.input_states:
+            # "input_state" is an InputState on the input CIM
+            value = [12.34]
             for key in self.input_CIM_states:
+                # "key" is an InputState on an origin Mechanism of the Composition
                 if self.input_CIM_states[key][0] == input_state:
-                    origin_input_state = self.input_CIM_states
+                    origin_input_state = key
                     origin_mechanism = key.owner
                     index = origin_mechanism.input_states.index(origin_input_state)
-                    value = inputs[origin_mechanism][index]
-                    build_CIM_input.append(value)
+                    if origin_mechanism in inputs:
+                        value = inputs[origin_mechanism][index]
+                    else:
+                        value = origin_mechanism.instance.defaults.variable[index]
+            # if value is None:
+            #     value =
+            build_CIM_input.append(value)
         print(build_CIM_input)
 
         self.input_CIM.execute(build_CIM_input)
@@ -1068,7 +1076,7 @@ class Composition(object):
             targets = {}
         execution_id = self._assign_execution_ids(execution_id)
         origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
-
+        inputs = self._adjust_execution_stimuli(inputs)
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
 
@@ -1502,3 +1510,22 @@ class Composition(object):
                                    .format(self.name, (stimuli[mech]), mech.name))
 
         return adjusted_stimuli, num_input_sets
+
+    def _adjust_execution_stimuli(self, stimuli):
+        adjusted_stimuli = {}
+        for mech, stimulus in stimuli.items():
+
+            check_spec_type = self._input_matches_variable(stimulus, mech.instance_defaults.value)
+            # If a mechanism provided a single input, wrap it in one more list in order to represent trials
+            if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
+                if check_spec_type == "homogeneous":
+                    # np.atleast_2d will catch any single-input states specified without an outer list
+                    # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
+                    adjusted_stimuli[mech] = np.atleast_2d(stimulus)
+                else:
+                    adjusted_stimuli[mech] = stimulus
+
+            else:
+                raise CompositionError("Input stimulus ({}) for {} is incompatible with its variable ({})."
+                                       .format(stimulus, mech.name, mech.instance_defaults.value))
+        return adjusted_stimuli
