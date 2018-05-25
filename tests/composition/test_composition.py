@@ -2818,13 +2818,14 @@ class TestCompositionInterface:
         comp._analyze_graph()
         comp.run(inputs={A: [1.0]})
 
-        for CIM_output_state in comp.output_CIM_output_states:
+        for terminal_state in comp.output_CIM_states:
             # all CIM output state keys in the CIM --> Terminal mapping dict are on the actual output CIM
-            assert comp.output_CIM_output_states[CIM_output_state] in comp.output_CIM.output_states
+            assert (comp.output_CIM_states[terminal_state][0] in comp.output_CIM.input_states) and \
+                   (comp.output_CIM_states[terminal_state][1] in comp.output_CIM.output_states)
 
         # all Terminal Output states are in the CIM --> Terminal mapping dict
-        assert C.output_states[0] in comp.output_CIM_output_states.keys()
-        assert C.output_states[1] in comp.output_CIM_output_states.keys()
+        assert C.output_states[0] in comp.output_CIM_states.keys()
+        assert C.output_states[1] in comp.output_CIM_states.keys()
 
         # May change to 2 in the future if we get rid of the original primary output state
         assert len(comp.output_CIM.output_states) == 3
@@ -2856,15 +2857,16 @@ class TestCompositionInterface:
         comp._analyze_graph()
         comp.run(inputs={A: [1.0]})
 
-        for CIM_output_state in comp.output_CIM_output_states:
+        for terminal_state in comp.output_CIM_states:
             # all CIM output state keys in the CIM --> Terminal mapping dict are on the actual output CIM
-            assert comp.output_CIM_output_states[CIM_output_state] in comp.output_CIM.output_states
+            assert (comp.output_CIM_states[terminal_state][0] in comp.output_CIM.input_states) and \
+                   (comp.output_CIM_states[terminal_state][1] in comp.output_CIM.output_states)
 
         # all Terminal Output states are in the CIM --> Terminal mapping dict
-        assert C.output_state in comp.output_CIM_output_states.keys()
-        assert D.output_state in comp.output_CIM_output_states.keys()
-        assert E.output_states[0] in comp.output_CIM_output_states.keys()
-        assert E.output_states[1] in comp.output_CIM_output_states.keys()
+        assert C.output_state in comp.output_CIM_states.keys()
+        assert D.output_state in comp.output_CIM_states.keys()
+        assert E.output_states[0] in comp.output_CIM_states.keys()
+        assert E.output_states[1] in comp.output_CIM_states.keys()
 
         # May change to 4 in the future if we get rid of the original primary output state
         assert len(comp.output_CIM.output_states) == 5
@@ -3078,11 +3080,11 @@ class TestInputSpecifications:
         comp.add_projection(B, MappingProjection(sender=B, receiver=D), D)
         comp.add_projection(C, MappingProjection(sender=C, receiver=D), D)
         comp._analyze_graph()
-        inputs = {A: [[[0],[0]], [[1],[1]], [[2],[2]]],
-                  B: [[0,0], [1,1], [2,2]],
-                  C: [[0,0,0], [1,1,1], [2,2,2]]
-
+        inputs = {A: [[[0], [0]], [[1], [1]], [[2], [2]]],
+                  B: [[0, 0], [1, 1], [2, 2]],
+                  C: [[0, 0, 0], [1, 1, 1], [2, 2, 2]]
         }
+
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs,
