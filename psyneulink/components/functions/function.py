@@ -6097,21 +6097,17 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             if rate < 0.0 or rate > 1.0:
                 raise FunctionError(rate_value_msg.format(rate, self.name))
 
-    def get_param_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            noise_is_array = hasattr(self.noise, "__len__") and len(self.noise) != 1
-            noise_ty = ir.ArrayType(ctx.float_ty, len(self.noise)) if noise_is_array else ctx.float_ty
-            # rate, offset, noise
-            param_type = ir.LiteralStructType([ctx.float_ty, ctx.float_ty, noise_ty])
-        return param_type
 
-    def get_param_initializer(self):
+    def get_params(self):
+        # WORKAROUND: get_current_function_param sometimes returns [x],
+        # soemtimes x
         noise = self.get_current_function_param(NOISE)
-        # Arrays need to be initialized using tuple
         if hasattr(noise, "__len__") and len(noise) > 1:
-            noise = tuple(np.asfarray(noise).flatten().tolist())
-        return (self.get_current_function_param(RATE),
-                self.get_current_function_param(OFFSET), noise)
+            noise = np.asfarray(noise).flatten().tolist()
+        else:
+            noise = np.atleast_1d(noise)[0]
+        return (np.atleast_1d(self.get_current_function_param(RATE))[0],
+                np.atleast_1d(self.get_current_function_param(OFFSET))[0], noise)
 
 
     def get_context_struct_type(self):
