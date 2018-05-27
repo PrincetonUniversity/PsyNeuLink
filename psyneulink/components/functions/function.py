@@ -4024,13 +4024,11 @@ class SoftMax(NormalizingFunction):
         with pnlvm.LLVMBuilderContext() as ctx:
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var[0])
 
-    def get_param_struct_type(self):
-        #TODO: convert this to use get_param_initializer
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, (0,))
 
-    def get_param_initializer(self):
-        return (self.get_current_function_param(GAIN),)
+    def get_params(self):
+        # WORKAROUND: get_current_function_param sometimes returns [x],
+        # soemtimes x
+        return (np.atleast_1d(self.get_current_function_param(GAIN))[0],)
 
     def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
