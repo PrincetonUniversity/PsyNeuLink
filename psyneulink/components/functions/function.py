@@ -3566,15 +3566,13 @@ class Logistic(TransferFunction):  # -------------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def get_param_struct_type(self):
-        #TODO: convert this to use get_param_initializer
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, (0,0,0))
 
-    def get_param_initializer(self):
-        return (self.get_current_function_param(GAIN),
-                self.get_current_function_param(BIAS),
-                self.get_current_function_param(OFFSET))
+    def get_params(self):
+        # WORKAROUND: get_current_function_param sometimes returns [x],
+        # soemtimes x
+        return (np.atleast_1d(self.get_current_function_param(GAIN))[0],
+                np.atleast_1d(self.get_current_function_param(BIAS))[0],
+                np.atleast_1d(self.get_current_function_param(OFFSET))[0])
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
