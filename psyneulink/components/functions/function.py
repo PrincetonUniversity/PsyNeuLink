@@ -745,7 +745,7 @@ class Function_Base(Function):
 
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
-            return ir.LiteralStructType([])
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, self.get_param_initializer())
 
     def get_param_initializer(self):
         return tuple([])
@@ -2279,6 +2279,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         return tuple(param_init)
 
     def get_param_struct_type(self):
+        #TODO: convert this to use get_param_initializer
         param_list = []
         for p in SCALE, OFFSET, EXPONENTS:
             # work around 2d structure of params
@@ -2288,9 +2289,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             param_list.append(param)
 
         with pnlvm.LLVMBuilderContext() as ctx:
-            params_ty = [pnlvm._convert_python_struct_to_llvm_ir(ctx, p) for p in param_list]
-            param_type = ir.LiteralStructType(params_ty)
-        return param_type
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, tuple(param_list))
 
     def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
         scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -3157,9 +3156,9 @@ class Linear(TransferFunction):  # ---------------------------------------------
         # self.functionOutputType = None
 
     def get_param_struct_type(self):
+        #TODO: convert this to use get_param_initializer
         with pnlvm.LLVMBuilderContext() as ctx:
-            param_type = ir.LiteralStructType((ctx.float_ty, ctx.float_ty))
-        return param_type
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, (0,0))
 
     def get_param_initializer(self):
         return (self.get_current_function_param(SLOPE),
@@ -3385,9 +3384,9 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          context=ContextFlags.CONSTRUCTOR)
 
     def get_param_struct_type(self):
+        #TODO: convert this to use get_param_initializer
         with pnlvm.LLVMBuilderContext() as ctx:
-            param_type = ir.LiteralStructType((ctx.float_ty, ctx.float_ty))
-        return param_type
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, (0,0))
 
     def get_param_initializer(self):
         return (self.get_current_function_param(RATE),
@@ -3567,9 +3566,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
                          context=ContextFlags.CONSTRUCTOR)
 
     def get_param_struct_type(self):
+        #TODO: convert this to use get_param_initializer
         with pnlvm.LLVMBuilderContext() as ctx:
-            param_type = ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.float_ty))
-        return param_type
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, (0,0,0))
 
     def get_param_initializer(self):
         return (self.get_current_function_param(GAIN),
@@ -4027,9 +4026,9 @@ class SoftMax(NormalizingFunction):
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var[0])
 
     def get_param_struct_type(self):
+        #TODO: convert this to use get_param_initializer
         with pnlvm.LLVMBuilderContext() as ctx:
-            param_type = ir.LiteralStructType([ctx.float_ty])
-        return param_type
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, (0,))
 
     def get_param_initializer(self):
         return (self.get_current_function_param(GAIN),)

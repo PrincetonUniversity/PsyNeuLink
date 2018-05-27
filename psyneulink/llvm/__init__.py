@@ -172,7 +172,7 @@ def _convert_python_struct_to_llvm_ir(ctx, t):
         return ir.ArrayType(elem_t, len(t))
     elif type(t) is tuple:
         elems_t = [_convert_python_struct_to_llvm_ir(ctx, x) for x in t]
-        return ir.LiteralStructType([elems_t])
+        return ir.LiteralStructType(elems_t)
     elif isinstance(t, (int, float)):
         return ctx.float_ty
     elif isinstance(t, np.ndarray):
