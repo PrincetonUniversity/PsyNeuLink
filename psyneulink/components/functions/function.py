@@ -743,12 +743,19 @@ class Function_Base(Function):
     def get_context_initializer(self):
         return tuple([])
 
+    def get_params(self):
+        return None
+
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, self.get_param_initializer())
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, self.get_params())
 
     def get_param_initializer(self):
-        return tuple([])
+        def tupleize(x):
+            if hasattr(x, "__len__"):
+                return tuple([tupleize(y) for y in x])
+            return x if x is not None else tuple()
+        return tupleize(self.get_params())
 
     def get_input_struct_type(self):
         default_var = self.instance_defaults.variable
