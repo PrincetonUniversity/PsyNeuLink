@@ -4656,14 +4656,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             return ir.ArrayType(ctx.float_ty, self._result_length)
 
 
-    def get_param_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            matrix_ty = ir.ArrayType(ctx.float_ty, self.matrix.size)
-            param_type = ir.LiteralStructType([matrix_ty])
-        return param_type
-
-    def get_param_initializer(self):
-        return (tuple(np.array(self.matrix).flatten().tolist()),)
+    def get_params(self):
+        return (np.array(self.matrix).flatten().tolist(),)
 
 
     def _gen_llvm_function_body(self, ctx, builder):
