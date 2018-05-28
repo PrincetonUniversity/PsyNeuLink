@@ -4652,8 +4652,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             return ir.ArrayType(ctx.float_ty, self._result_length)
 
 
-    def get_params(self):
-        return (np.array(self.matrix).flatten().tolist(),)
+    def get_param_ids(self):
+        return [MATRIX]
 
 
     def _gen_llvm_function_body(self, ctx, builder):
