@@ -3156,11 +3156,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         # self.functionOutputType = None
 
-    def get_params(self):
-        # WORKAROUND: get_current_function_param sometimes returns [x],
-        # soemtimes x
-        return (np.atleast_1d(self.get_current_function_param(SLOPE))[0],
-                np.atleast_1d(self.get_current_function_param(INTERCEPT))[0])
+    def get_param_ids(self):
+        return SLOPE, INTERCEPT
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
