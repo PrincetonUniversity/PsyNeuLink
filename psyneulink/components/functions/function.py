@@ -743,8 +743,23 @@ class Function_Base(Function):
     def get_context_initializer(self):
         return tuple([])
 
+    def get_param_ids(self):
+        return []
+
     def get_params(self):
-        return None
+        param_init = []
+        for p in self.get_param_ids():
+            param = self.get_current_function_param(p)
+            # WORKAROUND: get_current_function_param sometimes returns [x],
+            # sometimes x. Make sure scalars are not added as single element
+            # array
+            if hasattr(param, "__len__") and len(param) == 1:
+                param = param[0]
+            if not np.isscalar(param) and param is not None:
+                param = np.asfarray(param).flatten().tolist()
+            param_init.append(param)
+
+        return tuple(param_init)
 
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
