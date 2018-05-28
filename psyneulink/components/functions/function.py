@@ -3378,11 +3378,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
-    def get_params(self):
-        # WORKAROUND: get_current_function_param sometimes returns [x],
-        # soemtimes x
-        return (np.atleast_1d(self.get_current_function_param(RATE))[0],
-                np.atleast_1d(self.get_current_function_param(SCALE))[0])
+    def get_param_ids(self):
+        return RATE, SCALE
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
