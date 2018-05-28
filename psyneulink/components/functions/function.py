@@ -4036,13 +4036,8 @@ class SoftMax(NormalizingFunction):
 
 
     def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
-        output_type = self.params[OUTPUT_TYPE]
+        assert self.get_current_function_param(OUTPUT_TYPE) == ALL
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-
-        if output_type in (MAX_VAL, MAX_INDICATOR):
-            builder.store(ctx.float_ty(0), ptro)
-            return
-
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         orig_val = builder.load(ptri)
@@ -4073,7 +4068,7 @@ class SoftMax(NormalizingFunction):
         vector_length = ctx.int32_ty(vi.type.pointee.count)
         builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
 
-        output_type = self.params[OUTPUT_TYPE]
+        output_type = self.get_current_function_param(OUTPUT_TYPE)
         exp_sum = builder.load(exp_sum_ptr)
         index = builder.load(max_ind_ptr)
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
