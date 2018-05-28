@@ -2,8 +2,12 @@ from psyneulink.components.functions.function import Linear, SimpleIntegrator
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.library.subsystems.agt.lccontrolmechanism import LCControlMechanism
+from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.compositions.composition import Composition
 from psyneulink.scheduling.scheduler import Scheduler
+from psyneulink import SLOPE
 
 from itertools import product
 import numpy as np
@@ -112,6 +116,45 @@ def test_5_mechanisms_2_origins_1_terminal(benchmark, mode):
     sched = Scheduler(composition=comp)
     output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
     assert 250 == output[0][0]
+
+
+@pytest.mark.skip
+@pytest.mark.composition
+@pytest.mark.benchmark(group="Control composition scalar")
+@pytest.mark.parametrize("mode", ['Python'])
+def test_3_mechanisms_2_origins_1_control_1_terminal(benchmark, mode):
+    # A-|
+    #   C --
+    #              ==> E
+    # D --
+
+    # 5 x 4 = 20 --
+    #                20 + 25 = 45  ==> 45 * 5 = 225
+    # 5 x 5 = 25 --
+
+    comp = Composition()
+    C = TransferMechanism(name="C", function=Linear(slope=5.0))
+    D = TransferMechanism(name="D", default_variable=[0.0], function=Linear(slope=5.0))
+    A = LCControlMechanism(modulated_mechanisms=D,
+                           objective_mechanism=ObjectiveMechanism(
+                                                function=Linear,
+                                                monitored_output_states=[C],
+                                                name='LC ObjectiveMechanism'))
+    E = TransferMechanism(name="E", function=Linear(slope=5.0))
+    comp.add_mechanism(A)
+    comp.add_mechanism(C)
+    comp.add_mechanism(D)
+    comp.add_mechanism(E)
+    comp.add_projection(A, ControlProjection(sender=A.control_signals[0], receiver=D.parameter_states[SLOPE]), D)
+    comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
+    comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
+    comp.add_projection(C, MappingProjection(sender=C, receiver=A), A)
+    comp._analyze_graph()
+    inputs_dict = {C: [4.0]}#,
+#                   D: [5.0]}
+    sched = Scheduler(composition=comp)
+    output = benchmark(comp.run, inputs=inputs_dict, scheduler_processing=sched, bin_execute=(mode=='LLVM'))
+    assert 100 == output[0][0]
 
 
 @pytest.mark.composition
