@@ -2288,15 +2288,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var[0])
 
 
-    def get_params(self):
-        param_init = []
-        for p in SCALE, OFFSET, EXPONENTS:
-            param = self.get_current_function_param(p)
-            if not np.isscalar(param) and param is not None:
-                param = param.flatten().tolist()
-            param_init.append(param)
-
-        return tuple(param_init)
+    def get_param_ids(self):
+        return SCALE, OFFSET, EXPONENTS
 
 
     def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
