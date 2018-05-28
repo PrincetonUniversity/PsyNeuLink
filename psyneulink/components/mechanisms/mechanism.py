@@ -2447,7 +2447,12 @@ class Mechanism_Base(Mechanism):
             output_param_list.append(state.get_param_struct_type())
         output_param_struct = ir.LiteralStructType(output_param_list)
 
-        return ir.LiteralStructType([input_param_struct, self.function_object.get_param_struct_type(), output_param_struct])
+        param_param_list = []
+        for state in self.parameter_states:
+            param_param_list.append(state.get_param_struct_type())
+        param_param_struct = ir.LiteralStructType(param_param_list)
+
+        return ir.LiteralStructType([input_param_struct, self.function_object.get_param_struct_type(), output_param_struct, param_param_struct])
 
 
     def get_context_struct_type(self):
@@ -2493,7 +2498,12 @@ class Mechanism_Base(Mechanism):
             output_param_init_list.append(state.get_param_initializer())
         output_param_init = tuple(output_param_init_list)
 
-        return tuple([input_param_init, function_param_init, output_param_init])
+        param_param_init_list = []
+        for state in self.parameter_states:
+            param_param_init_list.append(state.get_param_initializer())
+        param_param_init = tuple(param_param_init_list)
+
+        return tuple([input_param_init, function_param_init, output_param_init, param_param_init])
 
 
     def get_context_initializer(self):
