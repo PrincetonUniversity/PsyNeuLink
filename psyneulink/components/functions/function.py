@@ -3555,12 +3555,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
                          context=ContextFlags.CONSTRUCTOR)
 
 
-    def get_params(self):
-        # WORKAROUND: get_current_function_param sometimes returns [x],
-        # soemtimes x
-        return (np.atleast_1d(self.get_current_function_param(GAIN))[0],
-                np.atleast_1d(self.get_current_function_param(BIAS))[0],
-                np.atleast_1d(self.get_current_function_param(OFFSET))[0])
+    def get_param_ids(self):
+        return GAIN, BIAS, OFFSET
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
