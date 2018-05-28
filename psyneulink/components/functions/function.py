@@ -6088,16 +6088,8 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
                 raise FunctionError(rate_value_msg.format(rate, self.name))
 
 
-    def get_params(self):
-        # WORKAROUND: get_current_function_param sometimes returns [x],
-        # soemtimes x
-        noise = self.get_current_function_param(NOISE)
-        if hasattr(noise, "__len__") and len(noise) > 1:
-            noise = np.asfarray(noise).flatten().tolist()
-        else:
-            noise = np.atleast_1d(noise)[0]
-        return (np.atleast_1d(self.get_current_function_param(RATE))[0],
-                np.atleast_1d(self.get_current_function_param(OFFSET))[0], noise)
+    def get_param_ids(self):
+        return RATE, OFFSET, NOISE
 
 
     def get_context_struct_type(self):
