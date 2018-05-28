@@ -1095,6 +1095,57 @@ class TransferMechanism(ProcessingMechanism_Base):
         f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
+        # Call parameter states for integrator function
+        is_count = len(self.input_states)
+        if_ids = self.integrator_function.get_param_ids() if self.integrator_mode else []
+        for idx, if_param in enumerate(if_ids):
+
+            # FIXME: Work around parameter rename. Mechanisms "smoothing_factor"
+            # is integrator function's "rate"
+            if if_param == RATE:
+                if_param = SMOOTHING_FACTOR
+
+            # FIXME: Why wouldn't it be there?
+            if if_param not in self._parameter_states:
+                continue
+
+            i = self._parameter_states.key_values.index(if_param)
+            assert self._parameter_states[if_param] == self.parameter_states[i]
+
+            # Skip parameter states that don't have incoming projections
+            if len(self._parameter_states[if_param].mod_afferents) == 0:
+                continue
+
+            ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            ps_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
+            # Parameter states modify corresponding parameter in param struct
+            ps_output = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+            ps_function = ctx.get_llvm_function(state.llvmSymbolName)
+            builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
+
+        # Call parameter states for main function
+        for idx, mf_param in enumerate(self.function_object.get_param_ids()):
+            # FIXME: why wouldn't it be there?
+            if mf_param not in self._parameter_states:
+                continue
+
+            i = self._parameter_states.key_values.index(mf_param)
+            assert self._parameter_states[mf_param] == self.parameter_states[i]
+
+            # Skip parameter states that don't have incoming projections
+            if len(self._parameter_states[mf_param].mod_afferents) == 0:
+                continue
+
+            ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            ps_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
+            # Parameter states modify corresponding parameter in param struct
+            ps_output = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+            ps_function = ctx.get_llvm_function(state.llvmSymbolName)
+            builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
+
+
         if self.integrator_mode:
             if_in = is_out
             if_out = builder.alloca(integrator_function.args[3].type.pointee, 1)
