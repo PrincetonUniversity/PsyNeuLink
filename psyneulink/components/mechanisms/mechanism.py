@@ -2466,7 +2466,12 @@ class Mechanism_Base(Mechanism):
             output_context_list.append(state.get_context_struct_type())
         output_context_struct = ir.LiteralStructType(output_context_list)
 
-        return ir.LiteralStructType([input_context_struct, self.function_object.get_context_struct_type(), output_context_struct])
+        parameter_context_list = []
+        for state in self.parameter_states:
+            parameter_context_list.append(state.get_context_struct_type())
+        parameter_context_struct = ir.LiteralStructType(parameter_context_list)
+
+        return ir.LiteralStructType([input_context_struct, self.function_object.get_context_struct_type(), output_context_struct, parameter_context_struct])
 
 
     def get_output_struct_type(self):
@@ -2519,7 +2524,12 @@ class Mechanism_Base(Mechanism):
             output_context_init_list.append(state.get_context_initializer())
         output_context_init = tuple(output_context_init_list)
 
-        return tuple([input_context_init, function_context_init, output_context_init])
+        parameter_context_init_list = []
+        for state in self.parameter_states:
+            parameter_context_init_list.append(state.get_context_initializer())
+        parameter_context_init = tuple(parameter_context_init_list)
+
+        return tuple([input_context_init, function_context_init, output_context_init, parameter_context_init])
 
 
     def _bin_execute(self,
