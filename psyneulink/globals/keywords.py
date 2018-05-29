@@ -560,6 +560,7 @@ BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 TDLEARNING_FUNCTION = "TD Learning Function"
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
 IDENTITY_FUNCTION = 'Identity Function'
+STATE_MAP_FUNCTION = 'State Map Function'
 # Distribution functions
 
 NORMAL_DIST_FUNCTION = "Normal Distribution Function"

@@ -58,7 +58,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.components.functions.function import UserDefinedFunction
+from psyneulink.components.functions.function import InterfaceStateMap, UserDefinedFunction
 from psyneulink.globals.keywords import OWNER_VALUE, SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAMP, PULSE_CLAMP, NO_CLAMP, IDENTITY_MATRIX
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import EXECUTING
@@ -797,11 +797,6 @@ class Composition(object):
             builds a dictionary of { Mechanism : OutputState } pairs where each origin mechanism has at least one
             corresponding OutputState on the CompositionInterfaceMechanism
         '''
-        # FIX BUG: stimulus CIM output states are not properly destroyed when analyze graph is run multiple times
-        # (extra mechanisms are marked as CIMs when graph is analyzed too early, so they create CIM output states)
-
-        #  INPUT CIMS
-        # loop over all origin mechanisms
 
         if not self.input_CIM.connected_to_composition:
             self.input_CIM.input_states.remove(self.input_CIM.input_state)
@@ -813,15 +808,17 @@ class Composition(object):
             self.output_CIM.output_states.remove(self.output_CIM.output_state)
             self.output_CIM.connected_to_composition = True
 
-        def input_CIM_input_state_map(variable, corresponding_input_state, default_value):
-
-                all_input_states = self.input_CIM.input_states
-                ind = all_input_states.index(corresponding_input_state)
-                if len(variable) > ind:
-                    return variable[ind]
-                return default_value
+        # def input_CIM_input_state_map(variable, corresponding_input_state, default_value):
+        #     all_input_states = self.input_CIM.input_states
+        #     ind = all_input_states.index(corresponding_input_state)
+        #     if len(variable) > ind:
+        #         return variable[ind]
+        #     return default_value
 
         current_origin_input_states = set()
+
+        #  INPUT CIMS
+        # loop over all origin mechanisms
 
         for mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN):
 
@@ -838,9 +835,12 @@ class Composition(object):
                     self.input_CIM.add_states(interface_input_state)
                     interface_output_state = OutputState(owner=self.input_CIM,
                                                          variable=OWNER_VALUE,
-                                                         function=UserDefinedFunction(custom_function=input_CIM_input_state_map,
-                                                                                      corresponding_input_state=interface_input_state,
-                                                                                      default_value=input_state.value),
+                                                         function=InterfaceStateMap(
+                                                             default_variable=input_state.value,
+                                                                                    corresponding_input_state=interface_input_state),
+                                                         # UserDefinedFunction(custom_function=input_CIM_input_state_map,
+                                                         #                              corresponding_input_state=interface_input_state,
+                                                         #                              default_value=input_state.value),
                                                          # reference_value= input_state.value,
                                                          name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
 
