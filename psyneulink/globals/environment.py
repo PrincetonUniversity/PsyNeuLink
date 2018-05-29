@@ -554,6 +554,7 @@ Class Reference
 
 import datetime
 import warnings
+
 from collections import Iterable
 from numbers import Number
 
@@ -563,8 +564,7 @@ import typecheck as tc
 from psyneulink.components.component import function_type
 from psyneulink.components.shellclasses import Mechanism, Process_Base, System_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import INPUT_LABELS_DICT, MECHANISM, \
-    PROCESS, RUN, SAMPLE, SYSTEM, TARGET, OUTPUT_LABELS_DICT
+from psyneulink.globals.keywords import INPUT_LABELS_DICT, MECHANISM, OUTPUT_LABELS_DICT, PROCESS, RUN, SAMPLE, SYSTEM, TARGET
 from psyneulink.globals.log import LogCondition
 from psyneulink.scheduling.time import TimeScale
 
@@ -573,14 +573,14 @@ __all__ = [
 ]
 
 class RunError(Exception):
-     def __init__(object, error_value):
-         object.error_value = error_value
+     def __init__(obj, error_value):
+         obj.error_value = error_value
 
-     def __str__(object):
-         return repr(object.error_value)
+     def __str__(obj):
+         return repr(obj.error_value)
 
 @tc.typecheck
-def run(object,
+def run(obj,
         inputs,
         num_trials:tc.optional(int)=None,
         initialize:bool=False,
@@ -618,13 +618,13 @@ def run(object,
             * call call_before_trial if specified;
             * for each time_step in the trial:
                 * call call_before_time_step if specified;
-                * call ``object.execute`` with inputs, and append result to ``object.results``;
+                * call ``obj.execute`` with inputs, and append result to ``obj.results``;
                 * call call_after_time_step if specified;
             * call call_after_trial if specified.
-        Return ``object.results``.
+        Return ``obj.results``.
 
         The inputs argument must be a list or an np.ndarray array of the appropriate dimensionality:
-            * the inner-most dimension must equal the length of object.instance_defaults.variable (i.e., the input to the object);
+            * the inner-most dimension must equal the length of obj.instance_defaults.variable (i.e., the input to the obj);
             * for Mechanism format, the length of the value of all entries must be equal (== number of executions);
             * the outer-most dimension is the number of input sets (num_input_sets) specified (one per execution)
                 Note: num_input_sets need not equal num_trials (the number of executions to actually run)
@@ -698,7 +698,7 @@ def run(object,
    Returns
    -------
 
-    <object>.results : List[OutputState.value]
+    <obj>.results : List[OutputState.value]
         list of the values, for each `TRIAL`, of the OutputStates for a Mechanism run directly,
         or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
@@ -706,20 +706,20 @@ def run(object,
 
     # small version of 'sequence' format in the once case where it was still working (single origin mechanism)
     if isinstance(inputs, (list, np.ndarray)):
-        if len(object.origin_mechanisms) == 1:
-            inputs = {object.origin_mechanisms[0]: inputs}
+        if len(obj.origin_mechanisms) == 1:
+            inputs = {obj.origin_mechanisms[0]: inputs}
         else:
             raise RunError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
-                           "mechanisms.".format(object.name, len(object.origin_mechanisms)))
+                           "mechanisms.".format(obj.name, len(obj.origin_mechanisms)))
     elif not isinstance(inputs, dict) and not isinstance(inputs, str):
-        if len(object.origin_mechanisms) == 1:
+        if len(obj.origin_mechanisms) == 1:
             raise RunError("Inputs to {} must be specified in a list or in a dictionary with the origin mechanism({}) "
-                           "as its only key".format(object.name, object.origin_mechanisms[0].name))
+                           "as its only key".format(obj.name, obj.origin_mechanisms[0].name))
         else:
             raise RunError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
-                           "mechanisms.".format(object.name, len(object.origin_mechanisms)))
+                           "mechanisms.".format(obj.name, len(obj.origin_mechanisms)))
 
-    inputs, num_inputs_sets = _adjust_stimulus_dict(object, inputs)
+    inputs, num_inputs_sets = _adjust_stimulus_dict(obj, inputs)
 
     if num_trials is not None:
         num_trials = num_trials
@@ -731,34 +731,34 @@ def run(object,
     if targets is not None:
 
         if isinstance(targets, dict):
-            targets, num_targets = _adjust_target_dict(object, targets)
+            targets, num_targets = _adjust_target_dict(obj, targets)
 
         elif isinstance(targets, (list, np.ndarray)):
             # small version of former 'sequence' format -- only allowed if there is a single Target mechanism
-            if len(object.target_mechanisms) == 1:
-                targets = {object.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
-                targets, num_targets = _adjust_target_dict(object, targets)
+            if len(obj.target_mechanisms) == 1:
+                targets = {obj.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
+                targets, num_targets = _adjust_target_dict(obj, targets)
             else:
-                raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
+                raise RunError("Target values for {} must be specified in a dictionary.".format(obj.name))
 
         elif isinstance(targets, function_type):
-            if len(object.target_mechanisms) == 1:
-                targets = {object.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
-                targets, num_targets = _adjust_target_dict(object, targets)
+            if len(obj.target_mechanisms) == 1:
+                targets = {obj.target_mechanisms[0].input_states[SAMPLE].path_afferents[0].sender.owner: targets}
+                targets, num_targets = _adjust_target_dict(obj, targets)
             else:
-                raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
+                raise RunError("Target values for {} must be specified in a dictionary.".format(obj.name))
         else:
-            raise RunError("Target values for {} must be specified in a dictionary.".format(object.name))
+            raise RunError("Target values for {} must be specified in a dictionary.".format(obj.name))
 
         # if num_targets = -1, all targets were specified as functions
         if num_targets != num_inputs_sets and num_targets != -1:
             raise RunError("Number of target values specified ({}) for each learning sequence in {} must equal the "
                            "number of input values specified ({}) for each origin mechanism in {}."
-                           .format(num_targets, object.name, num_inputs_sets, object.name))
+                           .format(num_targets, obj.name, num_inputs_sets, obj.name))
 
-    object_type = _get_object_type(object)
+    object_type = _get_object_type(obj)
 
-    object.targets = targets
+    obj.targets = targets
 
     # SET LEARNING (if relevant)
     # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
@@ -767,39 +767,39 @@ def run(object,
     # If learning is specified, buffer current state and set to specified state
     if learning is not None:
         try:
-            learning_state_buffer = object._learning_enabled
+            learning_state_buffer = obj._learning_enabled
         except AttributeError:
-            if object.verbosePref:
-                warnings.warn("WARNING: learning not enabled for {}".format(object.name))
+            if obj.verbosePref:
+                warnings.warn("WARNING: learning not enabled for {}".format(obj.name))
         else:
             if learning is True:
-                object._learning_enabled = True
+                obj._learning_enabled = True
 
             elif learning is False:
-                object._learning_enabled = False
+                obj._learning_enabled = False
 
     # SET LEARNING_RATE, if specified, for all learningProjections in process or system
-    if object.learning_rate is not None:
+    if obj.learning_rate is not None:
         from psyneulink.components.projections.modulatory.learningprojection import LearningProjection
-        for learning_mech in object.learning_mechanisms.mechanisms:
+        for learning_mech in obj.learning_mechanisms.mechanisms:
             for projection in learning_mech.output_state.efferents:
                 if isinstance(projection, LearningProjection):
-                    projection.function_object.learning_rate = object.learning_rate
+                    projection.function_obj.learning_rate = obj.learning_rate
 
     # Class-specific validation:
-    if not object.context.flags:
-        object.context.initialization_status = ContextFlags.VALIDATING
-        object.context.string = RUN + "validating " + object.name
+    if not obj.context.flags:
+        obj.context.initialization_status = ContextFlags.VALIDATING
+        obj.context.string = RUN + "validating " + obj.name
 
     # INITIALIZATION
     if initialize:
-        object.initialize()
+        obj.initialize()
 
     # SET UP TIMING
     if object_type == MECHANISM:
         time_steps = 1
     else:
-        time_steps = object.numPhases
+        time_steps = obj.numPhases
 
     # EXECUTE
     execution_inputs = {}
@@ -821,13 +821,13 @@ def run(object,
             for mech in inputs:
                 execution_inputs[mech] = inputs[mech][input_num]
             if object_type == SYSTEM:
-                object.inputs = execution_inputs
+                obj.inputs = execution_inputs
 
             # Assign targets:
             if targets is not None:
 
                 if isinstance(targets, function_type):
-                    object.target = targets
+                    obj.target = targets
                 else:
                     for mech in targets:
                         if callable(targets[mech]):
@@ -835,14 +835,14 @@ def run(object,
                         else:
                             execution_targets[mech] = targets[mech][input_num]
                     if object_type is SYSTEM:
-                        object.target = execution_targets
-                        object.current_targets = execution_targets
+                        obj.target = execution_targets
+                        obj.current_targets = execution_targets
 
-            if context == ContextFlags.COMMAND_LINE and not object.context.execution_phase == ContextFlags.SIMULATION:
-                object.context.execution_phase = ContextFlags.PROCESSING
-                object.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
+            if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
+                obj.context.execution_phase = ContextFlags.PROCESSING
+                obj.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 
-            result = object.execute(
+            result = obj.execute(
                 input=execution_inputs,
                 execution_id=execution_id,
                 termination_processing=termination_processing,
@@ -854,26 +854,26 @@ def run(object,
             if call_after_time_step:
                 call_after_time_step()
 
-        # object.results.append(result)
+        # obj.results.append(result)
         if isinstance(result, Iterable):
             result_copy = result.copy()
         else:
             result_copy = result
-        object.results.append(result_copy)
+        obj.results.append(result_copy)
 
         if call_after_trial:
             call_after_trial()
 
         from psyneulink.globals.log import _log_trials_and_runs, ContextFlags
-        _log_trials_and_runs(composition=object,
+        _log_trials_and_runs(composition=obj,
                              curr_condition=LogCondition.TRIAL,
                              context=context)
 
     try:
-        object.scheduler_processing.date_last_run_end = datetime.datetime.now()
-        object.scheduler_learning.date_last_run_end = datetime.datetime.now()
+        obj.scheduler_processing.date_last_run_end = datetime.datetime.now()
+        obj.scheduler_learning.date_last_run_end = datetime.datetime.now()
 
-        for sched in [object.scheduler_processing, object.scheduler_learning]:
+        for sched in [obj.scheduler_processing, obj.scheduler_learning]:
             sched.clock._increment_time(TimeScale.RUN)
     except AttributeError:
         # this will fail on processes, which do not have schedulers
@@ -885,14 +885,14 @@ def run(object,
     except UnboundLocalError:
         pass
     else:
-        object._learning_enabled = learning_state_buffer
+        obj._learning_enabled = learning_state_buffer
 
     from psyneulink.globals.log import _log_trials_and_runs
-    _log_trials_and_runs(composition=object,
+    _log_trials_and_runs(composition=obj,
                          curr_condition=LogCondition.RUN,
                          context=context)
 
-    return object.results
+    return obj.results
 
 @tc.typecheck
 
@@ -1243,15 +1243,15 @@ def _validate_target_function(target_function, target_mechanism, sample_mechanis
                            "of {} ({}). See {} entry in target specification dictionary. "
                            .format(generated_targets, target_mechanism.name, expected_shape, sample_mechanism.name))
 
-def _get_object_type(object):
-    if isinstance(object, Mechanism):
+def _get_object_type(obj):
+    if isinstance(obj, Mechanism):
         return MECHANISM
-    elif isinstance(object, Process_Base):
+    elif isinstance(obj, Process_Base):
         return PROCESS
-    elif isinstance(object, System_Base):
+    elif isinstance(obj, System_Base):
         return SYSTEM
     else:
-        raise RunError("{} type not supported by Run module".format(object.__class__.__name__))
+        raise RunError("{} type not supported by Run module".format(obj.__class__.__name__))
 
 
 import uuid
