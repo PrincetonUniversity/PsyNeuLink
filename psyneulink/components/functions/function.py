@@ -3039,18 +3039,17 @@ class InterfaceStateMap(InterfaceFunction):
         <InterfaceStateMap.input_states>`
 
         """
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        if hasattr(self.owner, "owner"):
-            variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-            index = self.owner.owner.input_states.index(self.corresponding_input_state)
+        index = self.corresponding_input_state.owner.input_states.index(self.corresponding_input_state)
 
-            if len(variable) > index:
-                value = variable[index]
-            else:
-                value = self.instance_defaults.variable
-            return value
+        if len(variable) > index:
+            value = variable[index]
         else:
-            return self.instance_defaults.variable
+            value = self.corresponding_input_state.owner.instance_defaults.variable[index]
+
+        return value
+
 
 # endregion
 

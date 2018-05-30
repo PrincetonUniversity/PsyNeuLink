@@ -58,7 +58,7 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.shellclasses import Mechanism, Projection
-from psyneulink.components.functions.function import InterfaceStateMap, UserDefinedFunction
+from psyneulink.components.functions.function import InterfaceStateMap
 from psyneulink.globals.keywords import OWNER_VALUE, SYSTEM, EXECUTING, SOFT_CLAMP, HARD_CLAMP, PULSE_CLAMP, NO_CLAMP, IDENTITY_MATRIX
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import EXECUTING
@@ -808,13 +808,6 @@ class Composition(object):
             self.output_CIM.output_states.remove(self.output_CIM.output_state)
             self.output_CIM.connected_to_composition = True
 
-        # def input_CIM_input_state_map(variable, corresponding_input_state, default_value):
-        #     all_input_states = self.input_CIM.input_states
-        #     ind = all_input_states.index(corresponding_input_state)
-        #     if len(variable) > ind:
-        #         return variable[ind]
-        #     return default_value
-
         current_origin_input_states = set()
 
         #  INPUT CIMS
@@ -828,20 +821,18 @@ class Composition(object):
 
                 # if there is not a corresponding CIM output state, add one
                 if input_state not in set(self.input_CIM_states.keys()):
+
                     interface_input_state = InputState(owner=self.input_CIM,
                                                        variable=input_state.value,
                                                        reference_value=input_state.value,
                                                        name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
+
                     self.input_CIM.add_states(interface_input_state)
+
                     interface_output_state = OutputState(owner=self.input_CIM,
                                                          variable=OWNER_VALUE,
-                                                         function=InterfaceStateMap(
-                                                             default_variable=input_state.value,
-                                                                                    corresponding_input_state=interface_input_state),
-                                                         # UserDefinedFunction(custom_function=input_CIM_input_state_map,
-                                                         #                              corresponding_input_state=interface_input_state,
-                                                         #                              default_value=input_state.value),
-                                                         # reference_value= input_state.value,
+                                                         default_variable=self.input_CIM.variable,
+                                                         function=InterfaceStateMap(corresponding_input_state=interface_input_state),
                                                          name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
@@ -855,7 +846,7 @@ class Composition(object):
 
 
         sends_to_input_states = set(self.input_CIM_states.keys())
-        # For any output state still registered on the CIM that does not map to a corresponding ORIGIN mech I.S.:
+        # For any states still registered on the CIM that does not map to a corresponding ORIGIN mech I.S.:
         for input_state in sends_to_input_states.difference(current_origin_input_states):
             for projection in input_state.path_afferents:
                 if projection.sender == self.input_CIM_states[input_state][1]:
@@ -890,7 +881,6 @@ class Composition(object):
                 # if there is not a corresponding CIM output state, add one
                 if output_state not in set(self.output_CIM_states.keys()):
                     interface_input_state = InputState(owner=self.output_CIM,
-                                                       # variable=output_state.value,
                                                        reference_value=output_state.value,
                                                        name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
 
@@ -899,9 +889,8 @@ class Composition(object):
                     interface_output_state = OutputState(
                         owner=self.output_CIM,
                         variable=OWNER_VALUE,
-                        function=UserDefinedFunction(custom_function=output_CIM_input_state_map,
-                                                    corresponding_input_state=interface_input_state),
-                        # variable=output_state.value,
+                        function=InterfaceStateMap(corresponding_input_state=interface_input_state,
+                                                   default_variable=output_state.value),
                         reference_value=output_state.value,
                         name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
 
@@ -909,19 +898,12 @@ class Composition(object):
 
                     self.output_CIM_states[output_state] = [interface_input_state, interface_output_state]
 
-                    proj_name_2 = "(" + output_state.name + ") to (" + interface_input_state.name + ")"
-                    # proj_name_1 = "(" + output_state.name + ") to (" + self.output_CIM.input_states[0].name + ")"
-                    # MappingProjection(sender=output_state,
-                    #                   # receiver=interface_input_state,
-                    #                   receiver=self.output_CIM.input_states[0],
-                    #                   matrix=IDENTITY_MATRIX,
-                    #                   name=proj_name_1)
+                    proj_name = "(" + output_state.name + ") to (" + interface_input_state.name + ")"
 
                     MappingProjection(sender=output_state,
                                       receiver=interface_input_state,
-                                      # receiver=self.output_CIM.input_states[0],
                                       matrix=IDENTITY_MATRIX,
-                                      name=proj_name_2)
+                                      name=proj_name)
 
         previous_terminal_output_states = set(self.output_CIM_states.keys())
         for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
