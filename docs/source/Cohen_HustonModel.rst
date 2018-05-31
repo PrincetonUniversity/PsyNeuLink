@@ -22,6 +22,7 @@ Note that we used different regression coefficients to produce these plots.
 .. _GRAIN_STROOP_EFFECT_Fig:
 
 .. figure:: _static/GRAIN_STROOP_EFFECT.svg
+   :target: _static/GRAIN_STROOP_EFFECT.svg
    :figwidth: 30 %
    :align: left
    :alt: Cohen&Huston plot produced by PsyNeuLink
@@ -29,6 +30,7 @@ Note that we used different regression coefficients to produce these plots.
 .. _Horserace_Fig:
 
 .. figure:: _static/Horserace.svg
+   :target: _static/Horserace.svg
    :figwidth: 30 %
    :align: right
    :alt: Cohen&Huston SOA produced by PsyNeuLink
@@ -47,6 +49,7 @@ Below the Graph of the model is shown.
 .. _GRAIN_STROOP_GRAPH_Fig:
 
 .. figure:: _static/GRAIN_STROOP_GRAPH.svg
+   :target: _static/GRAIN_STROOP_GRAPH.svg
    :figwidth: 75 %
    :align: center
    :alt: Cohen&Huston System Graph
@@ -55,13 +58,13 @@ System
 ~~~~~~
 
 **COLOR INPUT LAYER**:  a `TransferMechanism` with **size** = 3 (one element for the input to each color in the
-*HIDDEN COLOR LAYER, respectively), and assigned a `Linear` function with **slope**\=1.0 and **intercept** = 0.0.
+*HIDDEN COLOR LAYER*, respectively), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
 **WORD INPUT LAYER**:  a `TransferMechanism` with **size** = 3 (one element for the input to each word in the
-*HIDDEN WORD LAYER, respectively), and assigned a `Linear` function with **slope**\=1.0 and **intercept** = 0.0.
+*HIDDEN WORD LAYER*, respectively), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
 **TASK INPUT LAYER**:  a `TransferMechanism` with **size** = 2 (one element for the input to each task in the
-*TASK LAYER, respectively), and assigned a `Linear` function with **slope**\=1.0 and **intercept** = 0.0.
+*TASK LAYER*, respectively), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
 **HIDDEN COLOR LAYER**: a `RecurrentTransferMechanism` Mechanism of **size** = 3 (one element each for the color units),
 and assigned a `Logistic` Function with a bias = 4.0 and intercept = 0.0.  Each element is connected to every other
@@ -69,7 +72,7 @@ element by mutually inhibitory connections with a weight specified by **hetero**
 specified by setting the **integrator_mode** = `True` and **smoothing_factor** = 0.1.
 
 **HIDDEN WORD LAYER**: a `RecurrentTransferMechanism` specified as the *HIDDEN COLOR LAYER* with **size** = 3,
-a `Logistic` Function with a bias = 4.0 and intercept = 0.0, mutually inhibitory connections with a weight specified by
+a `Logistic` Function with a **bias** = 4.0 and **intercept** = 0.0, mutually inhibitory connections with a weight specified by
 **hetero** = -2.0, **integrator_mode** = `True` and **smoothing_factor** = 0.1..
 
 **RESPONSE LAYER**: a `RecurrentTransferMechanism` specified as the *HIDDEN COLOR LAYER* with the only difference of
@@ -108,14 +111,15 @@ the off-diagonals for the *HIDDEN COLOR LAYER* to the *RESPONSE LAYER* and to 2.
 off-diagonals for the *HIDDEN WORD LAYER* to the *RESPONSE LAYER*.
 
 During the stimulus presentation period, the *TASK LAYER* keeps receiving input from *TASK INPUT LAYER*. In addition,
-the *HIDDEN COLOR LAYER* and the *HIDDEN WORD LAYER* receive inputs from the *COLOR INOUT LAYER* and *WORD INPUT LAYER*,
+the *HIDDEN COLOR LAYER* and the *HIDDEN WORD LAYER* receive inputs from the *COLOR
+INPUT LAYER* and *WORD INPUT LAYER*,
 respectively.
 The system is executed until one of the two response units hit a threshold. This is specified in the
 `termination_processing` parameter in the `run` command.
 
 
 The `log` function is used to record the output values of the *RESPONSE LAYER*. The cyles until a threshold is reached
-is used for the regression we used here to transfer cycles to milliseconds. We used the regression cycles*5 + 115 to
+is used for the regression we used here to transfer cycles to milliseconds. We used the regression `cycles*5 + 115` to
 produce the plot below.
 
 Execution horse race Figure
