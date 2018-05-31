@@ -11,3 +11,6 @@ illustrate principles of neural and/or psychological function.
 • `NieuwenhuisModel`
 
 • `PCTC_model`
+
+• `Cohen_HustonModel`
+
