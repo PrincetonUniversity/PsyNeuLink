@@ -99,7 +99,6 @@ during initialization.
 
 Execution
 ---------
-
 The stimulus presentation sequence is split into 2 periods of execution, a settling period and stimulus presentation
 period. During the settling period, the *TASK LAYER* receives an input of 1 for the unit which represent the given task
 from the  *TASK INPUT LAYER*. The other unit receives an input of 0. This allows the system to settle into a ready state
