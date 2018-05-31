@@ -55,13 +55,13 @@ System
 ~~~~~~
 
 **COLOR INPUT LAYER**:  a `TransferMechanism` with **size** = 3 (one element for the input to each color in the
-*HIDDEN COLOR LAYER, respectively), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
+*HIDDEN COLOR LAYER, respectively), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
 **WORD INPUT LAYER**:  a `TransferMechanism` with **size** = 3 (one element for the input to each word in the
-*HIDDEN WORD LAYER, respectively), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
+*HIDDEN WORD LAYER, respectively), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
 **TASK INPUT LAYER**:  a `TransferMechanism` with **size** = 2 (one element for the input to each task in the
-*TASK LAYER, respectively), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
+*TASK LAYER, respectively), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
 **HIDDEN COLOR LAYER**: a `RecurrentTransferMechanism` Mechanism of **size** = 3 (one element each for the color units),
 and assigned a `Logistic` Function with a bias = 4.0 and intercept = 0.0.  Each element is connected to every other
