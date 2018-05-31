@@ -747,7 +747,7 @@ from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTEX
     GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, INPUT_STATES, LEARNING_PROJECTION_PARAMS, \
     LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
     NAME, OUTPUT_STATES, OWNER, PARAMETER_STATES, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, PROJECTIONS, \
-    PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, SIZE, \
+    PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, \
     STANDARD_OUTPUT_STATES, STATE, STATE_CONTEXT, STATE_NAME, STATE_PARAMS, STATE_PREFS, STATE_TYPE, STATE_VALUE, \
     VALUE, VARIABLE, WEIGHT, kwStateComponentCategory
 from psyneulink.globals.preferences.componentpreferenceset import kpVerbosePref
@@ -1052,8 +1052,7 @@ class State_Base(State):
             - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
             - context (str)
             - **kargs (dict): dictionary of arguments using the following keywords for each of the above kargs:
-                # + STATE_VALUE = value
-                + VARIABLE = variable
+                # STATE_PARAMS is not handled here like the others are
                 + STATE_PARAMS = params
                 + STATE_NAME = name
                 + STATE_PREFS = prefs
@@ -1063,18 +1062,6 @@ class State_Base(State):
                     * they take precedence over arguments specified directly in the call to __init__()
         """
         if kargs:
-            try:
-                variable = self._update_variable(kargs[VARIABLE])
-            except (KeyError, NameError):
-                pass
-            try:
-                size = kargs[SIZE]
-            except (KeyError, NameError):
-                pass
-            try:
-                projections = kargs[PROJECTIONS]
-            except (KeyError, NameError):
-                pass
             try:
                 name = kargs[STATE_NAME]
             except (KeyError, NameError):
