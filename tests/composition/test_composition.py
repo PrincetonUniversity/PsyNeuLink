@@ -925,7 +925,7 @@ class TestRun:
             scheduler_processing=sched,
             num_trials=5
         )
-        assert 125 == output[0][0]
+        assert np.allclose([125], output)
 
     def test_run_2_mechanisms_double_trial_specs(self):
         comp = Composition()
@@ -959,7 +959,7 @@ class TestRun:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        assert 75 == output[0][0]
+        assert np.allclose([75], output)
 
     def test_LPP(self):
 
@@ -1073,7 +1073,7 @@ class TestRun:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        assert 250 == output[0][0]
+        assert np.allclose([250], output)
 
 
 class TestCallBeforeAfterTimescale:
@@ -2335,7 +2335,7 @@ class TestNestedCompositions:
         output = sys.run(
             inputs=stimulus,
         )
-        assert 8 == output[0][0]
+        assert np.allclose([8], output)
 
     def test_two_paths_converge_one_system(self):
 
@@ -3091,7 +3091,7 @@ class TestInputSpecifications:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        assert 125 == output[0][0]
+        assert np.allclose([125], output)
 
     def test_run_2_mechanisms_reuse_input(self):
         comp = Composition()
@@ -3108,5 +3108,5 @@ class TestInputSpecifications:
             scheduler_processing=sched,
             num_trials=5
         )
-        assert 125 == output[0][0]
+        assert np.allclose([125], output)
 
