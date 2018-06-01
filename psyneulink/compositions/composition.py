@@ -821,14 +821,12 @@ class Composition(object):
 
                 # if there is not a corresponding CIM output state, add one
                 if input_state not in set(self.input_CIM_states.keys()):
-
                     interface_input_state = InputState(owner=self.input_CIM,
                                                        variable=input_state.value,
                                                        reference_value=input_state.value,
                                                        name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
 
                     self.input_CIM.add_states(interface_input_state)
-
                     interface_output_state = OutputState(owner=self.input_CIM,
                                                          variable=OWNER_VALUE,
                                                          default_variable=self.input_CIM.variable,
@@ -837,15 +835,15 @@ class Composition(object):
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
                     self.input_CIM.add_states(interface_output_state)
+
                     MappingProjection(sender=interface_output_state,
                                       receiver=input_state,
                                       matrix= IDENTITY_MATRIX,
                                       name="("+interface_output_state.name + ") to ("
                                            + input_state.owner.name + "-" + input_state.name+")")
 
-
-
         sends_to_input_states = set(self.input_CIM_states.keys())
+
         # For any states still registered on the CIM that does not map to a corresponding ORIGIN mech I.S.:
         for input_state in sends_to_input_states.difference(current_origin_input_states):
             for projection in input_state.path_afferents:
@@ -865,14 +863,6 @@ class Composition(object):
 
         # OUTPUT CIMS
         # loop over all terminal mechanisms
-
-        def output_CIM_input_state_map(variable, corresponding_input_state):
-
-            all_input_states = self.output_CIM.input_states
-            ind = all_input_states.index(corresponding_input_state)
-            if len(variable) > ind:
-                return variable[ind]
-            return variable
 
         current_terminal_output_states = set()
         for mech in self.get_mechanisms_by_role(MechanismRole.TERMINAL):

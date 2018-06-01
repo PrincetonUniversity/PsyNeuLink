@@ -166,10 +166,3 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                                                             name=name,
                                                             prefs=prefs,
                                                             context=ContextFlags.CONSTRUCTOR)
-
-    def _update_output_states(self, runtime_params=None, context=None):
-        """Execute function for each OutputState and assign result of each to corresponding item of self.output_values
-
-        """
-        for state in self.output_states:
-            state.update(params=runtime_params, context=context)

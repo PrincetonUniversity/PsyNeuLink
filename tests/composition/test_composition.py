@@ -826,7 +826,8 @@ class TestRun:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        assert np.allclose(250,output[0][0])
+
+        assert np.allclose([250], output)
 
     def test_run_2_mechanisms_with_scheduling_AAB_integrator(self):
         comp = Composition()
@@ -2411,17 +2412,22 @@ class TestNestedCompositions:
         sys = SystemComposition()
         sys.add_pathway(myPath)
         sys.add_pathway(myPath2)
-        sys.add_projection(sender=myMech3, projection=MappingProjection(sender=myMech3,
-                                                                        receiver=myMech4), receiver=myMech4)
+        sys.add_projection(sender=myMech3,
+                           projection=MappingProjection(sender=myMech3,
+                                                        receiver=myMech4),
+                           receiver=myMech4)
+
         # assign input to origin mechs
         # myMech4 ignores its input from the outside world because it is no longer considered an origin!
         stimulus = {myMech1: [[1]]}
         sys._analyze_graph()
+
         # schedule = Scheduler(composition=sys)
         output = sys.run(
             inputs=stimulus,
             # scheduler_processing=schedule
         )
+
         assert np.allclose(64, output)
 
     def test_two_paths_converge_one_system_scheduling_matters(self):
@@ -2944,7 +2950,7 @@ class TestInputStateSpecifications:
         assert np.allclose(A.input_states[1].value, [4.0])
         assert np.allclose(A.variable, [[2.0], [4.0]])
 
-        assert 2 == output[0][0]
+        assert np.allclose([[2], [4]], output)
 
     def test_two_input_states_created_with_strings(self):
         comp = Composition()

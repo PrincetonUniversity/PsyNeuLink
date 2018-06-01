@@ -3048,22 +3048,21 @@ class InterfaceStateMap(InterfaceFunction):
 
 
         if self.corresponding_input_state.owner.value is not None:
-            # If the variable is 1D (e.g. [0. , 0.], NOT [[0. , 0.]]), and then index is 0, then return whole variable
-            # np.atleast_2d fails in cases like var = [[0., 0.], [0.]] (transforms it to [[[0., 0.], [0.]]])
-            new_output_state = False
+
+            # If CIM's variable does not match its value, then a new pair of states was added since the last execution
             if not np.allclose(np.shape(self.corresponding_input_state.owner.variable),
                                np.shape(self.corresponding_input_state.owner.value)):
-                new_output_state = True
-
-            if new_output_state:
                 return self.corresponding_input_state.owner.instance_defaults.variable[index]
 
+            # If the variable is 1D (e.g. [0. , 0.], NOT [[0. , 0.]]), and the index is 0, then return whole variable
+            # np.atleast_2d fails in cases like var = [[0., 0.], [0.]] (transforms it to [[[0., 0.], [0.]]])
             if index == 0:
                 if not isinstance(variable[0], (list, np.ndarray)):
                     return variable
 
             return variable[index]
 
+        # CIM value = None, use CIM's default variable instead
         return self.corresponding_input_state.owner.instance_defaults.variable[index]
 
 # endregion
