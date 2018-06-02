@@ -243,14 +243,14 @@ class CompExecution:
     def freeze_values(self):
         self.__frozen_vals = copy.deepcopy(self.__data_struct)
 
-    def execute_node(self, node, inputs = None):
+    def execute_node(self, node, inputs=None, execution_id=None):
         # We need to reconstruct the inputs here if they were not provided.
         # This happens during node execution of nested compositions.
         if inputs is None and node is self._composition.input_CIM:
             # This assumes origin mechanisms are in the same order as
             # CIM input states
             origins = [n for n in self._composition.get_c_nodes_by_role(CNodeRole.ORIGIN) for istate in n.input_states]
-            input_data = [[proj.value for proj in state.all_afferents] for state in node.input_states]
+            input_data = [[proj.parameters.value.get(execution_id) for proj in state.all_afferents] for state in node.input_states]
             inputs = defaultdict(list)
             for n, d in zip(origins, input_data):
                 inputs[n].append(d[0])

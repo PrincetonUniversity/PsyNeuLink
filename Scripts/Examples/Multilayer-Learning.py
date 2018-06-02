@@ -85,7 +85,7 @@ def print_header(system):
 
 def show_target(system):
     i = system.input
-    t = system.target_input_states[0].value
+    t = system.target_input_states[0].parameters.value.get(system)
     print('\nOLD WEIGHTS: \n')
     print('- Input Weights: \n', Input_Weights.matrix)
     print('- Middle Weights: \n', Middle_Weights.matrix)
@@ -93,9 +93,9 @@ def show_target(system):
 
     print('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
     print('ACTIVITY FROM OLD WEIGHTS: \n')
-    print('- Middle 1: \n', Hidden_Layer_1.value)
-    print('- Middle 2: \n', Hidden_Layer_2.value)
-    print('- Output:\n', Output_Layer.value)
+    print('- Middle 1: \n', Hidden_Layer_1.parameters.value.get(system))
+    print('- Middle 2: \n', Hidden_Layer_2.parameters.value.get(system))
+    print('- Output:\n', Output_Layer.parameters.value.get(system))
 
 
 mySystem = pnl.System(

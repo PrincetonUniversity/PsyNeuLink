@@ -383,6 +383,7 @@ COMMENT
 
 """
 import inspect
+import itertools
 import warnings
 
 import numpy as np
@@ -397,6 +398,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, INPUT_STATE, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, RECEIVER, SENDER, STANDARD_ARGS, STATE, STATES, WEIGHT, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
+from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric, type_match
 
 __all__ = [
@@ -695,7 +697,7 @@ class Projection_Base(Projection):
         # FIX: NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
             # this should become _default_value when that is fully implemented
-            variable = self.sender.instance_defaults.value
+            variable = self.sender.defaults.value
         except AttributeError:
             if receiver.prefs.verbosePref:
                 warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
@@ -712,6 +714,9 @@ class Projection_Base(Projection):
                 print("{0} has more than one InputState; {1} has been assigned to the first one".
                       format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.input_state
+
+        if self not in self.receiver.afferents_info:
+            self.receiver.afferents_info[self] = ConnectionInfo()
 
        # Validate variable, function and params, and assign params to paramInstanceDefaults
         # Note: pass name of Projection (to override assignment of componentName in super.__init__)
@@ -773,15 +778,14 @@ class Projection_Base(Projection):
         _instantiate_parameter_states(owner=self, function=function, context=context)
 
     def _instantiate_sender(self, sender, context=None):
-        """Assign self.sender to OutputState of sender and insure compatibility with self.instance_defaults.variable
+        """Assign self.sender to OutputState of sender
 
         Assume self.sender has been assigned in _validate_params, from either sender arg or PROJECTION_SENDER
-        Validate, set self.instance_defaults.variable, and assign projection to sender's efferents attribute
+        Validate, and assign projection to sender's efferents attribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.output_state
         If self.sender is a State class reference, validate that it is a OutputState
         Assign projection to sender's efferents attribute
-        If self.value / self.instance_defaults.variable is None, set to sender.value
         """
         from psyneulink.core.components.states.outputstate import OutputState
 
@@ -860,11 +864,10 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def _update_parameter_states(self, runtime_params=None, context=None):
-
+    def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
         for state in self._parameter_states:
             state_name = state.name
-            state.update(params=runtime_params, context=context)
+            state.update(execution_id=execution_id, params=runtime_params, context=context)
 
             # # Assign ParameterState's value to parameter value in runtime_params
             # if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
@@ -893,26 +896,46 @@ class Projection_Base(Projection):
             # set by the statement below. For example, if state_name is 'matrix', the statement below sets
             # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
             # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
-            param[state_name] = type_match(state.value, param_type)
+            value = state.parameters.value.get(execution_id)
+            param[state_name] = type_match(value, param_type)
+            # manual setting of previous value to matrix value (happens in above param['matrix'] setting
+            if state_name == MATRIX:
+                state.function_object.parameters.previous_value.set(value, execution_id, override=True)
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
 
         if variable is None:
-            variable = self.sender.value
+            variable = self.sender.parameters.value.get(execution_id)
 
         self.context.execution_phase = ContextFlags.PROCESSING
         self.context.string = context
 
-        self.value = super()._execute(
+        value = super()._execute(
             variable=variable,
+            execution_id=execution_id,
             runtime_params=runtime_params,
             context=context
         )
         self.context.execution_phase = ContextFlags.IDLE
-        return self.value
+        return value
+
+    def _activate_for_compositions(self, composition):
+        try:
+            self.receiver.afferents_info[self].add_composition(composition)
+        except KeyError:
+            self.receiver.afferents_info[self] = ConnectionInfo(compositions=composition)
+
+        try:
+            composition._add_projection(self)
+        except AttributeError:
+            # composition may be ALL or None, in this case we don't need to add
+            pass
+
+    def _activate_for_all_compositions(self):
+        self._activate_for_compositions(ConnectionInfo.ALL)
 
     # FIX: 10/3/17 - replace with @property on Projection for receiver and sender
     @property
@@ -938,12 +961,6 @@ class Projection_Base(Projection):
     def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
         raise ProjectionError("PROGRAM ERROR: {} must implement _assign_default_projection_name().".
                               format(self.__class__.__name__))
-
-    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
-        for parameter_state in self.parameter_states:
-            parameter_state._assign_context_values(execution_id, base_execution_id, **kwargs)
-
-        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
 
     @property
     def parameter_states(self):
@@ -980,6 +997,15 @@ class Projection_Base(Projection):
         builder.call(main_function, [params, context, arg_in, arg_out])
 
         return builder
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self.function_object],
+            self.parameter_states,
+        ))
+
 
 @tc.typecheck
 def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):
@@ -1922,13 +1948,11 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     # state is State object, so use thatParameterState
     if isinstance(state, State_Base):
-        state._instantiate_projections_to_state(projections=projection_spec, context=context)
-        return
+        return state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
     # Generic INPUT_STATE is specified, so use (primary) InputState
     elif state is INPUT_STATE:
-        receiver.input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
-        return
+        return receiver.input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
     # input_state is index into input_states OrderedDict, so get corresponding key and assign to input_state
     elif isinstance(state, int):
@@ -1945,7 +1969,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     #    so try as key in input_states OrderedDict (i.e., as name of an InputState)
     if isinstance(state, str):
         try:
-            receiver.input_state[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
+            return receiver.input_state[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -1988,7 +2012,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                                                        list=[input_state],
                                                        name=receiver.name+'.input_states')
 
-    input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
+    return input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED

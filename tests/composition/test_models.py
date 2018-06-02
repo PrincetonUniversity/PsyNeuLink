@@ -267,12 +267,12 @@ class TestModels:
         result = z.run(inputs={myMechanism: [[40]]})[0][0]
 
         expected_output = [
-            (myMechanism.input_states[0].value, np.array([40.])),
-            (myMechanism.output_states[0].value, np.array([10.])),
-            (myMechanism_2.input_states[0].value, np.array([10.])),
-            (myMechanism_2.output_states[0].value, np.array([20.])),
-            (myMechanism_3.input_states[0].value, np.array([20.])),
-            (myMechanism_3.output_states[0].value, np.array([30.])),
+            (myMechanism.input_states[0].parameters.value.get(z), np.array([40.])),
+            (myMechanism.output_states[0].parameters.value.get(z), np.array([10.])),
+            (myMechanism_2.input_states[0].parameters.value.get(z), np.array([10.])),
+            (myMechanism_2.output_states[0].parameters.value.get(z), np.array([20.])),
+            (myMechanism_3.input_states[0].parameters.value.get(z), np.array([20.])),
+            (myMechanism_3.output_states[0].parameters.value.get(z), np.array([30.])),
             (result, np.array([30.])),
         ]
 
@@ -466,9 +466,9 @@ class TestModels:
 
         #   CREATE THRESHOLD FUNCTION
         # first value of DDM's value is DECISION_VARIABLE
-        def pass_threshold(mech1, mech2, thresh):
-            results1 = mech1.output_states[0].value
-            results2 = mech2.output_states[0].value
+        def pass_threshold(mech1, mech2, thresh, execution_id=None):
+            results1 = mech1.output_states[0].parameters.value.get(execution_id)
+            results2 = mech2.output_states[0].parameters.value.get(execution_id)
             for val in results1:
                 if val >= thresh:
                     return True
@@ -790,9 +790,9 @@ class TestModels:
         for pathway in composition_pathways:
             PCTC.add_linear_processing_pathway(pathway)
 
-        def pass_threshold(response_layer, thresh):
-            results1 = response_layer.output_states.values[0][0]  # red response
-            results2 = response_layer.output_states.values[0][1]  # green response
+        def pass_threshold(response_layer, thresh, execution_id=None):
+            results1 = response_layer.output_state.parameters.value.get(execution_id)[0]  # red response
+            results2 = response_layer.output_state.parameters.value.get(execution_id)[1]  # green response
             if results1 >= thresh or results2 >= thresh:
                 return True
             return False
@@ -844,6 +844,11 @@ class TestModels:
             [1.0, 0.0],  # the same for word input projections
             [0.0, 1.0]
         ])
+
+        # KDM 8/23/18: below must be added because these were expected to be changed with the above matrix setting, but this has appeared
+        # to be incorrect behavior, and the reason for doing it is unknown
+        color_input_weights.parameter_states['matrix'].function_object.parameters.previous_value.set(color_input_weights.matrix, PCTC, override=True)
+        word_input_weights.parameter_states['matrix'].function_object.parameters.previous_value.set(word_input_weights.matrix, PCTC, override=True)
 
         results_2 = PCTC.run(inputs=congruent_input,
                              termination_processing=terminate_trial)  # run system with congruent stimulus input until

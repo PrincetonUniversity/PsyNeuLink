@@ -1374,19 +1374,19 @@ class WhenFinished(Condition):
 
     Satisfied when:
 
-        - the Component specified in **component** has set its `is_finished` attribute to `True`.
+        - the `is_finished` methods of the Component specified in **components** returns `True`.
 
     Notes:
 
-        - This is a dynamic Condition: Each Component is responsible for assigning its `is_finished` attribute on it
+        - This is a dynamic Condition: Each Component is responsible for managing its finished status on its
           own, which can occur independently of the execution of other Components.  Therefore the satisfaction of
           this Condition) can vary arbitrarily in time.
 
     """
     def __init__(self, dependency):
-        def func(dependency):
+        def func(dependency, execution_id=None):
             try:
-                return dependency.is_finished
+                return dependency.is_finished(execution_id)
             except AttributeError as e:
                 raise ConditionError('WhenFinished: Unsupported dependency type: {0}; ({1})'.
                                      format(type(dependency), e))
@@ -1403,7 +1403,7 @@ class WhenFinishedAny(Condition):
 
     Satisfied when:
 
-        - any of the Components specified in **components** have set their `is_finished` attribute to `True`.
+        - the `is_finished` methods of any Components specified in **components** returns `True`.
 
     Notes:
 
@@ -1411,18 +1411,18 @@ class WhenFinishedAny(Condition):
           Any(WhenFinished(A), WhenFinished(B), WhenFinished(C)).
           If no components are specified, the condition will default to checking all of scheduler's Components.
 
-        - This is a dynamic Condition: Each Component is responsible for assigning its `is_finished` attribute on it
+        - This is a dynamic Condition: Each Component is responsible for managing its finished status on its
           own, which can occur independently of the execution of other Components.  Therefore the satisfaction of
           this Condition) can vary arbitrarily in time.
 
     """
     def __init__(self, *dependencies):
-        def func(*dependencies, scheduler=None):
+        def func(*dependencies, scheduler=None, execution_id=None):
             if len(dependencies) == 0:
                 dependencies = scheduler.nodes
             for d in dependencies:
                 try:
-                    if d.is_finished:
+                    if d.is_finished(execution_id):
                         return True
                 except AttributeError as e:
                     raise ConditionError('WhenFinishedAny: Unsupported dependency type: {0}; ({1})'.format(type(d), e))
@@ -1440,7 +1440,7 @@ class WhenFinishedAll(Condition):
 
     Satisfied when:
 
-        - all of the Components specified in **components** have set their `is_finished` attributes to `True`.
+        - the `is_finished` methods of all Components specified in **components** return `True`.
 
     Notes:
 
@@ -1448,18 +1448,18 @@ class WhenFinishedAll(Condition):
           All(WhenFinished(A), WhenFinished(B), WhenFinished(C)).
           If no components are specified, the condition will default to checking all of scheduler's Components.
 
-        - This is a dynamic Condition: Each Component is responsible for assigning its `is_finished` attribute on it
+        - This is a dynamic Condition: Each Component is responsible for managing its finished status on its
           own, which can occur independently of the execution of other Components.  Therefore the satisfaction of
           this Condition) can vary arbitrarily in time.
 
     """
     def __init__(self, *dependencies):
-        def func(*dependencies, scheduler=None):
+        def func(*dependencies, scheduler=None, execution_id=None):
             if len(dependencies) == 0:
                 dependencies = scheduler.nodes
             for d in dependencies:
                 try:
-                    if not d.is_finished:
+                    if not d.is_finished(execution_id):
                         return False
                 except AttributeError as e:
                     raise ConditionError('WhenFinishedAll: Unsupported dependency type: {0}; ({1})'.format(type(d), e))

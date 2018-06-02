@@ -790,9 +790,9 @@ OutputState(s).
 >>> S = pnl.System(processes=[P])
 >>> input_dictionary =  {M: [[1, 0, 0]]}
 >>> results = S.run(inputs=input_dictionary)
->>> M.output_labels
+>>> M.get_output_labels(S)
 ['red']
->>> M.output_states[0].label
+>>> M.output_states[0].get_label(S)
 'red'
 
 Labels may be used to visualize the input and outputs of Mechanisms in a System via the **show_structure** option of the
@@ -930,6 +930,7 @@ Class Reference
 """
 
 import inspect
+import itertools
 import logging
 import warnings
 
@@ -951,7 +952,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CHANGED, CURRENT_EXECUTION_COUNT, CURRENT_EXECUTION_TIME, EXECUTION_COUNT, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT_EXECUTE_METHOD_ONLY, INPUT_LABELS_DICT, INPUT_STATES, INPUT_STATE_VARIABLES, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, OWNER_VALUE, PARAMETER_STATES, PREVIOUS_VALUE, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric, parse_execution_context
 
 import ctypes
 
@@ -979,6 +980,10 @@ from collections import UserDict
 class MechParamsDict(UserDict):
     """Subclass for validation of dicts used to pass Mechanism parameters to OutputState for variable specification."""
     pass
+
+
+def _input_state_variables_getter(owning_component=None, execution_id=None):
+    return [input_state.parameters.variable.get(execution_id) for input_state in owning_component.input_states]
 
 
 class Mechanism_Base(Mechanism):
@@ -1206,11 +1211,6 @@ class Mechanism_Base(Mechanism):
         Condition for a `Component` is used.  It can be overridden in a given `System` by assigning a Condition for
         the Mechanism directly to a Scheduler that is then assigned to the System.
 
-    is_finished : bool : default False
-        set by a Mechanism to signal completion of its `execution <Mechanism_Execution>` in a `trial`; used by
-        `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
-        Components on the Mechanism.
-
     COMMENT:
         phaseSpec : int or float :  default 0
             determines the `TIME_STEP` (s) at which the Mechanism is executed as part of a System
@@ -1305,8 +1305,11 @@ class Mechanism_Base(Mechanism):
     class Params(Mechanism.Params):
         variable = Param(np.array([[0]]), read_only=True)
         value = Param(np.array([[0]]), read_only=True)
+        previous_value = Param(None, read_only=True)
         function = Linear
         has_initializers = False
+
+        input_state_variables = Param(None, read_only=True, user=False, getter=_input_state_variables_getter)
 
     registry = MechanismRegistry
 
@@ -1444,31 +1447,10 @@ class Mechanism_Base(Mechanism):
                                              param_defaults=params,
                                              prefs=prefs,
                                              name=name)
-
-        # FUNCTIONS:
-
-# IMPLEMENTATION NOTE:  REPLACE THIS WITH ABC (ABSTRACT CLASS)
-        # Assign class functions
-        self.classMethods = {
-            kwMechanismExecuteFunction: self.execute,
-            # kwMechanismAdjustFunction: self.adjust_function,
-            # kwMechanismTerminateFunction: self.terminate_execute
-        }
-        self.classMethodNames = self.classMethods.keys()
-
-        #  Validate class methods:
-        #    make sure all required ones have been implemented in (i.e., overridden by) subclass
-        for name, method in self.classMethods.items():
-            try:
-                method
-            except (AttributeError):
-                raise MechanismError("{0} is not implemented in Mechanism class {1}".
-                                     format(name, self.name))
-
-        try:
-            self.instance_defaults.value = self.value.copy()
-        except AttributeError:
-            self.instance_defaults.value = self.value
+        # try:
+        #     self.instance_defaults.value = self.value.copy()
+        # except AttributeError:
+        #     self.instance_defaults.value = self.value
         self.value = self._old_value = None
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
@@ -1652,10 +1634,10 @@ class Mechanism_Base(Mechanism):
         :return:
         """
 
-        variable = self._update_variable(super(Mechanism_Base, self)._validate_variable(variable, context))
+        variable = super(Mechanism_Base, self)._validate_variable(variable, context)
 
         # Force Mechanism variable specification to be a 2D array (to accomodate multiple InputStates - see above):
-        variable = self._update_variable(convert_to_np_array(variable, 2))
+        variable = convert_to_np_array(variable, 2)
 
         return variable
 
@@ -2061,7 +2043,7 @@ class Mechanism_Base(Mechanism):
         '''Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism'''
         pass
 
-    def reinitialize(self, *args):
+    def reinitialize(self, *args, execution_context=None):
         """
             If the mechanism's `function <Mechanism.function>` is an `Integrator`, or if the mechanism has and
             `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
@@ -2110,18 +2092,22 @@ class Mechanism_Base(Mechanism):
         # If the primary function of the mechanism is an integrator:
         # (1) reinitialize it, (2) update value, (3) update output states
         if isinstance(self.function_object, Integrator):
-            new_value = self.function_object.reinitialize(*args)
-            self.value = np.atleast_2d(new_value)
-            self._update_output_states(context="REINITIALIZING")
+            new_value = self.function_object.reinitialize(*args, execution_context=execution_context)
+            self.parameters.value.set(np.atleast_2d(new_value), execution_context=execution_context, override=True)
+            self._update_output_states(context="REINITIALIZING", execution_id=parse_execution_context(execution_context))
 
         # If the mechanism has an auxiliary integrator function:
         # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output states
         elif hasattr(self, "integrator_function"):
             if isinstance(self.integrator_function, Integrator):
-                new_input = self.integrator_function.reinitialize(*args)[0]
-                self.value = self.function_object.execute(variable=new_input, context="REINITIALIZING")
-                self._update_output_states(context="REINITIALIZING")
+                new_input = self.integrator_function.reinitialize(*args, execution_context=execution_context)[0]
+                self.parameters.value.set(
+                    self.function_object.execute(variable=new_input, context="REINITIALIZING"),
+                    execution_context=execution_context,
+                    override=True
+                )
+                self._update_output_states(context="REINITIALIZING", execution_id=parse_execution_context(execution_context))
 
             elif self.integrator_function is None:
                 if hasattr(self, "integrator_mode"):
@@ -2144,31 +2130,20 @@ class Mechanism_Base(Mechanism):
         # if hasattr(self, PREVIOUS_VALUE):
         #     self.previous_value = None
 
-    def get_current_mechanism_param(self, param_name):
+    def get_current_mechanism_param(self, param_name, execution_id=None):
         if param_name == "variable":
             raise MechanismError("The method 'get_current_mechanism_param' is intended for retrieving the current "
                                  "value of a mechanism parameter. 'variable' is not a mechanism parameter. If looking "
                                  "for {}'s default variable, try {}.instance_defaults.variable."
                                  .format(self.name, self.name))
         try:
-            return self._parameter_states[param_name].value
+            return self._parameter_states[param_name].parameters.value.get(execution_id)
         except (AttributeError, TypeError):
-            return getattr(self, param_name)
-
-    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
-        for input_state in self.input_states:
-            input_state._assign_context_values(execution_id, base_execution_id, **kwargs)
-
-        for output_state in self.output_states:
-            output_state._assign_context_values(execution_id, base_execution_id, **kwargs)
-
-        for parameter_state in self.parameter_states:
-            parameter_state._assign_context_values(execution_id, base_execution_id, **kwargs)
-
-        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
+            return getattr(self.parameters, param_name).get(execution_id)
 
     def execute(self,
                 input=None,
+                execution_id=None,
                 runtime_params=None,
                 ignore_execution_id = False,
                 context=None,
@@ -2229,6 +2204,11 @@ class Mechanism_Base(Mechanism):
         """
         self.ignore_execution_id = ignore_execution_id
         context = context or ContextFlags.COMMAND_LINE
+
+        # initialize context for this execution_id if not done already
+        if execution_id is not None:
+            self._assign_context_values(execution_id)
+
         if not self.context.source or context & ContextFlags.COMMAND_LINE:
             self.context.source = ContextFlags.COMMAND_LINE
         if self.context.initialization_status == ContextFlags.INITIALIZED:
@@ -2249,9 +2229,11 @@ class Mechanism_Base(Mechanism):
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod is INIT_EXECUTE_METHOD_ONLY:
-                return_value =  self._execute(variable=self.instance_defaults.variable,
-                                              runtime_params=runtime_params,
-                                              context=context,
+                return_value =  self._execute(
+                    variable=self.instance_defaults.variable,
+                    execution_id=execution_id,
+                    runtime_params=runtime_params,
+                    context=context,
                 )
 
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
@@ -2279,6 +2261,7 @@ class Mechanism_Base(Mechanism):
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
                 return_value = super()._execute(
                     variable=self.instance_defaults.variable,
+                    execution_id=execution_id,
                     runtime_params=runtime_params,
                     context=context,
                 )
@@ -2292,7 +2275,7 @@ class Mechanism_Base(Mechanism):
         )
 
         # MODIFIED 7/14/18 NEW:
-        self._update_previous_value()
+        self._update_previous_value(execution_id)
         # MODIFIED 7/14/18 END
 
         # UPDATE VARIABLE and INPUT STATE(S)
@@ -2302,8 +2285,7 @@ class Mechanism_Base(Mechanism):
         if (input is None
             and (self.context.execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
             and (self.input_state.path_afferents != [])):
-            variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
-                                                                       context=context))
+            variable = self._update_input_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
@@ -2313,10 +2295,12 @@ class Mechanism_Base(Mechanism):
                 input = self.instance_defaults.variable
             #     FIX:  this input value is sent to input CIMs when compositions are nested
             #           variable should be based on afferent projections
-            variable = self._update_variable(self._get_variable_from_input(input))
+            variable = self._get_variable_from_input(input)
+
+        self.parameters.variable.set(variable, execution_context=execution_id, override=True)
 
         # UPDATE PARAMETER STATE(S)
-        self._update_parameter_states(runtime_params=runtime_params, context=context)
+        self._update_parameter_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
@@ -2331,6 +2315,7 @@ class Mechanism_Base(Mechanism):
         #                      to avoid multiple calls to (and potential log entries for) self.value property
             value = self._execute(
                 variable=variable,
+                execution_id=execution_id,
                 runtime_params=runtime_params,
                 context=context
             )
@@ -2359,26 +2344,23 @@ class Mechanism_Base(Mechanism):
         # Set status based on whether self.value has changed
         self.status = value
 
-        self.value = value
+        self.parameters.value.set(value, execution_context=execution_id, override=True)
 
         # UPDATE OUTPUT STATE(S)
-        self._update_output_states(runtime_params=runtime_params, context=context)
+        self._update_output_states(execution_id=execution_id, runtime_params=runtime_params, context=context)
 
         # REPORT EXECUTION
         if self.prefs.reportOutputPref and (self.context.execution_phase &
                                             ContextFlags.PROCESSING|ContextFlags.LEARNING):
-            self._report_mechanism_execution(self.input_values, self.user_params, self.output_state.value)
+            self._report_mechanism_execution(self.get_input_values(execution_id), self.user_params, self.output_state.parameters.value.get(execution_id))
 
         # MODIFIED 10/28/18 OLD:  [JDC: DUPLICATES SAME ON COMPONENT AND THUS DOUBLE-INCREMENTS]
         # if self.context.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
         #     self._increment_execution_count()
-        #     self._update_current_execution_time(context=context)
+        #     self._update_current_execution_time(context=context, execution_id=execution_id)
         # MODIFIED 10/28/18 END
 
-        # Used by sublcasses with update_previous_value and/or convergence_function and delta
-        self._current_value = value
-
-        return self.value
+        return value
 
     def run(
         self,
@@ -2458,13 +2440,10 @@ class Mechanism_Base(Mechanism):
 
         return np.array(self.input_values)
 
-    def _update_previous_value(self):
-        try:
-            self.previous_value = self.value
-        except:
-            self.previous_value = None
+    def _update_previous_value(self, execution_id=None):
+        self.parameters.previous_value.set(self.parameters.value.get(execution_id), execution_id, override=True)
 
-    def _update_input_states(self, runtime_params=None, context=None):
+    def _update_input_states(self, execution_id=None, runtime_params=None, context=None):
         """ Update value for each InputState in self.input_states:
 
         Call execute method for all (MappingProjection) Projections in InputState.path_afferents
@@ -2473,13 +2452,13 @@ class Mechanism_Base(Mechanism):
         """
         for i in range(len(self.input_states)):
             state = self.input_states[i]
-            state.update(params=runtime_params, context=context)
-        return np.array(self.input_values)
+            state.update(execution_id=execution_id, params=runtime_params, context=context)
+        return np.array([state.parameters.value.get(execution_id) for state in self.input_states])
 
-    def _update_parameter_states(self, runtime_params=None, context=None):
+    def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
 
         for state in self._parameter_states:
-            state.update(params=runtime_params, context=context)
+            state.update(execution_id=execution_id, params=runtime_params, context=context)
         self._update_attribs_dicts(context=context)
 
     def _update_attribs_dicts(self, context=None):
@@ -2492,14 +2471,14 @@ class Mechanism_Base(Mechanism):
             if state.name in self.function_params:
                 self.function_params.__additem__(state.name, state.value)
 
-    def _update_output_states(self, runtime_params=None, context=None):
+    def _update_output_states(self, execution_id=None, runtime_params=None, context=None):
         """Execute function for each OutputState and assign result of each to corresponding item of self.output_values
 
         """
         for state in self.output_states:
-            state.update(params=runtime_params, context=context)
+            state.update(execution_id=execution_id, params=runtime_params, context=context)
 
-    def initialize(self, value):
+    def initialize(self, value, execution_context=None):
         """Assign an initial value to the Mechanism's `value <Mechanism_Base.value>` attribute and update its
         `OutputStates <Mechanism_OutputStates>`.
 
@@ -2511,11 +2490,11 @@ class Mechanism_Base(Mechanism):
 
         """
         if self.paramValidationPref:
-            if not iscompatible(value, self.value):
+            if not iscompatible(value, self.defaults.value):
                 raise MechanismError("Initialization value ({}) is not compatiable with value of {}".
                                      format(value, append_type_to_name(self)))
-        self.value = np.atleast_1d(value)
-        self._update_output_states(context="INITIAL_VALUE")
+        self.parameters.value.set(np.atleast_1d(value), execution_context, override=True)
+        self._update_output_states(execution_id=execution_context, context="INITIAL_VALUE")
 
 
     def _get_param_struct_type(self, ctx):
@@ -2713,7 +2692,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_output_states(self, ctx, builder, params, context, value, so):
         for i, state in enumerate(self.output_states):
             #FIXME: can we rely on this?
-            os_in_spec = state._variable
+            os_in_spec = state._variable_spec
             if os_in_spec == OWNER_VALUE:
                 os_input = value
             elif isinstance(os_in_spec, tuple) and os_in_spec[0] == OWNER_VALUE:
@@ -2799,12 +2778,12 @@ class Mechanism_Base(Mechanism):
 
         return pnlvm._convert_ctype_to_python(ct_vo)
 
-    def _report_mechanism_execution(self, input_val=None, params=None, output=None):
+    def _report_mechanism_execution(self, input_val=None, params=None, output=None, execution_id=None):
 
         if input_val is None:
-            input_val = self.input_values
+            input_val = self.get_input_values(execution_id)
         if output is None:
-            output = self.output_state.value
+            output = self.output_state.parameters.value.get(execution_id)
         params = params or self.user_params
 
         import re
@@ -3181,7 +3160,6 @@ class Mechanism_Base(Mechanism):
                     old_variable = self.instance_defaults.variable
                 old_variable.extend(added_variable)
                 self.instance_defaults.variable = np.array(old_variable)
-                self._update_variable(self.instance_defaults.variable)
             instantiated_input_states = _instantiate_input_states(self,
                                                                   input_states,
                                                                   added_variable,
@@ -3244,7 +3222,6 @@ class Mechanism_Base(Mechanism):
                 old_variable = self.instance_defaults.variable
                 old_variable = np.delete(old_variable,index,0)
                 self.instance_defaults.variable = old_variable
-                self._update_variable(self.instance_defaults.variable)
 
             elif state in self.output_states:
                 if isinstance(state, OutputState):
@@ -3274,7 +3251,7 @@ class Mechanism_Base(Mechanism):
 
     # @tc.typecheck
     # def _get_state_value_labels(self, state_type:tc.any(InputState, OutputState)):
-    def _get_state_value_labels(self, state_type):
+    def _get_state_value_labels(self, state_type, execution_context=None):
         """Return list of labels for the value of each State of specified state_type.
         If the labels_dict has subdicts (one for each State), get label for the value of each State from its subdict.
         If the labels dict does not have subdicts, then use the same dict for the only (or all) State(s)
@@ -3288,7 +3265,7 @@ class Mechanism_Base(Mechanism):
 
         labels = []
         for state in states:
-            labels.append(state.label)
+            labels.append(state.get_label(execution_context))
         return labels
 
     @tc.typecheck
@@ -3307,13 +3284,13 @@ class Mechanism_Base(Mechanism):
                                  format(Mechanism.__name__, system, System.__name__))
         self.systems.__additem__(system, role)
 
-    @property
-    def is_finished(self):
+    def is_finished(self, execution_context=None):
+        """
+            set by a Mechanism to signal completion of its `execution <Mechanism_Execution>` in a `trial`; used by
+            `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
+            Components on the Mechanism.
+        """
         return self._is_finished
-
-    @is_finished.setter
-    def is_finished(self, value):
-        self._is_finished = value
 
     @property
     def input_state(self):
@@ -3325,6 +3302,10 @@ class Mechanism_Base(Mechanism):
             return self.input_states.values
         except (TypeError, AttributeError):
             return None
+
+    def get_input_values(self, execution_context=None):
+        return [input_state.parameters.value.get(execution_context) for input_state in self.input_states]
+
     @property
     def external_input_states(self):
         try:
@@ -3353,11 +3334,13 @@ class Mechanism_Base(Mechanism):
         of the corresponding InputState, and is populated by a string label (from the input_labels_dict) when one
         exists, and the numeric value otherwise.
         """
+        return self.get_input_labels()
 
+    def get_input_labels(self, execution_context=None):
         if self.input_labels_dict:
-            return self._get_state_value_labels(InputState)
+            return self._get_state_value_labels(InputState, execution_context)
         else:
-            return self.input_values
+            return self.get_input_values(execution_context)
 
     @property
     def parameter_states(self):
@@ -3377,6 +3360,9 @@ class Mechanism_Base(Mechanism):
     def output_values(self):
         return self.output_states.values
 
+    def get_output_values(self, execution_context=None):
+        return [output_state.parameters.value.get(execution_context) for output_state in self.output_states]
+
     @property
     def output_labels(self):
         """
@@ -3384,10 +3370,13 @@ class Mechanism_Base(Mechanism):
         value of the corresponding OutputState, and is populated by a string label (from the output_labels_dict) when
         one exists, and the numeric value otherwise.
         """
+        return self.get_output_labels()
+
+    def get_output_labels(self, execution_context=None):
         if self.output_labels_dict:
-            return self._get_state_value_labels(OutputState)
+            return self._get_state_value_labels(OutputState, execution_context)
         else:
-            return self.output_values
+            return self.get_output_values(execution_context)
 
     @property
     def status(self):
@@ -3515,6 +3504,17 @@ class Mechanism_Base(Mechanism):
             pass
         return attribs_dict
 
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self.function_object],
+            self.input_states,
+            self.output_states,
+            self.parameter_states,
+        ))
+
+
 def _is_mechanism_spec(spec):
     """Evaluate whether spec is a valid Mechanism specification
 
@@ -3632,3 +3632,10 @@ class MechanismList(UserList):
                 values.append(output_state.value)
         return values
 
+    def get_output_state_values(self, execution_id):
+        """Return values of OutputStates for all mechanisms in MechanismList for **execution_id**"""
+        values = []
+        for item in self.mechanisms:
+            for output_state in item.output_states:
+                values.append(output_state.parameters.value.get(execution_id))
+        return values

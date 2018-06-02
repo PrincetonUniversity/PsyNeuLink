@@ -989,7 +989,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                          format(self.__class__.__name__, LearningMechanism.__name__,
                                                 repr(LEARNING_TIMING)))
 
-    def _parse_function_variable(self, variable, context=None):
+    def _parse_function_variable(self, variable, execution_id=None, context=None):
         function_variable = np.zeros_like(
             variable[np.array([ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_OUTPUT_INDEX])]
         )
@@ -1003,7 +1003,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
         """
 
-        variable = self._update_variable(super()._validate_variable(variable, context))
+        variable = super()._validate_variable(variable, context)
 
         if len(variable) < 3:
             raise LearningMechanismError("Variable for {} ({}) must have at least three items ({}, {}, and {}{})".
@@ -1102,7 +1102,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self.error_sources:
             self.error_matrices = [None] * len(self.error_sources)
             for i, error_source in enumerate(self.error_sources):
-                _instantiate_error_signal_projection(sender=error_source, receiver=self)
+                self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source, receiver=self)
                 if isinstance(error_source, ObjectiveMechanism):
                     self.error_matrices[i] = np.identity(len(error_source.input_states[SAMPLE].value))
                 else:
@@ -1203,6 +1203,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _execute(
         self,
         variable=None,
+        execution_id=None,
         runtime_params=None,
         context=None
     ):
@@ -1228,7 +1229,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         error_matrices = np.array(self.error_matrices)[np.array([c - ERROR_OUTPUT_INDEX for c in curr_indices])]
         for i, matrix in enumerate(error_matrices):
             if isinstance(error_matrices[i], ParameterState):
-                error_matrices[i] = error_matrices[i].value
+                error_matrices[i] = error_matrices[i].parameters.value.get(execution_id)
+
+        summed_learning_signal = 0
+        summed_error_signal = 0
 
         # Compute learning_signal for each error_signal (and corresponding error-Matrix:
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
@@ -1236,17 +1240,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
             variable[ERROR_OUTPUT_INDEX] = error_signal_input
             learning_signal, error_signal = super()._execute(
                 variable=variable,
+                execution_id=execution_id,
                 error_matrix=error_matrix,
                 runtime_params=runtime_params,
                 context=context
             )
             # Sum learning_signals and error_signals
-            try:
-                summed_learning_signal += learning_signal
-                summed_error_signal += error_signal
-            except UnboundLocalError:
-                summed_learning_signal = learning_signal
-                summed_error_signal = error_signal
+            summed_learning_signal += learning_signal
+            summed_error_signal += error_signal
 
         self.learning_signal = summed_learning_signal
         self.error_signal = summed_error_signal
@@ -1254,8 +1255,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
-        self.value = [self.learning_signal, self.error_signal]
-        return self.value
+        return [summed_learning_signal, summed_error_signal]
 
     @property
     def learning_enabled(self):

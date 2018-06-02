@@ -167,16 +167,15 @@ Class Reference
 
 """
 
+import itertools
 import numbers
+import numpy as np
+import typecheck as tc
 import warnings
 
 from collections import Iterable
-from types import MethodType
-
-import numpy as np
-import typecheck as tc
-
 from llvmlite import ir
+from types import MethodType
 
 from psyneulink.core.components.component import Param, function_type, method_type
 from psyneulink.core.components.functions.function import Distance, Function, Hebbian, Linear, LinearCombination, Stability, UserDefinedFunction, get_matrix, is_function_type
@@ -193,6 +192,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, OUTPUT_MEAN, OUTPUT_MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, OUTPUT_STD_DEV, OUTPUT_VARIANCE
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
+from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.core.scheduling.condition import Condition, TimeScale, WhenFinished
 from psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
@@ -272,6 +272,39 @@ class RECURRENT_OUTPUT():
     # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
     # for item in [item[NAME] for item in DDM_standard_output_states]:
     #     setattr(DDM_OUTPUT.__class__, item, item)
+
+
+def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, execution_id=None):
+    from psyneulink.library.components.projections.pathway.autoassociativeprojection import get_auto_matrix, get_hetero_matrix
+
+    try:
+        a = get_auto_matrix(owning_component.parameters.auto.get(execution_id), owning_component.size[0])
+        c = get_hetero_matrix(owning_component.parameters.hetero.get(execution_id), owning_component.size[0])
+        return a + c
+    except TypeError:
+        return None
+
+
+def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, execution_id=None):
+    # KDM 8/3/18: This was attributed to a hack in how auto/hetero were implemented, but this behavior matches
+    # the existing behavior. Unsure if this is actually correct though
+    # KDM 8/7/18: removing the below because it has bad side effects for _instantiate_from_context, and it's not clear
+    # that it's the correct behavior. Similar reason for removing/not implementing auto/hetero setters
+    # if hasattr(owning_component, "recurrent_projection"):
+    #     owning_component.recurrent_projection.parameter_states["matrix"].function_object.parameters.previous_value.set(value, execution_id)
+
+    try:
+        value = get_matrix(value, owning_component.size[0], owning_component.size[0])
+    except AttributeError:
+        pass
+
+    if value is not None:
+        temp_matrix = value.copy()
+        owning_component.parameters.auto.set(np.diag(temp_matrix).copy(), execution_id)
+        np.fill_diagonal(temp_matrix, 0)
+        owning_component.parameters.hetero.set(temp_matrix, execution_id)
+
+    return value
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
@@ -723,7 +756,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     componentType = RECURRENT_TRANSFER_MECHANISM
 
     class Params(TransferMechanism.Params):
-        matrix = HOLLOW_MATRIX
+        matrix = Param(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
 
         noise = Param(0.0, modulable=True)
         smoothing_factor = Param(0.5, modulable=True)
@@ -923,20 +956,20 @@ class RecurrentTransferMechanism(TransferMechanism):
                 if isinstance(comb_fct, type):
                     comb_fct = comb_fct()
                 elif isinstance(comb_fct, (function_type, method_type)):
-                    comb_fct = UserDefinedFunction(comb_fct, self.variable)
+                    comb_fct = UserDefinedFunction(comb_fct, self.defaults.variable)
                 try:
-                    cust_fct_result = comb_fct.execute(self.variable)
+                    cust_fct_result = comb_fct.execute(self.defaults.variable)
                 except:
                     raise RecurrentTransferError("Function specified for {} argument of {} ({}) does not "
                                                  "take an array with two items ({})".
-                                                 format(repr(COMBINATION_FUNCTION),self.name, comb_fct, self.variable))
+                                                 format(repr(COMBINATION_FUNCTION),self.name, comb_fct, self.defaults.variable))
                 try:
-                    assert len(cust_fct_result) == len(self.variable[0])
+                    assert len(cust_fct_result) == len(self.defaults.variable[0])
                 except:
                     raise RecurrentTransferError("Function specified for {} argument of {} ({}) did not return "
                                                  "a result that is the same shape as the input to {} ({})".
                                                  format(repr(COMBINATION_FUNCTION),self.name, comb_fct,
-                                                        self.name, self.variable[0]))
+                                                        self.name, self.defaults.variable[0]))
 
         # Validate DECAY
         # if DECAY in target_set and target_set[DECAY] is not None:
@@ -1010,12 +1043,12 @@ class RecurrentTransferMechanism(TransferMechanism):
             # If combination_function is a method of a subclass, let it pass
             if not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
-                    self._combination_function = comb_fct(default_variable=self.variable)
+                    self._combination_function = comb_fct(default_variable=self.instance_defaults.variable)
                 elif isinstance(comb_fct, MethodType) and comb_fct.__self__ == self:
                     pass
                 else:
                     self._combination_function = UserDefinedFunction(custom_function=comb_fct,
-                                                                     default_variable=self.variable)
+                                                                     default_variable=self.instance_defaults.variable)
 
         if self.auto is None and self.hetero is None:
             self.matrix = specified_matrix
@@ -1059,19 +1092,19 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 del self.output_states[ENTROPY]
 
-    def _update_parameter_states(self, runtime_params=None, context=None):
+    def _update_parameter_states(self, execution_id=None, runtime_params=None, context=None):
         for state in self._parameter_states:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
             # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
             # projection's _update_parameter_states, and accordingly are not updated here
             if state.name != AUTO and state.name != HETERO:
-                state.update(params=runtime_params, context=context)
+                state.update(execution_id=execution_id, params=runtime_params, context=context)
 
-    def _update_previous_value(self):
-        try:
-            self.previous_value = self.value
-        except:
-            self.previous_value = None
+    def _update_previous_value(self, execution_id=None):
+        value = self.parameters.value.get(execution_id)
+        if value is None:
+            value = self.defaults.value
+        self.parameters.previous_value.set(value, execution_id, override=True)
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
@@ -1097,8 +1130,10 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
-        if hasattr(self, "recurrent_projection"):
-            self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = val
+        # KDM 10/12/18: removing below because it doesn't seem to be correct, and also causes
+        # unexpected values to be set to previous_value
+        # if hasattr(self, "recurrent_projection"):
+        #     self.recurrent_projection.parameter_states["matrix"].function_object.previous_value = val
         if hasattr(self, '_parameter_states')\
                 and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
             if hasattr(self, 'size'):
@@ -1194,7 +1229,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
         if self.has_recurrent_input_state:
             # # FIX: 7/12/18 MAKE THIS A METHOD THAT CAN BE OVERRIDDEN BY CONTRASTIVEHEBBIAN
-            new_input_state = InputState(owner=self, name=RECURRENT, variable=self.variable[0],
+            new_input_state = InputState(owner=self, name=RECURRENT, variable=self.defaults.variable[0],
                                          internal_only=True)
             assert (len(new_input_state.all_afferents) == 0)  # just a sanity check
             assert(self.input_state.name != "Recurrent Input State")
@@ -1203,14 +1238,19 @@ class RecurrentTransferMechanism(TransferMechanism):
                                           category=INPUT_STATE,
                                           component=self.input_state)
             register_instance(self.input_state, EXTERNAL, InputState, self._stateRegistry, INPUT_STATE)
-            return AutoAssociativeProjection(owner=mech,
+            proj = AutoAssociativeProjection(owner=mech,
                                              receiver=new_input_state,
                                              matrix=matrix,
                                              name=mech.name + ' recurrent projection')
+            receiver = new_input_state
+        else:
+            proj = AutoAssociativeProjection(owner=mech,
+                                             matrix=matrix,
+                                             name=mech.name + ' recurrent projection')
+            receiver = self.input_state
 
-        return AutoAssociativeProjection(owner=mech,
-                                         matrix=matrix,
-                                         name=mech.name + ' recurrent projection')
+        proj._activate_for_compositions(ConnectionInfo.ALL)
+        return proj
 
     # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
     def _instantiate_learning_mechanism(self,
@@ -1231,14 +1271,16 @@ class RecurrentTransferMechanism(TransferMechanism):
         learning_mechanism.condition = learning_condition
 
         # Instantiate Projection from Mechanism's output to LearningMechanism
-        MappingProjection(sender=activity_vector,
+        mproj = MappingProjection(sender=activity_vector,
                           receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
                           name="Error Projection for {}".format(learning_mechanism.name))
+        mproj._activate_for_all_compositions()
 
         # Instantiate Projection from LearningMechanism to Mechanism's AutoAssociativeProjection
-        LearningProjection(sender=learning_mechanism.output_states[LEARNING_SIGNAL],
+        lproj = LearningProjection(sender=learning_mechanism.output_states[LEARNING_SIGNAL],
                            receiver=matrix.parameter_states[MATRIX],
                            name="{} for {}".format(LearningProjection.className, self.recurrent_projection.name))
+        lproj._activate_for_all_compositions()
 
         return learning_mechanism
 
@@ -1293,19 +1335,19 @@ class RecurrentTransferMechanism(TransferMechanism):
         if self.learning_mechanism is None:
             self.learning_enabled = False
 
-    # def _execute(self, variable=None, runtime_params=None, context=None):
+    # def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
     #
     #     if self.context.initialization_status != ContextFlags.INITIALIZING:
     #         self.previous_value = self.value
-    #     self._output = super()._execute(variable, runtime_params, context)
+    #     self._output = super()._execute(variable=variable, execution_id=execution_id, runtime_params=runtime_params, context=context)
     #     return self._output
     #     # return super()._execute(variable, runtime_params, context)
 
-    def _parse_function_variable(self, variable, context=None):
+    def _parse_function_variable(self, variable, execution_id=None, context=None):
         if self.has_recurrent_input_state:
-            variable = self.combination_function.execute(variable=variable)
+            variable = self.combination_function.execute(variable=variable, execution_id=execution_id)
 
-        return super()._parse_function_variable(variable, context)
+        return super()._parse_function_variable(variable, execution_id=execution_id, context=context)
 
     def _get_variable_from_input(self, input):
         if self.has_recurrent_input_state:
@@ -1319,10 +1361,10 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._get_variable_from_input(input)
 
-    def reinitialize(self, *args):
+    def reinitialize(self, *args, execution_context=None):
         if self.integrator_mode:
-            super().reinitialize(*args)
-        self.previous_value = None
+            super().reinitialize(*args, execution_context=execution_context)
+        self.parameters.previous_value.set(None, execution_context, override=True)
 
     @property
     def _learning_signal_source(self):
@@ -1425,3 +1467,16 @@ class RecurrentTransferMechanism(TransferMechanism):
         builder.store(builder.load(arg_out), old_val)
 
         return builder
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self.recurrent_projection],
+            [self.combination_function] if (
+                self.combination_function is not None
+                and not isinstance(self.combination_function, MethodType)
+                and self.has_recurrent_input_state
+            )
+            else [],
+        ))

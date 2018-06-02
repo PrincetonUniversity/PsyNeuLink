@@ -619,7 +619,8 @@ class AutodiffComposition(Composition):
         targets=None,
         epochs=None,
         randomize=False,
-        execution_id=None
+        execution_id=None,
+        base_execution_id=None,
     ):
 
         # set up execution id
@@ -739,7 +740,7 @@ class AutodiffComposition(Composition):
         # allow user to refresh the list tracking loss on every epoch in the autodiff composition's training history
         if refresh_losses:
             self.losses = []
-
+        results = []
         # get node roles, set up CIM's
         self._analyze_graph()
 
@@ -773,8 +774,7 @@ class AutodiffComposition(Composition):
         # if we're just doing step-by-step processing
         if targets is None:
 
-            results = []
-
+            cur_results = []
             # iterate over inputs
             for trial_num in range(num_input_sets):
 
@@ -796,10 +796,9 @@ class AutodiffComposition(Composition):
                     result_copy = trial_output.copy()
                 else:
                     result_copy = trial_output
-                results.append(result_copy)
+                cur_results.append(result_copy)
 
-            self.results.append(results)
-
+            results.append(cur_results)
 
         # if we're doing batch learning
         else:
@@ -849,13 +848,16 @@ class AutodiffComposition(Composition):
                 result_copy = trial_output.copy()
             else:
                 result_copy = trial_output
-            self.results.append(result_copy)
+            results.append(result_copy)
 
+        full_results = self.parameters.results.get(execution_id)
+        if full_results is None:
+            full_results = results
+        else:
+            full_results.extend(results)
 
-        # return result
-        return self.results
-
-
+        self.parameters.results.set(full_results, execution_id)
+        return full_results
 
     # validates properties of the autodiff composition, and arguments to run, when run is called
     def _validate_params(self, targets, epochs):

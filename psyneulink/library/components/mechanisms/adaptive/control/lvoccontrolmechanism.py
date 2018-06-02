@@ -689,7 +689,7 @@ class LVOCControlMechanism(OptimizationControlMechanism):
             self.learning_function.reinitialize({DEFAULT_VARIABLE: learning_function_default_variable})
 
 
-    def _execute(self, variable=None, runtime_params=None, context=None):
+    def _execute(self, variable=None, execution_id=None, runtime_params=None, context=None):
         """Find allocation_policy that optimizes EVC.
 
         Items of variable should be:

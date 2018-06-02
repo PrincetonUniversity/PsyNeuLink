@@ -363,7 +363,7 @@ class Context():
     """
 
     __name__ = 'Context'
-    _deepcopy_shared_keys = {'owner'}
+    _deepcopy_shared_keys = {'owner', 'composition', '_composition'}
 
     def __init__(self,
                  owner=None,
@@ -415,7 +415,12 @@ class Context():
     def composition(self, composition):
         # from psyneulink.core.compositions.composition import Composition
         # if isinstance(composition, Composition):
-        if composition is None or composition.__class__.__name__ in {'Composition', 'SystemComposition', 'PathwayComposition', 'System', 'Process'}:
+        if (
+            composition is None
+            or composition.__class__.__name__ in {
+                'Composition', 'SystemComposition', 'PathwayComposition', 'AutodiffComposition', 'System', 'Process'
+            }
+        ):
             self._composition = composition
         else:
             raise ContextError("Assignment to context.composition for {} ({}) "
@@ -614,18 +619,21 @@ def _get_time(component, context_flags, execution_id=None):
 
     system = ref_mech.parameters.context.get().composition
 
-    if system:
+    if system and hasattr(system, 'scheduler_processing'):
         execution_flags = context_flags & ContextFlags.EXECUTION_PHASE_MASK
-        if execution_flags == ContextFlags.PROCESSING or not execution_flags:
-            t = system.scheduler_processing.clock.time
-            t = time(t.run, t.trial, t.pass_, t.time_step)
-        elif execution_flags == ContextFlags.CONTROL:
-            t = system.scheduler_processing.clock.time
-            t = time(t.run, t.trial, t.pass_, t.time_step)
-        elif execution_flags == ContextFlags.LEARNING:
-            t = system.scheduler_learning.clock.time
-            t = time(t.run, t.trial, t.pass_, t.time_step)
-        else:
+        try:
+            if execution_flags == ContextFlags.PROCESSING or not execution_flags:
+                t = system.scheduler_processing.clocks[execution_id].time
+                t = time(t.run, t.trial, t.pass_, t.time_step)
+            elif execution_flags == ContextFlags.CONTROL:
+                t = system.scheduler_processing.clocks[execution_id].time
+                t = time(t.run, t.trial, t.pass_, t.time_step)
+            elif execution_flags == ContextFlags.LEARNING:
+                t = system.scheduler_learning.clocks[execution_id].time
+                t = time(t.run, t.trial, t.pass_, t.time_step)
+            else:
+                t = None
+        except KeyError:
             t = None
 
     else:

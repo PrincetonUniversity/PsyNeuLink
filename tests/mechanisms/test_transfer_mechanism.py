@@ -1185,7 +1185,7 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, 0.595)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.595)
 
         S.run(inputs={T: 2.0}, num_trials=2)
         # Trial 3
@@ -1195,7 +1195,7 @@ class TestIntegratorMode:
         # integration: 0.9*0.7355 + 0.1*2.0 + 0.0 = 0.86195  --->  previous value = 0.86195
         # linear fn: 0.86195*1.0 = 0.86195
 
-        assert np.allclose(T.integrator_function.previous_value, 0.86195)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.86195)
 
     def test_previous_value_reinitialize_execute(self):
         T = TransferMechanism(name="T",
@@ -1256,17 +1256,17 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, 0.595)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.595)
 
-        T.integrator_function.reinitialize(0.9)
+        T.integrator_function.reinitialize(0.9, execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, 0.9)
-        assert np.allclose(T.value, 0.595)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.9)
+        assert np.allclose(T.parameters.value.get(S), 0.595)
 
-        T.reinitialize(0.5)
+        T.reinitialize(0.5, execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, 0.5)
-        assert np.allclose(T.value, 0.5)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.5)
+        assert np.allclose(T.parameters.value.get(S), 0.5)
 
         S.run(inputs={T: 1.0}, num_trials=2)
         # Trial 3
@@ -1275,7 +1275,7 @@ class TestIntegratorMode:
         # Trial 4
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, 0.595)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), 0.595)
 
     def test_reinitialize_run_array(self):
         T = TransferMechanism(name="T",
@@ -1299,17 +1299,17 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.595, 0.595, 0.595])
 
-        T.integrator_function.reinitialize([0.9, 0.9, 0.9])
+        T.integrator_function.reinitialize([0.9, 0.9, 0.9], execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, [0.9, 0.9, 0.9])
-        assert np.allclose(T.value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.9, 0.9, 0.9])
+        assert np.allclose(T.parameters.value.get(S), [0.595, 0.595, 0.595])
 
-        T.reinitialize([0.5, 0.5, 0.5])
+        T.reinitialize([0.5, 0.5, 0.5], execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, [0.5, 0.5, 0.5])
-        assert np.allclose(T.value, [0.5, 0.5, 0.5])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.5, 0.5, 0.5])
+        assert np.allclose(T.parameters.value.get(S), [0.5, 0.5, 0.5])
 
         S.run(inputs={T: [1.0, 1.0, 1.0]}, num_trials=2)
         # Trial 3
@@ -1318,7 +1318,7 @@ class TestIntegratorMode:
         # Trial 4
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.595, 0.595, 0.595])
 
     def test_reinitialize_run_2darray(self):
 
@@ -1344,17 +1344,17 @@ class TestIntegratorMode:
         # Trial 2
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.595, 0.595, 0.595])
 
-        T.integrator_function.reinitialize([0.9, 0.9, 0.9])
+        T.integrator_function.reinitialize([0.9, 0.9, 0.9], execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, [0.9, 0.9, 0.9])
-        assert np.allclose(T.value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.9, 0.9, 0.9])
+        assert np.allclose(T.parameters.value.get(S), [0.595, 0.595, 0.595])
 
-        T.reinitialize(initial_val)
+        T.reinitialize(initial_val, execution_context=S)
 
-        assert np.allclose(T.integrator_function.previous_value, initial_val)
-        assert np.allclose(T.value, initial_val)
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), initial_val)
+        assert np.allclose(T.parameters.value.get(S), initial_val)
 
         S.run(inputs={T: [1.0, 1.0, 1.0]}, num_trials=2)
         # Trial 3
@@ -1363,7 +1363,7 @@ class TestIntegratorMode:
         # Trial 4
         # integration: 0.9*0.55 + 0.1*1.0 + 0.0 = 0.595  --->  previous value = 0.595
         # linear fn: 0.595*1.0 = 0.595
-        assert np.allclose(T.integrator_function.previous_value, [0.595, 0.595, 0.595])
+        assert np.allclose(T.integrator_function.parameters.previous_value.get(S), [0.595, 0.595, 0.595])
 
     def test_reinitialize_not_integrator(self):
 
@@ -1383,28 +1383,28 @@ class TestIntegratorMode:
         T.reinitialize_when = Never()
         # T starts with integrator_mode = True; confirm that T behaves correctly
         S.run({T: [[1.0], [1.0], [1.0]]})
-        assert np.allclose(T.value, [[0.875]])
+        assert np.allclose(T.parameters.value.get(S), [[0.875]])
 
-        assert T.integrator_mode is True
+        assert T.parameters.integrator_mode.get(S) is True
         assert T.integrator_function is integrator_function
 
         # Switch integrator_mode to False; confirm that T behaves correctly
-        T.integrator_mode = False
+        T.parameters.integrator_mode.set(False, execution_context=S)
 
-        assert T.integrator_mode is False
+        assert T.parameters.integrator_mode.get(S) is False
 
         S.run({T: [[1.0], [1.0], [1.0]]})
-        assert np.allclose(T.value, [[1.0]])
+        assert np.allclose(T.parameters.value.get(S), [[1.0]])
 
         # Switch integrator_mode BACK to True; confirm that T picks up where it left off
-        T.integrator_mode = True
+        T.parameters.integrator_mode.set(True, execution_context=S)
 
-        assert T.integrator_mode is True
+        assert T.parameters.integrator_mode.get(S) is True
         assert T.has_integrated is True
         assert T.integrator_function is integrator_function
 
         S.run({T: [[1.0], [1.0], [1.0]]})
-        assert np.allclose(T.value, [[0.984375]])
+        assert np.allclose(T.parameters.value.get(S), [[0.984375]])
 
     def test_initial_values_softmax(self):
         T = TransferMechanism(default_variable=[[0.0, 0.0], [0.0, 0.0]],
@@ -1418,7 +1418,7 @@ class TestIntegratorMode:
 
         S.run(inputs={T: [[1.5, 2.5], [3.5, 4.5]]})
 
-        result = T.value
+        result = T.parameters.value.get(S)
         # Expected results
         # integrator function:
         # input = [[1.5, 2.5], [3.5, 4.5]]  |  output = [[1.25, 2.25]], [3.25, 4.25]]
@@ -1433,9 +1433,10 @@ class TestIntegratorMode:
         S2 = SoftMax()
         expected_result_s2 = S2.function([[3.25, 4.25]])
 
-        assert np.allclose(expected_result_integrator, T.integrator_function_value)
+        assert np.allclose(expected_result_integrator, T.parameters.integrator_function_value.get(S))
         assert np.allclose(expected_result_s1, result[0])
         assert np.allclose(expected_result_s2, result[1])
+
 
 class TestOnResumeIntegratorMode:
     def test_integrator_mode_value_spec(self):
@@ -1448,21 +1449,21 @@ class TestOnResumeIntegratorMode:
         C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
-        assert np.allclose(T.value, [[1.25]])
+        assert np.allclose(T.parameters.value.get(C), [[1.25]])
 
-        T.integrator_mode = False                           # Switch to "instantaneous mode"
+        T.parameters.integrator_mode.set(False, execution_context=C)    # Switch to "instantaneous mode"
 
-        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "instantaneous mode"
+        C.run(inputs={T: [[1.0], [2.0]]})                               # Run in "instantaneous mode"
         # Trial 0: 1.0 * 1.0 = 1.0
         # Trial 1: 1.0 * 2.0 = 2.0
-        assert np.allclose(T.value, [[2.0]])
+        assert np.allclose(T.parameters.value.get(C), [[2.0]])
 
-        T.integrator_mode = True                            # Switch back to "integrator mode"
+        T.parameters.integrator_mode.set(True, execution_context=C)     # Switch back to "integrator mode"
 
-        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode" and pick up at 1.25
+        C.run(inputs={T: [[1.0], [2.0]]})                               # Run in "integrator mode" and pick up at 1.25
         # Trial 0: 0.5*1.25 + 0.5*1.0 = 1.125 * 1.0 = 1.125
         # Trial 1: 0.5*1.125 + 0.5*2.0 = 1.5625 * 1.0 = 1.5625
-        assert np.allclose(T.value, [[1.5625]])
+        assert np.allclose(T.parameters.value.get(C), [[1.5625]])
 
     def test_instantaneous_mode_value_spec(self):
         T = TransferMechanism(on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
@@ -1474,21 +1475,21 @@ class TestOnResumeIntegratorMode:
         C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode"
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
-        assert np.allclose(T.value, [[1.25]])
+        assert np.allclose(T.parameters.value.get(C), [[1.25]])
 
-        T.integrator_mode = False                           # Switch to "instantaneous mode"
+        T.parameters.integrator_mode.set(False, execution_context=C)     # Switch to "instantaneous mode"
 
-        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "instantaneous mode"
+        C.run(inputs={T: [[1.0], [2.0]]})                                # Run in "instantaneous mode"
         # Trial 0: 1.0 * 1.0 = 1.0
         # Trial 1: 1.0 * 2.0 = 2.0
-        assert np.allclose(T.value, [[2.0]])
+        assert np.allclose(T.parameters.value.get(C), [[2.0]])
 
-        T.integrator_mode = True                            # Switch back to "integrator mode"
+        T.parameters.integrator_mode.set(True, execution_context=C)      # Switch back to "integrator mode"
 
-        C.run(inputs={T: [[1.0], [2.0]]})                   # Run in "integrator mode" and pick up at 2.0
+        C.run(inputs={T: [[1.0], [2.0]]})                                # Run in "integrator mode" and pick up at 2.0
         # Trial 0: 0.5*2.0 + 0.5*1.0 = 1.5 * 1.0 = 1.5
         # Trial 1: 0.5*1.5 + 0.5*2.0 = 1.75 * 1.0 = 1.75
-        assert np.allclose(T.value, [[1.75]])
+        assert np.allclose(T.parameters.value.get(C), [[1.75]])
 
     def test_reinitialize_spec(self):
         T = TransferMechanism(on_resume_integrator_mode=REINITIALIZE,
@@ -1502,21 +1503,22 @@ class TestOnResumeIntegratorMode:
         C.run(inputs={T: [[1.0], [2.0]]})                        # Run in "integrator mode"
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
-        assert np.allclose(T.value, [[1.25]])
+        assert np.allclose(T.parameters.value.get(C), [[1.25]])
 
-        T.integrator_mode = False                               # Switch to "instantaneous mode"
+        T.parameters.integrator_mode.set(False, execution_context=C)                               # Switch to "instantaneous mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "instantaneous mode"
         # Trial 0: 1.0 * 1.0 = 1.0
         # Trial 1: 1.0 * 2.0 = 2.0
-        assert np.allclose(T.value, [[2.0]])
+        assert np.allclose(T.parameters.value.get(C), [[2.0]])
 
-        T.integrator_mode = True                                # Switch back to "integrator mode"
+        T.parameters.integrator_mode.set(True, execution_context=C)                                # Switch back to "integrator mode"
 
         C.run(inputs={T: [[1.0], [2.0]]})                       # Run in "integrator mode", pick up at 0.0
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
-        assert np.allclose(T.value, [[1.25]])
+        assert np.allclose(T.parameters.value.get(C), [[1.25]])
+
 
 class TestClip:
     def test_clip_float(self):

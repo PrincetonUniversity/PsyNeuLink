@@ -97,17 +97,17 @@ stim_list = {
 
 
 def print_header(system):
-    print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
+    print("\n\n**** Time: ", system.scheduler_processing.get_clock(system).simple_time)
 
 
-def show_target():
+def show_target(system):
     print('Gated: ',
           Gating_Mechanism.gating_signals[0].efferents[0].receiver.owner.name,
           Gating_Mechanism.gating_signals[0].efferents[0].receiver.name)
-    print('- Input_Layer.value:                  ', Input_Layer.value)
-    print('- Output_Layer.value:                 ', Output_Layer.value)
-    print('- Output_Layer.output_state.variable: ', Output_Layer.output_state.variable)
-    print('- Output_Layer.output_state.value:    ', Output_Layer.output_state.value)
+    print('- Input_Layer.value:                  ', Input_Layer.parameters.value.get(system))
+    print('- Output_Layer.value:                 ', Output_Layer.parameters.value.get(system))
+    print('- Output_Layer.output_state.variable: ', Output_Layer.output_state.parameters.variable.get(system))
+    print('- Output_Layer.output_state.value:    ', Output_Layer.output_state.parameters.value.get(system))
 
 mySystem = pnl.System(processes=[p, g])
 
@@ -118,5 +118,5 @@ results = mySystem.run(
     num_trials=4,
     inputs=stim_list,
     call_before_trial=functools.partial(print_header, mySystem),
-    call_after_trial=show_target,
+    call_after_trial=functools.partial(show_target, mySystem),
 )

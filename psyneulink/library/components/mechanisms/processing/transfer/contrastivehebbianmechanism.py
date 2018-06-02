@@ -404,6 +404,25 @@ class CONTRASTIVE_HEBBIAN_OUTPUT():
     MINUS_PHASE_OUTPUT=MINUS_PHASE_OUTPUT
     PLUS_PHASE_OUTPUT=PLUS_PHASE_OUTPUT
 
+
+def _CHM_output_activity_getter(owning_component=None, execution_id=None):
+    return owning_component.parameters.current_activity.get(execution_id)[owning_component.target_start:owning_component.target_end]
+
+
+def _CHM_input_activity_getter(owning_component=None, execution_id=None):
+    return owning_component.parameters.current_activity.get(execution_id)[:owning_component.input_size]
+
+
+def _CHM_hidden_activity_getter(owning_component=None, execution_id=None):
+    if owning_component.hidden_size:
+        return owning_component.parameters.current_activity.get(execution_id)[owning_component.input_size:owning_component.target_start]
+
+
+def _CHM_target_activity_getter(owning_component=None, execution_id=None):
+    if owning_component.target_size:
+        return owning_component.parameters.current_activity.get(execution_id)[owning_component.target_start:owning_component.target_end]
+
+
 class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     """
     ContrastiveHebbianMechanism(                                    \
@@ -860,6 +879,11 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         plus_phase_termination_condition = Param(CONVERGENCE, stateful=False, loggable=False)
         learning_function = Param(ContrastiveHebbian, stateful=False, loggable=False)
 
+        output_activity = Param(None, read_only=True, getter=_CHM_output_activity_getter)
+        input_activity = Param(None, read_only=True, getter=_CHM_input_activity_getter)
+        hidden_activity = Param(None, read_only=True, getter=_CHM_hidden_activity_getter)
+        target_activity = Param(None, read_only=True, getter=_CHM_target_activity_getter)
+
         minus_phase_termination_criterion = Param(0.01, modulable=True)
         plus_phase_termination_criterion = Param(0.01, modulable=True)
 
@@ -1061,6 +1085,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     def _execute(self,
                  variable=None,
+                 execution_id=None,
                  function_variable=None,
                  runtime_params=None,
                  context=None):
@@ -1086,56 +1111,37 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # USED FOR TEST PRINT BELOW:
         curr_phase = self.execution_phase
 
-        if self.is_finished == True:
+        if self._is_finished is True:
             # If current execution follows completion of a previous trial,
             #    zero activity for input from recurrent projection so that
             #    input does not contain residual activity of previous trial
             variable[RECURRENT_INDEX] = self.input_states[RECURRENT].socket_template
 
-        self.is_finished = False
+        self._is_finished = False
 
         # Need to store this, as it will be updated in call to super
-        previous_value = self.previous_value
+        previous_value = self.parameters.previous_value.get(execution_id)
 
         # Note _parse_function_variable selects actual input to function based on execution_phase
         current_activity = super()._execute(variable,
+                                            execution_id=execution_id,
                                             runtime_params=runtime_params,
                                             context=context)
 
         self.phase_execution_count += 1
 
-        self.output_activity = self.current_activity[self.target_start:self.target_end]
-
         current_activity = np.squeeze(current_activity)
         # Set value of primary OutputState to current activity
-        self.current_activity = current_activity
-
-        # TEST PRINT:
-        if self.context.initialization_status == ContextFlags.INITIALIZED:
-            print("--------------------------------------------",
-                  "\nTRIAL: {}  PASS: {}  TIME_STEP: {}".format(self.current_execution_time.trial,
-                                                                self.current_execution_time.pass_,
-                                                                self.current_execution_time.time_step),
-                  "\nCONTEXT: {}".format(self.context.flags_string),
-                  '\nphase: ', 'PLUS' if curr_phase == PLUS_PHASE else 'MINUS',
-                  '\nvariable: ', variable,
-                  '\ninput:', self.function_object.variable,
-                  '\nMATRIX:', self.matrix,
-                  '\ncurrent activity: ', self.current_activity,
-                  '\noutput activity: ', self.output_activity,
-                  '\nactivity diff: ', self.output_states[ACTIVITY_DIFFERENCE_OUTPUT].value,
-                  '\ndelta: ', self.delta if self.previous_value is not None else 'None',
-                  '\nis_finished: ', True if self.is_converged and self.execution_phase == MINUS_PHASE else False
-                  )
+        self.parameters.current_activity.set(current_activity, execution_id)
 
         # This is the first trial, so can't test for convergence
         #    (since that requires comparison with value from previous trial)
         if previous_value is None:
-            return self.current_activity
+            return current_activity
 
         if self.termination_condition is CONVERGENCE:
             self.convergence_criterion = self.termination_criterion
-            self.phase_terminated = self.is_converged
+            self.phase_terminated = self.is_converged(np.atleast_2d(current_activity), execution_id)
         elif self.termination_condition is COUNT:
             self.phase_terminated = (self.phase_execution_count == self.termination_criterion)
         else:
@@ -1150,24 +1156,23 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             # Terminate if this is the end of the plus phase, prepare for next trial
             if self.execution_phase == PLUS_PHASE:
                 # Store activity from last execution in plus phase
-                self.plus_phase_activity = current_activity
+                self.parameters.plus_phase_activity.set(current_activity, execution_id)
                 # # Set value of primary outputState to activity at end of plus phase
                 # self.current_activity = self.plus_phase_activity
-                self.current_activity = current_activity
-                self.output_activity = current_activity[self.target_start:self.target_end]
+                self.parameters.current_activity.set(current_activity, execution_id)
                 # self.execution_phase = None
-                self.is_finished = True
+                self._is_finished = True
 
             # Otherwise, prepare for start of plus phase on next execution
             else:
                 # Store activity from last execution in plus phase
-                self.minus_phase_activity = self.current_activity
+                self.parameters.minus_phase_activity.set(self.parameters.current_activity.get(), execution_id)
                 # Use initial_value attribute to initialize, for the minus phase,
                 #    both the integrator_function's previous_value
                 #    and the Mechanism's current activity (which is returned as its input)
                 if not self.continuous:
-                    self.reinitialize(self.initial_value)
-                    self.current_activity = self.initial_value
+                    self.reinitialize(self.initial_value, execution_context=execution_id)
+                    self.parameters.current_activity.set(self.initial_value, execution_id)
                 self.termination_criterion = self.plus_phase_termination_criterion
                 self.termination_condition = self.plus_phase_termination_condition
 
@@ -1178,9 +1183,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         return current_activity
         # return self.current_activity
 
-    def _parse_function_variable(self, variable, context=None):
+    def _parse_function_variable(self, variable, execution_id=None, context=None):
         function_variable = self.combination_function(variable, context)
-        return super(RecurrentTransferMechanism, self)._parse_function_variable(function_variable, context)
+        return super(RecurrentTransferMechanism, self)._parse_function_variable(function_variable, execution_id=execution_id, context=context)
 
     def combination_function(self, variable, context):
         # IMPLEMENTATION NOTE: use try and except here for efficiency: care more about execution than initialization

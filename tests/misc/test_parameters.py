@@ -6,7 +6,7 @@ from psyneulink.core.globals.utilities import unproxy_weakproxy
 # (ancestor, child, should_override)
 ancestor_child_data = [
     (pnl.Component, pnl.TransferMechanism, False),
-    (pnl.Component, pnl.OutputState, True),
+    (pnl.Component, pnl.OutputState, False),
     (pnl.Component, pnl.InputState, True),
     (pnl.Component, pnl.SimpleIntegrator, False),
     (pnl.Function_Base, pnl.SimpleIntegrator, True),

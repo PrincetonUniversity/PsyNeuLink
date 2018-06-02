@@ -826,6 +826,14 @@ class Scheduler(object):
     def clock(self):
         return self.clocks[self.default_execution_id]
 
+    def get_clock(self, execution_context):
+        try:
+            return self.clocks[execution_context.default_execution_id]
+        except AttributeError:
+            return self.clocks[execution_context]
+        except KeyError:
+            raise
+
     @property
     def termination_conds(self):
         return self._termination_conds

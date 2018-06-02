@@ -598,6 +598,7 @@ def run(obj,
         termination_processing=None,
         termination_learning=None,
         runtime_params=None,
+        execution_id=None,
         context=ContextFlags.COMMAND_LINE):
     """run(                      \
     inputs,                      \
@@ -800,7 +801,7 @@ def run(obj,
 
     # INITIALIZATION
     if initialize:
-        obj.initialize()
+        obj.initialize(execution_context=execution_id)
 
     # SET UP TIMING
     if object_type == MECHANISM:
@@ -811,12 +812,7 @@ def run(obj,
     # EXECUTE
     execution_inputs = {}
     execution_targets = {}
-
-    execution_id = _get_unique_id()
-
     for execution in range(num_trials):
-
-        # execution_id = _get_unique_id()
 
         if call_before_trial:
             call_before_trial()
@@ -831,8 +827,8 @@ def run(obj,
             # Reset any mechanisms whose 'reinitialize_when' conditions are satisfied
             for mechanism in obj.mechanisms:
                 if hasattr(mechanism, "reinitialize_when") and mechanism.has_initializers:
-                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing):
-                        mechanism.reinitialize(None)
+                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing, execution_id=execution_id):
+                        mechanism.reinitialize(None, execution_context=execution_id)
 
             input_num = execution%num_inputs_sets
 
@@ -884,16 +880,25 @@ def run(obj,
             call_after_trial()
 
         from psyneulink.core.globals.log import _log_trials_and_runs, ContextFlags
-        _log_trials_and_runs(composition=obj,
-                             curr_condition=LogCondition.TRIAL,
-                             context=context)
+        _log_trials_and_runs(
+            composition=obj,
+            curr_condition=LogCondition.TRIAL,
+            context=context,
+            execution_id=execution_id,
+        )
 
     try:
         obj.scheduler_processing.date_last_run_end = datetime.datetime.now()
         obj.scheduler_learning.date_last_run_end = datetime.datetime.now()
 
         for sched in [obj.scheduler_processing, obj.scheduler_learning]:
-            sched.clock._increment_time(TimeScale.RUN)
+            try:
+                sched.get_clock(execution_id)._increment_time(TimeScale.RUN)
+            except KeyError:
+                # learning scheduler may not have been execute, so may not have
+                # created a Clock for execution_id
+                pass
+
     except AttributeError:
         # this will fail on processes, which do not have schedulers
         pass
@@ -907,11 +912,15 @@ def run(obj,
         obj._learning_enabled = learning_state_buffer
 
     from psyneulink.core.globals.log import _log_trials_and_runs
-    _log_trials_and_runs(composition=obj,
-                         curr_condition=LogCondition.RUN,
-                         context=context)
+    _log_trials_and_runs(
+        composition=obj,
+        curr_condition=LogCondition.RUN,
+        context=context,
+        execution_id=execution_id
+    )
 
     return obj.results
+
 
 @tc.typecheck
 

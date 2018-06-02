@@ -1,5 +1,5 @@
-import psyneulink as pnl
 import numpy as np
+import psyneulink as pnl
 
 class TestStroop:
     def test_lauras_cohen_1990_model(self):
@@ -190,9 +190,11 @@ class TestStroop:
 
         #   CREATE THRESHOLD FUNCTION
         # first value of DDM's value is DECISION_VARIABLE
-        def pass_threshold(mech1, mech2, thresh):
-            results1 = mech1.output_states[0].value
-            results2 = mech2.output_states[0].value
+        # execution_id is always passed to Condition functions and is the context
+        # in which the function gets called - below, during system execution
+        def pass_threshold(mech1, mech2, thresh, execution_id=None):
+            results1 = mech1.output_states[0].parameters.value.get(execution_id)
+            results2 = mech2.output_states[0].parameters.value.get(execution_id)
             for val in results1:
                 if val >= thresh:
                     return True
@@ -227,10 +229,14 @@ class TestStroop:
             # Turn on noise
             switch_noise(mechanisms, pnl.NormalDist(mean=0, standard_deviation=unit_noise).function)
             # Execute until one of the accumulators crosses the threshold
-            my_Stroop.termination_processing = {pnl.TimeScale.TRIAL: pnl.While(pass_threshold,
-                                                                               respond_red_accumulator,
-                                                                               respond_green_accumulator,
-                                                                               accumulator_threshold)}
+            my_Stroop.termination_processing = {
+                pnl.TimeScale.TRIAL: pnl.While(
+                    pass_threshold,
+                    respond_red_accumulator,
+                    respond_green_accumulator,
+                    accumulator_threshold
+                )
+            }
 
         def switch_trial_type():
             # Next trial will be a processing trial

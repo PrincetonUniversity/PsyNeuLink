@@ -48,7 +48,7 @@ class TestBuffer():
         full_result = []
 
         def assemble_full_result():
-            full_result.append(P.value)
+            full_result.append(P.parameters.value.get(system))
 
         result = system.run(inputs={P: [[1.0], [2.0], [3.0], [4.0], [5.0]]},
                             call_after_trial=assemble_full_result)

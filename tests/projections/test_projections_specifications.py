@@ -21,7 +21,7 @@ class TestProjectionSpecificationFormats:
         assert M.output_states[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
     def test_multiple_modulatory_projections_with_state_name(self):
-        
+
         M = pnl.DDM(name='MY DDM')
         C = pnl.ControlMechanism(control_signals=[{'DECISION_CONTROL':[M.parameter_states[pnl.DRIFT_RATE],
                                                                        M.parameter_states[pnl.THRESHOLD]]}])
@@ -184,7 +184,7 @@ class TestProjectionSpecificationFormats:
                 C2 = pnl.ControlProjection()
             elif isinstance(C2, tuple) and C2[1] is 'CP_OBJECT':
                 C2 = (C2[0], pnl.ControlProjection())
-            
+
             R = pnl.RecurrentTransferMechanism(noise=C1,
                                                function=pnl.Logistic(gain=C2))
             assert R.parameter_states[pnl.NOISE].mod_afferents[0].name in \
@@ -226,7 +226,7 @@ class TestProjectionSpecificationFormats:
                 G2 = pnl.GatingProjection()
             elif isinstance(G2, tuple) and G2[1] is 'GP_OBJECT':
                 G2 = (G2[0], pnl.GatingProjection())
-            
+
             T = pnl.TransferMechanism(name='T-GATING-{}'.format(i),
                                       input_states=[G1],
                                       output_states=[G2])
@@ -236,40 +236,42 @@ class TestProjectionSpecificationFormats:
             assert T.output_states[0].mod_afferents[0].name in \
                    'GatingProjection for T-GATING-{}[OutputState-0]'.format(i)
 
+
+    # KDM: this is a good candidate for pytest.parametrize
     def test_masked_mapping_projection(self):
 
         t1 = pnl.TransferMechanism(size=2)
         t2 = pnl.TransferMechanism(size=2)
-        pnl.MaskedMappingProjection(sender=t1,
+        proj = pnl.MaskedMappingProjection(sender=t1,
                                     receiver=t2,
                                     matrix=[[1,2],[3,4]],
                                     mask=[[1,0],[0,1]],
                                     mask_operation=pnl.ADD
                                     )
-        p = pnl.Process(pathway=[t1, t2])
+        p = pnl.Process(pathway=[t1, proj, t2])
         val = p.execute(input=[1,2])
         assert np.allclose(val, [[8, 12]])
 
         t1 = pnl.TransferMechanism(size=2)
         t2 = pnl.TransferMechanism(size=2)
-        pnl.MaskedMappingProjection(sender=t1,
+        proj = pnl.MaskedMappingProjection(sender=t1,
                                     receiver=t2,
                                     matrix=[[1,2],[3,4]],
                                     mask=[[1,0],[0,1]],
                                     mask_operation=pnl.MULTIPLY
                                     )
-        p = pnl.Process(pathway=[t1, t2])
+        p = pnl.Process(pathway=[t1, proj, t2])
         val = p.execute(input=[1,2])
         assert np.allclose(val, [[1, 8]])
 
         t1 = pnl.TransferMechanism(size=2)
         t2 = pnl.TransferMechanism(size=2)
-        pnl.MaskedMappingProjection(sender=t1,
+        proj = pnl.MaskedMappingProjection(sender=t1,
                                     receiver=t2,
                                     mask=[[1,2],[3,4]],
                                     mask_operation=pnl.MULTIPLY
                                     )
-        p = pnl.Process(pathway=[t1, t2])
+        p = pnl.Process(pathway=[t1, proj, t2])
         val = p.execute(input=[1,2])
         assert np.allclose(val, [[1, 8]])
 
@@ -284,8 +286,8 @@ class TestProjectionSpecificationFormats:
                                         mask=[[1,2,3],[4,5,6]],
                                         mask_operation=pnl.MULTIPLY
                                         )
-        assert "Shape of the 'mask' for MaskedMappingProjection-0 ((2, 3)) must be the same as its 'matrix' ((2, 2))" \
-               in str(error_text.value)
+        assert "Shape of the 'mask'" in str(error_text.value)
+        assert "((2, 3)) must be the same as its 'matrix' ((2, 2))" in str(error_text.value)
 
     def test_duplicate_projection_detection_and_warning(self):
 

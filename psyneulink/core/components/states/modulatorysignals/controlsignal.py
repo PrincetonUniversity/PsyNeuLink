@@ -312,7 +312,7 @@ from psyneulink.core.components.component import Param, function_type, method_ty
 from psyneulink.core.components.functions.function import CombinationFunction, Exponential, IntegratorFunction, Linear, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.states.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.states.outputstate import SEQUENTIAL
+from psyneulink.core.components.states.outputstate import SEQUENTIAL, _output_state_variable_getter
 from psyneulink.core.components.states.state import State_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
@@ -625,7 +625,11 @@ class ControlSignal(ModulatorySignal):
     paramsType = OUTPUT_STATE_PARAMS
 
     class Params(ModulatorySignal.Params):
-        variable = Param(np.array(defaultControlAllocation), aliases='allocation')
+        # NOTE: if the specification of this getter is happening in several other classes, should consider
+        # refactoring Param to allow individual attributes to be inherited, othwerise, leaving this is an
+        # isolated case
+        variable = Param(np.array(defaultControlAllocation), aliases='allocation', getter=_output_state_variable_getter)
+        value = Param(np.array(defaultControlAllocation), read_only=True, aliases=['intensity'])
         allocation_samples = Param(np.arange(0.1, 1.01, 0.3), modulable=True)
         cost_options = ControlSignalCosts.DEFAULTS
         intensity_cost_function = Exponential
@@ -981,14 +985,15 @@ class ControlSignal(ModulatorySignal):
 
         return state_spec, params_dict
 
-    def update(self, params=None, context=None):
+    def update(self, execution_id=None, params=None, context=None):
         '''Update value (intensity) and costs
         '''
-        super().update(params=params, context=context)
+        super().update(execution_id=execution_id, params=params, context=context)
         if self.cost_options:
-            self.cost = self.compute_costs(self.intensity)
-        # Store current intensity and costs for use in next call as last state
-        self.last_intensity = self.intensity
+            intensity = self.parameters.value.get(execution_id)
+            self.cost = self.compute_costs(intensity)
+            # Store current intensity and costs for use in next call as last state
+            self.last_intensity = intensity
         if self.cost_options:
             self.last_cost = self.cost
             if ControlSignalCosts.DURATION & self.cost_options:
@@ -999,7 +1004,7 @@ class ControlSignal(ModulatorySignal):
 
         try:
             self.intensity_change = intensity-self.last_intensity
-        except AttributeError:
+        except (AttributeError, TypeError):
             self.intensity_change = [0]
 
         # COMPUTE COST(S)

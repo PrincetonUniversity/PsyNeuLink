@@ -49,14 +49,7 @@ def print_header(system):
     print("\n\n**** Time: ", system.scheduler_processing.clock.simple_time)
 
 
-def show_weights():
-    # print('Reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
-    # print(
-    #     '\nAction selected:  {}; predicted reward: {}'.format(
-    #         np.nonzero(action_selection.output_state.value)[0][0],
-    #         action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]
-    #     )
-    assert True
+def show_weights(system):
     comparator = action_selection.output_state.efferents[0].receiver.owner
     learn_mech = action_selection.output_state.efferents[1].receiver.owner
     print('\n'
@@ -71,16 +64,16 @@ def show_weights():
           '\nlearning mech learning_sig: {} '
           '\npredicted reward:           {} '.
         format(
-            action_selection.value,
-            action_selection.output_state.value,
-            comparator.input_states[pnl.SAMPLE].value,
-            comparator.input_states[pnl.TARGET].value,
-            learn_mech.input_states[pnl.ACTIVATION_INPUT].value,
-            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].value,
-            learn_mech.input_states[pnl.ERROR_SIGNAL].value,
-            learn_mech.output_states[pnl.ERROR_SIGNAL].value,
-            learn_mech.output_states[pnl.LEARNING_SIGNAL].value,
-            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0])
+            action_selection.parameters.value.get(system),
+            action_selection.output_state.parameters.value.get(system),
+            comparator.input_states[pnl.SAMPLE].parameters.value.get(system),
+            comparator.input_states[pnl.TARGET].parameters.value.get(system),
+            learn_mech.input_states[pnl.ACTIVATION_INPUT].parameters.value.get(system),
+            learn_mech.input_states[pnl.ACTIVATION_OUTPUT].parameters.value.get(system),
+            learn_mech.input_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
+            learn_mech.output_states[pnl.ERROR_SIGNAL].parameters.value.get(system),
+            learn_mech.output_states[pnl.LEARNING_SIGNAL].parameters.value.get(system),
+            action_selection.output_state.parameters.value.get(system)[np.nonzero(action_selection.output_state.parameters.value.get(system))][0])
     )
 
 p.run(
@@ -104,5 +97,5 @@ s.run(
     inputs=input_list,
     targets=reward,
     call_before_trial=functools.partial(print_header, s),
-    call_after_trial=show_weights
+    call_after_trial=functools.partial(show_weights, s)
 )

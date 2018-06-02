@@ -94,4 +94,4 @@ class TestNoLearning:
 
         expected_Output_Layer_output = [np.array([0.97988347, 0.97988347, 0.97988347])]
 
-        np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.output_values)
+        np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.get_output_values(s))

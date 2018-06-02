@@ -484,6 +484,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # Parse gating_signal specifications (in call to State._parse_state_spec)
         #    and any embedded Projection specifications (in call to <State>._instantiate_projections)
+        # KDM 5/29/18: here, what happens if you make two gating signals with the same owner (self)?
+        # looks like they both will get the variable spec (OWNER_VALUE, 0)
         gating_signal = _instantiate_state(state_type=GatingSignal,
                                            variable=(OWNER_VALUE,0),
                                            owner=self,
@@ -553,6 +555,13 @@ class GatingMechanism(AdaptiveMechanism_Base):
                         gating_signal_specs = projection.gating_signal or {}
                         gating_signal_specs.update({GATING_SIGNAL_SPECS: [projection]})
                         self._instantiate_gating_signal(gating_signal_specs, context=context)
+
+        self._activate_projections_for_compositions(self.system)
+
+    def _activate_projections_for_compositions(self, compositions=None):
+        for gp in self.gating_signals:
+            for eff in gp.efferents:
+                eff._activate_for_compositions(compositions)
 
     def show(self):
         """Display the InputStates and/or OutputStates gated by the GatingMechanism's `gating_signals

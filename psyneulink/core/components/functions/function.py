@@ -199,53 +199,31 @@ Class Reference
 
 """
 
+import ctypes
+import functools
+import itertools
 import numbers
+import numpy as np
+import typecheck as tc
 import warnings
 
 from collections import deque, namedtuple
 from enum import Enum, IntEnum
+from llvmlite import ir
 from random import randint
 
-# import autograd.numpy as np
-import numpy as np
-import typecheck as tc
-
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, Param, function_type, method_type, parameter_keywords
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import \
-    ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, \
-    BACKPROPAGATION_FUNCTION, BETA, BIAS, BUFFER_FUNCTION, \
-    COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, \
-    CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, \
-    DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, \
-    DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, \
-    ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, \
-    EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, \
-    FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, GAUSSIAN_FUNCTION, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, \
-    HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
-    IDENTITY_FUNCTION, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, \
-    INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, \
-    LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
-    LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, \
-    MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \
-    NAME, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, \
-    OPTIMIZATION_FUNCTION_TYPE, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, \
-    PARAMETER_STATE_PARAMS, PARAMS, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
-    SCALE, SELECTION_FUNCTION_TYPE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, \
-    STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, \
-    TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
-    UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
-    VARIABLE, VARIANCE, WALD_DIST_FUNCTION, WEIGHTS, X_0, kwComponentCategory, kwPreferenceSetName, VALUE, \
-    DEFAULT_VARIABLE, OWNER
-
-
+from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
+from psyneulink.core.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, BACKPROPAGATION_FUNCTION, BETA, BIAS, BUFFER_FUNCTION, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CONTRASTIVE_HEBBIAN_FUNCTION, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DEFAULT_VARIABLE, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXPONENTIAL, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, GAIN, GAMMA_DIST_FUNCTION, GAUSSIAN, GAUSSIAN_FUNCTION, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, HAS_INITIALIZERS, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_FUNCTION, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, KOHONEN_FUNCTION, LCAMechanism_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_DIFF, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NAME, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, OPTIMIZATION_FUNCTION_TYPE, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, OWNER, PARAMETER_STATE_PARAMS, PARAMS, PER_ITEM, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, SCALE, SELECTION_FUNCTION_TYPE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, STATE_MAP_FUNCTION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VALUE, VARIABLE, VARIANCE, WALD_DIST_FUNCTION, WEIGHTS, X_0, kwComponentCategory, kwPreferenceSetName
 from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, object_has_single_value, parameter_spec, safe_len, scalar_distance
+from psyneulink.core.globals.utilities import call_with_pruned_args, is_distance_metric, is_iterable, is_numeric, iscompatible, np_array_less_than_2d, object_has_single_value, parameter_spec, safe_len, scalar_distance
+from psyneulink.core.llvm import helpers
+
 
 __all__ = [
     'AccumulatorIntegrator', 'AdaptiveIntegrator', 'ADDITIVE', 'ADDITIVE_PARAM', 'ASCENT',
@@ -275,14 +253,6 @@ __all__ = [
     'WT_MATRIX_SENDERS_DIM'
 ]
 
-import ctypes
-import functools
-
-from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
-from psyneulink.core import llvm as pnlvm
-
-from llvmlite import ir
-from psyneulink.core.llvm import helpers
 
 EPSILON = np.finfo(float).eps
 
@@ -434,7 +404,7 @@ def _is_modulation_param(val):
 ModulatedParam = namedtuple('ModulatedParam', 'meta_param, function_param, function_param_val')
 
 
-def _get_modulated_param(owner, mod_proj):
+def _get_modulated_param(owner, mod_proj, execution_context=None):
     """Return ModulationParam object, function param name and value of param modulated by ModulatoryProjection
     """
 
@@ -457,7 +427,7 @@ def _get_modulated_param(owner, mod_proj):
         from psyneulink.core.globals.utilities import Modulation
         function_mod_meta_param_obj = getattr(Modulation, function_mod_meta_param_obj)
         function_param_name = function_mod_meta_param_obj
-        function_param_value = mod_proj.sender.value
+        function_param_value = mod_proj.sender.parameters.value.get(execution_context)
     else:
         # Get the actual parameter of owner.function_object to be modulated
         function_param_name = owner.function_object.params[function_mod_meta_param_obj.attrib_name]
@@ -795,15 +765,30 @@ class Function_Base(Function):
             raise FunctionError("{} is not a valid specification for the {} argument of {}{}".
                                 format(param, param_name, self.__class__.__name__, owner_name))
 
-    def get_current_function_param(self, param_name):
+    def get_current_function_param(self, param_name, execution_context=None):
         if param_name == "variable":
             raise FunctionError("The method 'get_current_function_param' is intended for retrieving the current value "
                                 "of a function parameter. 'variable' is not a function parameter. If looking for {}'s "
                                 "default variable, try {}.instance_defaults.variable.".format(self.name, self.name))
         try:
-            return self.owner._parameter_states[param_name].value
+            return self.owner._parameter_states[param_name].parameters.value.get(execution_context)
         except (AttributeError, TypeError):
-            return getattr(self, param_name)
+            try:
+                val = getattr(self.parameters, param_name).get(execution_context)
+                if val is None:
+                    raise AttributeError
+                else:
+                    return val
+            except AttributeError:
+                return getattr(self, param_name)
+
+    def get_previous_value(self, execution_context=None):
+        # temporary method until previous values are integrated for all parameters
+        value = self.parameters.previous_value.get(execution_context)
+        if value is None:
+            value = self.parameters.previous_value.get()
+
+        return value
 
     def convert_output_type(self, value, output_type=None):
         if output_type is None:
@@ -948,7 +933,7 @@ class Function_Base(Function):
                      context=None):
 
         # TODO: Port this to llvm
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         bf = self._llvmBinFunction
 
@@ -1157,6 +1142,7 @@ class ArgumentTherapy(Function_Base):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -1180,7 +1166,7 @@ class ArgumentTherapy(Function_Base):
         therapeutic response : boolean
 
         """
-        variable = self._update_variable(self._check_args(variable, params, context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # Compute the function
         statement = variable
@@ -1876,7 +1862,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             variable:
             context:
         """
-        variable = self._update_variable(super()._validate_variable(variable=variable, context=context))
+        variable = super()._validate_variable(variable=variable, context=context)
         if not is_numeric(variable):
             raise FunctionError("All elements of {} must be scalar values".
                                 format(self.__class__.__name__))
@@ -1925,6 +1911,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -1953,9 +1940,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         """
 
         # Validate variable and assign to variable, and validate params
-        variable = self._update_variable(self._check_args(variable=variable,
-                                                          params=params,
-                                                          context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         weights = self.get_current_function_param(WEIGHTS)
         exponents = self.get_current_function_param(EXPONENTS)
@@ -1972,16 +1957,16 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             if self.context.initialization_status == ContextFlags.INITIALIZING:
                 with np.errstate(divide='raise'):
                     try:
-                        variable = self._update_variable(variable ** exponents)
+                        variable = variable ** exponents
                     except FloatingPointError:
-                        variable = self._update_variable(np.ones_like(variable))
+                        variable = np.ones_like(variable)
             else:
                 # if this fails with FloatingPointError it should not be caught outside of initialization
-                variable = self._update_variable(variable ** exponents)
+                variable = variable ** exponents
 
         # Apply weights if they were specified
         if weights is not None:
-            variable = self._update_variable(variable * weights)
+            variable = variable * weights
 
         # Calculate using relevant aggregation operation and return
         if operation is SUM:
@@ -2223,7 +2208,7 @@ class LinearCombination(
             variable:
             context:
         """
-        variable = self._update_variable(super()._validate_variable(variable=variable, context=context))
+        variable = super()._validate_variable(variable=variable, context=context)
         # FIX: CONVERT TO AT LEAST 1D NP ARRAY IN INIT AND EXECUTE, SO ALWAYS NP ARRAY
         # FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
         # FIX; PUT THIS IN DOCUMENTATION
@@ -2332,6 +2317,7 @@ class LinearCombination(
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -2366,7 +2352,7 @@ class LinearCombination(
         """
 
         # Validate variable and assign to variable, and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         weights = self.get_current_function_param(WEIGHTS)
         exponents = self.get_current_function_param(EXPONENTS)
@@ -2404,16 +2390,16 @@ class LinearCombination(
             if self.context.initialization_status == ContextFlags.INITIALIZING:
                 with np.errstate(divide='raise'):
                     try:
-                        variable = self._update_variable(variable ** exponents)
+                        variable = variable ** exponents
                     except FloatingPointError:
-                        variable = self._update_variable(np.ones_like(variable))
+                        variable = np.ones_like(variable)
             else:
                 # if this fails with FloatingPointError it should not be caught outside of initialization
-                variable = self._update_variable(variable ** exponents)
+                variable = variable ** exponents
 
         # Apply weights if they were specified
         if weights is not None:
-            variable = self._update_variable(variable * weights)
+            variable = variable * weights
 
         # CW 3/19/18: a total hack, e.g. to make scale=[4.] turn into scale=4. Used b/c the `scale` ParameterState
         # changes scale's format: e.g. if you write c = pnl.LinearCombination(scale = 4), print(c.scale) returns [4.]
@@ -2779,7 +2765,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     def _validate_variable(self, variable, context=None):
         """Insure that all items of variable are numeric
         """
-        variable = self._update_variable(super()._validate_variable(variable=variable, context=context))
+        variable = super()._validate_variable(variable=variable, context=context)
         # if any(not is_numeric(item) for item in variable):
         #     raise FunctionError("All items of the variable for {} must be numeric".format(self.componentName))
         return variable
@@ -2861,6 +2847,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """Calculate and combine means of items in `variable <CombineMean.variable>`.
@@ -2893,7 +2880,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         """
 
         # Validate variable and assign to variable, and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         exponents = self.get_current_function_param(EXPONENTS)
         weights = self.get_current_function_param(WEIGHTS)
@@ -3028,7 +3015,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         -------
         variable if all items are numeric
         """
-        variable = self._update_variable(super()._validate_variable(variable=variable, context=context))
+        variable = super()._validate_variable(variable=variable, context=context)
 
         if isinstance(variable, (list, np.ndarray)):
             if isinstance(variable, np.ndarray) and not variable.ndim:
@@ -3091,6 +3078,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -3119,9 +3107,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                 :math: `\\delta(t) = r(t) + \\gamma sample(t) - sample(t - 1)`
 
         """
-        variable = self._update_variable(self._check_args(variable=variable,
-                                                          params=params,
-                                                          context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         gamma = self.get_current_function_param(GAMMA)
         sample = variable[0]
         reward = variable[1]
@@ -3153,8 +3139,7 @@ class InterfaceFunction(Function_Base):
                          context=context)
 
 
-class Identity(
-    InterfaceFunction):  # -------------------------------------------------------------------------------------
+class Identity(InterfaceFunction):  # -------------------------------------------------------------------------------------
     """
     Identity(                \
              default_variable, \
@@ -3237,10 +3222,13 @@ class Identity(
 
         # self.functionOutputType = None
 
-    def function(self,
-                 variable=None,
-                 params=None,
-                 context=None):
+    def function(
+        self,
+        variable=None,
+        execution_id=None,
+        params=None,
+        context=None
+    ):
         """
         Return: `variable <Identity.variable>`
 
@@ -3263,7 +3251,7 @@ class Identity(
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         # outputType = self.functionOutputType
 
         return variable
@@ -3382,10 +3370,13 @@ class InterfaceStateMap(InterfaceFunction):
 
         # self.functionOutputType = None
 
-    def function(self,
-                 variable=None,
-                 params=None,
-                 context=None):
+    def function(
+        self,
+        variable=None,
+        execution_id=None,
+        params=None,
+        context=None
+    ):
         """
         Return: The item of `value <InterfaceStateMap.value>` whose index corresponds to the index of
         `corresponding_input_state <InterfaceStateMap.corresponding_input_state>` in `input_states
@@ -3414,17 +3405,14 @@ class InterfaceStateMap(InterfaceFunction):
         <InterfaceStateMap.input_states>`
 
         """
-        variable = self._update_variable(self._check_args(variable=variable,
-                                                          params=params,
-                                                          context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         index = self.corresponding_input_state.position_in_mechanism
 
-        if self.corresponding_input_state.owner.value is not None:
+        if self.corresponding_input_state.owner.parameters.value.get(execution_id) is not None:
 
             # If CIM's variable does not match its value, then a new pair of states was added since the last execution
-            if not np.allclose(np.shape(self.corresponding_input_state.owner.input_values),
-                               np.shape(self.corresponding_input_state.owner.value)):
+            if not np.shape(self.corresponding_input_state.owner.get_input_values(execution_id)) == np.shape(self.corresponding_input_state.owner.parameters.value.get(execution_id)):
                 return self.corresponding_input_state.owner.instance_defaults.variable[index]
 
             # If the variable is 1D (e.g. [0. , 0.], NOT [[0. , 0.]]), and the index is 0, then return whole variable
@@ -3670,6 +3658,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -3694,9 +3683,9 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-        slope = self.get_current_function_param(SLOPE)
-        intercept = self.get_current_function_param(INTERCEPT)
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        slope = self.get_current_function_param(SLOPE, execution_id)
+        intercept = self.get_current_function_param(INTERCEPT, execution_id)
 
         # MODIFIED 11/9/17 NEW:
         try:
@@ -3890,6 +3879,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -3915,7 +3905,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         rate = self.get_current_function_param(RATE)
         bias = self.get_current_function_param(BIAS)
         scale = self.get_current_function_param(SCALE)
@@ -3943,8 +3933,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         return self.get_current_function_param(RATE) * input + self.get_current_function_param(BIAS)
 
 
-class Logistic(
-    TransferFunction):  # ------------------------------------------------------------------------------------
+class Logistic(TransferFunction):  # ------------------------------------------------------------------------------------
     """
     Logistic(              \
          default_variable, \
@@ -4101,6 +4090,7 @@ class Logistic(
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -4134,8 +4124,8 @@ class Logistic(
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-        gain = self.get_current_function_param(GAIN)
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        gain = self.get_current_function_param(GAIN, execution_id)
         bias = self.get_current_function_param(BIAS)
         x_0 = self.get_current_function_param(X_0)
         offset = self.get_current_function_param(OFFSET)
@@ -4270,6 +4260,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -4290,7 +4281,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         ReLU transformation of variable : number or np.array
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         gain = self.get_current_function_param(GAIN)
         bias = self.get_current_function_param(BIAS)
@@ -4496,7 +4487,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, params=params, context=context)
         variance = self.get_current_function_param(VARIANCE)
         bias = self.get_current_function_param(BIAS)
         scale = self.get_current_function_param(SCALE)
@@ -4506,7 +4497,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         result = scale * np.random.normal(variable+bias, variance) + offset
 
         return self.convert_output_type(result)
-
 
     # def derivative(self, output, input=None):
     #     """
@@ -4783,6 +4773,7 @@ class SoftMax(TransferFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -4812,7 +4803,7 @@ class SoftMax(TransferFunction):
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # Assign the params and return the result
         output_type = self.get_current_function_param(OUTPUT_TYPE)
@@ -5054,7 +5045,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #     :param context:
     #     :return:
     #     """
-    #     variable = self._update_variable(super()._validate_variable(variable, context))
+    #     variable = super()._validate_variable(variable, context)
     #
     #     # Check that variable <= 2D
     #     try:
@@ -5348,6 +5339,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -5373,9 +5365,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
-        matrix = self.get_current_function_param(MATRIX)
-
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
+        matrix = self.get_current_function_param(MATRIX, execution_id)
         result = np.dot(variable, matrix)
         return self.convert_output_type(result)
 
@@ -5387,10 +5378,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         cols = None
         # use of variable attribute here should be ok because it's using it as a format/type
         if isinstance(obj, MappingProjection):
-            if isinstance(obj.sender.value, numbers.Number):
+            if isinstance(obj.sender.defaults.value, numbers.Number):
                 rows = 1
             else:
-                rows = len(obj.sender.value)
+                rows = len(obj.sender.defaults.value)
             if isinstance(obj.receiver.instance_defaults.variable, numbers.Number):
                 cols = 1
             else:
@@ -5404,7 +5395,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             return matrix
 
     def param_function(owner, function):
-        sender_len = len(owner.sender.value)
+        sender_len = len(owner.sender.defaults.value)
         receiver_len = len(owner.receiver.instance_defaults.variable)
         return function(sender_len, receiver_len)
 
@@ -5669,11 +5660,11 @@ class OneHot(SelectionFunction):
     def _validate_params(self, request_set, target_set=None, context=None):
 
         if request_set[MODE] in {PROB, PROB_INDICATOR}:
-            if not self.variable.ndim == 2:
+            if not self.instance_defaults.variable.ndim == 2:
                 raise FunctionError("If {} for {} {} is set to {}, variable must be 2d array".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB))
-            values = self.variable[0]
-            prob_dist = self.variable[1]
+            values = self.instance_defaults.variable[0]
+            prob_dist = self.instance_defaults.variable[1]
             if len(values)!=len(prob_dist):
                 raise FunctionError("If {} for {} {} is set to {}, the two items of its variable must be of equal "
                                     "length (len item 1 = {}; len item 2 = {}".
@@ -5692,6 +5683,7 @@ class OneHot(SelectionFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -5716,7 +5708,7 @@ class OneHot(SelectionFunction):
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         if self.mode is MAX_VAL:
             max_value = np.max(variable)
@@ -6123,8 +6115,13 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                 raise FunctionError("{}'s {} ({}) must be a number or a list/array of numbers."
                                     .format(self.name, initial_value_name, initial_value))
 
-    def _initialize_previous_value(self, initializer):
-        self.previous_value = np.atleast_1d(initializer)
+    def _initialize_previous_value(self, initializer, execution_context=None):
+        if execution_context is None:
+            # if this is run during initialization, self.parameters will refer to self.class_parameters
+            # because self.parameters has not been created yet
+            self.previous_value = np.atleast_1d(initializer)
+        else:
+            self.parameters.previous_value.set(np.atleast_1d(initializer), execution_context)
 
     def _try_execute_param(self, param, var):
 
@@ -6179,7 +6176,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         return value
 
-    def reinitialize(self, *args):
+    def reinitialize(self, *args, execution_context=None):
         """
             Effectively begins accumulation over again at the specified value(s).
 
@@ -6253,15 +6250,24 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         # rebuilding self.value rather than simply returning reinitialization_values in case any of the stateful
         # attrs are modified during assignment
-        self.value = []
+        value = []
         for i in range(len(self.stateful_attributes)):
             setattr(self, self.stateful_attributes[i], reinitialization_values[i])
-            self.value.append(getattr(self, self.stateful_attributes[i]))
+            getattr(self.parameters, self.stateful_attributes[i]).set(reinitialization_values[i], execution_context, override=True)
+            value.append(getattr(self, self.stateful_attributes[i]))
 
-        return self.value
+        self.parameters.value.set(value, execution_context, override=True)
+        return value
 
     def function(self, *args, **kwargs):
         raise FunctionError("Integrator is not meant to be called explicitly")
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self.noise] if isinstance(self.noise, DistributionFunction) else []
+        ))
 
 
 class SimpleIntegrator(Integrator):  # --------------------------------------------------------------------------------
@@ -6413,6 +6419,7 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -6438,7 +6445,7 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         rate = np.array(self.get_current_function_param(RATE)).astype(float)
 
@@ -6448,7 +6455,7 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
-        previous_value = self.previous_value
+        previous_value = self.get_previous_value(execution_id)
         new_value = variable
 
         value = previous_value + (new_value * rate) + noise
@@ -6459,7 +6466,7 @@ class SimpleIntegrator(Integrator):  # -----------------------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_value = adjusted_value
+            self.parameters.previous_value.set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
 
@@ -6653,6 +6660,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -6674,14 +6682,14 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         updated value of integral : 2d np.array
 
         """
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         rate = np.array(self.rate).astype(float)
         offset = self.get_current_function_param(OFFSET)
         scale = self.get_current_function_param(SCALE)
         noise = self._try_execute_param(self.noise, variable)
 
-        previous_value = np.atleast_2d(self.previous_value)
+        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
 
         value = previous_value + rate + noise
 
@@ -6691,7 +6699,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_value = adjusted_value
+            self.parameters.previous_value.set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
 
@@ -6852,16 +6860,22 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
         self.has_initializers = True
 
-    def _initialize_previous_value(self, initializer):
+    def _initialize_previous_value(self, initializer, execution_context=None):
         initializer = initializer or []
-        self.previous_value = deque(initializer, maxlen=self.history)
-        return self.previous_value
+        previous_value = deque(initializer, maxlen=self.history)
+
+        if execution_context is None:
+            self.previous_value = previous_value
+        else:
+            self.parameters.previous_value.set(previous_value, execution_context, override=True)
+
+        return previous_value
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         self.has_initializers = True
 
-    def reinitialize(self, *args):
+    def reinitialize(self, *args, execution_context=None):
         """
 
         Clears the `previous_value <Buffer.previous_value>` deque.
@@ -6890,16 +6904,18 @@ class Buffer(Integrator):  # ---------------------------------------------------
                                                                      self.name))
 
         if reinitialization_value is None or reinitialization_value == []:
-            self.previous_value.clear()
-            self.value = deque([], maxlen=self.history)
+            self.get_previous_value(execution_context).clear()
+            value = deque([], maxlen=self.history)
 
         else:
-            self.value = self._initialize_previous_value(reinitialization_value)
+            value = self._initialize_previous_value(reinitialization_value, execution_context=execution_context)
 
-        return self.value
+        self.parameters.value.set(value, execution_context, override=True)
+        return value
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -6926,7 +6942,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         rate = np.array(self.get_current_function_param(RATE)).astype(float)
 
@@ -6938,17 +6954,19 @@ class Buffer(Integrator):  # ---------------------------------------------------
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             return variable
 
-        self.previous_value.append(variable)
+        previous_value = self.get_previous_value(execution_id)
+        previous_value.append(variable)
 
         # Apply rate and/or noise if they are specified
         if rate != 1.0:
-            self.previous_value *= rate
+            previous_value *= rate
         if noise:
-            self.previous_value += noise
+            previous_value += noise
 
-        self.previous_value = deque(self.previous_value, maxlen=self.history)
+        previous_value = deque(previous_value, maxlen=self.history)
 
-        return self.convert_output_type(self.previous_value)
+        self.parameters.previous_value.set(previous_value, execution_id)
+        return self.convert_output_type(previous_value)
 
 
 class AdaptiveIntegrator(Integrator):  # -------------------------------------------------------------------------------
@@ -7277,6 +7295,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -7301,14 +7320,14 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         updated value of integral : 2d np.array
 
         """
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
-        rate = np.array(self.get_current_function_param(RATE)).astype(float)
+        rate = np.array(self.get_current_function_param(RATE, execution_id)).astype(float)
         offset = self.get_current_function_param(OFFSET)
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
 
-        previous_value = np.atleast_2d(self.previous_value)
+        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
 
         value = (1 - rate) * previous_value + rate * variable + noise
         adjusted_value = value + offset
@@ -7317,7 +7336,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_value = adjusted_value
+            self.parameters.previous_value.set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
 
@@ -7378,8 +7397,8 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         Once the magnitude of the decision variable has exceeded the threshold, the function will simply return the
         threshold magnitude (with the appropriate sign) for that execution and any future executions.
 
-        If the function is in a `DDM mechanism <DDM>`, crossing the threshold will also switch the `is_finished`
-        attribute from False to True. This attribute may be important for the `Scheduler <Scheduler>` when using
+        If the function is in a `DDM mechanism <DDM>`, crossing the threshold will also cause the return value of `is_finished`
+        from False to True. This value may be important for the `Scheduler <Scheduler>` when using
          `Conditions <Condition>` such as `WhenFinished <WhenFinished>`.
 
     params : Dict[param keyword: param value] : default None
@@ -7541,6 +7560,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -7568,15 +7588,15 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         updated value of integral : 2d np.array
 
         """
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         rate = np.array(self.get_current_function_param(RATE)).astype(float)
         offset = self.get_current_function_param(OFFSET)
         noise = self.get_current_function_param(NOISE)
-        threshold = self.get_current_function_param(THRESHOLD)
+        threshold = self.get_current_function_param(THRESHOLD, execution_id)
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE)
 
-        previous_value = np.atleast_2d(self.previous_value)
+        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
 
         value = previous_value + rate * variable * time_step_size \
                 + np.sqrt(time_step_size * noise) * np.random.normal()
@@ -7592,12 +7612,13 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_value = adjusted_value
+            previous_value = adjusted_value
             self.previous_time = self.previous_time + time_step_size
             if not np.isscalar(variable):
                 self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
-        return self.previous_value, self.previous_time
+        self.parameters.previous_value.set(previous_value, execution_id)
+        return previous_value, self.previous_time
 
 
 class OrnsteinUhlenbeckIntegrator(Integrator):  # ----------------------------------------------------------------------
@@ -7724,6 +7745,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
         time_step_size = Param(1.0, modulable=True)
         decay = Param(1.0, modulable=True)
         t0 = 0.0
+        previous_time = 0.0
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -7794,6 +7816,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -7823,14 +7846,14 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         rate = np.array(self.get_current_function_param(RATE)).astype(float)
         offset = self.get_current_function_param(OFFSET)
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE)
         decay = self.get_current_function_param(DECAY)
         noise = self.get_current_function_param(NOISE)
 
-        previous_value = np.atleast_2d(self.previous_value)
+        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
 
         # dx = (lambda*x + A)dt + c*dW
         value = previous_value + (decay * previous_value - rate * variable) * time_step_size + np.sqrt(
@@ -7842,13 +7865,13 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
         adjusted_value = value + offset
 
         if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_value = adjusted_value
+            previous_value = adjusted_value
             self.previous_time = self.previous_time + time_step_size
             if not np.isscalar(variable):
                 self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
-        return self.previous_value, self.previous_time
-
+        self.parameters.previous_value.set(previous_value, execution_id)
+        return previous_value, self.previous_time
 
 class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -8533,6 +8556,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -9064,7 +9088,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
 
         self.has_initializers = True
 
-    def _accumulator_check_args(self, variable=None, params=None, target_set=None, context=None):
+    def _accumulator_check_args(self, variable=None, execution_id=None, params=None, target_set=None, context=None):
         """validate params and assign any runtime params.
 
         Called by AccumulatorIntegrator to validate params
@@ -9097,7 +9121,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         # If params have been passed, treat as runtime params and assign to paramsCurrent
         #   (relabel params as runtime_params for clarity)
         for key in self._runtime_params_reset:
-            self._set_parameter_value(key, self._runtime_params_reset[key])
+            self._set_parameter_value(key, self._runtime_params_reset[key], execution_id)
         self._runtime_params_reset = {}
 
         runtime_params = params
@@ -9107,10 +9131,11 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
                     if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
                         continue
                     self._runtime_params_reset[param_name] = getattr(self, param_name)
-                    self._set_parameter_value(param_name, runtime_params[param_name])
+                    self._set_parameter_value(param_name, runtime_params[param_name], execution_id)
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -9132,10 +9157,10 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         updated value of integral : 2d np.array
 
         """
-        self._accumulator_check_args(variable, params=params, context=context)
+        self._accumulator_check_args(variable, execution_id=execution_id, params=params, context=context)
 
         rate = self.get_current_function_param(RATE)
-        increment = self.get_current_function_param(INCREMENT)
+        increment = self.get_current_function_param(INCREMENT, execution_id)
         noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
 
         if rate is None:
@@ -9144,7 +9169,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         if increment is None:
             increment = 0.0
 
-        previous_value = np.atleast_2d(self.previous_value)
+        previous_value = np.atleast_2d(self.get_previous_value(execution_id))
 
         value = previous_value * rate + noise + increment
 
@@ -9152,7 +9177,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_value = value
+            self.parameters.previous_value.set(value, execution_id, override=True)
 
         return self.convert_output_type(value)
 
@@ -9316,6 +9341,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -9343,7 +9369,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         rate = np.atleast_1d(self.get_current_function_param(RATE))
         initializer = self.get_current_function_param(INITIALIZER)  # unnecessary?
@@ -9355,7 +9381,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
-        previous_value = self.previous_value
+        previous_value = self.get_previous_value(execution_id)
         new_value = variable
 
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
@@ -9367,7 +9393,7 @@ class LCAIntegrator(Integrator):  # --------------------------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_value = adjusted_value
+            self.parameters.previous_value.set(adjusted_value, execution_id)
 
         return self.convert_output_type(adjusted_value)
 
@@ -9684,6 +9710,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -9707,7 +9734,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         updated value of integral : 2d np.array
 
         """
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
         rate = np.array(self.get_current_function_param(RATE)).astype(float)
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
@@ -9764,7 +9791,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
         return value + offset
 
-    def reinitialize(self, short=None, long=None):
+    def reinitialize(self, short=None, long=None, execution_context=None):
 
         """
         Effectively begins accumulation over again at the specified utilities.
@@ -9789,9 +9816,10 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
 
         self.previous_short_term_utility = short
         self.previous_long_term_utility = long
-        self.value = self.combine_utilities(short, long)
+        value = self.combine_utilities(short, long)
 
-        return self.value
+        self.parameters.value.set(value, execution_context, override=True)
+        return value
 
 
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
@@ -9970,6 +9998,7 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -9994,15 +10023,15 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
 
         """
 
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
-        attentional_drift_rate = float(self.get_current_function_param(DRIFT_RATE))
+        attentional_drift_rate = float(self.get_current_function_param(DRIFT_RATE, execution_id))
         stimulus_drift_rate = float(variable)
         drift_rate = attentional_drift_rate * stimulus_drift_rate
-        threshold = float(self.get_current_function_param(THRESHOLD))
-        starting_point = float(self.get_current_function_param(STARTING_POINT))
-        noise = float(self.get_current_function_param(NOISE))
-        t0 = float(self.get_current_function_param(NON_DECISION_TIME))
+        threshold = float(self.get_current_function_param(THRESHOLD, execution_id))
+        starting_point = float(self.get_current_function_param(STARTING_POINT, execution_id))
+        noise = float(self.get_current_function_param(NOISE, execution_id))
+        t0 = float(self.get_current_function_param(NON_DECISION_TIME, execution_id))
 
         # drift_rate = float(self.drift_rate) * float(variable)
         # threshold = float(self.threshold)
@@ -10010,7 +10039,8 @@ class BogaczEtAl(IntegratorFunction):  # ---------------------------------------
         # noise = float(self.noise)
         # t0 = float(self.t0)
 
-        self.bias = bias = (starting_point + threshold) / (2 * threshold)
+        bias = (starting_point + threshold) / (2 * threshold)
+        self.bias = bias
 
         # Prevents div by 0 issue below:
         if bias <= 0:
@@ -10129,8 +10159,7 @@ class NF_Results(IntEnum):
     COND_SKEW_RTS = 5
 
 
-class NavarroAndFuss(
-    IntegratorFunction):  # ----------------------------------------------------------------------------
+class NavarroAndFuss(IntegratorFunction):  # ----------------------------------------------------------------------------
     """
     NavarroAndFuss(                             \
         default_variable=None,                  \
@@ -10296,6 +10325,7 @@ class NavarroAndFuss(
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """
@@ -10321,7 +10351,7 @@ class NavarroAndFuss(
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         drift_rate = float(self.get_current_function_param(DRIFT_RATE))
         threshold = float(self.get_current_function_param(THRESHOLD))
@@ -10447,10 +10477,11 @@ class NormalDist(DistributionFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         # Validate variable and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         mean = self.get_current_function_param(DIST_MEAN)
         standard_deviation = self.get_current_function_param(STANDARD_DEVIATION)
@@ -10566,6 +10597,7 @@ class UniformToNormalDist(DistributionFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
 
@@ -10575,7 +10607,7 @@ class UniformToNormalDist(DistributionFunction):
             raise FunctionError("The UniformToNormalDist function requires the SciPy package.")
 
         # Validate variable and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         mean = self.get_current_function_param(DIST_MEAN)
         standard_deviation = self.get_current_function_param(STANDARD_DEVIATION)
@@ -10667,10 +10699,11 @@ class ExponentialDist(DistributionFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         # Validate variable and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         beta = self.get_current_function_param(BETA)
         result = np.random.exponential(beta)
@@ -10769,10 +10802,11 @@ class UniformDist(DistributionFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         # Validate variable and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         low = self.get_current_function_param(LOW)
         high = self.get_current_function_param(HIGH)
@@ -10873,10 +10907,11 @@ class GammaDist(DistributionFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         # Validate variable and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         scale = self.get_current_function_param(SCALE)
         dist_shape = self.get_current_function_param(DIST_SHAPE)
@@ -10976,10 +11011,11 @@ class WaldDist(DistributionFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         # Validate variable and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         scale = self.get_current_function_param(SCALE)
         mean = self.get_current_function_param(DIST_MEAN)
@@ -11321,6 +11357,7 @@ COMMENT
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """Calculate the stability of `variable <Stability.variable>`.
@@ -11337,13 +11374,10 @@ COMMENT
 
         """
         # Validate variable and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         from psyneulink.core.components.states.parameterstate import ParameterState
-        if isinstance(self.matrix, ParameterState):
-            matrix = self.matrix.value
-        else:
-            matrix = self.matrix
+        matrix = self.get_current_function_param(MATRIX, execution_id)
 
         current = variable
         if self.transfer_fct is not None:
@@ -11367,6 +11401,14 @@ COMMENT
         # MODIFIED 11/12/15 END
 
         return self.convert_output_type(result)
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self._metric_fct] if self._metric_fct is not None else [],
+            [self.transfer_fct] if self.transfer_fct is not None else [],
+        ))
 
 
 class Distance(ObjectiveFunction):
@@ -11746,6 +11788,7 @@ class Distance(ObjectiveFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """Calculate the distance between the two vectors in `variable <Stability.variable>`.
@@ -11761,7 +11804,7 @@ class Distance(ObjectiveFunction):
 
         """
         # Validate variable and validate params
-        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         v1 = variable[0]
         v2 = variable[1]
@@ -12099,6 +12142,7 @@ class OptimizationFunction(Function_Base):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None,
                  **kwargs):
@@ -12125,7 +12169,7 @@ class OptimizationFunction(Function_Base):
                           format(self.name, ', '.join(self._unspecified_args)))
             self._unspecified_args = []
 
-        sample = self._update_variable(self._check_args(variable, params, context))
+        sample = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         current_sample = sample
         current_value = self.objective_function(current_sample)
@@ -12151,7 +12195,7 @@ class OptimizationFunction(Function_Base):
             _progress_bar_count = 0
 
         # Iterate optimization process
-        while self.search_termination_function(current_sample, current_value, self.iteration):
+        while self.search_termination_function(current_sample, current_value, self.iteration, execution_id=execution_id):
 
             if _show_progress:
                 increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
@@ -12446,6 +12490,7 @@ class GradientOptimization(OptimizationFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None,
                  **kwargs):
@@ -12470,9 +12515,7 @@ class GradientOptimization(OptimizationFunction):
             evaluated; otherwise it is empty.
         '''
 
-        optimal_sample, optimal_value, all_samples, all_values = super().function(variable=variable,
-                                                                                  params=params,
-                                                                                  context=context)
+        optimal_sample, optimal_value, all_samples, all_values = super().function(variable=variable,execution_id=execution_id, params=params, context=context)
         return_all_samples = return_all_values = []
         if self._return_samples:
             return_all_samples = all_samples
@@ -12498,27 +12541,32 @@ class GradientOptimization(OptimizationFunction):
         # Update variable based on new gradients
         return variable + self.direction * self._current_step_size * np.array(self._gradients)
 
-    def _convergence_condition(self, variable, value, iteration):
+    def _convergence_condition(self, variable, value, iteration, execution_id=None):
+        previous_variable = self.parameters.previous_variable.get(execution_id)
+        previous_value = self.parameters.previous_value.get(execution_id)
+
         if iteration is 0:
             # self._convergence_metric = self.convergence_threshold + EPSILON
-            self._previous_variable = variable
-            self._previous_value = value
+            self.parameters.previous_variable.set(variable, execution_id, override=True)
+            self.parameters.previous_value.set(value, execution_id, override=True)
             return True
 
         # Evaluate for convergence
         if self.convergence_criterion == VALUE:
-            convergence_metric = np.abs(value - self._previous_value)
+            convergence_metric = np.abs(value - previous_value)
         else:
             convergence_metric = np.max(np.abs(np.array(variable) -
-                                               np.array(self._previous_variable)))
+                                               np.array(previous_variable)))
 
-        self._previous_variable = variable
-        self._previous_value = value
+        self.parameters.previous_variable.set(variable, execution_id, override=True)
+        self.parameters.previous_value.set(value, execution_id, override=True)
 
         return convergence_metric > self.convergence_threshold
 
 
 MAXIMIZE = 'maximize'
+
+
 MINIMIZE = 'minimize'
 
 
@@ -12672,6 +12720,7 @@ class GridSearch(OptimizationFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None,
                  **kwargs):
@@ -12794,9 +12843,12 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
-            last_sample, last_value, all_samples, all_values = super().function(variable=variable,
-                                                                    params=params,
-                                                                    context=context)
+            last_sample, last_value, all_samples, all_values = super().function(
+                variable=variable,
+                execution_id=execution_id,
+                params=params,
+                context=context
+            )
             return_optimal_value = max(all_values)
             return_optimal_sample = all_samples[all_values.index(return_optimal_value)]
             # if self._return_samples:
@@ -12809,7 +12861,7 @@ class GridSearch(OptimizationFunction):
     def _traverse_grid(self, variable, sample_num):
         return self.search_space[sample_num]
 
-    def _grid_complete(self, variable, value, iteration):
+    def _grid_complete(self, variable, value, iteration, execution_id=None):
         return iteration != len(self.search_space)
 
 
@@ -13028,7 +13080,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
 
     def _validate_variable(self, variable, context=None):
-        variable = self._update_variable(super()._validate_variable(variable, context))
+        variable = super()._validate_variable(variable, context)
 
         # variable = np.squeeze(np.array(variable))
 
@@ -13089,6 +13141,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """Calculate a matrix of weight changes from an array of activity values and a weight matrix that generated
@@ -13129,7 +13182,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
         """
 
-        variable = self._update_variable(self._check_args(variable, params, context))
+        variable = self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -13282,7 +13335,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
 
     def _validate_variable(self, variable, context=None):
-        variable = self._update_variable(super()._validate_variable(variable, context))
+        variable = super()._validate_variable(variable, context)
 
         variable = np.squeeze(np.array(variable))
 
@@ -13307,6 +13360,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """Calculate a matrix of weight changes from a 1d array of activity values using Hebbian learning function.
@@ -13336,7 +13390,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -13494,7 +13548,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
 
     def _validate_variable(self, variable, context=None):
-        variable = self._update_variable(super()._validate_variable(variable, context))
+        variable = super()._validate_variable(variable, context)
 
         variable = np.squeeze(np.array(variable))
 
@@ -13519,6 +13573,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None):
         """Calculate a matrix of weight changes from a 1d array of activity values using ContrastiveHebbian
@@ -13554,7 +13609,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -13772,7 +13827,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
         self._output_type = None
 
     def _validate_variable(self, variable, context=None):
-        variable = self._update_variable(super()._validate_variable(variable, context))
+        variable = super()._validate_variable(variable, context)
 
         if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
@@ -13808,6 +13863,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  params=None,
                  context=None,
                  **kwargs):
@@ -13850,7 +13906,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         output = self.activation_output
         error = self.error_signal
@@ -14123,10 +14179,13 @@ class BayesGLM(LearningFunction):
                                                         np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
             self.initialize_priors()
 
-    def function(self,
-                 variable=None,
-                 params=None,
-                 context=None):
+    def function(
+        self,
+        variable=None,
+        execution_id=None,
+        params=None,
+        context=None
+    ):
         '''Use predictor(s) and dependent variable(s) in `variable <BayesGLM.variable>` to update weight distribution
         parameters `mu_n <BayesGLM.mu_n>`, `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`,
         and `gamma_size_n <BayesGLM.gamma_size_n>`, and return an array of weights sampled from the distributions.
@@ -14171,8 +14230,12 @@ class BayesGLM(LearningFunction):
         self.gamma_shape_prior = self.gamma_shape_n
         self.gamma_size_prior = self.gamma_size_n
 
-        variable = self._update_variable(
-                            self._check_args([np.atleast_2d(variable[0]),np.atleast_2d(variable[1])],params,context))
+        variable = self._check_args(
+            [np.atleast_2d(variable[0]), np.atleast_2d(variable[1])],
+            execution_id,
+            params,
+            context
+        )
         predictors = variable[0]
         dependent_vars = variable[1]
 
@@ -14406,7 +14469,7 @@ class BackPropagation(LearningFunction):
         self._output_type = None
 
     def _validate_variable(self, variable, context=None):
-        variable = self._update_variable(super()._validate_variable(variable, context))
+        variable = super()._validate_variable(variable, context)
 
         if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items: "
@@ -14512,6 +14575,7 @@ class BackPropagation(LearningFunction):
 
     def function(self,
                  variable=None,
+                 execution_id=None,
                  error_matrix=None,
                  params=None,
                  context=None,
@@ -14553,7 +14617,7 @@ class BackPropagation(LearningFunction):
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # Manage error_matrix param
         # During init, function is called directly from Component (i.e., not from LearningMechanism execute() method),
@@ -14577,7 +14641,7 @@ class BackPropagation(LearningFunction):
             raise FunctionError("Call to {} function{} must include \'ERROR_MATRIX\' in params arg".
                                 format(self.__class__.__name__, owner_string))
 
-        # self._check_args(variable=variable, params=params, context=context)
+        # self._check_args(variable=variable, execution_id=execution_id, params=params, context=context)
 
         # Manage learning_rate
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
@@ -14647,7 +14711,7 @@ class TDLearning(Reinforcement):
                          prefs=prefs)
 
     def _validate_variable(self, variable, context=None):
-        variable = self._update_variable(super(Reinforcement, self)._validate_variable(variable, context))
+        variable = super(Reinforcement, self)._validate_variable(variable, context)
 
         if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items "

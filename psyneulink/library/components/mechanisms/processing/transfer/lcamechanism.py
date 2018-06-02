@@ -585,10 +585,10 @@ class LCAMechanism(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs)
 
-    def _get_integrated_function_input(self, function_variable, initial_value, noise, context):
+    def _get_integrated_function_input(self, function_variable, initial_value, noise, context, execution_id=None):
 
-        leak = self.get_current_mechanism_param("leak")
-        time_step_size = self.get_current_mechanism_param("time_step_size")
+        leak = self.get_current_mechanism_param("leak", execution_id)
+        time_step_size = self.get_current_mechanism_param("time_step_size", execution_id)
 
         if not self.integrator_function:
             self.integrator_function = LCAIntegrator(
@@ -601,6 +601,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         current_input = self.integrator_function._execute(
             function_variable,
+            execution_id=execution_id,
             # Should we handle runtime params?
             runtime_params={
                 INITIALIZER: initial_value,

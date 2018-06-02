@@ -340,10 +340,11 @@ Class Reference
 
 """
 
-import warnings
-
+import itertools
 import numpy as np
+import threading
 import typecheck as tc
+import warnings
 
 from psyneulink.core.components.component import Param
 from psyneulink.core.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param, \
@@ -716,6 +717,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                   modulation=modulation,
                                                   params=params)
 
+        self._sim_counts = {}
+
         super(ControlMechanism, self).__init__(default_variable=default_variable,
                                                size=size,
                                                modulation=modulation,
@@ -724,6 +727,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                function=function,
                                                prefs=prefs,
                                                context=ContextFlags.CONSTRUCTOR)
+
+        if system is not None:
+            self._activate_projections_for_compositions(system)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
@@ -926,6 +932,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             objective_roles.append(CNodeRole.TERMINAL)
         self.aux_components.append((self.objective_mechanism, objective_roles))
         self.aux_components.append((projection_from_objective, True))
+        self._objective_projection = projection_from_objective
         self.monitor_for_control = self.monitored_output_states
 
     def _instantiate_input_states(self, context=None):
@@ -1021,7 +1028,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.value = self.instance_defaults.value
 
         # Assign ControlSignal's variable to index of owner's value
-        control_signal._variable = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
+        control_signal._variable_spec = [(OWNER_VALUE, len(self.instance_defaults.value) - 1)]
         if not isinstance(control_signal.owner_value_index, int):
             raise ControlMechanismError(
                     "PROGRAM ERROR: The \'owner_value_index\' attribute for {} of {} ({})is not an int."
@@ -1038,23 +1045,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
             )
 
         return control_signal
-
-    def _execute(
-        self,
-        variable=None,
-        runtime_params=None,
-        context=None
-    ):
-        """Updates ControlSignals based on inputs
-
-        Must be overriden by subclass
-        """
-        # if self.verbosePref:
-        # if self.context.initialization_status != ContextFlags.INITIALIZING:
-        #     warnings.warn("No function has been specified for {};  default value ({}) was returned".
-        #               format(self.name, list(self.instance_defaults.value)))
-        # return self.instance_defaults.value
-        return super()._execute(variable=variable, runtime_params=runtime_params,context=context)
 
     def show(self):
         """Display the OutputStates monitored by ControlMechanism's `objective_mechanism
@@ -1228,10 +1218,25 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if context != ContextFlags.PROPERTY:
             system._controller = self
 
-    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
-        self.objective_mechanism._assign_context_values(execution_id, base_execution_id, **kwargs)
+        self._activate_projections_for_compositions(system)
 
-        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
+    def _activate_projections_for_compositions(self, compositions=None):
+        self._objective_projection._activate_for_compositions(compositions)
+
+        for cs in self.control_signals:
+            for eff in cs.efferents:
+                eff._activate_for_compositions(compositions)
+
+        # assign any deferred init objective mech monitored output state projections to this system
+        for output_state in self.objective_mechanism.monitored_output_states:
+            for eff in output_state.efferents:
+                eff._activate_for_compositions(compositions)
+
+        for eff in self.efferents:
+            eff._activate_for_compositions(compositions)
+
+        for aff in self._objective_mechanism.afferents:
+            aff._activate_for_compositions(compositions)
 
     @property
     def monitored_output_states(self):
@@ -1276,3 +1281,28 @@ class ControlMechanism(AdaptiveMechanism_Base):
     def control_projections(self):
         return [projection for control_signal in self.control_signals for projection in control_signal.efferents]
 
+    @property
+    def _sim_count_lock(self):
+        try:
+            return self.__sim_count_lock
+        except AttributeError:
+            self.__sim_count_lock = threading.Lock()
+            return self.__sim_count_lock
+
+    def get_next_sim_id(self, execution_id):
+        with self._sim_count_lock:
+            try:
+                sim_num = self._sim_counts[execution_id]
+                self._sim_counts[execution_id] += 1
+            except KeyError:
+                sim_num = 0
+                self._sim_counts[execution_id] = 1
+
+        return '{0}-sim-{1}'.format(execution_id, sim_num)
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self.objective_mechanism],
+        ))

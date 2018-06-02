@@ -570,7 +570,7 @@ class LearningProjection(ModulatoryProjection_Base):
         super()._instantiate_receiver(context=context)
 
         # Insure that the learning_signal is compatible with the receiver's weight matrix
-        if not iscompatible(self.value, self.receiver.instance_defaults.variable):
+        if not iscompatible(self.defaults.value, self.receiver.instance_defaults.variable):
             raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
                                           "the MappingProjection ({}) to which it is being assigned ({})".
                                           format(self.name,
@@ -580,11 +580,11 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Insure that learning_signal has the same shape as the receiver's weight matrix
         try:
-            receiver_weight_matrix_shape = np.array(self.receiver.value).shape
+            receiver_weight_matrix_shape = np.array(self.receiver.defaults.value).shape
         except TypeError:
             receiver_weight_matrix_shape = 1
         try:
-            learning_signal_shape = np.array(self.value).shape
+            learning_signal_shape = np.array(self.defaults.value).shape
         except TypeError:
             learning_signal_shape = 1
 
@@ -617,7 +617,7 @@ class LearningProjection(ModulatoryProjection_Base):
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = self
 
-    def _execute(self, variable, runtime_params=None, context=None):
+    def _execute(self, variable, execution_id=None, runtime_params=None, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
@@ -631,8 +631,8 @@ class LearningProjection(ModulatoryProjection_Base):
         if variable is not None:
             learning_signal = variable
         else:
-            learning_signal = self.sender.value
-        matrix = self.receiver.value
+            learning_signal = self.sender.parameters.value.get(execution_id)
+        matrix = self.receiver.parameters.value.get(execution_id)
         # If learning_signal is lower dimensional than matrix being trained
         #    and the latter is a diagonal matrix (square, with values only along the main diagonal)
         #    and the learning_signal is the same as the matrix,
@@ -660,19 +660,21 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # IMPLEMENTATION NOTE:  skip Projection._execute, as that uses self.sender.value as variable,
         #                       which undermines formatting of it (as learning_signal) above
-        self.weight_change_matrix = super(ShellClass, self)._execute(
+        value = super(ShellClass, self)._execute(
             variable=learning_signal,
+            execution_id=execution_id,
             runtime_params=runtime_params,
             context=context
         )
 
         if self.learning_rate is not None:
-            self.weight_change_matrix *= self.learning_rate
+            value *= self.learning_rate
 
         if self.context.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
-            print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(self.weight_change_matrix)))
+            print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(value)))
 
-        return self.value
+        self.weight_change_matrix = value
+        return value
 
     @property
     def learning_signal(self):

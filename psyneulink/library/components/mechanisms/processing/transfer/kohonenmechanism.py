@@ -50,6 +50,7 @@ Class Reference
 
 """
 
+import itertools
 import logging
 import numbers
 import warnings
@@ -518,6 +519,8 @@ class KohonenMechanism(TransferMechanism):
                                                               LearningMechanism.className,
                                                               self.name))
 
+        # KDM 10/22/18: should below be aux_components?
+
         # Instantiate Projection from learned_projection's sender to LearningMechanism
         MappingProjection(sender=self.learned_projection.sender,
                           receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
@@ -558,3 +561,11 @@ class KohonenMechanism(TransferMechanism):
             warnings.warn("Learning cannot be enabled for {} because it has no {}".
                   format(self.name, LearningMechanism.__name__))
             return
+
+    @property
+    def _dependent_components(self):
+        return list(itertools.chain(
+            super()._dependent_components,
+            [self.learning_mechanism],
+            [self.learning_projection],
+        ))
