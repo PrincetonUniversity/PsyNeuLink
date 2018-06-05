@@ -1092,6 +1092,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if context != ContextFlags.PROPERTY:
             system._controller = self
 
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        self.objective_mechanism._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
+
     @property
     def monitored_output_states(self):
         try:

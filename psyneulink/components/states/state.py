@@ -2075,6 +2075,12 @@ class State_Base(State):
                 return label
         return self.value
 
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        for eff in self.efferents:
+            eff._assign_context_values(execution_id, base_execution_id, **kwargs)
+
+        super()._assign_context_values(execution_id, base_execution_id, **kwargs)
+
     @property
     def owner(self):
         return self._owner

@@ -2730,6 +2730,16 @@ class Component(object, metaclass=ComponentsMeta):
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
 
+    def _assign_context_values(self, execution_id, base_execution_id=None, **kwargs):
+        try:
+            context_param = self.parameters.context.get(execution_id)
+        except ComponentError:
+            self.parameters.context._initialize_from_context(execution_id, base_execution_id)
+            context_param = self.parameters.context.get(execution_id)
+
+        for context_item, value in kwargs.items():
+            setattr(context_param, context_item, value)
+
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
     # ------------------------------------------------------------------------------------------------------------------
