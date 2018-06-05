@@ -826,7 +826,7 @@ class Composition(object):
                                                        reference_value=input_state.value,
                                                        name="INPUT_CIM_" + mech.name + "_" + input_state.name)
 
-                    self.input_CIM.add_states(interface_input_state)
+                    # self.input_CIM.add_states(interface_input_state)
                     interface_output_state = OutputState(owner=self.input_CIM,
                                                          variable=OWNER_VALUE,
                                                          default_variable=self.input_CIM.variable,
@@ -834,7 +834,7 @@ class Composition(object):
                                                          name="INPUT_CIM_" + mech.name + "_" + input_state.name)
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
-                    self.input_CIM.add_states(interface_output_state)
+                    # self.input_CIM.add_states(interface_output_state)
 
                     MappingProjection(sender=interface_output_state,
                                       receiver=input_state,
@@ -1500,3 +1500,14 @@ class Composition(object):
                 raise CompositionError("Input stimulus ({}) for {} is incompatible with its variable ({})."
                                        .format(stimulus, mech.name, mech.instance_defaults.value))
         return adjusted_stimuli
+
+
+    @property
+    def input_states(self):
+        """Returns all InputStates that belong to the Input CompositionInterfaceMechanism"""
+        return self.input_CIM.input_states
+
+    @property
+    def output_states(self):
+        """Returns all OutputStates that belong to the Output CompositionInterfaceMechanism"""
+        return self.output_CIM.output_states
