@@ -305,6 +305,9 @@ class Context():
         `initialization_status <Context.initialization_status>`, `execution_phase <Context.initialization_status>`,
         and `source <Context.source>` (described below).
 
+    flags_str : string
+        a mirror of **flags** that shows its value in readable string format
+
     initialization_status : field of flags attribute
         indicates the state of initialization of the Component;
         one and only one of the following flags is always set:
@@ -431,6 +434,10 @@ class Context():
         else:
             raise ContextError("\'{}\'{} argument in call to {} must be a {} or an int".
                                format(FLAGS, flags, self.__name__, ContextFlags.__name__))
+
+    @property
+    def flags_str(self):
+        return ContextFlags._get_context_string(self.flags)
 
     @property
     def initialization_status(self):
