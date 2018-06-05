@@ -305,8 +305,9 @@ class Context():
         `initialization_status <Context.initialization_status>`, `execution_phase <Context.initialization_status>`,
         and `source <Context.source>` (described below).
 
-    flags_str : string
-        a mirror of **flags** that shows its value in readable string format
+    flags_string : str
+        contains the names of the flags currently set in each of the fields of the `flags <Context.flags>` attribute;
+        note that this is *not* the same as the `string <Context.string>` attribute (see `note <Context_String_Note>`).
 
     initialization_status : field of flags attribute
         indicates the state of initialization of the Component;
@@ -339,13 +340,6 @@ class Context():
             * `COMMAND_LINE <ContextFlags.COMMAND_LINE>`
             * `COMPONENT <ContextFlags.COMPONENT>`
             * `COMPOSITION <ContextFlags.COMPOSITION>`
-
-    COMMENT:
-       REINSTATE ONCE flags_string property IS SUPPRESSED IN Context.rst
-    flags_string : str
-        contains the names of the flags currently set in each of the fields of the `flags <Context.flags>` attribute;
-        note that this is *not* the same as the `string <Context.string>` attribute (see `note <Context_String_Note>`).
-    COMMENT
 
     composition : Composition
       the `Composition <Composition>` in which the `owner <Context.owner>` is currently being executed.
@@ -436,7 +430,7 @@ class Context():
                                format(FLAGS, flags, self.__name__, ContextFlags.__name__))
 
     @property
-    def flags_str(self):
+    def flags_string(self):
         return ContextFlags._get_context_string(self.flags)
 
     @property
@@ -519,13 +513,6 @@ class Context():
         else:
             raise ContextError("PROGRAM ERROR: attempt to call update_execution_time for {} "
                                "when 'EXECUTING' was not in its context".format(self.owner.name))
-
-    @property
-    def flags_string(self, string=None):
-        """String with names of flags currently set in the owner's `flags <Context.flags>` attribute,
-        possibly prepended by an additional string.
-        """
-        return ContextFlags._get_context_string(self.owner.context.flags, string=string)
 
 
 @tc.typecheck
