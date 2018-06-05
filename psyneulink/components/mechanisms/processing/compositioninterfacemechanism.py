@@ -144,13 +144,14 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                  size=None,
                  input_states: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
                  function=Identity(),
+                 composition=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
         if default_variable is None and size is None:
             default_variable = self.ClassDefaults.variable
-
+        self.composition = composition
         self.connected_to_composition = False
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)

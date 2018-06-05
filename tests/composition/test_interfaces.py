@@ -22,7 +22,7 @@ from psyneulink.scheduling.condition import EveryNPasses, AfterNCalls
 from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.keywords import NAME, INPUT_STATE, HARD_CLAMP, SOFT_CLAMP, NO_CLAMP, PULSE_CLAMP
 
-class TestExecuteCIM():
+class TestExecuteCIM:
 
     def test_identity_function(self):
 
@@ -106,6 +106,97 @@ class TestExecuteCIM():
         assert np.allclose([30], output)
 
     def test_two_input_states_two_output_states(self):
+
+        comp = Composition()
+
+        A = TransferMechanism(name="composition-pytests-A",
+                              default_variable=[[0.0], [0.0]],
+                              function=Linear(slope=2.0))
+
+        B = TransferMechanism(name="composition-pytests-B",
+                              default_variable=[[0.0], [0.0]],
+                              function=Linear(slope=3.0))
+
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(A, MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), B)
+
+        comp._analyze_graph()
+        inputs_dict = {
+            A: [[5.], [6.]],
+        }
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched
+        )
+        print(B.value)
+        print(comp.output_CIM.output_states)
+        print(comp.output_CIM.output_values)
+        assert np.allclose([[30.], [36.]], output)
+
+
+        # assert np.allclose([30.], comp.output_CIM.output_states[1].value)
+        # assert np.allclose([36.], comp.output_CIM.output_states[2].value)
+
+class TestConnectCompositionsViaCIMS:
+
+    def test_connect_compositions_with_simple_states(self):
+
+        comp1 = Composition()
+
+        A = TransferMechanism(name="composition-pytests-A",
+                              function=Linear(slope=2.0))
+
+        B = TransferMechanism(name="composition-pytests-B",
+                              function=Linear(slope=3.0))
+
+        comp1.add_mechanism(A)
+        comp1.add_mechanism(B)
+
+        comp1.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+
+        comp1._analyze_graph()
+        inputs_dict = {
+            A: [[5.]],
+        }
+        sched = Scheduler(composition=comp1)
+
+        comp2 = Composition()
+
+        A2 = TransferMechanism(name="composition-pytests-A2",
+                              function=Linear(slope=2.0))
+
+        B2 = TransferMechanism(name="composition-pytests-B2",
+                              function=Linear(slope=3.0))
+
+        comp2.add_mechanism(A2)
+        comp2.add_mechanism(B2)
+
+        comp2.add_projection(A2, MappingProjection(sender=A2, receiver=B2), B2)
+
+        comp2._analyze_graph()
+        inputs_dict2 = {
+            A2: [[5.]],
+        }
+        sched = Scheduler(composition=comp2)
+        print(comp1.input_states)
+        print(comp1.output_states)
+        print(comp2.input_states)
+        print(comp2.output_states)
+
+        comp3 = Composition()
+        comp3.add_mechanism(comp1)
+        comp3.run(inputs={comp1: [[5.0]]})
+        # m=MappingProjection(sender=comp1.output_states[0], receiver=comp2.input_states[0])
+        #
+        # comp1.run(inputs=inputs_dict)
+        # # m.execute()
+        # comp2.execute()
+
+    def test_connect_compositions_with_complicated_states(self):
 
         comp = Composition()
 

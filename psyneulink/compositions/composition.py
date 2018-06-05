@@ -350,9 +350,11 @@ class Composition(object):
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.mechanisms = []
-        self.input_CIM = CompositionInterfaceMechanism(name="Input_CIM")
+        self.input_CIM = CompositionInterfaceMechanism(name="Input_CIM",
+                                                       composition=self)
         self.input_CIM_states = {}
-        self.output_CIM = CompositionInterfaceMechanism(name="Output_CIM")
+        self.output_CIM = CompositionInterfaceMechanism(name="Output_CIM",
+                                                        composition=self)
         self.output_CIM_states = {}
         self.execution_ids = []
 
@@ -908,24 +910,25 @@ class Composition(object):
 
         for input_state in self.input_CIM.input_states:
             # "input_state" is an InputState on the input CIM
-            value = [0]
-            # ^^ this line provides an input value for the primary input state which gets created when the
-            # CIM is constructed, and then ignored. FIX: skip creation of this input state
+
             for key in self.input_CIM_states:
                 # "key" is an InputState on an origin Mechanism of the Composition
                 if self.input_CIM_states[key][0] == input_state:
                     origin_input_state = key
                     origin_mechanism = key.owner
                     index = origin_mechanism.input_states.index(origin_input_state)
+
+                    if isinstance(origin_mechanism, CompositionInterfaceMechanism):
+                        index = origin_mechanism.input_states.index(origin_input_state)
+                        origin_mechanism = origin_mechanism.composition
+
                     if origin_mechanism in inputs:
                         value = inputs[origin_mechanism][index]
+
                     else:
-                        value = origin_mechanism.instance.defaults.variable[index]
+                        value = origin_mechanism.instance_defaults.variable[index]
 
             build_CIM_input.append(value)
-
-
-        self.input_CIM.execute(build_CIM_input)
 
     def _assign_execution_ids(self, execution_id=None):
         '''
@@ -1440,60 +1443,67 @@ class Composition(object):
         adjusted_stimuli = {}
         num_input_sets = -1
 
+
         for mech, stim_list in stimuli.items():
-
-            check_spec_type = self._input_matches_variable(stim_list, mech.instance_defaults.value)
-            # If a mechanism provided a single input, wrap it in one more list in order to represent trials
-            if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
-                if check_spec_type == "homogeneous":
-                    # np.atleast_2d will catch any single-input states specified without an outer list
-                    # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                    adjusted_stimuli[mech] = [np.atleast_2d(stim_list)]
-                else:
-                    adjusted_stimuli[mech] = [stim_list]
-
-                # verify that all mechanisms have provided the same number of inputs
-                if num_input_sets == -1:
-                    num_input_sets = 1
-                elif num_input_sets != 1:
-                    raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
-                                   "conflicts with at least one other mechanism's input specification.".format(self.name,
-                                                                                                               mech.name))
+            if isinstance(mech, Composition):
+                adjusted_stimuli[mech] = stim_list
+                num_input_sets = 1
             else:
-                adjusted_stimuli[mech] = []
-                for stim in stimuli[mech]:
-                    check_spec_type = self._input_matches_variable(stim, mech.instance_defaults.value)
-                    # loop over each input to verify that it matches variable
-                    if check_spec_type == False:
-                        err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
-                            format(stim, mech.name, mech.instance_defaults.value)
-                        # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
-                        # for "functionality" but rather a hack for user clarity
-                        if "KWTA" in str(type(mech)):
-                            err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
-                                                " to represent the outside stimulus for the inhibition input state, and " \
-                                                "for systems, put your inputs"
-                        raise RunError(err_msg)
-                    elif check_spec_type == "homogeneous":
+                check_spec_type = self._input_matches_variable(stim_list, mech.instance_defaults.value)
+                # If a mechanism provided a single input, wrap it in one more list in order to represent trials
+                if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
+                    if check_spec_type == "homogeneous":
                         # np.atleast_2d will catch any single-input states specified without an outer list
                         # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                        adjusted_stimuli[mech].append(np.atleast_2d(stim))
+                        adjusted_stimuli[mech] = [np.atleast_2d(stim_list)]
                     else:
-                        adjusted_stimuli[mech].append(stim)
+                        adjusted_stimuli[mech] = [stim_list]
 
-                # verify that all mechanisms have provided the same number of inputs
-                if num_input_sets == -1:
-                    num_input_sets = len(stimuli[mech])
-                elif num_input_sets != len(stimuli[mech]):
-                    raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {}"
-                                   "conflicts with at least one other mechanism's input specification."
-                                   .format(self.name, (stimuli[mech]), mech.name))
+                    # verify that all mechanisms have provided the same number of inputs
+                    if num_input_sets == -1:
+                        num_input_sets = 1
+                    elif num_input_sets != 1:
+                        raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
+                                       "conflicts with at least one other mechanism's input specification.".format(self.name,
+                                                                                                                   mech.name))
+                else:
+                    adjusted_stimuli[mech] = []
+                    for stim in stimuli[mech]:
+                        check_spec_type = self._input_matches_variable(stim, mech.instance_defaults.value)
+                        # loop over each input to verify that it matches variable
+                        if check_spec_type == False:
+                            err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
+                                format(stim, mech.name, mech.instance_defaults.value)
+                            # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
+                            # for "functionality" but rather a hack for user clarity
+                            if "KWTA" in str(type(mech)):
+                                err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
+                                                    " to represent the outside stimulus for the inhibition input state, and " \
+                                                    "for systems, put your inputs"
+                            raise RunError(err_msg)
+                        elif check_spec_type == "homogeneous":
+                            # np.atleast_2d will catch any single-input states specified without an outer list
+                            # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
+                            adjusted_stimuli[mech].append(np.atleast_2d(stim))
+                        else:
+                            adjusted_stimuli[mech].append(stim)
+
+                    # verify that all mechanisms have provided the same number of inputs
+                    if num_input_sets == -1:
+                        num_input_sets = len(stimuli[mech])
+                    elif num_input_sets != len(stimuli[mech]):
+                        raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {}"
+                                       "conflicts with at least one other mechanism's input specification."
+                                       .format(self.name, (stimuli[mech]), mech.name))
 
         return adjusted_stimuli, num_input_sets
 
     def _adjust_execution_stimuli(self, stimuli):
         adjusted_stimuli = {}
         for mech, stimulus in stimuli.items():
+            if isinstance(mech, Composition):
+                return {mech: stimulus}
+
 
             check_spec_type = self._input_matches_variable(stimulus, mech.instance_defaults.value)
             # If a mechanism provided a single input, wrap it in one more list in order to represent trials
