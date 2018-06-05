@@ -148,7 +148,6 @@ class TestNaming:
         T1 = pnl.TransferMechanism(name='T1')
         T2 = pnl.TransferMechanism(name='T2', input_states=[T1])
         I1 = pnl.InputState(owner=T2)
-        T2.add_states([I1])
         I2 = pnl.InputState(projections=[T1])
         assert I2.name == 'Deferred Init InputState'
         T2.add_states([I2])
@@ -156,7 +155,6 @@ class TestNaming:
         assert I2.name == 'InputState-2'
         assert T2.input_states[0].path_afferents[0].name == \
                'MappingProjection from T1[RESULTS] to T2[InputState-0]'
-        print(T2.input_states[2].path_afferents[0].name)
         assert T2.input_states[2].path_afferents[0].name == \
                'MappingProjection from T1[RESULTS] to T2[InputState-2]'
 
@@ -168,7 +166,6 @@ class TestNaming:
         assert T1.output_states[0].name == 'MY OUTPUT_STATE'
         assert T1.output_states[1].name == 'OutputState-0'
         O = pnl.OutputState(owner=T1)
-        T1.add_states([O])
         assert T1.output_states[2].name == 'OutputState-1'
         O2 = pnl.OutputState()
         T1.add_states([O2])

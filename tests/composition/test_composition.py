@@ -2428,7 +2428,7 @@ class TestNestedCompositions:
             # scheduler_processing=schedule
         )
 
-        assert np.allclose(64, output)
+        assert np.allclose([64], output)
 
     def test_two_paths_converge_one_system_scheduling_matters(self):
 

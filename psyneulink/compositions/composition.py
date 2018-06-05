@@ -350,7 +350,7 @@ class Composition(object):
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.mechanisms = []
-        self.input_CIM = CompositionInterfaceMechanism(name="Stimulus_CIM")
+        self.input_CIM = CompositionInterfaceMechanism(name="Input_CIM")
         self.input_CIM_states = {}
         self.output_CIM = CompositionInterfaceMechanism(name="Output_CIM")
         self.output_CIM_states = {}
@@ -824,14 +824,14 @@ class Composition(object):
                     interface_input_state = InputState(owner=self.input_CIM,
                                                        variable=input_state.value,
                                                        reference_value=input_state.value,
-                                                       name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
+                                                       name="INPUT_CIM_" + mech.name + "_" + input_state.name)
 
                     self.input_CIM.add_states(interface_input_state)
                     interface_output_state = OutputState(owner=self.input_CIM,
                                                          variable=OWNER_VALUE,
                                                          default_variable=self.input_CIM.variable,
                                                          function=InterfaceStateMap(corresponding_input_state=interface_input_state),
-                                                         name="STIMULUS_CIM_" + mech.name + "_" + input_state.name)
+                                                         name="INPUT_CIM_" + mech.name + "_" + input_state.name)
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
                     self.input_CIM.add_states(interface_output_state)
@@ -874,7 +874,7 @@ class Composition(object):
                                                        reference_value=output_state.value,
                                                        name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
 
-                    self.output_CIM.add_states([interface_input_state])
+                    # self.output_CIM.add_states([interface_input_state])
 
                     interface_output_state = OutputState(
                         owner=self.output_CIM,
@@ -884,7 +884,7 @@ class Composition(object):
                         reference_value=output_state.value,
                         name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
 
-                    self.output_CIM.add_states([interface_output_state])
+                    # self.output_CIM.add_states([interface_output_state])
 
                     self.output_CIM_states[output_state] = [interface_input_state, interface_output_state]
 

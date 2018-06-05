@@ -1145,7 +1145,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if context is None:
             context = ContextFlags.COMMAND_LINE
 
-        states = super().add_states(states=states, context=context)
+        states = super().add_states(states=states)
         for input_state in states[INPUT_STATES]:
             error_source = input_state.path_afferents[0].sender.owner
             self.error_sources.append(error_source)

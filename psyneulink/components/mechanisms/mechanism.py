@@ -2735,7 +2735,7 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_states(self, states, context=None):
+    def add_states(self, states):
         """
         add_states(states)
 
@@ -2774,8 +2774,7 @@ class Mechanism_Base(Mechanism):
         from psyneulink.components.states.inputstate import InputState, _instantiate_input_states
         from psyneulink.components.states.outputstate import OutputState, _instantiate_output_states
 
-        if context is None:
-            context = ContextFlags.COMMAND_LINE
+        context = ContextFlags.METHOD
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):
@@ -2792,6 +2791,7 @@ class Mechanism_Base(Mechanism):
             if (isinstance(state_type, InputState) or
                     (inspect.isclass(state_type) and issubclass(state_type, InputState))):
                 input_states.append(state)
+
             elif (isinstance(state_type, OutputState) or
                     (inspect.isclass(state_type) and issubclass(state_type, OutputState))):
                 output_states.append(state)

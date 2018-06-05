@@ -1143,10 +1143,7 @@ class State_Base(State):
         self.projections = self.path_afferents + self.mod_afferents + self.efferents
 
         if context == ContextFlags.COMMAND_LINE:
-
-            if self not in self.owner.output_states:
-
-                owner.add_states([self])
+            owner.add_states([self])
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
