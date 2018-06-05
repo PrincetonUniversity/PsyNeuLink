@@ -1,12 +1,12 @@
 
 Conflict Monitoring and Cognitive Control (Botvinick et al., 2001)
 ================================================================
-`"Conflict Monitoring and Cognitive Control" <https://www.ncbi.nlm.nih.gov/pubmed/11488380`_
+`"Conflict Monitoring and Cognitive Control" <https://www.ncbi.nlm.nih.gov/pubmed/11488380>`_
 
 Overview
 --------
 This implements a model concerning the role of the anterior cingulate cortex (ACC)
-`<https://en.wikipedia.org/wiki/Anterior_cingulate_cortex`_ in situations calling for their
+`<https://en.wikipedia.org/wiki/Anterior_cingulate_cortex>`_ in situations calling for their
 involvement. The demand for control is evaluated by monitoring for conflicts in information processing.
 The model is supported by data concerning the anterior cingulate cortex, a brain area involved in cognitive control,
 which also appears to respond to the occurrence of conflict.
@@ -43,32 +43,32 @@ bidirectional way. The response layer receives inputs from both hidden layers. A
 
 Network System
 ~~~~~~~~~~~~~~
-**COLOR INPUT LAYER**:  a `TransferMechanism` with **size**=3 (one unit for the input of one color, respectively
-here blue & green), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
+**COLOR INPUT LAYER**:  a `TransferMechanism` with **size** = 3 (one unit for the input of one color, respectively
+here blue & green), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
-**WORD INPUT LAYER**:  a `TransferMechanism` with **size**=3 (one unit for the input of one word, respectively,
-here blue & green), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
+**WORD INPUT LAYER**:  a `TransferMechanism` with **size** = 3 (one unit for the input of one word, respectively,
+here blue & green), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
-**TASK INPUT LAYER**:  a `TransferMechanism` with **size**=2 (one unit specified with a task
-value of one, the other element set to zero), and assigned a `Linear` function with **slope**=1.0 and **intercept**=0.0.
+**TASK INPUT LAYER**:  a `TransferMechanism` with **size** = 2 (one unit specified with a task
+value of one, the other element set to zero), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
 
-**COLOR HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**=3 (one element for each of the two colors, one
-element for the neutral color and assigned a `Logistic` function with **gain**=4.0 and **bias**=1.0.
-The **integrator_mode**=`True` and **smoothing_factor**=0.01. Both units receive mutually inhibitory weights
-(**hetero**=-2).
+**COLOR HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size** = 3 (one element for each of the two colors, one
+element for the neutral color and assigned a `Logistic` function with **gain** = 4.0 and **bias** = 1.0.
+The **integrator_mode** = `True` and **smoothing_factor** = 0.01. Both units receive mutually inhibitory weights
+(**hetero** = -2).
 
-**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size**=3 (one element for each of the two colors, one
-element for the neutral color and assigned a `Logistic` function with **gain**=4.0 and **bias**=1.0.
-The **integrator_mode**=`True` and **smoothing_factor**=0.01. Both units receive mutually inhibitory weights
-(**hetero**=-2).
+**WORD HIDDEN LAYER**: a `RecurrentTransferMechanism` with **size** = 3 (one element for each of the two colors, one
+element for the neutral color and assigned a `Logistic` function with **gain** = 4.0 and **bias** = 1.0.
+The **integrator_mode** = `True` and **smoothing_factor** = 0.01. Both units receive mutually inhibitory weights
+(**hetero** = -2).
 
-**TASK DEMAND LAYER**: a `RecurrentTransferMechanism` with **size**=2 (one element for each of the two tasks, and
-assigned a `Logistic` function with **gain**=1.0 and **bias**=0.0. The **integrator_mode**=`True`
-and **smoothing_factor**=0.01. Both units receive mutually inhibitory weights (**hetero**=-2).
+**TASK DEMAND LAYER**: a `RecurrentTransferMechanism` with **size** = 2 (one element for each of the two tasks, and
+assigned a `Logistic` function with **gain** = 1.0 and **bias** = 0.0. The **integrator_mode** = `True`
+and **smoothing_factor** = 0.01. Both units receive mutually inhibitory weights (**hetero** = -2).
 
-**RESPONSE LAYER**: a `RecurrentTransferMechanism` with **size**=2 (one element for each of the two responses, and
-assigned a `Logistic` function with **gain**=1.0 and **bias**=0.0. The **integrator_mode**=`True`
-and **smoothing_factor**=0.01. Both units receive mutually inhibitory weights (**hetero**=-2).
+**RESPONSE LAYER**: a `RecurrentTransferMechanism` with **size** = 2 (one element for each of the two responses, and
+assigned a `Logistic` function with **gain** = 1.0 and **bias** = 0.0. The **integrator_mode** = `True`
+and **smoothing_factor** = 0.01. Both units receive mutually inhibitory weights (**hetero** = -2).
 
 **PROJECTIONS**:  The weights of the  network are implemented as `MappingProjections <MappingProjection>`.
 The `matrix <MappingProjection.matrix>` parameter from the *COLOR INPUT_LAYER*, the *WORD INPUT_LAYER*, and the
