@@ -1090,15 +1090,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         else:
             return variable
 
-    def _execute(self,
-                 variable=None,
-                 runtime_params=None,
-                 context=None):
-
-        return super()._execute(variable=variable,
-                              runtime_params=runtime_params,
-                              context=context)
-
     def _get_variable_from_input(self, input):
         if self.has_recurrent_input_state:
             input = np.atleast_2d(input)
