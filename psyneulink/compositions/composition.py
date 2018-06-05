@@ -988,7 +988,7 @@ class Composition(object):
 
     def execute(
         self,
-        inputs,
+        inputs=None,
         scheduler_processing=None,
         scheduler_learning=None,
         termination_processing=None,
@@ -1043,21 +1043,30 @@ class Composition(object):
             output value of the final Mechanism executed in the Composition : various
         '''
 
+        nested = False
+        if len(self.input_CIM.path_afferents) > 0:
+            nested = True
+
         runtime_params = self._parse_runtime_params(runtime_params)
 
         if targets is None:
             targets = {}
         execution_id = self._assign_execution_ids(execution_id)
         origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
-        inputs = self._adjust_execution_stimuli(inputs)
+
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
 
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
-        self._assign_values_to_input_CIM(inputs)
-
+        if not nested:
+            inputs = self._adjust_execution_stimuli(inputs)
+            self._assign_values_to_input_CIM(inputs)
+        else:
+            for input_state in self.input_states:
+                print("Input State Value = ", input_state.value, " [", input_state.name, "]")
+                input_state.update()
         # self._assign_values_to_target_CIM_output_states(targets)
         # execution_id = self._assign_execution_ids(execution_id)
         next_pass_before = 1
@@ -1511,3 +1520,14 @@ class Composition(object):
     def output_states(self):
         """Returns all OutputStates that belong to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_states
+
+
+    @property
+    def input_state(self):
+        """Returns the index 0 InputState that belongs to the Input CompositionInterfaceMechanism"""
+        return self.input_CIM.input_states[0]
+
+    @property
+    def output_state(self):
+        """Returns the index 0 OutputState that belongs to the Output CompositionInterfaceMechanism"""
+        return self.output_CIM.output_states[0]
