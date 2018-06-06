@@ -2237,6 +2237,8 @@ class Mechanism_Base(Mechanism):
                 self.context.execution_phase = ContextFlags.PROCESSING
             if input is None:
                 input = self.instance_defaults.variable
+            #     FIX:  this input value is sent to input CIMs when compositions are nested
+            #           variable should be based on afferent projections
             variable = self._update_variable(self._get_variable_from_input(input))
 
         # UPDATE PARAMETER STATE(S)
@@ -2339,7 +2341,6 @@ class Mechanism_Base(Mechanism):
         )
 
     def _get_variable_from_input(self, input):
-
         input = np.atleast_2d(input)
         num_inputs = np.size(input, 0)
         num_input_states = len(self.input_states)
@@ -2351,7 +2352,7 @@ class Mechanism_Base(Mechanism):
                 input = np.squeeze(input)
             else:
                 num_inputs = np.size(input, 0)  # revert num_inputs to its previous value, when printing the error
-                raise SystemError("Number of inputs ({0}) to {1} does not match "
+                raise MechanismError("Number of inputs ({0}) to {1} does not match "
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))
         for input_item, input_state in zip(input, self.input_states):

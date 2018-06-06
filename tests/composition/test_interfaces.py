@@ -145,7 +145,7 @@ class TestConnectCompositionsViaCIMS:
 
     def test_connect_compositions_with_simple_states(self):
 
-        comp1 = Composition()
+        comp1 = Composition(name="first_composition")
 
         A = TransferMechanism(name="composition-pytests-A",
                               function=Linear(slope=2.0))
@@ -162,9 +162,11 @@ class TestConnectCompositionsViaCIMS:
         inputs_dict = {
             A: [[5.]],
         }
+        # comp1.run(inputs_dict)
+
         sched = Scheduler(composition=comp1)
 
-        comp2 = Composition()
+        comp2 = Composition(name="second_composition")
 
         A2 = TransferMechanism(name="composition-pytests-A2",
                               function=Linear(slope=2.0))
@@ -178,23 +180,19 @@ class TestConnectCompositionsViaCIMS:
         comp2.add_projection(A2, MappingProjection(sender=A2, receiver=B2), B2)
 
         comp2._analyze_graph()
-        inputs_dict2 = {
-            A2: [[5.]],
-        }
         sched = Scheduler(composition=comp2)
-        print(comp1.input_states)
-        print(comp1.output_states)
-        print(comp2.input_states)
-        print(comp2.output_states)
 
-        comp3 = Composition()
+        comp3 = Composition(name="outer_composition")
         comp3.add_mechanism(comp1)
-        comp3.run(inputs={comp1: [[5.0]]})
+
+        comp3.run(inputs={comp1: [[5.]]})
         # m=MappingProjection(sender=comp1.output_states[0], receiver=comp2.input_states[0])
         #
         # comp1.run(inputs=inputs_dict)
         # # m.execute()
         # comp2.execute()
+        print(A.input_values)
+        print(B.value)
 
     def test_connect_compositions_with_complicated_states(self):
 

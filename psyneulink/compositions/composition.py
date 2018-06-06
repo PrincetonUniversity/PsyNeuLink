@@ -344,16 +344,18 @@ class Composition(object):
 
     '''
 
-    def __init__(self):
+    def __init__(self, name=None):
         # core attributes
-        self.name = "Composition-TestName"
+        if name is None:
+            name = "composition"
+        self.name = name
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.mechanisms = []
-        self.input_CIM = CompositionInterfaceMechanism(name="Input_CIM",
+        self.input_CIM = CompositionInterfaceMechanism(name=self.name + " Input_CIM",
                                                        composition=self)
         self.input_CIM_states = {}
-        self.output_CIM = CompositionInterfaceMechanism(name="Output_CIM",
+        self.output_CIM = CompositionInterfaceMechanism(name=self.name + " Output_CIM",
                                                         composition=self)
         self.output_CIM_states = {}
         self.execution_ids = []
@@ -929,6 +931,7 @@ class Composition(object):
                         value = origin_mechanism.instance_defaults.variable[index]
 
             build_CIM_input.append(value)
+        self.input_CIM.execute(build_CIM_input)
 
     def _assign_execution_ids(self, execution_id=None):
         '''
@@ -1063,13 +1066,12 @@ class Composition(object):
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
 
-        if not nested:
+        if nested:
+            self.input_CIM.execute()
+        else:
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs)
-        else:
-            for input_state in self.input_states:
-                print("Input State Value = ", input_state.value, " [", input_state.name, "]")
-                input_state.update()
+
         # self._assign_values_to_target_CIM_output_states(targets)
         # execution_id = self._assign_execution_ids(execution_id)
         next_pass_before = 1
@@ -1149,7 +1151,8 @@ class Composition(object):
                                                                            key])
                     mechanism.function_object._runtime_params_reset = {}
                     mechanism.context.execution_phase = ContextFlags.IDLE
-
+                elif isinstance(mechanism, Composition):
+                    mechanism.execute()
                 if mechanism in origin_mechanisms:
                     if clamp_input:
                         if mechanism in pulse_clamp_inputs:
