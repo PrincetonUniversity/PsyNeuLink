@@ -93,18 +93,15 @@ Class Reference
 """
 
 import warnings
+
 from collections import namedtuple
 from enum import IntEnum
 from uuid import UUID
 
 import typecheck as tc
 
-from psyneulink.globals.keywords import CONTROL, EXECUTING, FLAGS, INITIALIZING, LEARNING, VALIDATE
-
-from psyneulink.globals.keywords import \
-    CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, SOURCE, LEARNING, VALIDATE
+from psyneulink.globals.keywords import CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SOURCE, VALIDATE
 from psyneulink.globals.utilities import get_deepcopy_with_shared_keys
-# from psyneulink.composition import Composition
 
 
 __all__ = [
