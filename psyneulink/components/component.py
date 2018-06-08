@@ -2671,6 +2671,24 @@ class Component(object):
     def initialize(self):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
+    def reinitialize(self, *args):
+        """
+            If the component's execute method involves execution of an `Integrator` Function, this method
+            effectively begins the function's accumulation over again at the specified value, and may update related
+            values on the component, depending on the component type.
+        """
+        from psyneulink.components.functions.function import Integrator
+        if hasattr(self, "function_object"):
+            if isinstance(self.function_object, Integrator):
+                new_value = self.function_object.reinitialize(*args)
+                self.value = np.atleast_2d(new_value)
+            else:
+                ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
+                               "(It does not have an accumulator to reinitialize).".format(self.name))
+        else:
+            ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
+                           "(It does not have an accumulator to reinitialize).".format(self.name))
+
     def execute(self, variable=None, runtime_params=None, context=None):
         return self._execute(variable=variable, runtime_params=runtime_params, context=context)
 
