@@ -191,8 +191,6 @@ class TestConnectCompositionsViaCIMS:
         # comp1.run(inputs=inputs_dict)
         # # m.execute()
         # comp2.execute()
-        print(A.input_values)
-        print(B.value)
 
     def test_connect_compositions_with_complicated_states(self):
 

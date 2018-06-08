@@ -2156,6 +2156,9 @@ class Mechanism_Base(Mechanism):
             <Mechanism_OutputStates>` after either one `TIME_STEP` or a `TRIAL`.
 
         """
+        if "first" in self.name:
+            print("input state value = ", self.input_state.value, " [", self.name, "]")
+            print("context = ", context)
         self.ignore_execution_id = ignore_execution_id
         context = context or ContextFlags.COMMAND_LINE
         if not self.context.source or context & ContextFlags.COMMAND_LINE:
@@ -2224,10 +2227,10 @@ class Mechanism_Base(Mechanism):
         # UPDATE VARIABLE and INPUT STATE(S)
 
         # Executing or simulating Process or System, get input by updating input_states
+
         if (input is None
             and (self.context.execution_phase & (ContextFlags.PROCESSING|ContextFlags.LEARNING|ContextFlags.SIMULATION))
             and (self.input_state.path_afferents != [])):
-
             variable = self._update_variable(self._update_input_states(runtime_params=runtime_params,
                                                                        context=context))
 

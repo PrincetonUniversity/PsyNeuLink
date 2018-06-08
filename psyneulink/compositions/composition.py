@@ -931,6 +931,7 @@ class Composition(object):
                         value = origin_mechanism.instance_defaults.variable[index]
 
             build_CIM_input.append(value)
+
         self.input_CIM.execute(build_CIM_input)
 
     def _assign_execution_ids(self, execution_id=None):
@@ -1007,6 +1008,7 @@ class Composition(object):
         clamp_input=SOFT_CLAMP,
         targets=None,
         runtime_params=None,
+        context=None
     ):
         '''
             Passes inputs to any Mechanisms receiving inputs directly from the user (via the "inputs" argument) then
@@ -1067,7 +1069,11 @@ class Composition(object):
             scheduler_learning = self.scheduler_learning
 
         if nested:
-            self.input_CIM.execute()
+
+            self.execution_id = self.input_CIM.path_afferents[0].sender.owner.composition._execution_id
+            self.input_CIM.context.execution_phase = ContextFlags.PROCESSING
+            self.input_CIM.execute(context=ContextFlags.PROCESSING)
+
         else:
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs)

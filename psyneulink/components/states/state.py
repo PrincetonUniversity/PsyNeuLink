@@ -1931,7 +1931,6 @@ class State_Base(State):
         variable = []
         # MODIFIED 5/4/18 END
         for projection in self.all_afferents:
-
             # Only update if sender has also executed in this round
             #     (i.e., has same execution_id as owner)
             # Get sender's execution id
