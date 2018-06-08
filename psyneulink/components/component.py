@@ -400,6 +400,7 @@ import typecheck as tc
 from psyneulink.globals.context import Context, ContextFlags, _get_time
 from psyneulink.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SEPARATOR_BAR, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.globals.log import LogCondition
+from psyneulink.scheduling.condition import Never
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.registry import register_category
@@ -880,6 +881,7 @@ class Component(object):
                  param_defaults,
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
                  function=None,
+                 reinitialize_when=Never,
                  name=None,
                  prefs=None):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
@@ -908,6 +910,7 @@ class Component(object):
         context = ContextFlags.COMPONENT
         self.context.initialization_status = ContextFlags.INITIALIZING
         self.context.execution_phase = None
+
         if not self.context.source:
             self.context.source = ContextFlags.COMPONENT
         self.context.string = "{}: {} {}".format(COMPONENT_INIT, INITIALIZING, self.name)
@@ -924,7 +927,7 @@ class Component(object):
         else:
             default_variable = v
             defaults[VARIABLE] = default_variable
-
+        self.reinitialize_when = reinitialize_when
         self.instance_defaults = self.InstanceDefaults(**defaults)
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
