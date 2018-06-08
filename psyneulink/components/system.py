@@ -2514,6 +2514,7 @@ class System(System_Base):
                 termination_processing=None,
                 termination_learning=None,
                 runtime_params=None,
+                reinitialize_values=None,
                 context=None):
         """Execute mechanisms in System at specified :ref:`phases <System_Execution_Phase>` in order \
         specified by the :py:data:`execution_graph <System.execution_graph>` attribute.
@@ -2556,6 +2557,10 @@ class System(System_Base):
             Each item is a 2d array that contains arrays for each OutputState.value of each `TERMINAL` Mechanism
 
         """
+
+        if reinitialize_values is None:
+            reinitialize_values = {}
+
         if self.scheduler_processing is None:
             self.scheduler_processing = Scheduler(system=self)
 
@@ -2655,7 +2660,9 @@ class System(System_Base):
         # sorted_list = list(object_item[0].name for object_item in self.execution_list)
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
-        self._execute_processing(runtime_params=runtime_params, context=context)
+        self._execute_processing(runtime_params=runtime_params,
+                                 reinitialize_values=reinitialize_values,
+                                 context=context)
 
         # EXECUTE LEARNING FOR EACH PROCESS
 
@@ -2697,7 +2704,7 @@ class System(System_Base):
 
         return self.terminal_mechanisms.outputStateValues
 
-    def _execute_processing(self, runtime_params, context=None):
+    def _execute_processing(self, runtime_params, reinitialize_values, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
         # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update())
@@ -2725,6 +2732,10 @@ class System(System_Base):
                     for param in runtime_params[mechanism]:
                         if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
+
+                if mechanism in reinitialize_values:
+                    if mechanism.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing):
+                        mechanism.reinitialize(reinitialize_values[mechanism])
 
                 mechanism.context.execution_phase = ContextFlags.PROCESSING
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
@@ -2904,6 +2915,7 @@ class System(System_Base):
             termination_processing=None,
             termination_learning=None,
             runtime_params=None,
+            reinitialize_values=None,
             context=None):
         """Run a sequence of executions
 
@@ -2970,6 +2982,9 @@ class System(System_Base):
         if runtime_params is None:
             runtime_params = {}
 
+        if reinitialize_values is None:
+            reinitialize_values = {}
+
         self.initial_values = initial_values
 
         logger.debug(inputs)
@@ -2989,6 +3004,7 @@ class System(System_Base):
                    termination_processing=termination_processing,
                    termination_learning=termination_learning,
                    runtime_params=runtime_params,
+                   reinitialize_values=reinitialize_values,
                    context=ContextFlags.COMPOSITION)
 
     def _report_system_initiation(self):
