@@ -737,7 +737,6 @@ class EVCControlMechanism(ControlMechanism):
                                            name=name,
                                            prefs=prefs)
 
-
     def _instantiate_input_states(self, context=None):
         """Instantiate PredictionMechanisms
         """
@@ -933,7 +932,6 @@ class EVCControlMechanism(ControlMechanism):
 
         return allocation_policy
 
-    def _update_predicted_input(self):
         """Assign values of prediction mechanisms to predicted_input
 
         Assign value of each predictionMechanism.value to corresponding item of self.predictedIinput
