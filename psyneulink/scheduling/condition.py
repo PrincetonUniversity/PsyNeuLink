@@ -176,10 +176,10 @@ List of Pre-specified Conditions
       satisfied any time after the specified `PASS` has occurred.
 
     * `AfterNPasses` (int[, TimeScale])
-      satisfied when or any time after the specified number of `PASS`es has occurred.
+      satisfied when or any time after the specified number of `PASS`\\ es has occurred.
 
     * `EveryNPasses` (int[, TimeScale])
-      satisfied every time the specified number of `PASS`es occurs.
+      satisfied every time the specified number of `PASS`\\ es occurs.
 
     * `BeforeTrial` (int[, TimeScale])
       satisfied any time before the specified `TRIAL` occurs.
@@ -191,7 +191,7 @@ List of Pre-specified Conditions
       satisfied any time after the specified `TRIAL` occurs.
 
     * `AfterNTrials` (int[, TimeScale])
-      satisfied any time after the specified number of `TRIAL`s has occurred.
+      satisfied any time after the specified number of `TRIAL`\\ s has occurred.
 
 
 .. _Conditions_Component_Based:
@@ -654,11 +654,11 @@ class BeforePass(Condition):
 
         n(int): the 'PASS' before which the Condition is satisfied
 
-        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`es (default: TimeScale.TRIAL)
+        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
 
-        - at most n-1 `PASS`es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
+        - at most n-1 `PASS`\\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
 
@@ -685,17 +685,17 @@ class AtPass(Condition):
 
         n(int): the `PASS` at which the Condition is satisfied
 
-        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`es (default: TimeScale.TRIAL)
+        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
 
-        - exactly n `PASS`es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
+        - exactly n `PASS`\\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
 
         - Counts of TimeScales are zero-indexed (that is, the first 'PASS' is pass 0, the second 'PASS' is 1, etc.);
-          so, `AtPass(1)` is satisfied when a single `PASS` (`PASS` 0) has occurred, and `AtPass(2) is satisfied
-          when two `PASS`es have occurred (`PASS` 0 and `PASS` 1), etc..
+          so, `AtPass(1)` is satisfied when a single `PASS` (`PASS` 0) has occurred, and `AtPass(2)` is satisfied
+          when two `PASS`\\ es have occurred (`PASS` 0 and `PASS` 1), etc..
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
@@ -717,16 +717,16 @@ class AfterPass(Condition):
 
         n(int): the `PASS` after which the Condition is satisfied
 
-        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`es (default: TimeScale.TRIAL)
+        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
 
-        - at least n+1 `PASS`es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
+        - at least n+1 `PASS`\\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
 
         - Counts of TimeScales are zero-indexed (that is, the first `PASS` is 0, the second `PASS` is 1, etc.); so,
-          `AfterPass(1)` is satisfied after `PASS` 1 has occurred and thereafter (i.e., in `PASS`es 2, 3, 4, etc.).
+          `AfterPass(1)` is satisfied after `PASS` 1 has occurred and thereafter (i.e., in `PASS`\\ es 2, 3, 4, etc.).
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
@@ -746,14 +746,14 @@ class AfterNPasses(Condition):
 
     Parameters:
 
-        n(int): the number of `PASS`es after which the Condition is satisfied
+        n(int): the number of `PASS`\\ es after which the Condition is satisfied
 
-        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`es (default: TimeScale.TRIAL)
+        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\\ es (default: TimeScale.TRIAL)
 
 
     Satisfied when:
 
-        - at least n `PASS`es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
+        - at least n `PASS`\\ es have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
@@ -775,13 +775,13 @@ class EveryNPasses(Condition):
 
         n(int): the frequency of passes with which this condition is satisfied
 
-        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`es (default: TimeScale.TRIAL)
+        time_scale(TimeScale): the TimeScale used as basis for counting `PASS`\\ es (default: TimeScale.TRIAL)
 
     Satisfied when:
 
         - `PASS` 0
 
-        - the specified number of `PASS`es that has occurred within a unit of time (at the `TimeScale` specified by
+        - the specified number of `PASS`\\ es that has occurred within a unit of time (at the `TimeScale` specified by
           **time_scale**) is evenly divisible by n.
 
     """
@@ -804,11 +804,11 @@ class BeforeTrial(Condition):
 
         n(int): the `TRIAL` before which the Condition is satisfied
 
-        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`s (default: TimeScale.RUN)
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s (default: TimeScale.RUN)
 
     Satisfied when:
 
-        - at most n-1 `TRIAL`s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
+        - at most n-1 `TRIAL`\\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
 
@@ -835,11 +835,11 @@ class AtTrial(Condition):
 
         n(int): the `TRIAL` at which the Condition is satisfied
 
-        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`s (default: TimeScale.RUN)
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s (default: TimeScale.RUN)
 
     Satisfied when:
 
-        - exactly n `TRIAL`s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
+        - exactly n `TRIAL`\\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
 
@@ -866,16 +866,16 @@ class AfterTrial(Condition):
 
         n(int): the `TRIAL` after which the Condition is satisfied
 
-        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`s. (default: TimeScale.RUN)
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s. (default: TimeScale.RUN)
 
     Satisfied when:
 
-        - at least n+1 `TRIAL`s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
+        - at least n+1 `TRIAL`\\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
 
     Notes:
 
         - Counts of TimeScales are zero-indexed (that is, the first `TRIAL` is 0, the second `TRIAL` is 1, etc.);
-          so,  `AfterPass(1)` is satisfied after `TRIAL` 1 has occurred and thereafter (i.e., in `TRIAL`s 2, 3, 4,
+          so,  `AfterPass(1)` is satisfied after `TRIAL` 1 has occurred and thereafter (i.e., in `TRIAL`\\ s 2, 3, 4,
           etc.).
 
     """
@@ -896,13 +896,13 @@ class AfterNTrials(Condition):
 
     Parameters:
 
-        n(int): the number of `TRIAL`s after which the Condition is satisfied
+        n(int): the number of `TRIAL`\\ s after which the Condition is satisfied
 
-        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`s (default: TimeScale.RUN)
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s (default: TimeScale.RUN)
 
     Satisfied when:
 
-        - at least n `TRIAL`s have occured  within one unit of time at the `TimeScale` specified by **time_scale**.
+        - at least n `TRIAL`\\ s have occured  within one unit of time at the `TimeScale` specified by **time_scale**.
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
