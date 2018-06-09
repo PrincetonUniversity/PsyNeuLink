@@ -166,6 +166,18 @@ List of Pre-specified Conditions
 **Time-Based Conditions** (based on the count of units of time at a specified `TimeScale`):
 
 
+    * `BeforeTimeStep` (int[, TimeScale])
+      satisfied any time before the specified `TIME_STEP` occurs.
+
+    * `AtTimeStep` (int[, TimeScale])
+      satisfied only during the specified `TIME_STEP`.
+
+    * `AfterTimeStep` (int[, TimeScale])
+      satisfied any time after the specified `TIME_STEP` has occurred.
+
+    * `AfterNTimeSteps` (int[, TimeScale])
+      satisfied when or any time after the specified number of `TIME_STEP`\\ s has occurred.
+
     * `BeforePass` (int[, TimeScale])
       satisfied any time before the specified `PASS` occurs.
 
@@ -259,10 +271,11 @@ from psyneulink.globals.utilities import prune_unused_args
 from psyneulink.scheduling.time import TimeScale
 
 __all__ = [
-    'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTrials', 'AfterPass', 'AfterTrial', 'All',
-    'AllHaveRun', 'Always', 'Any', 'AtNCalls', 'AtPass', 'AtTrial', 'BeforeNCalls', 'BeforePass', 'BeforeTrial',
-    'Condition', 'ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses', 'JustRan', 'Never', 'Not', 'NWhen',
-    'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot',
+    'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTimeSteps', 'AfterNTrials', 'AfterPass',
+    'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'Any', 'AtNCalls', 'AtPass', 'AtTimeStep', 'AtTrial',
+    'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial', 'Condition', 'ConditionError', 'ConditionSet',
+    'EveryNCalls', 'EveryNPasses', 'JustRan', 'Never', 'Not', 'NWhen', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny',
+    'While', 'WhileNot'
 ]
 
 logger = logging.getLogger(__name__)
@@ -645,6 +658,126 @@ class NWhen(Condition):
 # Time-based Conditions
 #   - satisfied based only on TimeScales
 ######################################################################
+
+class BeforeTimeStep(Condition):
+    """BeforeTimeStep
+
+    Parameters:
+
+        n(int): the 'TIME_STEP' before which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TIME_STEP`\\ s (default: TimeScale.TRIAL)
+
+    Satisfied when:
+
+        - at most n-1 `TIME_STEP`\\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
+
+    Notes:
+
+        - Counts of TimeScales are zero-indexed (that is, the first `TIME_STEP` is 0, the second `TIME_STEP` is 1, etc.);
+          so, `BeforeTimeStep(2)` is satisfied at `TIME_STEP` 0 and `TIME_STEP` 1.
+
+    """
+    def __init__(self, n, time_scale=TimeScale.TRIAL):
+        def func(n, time_scale, scheduler=None, execution_id=None):
+            try:
+                if execution_id not in scheduler.clocks:
+                    execution_id = scheduler.default_execution_id
+                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TIME_STEP, time_scale) < n
+            except AttributeError as e:
+                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+
+        super().__init__(func, n, time_scale)
+
+
+class AtTimeStep(Condition):
+    """AtTimeStep
+
+    Parameters:
+
+        n(int): the `TIME_STEP` at which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TIME_STEP`\\ s (default: TimeScale.TRIAL)
+
+    Satisfied when:
+
+        - exactly n `TIME_STEP`\\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
+
+    Notes:
+
+        - Counts of TimeScals are zero-indexed (that is, the first 'TIME_STEP' is pass 0, the second 'TIME_STEP' is 1, etc.);
+          so, `AtTimeStep(1)` is satisfied when a single `TIME_STEP` (`TIME_STEP` 0) has occurred, and `AtTimeStep(2)` is satisfied
+          when two `TIME_STEP`\\ s have occurred (`TIME_STEP` 0 and `TIME_STEP` 1), etc..
+
+    """
+    def __init__(self, n, time_scale=TimeScale.TRIAL):
+        def func(n, scheduler=None, execution_id=None):
+            try:
+                if execution_id not in scheduler.clocks:
+                    execution_id = scheduler.default_execution_id
+                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TIME_STEP, time_scale) == n
+            except AttributeError as e:
+                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+
+        super().__init__(func, n)
+
+
+class AfterTimeStep(Condition):
+    """AfterTimeStep
+
+    Parameters:
+
+        n(int): the `TIME_STEP` after which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TIME_STEP`\\ s (default: TimeScale.TRIAL)
+
+    Satisfied when:
+
+        - at least n+1 `TIME_STEP`\\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
+
+    Notes:
+
+        - Counts of TimeScals are zero-indexed (that is, the first `TIME_STEP` is 0, the second `TIME_STEP` is 1, etc.); so,
+          `AfterTimeStep(1)` is satisfied after `TIME_STEP` 1 has occurred and thereafter (i.e., in `TIME_STEP`\\ s 2, 3, 4, etc.).
+
+    """
+    def __init__(self, n, time_scale=TimeScale.TRIAL):
+        def func(n, time_scale, scheduler=None, execution_id=None):
+            try:
+                if execution_id not in scheduler.clocks:
+                    execution_id = scheduler.default_execution_id
+                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TIME_STEP, time_scale) > n
+            except AttributeError as e:
+                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+
+        super().__init__(func, n, time_scale)
+
+
+class AfterNTimeSteps(Condition):
+    """AfterNTimeSteps
+
+    Parameters:
+
+        n(int): the number of `TIME_STEP`\\ s after which the Condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TIME_STEP`\\ s (default: TimeScale.TRIAL)
+
+
+    Satisfied when:
+
+        - at least n `TIME_STEP`\\ s have occurred within one unit of time at the `TimeScale` specified by **time_scale**.
+
+    """
+    def __init__(self, n, time_scale=TimeScale.TRIAL):
+        def func(n, time_scale, scheduler=None, execution_id=None):
+            try:
+                if execution_id not in scheduler.clocks:
+                    execution_id = scheduler.default_execution_id
+                return scheduler.clocks[execution_id].get_total_times_relative(TimeScale.TIME_STEP, time_scale) >= n
+            except AttributeError as e:
+                raise ConditionError('{0}: scheduler must be supplied to is_satisfied: {1}'.format(type(self).__name__, e))
+
+        super().__init__(func, n, time_scale)
 
 
 class BeforePass(Condition):
