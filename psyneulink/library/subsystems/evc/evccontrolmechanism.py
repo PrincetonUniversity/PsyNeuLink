@@ -358,16 +358,17 @@ class EVCError(Exception):
 
 
 class EVCControlMechanism(ControlMechanism):
-    """EVCControlMechanism(                                                   \
+    """EVCControlMechanism(                                            \
     system=True,                                                       \
     objective_mechanism=None,                                          \
     prediction_mechanism_type=IntegratorMechanism,                     \
     prediction_mechanism_params=None,                                  \
+    simulation_length=1,                                               \
     function=ControlSignalGridSearch                                   \
     value_function=ValueFunction,                                      \
     cost_function=LinearCombination(operation=SUM),                    \
     combine_outcome_and_cost_function=LinearCombination(operation=SUM) \
-    save_all_values_and_policies:bool=:keyword:`False`,                \
+    save_all_values_and_policies=:keyword:`False`,                     \
     control_signals=None,                                              \
     params=None,                                                       \
     name=None,                                                         \
@@ -514,6 +515,9 @@ class EVCControlMechanism(ControlMechanism):
         <EVCControlMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms` corresponding to each `ORIGIN`
         Mechanism of the System. The key for each entry is the name of an `ORIGIN` Mechanism, and its
         value the `value <Mechanism_Base.value>` of the corresponding prediction Mechanism.
+
+    simulation_length : int
+        number of trials to simulate for each `allocation_policy <EVCControlMechanism.allocation_policy>`.
 
     objective_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the EVCControlMechanism to evaluate the performance of its `system
@@ -695,6 +699,7 @@ class EVCControlMechanism(ControlMechanism):
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  prediction_mechanism_type=integratormechanism.IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
+                 simulation_length:int=1,
                  control_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  function=ControlSignalGridSearch,
@@ -710,6 +715,7 @@ class EVCControlMechanism(ControlMechanism):
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanism_type=prediction_mechanism_type,
                                                   prediction_mechanism_params=prediction_mechanism_params,
+                                                  simulation_length=simulation_length,
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   control_signals=control_signals,
@@ -755,8 +761,9 @@ class EVCControlMechanism(ControlMechanism):
 
         Instantiate self.predicted_input dict:
             - key for each entry is an `ORIGIN` Mechanism of system
-            - value of each entry is the value of the corresponding predictionMechanism:
-                each value is a 2d array, each item of which is the value of an InputState of the predictionMechanism
+            - value of each entry is a list of the values of the corresponding predictionMechanism,
+                one for each trial to be simulated; each value is a 2d array, each item of which is the value of an
+                InputState of the predictionMechanism
 
         Args:
             context:
@@ -947,7 +954,6 @@ class EVCControlMechanism(ControlMechanism):
             # Get origin Mechanism for each process
             # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
             self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
-            # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
 
     def run_simulation(self,
                        inputs,
@@ -961,9 +967,9 @@ class EVCControlMechanism(ControlMechanism):
         ----------
 
         inputs : List[input] or ndarray(input) : default default_variable
-            the inputs used for each in a sequence of executions of the Mechanism in the `System`.  This should be the
-            `value <Mechanism_Base.value> for each `prediction Mechanism <EVCControlMechanism_Prediction_Mechanisms>` listed
-            in the `prediction_mechanisms` attribute.  The inputs are available from the `predicted_input` attribute.
+            the inputs provided to the ORIGIN Mechanisms of the `System` during each simulation.  This should be the
+            `value <Mechanism_Base.value> for each `prediction Mechanism <EVCControlMechanism_Prediction_Mechanisms>`
+            in the `prediction_mechanisms` attribute.  The inputs are available in the `predicted_input` attribute.
 
         allocation_vector : (1D np.array)
             the allocation policy to use in running the simulation, with one allocation value for each of the
@@ -980,13 +986,13 @@ class EVCControlMechanism(ControlMechanism):
             # Initialize value if it is None
             self.value = np.empty(len(self.control_signals))
 
-        # Implement the current allocation_policy over ControlSignals (outputStates),
+        # Implement the current allocation_policy over ControlSignals (OutputStates),
         #    by assigning allocation values to EVCControlMechanism.value, and then calling _update_output_states
         for i in range(len(self.control_signals)):
-            # self.control_signals[list(self.control_signals.values())[i]].value = np.atleast_1d(allocation_vector[i])
             self.value[i] = np.atleast_1d(allocation_vector[i])
         self._update_output_states(runtime_params=runtime_params, context=context)
 
+        # Run simulation
         self.system.context.execution_phase = ContextFlags.SIMULATION
         self.system.run(inputs=inputs, context=context)
         self.system.context.execution_phase = ContextFlags.IDLE

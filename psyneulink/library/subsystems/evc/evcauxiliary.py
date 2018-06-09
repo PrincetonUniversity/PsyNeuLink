@@ -17,6 +17,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.functions.function import Function_Base
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
@@ -521,10 +522,16 @@ def _compute_EVC(args):
     #       format(allocation_vector, [mech.outputState.value for mech in ctlr.predicted_input]),
     #       flush=True)
 
-    outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
-                        allocation_vector=allocation_vector,
-                        runtime_params=runtime_params,
-                        context=context)
+    # MODIFIED 6/8/18 NEW:
+    # FIX: NEED TO MODIFY predicted_input ATTRIBUTE TO BE A LIST OF INPUTS OF LEN simulation_length
+    # FIX: NEED TO MODIFY prediction_mechanism's function TO RECORD INPUTS FOR EACH TRIAL
+    # Run one simulation for each set of inputs in predicted_input
+    for inputs in ctlr.predicted_input:
+        outcome = ctlr.run_simulation(inputs=inputs,
+                            allocation_vector=allocation_vector,
+                            runtime_params=runtime_params,
+                            context=context)
+    # MODIFIED 6/8/18 END
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
                                                               outcome=outcome,
