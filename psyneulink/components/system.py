@@ -3851,7 +3851,7 @@ class System(System_Base):
 
             # rcvr is a LearningMechanism or ObjectiveMechanism (ComparatorMechanism)
             else:
-                if self not in rcvr.systems and process not in rcvr.processes:
+                if self not in rcvr.systems and processes and not any(p in rcvr.processes for p in processes):
                     return
 
                 # Implement node for Mechanism
