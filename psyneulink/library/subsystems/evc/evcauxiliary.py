@@ -523,21 +523,21 @@ def _compute_EVC(args):
     #       flush=True)
 
 
-    # # MODIFIED 6/8/18 OLD:
-    # outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
-    #                     allocation_vector=allocation_vector,
-    #                     runtime_params=runtime_params,
-    #                     context=context)
-    #
-    # MODIFIED 6/8/18 NEW:
-    # FIX: NEED TO MODIFY predicted_input ATTRIBUTE TO BE A LIST OF INPUTS OF LEN simulation_length
-    # FIX: NEED TO MODIFY prediction_mechanism's function TO RECORD INPUTS FOR EACH TRIAL
-    # Run one simulation for each set of inputs in predicted_input
-    for inputs in ctlr.predicted_input:
-        outcome = ctlr.run_simulation(inputs=inputs,
-                            allocation_vector=allocation_vector,
-                            runtime_params=runtime_params,
-                            context=context)
+    # MODIFIED 6/8/18 OLD:
+    outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
+                        allocation_vector=allocation_vector,
+                        runtime_params=runtime_params,
+                        context=context)
+
+    # # MODIFIED 6/8/18 NEW:
+    # # FIX: NEED TO MODIFY predicted_input ATTRIBUTE TO BE A LIST OF INPUTS OF LEN simulation_length
+    # # FIX: NEED TO MODIFY prediction_mechanism's function TO RECORD INPUTS FOR EACH TRIAL
+    # # Run one simulation for each set of inputs in predicted_input
+    # for inputs in ctlr.predicted_input:
+    #     outcome = ctlr.run_simulation(inputs=inputs,
+    #                         allocation_vector=allocation_vector,
+    #                         runtime_params=runtime_params,
+    #                         context=context)
     # MODIFIED 6/8/18 END
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
