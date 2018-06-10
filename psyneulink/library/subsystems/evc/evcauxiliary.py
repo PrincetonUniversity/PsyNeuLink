@@ -522,6 +522,13 @@ def _compute_EVC(args):
     #       format(allocation_vector, [mech.outputState.value for mech in ctlr.predicted_input]),
     #       flush=True)
 
+
+    # # MODIFIED 6/8/18 OLD:
+    # outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
+    #                     allocation_vector=allocation_vector,
+    #                     runtime_params=runtime_params,
+    #                     context=context)
+    #
     # MODIFIED 6/8/18 NEW:
     # FIX: NEED TO MODIFY predicted_input ATTRIBUTE TO BE A LIST OF INPUTS OF LEN simulation_length
     # FIX: NEED TO MODIFY prediction_mechanism's function TO RECORD INPUTS FOR EACH TRIAL

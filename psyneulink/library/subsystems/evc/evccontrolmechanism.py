@@ -328,7 +328,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import function_type
-from psyneulink.components.functions.function import ModulationParam, _is_modulation_param
+from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, AccretionIntegrator
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing import integratormechanism
@@ -336,7 +336,7 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, FUNCTION, \
+from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, FUNCTION, FUNCTION_PARAMS,\
     INITIALIZING, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, \
     PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -698,7 +698,12 @@ class EVCControlMechanism(ControlMechanism):
                  system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  prediction_mechanism_type=integratormechanism.IntegratorMechanism,
-                 prediction_mechanism_params:tc.optional(dict)=None,
+                 # MODIFIED 6/9/18 OLD:
+                 # prediction_mechanism_params:tc.optional(dict)=None,
+                 # MODIFIED 6/9/18 NEW:
+                 prediction_mechanism_params:tc.optional(dict)={FUNCTION:AccretionIntegrator,
+                                                                FUNCTION_PARAMS:{'initializer':[[0]]}},
+                 # MODIFIED 6/9/18 END
                  simulation_length:int=1,
                  control_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -952,6 +957,29 @@ class EVCControlMechanism(ControlMechanism):
             # Get origin Mechanism for each process
             # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
             self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
+
+    def _update_predicted_input(self):
+        """Assign values of prediction mechanisms to predicted_input
+
+        Assign value of each predictionMechanism.value to corresponding item of self.predictedIinput
+        Note: must be assigned in order of self.system.processes
+
+        """
+
+        # The number of ORIGIN mechanisms requiring input should = the number of prediction mechanisms
+        num_origin_mechs = len(self.system.origin_mechanisms)
+        num_prediction_mechs = len(self.origin_prediction_mechanisms)
+        if num_origin_mechs != num_prediction_mechs:
+            raise EVCError("PROGRAM ERROR:  The number of ORIGIN mechanisms ({}) does not equal"
+                           "the number of prediction_predictions mechanisms ({}) for {}".
+                           format(num_origin_mechs, num_prediction_mechs, self.system.name))
+
+        # Assign predicted_input for each process in system.processes
+        for origin_mech in self.system.origin_mechanisms:
+            # Get origin Mechanism for each process
+            # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
+            self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
+            # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
 
     def run_simulation(self,
                        inputs,
