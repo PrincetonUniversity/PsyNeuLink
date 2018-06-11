@@ -151,7 +151,7 @@ the EVC for each `allocation_policy`.  When an EVCControlMechanism is created, a
 Mechanism, a `MappingProjection` from the same source is created that projects to the corresponding prediction
 Mechanism. The type of `Mechanism <Mechanism>` used for the prediction Mechanisms is specified by the EVCControlMechanism's
 `prediction_mechanism_type` attribute, and their parameters can be specified with the `prediction_mechanism_params`
-attribute. The default type is an 'IntegratorMechanism`, that calculates an exponentially weighted time-average of
+attribute. The default type is an `PredictionMechanism` that calculates an exponentially weighted time-average of
 its input. The prediction mechanisms for an EVCControlMechanism are listed in its `prediction_mechanisms` attribute.
 
 
@@ -328,10 +328,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import function_type
-from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, AccretionIntegrator
+from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Recorder
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.mechanism import MechanismList
-from psyneulink.components.mechanisms.processing import integratormechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function, System_Base
@@ -342,7 +341,7 @@ from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
-from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction
+from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction, PredictionMechanism
 
 __all__ = [
     'EVCControlMechanism', 'EVCError',
@@ -361,9 +360,8 @@ class EVCControlMechanism(ControlMechanism):
     """EVCControlMechanism(                                            \
     system=True,                                                       \
     objective_mechanism=None,                                          \
-    prediction_mechanism_type=IntegratorMechanism,                     \
+    prediction_mechanism_type=PredictionMechanism,                     \
     prediction_mechanism_params=None,                                  \
-    simulation_length=1,                                               \
     function=ControlSignalGridSearch                                   \
     value_function=ValueFunction,                                      \
     cost_function=LinearCombination(operation=SUM),                    \
@@ -437,7 +435,7 @@ class EVCControlMechanism(ControlMechanism):
         monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
-    prediction_mechanism_type : CombinationFunction: default IntegratorMechanism
+    prediction_mechanism_type : CombinationFunction: default PredictionMechanism
         the `Mechanism <Mechanism>` class used for `prediction Mechanism(s) <EVCControlMechanism_Prediction_Mechanisms>`.
         Each instance is named using the name of the `ORIGIN` Mechanism + "PREDICTION_MECHANISM"
         and assigned an `OutputState` with a name based on the same.
@@ -500,7 +498,7 @@ class EVCControlMechanism(ControlMechanism):
         `system <EVCControlMechanism.system>`, one for each of its `ORIGIN` Mechanisms.  The key for each
         entry is an `ORIGIN` Mechanism of the System, and the value is the corresponding prediction Mechanism.
 
-    prediction_mechanism_type : ProcessingMechanism : default IntegratorMechanism
+    prediction_mechanism_type : ProcessingMechanism : default PredictionMechanism
         the `ProcessingMechanism <ProcessingMechanism>` class used for `prediction Mechanism(s)
         <EVCControlMechanism_Prediction_Mechanisms>`. Each instance is named based on `ORIGIN` Mechanism +
         "PREDICTION_MECHANISM", and assigned an `OutputState` with a name based on the same.
@@ -515,9 +513,6 @@ class EVCControlMechanism(ControlMechanism):
         <EVCControlMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms` corresponding to each `ORIGIN`
         Mechanism of the System. The key for each entry is the name of an `ORIGIN` Mechanism, and its
         value the `value <Mechanism_Base.value>` of the corresponding prediction Mechanism.
-
-    simulation_length : int
-        number of trials to simulate for each `allocation_policy <EVCControlMechanism.allocation_policy>`.
 
     objective_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the EVCControlMechanism to evaluate the performance of its `system
@@ -697,14 +692,8 @@ class EVCControlMechanism(ControlMechanism):
     def __init__(self,
                  system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 prediction_mechanism_type=integratormechanism.IntegratorMechanism,
-                 # MODIFIED 6/9/18 OLD:
-                 # prediction_mechanism_params:tc.optional(dict)=None,
-                 # MODIFIED 6/9/18 NEW:
-                 prediction_mechanism_params:tc.optional(dict)={FUNCTION:AccretionIntegrator,
-                                                                FUNCTION_PARAMS:{'initializer':[[0]]}},
-                 # MODIFIED 6/9/18 END
-                 simulation_length:int=1,
+                 prediction_mechanism_type=PredictionMechanism,
+                 prediction_mechanism_params:tc.optional(dict)=None,
                  control_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  function=ControlSignalGridSearch,
@@ -720,7 +709,6 @@ class EVCControlMechanism(ControlMechanism):
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanism_type=prediction_mechanism_type,
                                                   prediction_mechanism_params=prediction_mechanism_params,
-                                                  simulation_length=simulation_length,
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   control_signals=control_signals,

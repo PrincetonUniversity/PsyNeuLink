@@ -31,7 +31,7 @@ Integrator Functions:
   * `Integrator`
   * `SimpleIntegrator`
   * `ConstantIntegrator`
-  * 'AccretionIntegrator`
+  * 'Recorder`
   * `AdaptiveIntegrator`
   * `DriftDiffusionIntegrator`
   * `OrnsteinUhlenbeckIntegrator`
@@ -196,7 +196,7 @@ import typecheck as tc
 from psyneulink.components.component import ComponentError, DefaultsFlexibility, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ACCRETION_INTEGRATOR_FUNCTION, ACCUMULATOR_INTEGRATOR_FUNCTION, \
+from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, \
     BACKPROPAGATION_FUNCTION, BETA, BIAS, \
     COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CORRELATION, \
@@ -215,7 +215,7 @@ from psyneulink.globals.keywords import ACCRETION_INTEGRATOR_FUNCTION, ACCUMULAT
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
     OUTPUT_STATES, OUTPUT_TYPE, \
     PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RECORDER_FUNCTION, REDUCE_FUNCTION, RL_FUNCTION, \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
@@ -247,7 +247,7 @@ __all__ = [
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
     'OneHot', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
-    'PROPENSITY', 'AccretionIntegrator', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
+    'PROPENSITY', 'Recorder', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
     'UniformDist', 'UniformToNormalDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
@@ -5282,25 +5282,25 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         return adjusted_value
 
 
-class AccretionIntegrator(Integrator):  # ------------------------------------------------------------------------------
+class Recorder(Integrator):  # ------------------------------------------------------------------------------
     """
-    AccretionIntegrator(        \
+    Recorder(        \
         default_variable=None,  \
         rate=1.0,               \
         noise=0.0,              \
-        window_len=None,        \
+        history=None,           \
         initializer,            \
         params=None,            \
         owner=None,             \
         prefs=None,             \
         )
 
-    .. _AccretionIntegrator:
+    .. _Recorder:
 
-    Adds item to prior value by appending variable to `previous_value <AccretionIntegrator.previous_value>`:
+    Adds item to prior value by appending variable to `previous_value <Recorder.previous_value>`:
 
-        :math: `variable <AccretionIntegrator.variable>` * `rate <AccretionIntegrator.rate>` +
-        `noise <AccretionIntegrator.noise>`
+        :math: `variable <Recorder.variable>` * `rate <Recorder.rate>` +
+        `noise <Recorder.noise>`
 
     Arguments
     ---------
@@ -5317,8 +5317,8 @@ class AccretionIntegrator(Integrator):  # --------------------------------------
         specifies random value to be added in each call to `function <SimpleIntegrator.function>`. (see
         `noise <SimpleIntegrator.noise>` for details).
 
-    window_len : int : default None
-        specifies max length of `value <AccretionIntegrator.value>`.
+    history : int : default None
+        specifies max length of `value <Recorder.value>`.
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -5367,12 +5367,12 @@ class AccretionIntegrator(Integrator):  # --------------------------------------
             its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
             then the noise will simply be an offset that remains the same across all executions.
 
-    window_len : int
-        determines maximum length of value returned by the `function <AccretionIntegrator.function>`. If appending
-        `variable <AccretionIntegrator.variable>` to `previous_value <AccretionIntegrator.previous_value>` exceeds
-        window_len, the first item of `previous_value <AccretionIntegrator.previous_value>` is deleted, and `variable
-        <AccretionIntegrator.variable>` is appended to it, so that `value <AccretionIntegrator.previous_value>`
-        maintains a constant length.  If window_len is not specified (or set to 0), the value returned continues to
+    history : int
+        determines maximum length of value returned by the `function <Recorder.function>`. If appending
+        `variable <Recorder.variable>` to `previous_value <Recorder.previous_value>` exceeds
+        history, the first item of `previous_value <Recorder.previous_value>` is deleted, and `variable
+        <Recorder.variable>` is appended to it, so that `value <Recorder.previous_value>`
+        maintains a constant length.  If history is not specified (or set to 0), the value returned continues to
         be extended indefinitely.
 
     initializer : float, 1d np.array or list
@@ -5397,7 +5397,7 @@ class AccretionIntegrator(Integrator):  # --------------------------------------
         <LINK>` for details).
     """
 
-    componentName = ACCRETION_INTEGRATOR_FUNCTION
+    componentName = RECORDER_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -5414,7 +5414,7 @@ class AccretionIntegrator(Integrator):  # --------------------------------------
                  default_variable=None,
                  rate: parameter_spec=1.0,
                  noise=0.0,
-                 window_len:tc.optional(int)=None,
+                 history:tc.optional(int)=None,
                  initializer=None,
                  params: tc.optional(dict)=None,
                  owner=None,
@@ -5428,7 +5428,7 @@ class AccretionIntegrator(Integrator):  # --------------------------------------
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
-                                                  window_len=window_len,
+                                                  history=history,
                                                   params=params)
 
         super().__init__(
@@ -5446,10 +5446,10 @@ class AccretionIntegrator(Integrator):  # --------------------------------------
                  params=None,
                  context=None):
         """
-        Return: `previous_value <AccretionIntegrator.previous_value>` appended with `variable
-        <AccretionIntegrator.variable>` * `rate <AccretionIntegrator.rate>` + `noise <AccretionIntegrator.noise>`;
+        Return: `previous_value <Recorder.previous_value>` appended with `variable
+        <Recorder.variable>` * `rate <Recorder.rate>` + `noise <Recorder.noise>`;
 
-        If the length of the result exceeds `window_len <AccretionIntegrator.window_len>`, delete the first item.
+        If the length of the result exceeds `history <Recorder.history>`, delete the first item.
 
         Arguments
         ---------
@@ -5485,8 +5485,8 @@ class AccretionIntegrator(Integrator):  # --------------------------------------
             # append variable * rate + noise to previous_value
             adjusted_value = np.append(previous_value, (variable * rate) + noise, 0)
 
-        # if length of result exceeds window_len, delete first entry
-        if self.window_len and len(adjusted_value) > self.window_len:
+        # if length of result exceeds history, delete first entry
+        if self.history and len(adjusted_value) > self.history:
             adjusted_value = np.delete(adjusted_value, 0, 0)
 
         # If this NOT an initialization run, update the old value

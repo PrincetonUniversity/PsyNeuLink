@@ -16,19 +16,24 @@ Auxiliary functions for `EVCControlMechanism`.
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Function_Base
-from psyneulink.components.mechanisms.mechanism import Mechanism
+from psyneulink.components.functions.function import Function_Base, Recorder
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
+from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
-from psyneulink.globals.keywords import COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, kwPreferenceSetName, kwProgressBarChar
+from psyneulink.globals.keywords import \
+    COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_OUTPUT_TYPE_CONVERSION, \
+    INITIALIZER, PARAMETER_STATE_PARAMS, PREDICTION_MECHANISM, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, \
+    kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = [
-    'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch', 'EVCAuxiliaryError',
-    'EVCAuxiliaryFunction', 'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction', 'OUTCOME', 'PY_MULTIPROCESSING',
-    'ValueFunction',
+    'AVERAGE_INPUTS', 'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch',
+    'DECAY_FUNCTION', 'EVCAuxiliaryError', 'EVCAuxiliaryFunction', 'WINDOW',
+    'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction',
+    'INPUT_SEQUENCE', 'OUTCOME', 'PredictionMechanism', 'PY_MULTIPROCESSING', 'TIME_AVERAGE_INPUT',
+    'ValueFunction', 'WINDOWING_FUNCTION'
 ]
 
 PY_MULTIPROCESSING = False
@@ -504,6 +509,10 @@ def _compute_EVC(args):
     """Compute EVC for a specified `allocation_policy <EVCControlMechanism.allocation_policy>`.
 
     IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool
+    IMPLEMENTATION NOTE:  this could be further parallelized if input is for multiple trials
+
+    Simulates and calculates one trial for each set of inputs in ctrl.predicted_input.
+    Returns the average EVC over all trials
 
     Args:
         ctlr (EVCControlMechanism)
@@ -523,31 +532,125 @@ def _compute_EVC(args):
     #       flush=True)
 
 
-    # MODIFIED 6/8/18 OLD:
-    outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
-                        allocation_vector=allocation_vector,
-                        runtime_params=runtime_params,
-                        context=context)
+    # # MODIFIED 6/8/18 OLD:
+    # outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
+    #                     allocation_vector=allocation_vector,
+    #                     runtime_params=runtime_params,
+    #                     context=context)
+    # EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
+    #                                                            outcome=outcome,
+    #                                                            costs=ctlr.control_signal_costs,
+    #                                                            context=context)
+    # if PY_MULTIPROCESSING:
+    #     return
+    #
+    # else:
+    #     return (EVC_current)
 
-    # # MODIFIED 6/8/18 NEW:
-    # # FIX: NEED TO MODIFY predicted_input ATTRIBUTE TO BE A LIST OF INPUTS OF LEN simulation_length
-    # # FIX: NEED TO MODIFY prediction_mechanism's function TO RECORD INPUTS FOR EACH TRIAL
-    # # Run one simulation for each set of inputs in predicted_input
-    # for inputs in ctlr.predicted_input:
-    #     outcome = ctlr.run_simulation(inputs=inputs,
-    #                         allocation_vector=allocation_vector,
-    #                         runtime_params=runtime_params,
-    #                         context=context)
-    # MODIFIED 6/8/18 END
-
-    EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
-                                                              outcome=outcome,
-                                                              costs=ctlr.control_signal_costs,
-                                                              context=context)
-
+    # MODIFIED 6/8/18 NEW:
+    # FIX: NEED TO MODIFY prediction_mechanism's function TO RECORD INPUTS FOR EACH TRIAL
+    # Run one simulation and get EVC for each trial's worth of inputs in predicted_input
+    origin_mechs = list(ctlr.predicted_input.keys())
+    num_trials = len(ctlr.predicted_input[origin_mechs[0]])
+    EVC_list = []
+    for i in range(num_trials):
+        inputs = {key:value[i] for key, value in ctlr.predicted_input.items()}
+        outcome = ctlr.run_simulation(inputs=inputs,
+                            allocation_vector=allocation_vector,
+                            runtime_params=runtime_params,
+                            context=context)
+        EVC_list.append(ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
+                                                                  outcome=outcome,
+                                                                  costs=ctlr.control_signal_costs,
+                                                                  context=context))
+    EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
 
     if PY_MULTIPROCESSING:
         return
 
     else:
-        return (EVC_current)
+        return (EVC_avg)
+    # MODIFIED 6/8/18 END
+
+AVERAGE_INPUTS = 'AVERAGE_INPUTS'
+INPUT_SEQUENCE = 'INPUT_SEQUENCE'
+TIME_AVERAGE_INPUT = 'TIME_AVERAGE_INPUT'
+input_types = {TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE}
+
+WINDOW = 'window'
+DECAY_FUNCTION = 'decay_function'
+WINDOWING_FUNCTION = 'windowing_function'
+
+class PredictionMechanism(IntegratorMechanism):
+
+    componentType = PREDICTION_MECHANISM
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 size=None,
+                 input_states:tc.optional(tc.any(list, dict))=None,
+                 function:tc.optional(tc.enum(TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE))=TIME_AVERAGE_INPUT,
+                 initializer=None,
+                 window=1,
+                 decay_function:tc.optional(callable)=None,
+                 windowing_function:tc.optional(callable)=None,
+                 params=None,
+                 name=None,
+                 prefs:is_pref_set=None):
+
+        if FUNCTION in params:
+            function = params[FUNCTION]
+
+        input_type = None
+        if function in input_types:
+            input_type = function
+
+        params = self._assign_args_to_param_dicts(window=window,
+                                                  input_type=input_type,
+                                                  decay_function=decay_function,
+                                                  windowing_function=windowing_function,
+                                                  params=params)
+
+        if function in input_types:
+
+            if function is TIME_AVERAGE_INPUT:
+                # Use default for IntegratorMechanism: AdaptiveIntegrator
+                function = self.ClassDefaults.function
+
+            elif function in {AVERAGE_INPUTS, INPUT_SEQUENCE}:
+                # Maintain the preceding sequence of inputs (of length num_trials), and use those for each simulation
+                function = Recorder(default_variable=[[0]],
+                                    initializer=initializer or [[0]],
+                                    history=self.window)
+
+
+        super().__init__(
+                default_variable=default_variable,
+                size=size,
+                input_states=input_states,
+                function=function,
+                params=params,
+                name=name,
+                prefs=prefs)
+
+    def _execute(self, variable=None, runtime_params=None, context=None):
+
+        value = super()._execute(variable, runtime_params=runtime_params, context=context)
+
+        # If inputs are being recorded (#recorded = window):
+        if value.shape[0] > 1:
+            if self.input_type is AVERAGE_INPUTS:
+                # Compute average input over window
+                value = np.sum(value)/value.shape[0]
+
+            elif self.input_type is INPUT_SEQUENCE:
+                if self.windowing_function:
+                    # Use windowing_function to return input values
+                    value = self.windowing_function(value)
+                else:
+                    # Return all input values in window
+                    pass
+        return value
+
+
