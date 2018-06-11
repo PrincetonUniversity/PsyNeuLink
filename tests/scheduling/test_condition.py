@@ -6,7 +6,7 @@ from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.compositions.composition import Composition
-from psyneulink.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforePass, BeforeTrial, Condition, ConditionError, ConditionSet, EveryNCalls, EveryNPasses, NWhen, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny, WhileNot
+from psyneulink.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTimeStep, AtTrial, BeforeNCalls, BeforePass, BeforeTimeStep, BeforeTrial, Condition, ConditionError, ConditionSet, EveryNCalls, EveryNPasses, NWhen, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny, WhileNot
 from psyneulink.scheduling.scheduler import Scheduler
 from psyneulink.scheduling.time import TimeScale
 
@@ -203,6 +203,58 @@ class TestCondition:
             assert output == pytest.helpers.setify_expected_output(expected_output)
 
     class TestTime:
+
+        def test_BeforeTimeStep(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+            comp.add_mechanism(A)
+
+            sched = Scheduler(composition=comp)
+            sched.add_condition(A, BeforeTimeStep(2))
+
+            termination_conds = {}
+            termination_conds[TimeScale.RUN] = AfterNTrials(1)
+            termination_conds[TimeScale.TRIAL] = AtPass(5)
+            output = list(sched.run(termination_conds=termination_conds))
+
+            expected_output = [A, A, set(), set(), set()]
+            assert output == pytest.helpers.setify_expected_output(expected_output)
+
+        def test_BeforeTimeStep_2(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+            B = TransferMechanism(name='B')
+            comp.add_mechanism(A)
+            comp.add_mechanism(B)
+
+            comp.add_projection(A, MappingProjection(), B)
+
+            sched = Scheduler(composition=comp)
+            sched.add_condition(A, BeforeTimeStep(2))
+
+            termination_conds = {}
+            termination_conds[TimeScale.RUN] = AfterNTrials(1)
+            termination_conds[TimeScale.TRIAL] = AtPass(5)
+            output = list(sched.run(termination_conds=termination_conds))
+
+            expected_output = [A, B, B, B, B, B]
+            assert output == pytest.helpers.setify_expected_output(expected_output)
+
+        def test_AtTimeStep(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+            comp.add_mechanism(A)
+
+            sched = Scheduler(composition=comp)
+            sched.add_condition(A, AtTimeStep(0))
+
+            termination_conds = {}
+            termination_conds[TimeScale.RUN] = AfterNTrials(1)
+            termination_conds[TimeScale.TRIAL] = AtPass(5)
+            output = list(sched.run(termination_conds=termination_conds))
+
+            expected_output = [A, set(), set(), set(), set()]
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
         def test_BeforePass(self):
             comp = Composition()
