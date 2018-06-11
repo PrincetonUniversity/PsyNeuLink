@@ -2532,6 +2532,61 @@ class Mechanism_Base(Mechanism):
         return tuple([input_context_init, function_context_init, output_context_init, parameter_context_init])
 
 
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, context, si, so = builder.function.args
+
+        m_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        # Allocate temporary storage. We rely on the fact that series
+        # of input state results should match the mech function input.
+        is_output = builder.alloca(m_function.args[2].type.pointee, 1)
+
+        for i, state in enumerate(self.input_states):
+            is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_in = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_out = builder.gep(is_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            is_function = ctx.get_llvm_function(state.llvmSymbolName)
+            builder.call(is_function, [is_params, is_context, is_in, is_out])
+
+        # Call parameter states for main function
+        for idx, mf_param in enumerate(self.function_object.get_param_ids()):
+            # FIXME: why wouldn't it be there?
+            if mf_param not in self._parameter_states:
+                continue
+
+            i = self._parameter_states.key_values.index(mf_param)
+            assert self._parameter_states[mf_param] == self.parameter_states[i]
+
+            # Skip parameter states that don't have incoming projections
+            if len(self._parameter_states[mf_param].mod_afferents) == 0:
+                continue
+
+            ps_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            ps_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(3), ctx.int32_ty(i)])
+            ps_input = builder.gep(si, [ctx.int32_ty(0), ctx.int32_ty(is_count + i)])
+            # Parameter states modify corresponding parameter in param struct
+            ps_output = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(idx)])
+            ps_function = ctx.get_llvm_function(state.llvmSymbolName)
+            builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
+
+        mf_in = is_output
+        mf_out = builder.alloca(m_function.args[3].type.pointee, 1)
+        mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        mf_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+
+        builder.call(m_function, [mf_params, mf_context, mf_in, mf_out])
+
+        os_input = mf_out
+        for i, state in enumerate(self.output_states):
+            os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
+            os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            os_function = ctx.get_llvm_function(state.llvmSymbolName)
+            builder.call(os_function, [os_params, os_context, os_input, os_output])
+
+        return builder
+
+
     def _bin_execute(self,
                  variable=None,
                  runtime_params=None,
