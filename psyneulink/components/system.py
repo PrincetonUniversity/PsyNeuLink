@@ -2716,6 +2716,13 @@ class System(System_Base):
         for next_execution_set in self.scheduler_processing.run(termination_conds=self.termination_processing):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
+            for mechanism in self.mechanisms:
+                if hasattr(mechanism, "reinitialize_when"):
+                    if mechanism.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing):
+                        if mechanism in reinitialize_values:
+                            mechanism.reinitialize(reinitialize_values[mechanism])
+                        else:
+                            mechanism.reinitialize(None)
             for mechanism in next_execution_set:
                 logger.debug('\tRunning Mechanism {0}'.format(mechanism))
 
@@ -2727,15 +2734,12 @@ class System(System_Base):
                 mechanism.context.string = "Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
                 mechanism.context.composition = self
 
+
                 execution_runtime_params = {}
                 if mechanism in runtime_params:
                     for param in runtime_params[mechanism]:
                         if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
-
-                if mechanism in reinitialize_values:
-                    if mechanism.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing):
-                        mechanism.reinitialize(reinitialize_values[mechanism])
 
                 mechanism.context.execution_phase = ContextFlags.PROCESSING
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)

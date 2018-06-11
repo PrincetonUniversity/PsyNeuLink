@@ -554,8 +554,8 @@ def _compute_EVC(args):
     num_trials = len(ctlr.predicted_input[origin_mechs[0]])
     EVC_list = []
     reinitialize_values = {}
-    for mech in ctlr.system.mechanisms:
-        reinitialize_values[mech] = mech.
+    # for mech in ctlr.system.mechanisms:
+    #     reinitialize_values[mech] = mech.
 
     for i in range(num_trials):
         inputs = {key:value[i] for key, value in ctlr.predicted_input.items()}
