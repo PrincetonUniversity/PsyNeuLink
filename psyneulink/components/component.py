@@ -3016,7 +3016,11 @@ class Component(object):
 
     @auto_dependent.setter
     def auto_dependent(self, value):
-        """Assign auto_dependent status to Component and any of its owners up the hierarchy
+        """
+        Assign auto_dependent status to Component and any of its owners up the hierarchy.
+
+        Adding reinitialize_when attribute to Components that are now auto_dependent, and setting the default
+        reinitialize condition to AtTimeStep(0).
         """
         if self.owner is self:
             self._auto_dependent = value
