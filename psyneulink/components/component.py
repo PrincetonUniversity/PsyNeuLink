@@ -400,7 +400,7 @@ import typecheck as tc
 from psyneulink.globals.context import Context, ContextFlags, _get_time
 from psyneulink.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SEPARATOR_BAR, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.globals.log import LogCondition
-from psyneulink.scheduling.condition import Never
+from psyneulink.scheduling.condition import AtTimeStep
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.registry import register_category
@@ -881,7 +881,6 @@ class Component(object):
                  param_defaults,
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
                  function=None,
-                 reinitialize_when=Never,
                  name=None,
                  prefs=None):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
@@ -927,7 +926,6 @@ class Component(object):
         else:
             default_variable = v
             defaults[VARIABLE] = default_variable
-        self.reinitialize_when = reinitialize_when
         self.instance_defaults = self.InstanceDefaults(**defaults)
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
@@ -3022,11 +3020,21 @@ class Component(object):
         """
         if self.owner is self:
             self._auto_dependent = value
+            if value:
+                self.reinitialize_when = AtTimeStep(0)
+            else:
+                if hasattr(self, "reinitialize_when"):
+                    del self.reinitialize_when
         else:
             owner = self
             while owner is not None:
                 try:
                     owner._auto_dependent = value
+                    if value:
+                        owner.reinitialize_when = AtTimeStep(0)
+                    else:
+                        if hasattr(owner.reinitialize_when):
+                            del owner.reinitialize_when
                     owner = owner.owner
 
                 except AttributeError:
