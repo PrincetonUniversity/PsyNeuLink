@@ -652,5 +652,3 @@ class PredictionMechanism(IntegratorMechanism):
                     # Return all input values in window
                     pass
         return value
-
-
