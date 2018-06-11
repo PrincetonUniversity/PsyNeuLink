@@ -553,6 +553,10 @@ def _compute_EVC(args):
     origin_mechs = list(ctlr.predicted_input.keys())
     num_trials = len(ctlr.predicted_input[origin_mechs[0]])
     EVC_list = []
+    reinitialize_values = {}
+    for mech in ctlr.system.mechanisms:
+        reinitialize_values[mech] = mech.
+
     for i in range(num_trials):
         inputs = {key:value[i] for key, value in ctlr.predicted_input.items()}
         outcome = ctlr.run_simulation(inputs=inputs,
@@ -601,7 +605,7 @@ class PredictionMechanism(IntegratorMechanism):
                  name=None,
                  prefs:is_pref_set=None):
 
-        if FUNCTION in params:
+        if params and FUNCTION in params:
             function = params[FUNCTION]
 
         input_type = None
