@@ -572,6 +572,7 @@ def _compute_EVC(args):
         return (EVC_avg)
     # MODIFIED 6/8/18 END
 
+
 AVERAGE_INPUTS = 'AVERAGE_INPUTS'
 INPUT_SEQUENCE = 'INPUT_SEQUENCE'
 TIME_AVERAGE_INPUT = 'TIME_AVERAGE_INPUT'
@@ -580,6 +581,7 @@ input_types = {TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE}
 WINDOW = 'window'
 DECAY_FUNCTION = 'decay_function'
 WINDOWING_FUNCTION = 'windowing_function'
+
 
 class PredictionMechanism(IntegratorMechanism):
 
