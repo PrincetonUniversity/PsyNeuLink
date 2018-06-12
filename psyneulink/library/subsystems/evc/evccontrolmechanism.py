@@ -1027,7 +1027,6 @@ class EVCControlMechanism(ControlMechanism):
         # Run simulation
         self.system.context.execution_phase = ContextFlags.SIMULATION
 
-        # TBI: ASSEMBLE REINITIALIZE_VALUES
         self.system.run(inputs=inputs,
                         reinitialize_values=reinitialize_values,
                         context=context)

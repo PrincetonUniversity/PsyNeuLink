@@ -2711,10 +2711,6 @@ class System(System_Base):
         for next_execution_set in self.scheduler_processing.run(termination_conds=self.termination_processing):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
-            for mechanism in self.mechanisms:
-                if hasattr(mechanism, "reinitialize_when"):
-                    if mechanism.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing):
-                        mechanism.reinitialize(None)
 
             for mechanism in next_execution_set:
                 logger.debug('\tRunning Mechanism {0}'.format(mechanism))

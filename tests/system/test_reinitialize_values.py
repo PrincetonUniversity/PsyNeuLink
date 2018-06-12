@@ -46,6 +46,7 @@ class TestReinitializeValues:
         # Set reinitialization condition
         B.reinitialize_when = AtTrial(2)
 
+
         C.log.set_log_conditions('value')
 
         abc_system.run(inputs={A: [1.0]},

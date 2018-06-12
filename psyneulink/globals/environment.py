@@ -816,6 +816,12 @@ def run(obj,
             if call_before_time_step:
                 call_before_time_step()
 
+            # Reset any mechanisms whose 'reinitialize_when' conditions are satisfied
+            for mechanism in obj.mechanisms:
+                if hasattr(mechanism, "reinitialize_when"):
+                    if mechanism.reinitialize_when.is_satisfied(scheduler=obj.scheduler_processing):
+                        mechanism.reinitialize(None)
+
             input_num = execution%num_inputs_sets
 
             for mech in inputs:
