@@ -551,7 +551,9 @@ def _compute_EVC(args):
     # MODIFIED 6/8/18 NEW:
     # FIX: NEED TO MODIFY prediction_mechanism's function TO RECORD INPUTS FOR EACH TRIAL
     # Run one simulation and get EVC for each trial's worth of inputs in predicted_input
+
     origin_mechs = list(ctlr.predicted_input.keys())
+    # number of trials' worth of inputs in predicted_input should be the same for all ORIGIN Mechanisms, so use first:
     num_trials = len(ctlr.predicted_input[origin_mechs[0]])
     EVC_list = []
 
@@ -564,6 +566,7 @@ def _compute_EVC(args):
             for attr in component._reinitialization_attributes:
                 reinitialization_values[component].update({attr:getattr(component, attr)})
 
+    # Run simulation
     for i in range(num_trials):
         inputs = {key:value[i] for key, value in ctlr.predicted_input.items()}
         outcome = ctlr.run_simulation(inputs=inputs,
@@ -575,7 +578,11 @@ def _compute_EVC(args):
                                                                   outcome=outcome,
                                                                   costs=ctlr.control_signal_costs,
                                                                   context=context))
-        # FIX: Re-initialize self._reinitialization_attributes here
+
+    # Re-assign values of reinitialization attributes to their value at entry
+    for component, attr_list in reinitialization_values.items():
+        for attr in attr_list:
+            setattr(component, attr, reinitialization_values[component][attr])
 
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
 
