@@ -4839,7 +4839,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             Sets
 
             - `previous_value <Integrator.previous_value>`
-            - `initializer <Integrator.initial_value>`
             - `value <Integrator.value>`
 
             to the quantity specified.
@@ -4847,11 +4846,11 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             For specific types of Integrator functions, additional values, such as initial time, must be specified, and
             additional attributes are reset.
 
-            If no arguments are specified, then the instance default for `initializer <Integrator.initializer>` is used.
+            If no arguments are specified, then the current value of `initializer <Integrator.initializer>` is used.
         """
         if new_previous_value is None:
-            new_previous_value = self.instance_defaults.initializer
-        self._initializer = new_previous_value
+            new_previous_value = self.get_current_function_param("initializer")
+
         self.value = new_previous_value
         self.previous_value = new_previous_value
         return self.value
@@ -6049,21 +6048,20 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         Sets
 
         - `previous_value <DriftDiffusionIntegrator.previous_value>`
-        - `initializer <DriftDiffusionIntegrator.initializer>`
         - `value <DriftDiffusionIntegrator.value>`
 
         to the value specified in the first argument.
 
         Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the value specified in the second argument.
 
-        If no arguments are specified, then the instance defaults for `initializer
+        If arguments are not specified, then the current values for `initializer
         <DriftDiffusionIntegrator.initializer>` and `t0 <DriftDiffusionIntegrator.t0>` are used.
         """
         if new_previous_value is None:
-            new_previous_value = self.instance_defaults.initializer
+            new_previous_value = self.get_current_function_param("initializer")
         if new_previous_time is None:
-            new_previous_time = self.instance_defaults.t0
-        self._initializer = new_previous_value
+            new_previous_time = self.get_current_function_param("t0")
+
         self.value = new_previous_value
         self.previous_value = new_previous_value
         self.previous_time = new_previous_time
@@ -6302,21 +6300,20 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
         Sets
 
         - `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`
-        - `initializer <OrnsteinUhlenbeckIntegrator.initializer>`
         - `value <OrnsteinUhlenbeckIntegrator.value>`
 
         to the value specified in the first argument.
 
         Sets `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>` to the value specified in the second argument.
 
-        If no arguments are specified, then the instance defaults for `initializer
+        If no arguments are specified, then the current values of `initializer
         <OrnsteinUhlenbeckIntegrator.initializer>` and `t0 <OrnsteinUhlenbeckIntegrator.t0>` are used.
         """
         if new_previous_value is None:
-            new_previous_value = self.instance_defaults.initializer
+            new_previous_value =self.get_current_function_param("initializer")
         if new_previous_time is None:
-            new_previous_time = self.instance_defaults.t0
-        self._initializer = new_previous_value
+            new_previous_time = self.get_current_function_param("t0")
+
         self.value = new_previous_value
         self.previous_value = new_previous_value
         self.previous_time = new_previous_time
@@ -7084,37 +7081,28 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         """
         Effectively begins accumulation over again at the specified v, w, and time.
 
-        Sets
+            - Sets `previous_v <DriftDiffusionIntegrator.previous_v>` to the quantity specified in the first argument.
 
-        - `previous_v <DriftDiffusionIntegrator.previous_v>`
-        - `initial_v <DriftDiffusionIntegrator.initial_v>`
+            - Sets `previous_w <DriftDiffusionIntegrator.previous_w>` to the quantity specified in the second argument.
 
-        to the quantity specified in the first argument.
+            - Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in the third
+              argument.
 
-        Sets
-
-        - `previous_w <DriftDiffusionIntegrator.previous_w>`
-        - `initial_w <DriftDiffusionIntegrator.initial_w>`
-
-        to the quantity specified in the second argument.
-
-        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in the third argument.
-
-        If no arguments are specified, then the instance defaults for `initial_v <FHNIntegrator.initial_v>`, `initial_w
+        If no arguments are specified, then the current values of `initial_v <FHNIntegrator.initial_v>`, `initial_w
         <FHNIntegrator.initial_w>` and `t_0 <FHNIntegrator.t_0>` are used.
         """
         if new_previous_v is None:
-            new_previous_v = self.instance_defaults.initial_v
+            new_previous_v = self.get_current_function_param("initial_v")
         if new_previous_w is None:
-            new_previous_w = self.instance_defaults.initial_w
+            new_previous_w = self.get_current_function_param("initial_w")
         if new_previous_time is None:
-            new_previous_time = self.instance_defaults.t_0
-        self._initial_v = new_previous_v
+            new_previous_time = self.get_current_function_param("t_0")
+
         self.previous_v = new_previous_v
-        self._initial_w = new_previous_w
         self.previous_w = new_previous_w
         self.previous_time = new_previous_time
         self.value = new_previous_v, new_previous_w, new_previous_time
+
         return [new_previous_v], [new_previous_w], [new_previous_time]
 
 
@@ -7966,38 +7954,28 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         """
         Effectively begins accumulation over again at the specified utilities.
 
-        Sets
+        Sets `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>` to the quantity specified
+        in the first argument and `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>` to the
+        quantity specified in the second argument.
 
-        - `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>`
-        - `initial_short_term_utility <AGTUtilityIntegrator.initial_short_term_utility>`
-
-        to the quantity specified in the first argument.
-
-        Sets
-
-        - `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`
-        - `initial_long_term_utility <AGTUtilityIntegrator.initial_long_term_utility>`
-
-        to the quantity specified in the second argument.
-
-        sets `value <AGTUtilityIntegrator.value>` by computing it based on the newly updated values for
+        Sets `value <AGTUtilityIntegrator.value>` by computing it based on the newly updated values for
         `previous_short_term_utility <AGTUtilityIntegrator.previous_short_term_utility>` and
         `previous_long_term_utility <AGTUtilityIntegrator.previous_long_term_utility>`.
 
-        If no arguments are specified, then the instance defaults for `initial_short_term_utility
+        If no arguments are specified, then the current values of `initial_short_term_utility
         <AGTUtilityIntegrator.initial_short_term_utility>` and `initial_long_term_utility
         <AGTUtilityIntegrator.initial_long_term_utility>` are used.
         """
 
         if short is None:
-            short = self.instance_defaults.initial_short_term_utility
+            short = self.get_current_function_param("initial_short_term_utility")
         if long is None:
-            long = self.instance_defaults.initial_long_term_utility
-        self._initial_short_term_utility = short
+            long = self.get_current_function_param("initial_long_term_utility")
+
         self.previous_short_term_utility = short
-        self._initial_long_term_utility = long
         self.previous_long_term_utility = long
         self.value = self.combine_utilities(short, long)
+
         return self.value
 #
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()

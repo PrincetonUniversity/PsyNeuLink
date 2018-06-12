@@ -1025,7 +1025,11 @@ class EVCControlMechanism(ControlMechanism):
 
         # Run simulation
         self.system.context.execution_phase = ContextFlags.SIMULATION
-        self.system.run(inputs=inputs, reinitialize_values=reinitialize_values, context=context)
+
+        # TBI: ASSEMBLE REINITIALIZE_VALUES
+        self.system.run(inputs=inputs,
+                        reinitialize_values=reinitialize_values,
+                        context=context)
         self.system.context.execution_phase = ContextFlags.IDLE
 
         # Get outcomes for current allocation_policy

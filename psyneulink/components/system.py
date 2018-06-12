@@ -2514,7 +2514,6 @@ class System(System_Base):
                 termination_processing=None,
                 termination_learning=None,
                 runtime_params=None,
-                reinitialize_values=None,
                 context=None):
         """Execute mechanisms in System at specified :ref:`phases <System_Execution_Phase>` in order \
         specified by the :py:data:`execution_graph <System.execution_graph>` attribute.
@@ -2557,9 +2556,6 @@ class System(System_Base):
             Each item is a 2d array that contains arrays for each OutputState.value of each `TERMINAL` Mechanism
 
         """
-
-        if reinitialize_values is None:
-            reinitialize_values = {}
 
         if self.scheduler_processing is None:
             self.scheduler_processing = Scheduler(system=self)
@@ -2661,7 +2657,6 @@ class System(System_Base):
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
         self._execute_processing(runtime_params=runtime_params,
-                                 reinitialize_values=reinitialize_values,
                                  context=context)
 
         # EXECUTE LEARNING FOR EACH PROCESS
@@ -2719,10 +2714,8 @@ class System(System_Base):
             for mechanism in self.mechanisms:
                 if hasattr(mechanism, "reinitialize_when"):
                     if mechanism.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing):
-                        if mechanism in reinitialize_values:
-                            mechanism.reinitialize(reinitialize_values[mechanism])
-                        else:
-                            mechanism.reinitialize(None)
+                        mechanism.reinitialize(None)
+
             for mechanism in next_execution_set:
                 logger.debug('\tRunning Mechanism {0}'.format(mechanism))
 
@@ -2921,6 +2914,7 @@ class System(System_Base):
             runtime_params=None,
             reinitialize_values=None,
             context=None):
+
         """Run a sequence of executions
 
         Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run` for details of
@@ -2989,6 +2983,9 @@ class System(System_Base):
         if reinitialize_values is None:
             reinitialize_values = {}
 
+        for mechanism in reinitialize_values:
+            mechanism.reinitialize(*reinitialize_values[mechanism])
+
         self.initial_values = initial_values
 
         logger.debug(inputs)
@@ -3008,7 +3005,6 @@ class System(System_Base):
                    termination_processing=termination_processing,
                    termination_learning=termination_learning,
                    runtime_params=runtime_params,
-                   reinitialize_values=reinitialize_values,
                    context=ContextFlags.COMPOSITION)
 
     def _report_system_initiation(self):

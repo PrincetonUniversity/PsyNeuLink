@@ -2233,8 +2233,7 @@ class Process(Process_Base):
             call_before_trial=None,
             call_after_trial=None,
             call_before_time_step=None,
-            call_after_time_step=None,
-            reinitialize_values=None,
+            call_after_time_step=None
     ):
         """Run a sequence of executions
 
@@ -2324,9 +2323,8 @@ class Process(Process_Base):
                    call_before_trial=call_before_trial,
                    call_after_trial=call_after_trial,
                    call_before_time_step=call_before_time_step,
-                   call_after_time_step=call_after_time_step,
-                   reinitialize_values=reinitialize_values
-        )
+                   call_after_time_step=call_after_time_step)
+
     def _report_process_initiation(self, input=None, separator=False):
         """
         Parameters

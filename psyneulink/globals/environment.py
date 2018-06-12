@@ -594,7 +594,6 @@ def run(obj,
         termination_processing=None,
         termination_learning=None,
         runtime_params=None,
-        reinitialize_values=None,
         context=ContextFlags.COMMAND_LINE):
     """run(                      \
     inputs,                      \
@@ -727,9 +726,6 @@ def run(obj,
     else:
         num_trials = num_inputs_sets
 
-    if reinitialize_values is None:
-        reinitialize_values = {}
-
     # num_trials = num_trials or num_inputs_sets  # num_trials may be provided by user, otherwise = # of input sets
 
     if targets is not None:
@@ -852,7 +848,6 @@ def run(obj,
                 termination_processing=termination_processing,
                 termination_learning=termination_learning,
                 runtime_params=runtime_params,
-                reinitialize_values=reinitialize_values,
                 context=context
             )
 
