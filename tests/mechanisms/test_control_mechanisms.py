@@ -69,3 +69,18 @@ class TestLCControlMechanism:
 
         # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
         assert np.allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)
+
+
+    @pytest.mark.skip
+    @pytest.mark.mechanism
+    @pytest.mark.control_mechanism
+    @pytest.mark.benchmark(group="ControlMechanism")
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_lc_control_mech_basic(self, benchmark, mode):
+
+        LC = pnl.LCControlMechanism(
+            base_level_gain=3.0,
+            scaling_factor_gain=0.5,
+        )
+        val = benchmark(LC.execute, [[10.0]])
+        assert np.allclose(np.asfarray(val).flatten(), [3.00126183, 3.00126183, 0.51215226, 0.00252367, 0.05])
