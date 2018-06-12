@@ -23,7 +23,8 @@ from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.globals.keywords import \
     COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    INITIALIZER, PARAMETER_STATE_PARAMS, PREDICTION_MECHANISM, SAVE_ALL_VALUES_AND_POLICIES, VALUE_FUNCTION, \
+    PARAMETER_STATE_PARAMS, PREDICTION_MECHANISM, REINITIALIZATION_ATTRIBUTES, SAVE_ALL_VALUES_AND_POLICIES, \
+    VALUE_FUNCTION, \
     kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -32,8 +33,8 @@ __all__ = [
     'AVERAGE_INPUTS', 'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch',
     'DECAY_FUNCTION', 'EVCAuxiliaryError', 'EVCAuxiliaryFunction', 'WINDOW',
     'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction',
-    'INPUT_SEQUENCE', 'OUTCOME', 'PredictionMechanism', 'PY_MULTIPROCESSING', 'TIME_AVERAGE_INPUT',
-    'ValueFunction', 'WINDOWING_FUNCTION'
+    'INPUT_SEQUENCE', 'OUTCOME', 'PredictionMechanism', 'PY_MULTIPROCESSING',
+    'TIME_AVERAGE_INPUT', 'ValueFunction', 'WINDOWING_FUNCTION'
 ]
 
 PY_MULTIPROCESSING = False
@@ -553,20 +554,29 @@ def _compute_EVC(args):
     origin_mechs = list(ctlr.predicted_input.keys())
     num_trials = len(ctlr.predicted_input[origin_mechs[0]])
     EVC_list = []
-    reinitialize_values = {}
-    # for mech in ctlr.system.mechanisms:
-    #     reinitialize_values[mech] = mech.
+
+    # Get any values that need to be reinitialized for each run
+    reinitialization_values = {}
+    from psyneulink.scheduling.condition import AtTrial
+    for component in ctlr._reinitialization_components:
+        if isinstance(component.reinitialize_when, AtTrial) and component.reinitialize_when.args[0]==0:
+            reinitialization_values[component] = {}
+            for attr in component._reinitialization_attributes:
+                reinitialization_values[component].update({attr:getattr(component, attr)})
 
     for i in range(num_trials):
         inputs = {key:value[i] for key, value in ctlr.predicted_input.items()}
         outcome = ctlr.run_simulation(inputs=inputs,
-                            allocation_vector=allocation_vector,
-                            runtime_params=runtime_params,
-                            context=context)
+                                      allocation_vector=allocation_vector,
+                                      runtime_params=runtime_params,
+                                      reinitialize_values=reinitialization_values,
+                                      context=context)
         EVC_list.append(ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
                                                                   outcome=outcome,
                                                                   costs=ctlr.control_signal_costs,
                                                                   context=context))
+        # FIX: Re-initialize self._reinitialization_attributes here
+
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
 
     if PY_MULTIPROCESSING:

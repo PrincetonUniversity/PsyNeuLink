@@ -336,8 +336,8 @@ from psyneulink.components.projections.pathway.mappingprojection import MappingP
 from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, FUNCTION, FUNCTION_PARAMS,\
-    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, \
-    PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, SUM
+    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, \
+    PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, REINITIALIZATION_ATTRIBUTES, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList
@@ -832,8 +832,23 @@ class EVCControlMechanism(ControlMechanism):
         for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
             self.predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
+    # FIX: THIS SHOULD BE REVISED IF/WHEN GENERIC METHOD IS ADDED TO COMPONENT OR MECHANISM TO ACCOMPLISH THIS
+    def _get_initialization_attributes(self, system:System_Base, context=None):
+        self._reinitialization_components = {}
+        for mech in system.mechanisms:
+            if hasattr(mech, REINITIALIZATION_ATTRIBUTES):
+                self._reinitialization_components[mech]=mech._reinitialization_attributes
+            if hasattr(mech.function_object, REINITIALIZATION_ATTRIBUTES):
+                self._reinitialization_components[mech.function_object]=\
+                    mech.function_object._reinitialization_attributes
+            if hasattr(mech, 'integrator_function'):
+                self._reinitialization_components[mech.integrator_function]=\
+                    mech.integrator_function._reinitialization_attributes
+
     def _instantiate_attributes_after_function(self, context=None):
 
+        if self.system is not None:
+            self._get_initialization_attributes(system=self.system, context=context)
         super()._instantiate_attributes_after_function(context=context)
 
         if self.system is None or not self.system.enable_controller:
@@ -866,6 +881,7 @@ class EVCControlMechanism(ControlMechanism):
     @tc.typecheck
     def assign_as_controller(self, system:System_Base, context=ContextFlags.COMMAND_LINE):
         self._instantiate_prediction_mechanisms(system=system, context=context)
+        self._get_initialization_attributes(system=system, context=context)
         super().assign_as_controller(system=system, context=context)
 
     def _execute(
@@ -973,6 +989,7 @@ class EVCControlMechanism(ControlMechanism):
                        inputs,
                        allocation_vector,
                        runtime_params=None,
+                       reinitialize_values=None,
                        context=None):
         """
         Run simulation of `System` for which the EVCControlMechanism is the `controller <System.controller>`.
@@ -1008,7 +1025,7 @@ class EVCControlMechanism(ControlMechanism):
 
         # Run simulation
         self.system.context.execution_phase = ContextFlags.SIMULATION
-        self.system.run(inputs=inputs, context=context)
+        self.system.run(inputs=inputs, reinitialize_values=reinitialize_values, context=context)
         self.system.context.execution_phase = ContextFlags.IDLE
 
         # Get outcomes for current allocation_policy
