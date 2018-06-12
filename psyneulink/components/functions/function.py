@@ -4850,7 +4850,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         """
         if new_previous_value is None:
             new_previous_value = self.get_current_function_param("initializer")
-
         self.value = new_previous_value
         self.previous_value = new_previous_value
         return self.value

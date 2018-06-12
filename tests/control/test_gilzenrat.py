@@ -9,6 +9,7 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.scheduling.condition import Never
 
 class TestGilzenratMechanisms:
 
@@ -50,7 +51,7 @@ class TestGilzenratMechanisms:
                 self_excitation=1.0,
                 competition=-1.0,
                 initial_value=np.array([[1.0]]))
-
+        G.reinitialize_when = Never()
         P = Process(pathway=[G])
         S = System(processes=[P])
         G.output_state.value = [0.0]

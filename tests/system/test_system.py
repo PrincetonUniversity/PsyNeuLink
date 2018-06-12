@@ -11,6 +11,7 @@ from psyneulink.globals.keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGI
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM
 from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
 from psyneulink.scheduling.condition import Any, AtTrial, AfterTrial
+from psyneulink.scheduling.condition import Never
 
 def test_danglingControlledMech():
     #

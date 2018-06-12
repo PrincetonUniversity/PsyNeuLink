@@ -930,12 +930,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                           owner=self)
 
             self.original_integrator_function = self.integrator_function
-
         current_input = self.integrator_function.execute(function_variable,
                                                          # Should we handle runtime params?
-                                                         runtime_params={INITIALIZER: self.initial_value,
-                                                                         NOISE: self.noise,
-                                                                         RATE: self.smoothing_factor},
+                                                         runtime_params={INITIALIZER: initial_value,
+                                                                         NOISE: noise,
+                                                                         RATE: smoothing_factor},
                                                          context=context)
 
         return current_input
@@ -1001,7 +1000,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         noise = self.get_current_mechanism_param("noise")
         initial_value = self.get_current_mechanism_param("initial_value")
 
-
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
@@ -1010,9 +1008,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update according to time-scale of integration
         if integrator_mode:
             current_input = self._get_integrated_function_input(variable,
-                                                                    initial_value,
-                                                                    noise,
-                                                                    context)
+                                                                initial_value,
+                                                                noise,
+                                                                context)
 
         else:
             current_input = self._get_instantaneous_function_input(variable, noise)
