@@ -3,9 +3,9 @@ import numpy as np
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
-from psyneulink.scheduling.condition import AtTrial
+from psyneulink.scheduling.condition import AtTrial, Never
 from psyneulink.components.states.outputstate import OutputState
-from psyneulink.components.functions.function import AdaptiveIntegrator, DriftDiffusionIntegrator
+from psyneulink.components.functions.function import AdaptiveIntegrator, DriftDiffusionIntegrator, Integrator
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 
 class TestReinitializeValues:
@@ -112,3 +112,62 @@ class TestReinitializeValues:
         assert np.allclose(output_after_saving_state, output_after_reinitialization)
         assert np.allclose(original_output, [np.array([[0.5]]), np.array([[0.75]])])
         assert np.allclose(output_after_reinitialization, [np.array([[0.875]]), np.array([[0.9375]])])
+
+    def test_save_state_before_simulations(self):
+
+        A = TransferMechanism(name='A',
+                              integrator_mode=True,
+                              smoothing_factor=0.2)
+
+        # B = IntegratorMechanism(name='B',
+        #                         function=DriftDiffusionIntegrator(rate=0.1))
+        C = TransferMechanism(name='C')
+
+        P = Process(pathway=[A,
+                             # B,
+                             C])
+        S = System(processes=[P])
+        A.reinitialize_when = Never()
+
+        S.run(inputs={A: [[1.0], [1.0]]})
+
+        run_1_values = [A.value,
+                        # B.value,
+                        C.value]
+
+        # "Save state" code from EVCaux
+
+        # Get any values that need to be reinitialized for each run
+        reinitialization_values = {}
+        for mechanism in S.stateful_mechanisms:
+            # "save" the current state of each stateful mechanism by storing the values of each of its stateful
+            # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
+            # the reinitialize method on each stateful mechanism.
+            reinitialization_value = []
+
+            if isinstance(mechanism.function_object, Integrator):
+                for attr in mechanism.function_object.stateful_attributes:
+                    reinitialization_value.append(getattr(mechanism.function_object, attr))
+            elif hasattr(mechanism, "integrator_function"):
+                if isinstance(mechanism.integrator_function, Integrator):
+                    for attr in mechanism.integrator_function.stateful_attributes:
+                        reinitialization_value.append(getattr(mechanism.integrator_function, attr))
+
+            reinitialization_values[mechanism] = reinitialization_value
+
+        # Allow values to continue accumulating so that we can set them back to the saved state
+        S.run(inputs={A: [[1.0], [1.0]]})
+
+        run_2_values = [A.value,
+                        # B.value,
+                        C.value]
+
+        S.run(inputs={A: [[1.0], [1.0]]},
+              reinitialize_values=reinitialization_values)
+
+        run_3_values = [A.value,
+                        # B.value,
+                        C.value]
+
+        assert(np.allclose(run_2_values, run_3_values))
+

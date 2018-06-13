@@ -3027,9 +3027,9 @@ class Component(object):
             if value:
                 # self.reinitialize_when = AtTimeStep(0)
                 self.reinitialize_when = Never()
-            else:
-                if hasattr(self, "reinitialize_when"):
-                    del self.reinitialize_when
+            # else:
+            #     if hasattr(self, "reinitialize_when"):
+            #         del self.reinitialize_when
         else:
             owner = self
             while owner is not None:
@@ -3038,9 +3038,9 @@ class Component(object):
                     if value:
                         # owner.reinitialize_when = AtTimeStep(0)
                         owner.reinitialize_when = Never()
-                    else:
-                        if hasattr(owner.reinitialize_when):
-                            del owner.reinitialize_when
+                    # else:
+                    #     if hasattr(owner.reinitialize_when):
+                    #         del owner.reinitialize_when
                     owner = owner.owner
 
                 except AttributeError:
