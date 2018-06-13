@@ -3319,6 +3319,24 @@ class System(System_Base):
         return self._all_mechanisms.mechanisms
 
     @property
+
+    def stateful_mechanisms(self):
+        """List of all mechanisms in the system that are currently marked as stateful (mechanism.auto_dependent = True)
+
+        Returns
+        -------
+        all stateful mechanisms in the system : List[Mechanism]
+
+        """
+
+        stateful_mechanisms = []
+        for mechanism in self.mechanisms:
+            if mechanism.auto_dependent:
+                stateful_mechanisms.append(mechanism)
+
+        return stateful_mechanisms
+
+    @property
     def numPhases(self):
         """Number of phases required to execute all ProcessingMechanisms in the system
 

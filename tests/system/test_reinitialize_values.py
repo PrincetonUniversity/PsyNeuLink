@@ -69,7 +69,7 @@ class TestReinitializeValues:
 
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
         reinitialize_values = []
-        for attr in A.function_object._stateful_attributes:
+        for attr in A.function_object.stateful_attributes:
             reinitialize_values.append(getattr(A.function_object, attr))
 
         # Execute A twice AFTER saving the state so that it continues accumulating.
@@ -96,7 +96,7 @@ class TestReinitializeValues:
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
         reinitialize_values = []
 
-        for attr in A.integrator_function._stateful_attributes:
+        for attr in A.integrator_function.stateful_attributes:
             reinitialize_values.append(getattr(A.integrator_function, attr))
 
         # Execute A twice AFTER saving the state so that it continues accumulating.

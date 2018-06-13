@@ -16,14 +16,14 @@ Auxiliary functions for `EVCControlMechanism`.
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Function_Base, Recorder
+from psyneulink.components.functions.function import Function_Base, Recorder, Integrator
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.globals.keywords import \
     COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    PARAMETER_STATE_PARAMS, PREDICTION_MECHANISM, REINITIALIZATION_ATTRIBUTES, SAVE_ALL_VALUES_AND_POLICIES, \
+    PARAMETER_STATE_PARAMS, PREDICTION_MECHANISM, STATEFUL_ATTRIBUTES, SAVE_ALL_VALUES_AND_POLICIES, \
     VALUE_FUNCTION, \
     kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
@@ -559,16 +559,26 @@ def _compute_EVC(args):
 
     # Get any values that need to be reinitialized for each run
     reinitialization_values = {}
-    from psyneulink.scheduling.condition import AtTrial
-    for component in ctlr._reinitialization_components:
-        if isinstance(component.reinitialize_when, AtTrial) and component.reinitialize_when.args[0]==0:
-            reinitialization_values[component] = {}
-            for attr in component._stateful_attributes:
-                reinitialization_values[component].update({attr:getattr(component, attr)})
+    for mechanism in ctlr.system.stateful_mechanisms:
+        # "save" the current state of each stateful mechanism by storing the values of each of its stateful
+        # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
+        # the reinitialize method on each stateful mechanism.
+        reinitialization_value = []
+
+        if isinstance(mechanism.function_object, Integrator):
+            for attr in mechanism.function_object.stateful_attributes:
+                reinitialization_value.append(getattr(mechanism.function_object, attr))
+        elif hasattr(mechanism, "integrator_function"):
+            if isinstance(mechanism.integrator_function, Integrator):
+                for attr in mechanism.integrator_function.stateful_attributes:
+                    reinitialization_value.append(getattr(mechanism.integrator_function, attr))
+
+        reinitialization_values[mechanism] = reinitialization_value
 
     # Run simulation
     for i in range(num_trials):
         inputs = {key:value[i] for key, value in ctlr.predicted_input.items()}
+
         outcome = ctlr.run_simulation(inputs=inputs,
                                       allocation_vector=allocation_vector,
                                       runtime_params=runtime_params,
