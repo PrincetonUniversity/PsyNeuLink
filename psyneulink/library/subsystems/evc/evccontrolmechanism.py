@@ -837,14 +837,14 @@ class EVCControlMechanism(ControlMechanism):
         self._reinitialization_components = {}
         for mech in system.mechanisms:
             if hasattr(mech, REINITIALIZATION_ATTRIBUTES):
-                self._reinitialization_components[mech]=mech._reinitialization_attributes
+                self._reinitialization_components[mech]=mech._stateful_attributes
             if hasattr(mech.function_object, REINITIALIZATION_ATTRIBUTES):
                 self._reinitialization_components[mech.function_object]=\
-                    mech.function_object._reinitialization_attributes
+                    mech.function_object._stateful_attributes
             if hasattr(mech, 'integrator_function'):
                 if mech.integrator_function:
                     self._reinitialization_components[mech.integrator_function]=\
-                        mech.integrator_function._reinitialization_attributes
+                        mech.integrator_function._stateful_attributes
 
     def _instantiate_attributes_after_function(self, context=None):
 

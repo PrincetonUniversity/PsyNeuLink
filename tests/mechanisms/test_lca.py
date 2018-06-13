@@ -69,10 +69,10 @@ class TestLCA:
                 leak=0.5,
                 competition=1.0,
                 time_step_size=0.1)
-        L.reinitialize_when = Never()
+
         P = Process(pathway=[T, L])
         S = System(processes=[P])
-
+        L.reinitialize_when = Never()
         #  - - - - - - - Equations to be executed  - - - - - - -
 
         # new_transfer_input =

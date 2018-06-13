@@ -563,7 +563,7 @@ def _compute_EVC(args):
     for component in ctlr._reinitialization_components:
         if isinstance(component.reinitialize_when, AtTrial) and component.reinitialize_when.args[0]==0:
             reinitialization_values[component] = {}
-            for attr in component._reinitialization_attributes:
+            for attr in component._stateful_attributes:
                 reinitialization_values[component].update({attr:getattr(component, attr)})
 
     # Run simulation

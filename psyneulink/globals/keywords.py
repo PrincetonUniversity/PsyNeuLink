@@ -362,7 +362,7 @@ kwParams = 'params'
 CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'
 ENABLED = 'ENABLED'
-REINITIALIZATION_ATTRIBUTES = '_reinitialization_attributes'
+REINITIALIZATION_ATTRIBUTES = '_stateful_attributes'
 
 
 #endregion

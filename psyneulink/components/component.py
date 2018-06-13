@@ -400,7 +400,7 @@ import typecheck as tc
 from psyneulink.globals.context import Context, ContextFlags, _get_time
 from psyneulink.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SEPARATOR_BAR, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.globals.log import LogCondition
-from psyneulink.scheduling.condition import AtTimeStep
+from psyneulink.scheduling.condition import AtTimeStep, Never
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.registry import register_category
@@ -3025,7 +3025,8 @@ class Component(object):
         if self.owner is self:
             self._auto_dependent = value
             if value:
-                self.reinitialize_when = AtTimeStep(0)
+                # self.reinitialize_when = AtTimeStep(0)
+                self.reinitialize_when = Never()
             else:
                 if hasattr(self, "reinitialize_when"):
                     del self.reinitialize_when
@@ -3035,7 +3036,8 @@ class Component(object):
                 try:
                     owner._auto_dependent = value
                     if value:
-                        owner.reinitialize_when = AtTimeStep(0)
+                        # owner.reinitialize_when = AtTimeStep(0)
+                        owner.reinitialize_when = Never()
                     else:
                         if hasattr(owner.reinitialize_when):
                             del owner.reinitialize_when

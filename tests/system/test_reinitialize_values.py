@@ -60,7 +60,7 @@ class TestReinitializeValues:
                                                                         [np.array([0.75])],
                                                                         [np.array([0.875])]])
 
-    def test_reset_state_with_mechanism_execute(self):
+    def test_reset_state_integrator_mechanism(self):
         A = IntegratorMechanism(name='A',
                                 function=DriftDiffusionIntegrator())
 
@@ -69,7 +69,7 @@ class TestReinitializeValues:
 
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
         reinitialize_values = []
-        for attr in A.function_object._reinitialization_attributes:
+        for attr in A.function_object._stateful_attributes:
             reinitialize_values.append(getattr(A.function_object, attr))
 
         # Execute A twice AFTER saving the state so that it continues accumulating.
@@ -85,3 +85,30 @@ class TestReinitializeValues:
         assert np.allclose(output_after_saving_state, output_after_reinitialization)
         assert np.allclose(original_output, [np.array([[1.0]]), np.array([[2.0]])])
         assert np.allclose(output_after_reinitialization, [np.array([[3.0]]), np.array([[4.0]])])
+
+    def test_reset_state_transfer_mechanism(self):
+        A = TransferMechanism(name='A',
+                              integrator_mode=True)
+
+        # Execute A twice
+        original_output = [A.execute(1.0), A.execute(1.0)]
+
+        # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
+        reinitialize_values = []
+
+        for attr in A.integrator_function._stateful_attributes:
+            reinitialize_values.append(getattr(A.integrator_function, attr))
+
+        # Execute A twice AFTER saving the state so that it continues accumulating.
+        # We expect the next two outputs to repeat once we reset the state b/c we will return it to the current state
+        output_after_saving_state = [A.execute(1.0), A.execute(1.0)]
+
+        # RESETTING STATE - - - - - - - - - - - - - - - - - - - - - - - -
+        A.reinitialize(*reinitialize_values)
+
+        # We expect these results to match the results from immediately after saving the state
+        output_after_reinitialization = [A.execute(1.0), A.execute(1.0)]
+
+        assert np.allclose(output_after_saving_state, output_after_reinitialization)
+        assert np.allclose(original_output, [np.array([[0.5]]), np.array([[0.75]])])
+        assert np.allclose(output_after_reinitialization, [np.array([[0.875]]), np.array([[0.9375]])])

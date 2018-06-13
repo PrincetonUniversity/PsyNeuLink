@@ -463,6 +463,7 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler, Condition, Always
+from psyneulink.scheduling.condition import AtTimeStep, Never
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
@@ -843,6 +844,7 @@ class System(System_Base):
                  # learning=None,
                  learning_rate=None,
                  targets=None,
+                 reinitialize_mechanisms_when=AtTimeStep(0),
                  params=None,
                  name=None,
                  scheduler=None,
@@ -892,6 +894,7 @@ class System(System_Base):
                          context=context)
 
         self.context.initialization_status = ContextFlags.INITIALIZED
+        self.reinitialize_mechanisms_when = reinitialize_mechanisms_when
         self._execution_id = None
 
         # Assign controller
@@ -902,6 +905,16 @@ class System(System_Base):
         #     print("\n{0} initialized with:\n- pathway: [{1}]".
         #           # format(self.name, self.pathwayMechanismNames.__str__().strip("[]")))
         #           format(self.name, self.names.__str__().strip("[]")))
+
+    def _assign_reinitialize_condition_to_mechanisms(self, reinitialize_mechanisms_when):
+        if not isinstance(reinitialize_mechanisms_when, Condition):
+            raise SystemError("{} is not a valid specification for reinitialize_mechanisms_when of {}. "
+                              "reinitialize_mechanisms_when must be a Condition.".format(reinitialize_mechanisms_when,
+                                                                                         self.name))
+        for mechanism in self.mechanisms:
+            if hasattr(mechanism, "reinitialize_when"):
+                if isinstance(mechanism.reinitialize_when, Never):
+                    mechanism.reinitialize_when = reinitialize_mechanisms_when
 
     def _validate_variable(self, variable, context=None):
         """Convert variable to 2D np.array: \
@@ -3284,6 +3297,15 @@ class System(System_Base):
     @property
     def function(self):
         return self.execute
+
+    @property
+    def reinitialize_mechanisms_when(self):
+        return self._reinitialize_mechanisms_when
+
+    @reinitialize_mechanisms_when.setter
+    def reinitialize_mechanisms_when(self, new_condition):
+        self._reinitialize_mechanisms_when = new_condition
+        self._assign_reinitialize_condition_to_mechanisms(new_condition)
 
     @property
     def mechanisms(self):

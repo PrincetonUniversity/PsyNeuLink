@@ -1036,11 +1036,12 @@ class TestIntegratorMode:
                               integrator_mode=True,
                               smoothing_factor=0.1,
                               noise=0.0)
-        T.reinitialize_when = Never()
         P = Process(name="P",
                     pathway=[T])
         S = System(name="S",
                    processes=[P])
+
+        T.reinitialize_when = Never()
 
         assert np.allclose(T.previous_value, 0.5)
 
@@ -1079,11 +1080,11 @@ class TestIntegratorMode:
                               integrator_mode=True,
                               smoothing_factor=0.1,
                               noise=0.0)
-        T.reinitialize_when = Never()
         P = Process(name="P",
                     pathway=[T])
         S = System(name="S",
                    processes=[P])
+        T.reinitialize_when = Never()
 
         assert np.allclose(T.previous_value, [0.5, 0.5, 0.5])
 
@@ -1124,11 +1125,11 @@ class TestIntegratorMode:
                               integrator_mode=True,
                               smoothing_factor=0.1,
                               noise=0.0)
-        T.reinitialize_when = Never()
         P = Process(name="P",
                     pathway=[T])
         S = System(name="S",
                    processes=[P])
+        T.reinitialize_when = Never()
 
         assert np.allclose(T.previous_value, initial_val)
 

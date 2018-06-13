@@ -4618,7 +4618,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         # Assign here as default, for use in initialization of function
         self.previous_value = initializer
-        self._reinitialization_attributes = ["previous_value"]
+        self._stateful_attributes = ["previous_value"]
         # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
         params[INITIALIZER] = initializer
 
@@ -5972,7 +5972,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
 
         self.previous_time = self.t0
         self.auto_dependent = True
-        self._reinitialization_attributes = ["previous_value", "previous_time"]
+        self._stateful_attributes = ["previous_value", "previous_time"]
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -6229,7 +6229,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
 
         self.previous_time = self.t0
         self.auto_dependent = True
-        self._reinitialization_attributes = ["previous_value", "previous_time"]
+        self._stateful_attributes = ["previous_value", "previous_time"]
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -6767,7 +6767,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         self.previous_v = self.initial_v
         self.previous_w = self.initial_w
         self.previous_time = self.t_0
-        self._reinitialization_attributes = ["previous_v", "previous_w", "previous_time"]
+        self._stateful_attributes = ["previous_v", "previous_w", "previous_time"]
 
         super().__init__(
             default_variable=default_variable,
@@ -7779,7 +7779,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         self.auto_dependent = True
-        self._reinitialization_attributes = ["previous_short_term_utility", "previous_long_term_utility"]
+        self._stateful_attributes = ["previous_short_term_utility", "previous_long_term_utility"]
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
