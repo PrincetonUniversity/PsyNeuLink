@@ -119,12 +119,12 @@ class TestReinitializeValues:
                               integrator_mode=True,
                               smoothing_factor=0.2)
 
-        # B = IntegratorMechanism(name='B',
-        #                         function=DriftDiffusionIntegrator(rate=0.1))
+        B = IntegratorMechanism(name='B',
+                                function=DriftDiffusionIntegrator(rate=0.1))
         C = TransferMechanism(name='C')
 
         P = Process(pathway=[A,
-                             # B,
+                             B,
                              C])
         S = System(processes=[P])
         A.reinitialize_when = Never()
@@ -132,7 +132,7 @@ class TestReinitializeValues:
         S.run(inputs={A: [[1.0], [1.0]]})
 
         run_1_values = [A.value,
-                        # B.value,
+                        B.value,
                         C.value]
 
         # "Save state" code from EVCaux
@@ -159,15 +159,17 @@ class TestReinitializeValues:
         S.run(inputs={A: [[1.0], [1.0]]})
 
         run_2_values = [A.value,
-                        # B.value,
+                        B.value,
                         C.value]
 
         S.run(inputs={A: [[1.0], [1.0]]},
               reinitialize_values=reinitialization_values)
 
         run_3_values = [A.value,
-                        # B.value,
+                        B.value,
                         C.value]
 
-        assert(np.allclose(run_2_values, run_3_values))
+        assert np.allclose(run_2_values, run_3_values)
+        assert np.allclose(run_1_values, [np.array([[0.36]]), np.array([[0.056]]), np.array([[0.056]])])
+        assert np.allclose(run_2_values, [np.array([[0.5904]]), np.array([[0.16384]]), np.array([[0.16384]])])
 

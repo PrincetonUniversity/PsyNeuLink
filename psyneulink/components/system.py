@@ -907,6 +907,10 @@ class System(System_Base):
         #           format(self.name, self.names.__str__().strip("[]")))
 
     def _assign_reinitialize_condition_to_mechanisms(self, reinitialize_mechanisms_when):
+        """
+        Assign the Condition specified in the reinitialize_mechanisms_when argument to the reinitialize_when attribute
+        of each Mechanism in the System.
+        """
         if not isinstance(reinitialize_mechanisms_when, Condition):
             raise SystemError("{} is not a valid specification for reinitialize_mechanisms_when of {}. "
                               "reinitialize_mechanisms_when must be a Condition.".format(reinitialize_mechanisms_when,
@@ -2973,6 +2977,16 @@ class System(System_Base):
             a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
             phase of execution <System_Execution_Learning>`
 
+        reinitialize_values : Dict[Mechanism: List[reinitialization values] or np.ndarray(reinitialization values)
+            a dictionary containing Mechanism: value pairs. Each Mechanism in the dictionary is :ref:`reinitialized
+            <Mechanism.reinitialize>` at the start of the Run. The Mechanism's value in the reinitialize_values
+            dictionary is passed into its :ref:`reinitialize <Mechanism.reinitialize>` method. See the
+            :ref:`reinitialize method <IntegratorFunction.reinitialize>` of the `function <Mechanism.function_object>`
+            or `integrator_function <TransferMechanism.integrator_function>` of the Mechanism for details on which
+            values must be passed in as arguments. Keep in mind that only stateful Mechanisms may be reinitialized, and
+            that Mechanisms in reinitialize_values will reinitialize regardless of whether their `reinitialize_when
+            <Component.reinitialize_when>` Condition is satisfied.
+
         Returns
         -------
 
@@ -3304,8 +3318,20 @@ class System(System_Base):
 
     @reinitialize_mechanisms_when.setter
     def reinitialize_mechanisms_when(self, new_condition):
+
+        # Validate
+        if not isinstance(new_condition, Condition):
+            raise SystemError("{} is not a valid specification for reinitialize_mechanisms_when of {}. "
+                              "reinitialize_mechanisms_when must be a Condition.".format(new_condition, self.name))
+
+        # assign to backing field
         self._reinitialize_mechanisms_when = new_condition
-        self._assign_reinitialize_condition_to_mechanisms(new_condition)
+
+        # assign to all mechanisms that do not already have a user-specified condition
+        for mechanism in self.mechanisms:
+            if hasattr(mechanism, "reinitialize_when"):
+                if isinstance(mechanism.reinitialize_when, Never):
+                    mechanism.reinitialize_when = new_condition
 
     @property
     def mechanisms(self):
@@ -3321,7 +3347,8 @@ class System(System_Base):
     @property
 
     def stateful_mechanisms(self):
-        """List of all mechanisms in the system that are currently marked as stateful (mechanism.auto_dependent = True)
+        """
+        List of all mechanisms in the system that are currently marked as stateful (mechanism.auto_dependent = True)
 
         Returns
         -------

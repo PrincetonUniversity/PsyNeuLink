@@ -158,6 +158,14 @@ user once the component is constructed, with the one exception of `prefs <Compon
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
   preference (see `PreferenceSet <LINK>` for details).
 
+.. _Reinitialize_When:
+* **reinitialize_when** - the `reinitialize_when <Components.reinitialize_when>` attribute contains a `Condition`. When
+  this condition is satisfied, the Component executes its 'reinitialize <Component.reinitialize>' method. The
+  'reinitialize <Component.reinitialize>' method is executed without arguments, meaning that the relevant function's
+  <initializer type <IntegratorFunction.initializer>' attribute(s) (initialization attributes vary among functions) is
+  used for reinitialization. Keep in mind that the 'reinitialize <Component.reinitialize>' method and `reinitialize_when
+  <Components.reinitialize_when>` attribute only exist on stateful Mechanisms.
+
 .. _User_Modifiable_Parameters:
 
 User-modifiable Parameters
@@ -743,6 +751,9 @@ class Component(object):
 
     current_execution_time : tuple(`Time.RUN`, `Time.TRIAL`, `Time.PASS`, `Time.TIME_STEP`)
         see `current_execution_time <Component_Current_Execution_Time>`
+
+    reinitialize_when : `Condition`
+
 
     name : str
         see `name <Component_Name>`
@@ -2636,6 +2647,13 @@ class Component(object):
             raise ComponentError('Unsupported function type: {0}, function={1}'.format(type(function), function))
 
         self.function_object.owner = self
+
+        # KAM added 6/14/18 for functions that do not pass their auto_dependent status up to their owner via property
+        # FIX: need comprehensive solution for auto_dependent; need to determine whether states affect mechanism's
+        # auto_dependent status
+        if self.function_object.auto_dependent:
+            self._auto_dependent = True
+
         # assign to backing field to avoid long chain of assign_params, instantiate_defaults, etc.
         # that ultimately doesn't end up assigning the attribute
         # self._function_params = self.function_object.user_params

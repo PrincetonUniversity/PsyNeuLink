@@ -590,9 +590,8 @@ def _compute_EVC(args):
                                                                   context=context))
 
     # Re-assign values of reinitialization attributes to their value at entry
-    for component, attr_list in reinitialization_values.items():
-        for attr in attr_list:
-            setattr(component, attr, reinitialization_values[component][attr])
+    for mechanism in reinitialization_values:
+        mechanism.reinitialize(*reinitialization_values[mechanism])
 
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
 
