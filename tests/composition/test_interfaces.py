@@ -13,7 +13,7 @@ from psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanis
 from psyneulink.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.states.inputstate import InputState
-from psyneulink.compositions.composition import Composition, CompositionError, MechanismRole
+from psyneulink.compositions.composition import Composition, CompositionError, CNodeRole
 from psyneulink.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.compositions.systemcomposition import SystemComposition
 from psyneulink.scheduling.condition import EveryNCalls
@@ -35,7 +35,7 @@ class TestExecuteCIM:
         assert np.allclose([1.0, 2.0,3.0], output)
 
         output = I.execute([[1.0, 2.0], [3.0]])
-        print(output)
+
         assert np.allclose([1.0, 2.0], output[0])
         assert np.allclose([3.0], output[1])
 
@@ -56,11 +56,6 @@ class TestExecuteCIM:
         cim = CompositionInterfaceMechanism(default_variable=[[0.0], [0.0], [0.0]])
         cim.execute([[1.0], [2.0], [3.0]])
         assert np.allclose(cim.value, [[1.0], [2.0], [3.0]])
-        print(cim.output_states)
-        print(cim.output_states[0].value)
-        print(cim.output_states[1].value)
-        print(cim.output_states[0].variable)
-        print(cim.output_states[1].variable)
 
     def test_standalone_processing_multiple_input_states(self):
 
@@ -79,8 +74,8 @@ class TestExecuteCIM:
         B = TransferMechanism(name="composition-pytests-B",
                               function=Linear(slope=3.0))
 
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
+        comp.add_c_node(A)
+        comp.add_c_node(B)
 
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
 
@@ -94,15 +89,7 @@ class TestExecuteCIM:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        print("B.value = ", B.value)
-        print("B.output_states = ", B.output_states)
-        print("B.output_values = ", B.output_values)
-        # print("B.output_states[0].efferents[0].receiver.variable = ", B.output_states[0].efferents[0].receiver.variable)
-        print("Input States: \n", comp.output_CIM.input_states)
-        print("Input Values: \n", comp.output_CIM.input_values)
-        print("\n\n Output States: \n", comp.output_CIM.output_states)
-        print("Output Values: \n", comp.output_CIM.output_values)
-        print("output = ", output)
+
         assert np.allclose([30], output)
 
     def test_two_input_states_two_output_states(self):
@@ -117,8 +104,8 @@ class TestExecuteCIM:
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
-        comp.add_mechanism(A)
-        comp.add_mechanism(B)
+        comp.add_c_node(A)
+        comp.add_c_node(B)
 
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
         comp.add_projection(A, MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), B)
@@ -132,9 +119,7 @@ class TestExecuteCIM:
             inputs=inputs_dict,
             scheduler_processing=sched
         )
-        print(B.value)
-        print(comp.output_CIM.output_states)
-        print(comp.output_CIM.output_values)
+
         assert np.allclose([[30.], [36.]], output)
 
 
@@ -153,8 +138,8 @@ class TestConnectCompositionsViaCIMS:
         B = TransferMechanism(name="composition-pytests-B",
                               function=Linear(slope=3.0))
 
-        comp1.add_mechanism(A)
-        comp1.add_mechanism(B)
+        comp1.add_c_node(A)
+        comp1.add_c_node(B)
 
         comp1.add_projection(A, MappingProjection(sender=A, receiver=B), B)
 
@@ -174,8 +159,8 @@ class TestConnectCompositionsViaCIMS:
         B2 = TransferMechanism(name="composition-pytests-B2",
                               function=Linear(slope=3.0))
 
-        comp2.add_mechanism(A2)
-        comp2.add_mechanism(B2)
+        comp2.add_c_node(A2)
+        comp2.add_c_node(B2)
 
         comp2.add_projection(A2, MappingProjection(sender=A2, receiver=B2), B2)
 
@@ -183,8 +168,8 @@ class TestConnectCompositionsViaCIMS:
         sched = Scheduler(composition=comp2)
 
         comp3 = Composition(name="outer_composition")
-        comp3.add_mechanism(comp1)
-        comp3.add_mechanism(comp2)
+        comp3.add_c_node(comp1)
+        comp3.add_c_node(comp2)
         comp3.add_projection(comp1, MappingProjection(), comp2)
 
         # comp1:
@@ -219,8 +204,8 @@ class TestConnectCompositionsViaCIMS:
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
-        inner_composition_1.add_mechanism(A)
-        inner_composition_1.add_mechanism(B)
+        inner_composition_1.add_c_node(A)
+        inner_composition_1.add_c_node(B)
 
         inner_composition_1.add_projection(A, MappingProjection(sender=A, receiver=B), B)
         inner_composition_1.add_projection(A, MappingProjection(sender=A.output_states[1], receiver=B.input_states[1]), B)
@@ -237,8 +222,8 @@ class TestConnectCompositionsViaCIMS:
                               default_variable=[[0.0], [0.0]],
                               function=Linear(slope=3.0))
 
-        inner_composition_2.add_mechanism(A2)
-        inner_composition_2.add_mechanism(B2)
+        inner_composition_2.add_c_node(A2)
+        inner_composition_2.add_c_node(B2)
 
         inner_composition_2.add_projection(A2, MappingProjection(sender=A2, receiver=B2), B2)
         inner_composition_2.add_projection(A2, MappingProjection(sender=A2.output_states[1], receiver=B2.input_states[1]), B2)
@@ -247,8 +232,8 @@ class TestConnectCompositionsViaCIMS:
 
         outer_composition = Composition(name="outer_composition")
 
-        outer_composition.add_mechanism(inner_composition_1)
-        outer_composition.add_mechanism(inner_composition_2)
+        outer_composition.add_c_node(inner_composition_1)
+        outer_composition.add_c_node(inner_composition_2)
 
         outer_composition.add_projection(sender=inner_composition_1, projection=MappingProjection(), receiver=inner_composition_2)
         outer_composition.add_projection(sender=inner_composition_1,

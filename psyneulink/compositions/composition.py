@@ -68,13 +68,13 @@ from psyneulink.scheduling.time import TimeScale
 from psyneulink.globals.context import ContextFlags, ContextStatus
 
 __all__ = [
-    'Composition', 'CompositionError', 'MechanismRole',
+    'Composition', 'CompositionError', 'CNodeRole',
 ]
 
 logger = logging.getLogger(__name__)
 
 
-class MechanismRole(Enum):
+class CNodeRole(Enum):
     """
 
     - ORIGIN
@@ -351,7 +351,7 @@ class Composition(object):
         self.name = name
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
-        self.mechanisms = []
+        self.c_nodes = []
         self.input_CIM = CompositionInterfaceMechanism(name=self.name + " Input_CIM",
                                                        composition=self)
         self.input_CIM_states = {}
@@ -371,7 +371,7 @@ class Composition(object):
         self.needs_update_scheduler_learning = True  # Tracks if the learning scheduler needs to be regenerated (mechanisms/projections added/removed etc)
 
         # helper attributes
-        self.mechanisms_to_roles = OrderedDict()
+        self.c_nodes_to_roles = OrderedDict()
 
         # Create lists to track identity of certain mechanism classes within the
         # composition.
@@ -444,7 +444,7 @@ class Composition(object):
     def _get_unique_id(self):
         return uuid.uuid4()
 
-    def add_mechanism(self, mech):
+    def add_c_node(self, mech):
         '''
             Adds a Mechanism to the Composition, if it is not already added
 
@@ -457,8 +457,8 @@ class Composition(object):
         if mech not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
             mech.is_processing = True
             self.graph.add_component(mech)  # Set incoming edge list of mech to empty
-            self.mechanisms.append(mech)
-            self.mechanisms_to_roles[mech] = set()
+            self.c_nodes.append(mech)
+            self.c_nodes_to_roles[mech] = set()
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
@@ -517,7 +517,7 @@ class Composition(object):
 
         # add all mechanisms first
         for m in mechanisms:
-            self.add_mechanism(m)
+            self.add_c_node(m)
 
         # then projections
         for p in projections:
@@ -528,7 +528,7 @@ class Composition(object):
     def add_linear_processing_pathway(self, pathway):
         # First, verify that the pathway begins with a mechanism
         if isinstance(pathway[0], Mechanism):
-            self.add_mechanism(pathway[0])
+            self.add_c_node(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError("The first item in a linear processing pathway must be a Mechanism.")
@@ -536,7 +536,7 @@ class Composition(object):
         for c in range(1, len(pathway)):
             # if the current item is a mechanism, add it
             if isinstance(pathway[c], Mechanism):
-                self.add_mechanism(pathway[c])
+                self.add_c_node(pathway[c])
 
         # Then, loop through and validate that the mechanism-projection relationships make sense
         # and add MappingProjections where needed
@@ -638,20 +638,20 @@ class Composition(object):
             graph = self.graph_processing
 
         # Clear old information
-        self.mechanisms_to_roles.update({k: set() for k in self.mechanisms_to_roles})
+        self.c_nodes_to_roles.update({k: set() for k in self.c_nodes_to_roles})
 
-        # Identify Origin mechanisms
-        for mech in self.mechanisms:
+        # Identify Origin nodes
+        for mech in self.c_nodes:
             if graph.get_parents_from_component(mech) == []:
-                self._add_mechanism_role(mech, MechanismRole.ORIGIN)
-        # Identify Terminal mechanisms
+                self._add_c_node_role(mech, CNodeRole.ORIGIN)
+        # Identify Terminal nodes
             if graph.get_children_from_component(mech) == []:
-                self._add_mechanism_role(mech, MechanismRole.TERMINAL)
-        # Identify Recurrent_init and Cycle mechanisms
-        visited = []  # Keep track of all mechanisms that have been visited
-        for origin_mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN):  # Cycle through origin mechanisms first
-            visited_current_path = []  # Track all mechanisms visited from the current origin
-            next_visit_stack = []  # Keep a stack of mechanisms to be visited next
+                self._add_c_node_role(mech, CNodeRole.TERMINAL)
+        # Identify Recurrent_init and Cycle nodes
+        visited = []  # Keep track of all nodes that have been visited
+        for origin_mech in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
+            visited_current_path = []  # Track all nodes visited from the current origin
+            next_visit_stack = []  # Keep a stack of nodes to be visited next
             next_visit_stack.append(origin_mech)
             for mech in next_visit_stack:  # While the stack isn't empty
                 visited.append(mech)  # Mark the mech as visited
@@ -660,12 +660,12 @@ class Composition(object):
                 for child in children:
                     # If the child has been visited this path and is not already initialized
                     if child in visited_current_path:
-                        self._add_mechanism_role(mech, MechanismRole.RECURRENT_INIT)
-                        self._add_mechanism_role(child, MechanismRole.CYCLE)
+                        self._add_c_node_role(mech, CNodeRole.RECURRENT_INIT)
+                        self._add_c_node_role(child, CNodeRole.CYCLE)
                     elif child not in visited:  # Else if the child has not been explored
                         next_visit_stack.append(child)  # Add it to the visit stack
-        for mech in self.mechanisms:
-            if mech not in visited:  # Check the rest of the mechanisms
+        for mech in self.c_nodes:
+            if mech not in visited:  # Check the rest of the nodes
                 visited_current_path = []
                 next_visit_stack = []
                 next_visit_stack.append(mech)
@@ -675,8 +675,8 @@ class Composition(object):
                     children = [vertex.component for vertex in graph.get_children_from_component(remaining_mech)]
                     for child in children:
                         if child in visited_current_path:
-                            self._add_mechanism_role(remaining_mech, MechanismRole.RECURRENT_INIT)
-                            self._add_mechanism_role(child, MechanismRole.CYCLE)
+                            self._add_c_node_role(remaining_mech, CNodeRole.RECURRENT_INIT)
+                            self._add_c_node_role(child, CNodeRole.CYCLE)
                         elif child not in visited:
                             next_visit_stack.append(child)
 
@@ -686,7 +686,7 @@ class Composition(object):
 
     def _update_processing_graph(self):
         '''
-        Constructs the processing graph (the graph that contains only non-learning mechanisms as vertices)
+        Constructs the processing graph (the graph that contains only non-learning nodes as vertices)
         from the composition's full graph
         '''
         logger.debug('Updating processing graph')
@@ -728,55 +728,55 @@ class Composition(object):
 
         self.needs_update_graph_processing = False
 
-    def get_mechanisms_by_role(self, role):
+    def get_c_nodes_by_role(self, role):
         '''
-            Returns a set of mechanisms in this Composition that have the role `role`
+            Returns a set of Composition Nodes in this Composition that have the role `role`
 
             Arguments
             _________
 
-            role : MechanismRole
-                the set of mechanisms having this role to return
+            role : CNodeRole
+                the set of nodes having this role to return
 
             Returns
             -------
 
-            set of Mechanisms with `MechanismRole` `role` : set(`Mechanism <Mechanism>`)
+            set of Mechanisms with `CNodeRole` `role` : set(`Mechanism <Mechanism>`)
         '''
-        if role not in MechanismRole:
-            raise CompositionError('Invalid MechanismRole: {0}'.format(role))
+        if role not in CNodeRole:
+            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
 
         try:
-            return set([mech for mech in self.mechanisms if role in self.mechanisms_to_roles[mech]])
+            return set([mech for mech in self.c_nodes if role in self.c_nodes_to_roles[mech]])
         except KeyError as e:
-            raise CompositionError('Mechanism not assigned to role in mechanisms_to_roles: {0}'.format(e))
+            raise CompositionError('Node not assigned to role in nodes_to_roles: {0}'.format(e))
 
-    def get_roles_by_mechanism(self, mechanism):
+    def get_roles_by_c_node(self, c_node):
         try:
-            return self.mechanisms_to_roles[mechanism]
+            return self.c_nodes_to_roles[c_node]
         except KeyError:
             raise CompositionError('Mechanism {0} not found in {1}.mechanisms_to_roles'.format(mechanism, self))
 
-    def _set_mechanism_roles(self, mech, roles):
-        self.clear_mechanism_role(mech)
+    def _set_c_node_roles(self, c_node, roles):
+        self.clear_c_node_role(c_node)
         for role in roles:
-            self._add_mechanism_role(role)
+            self._add_c_node_role(role)
 
-    def _clear_mechanism_roles(self, mech):
-        if mech in self.mechanisms_to_roles:
-            self.mechanisms_to_roles[mech] = set()
+    def _clear_c_node_roles(self, c_node):
+        if c_node in self.c_nodes_to_roles:
+            self.c_nodes_to_roles[c_node] = set()
 
-    def _add_mechanism_role(self, mech, role):
-        if role not in MechanismRole:
-            raise CompositionError('Invalid MechanismRole: {0}'.format(role))
+    def _add_c_node_role(self, c_node, role):
+        if role not in CNodeRole:
+            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
 
-        self.mechanisms_to_roles[mech].add(role)
+        self.c_nodes_to_roles[c_node].add(role)
 
-    def _remove_mechanism_role(self, mech, role):
-        if role not in MechanismRole:
-            raise CompositionError('Invalid MechanismRole: {0}'.format(role))
+    def _remove_c_node_role(self, c_node, role):
+        if role not in CNodeRole:
+            raise CompositionError('Invalid CNodeRole: {0}'.format(role))
 
-        self.mechanisms_to_roles[mech].remove(role)
+        self.c_nodes_to_roles[c_node].remove(role)
 
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
     # feed_dict is a dictionary of the input states of each mechanism of the specified type
@@ -829,7 +829,7 @@ class Composition(object):
         #  INPUT CIMS
         # loop over all origin mechanisms
 
-        for mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN):
+        for mech in self.get_c_nodes_by_role(CNodeRole.ORIGIN):
 
             for input_state in mech.input_states:
                 # add it to our set of current input states
@@ -881,7 +881,7 @@ class Composition(object):
         # loop over all terminal mechanisms
 
         current_terminal_output_states = set()
-        for mech in self.get_mechanisms_by_role(MechanismRole.TERMINAL):
+        for mech in self.get_c_nodes_by_role(CNodeRole.TERMINAL):
             for output_state in mech.output_states:
                 current_terminal_output_states.add(output_state)
                 # if there is not a corresponding CIM output state, add one
@@ -1023,7 +1023,7 @@ class Composition(object):
         context=None
     ):
         '''
-            Passes inputs to any Mechanisms receiving inputs directly from the user (via the "inputs" argument) then
+            Passes inputs to any Nodes receiving inputs directly from the user (via the "inputs" argument) then
             coordinates with the Scheduler to receive and execute sets of Mechanisms that are eligible to run until
             termination conditions are met.
 
@@ -1072,7 +1072,7 @@ class Composition(object):
         if targets is None:
             targets = {}
         execution_id = self._assign_execution_ids(execution_id)
-        origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
 
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
@@ -1220,9 +1220,9 @@ class Composition(object):
             Arguments
             ---------
 
-            inputs: { `Mechanism <Mechanism>` : list }
-                a dictionary containing a key-value pair for each Mechanism in the composition that receives inputs from
-                the user. For each pair, the key is the Mechanism and the value is a list of inputs. Each input in the
+            inputs: { `Mechanism <Mechanism>` : list } or { `Composition <Composition>` : list }
+                a dictionary containing a key-value pair for each Node in the composition that receives inputs from
+                the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
                 list corresponds to a certain `TRIAL`.
 
             scheduler_processing : Scheduler
@@ -1277,7 +1277,7 @@ class Composition(object):
             Returns
             ---------
 
-            output value of the final Mechanism executed in the composition : various
+            output value of the final Node executed in the composition : various
         '''
 
         if scheduler_processing is None:
@@ -1297,7 +1297,7 @@ class Composition(object):
         scheduler_processing.update_termination_conditions(termination_processing)
         scheduler_learning.update_termination_conditions(termination_learning)
 
-        origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
 
         # if there is only one origin mechanism, allow inputs to be specified in a list
         if isinstance(inputs, (list, np.ndarray)):
@@ -1348,7 +1348,6 @@ class Composition(object):
             stimulus_index = trial_num % num_inputs_sets
             for mech in inputs:
                 execution_stimuli[mech] = inputs[mech][stimulus_index]
-            print(execution_stimuli, "  (execution stimuli)")
             # execute processing
             # pass along the stimuli for this trial
             trial_output = self.execute(inputs=execution_stimuli,
@@ -1367,7 +1366,7 @@ class Composition(object):
         # ---------------------------------------------------------------------------------
             # store the result of this execute in case it will be the final result
 
-            # terminal_mechanisms = self.get_mechanisms_by_role(MechanismRole.TERMINAL)
+            # terminal_mechanisms = self.get_c_nodes_by_role(CNodeRole.TERMINAL)
             # for terminal_mechanism in terminal_mechanisms:
             #     for terminal_output_state in terminal_mechanism.output_states:
             #         CIM_output_state = self.output_CIM_states[terminal_output_state]
@@ -1440,16 +1439,16 @@ class Composition(object):
         # STEP 1: validate that there is a one-to-one mapping of input entries to origin mechanisms
 
 
-        # Check that all of the mechanisms listed in the inputs dict are ORIGIN mechanisms in the self
-        origin_mechanisms = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        # Check that all of the nodes listed in the inputs dict are ORIGIN nodes in the self
+        origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
         for mech in stimuli.keys():
-            if not mech in origin_mechanisms:
-                raise CompositionError("{} in inputs dict for {} is not one of its ORIGIN mechanisms".
+            if not mech in origin_nodes:
+                raise CompositionError("{} in inputs dict for {} is not one of its ORIGIN nodes".
                                format(mech.name, self.name))
-        # Check that all of the ORIGIN mechanisms in the self are represented by entries in the inputs dict
-        for mech in origin_mechanisms:
+        # Check that all of the ORIGIN nodes in the self are represented by entries in the inputs dict
+        for mech in origin_nodes:
             if not mech in stimuli:
-                raise RunError("Entry for ORIGIN Mechanism {} is missing from the inputs dict for {}".
+                raise RunError("Entry for ORIGIN Node {} is missing from the inputs dict for {}".
                                format(mech.name, self.name))
 
         # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
@@ -1480,12 +1479,12 @@ class Composition(object):
                     else:
                         adjusted_stimuli[mech] = [stim_list]
 
-                    # verify that all mechanisms have provided the same number of inputs
+                    # verify that all nodes have provided the same number of inputs
                     if num_input_sets == -1:
                         num_input_sets = 1
                     elif num_input_sets != 1:
                         raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
-                                       "conflicts with at least one other mechanism's input specification.".format(self.name,
+                                       "conflicts with at least one other node's input specification.".format(self.name,
                                                                                                                    mech.name))
                 else:
                     adjusted_stimuli[mech] = []
