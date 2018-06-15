@@ -472,13 +472,13 @@ class Composition(object):
             Arguments
             ---------
 
-            sender : Mechanism
+            sender : Mechanism, OutputState, or Composition
                 the sender of **projection**
 
             projection : Projection
                 the projection to add
 
-            receiver : Mechanism
+            receiver : Mechanism, InputState, or Composition
                 the receiver of **projection**
         '''
         if projection not in [vertex.component for vertex in self.graph.vertices]:
@@ -573,28 +573,40 @@ class Composition(object):
         if hasattr(projection, "sender") and hasattr(projection, "receiver"):
             # the sender and receiver were passed directly to the Projection object AND to compositions'
             # add_projection() method -- confirm that these are consistent
+            true_sender_owner = sender
+            true_receiver_owner = receiver
+            if isinstance(sender, Composition):
+                true_sender_owner = sender.output_CIM
+            if isinstance(receiver, Composition):
+                true_receiver_owner = receiver.input_CIM
 
-            if projection.sender.owner != sender:
+            if projection.sender.owner != true_sender_owner:
                 raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
                                        "Components in their Composition.".format(projection, sender))
 
-            if projection.receiver.owner != receiver:
+            if projection.receiver.owner != true_receiver_owner:
                 raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
                                        "Components in their Composition.".format(projection, receiver))
         else:
             # sender and receiver were NOT passed directly to the Projection object
             # assign them based on the sender and receiver passed into add_projection()
-            projection.init_args['sender'] = sender
-            projection.init_args['receiver'] = receiver
+            projection_object_sender = sender
+            projection_object_receiver = receiver
+            if isinstance(sender, Composition):
+                projection_object_sender = sender.output_CIM
+            if isinstance(receiver, Composition):
+                projection_object_receiver = receiver.input_CIM
+            projection.init_args['sender'] = projection_object_sender
+            projection.init_args['receiver'] = projection_object_receiver
             projection.context.initialization_status = ContextFlags.DEFERRED_INIT
             projection._deferred_init(context=" INITIALIZING ")
 
-        if projection.sender.owner != sender:
-            raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
-                                   "Components in the Composition.".format(projection, sender))
-        if projection.receiver.owner != receiver:
-            raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
-                                   "Components in the Composition.".format(projection, receiver))
+            if projection.sender.owner != projection_object_sender:
+                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
+                                       "Components in the Composition.".format(projection, sender))
+            if projection.receiver.owner != projection_object_receiver:
+                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
+                                       "Components in the Composition.".format(projection, receiver))
 
     def _analyze_graph(self, graph=None):
         ########
@@ -1158,7 +1170,7 @@ class Composition(object):
                     mechanism.function_object._runtime_params_reset = {}
                     mechanism.context.execution_phase = ContextFlags.IDLE
                 elif isinstance(mechanism, Composition):
-                    mechanism.execute()
+                    mechanism.execute(execution_id=self._execution_id)
                 if mechanism in origin_mechanisms:
                     if clamp_input:
                         if mechanism in pulse_clamp_inputs:
