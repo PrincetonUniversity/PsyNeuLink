@@ -23,7 +23,7 @@ Note that we used different regression coefficients to produce these plots.
 
 .. figure:: _static/GRAIN_STROOP_EFFECT.svg
    :target: _static/GRAIN_STROOP_EFFECT.svg
-   :figwidth: 30 %
+   :figwidth: 45 %
    :align: left
    :alt: Cohen&Huston plot produced by PsyNeuLink
 
@@ -31,9 +31,10 @@ Note that we used different regression coefficients to produce these plots.
 
 .. figure:: _static/Horserace.svg
    :target: _static/Horserace.svg
-   :figwidth: 30 %
+   :figwidth: 45 %
    :align: right
    :alt: Cohen&Huston SOA produced by PsyNeuLink
+
 
 
 The Model

@@ -2364,8 +2364,8 @@ class TestNestedCompositions:
         myPath2 = PathwayComposition()
         myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
         myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-        myPath.add_linear_processing_pathway([myMech4, myMech5, myMech3])
-        myPath._analyze_graph()
+        myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
+        myPath2._analyze_graph()
 
         sys = SystemComposition()
         sys.add_pathway(myPath)
@@ -2406,8 +2406,8 @@ class TestNestedCompositions:
         myMech4 = TransferMechanism(function=Linear(slope=2.0))
         myMech5 = TransferMechanism(function=Linear(slope=2.0))
         myMech6 = TransferMechanism(function=Linear(slope=2.0))
-        myPath.add_linear_processing_pathway([myMech4, myMech5, myMech6])
-        myPath._analyze_graph()
+        myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech6])
+        myPath2._analyze_graph()
 
         sys = SystemComposition()
         sys.add_pathway(myPath)
@@ -2461,8 +2461,8 @@ class TestNestedCompositions:
         myPath2 = PathwayComposition()
         myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
         myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-        myPath.add_linear_processing_pathway([myMech4, myMech5, myMech3])
-        myPath._analyze_graph()
+        myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
+        myPath2._analyze_graph()
 
         sys = SystemComposition()
         sys.add_pathway(myPath)
