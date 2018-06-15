@@ -159,12 +159,17 @@ user once the component is constructed, with the one exception of `prefs <Compon
   preference (see `PreferenceSet <LINK>` for details).
 
 .. _Reinitialize_When:
-* **reinitialize_when** - the `reinitialize_when <Components.reinitialize_when>` attribute contains a `Condition`. When
-  this condition is satisfied, the Component executes its 'reinitialize <Component.reinitialize>' method. The
-  'reinitialize <Component.reinitialize>' method is executed without arguments, meaning that the relevant function's
-  <initializer type <IntegratorFunction.initializer>' attribute(s) (initialization attributes vary among functions) is
-  used for reinitialization. Keep in mind that the 'reinitialize <Component.reinitialize>' method and `reinitialize_when
-  <Components.reinitialize_when>` attribute only exist on stateful Mechanisms.
+* **reinitialize_when** - the `reinitialize_when <Component.reinitialize_when>` attribute contains a `Condition`. When
+  this condition is satisfied, the Component calls its `reinitialize <Component.reinitialize>` method. The
+  `reinitialize <Component.reinitialize>` method is executed without arguments, meaning that the relevant function's
+  `initializer<Integrator.initializer>` attribute (or equivalent -- initialization attributes vary among functions) is
+  used for reinitialization. Keep in mind that the `reinitialize <Component.reinitialize>` method and `reinitialize_when
+  <Component.reinitialize_when>` attribute only exist on stateful Mechanisms.
+
+  .. note::
+
+        Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
+        Components do not reinitialize.
 
 .. _User_Modifiable_Parameters:
 
