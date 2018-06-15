@@ -1081,7 +1081,6 @@ class Composition(object):
             scheduler_learning = self.scheduler_learning
 
         if nested:
-
             self.execution_id = self.input_CIM.path_afferents[0].sender.owner.composition._execution_id
             self.input_CIM.context.execution_phase = ContextFlags.PROCESSING
             self.input_CIM.execute(context=ContextFlags.PROCESSING)
@@ -1315,9 +1314,9 @@ class Composition(object):
             else:
                 raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
                                "mechanisms.".format(self.name, len(origin_mechanisms)))
-
+        print("inputs before adjustment = ", inputs)
         inputs, num_inputs_sets = self._adjust_stimulus_dict(inputs)
-
+        print("inputs after adjustment = ", inputs)
         if num_trials is not None:
             num_trials = num_trials
         else:
@@ -1349,6 +1348,7 @@ class Composition(object):
             stimulus_index = trial_num % num_inputs_sets
             for mech in inputs:
                 execution_stimuli[mech] = inputs[mech][stimulus_index]
+            print(execution_stimuli, "  (execution stimuli)")
             # execute processing
             # pass along the stimuli for this trial
             trial_output = self.execute(inputs=execution_stimuli,
@@ -1552,11 +1552,26 @@ class Composition(object):
         """Returns all OutputStates that belong to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_states
 
+    @property
+    def output_values(self):
+        """Returns values of all OutputStates that belong to the Output CompositionInterfaceMechanism"""
+        output_values = []
+        for state in self.output_CIM.output_states:
+            output_values.append(state.value)
+        return output_values
 
     @property
     def input_state(self):
         """Returns the index 0 InputState that belongs to the Input CompositionInterfaceMechanism"""
         return self.input_CIM.input_states[0]
+
+    @property
+    def input_values(self):
+        """Returns values of all InputStates that belong to the Input CompositionInterfaceMechanism"""
+        input_values = []
+        for state in self.input_CIM.input_states:
+            input_values.append(state.value)
+        return input_values
 
     @property
     def output_state(self):
