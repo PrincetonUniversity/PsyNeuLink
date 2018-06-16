@@ -340,7 +340,7 @@ from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_
     PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, STATEFUL_ATTRIBUTES, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList
+from psyneulink.globals.utilities import ContentAddressableList, is_iterable
 from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction, PredictionMechanism
 
 __all__ = [
@@ -360,8 +360,7 @@ class EVCControlMechanism(ControlMechanism):
     """EVCControlMechanism(                                            \
     system=True,                                                       \
     objective_mechanism=None,                                          \
-    prediction_mechanism_type=PredictionMechanism,                     \
-    prediction_mechanism_params=None,                                  \
+    prediction_mechanisms=PredictionMechanism,                         \
     function=ControlSignalGridSearch                                   \
     value_function=ValueFunction,                                      \
     cost_function=LinearCombination(operation=SUM),                    \
@@ -435,15 +434,25 @@ class EVCControlMechanism(ControlMechanism):
         monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
-    prediction_mechanism_type : CombinationFunction: default PredictionMechanism
-        the `Mechanism <Mechanism>` class used for `prediction Mechanism(s) <EVCControlMechanism_Prediction_Mechanisms>`.
-        Each instance is named using the name of the `ORIGIN` Mechanism + "PREDICTION_MECHANISM"
-        and assigned an `OutputState` with a name based on the same.
+    prediction_mechanisms : Mechanism, Mechanism subclass, dict, (Mechanism subclass, dict) or list: \
+    default PredictionMechanism
+        the `Mechanism(s) <Mechanism>` or class(es) of Mechanisms  used for `prediction Mechanism(s)
+        <EVCControlMechanism_Prediction_Mechanisms>`.  If a class, dict, or tuple is specified, it is used as the
+        specification for all prediction Mechanisms.  A dict specified on its own is assumed to be a `parameter
+        specification dictionary <ParameterState_Specification>` for a `PredictionMechanism`; a dict specified
+        in a tuple must be a `parameter specification dictionary <ParameterState_Specification>` appropriate for the
+        type of Mechanism specified as the first item of the tuple.  If a list is specified, its length must equal
+        the number of `ORIGIN` Mechanisms in the System for which the EVCControlMechanism is the `controller
+        <System.controller>`;  each item must be a Mechanism, subclass of one, or a tuple specifying a subclass and
+        parameter specification dictionary, that is used as the specification for the prediction Mechanism for the
+        corresponding item in list of Systems in `ORIGIN` Mechanism in its `origin_mechanisms
+        <System.origin_mechanisms>` attribute.
 
-    prediction_mechanism_params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` passed to the constructor for a Mechanism
-        of `prediction_mechanism_type`. The same parameter dictionary is passed to all
-        `prediction mechanisms <EVCControlMechanism_Prediction_Mechanisms>` created for the EVCControlMechanism.
+        ..note::
+            Specifying a single instantiated Mechanism (i.e., outside of a list) is a convenience notation, that assumes
+            the System for which the EVCControlMechanism is the `controller <System.controller>` has a single `ORIGIN`
+            Mechanism; this will cause an if the System has more than one `ORIGIN` Mechanism;  in that case, one of the
+            other forms of specification must be used.
 
     function : function or method : ControlSignalGridSearch
         specifies the function used to determine the `allocation_policy` for the next execution of the
@@ -490,23 +499,15 @@ class EVCControlMechanism(ControlMechanism):
         specified in its **control_signals** argument.
 
     prediction_mechanisms : List[ProcessingMechanism]
-        list of `predictions mechanisms <EVCControlMechanism_Prediction_Mechanisms>` generated for the EVCControlMechanism's
-        `system <EVCControlMechanism.system>` when the EVCControlMechanism is created, one for each `ORIGIN` Mechanism in the System.
+        list of `predictions mechanisms <EVCControlMechanism_Prediction_Mechanisms>` generated for the
+        EVCControlMechanism's `system <EVCControlMechanism.system>` when the EVCControlMechanism is created,
+        one for each `ORIGIN` Mechanism in the System.  Each prediction Mechanism is named using the name of the `
+        ORIGIN` Mechanism + "PREDICTION_MECHANISM" and assigned an `OutputState` with a name based on the same.
 
     origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
         dictionary of `prediction mechanisms <EVCControlMechanism_Prediction_Mechanisms>` added to the EVCControlMechanism's
         `system <EVCControlMechanism.system>`, one for each of its `ORIGIN` Mechanisms.  The key for each
         entry is an `ORIGIN` Mechanism of the System, and the value is the corresponding prediction Mechanism.
-
-    prediction_mechanism_type : ProcessingMechanism : default PredictionMechanism
-        the `ProcessingMechanism <ProcessingMechanism>` class used for `prediction Mechanism(s)
-        <EVCControlMechanism_Prediction_Mechanisms>`. Each instance is named based on `ORIGIN` Mechanism +
-        "PREDICTION_MECHANISM", and assigned an `OutputState` with a name based on the same.
-
-    prediction_mechanism_params : Dict[param key, param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` passed to `prediction_mechanism_type` when
-        the `prediction Mechanism <EVCControlMechanism_Prediction_Mechanisms>` is created.  The same dictionary will be passed
-        to all instances of `prediction_mechanism_type` created.
 
     predicted_input : Dict[ProcessingMechanism, value]
         dictionary with the `value <Mechanism_Base.value>` of each `prediction Mechanism
@@ -692,12 +693,7 @@ class EVCControlMechanism(ControlMechanism):
     def __init__(self,
                  system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 # # MODIFIED 6/16/18 OLD:
-                 # prediction_mechanism_type=PredictionMechanism,
-                 # prediction_mechanism_params:tc.optional(dict)=None,
-                 # # MODIFIED 6/16/18 NEW:
-                 prediction_mechanisms:tc.optional(list, tuple, Mechanism)=[PredictionMechanism],
-                 # # MODIFIED 6/16/18 END
+                 prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
                  control_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  function=ControlSignalGridSearch,
@@ -711,12 +707,7 @@ class EVCControlMechanism(ControlMechanism):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
-                                                  # # MODIFIED 6/16/18 OLD:
-                                                  # prediction_mechanism_type=prediction_mechanism_type,
-                                                  # prediction_mechanism_params=prediction_mechanism_params,
-                                                  # MODIFIED 6/16/18 NEW:
                                                   prediction_mechanisms=prediction_mechanisms,
-                                                  # MODIFIED 6/16/18 END
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   control_signals=control_signals,
@@ -739,14 +730,24 @@ class EVCControlMechanism(ControlMechanism):
                                            prefs=prefs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        '''Validate prediction_mechanism specification'''
+        '''Validate prediction_mechanisms'''
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        prediction_mechanisms = target_set[PREDICTION_MECHANISMS]
-
-
-
+        if PREDICTION_MECHANISMS in target_set:
+            prediction_mechanisms = target_set[PREDICTION_MECHANISMS]
+            if isinstance(prediction_mechanisms, type) and not issubclass(prediction_mechanisms, Mechanism):
+                raise EVCError("Class used to specify {} argument of {} ({}) must be a type of {}".
+                               format(self.name,repr(PREDICTION_MECHANISMS),prediction_mechanisms,Mechanism.__name__))
+            elif isinstance(prediction_mechanisms, list):
+                for pm in prediction_mechanisms:
+                    if not (isinstance(pm,Mechanism) or
+                            (isinstance(pm,type) and issubclass(pm,Mechanism)) or
+                            (isinstance(pm,tuple) and issubclass(pm[0],Mechanism) and isinstance(pm[1],dict))):
+                        raise EVCError("Unrecognized item ({}) in the list specified for {} arg of constructor for {}; "
+                                       "must be a Mechanism, a class of Mechanism, or a tuple with a Mechanism class "
+                                       "and parameter specification dictionary".
+                                       format(pm, repr(PREDICTION_MECHANISMS), self.name))
 
     def _instantiate_input_states(self, context=None):
         """Instantiate PredictionMechanisms
@@ -790,16 +791,89 @@ class EVCControlMechanism(ControlMechanism):
         # Dictionary of prediction_mechanisms, keyed by the ORIGIN Mechanism to which they correspond
         self.origin_prediction_mechanisms = {}
 
-        # List of prediction Mechanism tuples (used by system to execute them)
+        # List of prediction Mechanism tuples (used by System to execute them)
         self.prediction_mechs = []
 
-        # Get any params specified for predictionMechanism(s) by EVCControlMechanism
-        try:
-            prediction_mechanism_params = self.paramsCurrent[PREDICTION_MECHANISM_PARAMS]
-        except KeyError:
-            prediction_mechanism_params = {}
+        # MODIFIED 6/16/18 OLD:
+        # # Get any params specified for predictionMechanism(s) by EVCControlMechanism
+        # try:
+        #     prediction_mechanism_params = self.paramsCurrent[PREDICTION_MECHANISM_PARAMS]
+        # except KeyError:
+        #     prediction_mechanism_params = {}
+        #
+        # for origin_mech in system.origin_mechanisms.mechanisms:
+        #     state_names = []
+        #     variable = []
+        #     for state_name in origin_mech.input_states.names:
+        #         state_names.append(state_name)
+        #         # variable.append(origin_mech.input_states[state_name].instance_defaults.variable)
+        #         variable.append(origin_mech.input_states[state_name].value)
+        #
+        #     # Instantiate PredictionMechanism
+        #     prediction_mechanism = self.prediction_mechanism_type(
+        #             name=origin_mech.name + " " + PREDICTION_MECHANISM,
+        #             default_variable=variable,
+        #             input_states=state_names,
+        #             params = prediction_mechanism_params)
+        #     prediction_mechanism._role = CONTROL
+        #     prediction_mechanism.origin_mech = origin_mech
+        #
+        #     # Assign projections to prediction_mechanism that duplicate those received by origin_mech
+        #     #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
+        #     for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
+        #                                                     prediction_mechanism.input_states):
+        #         for projection in orig_input_state.path_afferents:
+        #             MappingProjection(sender=projection.sender,
+        #                               receiver=prediction_input_state,
+        #                               matrix=projection.matrix)
+        #
+        #     # Assign list of processes for which prediction_mechanism will provide input during the simulation
+        #     # - used in _get_simulation_system_inputs()
+        #     # - assign copy,
+        #     #       since don't want to include the prediction process itself assigned to origin_mech.processes below
+        #     prediction_mechanism.use_for_processes = list(origin_mech.processes.copy())
+        #
+        #     # # FIX: REPLACE REFERENCE TO THIS ELSEWHERE WITH REFERENCE TO MECH_TUPLES BELOW
+        #     self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
+        #
+        #     # Add to list of EVCControlMechanism's prediction_object_items
+        #     # prediction_object_item = prediction_mechanism
+        #     self.prediction_mechs.append(prediction_mechanism)
+        #
+        #     # Add to system execution_graph and execution_list
+        #     system.execution_graph[prediction_mechanism] = set()
+        #     system.execution_list.append(prediction_mechanism)
 
-        for origin_mech in system.origin_mechanisms.mechanisms:
+        # MODIFIED 6/16/18 NEW:
+
+        # IF IT IS A MECHANISM, PUT IT IN A LIST
+        # IF IT IS A CLASS, PUT IT IN A TUPLE WITH NONE
+        # NOW IF IT IS TUPLE,
+
+        # self.prediction_mechanisms is:
+        if isinstance(self.prediction_mechanisms, Mechanism):
+            # a single Mechanism, so put it in a list
+            prediction_mech_specs = [self.prediction_mechanisms]
+        elif isinstance(self.prediction_mechanisms, type):
+            # a class, so put it as 1st item in a 2-item tuple, with None as 2nd item
+            prediction_mech_specs = (self.prediction_mechanisms, None)
+        elif isinstance(self.prediction_mechanisms, dict):
+            # a class, so put it as 1st item in a 2-item tuple, with None as 2nd item
+            prediction_mech_specs = (PredictionMechanism, self.prediction_mechanisms)
+
+        if isinstance(prediction_mech_specs, tuple):
+            # a tuple, so create a list with same length as self.system.origin_mechanisms, and tuple as each item
+            prediction_mech_specs = [prediction_mech_specs] * len(system.origin_mechanisms)
+
+        # Make sure prediction_mechanisms is the same length as self.system.origin_mechanisms
+        from psyneulink.components.system import ORIGIN_MECHANISMS
+        if len(prediction_mech_specs) != len(system.origin_mechanisms):
+            raise EVCError("Number of PredictionMechanisms specified for {} ({}) "
+                           "must equal the number of {} ({}) in the System it controls ({})".
+                           format(self.name, len(prediction_mech_specs),
+                           repr(ORIGIN_MECHANISMS), len(system.orign_mechanisms), self.system.name))
+
+        for origin_mech, pm_spec in zip(system.origin_mechanisms.mechanisms, prediction_mech_specs):
             state_names = []
             variable = []
             for state_name in origin_mech.input_states.names:
@@ -808,11 +882,18 @@ class EVCControlMechanism(ControlMechanism):
                 variable.append(origin_mech.input_states[state_name].value)
 
             # Instantiate PredictionMechanism
-            prediction_mechanism = self.prediction_mechanism_type(
-                    name=origin_mech.name + " " + PREDICTION_MECHANISM,
-                    default_variable=variable,
-                    input_states=state_names,
-                    params = prediction_mechanism_params)
+            if isinstance(pm_spec, Mechanism):
+                prediction_mechanism=pm_spec
+            elif isinstance(pm_spec, tuple):
+                prediction_mechanism = pm_spec[0](
+                        name=origin_mech.name + " " + PREDICTION_MECHANISM,
+                        default_variable=variable,
+                        input_states=state_names,
+                        params = pm_spec[1])
+            else:
+                raise EVCError("PROGRAM ERROR: Unexpected item ({}) in list for {} arg of constructor for {}".
+                               format(pm_spec, repr(PREDICTION_MECHANISMS), self.name))
+
             prediction_mechanism._role = CONTROL
             prediction_mechanism.origin_mech = origin_mech
 
@@ -841,6 +922,9 @@ class EVCControlMechanism(ControlMechanism):
             # Add to system execution_graph and execution_list
             system.execution_graph[prediction_mechanism] = set()
             system.execution_list.append(prediction_mechanism)
+
+        # MODIFIED 6/16/18 END
+
 
         self.prediction_mechanisms = MechanismList(self, self.prediction_mechs)
 
