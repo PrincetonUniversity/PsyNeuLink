@@ -2490,7 +2490,7 @@ class Component(object):
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
                 # MODIFIED 6/16/18 NEW:
-                not isinstance(param_spec[1], Iterable) and
+                not isinstance(param_spec[1], dict) and
                 # MODIFIED 6/16/18 END
                 (param_spec[1] in ALLOWABLE_TUPLE_SPEC_KEYWORDS or
                  isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or

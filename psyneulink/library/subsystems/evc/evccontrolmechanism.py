@@ -858,8 +858,11 @@ class EVCControlMechanism(ControlMechanism):
             # a class, so put it as 1st item in a 2-item tuple, with None as 2nd item
             prediction_mech_specs = (self.prediction_mechanisms, None)
         elif isinstance(self.prediction_mechanisms, dict):
-            # a class, so put it as 1st item in a 2-item tuple, with None as 2nd item
+            # a dict, so put it as 2nd item in a 2-item tuple, with PredictionMechanism as 1st item
             prediction_mech_specs = (PredictionMechanism, self.prediction_mechanisms)
+        elif isinstance(self.prediction_mechanisms, tuple):
+            # a tuple, so leave as is for now (put in list below)
+            prediction_mech_specs = self.prediction_mechanisms
 
         if isinstance(prediction_mech_specs, tuple):
             # a tuple, so create a list with same length as self.system.origin_mechanisms, and tuple as each item
