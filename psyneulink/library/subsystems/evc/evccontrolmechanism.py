@@ -790,7 +790,7 @@ class EVCControlMechanism(ControlMechanism):
                 variable.append(origin_mech.input_states[state_name].value)
 
             # Instantiate PredictionMechanism
-            prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
+            prediction_mechanism = self.prediction_mechanism_type(
                     name=origin_mech.name + " " + PREDICTION_MECHANISM,
                     default_variable=variable,
                     input_states=state_names,
