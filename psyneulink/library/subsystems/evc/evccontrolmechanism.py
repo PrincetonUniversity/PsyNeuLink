@@ -329,8 +329,8 @@ import typecheck as tc
 
 from psyneulink.components.component import function_type
 from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Recorder
+from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.components.shellclasses import Function, System_Base
@@ -692,8 +692,12 @@ class EVCControlMechanism(ControlMechanism):
     def __init__(self,
                  system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 prediction_mechanism_type=PredictionMechanism,
-                 prediction_mechanism_params:tc.optional(dict)=None,
+                 # # MODIFIED 6/16/18 OLD:
+                 # prediction_mechanism_type=PredictionMechanism,
+                 # prediction_mechanism_params:tc.optional(dict)=None,
+                 # # MODIFIED 6/16/18 NEW:
+                 prediction_mechanisms:tc.optional(list, tuple, Mechanism)=[PredictionMechanism],
+                 # # MODIFIED 6/16/18 END
                  control_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  function=ControlSignalGridSearch,
@@ -707,8 +711,12 @@ class EVCControlMechanism(ControlMechanism):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
-                                                  prediction_mechanism_type=prediction_mechanism_type,
-                                                  prediction_mechanism_params=prediction_mechanism_params,
+                                                  # # MODIFIED 6/16/18 OLD:
+                                                  # prediction_mechanism_type=prediction_mechanism_type,
+                                                  # prediction_mechanism_params=prediction_mechanism_params,
+                                                  # MODIFIED 6/16/18 NEW:
+                                                  prediction_mechanisms=prediction_mechanisms,
+                                                  # MODIFIED 6/16/18 END
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   control_signals=control_signals,
@@ -729,6 +737,16 @@ class EVCControlMechanism(ControlMechanism):
                                            params=params,
                                            name=name,
                                            prefs=prefs)
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        '''Validate prediction_mechanism specification'''
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        prediction_mechanisms = target_set[PREDICTION_MECHANISMS]
+
+
+
 
     def _instantiate_input_states(self, context=None):
         """Instantiate PredictionMechanisms
