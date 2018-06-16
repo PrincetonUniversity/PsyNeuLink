@@ -832,12 +832,21 @@ class EVCControlMechanism(ControlMechanism):
         for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
             self.predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
+    # MODIFIED 6/16/18 NEW:
+    def _get_stateful_mechs(self, system:System_Base, context=None):
+        self._stateful_mechs = dict({mech:mech.previous_value} for mech in system.mechanisms if mech.auto_dependent)
+    # MODIFIED 6/16/18 END
+
     def _instantiate_attributes_after_function(self, context=None):
 
         super()._instantiate_attributes_after_function(context=context)
 
         if self.system is None or not self.system.enable_controller:
             return
+
+        # MODIFIED 6/16/18 NEW:
+        self._get_stateful_mechs(self.system, context=context)
+        # MODIFIED 6/16/18 END
 
         cost_Function = self.cost_function
         if isinstance(cost_Function, Function):
@@ -925,27 +934,6 @@ class EVCControlMechanism(ControlMechanism):
 
         return allocation_policy
 
-        """Assign values of prediction mechanisms to predicted_input
-
-        Assign value of each predictionMechanism.value to corresponding item of self.predictedIinput
-        Note: must be assigned in order of self.system.processes
-
-        """
-
-        # Assign predicted_input for each process in system.processes
-
-        # The number of ORIGIN mechanisms requiring input should = the number of prediction mechanisms
-        num_origin_mechs = len(self.system.origin_mechanisms)
-        num_prediction_mechs = len(self.origin_prediction_mechanisms)
-        if num_origin_mechs != num_prediction_mechs:
-            raise EVCError("PROGRAM ERROR:  The number of ORIGIN mechanisms ({}) does not equal"
-                           "the number of prediction_predictions mechanisms ({}) for {}".
-                           format(num_origin_mechs, num_prediction_mechs, self.system.name))
-        for origin_mech in self.system.origin_mechanisms:
-            # Get origin Mechanism for each process
-            # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
-            self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
-
     def _update_predicted_input(self):
         """Assign values of prediction mechanisms to predicted_input
 
@@ -1009,7 +997,6 @@ class EVCControlMechanism(ControlMechanism):
 
         # Run simulation
         self.system.context.execution_phase = ContextFlags.SIMULATION
-
         self.system.run(inputs=inputs,
                         reinitialize_values=reinitialize_values,
                         context=context)
