@@ -4,11 +4,7 @@ import psyneulink.globals.keywords as kw
 import numpy as np
 import pytest
 
-SIZE=8
 np.random.seed(0)
-test_var = np.random.rand(SIZE)
-test_initializer = np.random.rand(SIZE)
-
 params = {'a_v' : np.random.rand(),
           'b_v' : np.random.rand(),
           'c_v' : np.random.rand(),
@@ -25,13 +21,16 @@ params = {'a_v' : np.random.rand(),
           'mode' : np.random.rand(),
           }
 
+SIZE=8
+test_var = np.random.rand(SIZE)
+
 test_data = [
-    (Function.FHNIntegrator, test_var, "RK4", params, ([0.33511552, 0.36644674, 0.34524828, 0.33437834, 0.31170683,
-       0.35336752, 0.31430587, 0.39997071], [0.69061155, 0.69494508, 0.69201482, 0.69050939, 0.68736324,
-       0.69313801, 0.68772434, 0.69956405], 0.15000000000000002)),
-    (Function.FHNIntegrator, test_var, "EULER", params, ([0.33322092, 0.36410292, 0.34322017, 0.33249301, 0.31007781,
-       0.35122431, 0.31265031, 0.39702677], [0.5978193 , 0.60006729, 0.59854804, 0.59776621, 0.59612942,
-       0.59913078, 0.59631748, 0.6024552 ], 0.15000000000000002)),
+    (Function.FHNIntegrator, test_var, "RK4", params, ([0.23621415, 0.24033985, 0.22322577, 0.43877457, 0.42374559,
+       0.44914662, 0.47952703, 0.42953011], [0.21400386, 0.21415157, 0.2135381 , 0.22111574, 0.22059828,
+       0.22147186, 0.22251029, 0.22079764], 0.15000000000000002)),
+    (Function.FHNIntegrator, test_var, "EULER", params, ([0.23686576, 0.24093183, 0.22404678, 0.43291206, 0.41863405,
+       0.44273909, 0.47139546, 0.42413492], [0.20757016, 0.2076755 , 0.20723764, 0.21257185, 0.21221299,
+       0.21281834, 0.21353476, 0.21235135], 0.15000000000000002)),
 ]
 
 # use list, naming function produces ugly names
