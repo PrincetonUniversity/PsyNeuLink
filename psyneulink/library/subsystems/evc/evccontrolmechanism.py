@@ -832,21 +832,12 @@ class EVCControlMechanism(ControlMechanism):
         for i, origin_mech in zip(range(len(system.origin_mechanisms)), system.origin_mechanisms):
             self.predicted_input[origin_mech] = system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
-    # MODIFIED 6/16/18 NEW:
-    def _get_stateful_mechs(self, system:System_Base, context=None):
-        self._stateful_mechs = dict({mech:mech.previous_value} for mech in system.mechanisms if mech.auto_dependent)
-    # MODIFIED 6/16/18 END
-
     def _instantiate_attributes_after_function(self, context=None):
 
         super()._instantiate_attributes_after_function(context=context)
 
         if self.system is None or not self.system.enable_controller:
             return
-
-        # MODIFIED 6/16/18 NEW:
-        self._get_stateful_mechs(self.system, context=context)
-        # MODIFIED 6/16/18 END
 
         cost_Function = self.cost_function
         if isinstance(cost_Function, Function):
