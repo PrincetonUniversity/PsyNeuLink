@@ -328,7 +328,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import function_type
-from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Recorder
+from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer
 from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism

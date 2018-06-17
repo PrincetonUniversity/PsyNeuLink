@@ -16,7 +16,7 @@ Auxiliary functions for `EVCControlMechanism`.
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Function_Base, Recorder, Integrator
+from psyneulink.components.functions.function import Function_Base, Buffer, Integrator
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.globals.context import ContextFlags
@@ -652,7 +652,7 @@ class PredictionMechanism(IntegratorMechanism):
 
             elif function in {AVERAGE_INPUTS, INPUT_SEQUENCE}:
                 # Maintain the preceding sequence of inputs (of length num_trials), and use those for each simulation
-                function = Recorder(default_variable=[[0]],
+                function = Buffer(default_variable=[[0]],
                                     initializer=initializer or [[0]],
                                     history=self.window)
 

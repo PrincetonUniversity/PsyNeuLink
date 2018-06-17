@@ -31,7 +31,7 @@ Integrator Functions:
   * `Integrator`
   * `SimpleIntegrator`
   * `ConstantIntegrator`
-  * 'Recorder`
+  * 'Buffer`
   * `AdaptiveIntegrator`
   * `DriftDiffusionIntegrator`
   * `OrnsteinUhlenbeckIntegrator`
@@ -215,7 +215,7 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
     OUTPUT_STATES, OUTPUT_TYPE, \
     PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RECORDER_FUNCTION, REDUCE_FUNCTION, RL_FUNCTION, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RL_FUNCTION, \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
@@ -247,7 +247,7 @@ __all__ = [
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
     'OneHot', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
-    'PROPENSITY', 'Recorder', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
+    'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
     'UniformDist', 'UniformToNormalDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
@@ -5283,9 +5283,9 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         return adjusted_value
 
 
-class Recorder(Integrator):  # ------------------------------------------------------------------------------
+class Buffer(Integrator):  # ------------------------------------------------------------------------------
     """
-    Recorder(        \
+    Buffer(        \
         default_variable=None,  \
         rate=1.0,               \
         noise=0.0,              \
@@ -5296,12 +5296,12 @@ class Recorder(Integrator):  # -------------------------------------------------
         prefs=None,             \
         )
 
-    .. _Recorder:
+    .. _Buffer:
 
-    Adds item to prior value by appending variable to `previous_value <Recorder.previous_value>`:
+    Adds item to prior value by appending variable to `previous_value <Buffer.previous_value>`:
 
-        :math: `variable <Recorder.variable>` * `rate <Recorder.rate>` +
-        `noise <Recorder.noise>`
+        :math: `variable <Buffer.variable>` * `rate <Buffer.rate>` +
+        `noise <Buffer.noise>`
 
     Arguments
     ---------
@@ -5319,7 +5319,7 @@ class Recorder(Integrator):  # -------------------------------------------------
         `noise <SimpleIntegrator.noise>` for details).
 
     history : int : default None
-        specifies max length of `value <Recorder.value>`.
+        specifies max length of `value <Buffer.value>`.
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -5369,10 +5369,10 @@ class Recorder(Integrator):  # -------------------------------------------------
             then the noise will simply be an offset that remains the same across all executions.
 
     history : int
-        determines maximum length of value returned by the `function <Recorder.function>`. If appending
-        `variable <Recorder.variable>` to `previous_value <Recorder.previous_value>` exceeds
-        history, the first item of `previous_value <Recorder.previous_value>` is deleted, and `variable
-        <Recorder.variable>` is appended to it, so that `value <Recorder.previous_value>`
+        determines maximum length of value returned by the `function <Buffer.function>`. If appending
+        `variable <Buffer.variable>` to `previous_value <Buffer.previous_value>` exceeds
+        history, the first item of `previous_value <Buffer.previous_value>` is deleted, and `variable
+        <Buffer.variable>` is appended to it, so that `value <Buffer.previous_value>`
         maintains a constant length.  If history is not specified (or set to 0), the value returned continues to
         be extended indefinitely.
 
@@ -5398,7 +5398,7 @@ class Recorder(Integrator):  # -------------------------------------------------
         <LINK>` for details).
     """
 
-    componentName = RECORDER_FUNCTION
+    componentName = BUFFER_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -5421,8 +5421,9 @@ class Recorder(Integrator):  # -------------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        if initializer is None and default_variable is not None:
+        # if initializer is None and default_variable is not None:
             # initializer = np.empty(np.array(default_variable).shape)
+        if initializer is None:
             initializer = np.array([[]])
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -5447,10 +5448,10 @@ class Recorder(Integrator):  # -------------------------------------------------
                  params=None,
                  context=None):
         """
-        Return: `previous_value <Recorder.previous_value>` appended with `variable
-        <Recorder.variable>` * `rate <Recorder.rate>` + `noise <Recorder.noise>`;
+        Return: `previous_value <Buffer.previous_value>` appended with `variable
+        <Buffer.variable>` * `rate <Buffer.rate>` + `noise <Buffer.noise>`;
 
-        If the length of the result exceeds `history <Recorder.history>`, delete the first item.
+        If the length of the result exceeds `history <Buffer.history>`, delete the first item.
 
         Arguments
         ---------
