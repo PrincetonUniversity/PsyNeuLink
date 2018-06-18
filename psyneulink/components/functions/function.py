@@ -4609,6 +4609,10 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             else:
                 initializer = self.ClassDefaults.variable
 
+        # Assign here as default, for use in initialization of function
+        # self.previous_value = initializer
+        self._initialize_previous_value(initializer)
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
@@ -4616,8 +4620,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                                                   params=params)
 
 
-        # Assign here as default, for use in initialization of function
-        self.previous_value = initializer
         self.stateful_attributes = ["previous_value"]
         # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
         params[INITIALIZER] = initializer
@@ -4777,6 +4779,9 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             raise FunctionError(
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
+
+    def _initialize_previous_value(self, initializer):
+        self.previous_value = initializer
 
     def _try_execute_param(self, param, var):
 
