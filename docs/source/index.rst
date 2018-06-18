@@ -223,6 +223,7 @@ Table of Contents
    QuickReference
    Core
    Library
+   ContributorsGuide
 
 .. _Indices_and_Tables:
 
