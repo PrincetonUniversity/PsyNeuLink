@@ -614,7 +614,6 @@ WINDOW = 'window'
 DECAY_FUNCTION = 'decay_function'
 WINDOWING_FUNCTION = 'windowing_function'
 
-
 class PredictionMechanism(IntegratorMechanism):
 
     componentType = PREDICTION_MECHANISM
@@ -658,7 +657,6 @@ class PredictionMechanism(IntegratorMechanism):
                                     initializer=initializer,
                                     history=self.window)
 
-
         super().__init__(
                 default_variable=default_variable,
                 size=size,
@@ -672,8 +670,10 @@ class PredictionMechanism(IntegratorMechanism):
         '''Update predicted value on "real" but not simulation runs '''
 
         if self.context.execution_phase == ContextFlags.SIMULATION:
+            # Just return current value for simulation runs
             value = self.value
         else:
+            # Update deque with new input for any other type of run
             value = super()._execute(variable, runtime_params=runtime_params, context=context)
 
             # If inputs are being recorded (#recorded = window):
