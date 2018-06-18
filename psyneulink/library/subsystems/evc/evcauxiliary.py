@@ -577,7 +577,8 @@ def _compute_EVC(args):
 
         reinitialization_values[mechanism] = reinitialization_value
 
-    # Run simulation
+    # Run simulation trial by trial in order to get EVC for each trial
+    # IMPLEMENTATION NOTE:  Consider calling execute rather than run (for efficiency)
     for i in range(num_trials):
         inputs = {key:value[i] for key, value in ctlr.predicted_input.items()}
 

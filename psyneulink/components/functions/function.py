@@ -4619,7 +4619,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                                                   noise=noise,
                                                   params=params)
 
-
         self.stateful_attributes = ["previous_value"]
         # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
         params[INITIALIZER] = initializer
@@ -4629,14 +4628,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                          owner=owner,
                          prefs=prefs,
                          context=context)
-
-        # FIX: All tests are passed without this. Is there any reason to keep it?
-        # MODIFIED 6/16/18 OLD:
-        # self.initializer = initializer
-        #
-        # # Reassign to kWInitializer in case default value was overridden
-        # self.previous_value = self.initializer
-        # MODIFIED 6/16/18 END
 
         self.auto_dependent = True
 
