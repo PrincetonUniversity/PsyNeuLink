@@ -633,8 +633,14 @@ class PredictionMechanism(IntegratorMechanism):
     COMMENT:
         EXPLAIN FUNCTION, INITIALIZER, WINDOW, DECAY_FUNCTION AND WINDOWING_FUNCTION HERE
 
+    .. _PredictionMechanism_Creation:
+
     Creating a PredictionMechanism
     ------------------------------
+
+    PredictionMechanisms are created automatically when an EVCControlMechanism is created, one for each `ORIGIN`
+    Mechanism in the `System` for which the EVCControlMechanism is a controller <System.controller>` (and designated in
+    in the EVCControlMechanism's `system <EVCControlMechanism.system>` attribute).
 
     Structure
     ---------

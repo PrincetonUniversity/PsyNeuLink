@@ -119,7 +119,7 @@ in a variety of ways:
       **objective_mechanism** argument of the EVCControlMechanism's constructor;
     ..
     * using the  **monitored_output_states** argument for an ObjectiveMechanism specified in the `objective_mechanism
-      <EVCControlMechanism.objective_mechanism>` argument of the EVCMechanism's constructor;
+      <EVCControlMechanism.objective_mechanism>` argument of the EVCControlMechanism's constructor;
     ..
     * specifying a different `ObjectiveMechanism` in the **objective_mechanism** argument of the EVCControlMechanism's
       constructor. The result of the `objective_mechanism <EVCControlMechanism.objective_mechanism>`'s `function
