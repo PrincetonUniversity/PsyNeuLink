@@ -4630,10 +4630,12 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=context)
 
-        self.initializer = initializer
-
-        # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
+        # MODIFIED 6/16/18 OLD:
+        # self.initializer = initializer
+        #
+        # # Reassign to kWInitializer in case default value was overridden
+        # self.previous_value = self.initializer
+        # MODIFIED 6/16/18 END
 
         self.auto_dependent = True
 
