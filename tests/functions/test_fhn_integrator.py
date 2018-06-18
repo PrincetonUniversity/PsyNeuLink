@@ -56,7 +56,6 @@ def test_basic(func, variable, integration_method, params, expected, benchmark):
 
 
 @pytest.mark.function
-@pytest.mark.skip
 @pytest.mark.integrator_function
 @pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
 @pytest.mark.benchmark

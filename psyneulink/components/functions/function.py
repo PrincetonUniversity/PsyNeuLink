@@ -7542,6 +7542,279 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         self.value = new_previous_v, new_previous_w, new_previous_time
         return [new_previous_v], [new_previous_w], [new_previous_time]
 
+
+    def bin_function(self,
+                     variable=None,
+                     params=None,
+                     context=None):
+
+        ret = super().bin_function(variable, params, context)
+
+        v_len = len(self.previous_v)
+        v = ret[0:v_len]
+        if np.isscalar(self.previous_w):
+            w = ret[-2]
+        else:
+            w = ret[v_len:v_len + len(self.previous_w)]
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
+            self.previous_v = v
+            self.previous_w = w
+            self.previous_time = ret[-1]
+
+        return v, w, ret[-1]
+
+
+    @property
+    def _result_length(self):
+        # Override defaults. We output the entire saved context
+        initializer = self.get_context_initializer()
+        w_len = 1 if np.isscalar(initializer[1]) else len(initializer[1])
+        return len(initializer[0]) + w_len + 1
+
+
+    def get_param_ids(self):
+        # Omit "integration_method" which is a compile time parameter
+        return ("a_v", "b_v", "c_v", "d_v", "e_v", "f_v", "a_w", "b_w", "c_w",
+               "time_constant_v", "time_constant_w", "threshold",
+               "uncorrelated_activity", "mode", TIME_STEP_SIZE)
+
+
+    def get_output_struct_type(self):
+        default_val = self.instance_defaults.value
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
+
+
+    def get_context_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            context = (self.previous_v, self.previous_w, self.previous_time)
+            context_type = pnlvm._convert_python_struct_to_llvm_ir(ctx, context)
+        return context_type
+
+
+    def get_context_initializer(self):
+        v = self.previous_v if np.isscalar(self.previous_v) else tuple(self.previous_v)
+        w = self.previous_w if np.isscalar(self.previous_w) else tuple(self.previous_w)
+        return (v, w, self.previous_time)
+
+
+    def _gen_llvm_function_body(self, ctx, builder):
+        params, previous, vi, out = builder.function.args
+        zero_i32 = ctx.int32_ty(0)
+
+        # Load previous values
+        previous_v_ptr = builder.gep(previous, [zero_i32, ctx.int32_ty(0)])
+        previous_w_ptr = builder.gep(previous, [zero_i32, ctx.int32_ty(1)])
+        previous_time_ptr = builder.gep(previous, [zero_i32, ctx.int32_ty(2)])
+        previous_time = builder.load(previous_time_ptr)
+
+        # Output locations
+        out_v_ptr = builder.gep(out, [zero_i32, ctx.int32_ty(0)])
+        out_w_ptr = builder.gep(out, [zero_i32, ctx.int32_ty(1)])
+        out_time_ptr = builder.gep(out, [zero_i32, ctx.int32_ty(2)])
+
+        # Load parameters
+        param_vals = {}
+        for i, p in enumerate(self.get_param_ids()):
+            param_ptr = builder.gep(params, [zero_i32, ctx.int32_ty(i)])
+            param_vals[p] = builder.load(param_ptr)
+
+        inner_args = {"ctx":ctx, "var_ptr":vi, "param_vals":param_vals,
+                      "out_v":out_v_ptr, "out_w":out_w_ptr,
+                      "previous_v_ptr":previous_v_ptr,
+                      "previous_w_ptr":previous_w_ptr,
+                      "previous_time":previous_time}
+
+        method = self.get_current_function_param("integration_method")
+        if method == "RK4":
+            func = functools.partial(self.__gen_llvm_rk4_body, **inner_args)
+        elif method == "EULER":
+            func = functools.partial(self.__gen_llvm_euler_body, **inner_args)
+        else:
+            raise FunctionError("Invalid integration method ({}) selected for {}".
+                                format(integration_method, self.name))
+
+        vector_length = ctx.int32_ty(vi.type.pointee.count)
+        builder = helpers.for_loop_zero_inc(builder, vector_length, func, method + "_body")
+
+        # Save output time
+        time = builder.fadd(previous_time, param_vals[TIME_STEP_SIZE])
+        builder.store(time, out_time_ptr)
+
+        # Save context
+        result = builder.load(out)
+        builder.store(result, previous)
+        return builder
+
+
+    def __gen_llvm_rk4_body(self, builder, index, ctx, var_ptr, out_v, out_w, param_vals, previous_v_ptr, previous_w_ptr, previous_time):
+        var = builder.load(builder.gep(var_ptr, [ctx.int32_ty(0), index]))
+
+        previous_v = builder.load(builder.gep(previous_v_ptr, [ctx.int32_ty(0), index]))
+        previous_w = builder.load(builder.gep(previous_w_ptr, [ctx.int32_ty(0), index]))
+
+        out_v_ptr = builder.gep(out_v, [ctx.int32_ty(0), index])
+        out_w_ptr = builder.gep(out_w, [ctx.int32_ty(0), index])
+
+        time_step_size = param_vals[TIME_STEP_SIZE]
+
+        # First approximation uses previous_v
+        input_v = previous_v
+        slope_v_approx_1 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
+
+        # First approximation uses previous_w
+        input_w = previous_w
+        slope_w_approx_1 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
+
+        # Second approximation
+        # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_1
+        input_v = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_v = builder.fmul(input_v, slope_v_approx_1)
+        input_v = builder.fadd(input_v, previous_v)
+        slope_v_approx_2 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
+
+        # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_1
+        input_w = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_w = builder.fmul(input_w, slope_w_approx_1)
+        input_w = builder.fadd(input_w, previous_w)
+        slope_w_approx_2 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
+
+        # Third approximation
+        # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_2
+        input_v = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_v = builder.fmul(input_v, slope_v_approx_2)
+        input_v = builder.fadd(input_v, previous_v)
+        slope_v_approx_3 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
+
+        # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_2
+        input_w = builder.fmul(ctx.float_ty(0.5), time_step_size)
+        input_w = builder.fmul(input_w, slope_w_approx_2)
+        input_w = builder.fadd(input_w, previous_w)
+        slope_w_approx_3 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
+
+
+        # Fourth approximation
+        # v is approximately previous_value_v + time_step_size * slope_v_approx_3
+        input_v = builder.fmul(time_step_size, slope_v_approx_3)
+        input_v = builder.fadd(input_v, previous_v)
+        slope_v_approx_4 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
+
+        # w is approximately previous_value_w + time_step_size * slope_w_approx_3
+        input_w = builder.fmul(time_step_size, slope_w_approx_3)
+        input_w = builder.fadd(input_w, previous_w)
+        slope_w_approx_4 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
+
+        ts = builder.fdiv(time_step_size, ctx.float_ty(6.0))
+        # new_v = previous_value_v \
+        #    + (time_step_size/6) * (slope_v_approx_1
+        #    + 2 * (slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
+        new_v = builder.fadd(slope_v_approx_2, slope_v_approx_3)
+        new_v = builder.fmul(new_v, ctx.float_ty(2.0))
+        new_v = builder.fadd(new_v, slope_v_approx_1)
+        new_v = builder.fadd(new_v, slope_v_approx_4)
+        new_v = builder.fmul(new_v, ts)
+        new_v = builder.fadd(new_v, previous_v)
+        builder.store(new_v, out_v_ptr)
+
+        # new_w = previous_walue_w \
+        #    + (time_step_size/6) * (slope_w_approx_1
+        #    + 2 * (slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
+        new_w = builder.fadd(slope_w_approx_2, slope_w_approx_3)
+        new_w = builder.fmul(new_w, ctx.float_ty(2.0))
+        new_w = builder.fadd(new_w, slope_w_approx_1)
+        new_w = builder.fadd(new_w, slope_w_approx_4)
+        new_w = builder.fmul(new_w, ts)
+        new_w = builder.fadd(new_w, previous_w)
+        builder.store(new_w, out_w_ptr)
+
+
+    def __gen_llvm_euler_body(self, builder, index, ctx, var_ptr, out_v, out_w, param_vals, previous_v_ptr, previous_w_ptr, previous_time):
+
+        var = builder.load(builder.gep(var_ptr, [ctx.int32_ty(0), index]))
+        previous_v = builder.load(builder.gep(previous_v_ptr, [ctx.int32_ty(0), index]))
+        previous_w = builder.load(builder.gep(previous_w_ptr, [ctx.int32_ty(0), index]))
+        out_v_ptr = builder.gep(out_v, [ctx.int32_ty(0), index])
+        out_w_ptr = builder.gep(out_w, [ctx.int32_ty(0), index])
+
+        # First approximation uses previous_v
+        slope_v_approx = self.__gen_llvm_dv_dt(builder, ctx, var, previous_v, previous_w, param_vals)
+
+        # First approximation uses previous_w
+        slope_w_approx = self.__gen_llvm_dw_dt(builder, ctx, previous_w, previous_v, param_vals)
+
+        # new_v = previous_value_v + time_step_size*slope_v_approx
+        new_v = builder.fmul(param_vals[TIME_STEP_SIZE], slope_v_approx)
+        new_v = builder.fadd(previous_v, new_v)
+        builder.store(new_v, out_v_ptr)
+        # new_w = previous_value_w + time_step_size*slope_w_approx
+        new_w = builder.fmul(param_vals[TIME_STEP_SIZE], slope_w_approx)
+        new_w = builder.fadd(previous_w, new_w)
+        builder.store(new_w, out_w_ptr)
+
+
+    def __gen_llvm_dv_dt(self, builder, ctx, var, v, previous_w, param_vals):
+        #val = (a_v*(v**3) + (1+threshold)*b_v*(v**2) + (-threshold)*c_v*v + d_v
+        #    + e_v*self.previous_w + f_v*variable)/time_constant_v
+        pow_f = ctx.module.declare_intrinsic("llvm.pow", [ctx.float_ty])
+
+        v_3 = builder.call(pow_f, [v, ctx.float_ty(3.0)])
+        tmp1 = builder.fmul(param_vals["a_v"], v_3)
+
+        thr_p1 = builder.fadd(ctx.float_ty(1.0), param_vals["threshold"])
+        tmp2 = builder.fmul(thr_p1, param_vals["b_v"])
+        v_2 = builder.call(pow_f, [v, ctx.float_ty(2.0)])
+        tmp2 = builder.fmul(tmp2, v_2)
+
+        thr_neg = builder.fsub(ctx.float_ty(0.0), param_vals["threshold"])
+        tmp3 = builder.fmul(thr_neg, param_vals["c_v"])
+        tmp3 = builder.fmul(tmp3, v)
+
+        tmp4 = param_vals["d_v"]
+
+        tmp5 = builder.fmul(param_vals["e_v"], previous_w)
+
+        tmp6 = builder.fmul(param_vals["f_v"], var)
+
+        sum = ctx.float_ty(-0.0)
+        sum = builder.fadd(sum, tmp1)
+        sum = builder.fadd(sum, tmp2)
+        sum = builder.fadd(sum, tmp3)
+        sum = builder.fadd(sum, tmp4)
+        sum = builder.fadd(sum, tmp5)
+        sum = builder.fadd(sum, tmp6)
+
+        res = builder.fdiv(sum, param_vals["time_constant_v"])
+
+        return res
+
+
+    def __gen_llvm_dw_dt(self, builder, ctx, w, previous_v, param_vals):
+        # val = (mode*a_w*self.previous_v + b_w*w + c_w +
+        #       (1-mode)*uncorrelated_activity)/time_constant_w
+
+        tmp1 = builder.fmul(param_vals["mode"], previous_v)
+        tmp1 = builder.fmul(tmp1, param_vals["a_w"])
+
+        tmp2 = builder.fmul(param_vals["b_w"], w)
+
+        tmp3 = param_vals["c_w"]
+
+        mod_1 = builder.fsub(ctx.float_ty(1.0), param_vals["mode"])
+        tmp4 = builder.fmul(mod_1, param_vals["uncorrelated_activity"])
+
+        sum = ctx.float_ty(-0.0)
+        sum = builder.fadd(sum, tmp1)
+        sum = builder.fadd(sum, tmp2)
+        sum = builder.fadd(sum, tmp3)
+        sum = builder.fadd(sum, tmp4)
+
+        res = builder.fdiv(sum, param_vals["time_constant_w"])
+        return res
+
+
 class AccumulatorIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
     AccumulatorIntegrator(              \
