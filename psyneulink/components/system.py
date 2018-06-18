@@ -440,7 +440,8 @@ from toposort import toposort, toposort_flatten
 
 from psyneulink.components.component import Component
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
-from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
+from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary import \
+    _assign_error_signal_projections, _get_learning_mechanisms
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
 from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
@@ -463,6 +464,7 @@ from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler, Condition, Always
+from psyneulink.scheduling.condition import AtTimeStep, Never
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
@@ -843,6 +845,7 @@ class System(System_Base):
                  # learning=None,
                  learning_rate=None,
                  targets=None,
+                 reinitialize_mechanisms_when=AtTimeStep(0),
                  params=None,
                  name=None,
                  scheduler=None,
@@ -892,6 +895,7 @@ class System(System_Base):
                          context=context)
 
         self.context.initialization_status = ContextFlags.INITIALIZED
+        self.reinitialize_mechanisms_when = reinitialize_mechanisms_when
         self._execution_id = None
 
         # Assign controller
@@ -902,6 +906,20 @@ class System(System_Base):
         #     print("\n{0} initialized with:\n- pathway: [{1}]".
         #           # format(self.name, self.pathwayMechanismNames.__str__().strip("[]")))
         #           format(self.name, self.names.__str__().strip("[]")))
+
+    def _assign_reinitialize_condition_to_mechanisms(self, reinitialize_mechanisms_when):
+        """
+        Assign the Condition specified in the reinitialize_mechanisms_when argument to the reinitialize_when attribute
+        of each Mechanism in the System.
+        """
+        if not isinstance(reinitialize_mechanisms_when, Condition):
+            raise SystemError("{} is not a valid specification for reinitialize_mechanisms_when of {}. "
+                              "reinitialize_mechanisms_when must be a Condition.".format(reinitialize_mechanisms_when,
+                                                                                         self.name))
+        for mechanism in self.mechanisms:
+            if hasattr(mechanism, "reinitialize_when"):
+                if isinstance(mechanism.reinitialize_when, Never):
+                    mechanism.reinitialize_when = reinitialize_mechanisms_when
 
     def _validate_variable(self, variable, context=None):
         """Convert variable to 2D np.array: \
@@ -2699,7 +2717,7 @@ class System(System_Base):
 
         return self.terminal_mechanisms.outputStateValues
 
-    def _execute_processing(self, runtime_params, reinitialize_values, context=None):
+    def _execute_processing(self, runtime_params, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
         # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update())
@@ -2711,10 +2729,6 @@ class System(System_Base):
         for next_execution_set in self.scheduler_processing.run(termination_conds=self.termination_processing):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
-            for mechanism in self.mechanisms:
-                if hasattr(mechanism, "reinitialize_when"):
-                    if mechanism.reinitialize_when.is_satisfied(scheduler=self.scheduler_processing):
-                        mechanism.reinitialize(None)
 
             for mechanism in next_execution_set:
                 logger.debug('\tRunning Mechanism {0}'.format(mechanism))
@@ -2734,7 +2748,11 @@ class System(System_Base):
                         if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
-                mechanism.context.execution_phase = ContextFlags.PROCESSING
+                # # MODIFIED 6/18/18 OLD:
+                # mechanism.context.execution_phase = ContextFlags.PROCESSING
+                # MODIFIED 6/18/18 NEW:
+                mechanism.context.execution_phase = self.context.execution_phase
+                # MODIFIED 6/18/18 END
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
                 for key in mechanism._runtime_params_reset:
                     mechanism._set_parameter_value(key, mechanism._runtime_params_reset[key])
@@ -2963,6 +2981,16 @@ class System(System_Base):
         termination_learning : Dict[TimeScale: Condition]
             a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
             phase of execution <System_Execution_Learning>`
+
+        reinitialize_values : Dict[Mechanism: List[reinitialization values] or np.ndarray(reinitialization values)
+            a dictionary containing Mechanism: value pairs. Each Mechanism in the dictionary calls its `reinitialize
+            <Mechanism_Base.reinitialize>` method at the start of the Run. The Mechanism's value in the
+            reinitialize_values dictionary is passed into its `reinitialize <Mechanism_Base.reinitialize>` method. See
+            the `reinitialize method <Integrator.reinitialize>` of the `function <Mechanism_Base.function>`
+            or `integrator_function <TransferMechanism.integrator_function>` of the Mechanism for details on which
+            values must be passed in as arguments. Keep in mind that only stateful Mechanisms may be reinitialized, and
+            that Mechanisms in reinitialize_values will reinitialize regardless of whether their `reinitialize_when
+            <Component.reinitialize_when>` Condition is satisfied.
 
         Returns
         -------
@@ -3290,6 +3318,27 @@ class System(System_Base):
         return self.execute
 
     @property
+    def reinitialize_mechanisms_when(self):
+        return self._reinitialize_mechanisms_when
+
+    @reinitialize_mechanisms_when.setter
+    def reinitialize_mechanisms_when(self, new_condition):
+
+        # Validate
+        if not isinstance(new_condition, Condition):
+            raise SystemError("{} is not a valid specification for reinitialize_mechanisms_when of {}. "
+                              "reinitialize_mechanisms_when must be a Condition.".format(new_condition, self.name))
+
+        # assign to backing field
+        self._reinitialize_mechanisms_when = new_condition
+
+        # assign to all mechanisms that do not already have a user-specified condition
+        for mechanism in self.mechanisms:
+            if hasattr(mechanism, "reinitialize_when"):
+                if isinstance(mechanism.reinitialize_when, Never):
+                    mechanism.reinitialize_when = new_condition
+
+    @property
     def mechanisms(self):
         """List of all mechanisms in the system
 
@@ -3299,6 +3348,25 @@ class System(System_Base):
 
         """
         return self._all_mechanisms.mechanisms
+
+    @property
+
+    def stateful_mechanisms(self):
+        """
+        List of all mechanisms in the system that are currently marked as stateful (mechanism.auto_dependent = True)
+
+        Returns
+        -------
+        all stateful mechanisms in the system : List[Mechanism]
+
+        """
+
+        stateful_mechanisms = []
+        for mechanism in self.mechanisms:
+            if mechanism.auto_dependent:
+                stateful_mechanisms.append(mechanism)
+
+        return stateful_mechanisms
 
     @property
     def numPhases(self):

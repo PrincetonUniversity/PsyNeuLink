@@ -16,14 +16,14 @@ Auxiliary functions for `EVCControlMechanism`.
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.functions.function import Function_Base, Recorder
+from psyneulink.components.functions.function import Function_Base, Buffer, Integrator
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import MPI_IMPLEMENTATION, defaultControlAllocation
 from psyneulink.globals.keywords import \
     COMBINE_OUTCOME_AND_COST_FUNCTION, COST_FUNCTION, EVC_SIMULATION, FUNCTION, FUNCTION_OUTPUT_TYPE_CONVERSION, \
-    PARAMETER_STATE_PARAMS, PREDICTION_MECHANISM, REINITIALIZATION_ATTRIBUTES, SAVE_ALL_VALUES_AND_POLICIES, \
+    PARAMETER_STATE_PARAMS, PREDICTION_MECHANISM, STATEFUL_ATTRIBUTES, SAVE_ALL_VALUES_AND_POLICIES, \
     VALUE_FUNCTION, \
     kwPreferenceSetName, kwProgressBarChar
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
@@ -557,18 +557,30 @@ def _compute_EVC(args):
     num_trials = len(ctlr.predicted_input[origin_mechs[0]])
     EVC_list = []
 
+
+    # FIX: 6/16/18: ADD PREDICTION MECHANISM HERE IF IT'S FUNCTION IS STATEFUL
     # Get any values that need to be reinitialized for each run
     reinitialization_values = {}
-    from psyneulink.scheduling.condition import AtTrial
-    for component in ctlr._reinitialization_components:
-        if isinstance(component.reinitialize_when, AtTrial) and component.reinitialize_when.args[0]==0:
-            reinitialization_values[component] = {}
-            for attr in component._reinitialization_attributes:
-                reinitialization_values[component].update({attr:getattr(component, attr)})
+    for mechanism in ctlr.system.stateful_mechanisms + ctlr.prediction_mechanisms.mechanisms:
+        # "save" the current state of each stateful mechanism by storing the values of each of its stateful
+        # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
+        # the reinitialize method on each stateful mechanism.
+        reinitialization_value = []
+
+        if isinstance(mechanism.function_object, Integrator):
+            for attr in mechanism.function_object.stateful_attributes:
+                reinitialization_value.append(getattr(mechanism.function_object, attr))
+        elif hasattr(mechanism, "integrator_function"):
+            if isinstance(mechanism.integrator_function, Integrator):
+                for attr in mechanism.integrator_function.stateful_attributes:
+                    reinitialization_value.append(getattr(mechanism.integrator_function, attr))
+
+        reinitialization_values[mechanism] = reinitialization_value
 
     # Run simulation
     for i in range(num_trials):
         inputs = {key:value[i] for key, value in ctlr.predicted_input.items()}
+
         outcome = ctlr.run_simulation(inputs=inputs,
                                       allocation_vector=allocation_vector,
                                       runtime_params=runtime_params,
@@ -580,9 +592,8 @@ def _compute_EVC(args):
                                                                   context=context))
 
     # Re-assign values of reinitialization attributes to their value at entry
-    for component, attr_list in reinitialization_values.items():
-        for attr in attr_list:
-            setattr(component, attr, reinitialization_values[component][attr])
+    for mechanism in reinitialization_values:
+        mechanism.reinitialize(*reinitialization_values[mechanism])
 
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
 
@@ -602,7 +613,6 @@ input_types = {TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE}
 WINDOW = 'window'
 DECAY_FUNCTION = 'decay_function'
 WINDOWING_FUNCTION = 'windowing_function'
-
 
 class PredictionMechanism(IntegratorMechanism):
 
@@ -643,10 +653,9 @@ class PredictionMechanism(IntegratorMechanism):
 
             elif function in {AVERAGE_INPUTS, INPUT_SEQUENCE}:
                 # Maintain the preceding sequence of inputs (of length num_trials), and use those for each simulation
-                function = Recorder(default_variable=[[0]],
-                                    initializer=initializer or [[0]],
+                function = Buffer(default_variable=[[0]],
+                                    initializer=initializer,
                                     history=self.window)
-
 
         super().__init__(
                 default_variable=default_variable,
@@ -658,20 +667,26 @@ class PredictionMechanism(IntegratorMechanism):
                 prefs=prefs)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
+        '''Update predicted value on "real" but not simulation runs '''
 
-        value = super()._execute(variable, runtime_params=runtime_params, context=context)
+        if self.context.execution_phase == ContextFlags.SIMULATION:
+            # Just return current value for simulation runs
+            value = self.value
+        else:
+            # Update deque with new input for any other type of run
+            value = super()._execute(variable, runtime_params=runtime_params, context=context)
 
-        # If inputs are being recorded (#recorded = window):
-        if value.shape[0] > 1:
-            if self.input_type is AVERAGE_INPUTS:
-                # Compute average input over window
-                value = np.sum(value)/value.shape[0]
+            # If inputs are being recorded (#recorded = window):
+            if len(value) > 1:
+                if self.input_type is AVERAGE_INPUTS:
+                    # Compute average input over window
+                    value = np.sum(value)/value.shape[0]
 
-            elif self.input_type is INPUT_SEQUENCE:
-                if self.windowing_function:
-                    # Use windowing_function to return input values
-                    value = self.windowing_function(value)
-                else:
-                    # Return all input values in window
-                    pass
+                elif self.input_type is INPUT_SEQUENCE:
+                    if self.windowing_function:
+                        # Use windowing_function to return input values
+                        value = self.windowing_function(value)
+                    else:
+                        # Return all input values in window
+                        pass
         return value

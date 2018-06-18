@@ -31,7 +31,7 @@ Integrator Functions:
   * `Integrator`
   * `SimpleIntegrator`
   * `ConstantIntegrator`
-  * 'Recorder`
+  * 'Buffer`
   * `AdaptiveIntegrator`
   * `DriftDiffusionIntegrator`
   * `OrnsteinUhlenbeckIntegrator`
@@ -186,7 +186,7 @@ Class Reference
 import numbers
 import warnings
 
-from collections import namedtuple
+from collections import namedtuple, deque
 from enum import Enum, IntEnum
 from random import randint
 
@@ -215,7 +215,7 @@ from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
     OUTPUT_STATES, OUTPUT_TYPE, \
     PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RECORDER_FUNCTION, REDUCE_FUNCTION, RL_FUNCTION, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RL_FUNCTION, \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
@@ -247,7 +247,7 @@ __all__ = [
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
     'OneHot', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
-    'PROPENSITY', 'Recorder', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
+    'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
     'UniformDist', 'UniformToNormalDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
@@ -4609,6 +4609,10 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             else:
                 initializer = self.ClassDefaults.variable
 
+        # Assign here as default, for use in initialization of function
+        # self.previous_value = initializer
+        self._initialize_previous_value(initializer)
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
@@ -4616,9 +4620,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                                                   params=params)
 
 
-        # Assign here as default, for use in initialization of function
-        self.previous_value = initializer
-        self._reinitialization_attributes = ["previous_value"]
+        self.stateful_attributes = ["previous_value"]
         # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
         params[INITIALIZER] = initializer
 
@@ -4628,10 +4630,13 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=context)
 
-        self.initializer = initializer
-
-        # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
+        # FIX: All tests are passed without this. Is there any reason to keep it?
+        # MODIFIED 6/16/18 OLD:
+        # self.initializer = initializer
+        #
+        # # Reassign to kWInitializer in case default value was overridden
+        # self.previous_value = self.initializer
+        # MODIFIED 6/16/18 END
 
         self.auto_dependent = True
 
@@ -4778,6 +4783,9 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
 
+    def _initialize_previous_value(self, initializer):
+        self.previous_value = initializer
+
     def _try_execute_param(self, param, var):
 
         # param is a list; if any element is callable, execute it
@@ -4850,14 +4858,12 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         """
         if new_previous_value is None:
             new_previous_value = self.get_current_function_param("initializer")
-
         self.value = new_previous_value
         self.previous_value = new_previous_value
         return self.value
 
     def function(self, *args, **kwargs):
         raise FunctionError("Integrator is not meant to be called explicitly")
-
 
 
 class SimpleIntegrator(Integrator):  # --------------------------------------------------------------------------------
@@ -5284,9 +5290,9 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
         return adjusted_value
 
 
-class Recorder(Integrator):  # ------------------------------------------------------------------------------
+class Buffer(Integrator):  # ------------------------------------------------------------------------------
     """
-    Recorder(        \
+    Buffer(        \
         default_variable=None,  \
         rate=1.0,               \
         noise=0.0,              \
@@ -5297,12 +5303,12 @@ class Recorder(Integrator):  # -------------------------------------------------
         prefs=None,             \
         )
 
-    .. _Recorder:
+    .. _Buffer:
 
-    Adds item to prior value by appending variable to `previous_value <Recorder.previous_value>`:
+    Adds item to prior value by appending variable to `previous_value <Buffer.previous_value>`:
 
-        :math: `variable <Recorder.variable>` * `rate <Recorder.rate>` +
-        `noise <Recorder.noise>`
+        :math: `variable <Buffer.variable>` * `rate <Buffer.rate>` +
+        `noise <Buffer.noise>`
 
     Arguments
     ---------
@@ -5320,7 +5326,7 @@ class Recorder(Integrator):  # -------------------------------------------------
         `noise <SimpleIntegrator.noise>` for details).
 
     history : int : default None
-        specifies max length of `value <Recorder.value>`.
+        specifies max length of `value <Buffer.value>`.
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -5370,10 +5376,10 @@ class Recorder(Integrator):  # -------------------------------------------------
             then the noise will simply be an offset that remains the same across all executions.
 
     history : int
-        determines maximum length of value returned by the `function <Recorder.function>`. If appending
-        `variable <Recorder.variable>` to `previous_value <Recorder.previous_value>` exceeds
-        history, the first item of `previous_value <Recorder.previous_value>` is deleted, and `variable
-        <Recorder.variable>` is appended to it, so that `value <Recorder.previous_value>`
+        determines maximum length of value returned by the `function <Buffer.function>`. If appending
+        `variable <Buffer.variable>` to `previous_value <Buffer.previous_value>` exceeds
+        history, the first item of `previous_value <Buffer.previous_value>` is deleted, and `variable
+        <Buffer.variable>` is appended to it, so that `value <Buffer.previous_value>`
         maintains a constant length.  If history is not specified (or set to 0), the value returned continues to
         be extended indefinitely.
 
@@ -5399,7 +5405,7 @@ class Recorder(Integrator):  # -------------------------------------------------
         <LINK>` for details).
     """
 
-    componentName = RECORDER_FUNCTION
+    componentName = BUFFER_FUNCTION
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -5417,14 +5423,10 @@ class Recorder(Integrator):  # -------------------------------------------------
                  rate: parameter_spec=1.0,
                  noise=0.0,
                  history:tc.optional(int)=None,
-                 initializer=None,
+                 initializer=[],
                  params: tc.optional(dict)=None,
                  owner=None,
                  prefs: is_pref_set = None):
-
-        if initializer is None and default_variable is not None:
-            # initializer = np.empty(np.array(default_variable).shape)
-            initializer = np.array([[]])
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -5443,15 +5445,19 @@ class Recorder(Integrator):  # -------------------------------------------------
 
         self.auto_dependent = True
 
+    def _initialize_previous_value(self, initializer):
+        initializer = initializer or []
+        self.previous_value = deque(initializer, maxlen=self.history)
+
     def function(self,
                  variable=None,
                  params=None,
                  context=None):
         """
-        Return: `previous_value <Recorder.previous_value>` appended with `variable
-        <Recorder.variable>` * `rate <Recorder.rate>` + `noise <Recorder.noise>`;
+        Return: `previous_value <Buffer.previous_value>` appended with `variable
+        <Buffer.variable>` * `rate <Buffer.rate>` + `noise <Buffer.noise>`;
 
-        If the length of the result exceeds `history <Recorder.history>`, delete the first item.
+        If the length of the result exceeds `history <Buffer.history>`, delete the first item.
 
         Arguments
         ---------
@@ -5477,27 +5483,18 @@ class Recorder(Integrator):  # -------------------------------------------------
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
-        previous_value = self.previous_value
 
-        if np.array(previous_value[0]).size == 0:
-            # if there are no previous values, assign variable * rate + noise to previous_value
-            adjusted_value = variable * rate + noise
+        new_value = variable * rate + noise
 
-        else:
-            # append variable * rate + noise to previous_value
-            adjusted_value = np.append(previous_value, (variable * rate) + noise, 0)
+        # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
+        # Just return current value (for validation).
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            return new_value
 
-        # if length of result exceeds history, delete first entry
-        if self.history and len(adjusted_value) > self.history:
-            adjusted_value = np.delete(adjusted_value, 0, 0)
+        # If this NOT an initialization run, update deque
+        self.previous_value.append(new_value)
 
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_value = adjusted_value
-
-        return adjusted_value
+        return self.previous_value
 
 
 class AdaptiveIntegrator(Integrator):  # -------------------------------------------------------------------------------
@@ -5973,7 +5970,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
 
         self.previous_time = self.t0
         self.auto_dependent = True
-        self._reinitialization_attributes = ["previous_value", "previous_time"]
+        self.stateful_attributes = ["previous_value", "previous_time"]
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -6230,7 +6227,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
 
         self.previous_time = self.t0
         self.auto_dependent = True
-        self._reinitialization_attributes = ["previous_value", "previous_time"]
+        self.stateful_attributes = ["previous_value", "previous_time"]
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -6768,7 +6765,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         self.previous_v = self.initial_v
         self.previous_w = self.initial_w
         self.previous_time = self.t_0
-        self._reinitialization_attributes = ["previous_v", "previous_w", "previous_time"]
+        self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
 
         super().__init__(
             default_variable=default_variable,
@@ -7780,7 +7777,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         self.auto_dependent = True
-        self._reinitialization_attributes = ["previous_short_term_utility", "previous_long_term_utility"]
+        self.stateful_attributes = ["previous_short_term_utility", "previous_long_term_utility"]
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
