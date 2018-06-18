@@ -6160,7 +6160,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         # ct_old also contains the correct value
-        if not context or not INITIALIZING in context:
+        if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = ret
 
         return ret
