@@ -7339,7 +7339,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         slope_v_approx_4 = slope_v(variable,
                                    previous_time + time_step_size,
                                    previous_value_v + (time_step_size * slope_v_approx_3),
-                                   previous_value_w + (time_step_size * slope_v_approx_3),
+                                   previous_value_w + (time_step_size * slope_w_approx_3),
                                    a_v,
                                    threshold,
                                    b_v,
@@ -7351,7 +7351,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         slope_w_approx_4 = slope_w(variable,
                                    previous_time + time_step_size,
-                                   previous_value_w + (time_step_size * slope_v_approx_3),
+                                   previous_value_w + (time_step_size * slope_w_approx_3),
                                    previous_value_v + (time_step_size * slope_v_approx_3),
                                    mode,
                                    a_w,
