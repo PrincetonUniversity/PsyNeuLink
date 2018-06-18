@@ -622,16 +622,32 @@ class PredictionMechanism(IntegratorMechanism):
     function=TIME_AVERAGE_INPUT, \
     initial_value=None,          \
     window=1,                    \
-    decay_function=None,         \
     windowing_function=None,     \
+    decay_function=None,         \
     params=None,                 \
     name=None,                   \
     prefs=None)
 
-    Used to generate inputs for simulation(s) run by `EVCControlMechanism`.
+    Mechanism used to generate inputs for simulation run(s) of `Composition` controlled by an `EVCControlMechanism`.
 
     COMMENT:
-        EXPLAIN FUCTION, INITIALIZER, WINDOW, DECAY FUNCTION AND WINDOWIN FUNCTION HERE
+        EXPLAIN FUNCTION, INITIALIZER, WINDOW, DECAY_FUNCTION AND WINDOWING_FUNCTION HERE
+
+    Creating a PredictionMechanism
+    ------------------------------
+
+    Structure
+    ---------
+
+     .. _PredictionMechanism_Function:
+
+     PredictionMechanism Function
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Execution
+    ---------
+
+
     COMMENT
 
     Arguments
@@ -646,15 +662,30 @@ class PredictionMechanism(IntegratorMechanism):
     size : int, list or np.ndarray of ints
         see `size <Mechanism.size>`.
 
-    function : *TIME_AVERAGE_INPUT*, *AVERAGE_INPUTS*, *INPUT_SEQUENCE* : default *TIME_AVERAGE_INPUT*
+    function : function, *TIME_AVERAGE_INPUT*, *AVERAGE_INPUTS*, or *INPUT_SEQUENCE* : default *TIME_AVERAGE_INPUT*
+        specifies the function used to generate the input provided to the `ORIGIN` Mechanisms of
+        the EVCControlMechanism's `system <EVCControlMechanism.system>`; the function must take as its input a
+        single value with the same format as the `variable <Mechanism.variable>` of the corresponding `ORIGIN`
+        Mechanism in the EVCControlMechanism's `system <EVCControlMechanism.system>`, and must return a similarly
+        formatted value or a list of them (see `PredictionMechanism_Function` for additional details).
 
     initial_value :  value, list or np.ndarray : default None
+        specifies value used to initialize the PredictionMechanism's `value <PredictionMechanism.value>` attribute;
+        if None is specified, 0 is used if the `value <Function.value>` of the PredictionMechanism's `function
+        PredictionMechanism.function>` is numeric, and an empty list is used if *INPUT_SEQUENCE* is specified.
 
     window : int : default None
+        specifies number of input values to maintain when *INPUT_SEQUENCE* option is used for
+        `function <PredictionMechanism.function>`
 
-    decay_function: function : default None,
+    windowing_function: function : default None
+        specifies a function that takes a list of values, each of which has the same format as the `variable
+        <Mechanism.variable>` of the corresponding `ORIGIN` Mechanism in the EVCControlMechanism's `system
+        <EVCControlMechanism.system>`, and returns a list of similarly formatted values, though not necessarily of the s
+        ame length (see `PredictionMechanism_Function` for additional details).
 
-    windowing_function: function : default None,
+    decay_function: function : default None
+       *TBI*
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -668,6 +699,9 @@ class PredictionMechanism(IntegratorMechanism):
     prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
         specifies the `PreferenceSet` for the TransferMechanism; see `prefs <TransferMechanism.prefs>` for details.
 
+    Attributes
+    ----------
+
     """
 
     componentType = PREDICTION_MECHANISM
@@ -680,8 +714,8 @@ class PredictionMechanism(IntegratorMechanism):
                  function:tc.optional(tc.enum(TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE))=TIME_AVERAGE_INPUT,
                  initial_value=None,
                  window=1,
-                 decay_function:tc.optional(callable)=None,
                  windowing_function:tc.optional(callable)=None,
+                 decay_function:tc.optional(callable)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
