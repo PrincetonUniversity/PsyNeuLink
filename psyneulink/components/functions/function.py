@@ -7499,6 +7499,9 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             self.previous_v = approximate_values[0]
             self.previous_w = approximate_values[1]
             self.previous_time += time_step_size
+        else:
+            self.previous_v = np.zeros_like(approximate_values[0])
+            self.previous_w = np.zeros_like(approximate_values[0])
 
         return self.previous_v, self.previous_w, self.previous_time
 
