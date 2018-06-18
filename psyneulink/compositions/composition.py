@@ -83,7 +83,7 @@ class CNodeRole(Enum):
         only one `ORIGIN` Mechanism, but a System may have many.  Note that the `ORIGIN` Mechanism of a Process is not
         necessarily an `ORIGIN` of the System to which it belongs, as it may receive `Projections <Projection>` from
         other Processes in the System (see `example <LearningProjection_Target_vs_Terminal_Figure>`). The `ORIGIN`
-        Mechanisms of a Process or System are listed in its :keyword:`origin_mechanisms` attribute, and can be displayed
+        Mechanisms of a Process or System are listed in its :keyword:`origin_nodes` attribute, and can be displayed
         using its :keyword:`show` method.  For additional details about `ORIGIN` Mechanisms in Processes, see `Process
         Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`; and for Systems see
         `System Mechanisms <System_Mechanisms>` and `System Input and Initialization
@@ -131,7 +131,7 @@ class CNodeRole(Enum):
         from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
         `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
         Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or System are listed in its
-        :keyword:`target_mechanisms` attribute, and can be displayed using its :keyword:`show` method.  For additional
+        :keyword:`target_nodes` attribute, and can be displayed using its :keyword:`show` method.  For additional
         details, see `TARGET Mechanisms <LearningMechanism_Targets>`, `learning sequence <Process_Learning_Sequence>`,
         and specifying `target values <Run_Targets>`.
 
@@ -328,11 +328,12 @@ class Composition(object):
         ----------
 
         graph : `Graph`
-            The full `Graph` associated with this Composition. Contains both `Mechanisms <Mechanism>` and `Projections
-            <Projection>` used in processing or learning.
+            The full `Graph` associated with this Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
+            `Compositions <Composition>` and `Projections <Projection>` used in processing or learning.
 
-        mechanisms : `list[Mechanism]`
-            A list of all `Mechanisms <Mechanism>` contained in this Composition
+        c_nodes : `list[Mechanisms and Compositions]`
+            A list of all Composition Nodes (`Mechanisms <Mechanism>` and `Compositions <Composition>`) contained in
+            this Composition
 
         COMMENT:
         name : str
@@ -373,14 +374,13 @@ class Composition(object):
         # helper attributes
         self.c_nodes_to_roles = OrderedDict()
 
-        # Create lists to track identity of certain mechanism classes within the
-        # composition.
-        # Explicit classes:
-        self.explicit_input_mechanisms = []  # Need to track to know which to leave untouched
-        self.all_input_mechanisms = []
-        self.explicit_output_mechanisms = []  # Need to track to know which to leave untouched
-        self.all_output_mechanisms = []
-        self.target_mechanisms = []  # Do not need to track explicit as they mush be explicit
+        # Create lists to track certain categories of Composition Nodes:
+        # TBI???
+        self.explicit_input_nodes = []  # Need to track to know which to leave untouched
+        self.all_input_nodes = []
+        self.explicit_output_nodes = []  # Need to track to know which to leave untouched
+        self.all_output_nodes = []
+        self.target_nodes = []  # Do not need to track explicit as they must be explicit
 
         # Reporting
         self.results = []
@@ -444,21 +444,21 @@ class Composition(object):
     def _get_unique_id(self):
         return uuid.uuid4()
 
-    def add_c_node(self, mech):
+    def add_c_node(self, node):
         '''
-            Adds a Mechanism to the Composition, if it is not already added
+            Adds a Composition Node (`Mechanism` or `Composition`) to the Composition, if it is not already added
 
             Arguments
             ---------
 
-            mech : Mechanism
-                the Mechanism to add
+            node : `Mechanism` or `Composition`
+                the node to add
         '''
-        if mech not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
-            mech.is_processing = True
-            self.graph.add_component(mech)  # Set incoming edge list of mech to empty
-            self.c_nodes.append(mech)
-            self.c_nodes_to_roles[mech] = set()
+        if node not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
+            node.is_processing = True
+            self.graph.add_component(node)  # Set incoming edge list of node to empty
+            self.c_nodes.append(node)
+            self.c_nodes_to_roles[node] = set()
 
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
@@ -472,13 +472,13 @@ class Composition(object):
             Arguments
             ---------
 
-            sender : Mechanism, OutputState, or Composition
+            sender : Mechanism, Composition, or OutputState
                 the sender of **projection**
 
             projection : Projection
                 the projection to add
 
-            receiver : Mechanism, InputState, or Composition
+            receiver : Mechanism, Composition, or OutputState
                 the receiver of **projection**
         '''
         if projection not in [vertex.component for vertex in self.graph.vertices]:
@@ -486,7 +486,7 @@ class Composition(object):
             projection.name = '{0} to {1}'.format(sender, receiver)
             self.graph.add_component(projection)
 
-            # Add connections between mechanisms and the projection
+            # Add connections between nodes and the projection
             self.graph.connect_components(sender, projection)
             self.graph.connect_components(projection, receiver)
             self._validate_projection(sender, projection, receiver)
@@ -507,17 +507,19 @@ class Composition(object):
 
         '''
 
-        # identify mechanisms and projections
-        mechanisms, projections = [], []
+        # identify nodes and projections
+        c_nodes, projections = [], []
         for c in path.graph.vertices:
             if isinstance(c.component, Mechanism):
-                mechanisms.append(c.component)
+                c_nodes.append(c.component)
+            elif isinstance(c.component, Composition):
+                c_nodes.append(c.component)
             elif isinstance(c.component, Projection):
                 projections.append(c.component)
 
-        # add all mechanisms first
-        for m in mechanisms:
-            self.add_c_node(m)
+        # add all c_nodes first
+        for node in c_nodes:
+            self.add_c_node(node)
 
         # then projections
         for p in projections:
@@ -529,10 +531,13 @@ class Composition(object):
         # First, verify that the pathway begins with a mechanism
         if isinstance(pathway[0], Mechanism):
             self.add_c_node(pathway[0])
+        elif isinstance(pathway[0], Composition):
+            self.add_c_node(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
-            raise CompositionError("The first item in a linear processing pathway must be a Mechanism.")
-        # Then, add all of the remaining mechanisms in the pathway
+            raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
+                                   "Composition).")
+        # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
             # if the current item is a mechanism, add it
             if isinstance(pathway[c], Mechanism):
@@ -541,9 +546,10 @@ class Composition(object):
         # Then, loop through and validate that the mechanism-projection relationships make sense
         # and add MappingProjections where needed
         for c in range(1, len(pathway)):
-            if isinstance(pathway[c], Mechanism):
-                if isinstance(pathway[c - 1], Mechanism):
-                    # if the previous item was also a mechanism, add a mapping projection between them
+            # if the current item is a Node
+            if isinstance(pathway[c], (Mechanism, Composition)):
+                if isinstance(pathway[c - 1], (Mechanism, Composition)):
+                    # if the previous item was also a Composition Node, add a mapping projection between them
                     self.add_projection(
                         pathway[c - 1],
                         MappingProjection(
@@ -552,21 +558,24 @@ class Composition(object):
                         ),
                         pathway[c]
                     )
-            # if the current item is a projection
+            # if the current item is a Projection
             elif isinstance(pathway[c], Projection):
                 if c == len(pathway) - 1:
                     raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
                                            " a linear processing pathway.".format(pathway[c]))
-                # confirm that it is between two mechanisms, then add the projection
-                if isinstance(pathway[c - 1], Mechanism) and isinstance(pathway[c + 1], Mechanism):
+                # confirm that it is between two nodes, then add the projection
+                if isinstance(pathway[c - 1], (Mechanism, Composition)) \
+                        and isinstance(pathway[c + 1], (Mechanism, Composition)):
                     self.add_projection(pathway[c - 1], pathway[c], pathway[c + 1])
                 else:
                     raise CompositionError(
-                        "{} is not between two mechanisms. A Projection in a linear processing pathway must be preceded"
-                        " by a Mechanism and followed by a Mechanism".format(pathway[c]))
+                        "{} is not between two Composition Nodes. A Projection in a linear processing pathway must be "
+                        "preceded by a Composition Node (Mechanism or Composition) and followed by a Composition Node"
+                        .format(pathway[c]))
             else:
-                raise CompositionError("{} is not a Projection or Mechanism. A linear processing pathway must be made "
-                                       "up of Projections and Mechanisms.".format(pathway[c]))
+                raise CompositionError("{} is not a Projection or a Composition node (Mechanism or Composition). A "
+                                       "linear processing pathway must be made up of Projections and Composition Nodes."
+                                       .format(pathway[c]))
 
     def _validate_projection(self, sender, projection, receiver):
 
@@ -612,27 +621,27 @@ class Composition(object):
         ########
         # Determines identity of significant nodes of the graph
         # Each node falls into one or more of the following categories
-        # - Origin: Origin mechanisms are those which do not receive any projections.
-        # - Terminal: Terminal mechanisms provide the output of the composition. By
+        # - Origin: Origin nodes are those which do not receive any projections.
+        # - Terminal: Terminal nodes provide the output of the composition. By
         #   default, those which do not send any projections, but they may also be
         #   specified explicitly.
-        # - Recurrent_init: Recurrent_init mechanisms send projections that close recurrent
+        # - Recurrent_init: Recurrent_init nodes send projections that close recurrent
         #   loops in the composition (or projections that are explicitly specified as
-        #   recurrent). They need an initial value so that their receiving mechanisms
+        #   recurrent). They need an initial value so that their receiving nodes
         #   have input.
-        # - Cycle: Cycle mechanisms receive projections from Recurrent_init mechanisms. They
-        #   can be viewd as the starting points of recurrent loops.
+        # - Cycle: Cycle nodes receive projections from Recurrent_init nodes. They
+        #   can be viewed as the starting points of recurrent loops.
         # The following categories can be explicitly set by the user in which case their
-        # values are not changed based on the graph analysis. Additional mechanisms may
+        # values are not changed based on the graph analysis. Additional nodes may
         # be automatically added besides those specified by the user.
-        # - Input: Input mechanisms accept inputs from the input_dict of the composition.
-        #   All Origin mechanisms are added to this category automatically.
-        # - Output: Output mechanisms provide their values as outputs of the composition.
-        #   All Terminal mechanisms are added to this category automatically.
-        # - Target: Target mechanisms receive target values for the composition to be
-        #   used by learning and control. They are usually Comparator mechanisms that
-        #   compare the target value to the output of another mechanism in the composition.
-        # - Monitored: Monitored mechanisms send projections to Target mechanisms.
+        # - Input: Input nodes accept inputs from the input_dict of the composition.
+        #   All Origin nodes are added to this category automatically.
+        # - Output: Output nodes provide their values as outputs of the composition.
+        #   All Terminal nodes are added to this category automatically.
+        # - Target: Target nodes receive target values for the composition to be
+        #   used by learning and control. They are usually Comparator nodes that
+        #   compare the target value to the output of another node in the composition.
+        # - Monitored: Monitored nodes send projections to Target nodes.
         ########
         if graph is None:
             graph = self.graph_processing
@@ -641,41 +650,41 @@ class Composition(object):
         self.c_nodes_to_roles.update({k: set() for k in self.c_nodes_to_roles})
 
         # Identify Origin nodes
-        for mech in self.c_nodes:
-            if graph.get_parents_from_component(mech) == []:
-                self._add_c_node_role(mech, CNodeRole.ORIGIN)
+        for node in self.c_nodes:
+            if graph.get_parents_from_component(node) == []:
+                self._add_c_node_role(node, CNodeRole.ORIGIN)
         # Identify Terminal nodes
-            if graph.get_children_from_component(mech) == []:
-                self._add_c_node_role(mech, CNodeRole.TERMINAL)
+            if graph.get_children_from_component(node) == []:
+                self._add_c_node_role(node, CNodeRole.TERMINAL)
         # Identify Recurrent_init and Cycle nodes
         visited = []  # Keep track of all nodes that have been visited
-        for origin_mech in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
+        for origin_node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):  # Cycle through origin nodes first
             visited_current_path = []  # Track all nodes visited from the current origin
             next_visit_stack = []  # Keep a stack of nodes to be visited next
-            next_visit_stack.append(origin_mech)
-            for mech in next_visit_stack:  # While the stack isn't empty
-                visited.append(mech)  # Mark the mech as visited
-                visited_current_path.append(mech)  # And visited during the current path
-                children = [vertex.component for vertex in graph.get_children_from_component(mech)]  # Get the children of that mechanism
+            next_visit_stack.append(origin_node)
+            for node in next_visit_stack:  # While the stack isn't empty
+                visited.append(node)  # Mark the node as visited
+                visited_current_path.append(node)  # And visited during the current path
+                children = [vertex.component for vertex in graph.get_children_from_component(node)]
                 for child in children:
                     # If the child has been visited this path and is not already initialized
                     if child in visited_current_path:
-                        self._add_c_node_role(mech, CNodeRole.RECURRENT_INIT)
+                        self._add_c_node_role(node, CNodeRole.RECURRENT_INIT)
                         self._add_c_node_role(child, CNodeRole.CYCLE)
                     elif child not in visited:  # Else if the child has not been explored
                         next_visit_stack.append(child)  # Add it to the visit stack
-        for mech in self.c_nodes:
-            if mech not in visited:  # Check the rest of the nodes
+        for node in self.c_nodes:
+            if node not in visited:  # Check the rest of the nodes
                 visited_current_path = []
                 next_visit_stack = []
-                next_visit_stack.append(mech)
-                for remaining_mech in next_visit_stack:
-                    visited.append(remaining_mech)
-                    visited_current_path.append(remaining_mech)
-                    children = [vertex.component for vertex in graph.get_children_from_component(remaining_mech)]
+                next_visit_stack.append(node)
+                for remaining_node in next_visit_stack:
+                    visited.append(remaining_node)
+                    visited_current_path.append(remaining_node)
+                    children = [vertex.component for vertex in graph.get_children_from_component(remaining_node)]
                     for child in children:
                         if child in visited_current_path:
-                            self._add_c_node_role(remaining_mech, CNodeRole.RECURRENT_INIT)
+                            self._add_c_node_role(remaining_node, CNodeRole.RECURRENT_INIT)
                             self._add_c_node_role(child, CNodeRole.CYCLE)
                         elif child not in visited:
                             next_visit_stack.append(child)
@@ -741,24 +750,25 @@ class Composition(object):
             Returns
             -------
 
-            set of Mechanisms with `CNodeRole` `role` : set(`Mechanism <Mechanism>`)
+            set of Compositon Nodes with `CNodeRole` `role` : set(`Mechanisms <Mechanism>` and
+            `Compositions <Composition>`)
         '''
         if role not in CNodeRole:
             raise CompositionError('Invalid CNodeRole: {0}'.format(role))
 
         try:
-            return set([mech for mech in self.c_nodes if role in self.c_nodes_to_roles[mech]])
+            return set([node for node in self.c_nodes if role in self.c_nodes_to_roles[node]])
         except KeyError as e:
-            raise CompositionError('Node not assigned to role in nodes_to_roles: {0}'.format(e))
+            raise CompositionError('Node missing from {0}.c_nodes_to_roles: {1}'.format(self, e))
 
     def get_roles_by_c_node(self, c_node):
         try:
             return self.c_nodes_to_roles[c_node]
         except KeyError:
-            raise CompositionError('Mechanism {0} not found in {1}.mechanisms_to_roles'.format(mechanism, self))
+            raise CompositionError('Node {0} not found in {1}.c_nodes_to_roles'.format(c_node, self))
 
     def _set_c_node_roles(self, c_node, roles):
-        self.clear_c_node_role(c_node)
+        self._clear_c_node_roles(c_node)
         for role in roles:
             self._add_c_node_role(role)
 
@@ -810,8 +820,26 @@ class Composition(object):
 
     def _create_CIM_states(self):
         '''
-            builds a dictionary of { Mechanism : OutputState } pairs where each origin mechanism has at least one
-            corresponding OutputState on the CompositionInterfaceMechanism
+            - remove the default InputState and OutputState from the CIMs if this is the first time that real
+              InputStates and OutputStates are being added to the CIMs
+
+            - create a corresponding InputState and OutputState on the Input CompositionInterfaceMechanism for each
+              InputState of each origin node, and a Projection between the newly created InputCIM OutputState and the
+              origin InputState
+
+            - create a corresponding InputState and OutputState on the Output CompositionInterfaceMechanism for each
+              OutputState of each terminal node, and a Projection between the terminal OutputState and the newly created
+              OutputCIM InputState
+
+            - build two dictionaries:
+
+                (1) input_CIM_states = { Origin Node InputState: (InputCIM InputState, InputCIM OutputState) }
+
+                (2) output_CIM_states = { Terminal Node OutputState: (OutputCIM InputState, OutputCIM OutputState) }
+
+            - delete all of the above for any node States which were previously, but are no longer, classified as
+              Origin/Terminal
+
         '''
 
         if not self.input_CIM.connected_to_composition:
@@ -827,11 +855,11 @@ class Composition(object):
         current_origin_input_states = set()
 
         #  INPUT CIMS
-        # loop over all origin mechanisms
+        # loop over all origin nodes
 
-        for mech in self.get_c_nodes_by_role(CNodeRole.ORIGIN):
+        for node in self.get_c_nodes_by_role(CNodeRole.ORIGIN):
 
-            for input_state in mech.input_states:
+            for input_state in node.input_states:
                 # add it to our set of current input states
                 current_origin_input_states.add(input_state)
 
@@ -840,14 +868,14 @@ class Composition(object):
                     interface_input_state = InputState(owner=self.input_CIM,
                                                        variable=input_state.value,
                                                        reference_value=input_state.value,
-                                                       name="INPUT_CIM_" + mech.name + "_" + input_state.name)
+                                                       name="INPUT_CIM_" + node.name + "_" + input_state.name)
 
                     # self.input_CIM.add_states(interface_input_state)
                     interface_output_state = OutputState(owner=self.input_CIM,
                                                          variable=OWNER_VALUE,
                                                          default_variable=self.input_CIM.variable,
                                                          function=InterfaceStateMap(corresponding_input_state=interface_input_state),
-                                                         name="INPUT_CIM_" + mech.name + "_" + input_state.name)
+                                                         name="INPUT_CIM_" + node.name + "_" + input_state.name)
 
                     self.input_CIM_states[input_state] = [interface_input_state, interface_output_state]
                     # self.input_CIM.add_states(interface_output_state)
@@ -860,17 +888,17 @@ class Composition(object):
 
         sends_to_input_states = set(self.input_CIM_states.keys())
 
-        # For any states still registered on the CIM that does not map to a corresponding ORIGIN mech I.S.:
+        # For any states still registered on the CIM that does not map to a corresponding ORIGIN node I.S.:
         for input_state in sends_to_input_states.difference(current_origin_input_states):
             for projection in input_state.path_afferents:
                 if projection.sender == self.input_CIM_states[input_state][1]:
-                    # remove the corresponding projection from the ORIGIN mechanism's path afferents
+                    # remove the corresponding projection from the ORIGIN node's path afferents
                     input_state.path_afferents.remove(projection)
 
                     # projection.receiver.efferents.remove(projection)
                     # Bug? ^^ projection is not in receiver.efferents??
 
-            # remove the CIM input and output states associated with this Origin mechanism input state
+            # remove the CIM input and output states associated with this Origin node input state
             self.input_CIM.input_states.remove(self.input_CIM_states[input_state][0])
             self.input_CIM.output_states.remove(self.input_CIM_states[input_state][1])
 
@@ -878,17 +906,17 @@ class Composition(object):
             del self.input_CIM_states[input_state]
 
         # OUTPUT CIMS
-        # loop over all terminal mechanisms
+        # loop over all terminal nodes
 
         current_terminal_output_states = set()
-        for mech in self.get_c_nodes_by_role(CNodeRole.TERMINAL):
-            for output_state in mech.output_states:
+        for node in self.get_c_nodes_by_role(CNodeRole.TERMINAL):
+            for output_state in node.output_states:
                 current_terminal_output_states.add(output_state)
                 # if there is not a corresponding CIM output state, add one
                 if output_state not in set(self.output_CIM_states.keys()):
                     interface_input_state = InputState(owner=self.output_CIM,
                                                        reference_value=output_state.value,
-                                                       name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
+                                                       name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
 
                     # self.output_CIM.add_states([interface_input_state])
 
@@ -898,7 +926,7 @@ class Composition(object):
                         function=InterfaceStateMap(corresponding_input_state=interface_input_state,
                                                    default_variable=output_state.value),
                         reference_value=output_state.value,
-                        name="OUTPUT_CIM_" + mech.name + "_" + output_state.name)
+                        name="OUTPUT_CIM_" + node.name + "_" + output_state.name)
 
                     # self.output_CIM.add_states([interface_output_state])
 
@@ -913,12 +941,16 @@ class Composition(object):
 
         previous_terminal_output_states = set(self.output_CIM_states.keys())
         for output_state in previous_terminal_output_states.difference(current_terminal_output_states):
-            # remove the CIM input and output states associated with this Terminal Mechanism output state
+            # remove the CIM input and output states associated with this Terminal Node output state
             self.output_CIM.input_states.remove(self.output_CIM_states[output_state][0])
             self.output_CIM.output_states.remove(self.output_CIM_states[output_state][1])
             del self.output_CIM_states[output_state]
 
     def _assign_values_to_input_CIM(self, inputs):
+        """
+            Assign values from input dictionary to the InputStates of the Input CIM, then execute the Input CIM
+
+        """
 
         build_CIM_input = []
 
@@ -926,21 +958,21 @@ class Composition(object):
             # "input_state" is an InputState on the input CIM
 
             for key in self.input_CIM_states:
-                # "key" is an InputState on an origin Mechanism of the Composition
+                # "key" is an InputState on an origin Node of the Composition
                 if self.input_CIM_states[key][0] == input_state:
                     origin_input_state = key
-                    origin_mechanism = key.owner
-                    index = origin_mechanism.input_states.index(origin_input_state)
+                    origin_node = key.owner
+                    index = origin_node.input_states.index(origin_input_state)
 
-                    if isinstance(origin_mechanism, CompositionInterfaceMechanism):
-                        index = origin_mechanism.input_states.index(origin_input_state)
-                        origin_mechanism = origin_mechanism.composition
+                    if isinstance(origin_node, CompositionInterfaceMechanism):
+                        index = origin_node.input_states.index(origin_input_state)
+                        origin_node = origin_node.composition
 
-                    if origin_mechanism in inputs:
-                        value = inputs[origin_mechanism][index]
+                    if origin_node in inputs:
+                        value = inputs[origin_node][index]
 
                     else:
-                        value = origin_mechanism.instance_defaults.variable[index]
+                        value = origin_node.instance_defaults.variable[index]
 
             build_CIM_input.append(value)
 
@@ -948,12 +980,11 @@ class Composition(object):
 
     def _assign_execution_ids(self, execution_id=None):
         '''
-            assigns the same uuid to each Mechanism in the composition's processing graph as well as all input
-            mechanisms for this composition. The uuid is either specified in the user's call to run(), or generated
-            randomly at run time.
+            assigns the same uuid to each Node in the composition's processing graph as well as the CIMs. The uuid is
+            either specified in the user's call to run(), or generated randomly at run time.
         '''
 
-        # Traverse processing graph and assign one uuid to all of its mechanisms
+        # Traverse processing graph and assign one uuid to all of its nodes
         if execution_id is None:
             execution_id = self._get_unique_id()
 
@@ -963,10 +994,6 @@ class Composition(object):
         for v in self._graph_processing.vertices:
             v.component._execution_id = execution_id
 
-        # Assign the uuid to all input mechanisms
-        # for k in self.input_mechanisms.keys():
-        #     self.input_mechanisms[k]._execution_id = execution_id
-
         self.input_CIM._execution_id = execution_id
         self.output_CIM._execution_id = execution_id
         # self.target_CIM._execution_id = execution_id
@@ -975,10 +1002,10 @@ class Composition(object):
         return execution_id
 
     def _identify_clamp_inputs(self, list_type, input_type, origins):
-        # clamp type of this list is same as the one the user set for the whole composition; return all mechanisms
+        # clamp type of this list is same as the one the user set for the whole composition; return all nodes
         if list_type == input_type:
             return origins
-        # the user specified different types of clamps for each origin mechanism; generate a list accordingly
+        # the user specified different types of clamps for each origin node; generate a list accordingly
         elif isinstance(input_type, dict):
             return [k for k, v in input_type.items() if list_type == v]
         # clamp type of this list is NOT same as the one the user set for the whole composition; return empty list
@@ -988,20 +1015,20 @@ class Composition(object):
     def _parse_runtime_params(self, runtime_params):
         if runtime_params is None:
             return {}
-        for mechanism in runtime_params:
-            for param in runtime_params[mechanism]:
-                if isinstance(runtime_params[mechanism][param], tuple):
-                    if len(runtime_params[mechanism][param]) == 1:
-                        runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
-                    elif len(runtime_params[mechanism][param]) != 2:
+        for c_node in runtime_params:
+            for param in runtime_params[c_node]:
+                if isinstance(runtime_params[c_node][param], tuple):
+                    if len(runtime_params[c_node][param]) == 1:
+                        runtime_params[c_node][param] = (runtime_params[c_node][param], Always())
+                    elif len(runtime_params[c_node][param]) != 2:
                         raise SystemError("Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
                                           "Must be a tuple of the form (parameter value, condition), or simply the "
-                                          "parameter value. ".format(runtime_params[mechanism][param],
-                                                                     mechanism.name,
+                                          "parameter value. ".format(runtime_params[c_node][param],
+                                                                     c_node.name,
                                                                      param,
                                                                      self.name))
                 else:
-                    runtime_params[mechanism][param] = (runtime_params[mechanism][param], Always())
+                    runtime_params[c_node][param] = (runtime_params[c_node][param], Always())
         return runtime_params
 
 
@@ -1072,7 +1099,7 @@ class Composition(object):
         if targets is None:
             targets = {}
         execution_id = self._assign_execution_ids(execution_id)
-        origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
 
         if scheduler_processing is None:
             scheduler_processing = self.scheduler_processing
@@ -1094,11 +1121,11 @@ class Composition(object):
         next_pass_before = 1
         next_pass_after = 1
         if clamp_input:
-            soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, origin_mechanisms)
-            hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, origin_mechanisms)
-            pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, origin_mechanisms)
-            no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, origin_mechanisms)
-        # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
+            soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, origin_nodes)
+            hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, origin_nodes)
+            pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, origin_nodes)
+            no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, origin_nodes)
+        # run scheduler to receive sets of nodes that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
 
         if call_before_pass:
@@ -1119,63 +1146,61 @@ class Composition(object):
 
             if call_before_time_step:
                 call_before_time_step()
-            # execute each mechanism with EXECUTING in context
-            for mechanism in next_execution_set:
+            # execute each node with EXECUTING in context
+            for node in next_execution_set:
 
-                if mechanism in origin_mechanisms:
+                if node in origin_nodes:
                     # KAM 8/28 commenting out the below code because it's not necessarily how we want to handle
-                    # a recurrent projection on the first time step (meaning, before its mechanism has executed)
+                    # a recurrent projection on the first time step (meaning, before its node has executed)
                     # FIX: determine the correct behavior for this case & document it
 
                     # if (
                     #     scheduler_processing.times[execution_id][TimeScale.TRIAL][TimeScale.TIME_STEP] == 0
-                    #     and hasattr(mechanism, "recurrent_projection")
+                    #     and hasattr(node, "recurrent_projection")
                     # ):
-                    #     mechanism.recurrent_projection.sender.value = [0.0]
+                    #     node.recurrent_projection.sender.value = [0.0]
                     if clamp_input:
-                        if mechanism in hard_clamp_inputs:
+                        if node in hard_clamp_inputs:
                             # clamp = HARD_CLAMP --> "turn off" recurrent projection
-                            if hasattr(mechanism, "recurrent_projection"):
-                                mechanism.recurrent_projection.sender.value = [0.0]
-                        elif mechanism in no_clamp_inputs:
-                            for input_state in mechanism.input_states:
+                            if hasattr(node, "recurrent_projection"):
+                                node.recurrent_projection.sender.value = [0.0]
+                        elif node in no_clamp_inputs:
+                            for input_state in node.input_states:
                                 self.input_CIM_states[input_state][1].value = 0.0
-                            # self.input_mechanisms[mechanism]._output_states[0].value = 0.0
 
-                if isinstance(mechanism, Mechanism):
+                if isinstance(node, Mechanism):
 
                     execution_runtime_params = {}
 
-                    if mechanism in runtime_params:
-                        for param in runtime_params[mechanism]:
-                            if runtime_params[mechanism][param][1].is_satisfied(scheduler=execution_scheduler,
-                                               # KAM 5/15/18 - not sure if this will always be the correct execution id:
+                    if node in runtime_params:
+                        for param in runtime_params[node]:
+                            if runtime_params[node][param][1].is_satisfied(scheduler=execution_scheduler,
+                                                                           # KAM 5/15/18 - not sure if this will always be the correct execution id:
                                                                                 execution_id=self._execution_id):
-                                execution_runtime_params[param] = runtime_params[mechanism][param][0]
+                                execution_runtime_params[param] = runtime_params[node][param][0]
 
-                    mechanism.context.execution_phase = ContextFlags.PROCESSING
+                    node.context.execution_phase = ContextFlags.PROCESSING
 
-                    mechanism.execute(runtime_params=execution_runtime_params,
-                                      context=ContextFlags.COMPOSITION)
+                    node.execute(runtime_params=execution_runtime_params,
+                                 context=ContextFlags.COMPOSITION)
 
-                    for key in mechanism._runtime_params_reset:
-                        mechanism._set_parameter_value(key, mechanism._runtime_params_reset[key])
-                    mechanism._runtime_params_reset = {}
+                    for key in node._runtime_params_reset:
+                        node._set_parameter_value(key, node._runtime_params_reset[key])
+                    node._runtime_params_reset = {}
 
-                    for key in mechanism.function_object._runtime_params_reset:
-                        mechanism.function_object._set_parameter_value(key,
-                                                                       mechanism.function_object._runtime_params_reset[
+                    for key in node.function_object._runtime_params_reset:
+                        node.function_object._set_parameter_value(key,
+                                                                  node.function_object._runtime_params_reset[
                                                                            key])
-                    mechanism.function_object._runtime_params_reset = {}
-                    mechanism.context.execution_phase = ContextFlags.IDLE
-                elif isinstance(mechanism, Composition):
-                    mechanism.execute(execution_id=self._execution_id)
-                if mechanism in origin_mechanisms:
+                    node.function_object._runtime_params_reset = {}
+                    node.context.execution_phase = ContextFlags.IDLE
+                elif isinstance(node, Composition):
+                    node.execute(execution_id=self._execution_id)
+                if node in origin_nodes:
                     if clamp_input:
-                        if mechanism in pulse_clamp_inputs:
-                            for input_state in mechanism.input_states:
-                            # clamp = None --> "turn off" input mechanism
-                            # self.input_mechanisms[mechanism]._output_states[0].value = 0
+                        if node in pulse_clamp_inputs:
+                            for input_state in node.input_states:
+                            # clamp = None --> "turn off" input node
                                 self.input_CIM_states[input_state][1].value = 0
 
 
@@ -1215,7 +1240,7 @@ class Composition(object):
     ):
         '''
             Passes inputs to compositions, then executes
-            to receive and execute sets of mechanisms that are eligible to run until termination conditions are met.
+            to receive and execute sets of nodes that are eligible to run until termination conditions are met.
 
             Arguments
             ---------
@@ -1259,18 +1284,19 @@ class Composition(object):
             call_after_trial : callable
                 will be called after each `TRIAL` is executed.
 
-            runtime_params : Dict[Mechanism: Dict[Param: Tuple(Value, Condition)]]
-                nested dictionary of (value, `Condition`) tuples for parameters of Mechanisms of the Composition; specifies
-                alternate parameter values to be used only during this `Run` when the specified `Condition` is met.
+            runtime_params : Dict[Node: Dict[Param: Tuple(Value, Condition)]]
+                nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
+                `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
+                during this `Run` when the specified `Condition` is met.
 
                 Outer dictionary:
-                    - *key* - Mechanism
+                    - *key* - Node
                     - *value* - Runtime Parameter Specification Dictionary
 
                 Runtime Parameter Specification Dictionary:
-                    - *key* - keyword corresponding to a parameter of the Mechanism
-                    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a
-                      `Condition`
+                    - *key* - keyword corresponding to a parameter of the Node
+                    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
+                      a `Condition`
 
                 See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
 
@@ -1297,26 +1323,26 @@ class Composition(object):
         scheduler_processing.update_termination_conditions(termination_processing)
         scheduler_learning.update_termination_conditions(termination_learning)
 
-        origin_mechanisms = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
+        origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
 
         # if there is only one origin mechanism, allow inputs to be specified in a list
         if isinstance(inputs, (list, np.ndarray)):
-            if len(origin_mechanisms) == 1:
-                inputs = {next(iter(origin_mechanisms)): inputs}
+            if len(origin_nodes) == 1:
+                inputs = {next(iter(origin_nodes)): inputs}
             else:
                 raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
-                               "mechanisms.".format(self.name, len(origin_mechanisms)))
+                               "nodes.".format(self.name, len(origin_nodes)))
         elif not isinstance(inputs, dict):
-            if len(origin_mechanisms) == 1:
+            if len(origin_nodes) == 1:
                 raise CompositionError(
                     "Inputs to {} must be specified in a list or in a dictionary with the origin mechanism({}) "
-                    "as its only key".format(self.name, next(iter(origin_mechanisms)).name))
+                    "as its only key".format(self.name, next(iter(origin_nodes)).name))
             else:
                 raise CompositionError("Inputs to {} must be specified in a dictionary with a key for each of its {} origin "
-                               "mechanisms.".format(self.name, len(origin_mechanisms)))
-        print("inputs before adjustment = ", inputs)
+                               "nodes.".format(self.name, len(origin_nodes)))
+
         inputs, num_inputs_sets = self._adjust_stimulus_dict(inputs)
-        print("inputs after adjustment = ", inputs)
+
         if num_trials is not None:
             num_trials = num_trials
         else:
@@ -1346,8 +1372,8 @@ class Composition(object):
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             execution_stimuli = {}
             stimulus_index = trial_num % num_inputs_sets
-            for mech in inputs:
-                execution_stimuli[mech] = inputs[mech][stimulus_index]
+            for node in inputs:
+                execution_stimuli[node] = inputs[node][stimulus_index]
             # execute processing
             # pass along the stimuli for this trial
             trial_output = self.execute(inputs=execution_stimuli,
@@ -1392,11 +1418,11 @@ class Composition(object):
                 if isinstance(targets, function_type):
                     self.target = targets
                 else:
-                    for mech in targets:
-                        if callable(targets[mech]):
-                            execution_targets[mech] = targets[mech]
+                    for node in targets:
+                        if callable(targets[node]):
+                            execution_targets[node] = targets[node]
                         else:
-                            execution_targets[mech] = targets[mech][target_index]
+                            execution_targets[node] = targets[node][target_index]
 
                     # devel needs the lines below because target and current_targets are attrs of system
                     # self.target = execution_targets
@@ -1436,20 +1462,20 @@ class Composition(object):
 
     def _adjust_stimulus_dict(self, stimuli):
 
-        # STEP 1: validate that there is a one-to-one mapping of input entries to origin mechanisms
+        # STEP 1: validate that there is a one-to-one mapping of input entries to origin nodes
 
 
         # Check that all of the nodes listed in the inputs dict are ORIGIN nodes in the self
         origin_nodes = self.get_c_nodes_by_role(CNodeRole.ORIGIN)
-        for mech in stimuli.keys():
-            if not mech in origin_nodes:
+        for node in stimuli.keys():
+            if not node in origin_nodes:
                 raise CompositionError("{} in inputs dict for {} is not one of its ORIGIN nodes".
-                               format(mech.name, self.name))
+                               format(node.name, self.name))
         # Check that all of the ORIGIN nodes in the self are represented by entries in the inputs dict
-        for mech in origin_nodes:
-            if not mech in stimuli:
+        for node in origin_nodes:
+            if not node in stimuli:
                 raise RunError("Entry for ORIGIN Node {} is missing from the inputs dict for {}".
-                               format(mech.name, self.name))
+                               format(node.name, self.name))
 
         # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
 
@@ -1464,20 +1490,20 @@ class Composition(object):
         num_input_sets = -1
 
 
-        for mech, stim_list in stimuli.items():
-            if isinstance(mech, Composition):
-                adjusted_stimuli[mech] = stim_list
+        for node, stim_list in stimuli.items():
+            if isinstance(node, Composition):
+                adjusted_stimuli[node] = stim_list
                 num_input_sets = 1
             else:
-                check_spec_type = self._input_matches_variable(stim_list, mech.instance_defaults.value)
-                # If a mechanism provided a single input, wrap it in one more list in order to represent trials
+                check_spec_type = self._input_matches_variable(stim_list, node.instance_defaults.value)
+                # If a nodeanism provided a single input, wrap it in one more list in order to represent trials
                 if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
                     if check_spec_type == "homogeneous":
                         # np.atleast_2d will catch any single-input states specified without an outer list
                         # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                        adjusted_stimuli[mech] = [np.atleast_2d(stim_list)]
+                        adjusted_stimuli[node] = [np.atleast_2d(stim_list)]
                     else:
-                        adjusted_stimuli[mech] = [stim_list]
+                        adjusted_stimuli[node] = [stim_list]
 
                     # verify that all nodes have provided the same number of inputs
                     if num_input_sets == -1:
@@ -1485,18 +1511,18 @@ class Composition(object):
                     elif num_input_sets != 1:
                         raise RunError("Input specification for {} is not valid. The number of inputs (1) provided for {}"
                                        "conflicts with at least one other node's input specification.".format(self.name,
-                                                                                                                   mech.name))
+                                                                                                                   node.name))
                 else:
-                    adjusted_stimuli[mech] = []
-                    for stim in stimuli[mech]:
-                        check_spec_type = self._input_matches_variable(stim, mech.instance_defaults.value)
+                    adjusted_stimuli[node] = []
+                    for stim in stimuli[node]:
+                        check_spec_type = self._input_matches_variable(stim, node.instance_defaults.value)
                         # loop over each input to verify that it matches variable
                         if check_spec_type == False:
                             err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
-                                format(stim, mech.name, mech.instance_defaults.value)
+                                format(stim, node.name, node.instance_defaults.value)
                             # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
                             # for "functionality" but rather a hack for user clarity
-                            if "KWTA" in str(type(mech)):
+                            if "KWTA" in str(type(node)):
                                 err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
                                                     " to represent the outside stimulus for the inhibition input state, and " \
                                                     "for systems, put your inputs"
@@ -1504,40 +1530,40 @@ class Composition(object):
                         elif check_spec_type == "homogeneous":
                             # np.atleast_2d will catch any single-input states specified without an outer list
                             # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                            adjusted_stimuli[mech].append(np.atleast_2d(stim))
+                            adjusted_stimuli[node].append(np.atleast_2d(stim))
                         else:
-                            adjusted_stimuli[mech].append(stim)
+                            adjusted_stimuli[node].append(stim)
 
-                    # verify that all mechanisms have provided the same number of inputs
+                    # verify that all nodeanisms have provided the same number of inputs
                     if num_input_sets == -1:
-                        num_input_sets = len(stimuli[mech])
-                    elif num_input_sets != len(stimuli[mech]):
+                        num_input_sets = len(stimuli[node])
+                    elif num_input_sets != len(stimuli[node]):
                         raise RunError("Input specification for {} is not valid. The number of inputs ({}) provided for {}"
-                                       "conflicts with at least one other mechanism's input specification."
-                                       .format(self.name, (stimuli[mech]), mech.name))
+                                       "conflicts with at least one other node's input specification."
+                                       .format(self.name, (stimuli[node]), node.name))
 
         return adjusted_stimuli, num_input_sets
 
     def _adjust_execution_stimuli(self, stimuli):
         adjusted_stimuli = {}
-        for mech, stimulus in stimuli.items():
-            if isinstance(mech, Composition):
-                return {mech: stimulus}
+        for node, stimulus in stimuli.items():
+            if isinstance(node, Composition):
+                return {node: stimulus}
 
 
-            check_spec_type = self._input_matches_variable(stimulus, mech.instance_defaults.value)
-            # If a mechanism provided a single input, wrap it in one more list in order to represent trials
+            check_spec_type = self._input_matches_variable(stimulus, node.instance_defaults.value)
+            # If a nodeanism provided a single input, wrap it in one more list in order to represent trials
             if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
                 if check_spec_type == "homogeneous":
                     # np.atleast_2d will catch any single-input states specified without an outer list
                     # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                    adjusted_stimuli[mech] = np.atleast_2d(stimulus)
+                    adjusted_stimuli[node] = np.atleast_2d(stimulus)
                 else:
-                    adjusted_stimuli[mech] = stimulus
+                    adjusted_stimuli[node] = stimulus
 
             else:
                 raise CompositionError("Input stimulus ({}) for {} is incompatible with its variable ({})."
-                                       .format(stimulus, mech.name, mech.instance_defaults.value))
+                                       .format(stimulus, node.name, node.instance_defaults.value))
         return adjusted_stimuli
 
 

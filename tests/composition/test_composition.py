@@ -1022,9 +1022,8 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, B_to_C, A_to_B, B, C])
 
-        assert "A Projection in a linear processing pathway must be preceded by a Mechanism and followed by a " \
-               "Mechanism" \
-               in str(error_text.value)
+        assert "A Projection in a linear processing pathway must be preceded by a Composition Node (Mechanism or " \
+               "Composition) and followed by a Composition Node" in str(error_text.value)
 
     def test_LPP_start_with_projection(self):
         comp = Composition()
@@ -1034,7 +1033,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([Nonsense_Projection, A, B])
 
-        assert "The first item in a linear processing pathway must be a Mechanism." in str(
+        assert "The first item in a linear processing pathway must be a Node (Mechanism or Composition)." in str(
             error_text.value)
 
     def test_LPP_wrong_component(self):
@@ -1045,7 +1044,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, Nonsense, B])
 
-        assert "A linear processing pathway must be made up of Projections and Mechanisms." in str(
+        assert "A linear processing pathway must be made up of Projections and Composition Nodes." in str(
             error_text.value)
 
     def test_LPP_two_origins_one_terminal(self):

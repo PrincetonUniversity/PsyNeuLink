@@ -316,8 +316,8 @@ before the `controller <System.controller> is executed <System_Execution_Control
 The learning Components of a System can be displayed using the System's `show_graph <System.show_graph>` method with its
 **show_learning** argument assigned `True` or *ALL*. The target values used for learning can be specified in either of
 two formats: dictionary or function, which are described in the `Run` module (see `Run_Targets`). Both formats require
-that a target value be provided for each `TARGET` Mechanism of the System (listed in its `target_mechanisms
-<System.target_mechanisms>` attribute).
+that a target value be provided for each `TARGET` Mechanism of the System (listed in its `target_nodes
+<System.target_nodes>` attribute).
 
 .. note::
    A `TARGET` Mechanism of a Process is not necessarily one of the `TARGET` Mechanisms of the System to which it belongs
@@ -491,7 +491,7 @@ TERMINAL_MECHANISMS = 'terminal_mechanisms'
 OUTPUT_STATE_NAMES = 'output_state_names'
 OUTPUT_VALUE_ARRAY = 'output_value_array'
 NUM_PHASES_PER_TRIAL = 'num_phases'
-TARGET_MECHANISMS = 'target_mechanisms'
+TARGET_MECHANISMS = 'target_nodes'
 LEARNING_PROJECTION_RECEIVERS = 'learning_projection_receivers'
 LEARNING_MECHANISMS = 'learning_mechanisms'
 CONTROL_MECHANISM = 'control_mechanism'
@@ -746,13 +746,13 @@ class System(System_Base):
 
     target_mechanisms : MechanismList
         all `TARGET` Mechanisms in the System (used for `learning <System_Execution_Learning>`), listed in
-        ``target_mechanisms.data``.
+        ``target_nodes.data``.
         COMMENT:
             based on _target_mechs)
         COMMENT
 
     target_input_states : List[SystemInputState]
-        one item for each `TARGET` Mechanism in the System (listed in its `target_mechanisms
+        one item for each `TARGET` Mechanism in the System (listed in its `target_nodes
         <System.target_mechansims>` attribute).  Used to represent the values specified in the **targets**
         argument of the System's `execute <System.execute>` and `run <System.run>` methods, and to provide
         thoese values to the the TARGET `InputState` of each `TARGET` Mechanism during `execution
@@ -1846,7 +1846,7 @@ class System(System_Base):
         self.learning_execution_list = toposort_flatten(self.learning_execution_graph, sort=False)
         # self.learning_execution_list = self._toposort_with_ordered_mechs(self.learning_execution_graph)
 
-        # Construct learning_mechanisms and target_mechanisms MechanismLists
+        # Construct learning_mechanisms and target_nodes MechanismLists
 
         self._learning_mechs = []
         self._target_mechs = []
@@ -1879,7 +1879,7 @@ class System(System_Base):
             # MODIFIED CW and KM 1/29/18: changed below from error to warning
             if not self.target_mechanisms:
                 if self.verbosePref:
-                    warnings.warn("WARNING: Learning has been specified for {} but it has no target_mechanisms. This "
+                    warnings.warn("WARNING: Learning has been specified for {} but it has no target_nodes. This "
                                   "is okay if the learning (e.g. Hebbian learning) does not need a target.".
                                   format(self.name))
                 return
@@ -1894,7 +1894,7 @@ class System(System_Base):
                 warnings.warn("Learning has been specified for {} but its \'targets\' argument was not specified;"
                               "default will be used ({})".format(self.name, self.targets))
             # MODIFIED 6/25/17 END
-        # Create SystemInputState for each TARGET mechanism in target_mechanisms and
+        # Create SystemInputState for each TARGET mechanism in target_nodes and
         #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
 
 
@@ -1948,7 +1948,7 @@ class System(System_Base):
 
 
 
-            # Create SystemInputState for each TARGET mechanism in target_mechanisms and
+            # Create SystemInputState for each TARGET mechanism in target_nodes and
             #    assign MappingProjection from the SystemInputState
             #    to the TARGET mechanism's TARGET inputSate
             #    (i.e., from the SystemInputState to the ComparatorMechanism)
@@ -2776,7 +2776,7 @@ class System(System_Base):
         from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
         # if isinstance(self.targets, function_type):
         #     self.current_targets = self.targets()
-        #     for i in range(len(self.target_mechanisms)):
+        #     for i in range(len(self.target_nodes)):
         #         self.target_input_states[i].value = self.current_targets[i]
 
         if not hasattr(self, "target"):
@@ -2873,7 +2873,7 @@ class System(System_Base):
 
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
-            # Report learning for target_mechanisms (and the processes to which they belong)
+            # Report learning for target_nodes (and the processes to which they belong)
             # Sort for consistency of reporting:
             print("\n\'{}' learning completed:".format(self.name))
 
@@ -4342,7 +4342,7 @@ class SystemInputState(OutputState):
 
     A SystemInputState is created for each `InputState` of each `ORIGIN` Mechanism in `origin_mechanisms`, and for the
     *TARGET* `InputState <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed
-    in `target_mechanisms <System.target_mechanisms>`.  A `MappingProjection` is created that projects to each
+    in `target_nodes <System.target_nodes>`.  A `MappingProjection` is created that projects to each
     of these InputStates from the corresponding SystemInputState.  When the System's `execute <System.execute>` or
     `run <System.run>` method is called, each item of its **inputs** and **targets** arguments is assigned as
     the `value <SystemInputState.value>` of a SystemInputState, which is then conveyed to the

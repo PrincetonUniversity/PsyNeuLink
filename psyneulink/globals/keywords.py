@@ -156,7 +156,7 @@ class CNodeRoles:
         from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
         `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It is usually (but not necessarily)
         associated with the `TERMINAL` Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or
-        System are listed in its :keyword:`target_mechanisms` attribute, and can be displayed using its
+        System are listed in its :keyword:`target_nodes` attribute, and can be displayed using its
         :keyword:`show` method.  For additional details, see `TARGET Mechanisms <LearningMechanism_Targets>`,
         `learning sequence <Process_Learning_Sequence>`, and specifying `target values <Run_Targets>`.
 
