@@ -616,6 +616,59 @@ DECAY_FUNCTION = 'decay_function'
 WINDOWING_FUNCTION = 'windowing_function'
 
 class PredictionMechanism(IntegratorMechanism):
+    """PredictionMechanism(      \
+    default_variable=None,       \
+    size=None,                   \
+    function=TIME_AVERAGE_INPUT, \
+    initial_value=None,          \
+    window=1,                    \
+    decay_function=None,         \
+    windowing_function=None,     \
+    params=None,                 \
+    name=None,                   \
+    prefs=None)
+
+    Used to generate inputs for simulation(s) run by `EVCControlMechanism`.
+
+    COMMENT:
+        EXPLAIN FUCTION, INITIALIZER, WINDOW, DECAY FUNCTION AND WINDOWIN FUNCTION HERE
+    COMMENT
+
+    Arguments
+    ---------
+
+    default_variable : number, list or np.ndarray : default None
+        specifies the input to the Mechanism to use if none is provided in a call to its
+        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method; format must match the
+        `variable <Mechanism.variable>` for the `ORIGIN` Mechanism in the `EVCControlMechanism`\\`s
+        `system <EVCControlMechanism.system>` to which the PredictionMechanism corresponds.
+
+    size : int, list or np.ndarray of ints
+        see `size <Mechanism.size>`.
+
+    function : *TIME_AVERAGE_INPUT*, *AVERAGE_INPUTS*, *INPUT_SEQUENCE* : default *TIME_AVERAGE_INPUT*
+
+    initial_value :  value, list or np.ndarray : default None
+
+    window : int : default None
+
+    decay_function: function : default None,
+
+    windowing_function: function : default None,
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        the Mechanism, its `function <Mechanism_Base.function>`, and/or a custom function and its parameters.  Values
+        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor.
+
+    name : str : default see `name <TransferMechanism.name>`
+        specifies the name of the TransferMechanism.
+
+    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
+        specifies the `PreferenceSet` for the TransferMechanism; see `prefs <TransferMechanism.prefs>` for details.
+
+    """
 
     componentType = PREDICTION_MECHANISM
 
@@ -625,7 +678,7 @@ class PredictionMechanism(IntegratorMechanism):
                  size=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  function:tc.optional(tc.enum(TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE))=TIME_AVERAGE_INPUT,
-                 initializer=None,
+                 initial_value=None,
                  window=1,
                  decay_function:tc.optional(callable)=None,
                  windowing_function:tc.optional(callable)=None,
@@ -655,7 +708,7 @@ class PredictionMechanism(IntegratorMechanism):
             elif function in {AVERAGE_INPUTS, INPUT_SEQUENCE}:
                 # Maintain the preceding sequence of inputs (of length num_trials), and use those for each simulation
                 function = Buffer(default_variable=[[0]],
-                                    initializer=initializer,
+                                    initializer=initial_value,
                                     history=self.window)
 
         super().__init__(

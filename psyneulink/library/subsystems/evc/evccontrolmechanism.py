@@ -13,11 +13,12 @@
 Overview
 --------
 
-An EVCControlMechanism is a `ControlMechanism <ControlMechanism>` that regulates it `ControlSignals <ControlSignal>` in order
-to optimize the performance of the System to which it belongs.  EVCControlMechanism is one of the most powerful, but also one
-of the most complex components in PsyNeuLink.  It is designed to implement a form of the Expected Value of Control (EVC)
-Theory described in `Shenhav et al. (2013) <https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_, which provides useful
-background concerning the purpose and structure of the EVCControlMechanism.
+An EVCControlMechanism is a `ControlMechanism <ControlMechanism>` that regulates it `ControlSignals <ControlSignal>` in
+order to optimize the performance of the System to which it belongs.  EVCControlMechanism is one of the most
+powerful, but also one of the most complex components in PsyNeuLink.  It is designed to implement a form of the
+Expected Value of Control (EVC) Theory described in `Shenhav et al. (2013)
+<https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_, which provides useful background concerning the purpose and
+structure of the EVCControlMechanism.
 
 An EVCControlMechanism is similar to a standard `ControlMechanism`, with the following exceptions:
 
@@ -25,10 +26,11 @@ An EVCControlMechanism is similar to a standard `ControlMechanism`, with the fol
     (see `ControlMechanism_System_Controller`);
   ..
   * it has several specialized functions that are used to search over the `allocations <ControlSignal.allocations>`\\s
-    of its its `ControlSignals <ControlSignal>`, and evaluate the performance of its `system <EVCControlMechanism.system>`;
-    by default, it simulates its `system <EVCControlMechanism.system>` and evaluates its performance under all combinations
-    of ControlSignal values to find the one that optimizes the `Expected Value of Control <EVCControlMechanism_EVC>`, however
-    its functions can be customized or replaced to implement other optimization procedures.
+    of its its `ControlSignals <ControlSignal>`, and evaluate the performance of its `system
+    <EVCControlMechanism.system>`; by default, it simulates its `system <EVCControlMechanism.system>` and evaluates
+    its performance under all combinations of ControlSignal values to find the one that optimizes the `Expected
+    Value of Control <EVCControlMechanism_EVC>`, however its functions can be customized or replaced to implement
+    other optimization procedures.
   ..
   * it creates a specialized set of `prediction Mechanisms` EVCControlMechanism_Prediction_Mechanisms` that are used to
     simulate the performnace of its `system <EVCControlMechanism.system>`.
@@ -38,42 +40,45 @@ An EVCControlMechanism is similar to a standard `ControlMechanism`, with the fol
 Expected Value of Control (EVC)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The EVCControlMechanism uses it `function <EVCControlMechanism.function>` to select an `allocation_policy` for its `system
-<EVCControlMechanism.system>`.  In the `default configuration <EVC_Default_Configuration>`, an EVCControlMechanism carries out an
-exhaustive evaluation of allocation policies, simulating its `system <EVCControlMechanism.system>` under each, and using an
-`ObjectiveMechanism` and several `auxiliary functions <EVCControlMechanism_Functions>` to calculate the **expected
-value of control (EVC)** for each `allocation_policy`: a cost-benefit analysis that weighs the `cost
-<ControlSignal.cost> of the ControlSignals against the outcome of the `system <EVCControlMechanism.system>` \\s performance for
-a given `allocation_policy`. The EVCControlMechanism selects the `allocation_policy` that generates the maximum EVC, and
-implements that for the next `TRIAL`. Each step of this procedure can be modified, or replaced entirely, by assigning
-custom functions to corresponding parameters of the EVCControlMechanism, as described `below <EVCControlMechanism_Functions>`.
+The EVCControlMechanism uses it `function <EVCControlMechanism.function>` to select an `allocation_policy` for its
+`system <EVCControlMechanism.system>`.  In the `default configuration <EVCControlMechanism_Default_Configuration>`,
+an EVCControlMechanism carries out an exhaustive evaluation of allocation policies, simulating its `system
+<EVCControlMechanism.system>` under each, and using an `ObjectiveMechanism` and several `auxiliary functions
+<EVCControlMechanism_Functions>` to calculate the **expected value of control (EVC)** for each `allocation_policy`:
+a cost-benefit analysis that weighs the `cost <ControlSignal.cost> of the ControlSignals against the outcome of the
+`system <EVCControlMechanism.system>` \\s performance for a given `allocation_policy`. The EVCControlMechanism
+selects the `allocation_policy` that generates the maximum EVC, and implements that for the next `TRIAL`. Each step
+of this procedure can be modified, or replaced entirely, by assigning custom functions to corresponding parameters of
+the EVCControlMechanism, as described `below <EVCControlMechanism_Functions>`.
 
 .. _EVCControlMechanism_Creation:
 
 Creating an EVCControlMechanism
 ------------------------
 
-An EVCControlMechanism can be created in any of the ways used to `create a ControlMechanism <ControlMechanism_Creation>`;
-it is also created automatically when a `System` is created and the EVCControlMechanism class is specified in the
-**controller** argument of the System's constructor (see `System_Creation`).  The ObjectiveMechanism,
-the OutputStates it monitors and evaluates, and the parameters controlled by an EVCControlMechanism can be specified in the
-standard way for a ControlMechanism (see `ControlMechanism_ObjectiveMechanism` and
-`ControlMechanism_Control_Signals`, respectively).
+An EVCControlMechanism can be created in any of the ways used to `create a ControlMechanism
+<ControlMechanism_Creation>`; it is also created automatically when a `System` is created and the EVCControlMechanism
+class is specified in the **controller** argument of the System's constructor (see `System_Creation`).  The
+ObjectiveMechanism, the OutputStates it monitors and evaluates, and the parameters controlled by an
+EVCControlMechanism can be specified in the standard way for a ControlMechanism (see
+`ControlMechanism_ObjectiveMechanism` and `ControlMechanism_Control_Signals`, respectively).
 
 .. note::
-   Although an EVCControlMechanism can be created on its own, it can only be assigned to, and executed within a `System` as
-   the System's `controller <System.controller>`.
+   Although an EVCControlMechanism can be created on its own, it can only be assigned to, and executed within a `System`
+   as the System's `controller <System.controller>`.
 
 When an EVCControlMechanism is assigned to, or created by a System, it is assigned the OutputStates to be monitored and
 parameters to be controlled specified for that System (see `System_Control`), and a `prediction Mechanism
-<EVCControlMechanism_Prediction_Mechanisms>` is created for each `ORIGIN` Mechanism in the `system <EVCControlMechanism.system>`.
-The prediction Mechanisms are assigned to the EVCControlMechanism's `prediction_mechanisms` attribute. The OutputStates used
-to determine an EVCControlMechanism’s allocation_policy and the parameters it controls can be listed using its show method.
-The EVCControlMechanism and the Components associated with it in its `system <EVCControlMechanism.system>` can be displayed using
-the System's `System.show_graph` method with its **show_control** argument assigned as `True`
+<EVCControlMechanism_Prediction_Mechanisms>` is created for each `ORIGIN` Mechanism in the `system
+<EVCControlMechanism.system>`. The prediction Mechanisms are assigned to the EVCControlMechanism's
+`prediction_mechanisms` attribute. The OutputStates used to determine an EVCControlMechanism’s allocation_policy and
+the parameters it controls can be listed using its show method. The EVCControlMechanism and the Components
+associated with it in its `system <EVCControlMechanism.system>` can be displayed using the System's
+`System.show_graph` method with its **show_control** argument assigned as `True`
 
-An EVCControlMechanism that has been constructed automatically can be customized by assigning values to its attributes (e.g.,
-those described above, or its `function <EVCControlMechanism.function>` as described under `EVC_Default_Configuration `below).
+An EVCControlMechanism that has been constructed automatically can be customized by assigning values to its
+attributes (e.g., those described above, or its `function <EVCControlMechanism.function>` as described under
+`EVCControlMechanism_Default_Configuration `below).
 
 
 .. _EVCControlMechanism_Structure:
@@ -81,11 +86,11 @@ those described above, or its `function <EVCControlMechanism.function>` as descr
 Structure
 ---------
 
-An EVCControlMechanism must belong to a `System` (identified in its `system <EVCControlMechanism.system>` attribute).  In addition
-to the standard Components of a `ControlMechanism`, has a specialized set of `prediction mechanisms
-<EVCControlMechanism_Prediction_Mechanisms>` and `functions <EVCControlMechanism_Functions>` that it uses to simulate and evaluate
-the performance of its `system <EVCControlMechanism.system>` under the influence of different values of its `ControlSignals
-<EVCControlMechanism_ControlSignals>`.  Each of these specialized Components is described below.
+An EVCControlMechanism must belong to a `System` (identified in its `system <EVCControlMechanism.system>` attribute).
+In addition to the standard Components of a `ControlMechanism`, has a specialized set of `prediction mechanisms
+<EVCControlMechanism_Prediction_Mechanisms>` and `functions <EVCControlMechanism_Functions>` that it uses to simulate
+and evaluate the performance of its `system <EVCControlMechanism.system>` under the influence of different values of
+its `ControlSignals <EVCControlMechanism_ControlSignals>`.  Each of these specialized Components is described below.
 
 .. _EVCControlMechanism_Input:
 
@@ -100,10 +105,11 @@ ObjectiveMechanism
 Like any ControlMechanism, an EVCControlMechanism receives its input from the *OUTCOME* `OutputState
 <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
 <InputState_Primary>`.  The ObjectiveFunction is listed in the EVCControlMechanism's `objective_mechanism
-<EVCControlMechanism.objective_mechanism>` attribute.  By default, the ObjectiveMechanism's function is a `LinearCombination`
-function with its `operation <LinearCombination.operation>` attribute assigned as *PRODUCT*;  this takes the product of
-the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed in its `monitored_output_states
-<ObjectiveMechanism.monitored_output_states>` attribute.  However, this can be customized in a variety of ways:
+<EVCControlMechanism.objective_mechanism>` attribute.  By default, the ObjectiveMechanism's function is a
+`LinearCombination` function with its `operation <LinearCombination.operation>` attribute assigned as *PRODUCT*;
+this takes the product of the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed in its
+`monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute.  However, this can be customized
+in a variety of ways:
 
     * by specifying a different `function <ObjectiveMechanism.function>` for the ObjectiveMechanism
       (see `Objective Mechanism Examples <ObjectiveMechanism_Weights_and_Exponents_Example>` for an example);
@@ -123,20 +129,20 @@ the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed 
 
     .. note::
        If a constructor for an `ObjectiveMechanism` is used for the **objective_mechanism** argument of the
-       EVCControlMechanism's constructor, then the default values of its attributes override any used by the EVCControlMechanism
-       for its `objective_mechanism <EVCControlMechanism.objective_mechanism>`.  In particular, whereas an EVCControlMechanism uses
-       the same default `function <ObjectiveMechanism.function>` as an `ObjectiveMechanism` (`LinearCombination`),
-       it uses *PRODUCT* rather than *SUM* as the default value of the `operation <LinearCombination.operation>`
-       attribute of the function.  As a consequence, if the constructor for an ObjectiveMechanism is used to specify
-       the EVCControlMechanism's **objective_mechanism** argument, and the **operation** argument is not specified,
-       *SUM* rather than *PRODUCT* will be used for the ObjectiveMechanism's `function
-       <ObjectiveMechanism.function>`.  To ensure that *PRODUCT* is used, it must be specified explicitly in the
-       **operation** argument of the constructor for the ObjectiveMechanism (see 1st example under
-       `System_Control_Examples`).
+       EVCControlMechanism's constructor, then the default values of its attributes override any used by the
+       EVCControlMechanism for its `objective_mechanism <EVCControlMechanism.objective_mechanism>`.  In particular,
+       whereas an EVCControlMechanism uses the same default `function <ObjectiveMechanism.function>` as an
+       `ObjectiveMechanism` (`LinearCombination`), it uses *PRODUCT* rather than *SUM* as the default value of the
+       `operation <LinearCombination.operation>` attribute of the function.  As a consequence, if the constructor for
+       an ObjectiveMechanism is used to specify the EVCControlMechanism's **objective_mechanism** argument,
+       and the **operation** argument is not specified, *SUM* rather than *PRODUCT* will be used for the
+       ObjectiveMechanism's `function <ObjectiveMechanism.function>`.  To ensure that *PRODUCT* is used, it must be
+       specified explicitly in the **operation** argument of the constructor for the ObjectiveMechanism (see 1st
+       example under `System_Control_Examples`).
 
-The result of the EVCControlMechanism's `objective_mechanism <EVCControlMechanism.objective_mechanism>` is used by its `function
-<ObjectiveMechanism.function>` to evaluate the performance of its `system <EVCControlMechanism.system>` when computing the `EVC
-<EVCControlMechanism_EVC>`.
+The result of the EVCControlMechanism's `objective_mechanism <EVCControlMechanism.objective_mechanism>` is used by
+its `function <ObjectiveMechanism.function>` to evaluate the performance of its `system <EVCControlMechanism.system>`
+when computing the `EVC <EVCControlMechanism_EVC>`.
 
 
 .. _EVCControlMechanism_Prediction_Mechanisms:
@@ -144,15 +150,43 @@ The result of the EVCControlMechanism's `objective_mechanism <EVCControlMechanis
 Prediction Mechanisms
 ^^^^^^^^^^^^^^^^^^^^^
 
-These are used to provide input to the `system <EVCControlMechanism.system>` when the EVCControlMechanism's default `function
-<EVCControlMechanism.function>` (`ControlSignalGridSearch`) `simulates its execution <EVC_Default_Configuration>` to evaluate
-the EVC for each `allocation_policy`.  When an EVCControlMechanism is created, a prediction Mechanism is created for each
-`ORIGIN` Mechanism in its `system <EVCControlMechanism.system>`, and for each `Projection <Projection>` received by an `ORIGIN`
-Mechanism, a `MappingProjection` from the same source is created that projects to the corresponding prediction
-Mechanism. The type of `Mechanism <Mechanism>` used for the prediction Mechanisms is specified by the EVCControlMechanism's
-`prediction_mechanism_type` attribute, and their parameters can be specified with the `prediction_mechanism_params`
-attribute. The default type is an `PredictionMechanism` that calculates an exponentially weighted time-average of
-its input. The prediction mechanisms for an EVCControlMechanism are listed in its `prediction_mechanisms` attribute.
+These are used to provide input to the `system <EVCControlMechanism.system>` if the EVCControlMechanism's
+`function <EVCControlMechanism.function>` (`ControlSignalGridSearch`) `simulates its execution
+<EVCControlMechanism_Default_Configuration>` to evaluate the EVC for a given `allocation_policy`.  When an
+EVCControlMechanism is created, a prediction Mechanism is created for each `ORIGIN` Mechanism in its `system
+<EVCControlMechanism.system>`, and for each `Projection <Projection>` received by an `ORIGIN` Mechanism,
+a `MappingProjection` from the same source is created that projects to the corresponding prediction Mechanism.  By
+default, the `PredictionMechanism` subclass  is used for all prediction mechanisms, which calculates an
+exponentially weighted time-average of its input over (non-simuated) trials, that is provided as input to the
+corresponding `ORIGIN` Mechanism on each simulated trial. However, any other type of Mechanism can be used as a
+prediction mechanism, so long as it has the same number of `InputStates <InputState>` as the `ORIGIN` Mechanism to
+which it corresponds, and an `OutputState` corresponding to each.  The default type is a `PredictionMechanism`,
+that calculates an exponentially weighted time-average of its input. The prediction mechanisms can be customized
+using the *prediction_mechanisms* argument of the EVCControlMechanism's constructor, which can be specified using any
+of the following formats:
+
+  * **Mechanism** -- convenience format for cases in which the EVCControlMechanism's `system
+    <EVCControlMechanism.system>` has a single `ORIGIN` Mechanism;  the Mechanism must have the same number of
+    `InputStates <InputState>` as the `system <EVCControlMechanism.system>`\\'s `ORIGIN` Mechanism, and
+    an `OutputState` for each.
+  ..
+  * **Mechanism subclass** -- used as the class for all prediction mechanisms; a default instance of that class
+    is created for each prediction mechanism, with a number of InputStates and OutputStates equal to the number of
+    InputStates of the `ORIGIN` Mechanism to which it corresponds.
+  ..
+  * **dict** -- a `parameter specification dictionary <ParameterState_Specification>` specifying the parameters to be
+    assigned to all prediction mechanisms, all of which are instances of a `PredictionMechanism` (thus, the parameters
+    specified must be appropriate for a PredictionMechanism).
+  ..
+  * **2-item tuple:** *(Mechanism subclass, dict)* -- the Mechanism subclass, and parameters specified in
+    the `parameter specification dictionary <ParameterState_Specification>`, are used for all prediction mechanisms.
+  ..
+  * **list** -- its length must equal the number of `ORIGIN` Mechanisms in the EVCControlMechanism's `system
+    <EVCControlMechanism.system>` each item must be a Mechanism, a subclass of one, or a 2-item tuple (see above),
+    that is used as the specification for the prediction Mechanism for the corresponding `ORIGIN` Mechanism listed in
+    the System's `origin_mechanisms <System.origin_mechanisms>` attribute.
+
+The prediction mechanisms for an EVCControlMechanism are listed in its `prediction_mechanisms` attribute.
 
 
 .. _EVCControlMechanism_Functions:
@@ -161,7 +195,7 @@ Function
 ~~~~~~~~
 
 By default, the primary `function <EVCControlMechanism.function>` is `ControlSignalGridSearch` (see
-`EVC_Default_Configuration`), that systematically evaluates the effects of its ControlSignals on the performance of
+`EVCControlMechanism_Default_Configuration`), that systematically evaluates the effects of its ControlSignals on the performance of
 its `system <EVCControlMechanism.system>` to identify an `allocation_policy <EVCControlMechanism.allocation_policy>` that yields the
 highest `EVC <EVCControlMechanism_EVC>`.  However, any function can be used that returns an appropriate value (i.e., that
 specifies an `allocation_policy` for the number of `ControlSignals <EVCControlMechanism_ControlSignals>` in the EVCControlMechanism's
@@ -268,7 +302,7 @@ last `Mechanism <Mechanism>` to be executed in a `TRIAL` for its `system <EVCCon
 value of its `prediction_mechanisms` and `objective_mechanism`, and then calls its `function <EVCControlMechanism.function>`,
 which determines and implements the `allocation_policy` for the next `TRIAL` of its `system <EVCControlMechanism.system>`
 \\s execution.  The default `function <EVCControlMechanism.function>` executes the following steps (described in greater
-detailed `above <EVC_Default_Configuration>`):
+detailed `above <EVCControlMechanism_Default_Configuration>`):
 
 * samples every allocation_policy (i.e., every combination of the `allocation` \\s specified for the EVCControlMechanism's
   ControlSignals specified by their `allocation_samples` attributes);  for each `allocation_policy`, it:
@@ -437,6 +471,12 @@ class EVCControlMechanism(ControlMechanism):
     prediction_mechanisms : Mechanism, Mechanism subclass, dict, (Mechanism subclass, dict) or list: \
     default PredictionMechanism
         the `Mechanism(s) <Mechanism>` or class(es) of Mechanisms  used for `prediction Mechanism(s)
+        <EVCControlMechanism_Prediction_Mechanisms>` and, optionally, their parameters (specified in a `parameter
+        specification dictionary <ParameterState_Specification>`);  see `EVCControlMechanism_Prediction_Mechanisms`
+        for details.
+
+        COMMENT:
+        the `Mechanism(s) <Mechanism>` or class(es) of Mechanisms  used for `prediction Mechanism(s)
         <EVCControlMechanism_Prediction_Mechanisms>`.  If a class, dict, or tuple is specified, it is used as the
         specification for all prediction Mechanisms.  A dict specified on its own is assumed to be a `parameter
         specification dictionary <ParameterState_Specification>` for a `PredictionMechanism`; a dict specified
@@ -453,6 +493,7 @@ class EVCControlMechanism(ControlMechanism):
             the System for which the EVCControlMechanism is the `controller <System.controller>` has a single `ORIGIN`
             Mechanism; this will cause an if the System has more than one `ORIGIN` Mechanism;  in that case, one of the
             other forms of specification must be used.
+        COMMENT
 
     function : function or method : ControlSignalGridSearch
         specifies the function used to determine the `allocation_policy` for the next execution of the
@@ -492,7 +533,7 @@ class EVCControlMechanism(ControlMechanism):
     Attributes
     ----------
 
-    system : System_Base
+    system : System
         the `System` for which EVCControlMechanism is the `controller <System.controller>`;
         the EVCControlMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
         argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
@@ -501,8 +542,9 @@ class EVCControlMechanism(ControlMechanism):
     prediction_mechanisms : List[ProcessingMechanism]
         list of `predictions mechanisms <EVCControlMechanism_Prediction_Mechanisms>` generated for the
         EVCControlMechanism's `system <EVCControlMechanism.system>` when the EVCControlMechanism is created,
-        one for each `ORIGIN` Mechanism in the System.  Each prediction Mechanism is named using the name of the `
-        ORIGIN` Mechanism + "PREDICTION_MECHANISM" and assigned an `OutputState` with a name based on the same.
+        one for each `ORIGIN` Mechanism in the `system <EVCControlMechanism.system>`.  Each prediction Mechanism is
+        named using the name of the ` ORIGIN` Mechanism + "PREDICTION_MECHANISM" and assigned an `OutputState` with
+        a name based on the same.
 
     origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
         dictionary of `prediction mechanisms <EVCControlMechanism_Prediction_Mechanisms>` added to the EVCControlMechanism's
@@ -984,8 +1026,8 @@ class EVCControlMechanism(ControlMechanism):
         Update prediction mechanisms
         Construct control_signal_search_space (from allocation_samples of each item in control_signals):
             * get `allocation_samples` for each ControlSignal in `control_signals`
-            * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of which
-              is a different combination of values, one from the `allocation_samples` of each ControlSignal.
+            * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of
+              which is a different combination of values, one from the `allocation_samples` of each ControlSignal.
         Call self.function -- default is ControlSignalGridSearch
         Return an allocation_policy
         """

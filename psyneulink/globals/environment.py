@@ -861,12 +861,12 @@ def run(obj,
             if call_after_time_step:
                 call_after_time_step()
 
-        # obj.results.append(result)
-        if isinstance(result, Iterable):
-            result_copy = result.copy()
-        else:
-            result_copy = result
-        obj.results.append(result_copy)
+        if obj.context.execution_phase != ContextFlags.SIMULATION:
+            if isinstance(result, Iterable):
+                result_copy = result.copy()
+            else:
+                result_copy = result
+            obj.results.append(result_copy)
 
         if call_after_trial:
             call_after_trial()

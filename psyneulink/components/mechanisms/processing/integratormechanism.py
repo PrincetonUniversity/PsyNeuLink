@@ -95,12 +95,12 @@ class IntegratorMechanismError(Exception):
 
 class IntegratorMechanism(ProcessingMechanism_Base):
     """
-    IntegratorMechanism(                            \
-    default_variable=None,                               \
-    size=None,                                              \
+    IntegratorMechanism(                   \
+    default_variable=None,                 \
+    size=None,                             \
     function=AdaptiveIntegrator(rate=0.5), \
-    params=None,                                            \
-    name=None,                                              \
+    params=None,                           \
+    name=None,                             \
     prefs=None)
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that integrates its input.
