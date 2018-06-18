@@ -186,7 +186,7 @@ Class Reference
 import numbers
 import warnings
 
-from collections import namedtuple
+from collections import namedtuple, deque
 from enum import Enum, IntEnum
 from random import randint
 
@@ -5421,7 +5421,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
                  rate: parameter_spec=1.0,
                  noise=0.0,
                  history:tc.optional(int)=None,
-                 initializer=None,
+                 initializer=[],
                  params: tc.optional(dict)=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -5447,6 +5447,11 @@ class Buffer(Integrator):  # ---------------------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         self.auto_dependent = True
+
+    def _initialize_previous_value(self, initializer):
+        initializer = initializer or []
+        self.previous_value = deque(initializer, maxlen=self.history)
+        assert True
 
     def function(self,
                  variable=None,
