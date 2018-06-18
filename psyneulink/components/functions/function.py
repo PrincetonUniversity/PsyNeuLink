@@ -4863,7 +4863,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         raise FunctionError("Integrator is not meant to be called explicitly")
 
 
-
 class SimpleIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
     SimpleIntegrator(                 \
@@ -5428,8 +5427,8 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
         # if initializer is None and default_variable is not None:
             # initializer = np.empty(np.array(default_variable).shape)
-        if initializer is None:
-            initializer = np.array([[]])
+        # if initializer is None:
+        #     initializer = np.array([[]])
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -5451,7 +5450,6 @@ class Buffer(Integrator):  # ---------------------------------------------------
     def _initialize_previous_value(self, initializer):
         initializer = initializer or []
         self.previous_value = deque(initializer, maxlen=self.history)
-        assert True
 
     def function(self,
                  variable=None,
@@ -5487,27 +5485,41 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
-        previous_value = self.previous_value
 
-        if np.array(previous_value[0]).size == 0:
-            # if there are no previous values, assign variable * rate + noise to previous_value
-            adjusted_value = variable * rate + noise
+        # previous_value = self.previous_value
 
-        else:
-            # append variable * rate + noise to previous_value
-            adjusted_value = np.append(previous_value, (variable * rate) + noise, 0)
-
-        # if length of result exceeds history, delete first entry
-        if self.history and len(adjusted_value) > self.history:
-            adjusted_value = np.delete(adjusted_value, 0, 0)
+        # # MODIFIED 6/16/18 OLD:
+        # if np.array(previous_value[0]).size == 0:
+        #     # if there are no previous values, assign variable * rate + noise to previous_value
+        #     adjusted_value = variable * rate + noise
+        #
+        # else:
+        #     # append variable * rate + noise to previous_value
+        #     adjusted_value = np.append(previous_value, (variable * rate) + noise, 0)
+        #
+        # # if length of result exceeds history, delete first entry
+        # if self.history and len(adjusted_value) > self.history:
+        #     adjusted_value = np.delete(adjusted_value, 0, 0)
+        #
+        # # If this NOT an initialization run, update the old value
+        # # If it IS an initialization run, leave as is
+        # #    (don't want to count it as an execution step)
+        # if self.context.initialization_status != ContextFlags.INITIALIZING:
+        #     self.previous_value = adjusted_value
+        #
+        # return adjusted_value
+        # MODIFIED 6/16/18 NEW:
+        new_value = variable * rate + noise
 
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if self.context.initialization_status != ContextFlags.INITIALIZING:
-            self.previous_value = adjusted_value
+        if self.context.initialization_status == ContextFlags.INITIALIZING:
+            return new_value
 
-        return adjusted_value
+        return self.previous_value.append(new_value)
+
+        # MODIFIED 6/16/18 END
 
 
 class AdaptiveIntegrator(Integrator):  # -------------------------------------------------------------------------------
