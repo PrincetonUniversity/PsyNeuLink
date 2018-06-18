@@ -844,7 +844,8 @@ def run(obj,
                         obj.target = execution_targets
                         obj.current_targets = execution_targets
 
-            if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
+            # if context == ContextFlags.COMMAND_LINE and not obj.context.execution_phase == ContextFlags.SIMULATION:
+            if context == ContextFlags.COMMAND_LINE or not obj.context.execution_phase == ContextFlags.SIMULATION:
                 obj.context.execution_phase = ContextFlags.PROCESSING
                 obj.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 

@@ -557,9 +557,11 @@ def _compute_EVC(args):
     num_trials = len(ctlr.predicted_input[origin_mechs[0]])
     EVC_list = []
 
+
+    # FIX: 6/16/18: ADD PREDICTION MECHANISM HERE IF IT'S FUNCTION IS STATEFUL
     # Get any values that need to be reinitialized for each run
     reinitialization_values = {}
-    for mechanism in ctlr.system.stateful_mechanisms:
+    for mechanism in ctlr.system.stateful_mechanisms + ctlr.prediction_mechanisms.mechanisms:
         # "save" the current state of each stateful mechanism by storing the values of each of its stateful
         # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
         # the reinitialize method on each stateful mechanism.
@@ -667,20 +669,24 @@ class PredictionMechanism(IntegratorMechanism):
                 prefs=prefs)
 
     def _execute(self, variable=None, runtime_params=None, context=None):
+        '''Update predicted value on "real" but not simulation runs '''
 
-        value = super()._execute(variable, runtime_params=runtime_params, context=context)
+        if self.context.execution_phase == ContextFlags.SIMULATION:
+            value = self.value
+        else:
+            value = super()._execute(variable, runtime_params=runtime_params, context=context)
 
-        # If inputs are being recorded (#recorded = window):
-        if len(value) > 1:
-            if self.input_type is AVERAGE_INPUTS:
-                # Compute average input over window
-                value = np.sum(value)/value.shape[0]
+            # If inputs are being recorded (#recorded = window):
+            if len(value) > 1:
+                if self.input_type is AVERAGE_INPUTS:
+                    # Compute average input over window
+                    value = np.sum(value)/value.shape[0]
 
-            elif self.input_type is INPUT_SEQUENCE:
-                if self.windowing_function:
-                    # Use windowing_function to return input values
-                    value = self.windowing_function(value)
-                else:
-                    # Return all input values in window
-                    pass
+                elif self.input_type is INPUT_SEQUENCE:
+                    if self.windowing_function:
+                        # Use windowing_function to return input values
+                        value = self.windowing_function(value)
+                    else:
+                        # Return all input values in window
+                        pass
         return value

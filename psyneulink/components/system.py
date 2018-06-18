@@ -2748,7 +2748,11 @@ class System(System_Base):
                         if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
-                mechanism.context.execution_phase = ContextFlags.PROCESSING
+                # # MODIFIED 6/18/18 OLD:
+                # mechanism.context.execution_phase = ContextFlags.PROCESSING
+                # MODIFIED 6/18/18 NEW:
+                mechanism.context.execution_phase = self.context.execution_phase
+                # MODIFIED 6/18/18 END
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
                 for key in mechanism._runtime_params_reset:
                     mechanism._set_parameter_value(key, mechanism._runtime_params_reset[key])
