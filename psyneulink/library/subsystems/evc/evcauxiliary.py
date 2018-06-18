@@ -671,7 +671,7 @@ class PredictionMechanism(IntegratorMechanism):
         value = super()._execute(variable, runtime_params=runtime_params, context=context)
 
         # If inputs are being recorded (#recorded = window):
-        if value.shape[0] > 1:
+        if len(value) > 1:
             if self.input_type is AVERAGE_INPUTS:
                 # Compute average input over window
                 value = np.sum(value)/value.shape[0]

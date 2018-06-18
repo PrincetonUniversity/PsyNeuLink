@@ -4630,6 +4630,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=context)
 
+        # FIX: All tests are passed without this. Is there any reason to keep it?
         # MODIFIED 6/16/18 OLD:
         # self.initializer = initializer
         #
@@ -5427,11 +5428,6 @@ class Buffer(Integrator):  # ---------------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # if initializer is None and default_variable is not None:
-            # initializer = np.empty(np.array(default_variable).shape)
-        # if initializer is None:
-        #     initializer = np.array([[]])
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
@@ -5488,40 +5484,17 @@ class Buffer(Integrator):  # ---------------------------------------------------
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
 
-        # previous_value = self.previous_value
-
-        # # MODIFIED 6/16/18 OLD:
-        # if np.array(previous_value[0]).size == 0:
-        #     # if there are no previous values, assign variable * rate + noise to previous_value
-        #     adjusted_value = variable * rate + noise
-        #
-        # else:
-        #     # append variable * rate + noise to previous_value
-        #     adjusted_value = np.append(previous_value, (variable * rate) + noise, 0)
-        #
-        # # if length of result exceeds history, delete first entry
-        # if self.history and len(adjusted_value) > self.history:
-        #     adjusted_value = np.delete(adjusted_value, 0, 0)
-        #
-        # # If this NOT an initialization run, update the old value
-        # # If it IS an initialization run, leave as is
-        # #    (don't want to count it as an execution step)
-        # if self.context.initialization_status != ContextFlags.INITIALIZING:
-        #     self.previous_value = adjusted_value
-        #
-        # return adjusted_value
-        # MODIFIED 6/16/18 NEW:
         new_value = variable * rate + noise
 
-        # If this NOT an initialization run, update the old value
-        # If it IS an initialization run, leave as is
-        #    (don't want to count it as an execution step)
+        # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
+        # Just return current value (for validation).
         if self.context.initialization_status == ContextFlags.INITIALIZING:
             return new_value
 
-        return self.previous_value.append(new_value)
+        # If this NOT an initialization run, update deque
+        self.previous_value.append(new_value)
 
-        # MODIFIED 6/16/18 END
+        return self.previous_value
 
 
 class AdaptiveIntegrator(Integrator):  # -------------------------------------------------------------------------------
