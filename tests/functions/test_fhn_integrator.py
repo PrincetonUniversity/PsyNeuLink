@@ -1,4 +1,3 @@
-
 import psyneulink.components.functions.function as Function
 import psyneulink.globals.keywords as kw
 import numpy as np
@@ -39,18 +38,18 @@ names = [
     "FHNIntegrator EULER",
 ]
 
-GROUP_PREFIX="FHNIntegrator "
-
 @pytest.mark.function
 @pytest.mark.integrator_function
 @pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_basic(func, variable, integration_method, params, expected, benchmark):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
-    benchmark.group = GROUP_PREFIX + func.componentName;
-    f.function(variable)
-    f.function(variable)
-    res = benchmark(f.function, variable)
+    res = f.function(variable)
+    res = f.function(variable)
+    res = f.function(variable)
+
+    benchmark(f.function, variable)
+
     assert np.allclose(res[0], expected[0])
     assert np.allclose(res[1], expected[1])
     assert np.allclose(res[2], expected[2])
@@ -63,9 +62,12 @@ def test_basic(func, variable, integration_method, params, expected, benchmark):
 @pytest.mark.benchmark
 def test_llvm(func, variable, integration_method, params, expected, benchmark):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
-    f.bin_function(variable)
-    f.bin_function(variable)
-    res = benchmark(f.bin_function, variable)
+    res = f.bin_function(variable)
+    res = f.bin_function(variable)
+    res = f.bin_function(variable)
+
+    benchmark(f.bin_function, variable)
+
     assert np.allclose(res[0], expected[0])
     assert np.allclose(res[1], expected[1])
     assert np.allclose(res[2], expected[2])
