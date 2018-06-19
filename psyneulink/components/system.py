@@ -2677,6 +2677,9 @@ class System(System_Base):
         self._execute_processing(runtime_params=runtime_params,
                                  context=context)
 
+        # outcome = self.terminal_mechanisms.outputStateValues
+
+
         # EXECUTE LEARNING FOR EACH PROCESS
 
         # Execute learning except for simulation runs
@@ -2716,6 +2719,7 @@ class System(System_Base):
             self._report_system_completion()
 
         return self.terminal_mechanisms.outputStateValues
+        # return outcome
 
     def _execute_processing(self, runtime_params, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase

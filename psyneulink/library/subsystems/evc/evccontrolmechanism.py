@@ -944,11 +944,15 @@ class EVCControlMechanism(ControlMechanism):
             if isinstance(pm_spec, Mechanism):
                 prediction_mechanism=pm_spec
             elif isinstance(pm_spec, tuple):
-                prediction_mechanism = pm_spec[0](
+                mech_class = pm_spec[0]
+                mech_params = pm_spec[1] or {}
+                prediction_mechanism = mech_class(
                         name=origin_mech.name + " " + PREDICTION_MECHANISM,
                         default_variable=variable,
                         input_states=state_names,
-                        **pm_spec[1])
+                        # params = mech_params
+                        **mech_params
+                )
             else:
                 raise EVCError("PROGRAM ERROR: Unexpected item ({}) in list for {} arg of constructor for {}".
                                format(pm_spec, repr(PREDICTION_MECHANISMS), self.name))

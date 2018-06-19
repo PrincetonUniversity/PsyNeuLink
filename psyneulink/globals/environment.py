@@ -851,7 +851,7 @@ def run(obj,
                 obj.context.execution_phase = ContextFlags.PROCESSING
                 obj.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 
-            x = obj.execute(
+            result = obj.execute(
                 input=execution_inputs,
                 execution_id=execution_id,
                 termination_processing=termination_processing,
@@ -860,14 +860,10 @@ def run(obj,
                 context=context
             )
 
-            if obj.context.execution_phase != ContextFlags.SIMULATION:
-                result = x
-
-
             if call_after_time_step:
                 call_after_time_step()
 
-        if result:
+        if obj.context.execution_phase != ContextFlags.SIMULATION:
             if isinstance(result, Iterable):
                 result_copy = result.copy()
             else:
