@@ -21,6 +21,7 @@ Functions
              SoftMax,
              LinearMatrix,
              Integrator,
+             Buffer,
              SimpleIntegrator,
              ConstantIntegrator,
              AdaptiveIntegrator,

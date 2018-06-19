@@ -3457,12 +3457,12 @@ class OneHot(TransferFunction):  # ---------------------------------------------
 
     mode : MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, or PROB : default MAX_VAL
         determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`:
-            * **MAX_VAL**: element with the maximum signed value in the original array;
-            * *MAX_ABS_VAL**: element with the maximum absolute value;
-            * **MAX_INDICATOR**: 1 in place of the element with the maximum signed value;
-            * **MAX_ABS_INDICATOR**: 1 in place of the element with the maximum absolute value;
-            * **PROB**: probabilistically chosen element based on probabilities passed in second item of
-            * **PROB_INDICATOR**: same as *PROB* but chosen item is assigned a value of 1.
+            * *MAX_VAL*: element with the maximum signed value in the original array;
+            * *MAX_ABS_VAL*: element with the maximum absolute value;
+            * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
+            * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
+            * *PROB*: probabilistically chosen element based on probabilities passed in second item of
+            * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4593,8 +4593,8 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     def __init__(self,
                  default_variable=None,
                  rate: parameter_spec = 1.0,
-                 noise=0.0,
-                 initializer=None,
+                 noise = 0.0,
+                 initializer = None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
