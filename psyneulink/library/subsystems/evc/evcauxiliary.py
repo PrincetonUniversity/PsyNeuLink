@@ -391,8 +391,11 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             EVC_values = np.array([])
             EVC_policies = np.array([[]])
 
-            # # TEST PRINT:
-            # print("\nEVC SIMULATION\n")
+            # TEST PRINT:
+            inputs = []
+            for i in controller.predicted_input.values():
+                inputs.append(repr(i).replace('\n', ''))
+            print("\nEVC SIMULATION for Inputs: {}".format(inputs))
 
             for allocation_vector in controller.control_signal_search_space[start:end,:]:
             # for iter in range(rank, len(controller.control_signal_search_space), size):
@@ -412,6 +415,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
                 EVC_max = max(EVC, EVC_max)
                 # max_result([t1, t2], key=lambda x: x1)
+
 
                 # Add to list of EVC values and allocation policies if save option is set
                 if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
@@ -436,6 +440,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     EVC_max_state_values = controller.input_values
                     EVC_max_policy = allocation_vector
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
+
+            # TEST PRINT:
+            print("EVC_max: {}\tASSOCIATED allocation_policy: {}\n".format(EVC_max, EVC_max_policy))
 
             #endregion
 
@@ -541,23 +548,6 @@ def _compute_EVC(args):
     #       flush=True)
 
 
-    # # MODIFIED 6/8/18 OLD:
-    # outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
-    #                     allocation_vector=allocation_vector,
-    #                     runtime_params=runtime_params,
-    #                     context=context)
-    # EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
-    #                                                            outcome=outcome,
-    #                                                            costs=ctlr.control_signal_costs,
-    #                                                            context=context)
-    # if PY_MULTIPROCESSING:
-    #     return
-    #
-    # else:
-    #     return (EVC_current)
-
-    # MODIFIED 6/8/18 NEW:
-    # FIX: NEED TO MODIFY prediction_mechanism's function TO RECORD INPUTS FOR EACH TRIAL
     # Run one simulation and get EVC for each trial's worth of inputs in predicted_input
 
     origin_mechs = list(ctlr.predicted_input.keys())
@@ -585,6 +575,7 @@ def _compute_EVC(args):
 
         reinitialization_values[mechanism] = reinitialization_value
 
+
     # Run simulation trial by trial in order to get EVC for each trial
     # IMPLEMENTATION NOTE:  Consider calling execute rather than run (for efficiency)
     for i in range(num_trials):
@@ -599,19 +590,25 @@ def _compute_EVC(args):
                                                                   outcome=outcome,
                                                                   costs=ctlr.control_signal_costs,
                                                                   context=context))
+        assert True
+        # TEST PRINT
+        print ("Trial: {}\tInput: {}\tAllocation: {}\tOutcome: {}\tCost: {}\tEVC: {}".
+               format(i, list(inputs.values())[0], allocation_vector,
+                      EVC_list[i][1], EVC_list[i][2], EVC_list[i][0]))
 
     # Re-assign values of reinitialization attributes to their value at entry
     for mechanism in reinitialization_values:
         mechanism.reinitialize(*reinitialization_values[mechanism])
 
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
+    # TEST PRINT
+    print("EVC_avg: {}".format(EVC_avg[0]))
 
     if PY_MULTIPROCESSING:
         return
 
     else:
         return (EVC_avg)
-    # MODIFIED 6/8/18 END
 
 
 AVERAGE_INPUTS = 'AVERAGE_INPUTS'
