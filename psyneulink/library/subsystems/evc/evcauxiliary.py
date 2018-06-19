@@ -32,7 +32,7 @@ from psyneulink.globals.preferences.preferenceset import PreferenceEntry, Prefer
 
 __all__ = [
     'AVERAGE_INPUTS', 'CONTROL_SIGNAL_GRID_SEARCH_FUNCTION', 'CONTROLLER', 'ControlSignalGridSearch',
-    'EVCAuxiliaryError', 'EVCAuxiliaryFunction', 'WINDOW',
+    'EVCAuxiliaryError', 'EVCAuxiliaryFunction', 'WINDOW_SIZE',
     'kwEVCAuxFunction', 'kwEVCAuxFunctionType', 'kwValueFunction',
     'INPUT_SEQUENCE', 'OUTCOME', 'PredictionMechanism', 'PY_MULTIPROCESSING',
     'TIME_AVERAGE_INPUT', 'ValueFunction', 'FILTER_FUNCTION'
@@ -619,7 +619,7 @@ INPUT_SEQUENCE = 'INPUT_SEQUENCE'
 TIME_AVERAGE_INPUT = 'TIME_AVERAGE_INPUT'
 input_types = {TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE}
 
-WINDOW = 'window'
+WINDOW_SIZE = 'window_size'
 FILTER_FUNCTION = 'filter_function'
 
 
@@ -629,7 +629,7 @@ class PredictionMechanism(IntegratorMechanism):
     size=None,                   \
     function=TIME_AVERAGE_INPUT, \
     initial_value=None,          \
-    window=1,                    \
+    window_size=1,                    \
     filter_function=None,        \
     params=None,                 \
     name=None,                   \
@@ -640,7 +640,7 @@ class PredictionMechanism(IntegratorMechanism):
     of that System.
 
     COMMENT:
-        EXPLAIN FUNCTION, INITIALIZER, WINDOW, AND FILTER_FUNCTION HERE
+        EXPLAIN FUNCTION, INITIALIZER, WINDOW_SIZE, AND FILTER_FUNCTION HERE
     COMMENT
 
     .. _PredictionMechanism_Creation:
@@ -683,23 +683,23 @@ class PredictionMechanism(IntegratorMechanism):
       of the function.  The function returns the time-averaged input as a single item.
 
     * *AVERAGE_INPUTS:* uses a `Buffer` Function to compute the average of the number of preceding inputs specified in
-      the PredictionMechanism's **window** argument.  If the **rate** and/or **noise** arguments are specified, they
-      are applied to each item in the list before it is averaged, as follows: :math:`item * rate + noise`.
+      the PredictionMechanism's **window_size** argument.  If the **rate** and/or **noise** arguments are specified,
+      they are applied to each item in the list before it is averaged, as follows: :math:`item * rate + noise`.
 
     .. _PredictionMechanism_Input_Sequence:
 
     * *INPUT_SEQUENCE:* uses a `Buffer` Function to maintain a running record of preceding inputs, which are returned
       in a list. When the EVCControlMechanism `runs a simulation <EVCControlMechanism_Execution>`, one trial is run
       using each item in the list as the input to the PredictionMechanism's associated `ORIGIN` Mechanism.
-      The **window** argument can be used to specify how many preceding inputs should be maintained in the record;
-      if the number of preceding inputs exceeds the value of **window**, the oldest is deleted and the most recent one
-      is added to the list.  If **window** is not specified (`None`), a record of all preceding inputs is maintained
-      and returned. The **filter_function** argument can be used to specify a function that filters the list (e.g.,
-      modifies and/or deletes items);  the modified list is then returned by the PredictionMechanism's `function
-      <PredictionMechanism.function>`.  If the **rate** and/or **noise** arguments are specified, they are applied to
-      each item in the list, as follows: :math:`item * rate + noise`;  note that since the list is maintained across
-      trials in the actual run of the `system <EVCControlMechanism.system>`, the effects of these parameters are
-      cumulative over trials.
+      The **window_size** argument can be used to specify how many preceding inputs should be maintained in the record;
+      if the number of preceding inputs exceeds the value of **window_size**, the oldest is deleted and the most recent
+      one is added to the list.  If **window_size** is not specified (`None`), a record of all preceding inputs is
+      maintained and returned. The **filter_function** argument can be used to specify a function that filters the
+      list (e.g., modifies and/or deletes items);  the modified list is then returned by the PredictionMechanism's
+      `function <PredictionMechanism.function>`.  If the **rate** and/or **noise** arguments are specified,
+      they are applied to each item in the list, as follows: :math:`item * rate + noise`;  note that since the list
+      is maintained across trials in the actual run of the `system <EVCControlMechanism.system>`, the effects of
+      these parameters are cumulative over trials.
 
     **Execution**
 
@@ -742,7 +742,7 @@ class PredictionMechanism(IntegratorMechanism):
         if `None` is specified, 0 is used if the `value <Function_Base.value>` of the PredictionMechanism's `function
         <PredictionMechanism.function>` is numeric, and an empty list is used if *INPUT_SEQUENCE* is specified.
 
-    window : int : default None
+    window_size : int : default None
         specifies number of input values to maintain when *INPUT_SEQUENCE* option is used for
         `function <PredictionMechanism.function>`
 
@@ -797,7 +797,7 @@ class PredictionMechanism(IntegratorMechanism):
                  initial_value=None,
                  rate:tc.optional(float)=None,
                  noise=None,
-                 window=1,
+                 window_size=1,
                  filter_function:tc.optional(callable)=None,
                  params=None,
                  name=None,
@@ -812,7 +812,7 @@ class PredictionMechanism(IntegratorMechanism):
 
         noise= noise or 0.0
 
-        params = self._assign_args_to_param_dicts(window=window,
+        params = self._assign_args_to_param_dicts(window_size=window_size,
                                                   input_type=input_type,
                                                   filter_function=filter_function,
                                                   params=params)
@@ -824,12 +824,12 @@ class PredictionMechanism(IntegratorMechanism):
                 function = self.ClassDefaults.function
 
             elif function in {AVERAGE_INPUTS, INPUT_SEQUENCE}:
-                # Maintain the preceding sequence of inputs (of length window), and use those for each simulation
+                # Maintain the preceding sequence of inputs (of length window_size), and use those for each simulation
                 function = Buffer(default_variable=[[0]],
                                   initializer=initial_value,
                                   rate=rate,
                                   noise=noise,
-                                  history=self.window)
+                                  history=self.window_size)
 
         params.update({FUNCTION_PARAMS:{RATE:rate,
                                         NOISE:noise}})
@@ -853,10 +853,10 @@ class PredictionMechanism(IntegratorMechanism):
             # Update deque with new input for any other type of run
             value = super()._execute(variable, runtime_params=runtime_params, context=context)
 
-            # If inputs are being recorded (#recorded = window):
+            # If inputs are being recorded (#recorded = window_size):
             if len(value) > 1:
                 if self.input_type is AVERAGE_INPUTS:
-                    # Compute average input over window
+                    # Compute average input over window_size
                     value = np.sum(value)/value.shape[0]
 
                 elif self.input_type is INPUT_SEQUENCE:
@@ -864,6 +864,6 @@ class PredictionMechanism(IntegratorMechanism):
                         # Use filter_function to return input values
                         value = self.filter_function(value)
                     else:
-                        # Return all input values in window
+                        # Return all input values in window_size
                         pass
         return value
