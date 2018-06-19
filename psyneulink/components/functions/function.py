@@ -2360,6 +2360,9 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
     def _gen_llvm_function_body(self, ctx, builder):
         params, _, vi, vo = builder.function.args
+        # Some times we output to 2d array
+        if isinstance(vo.type.pointee, ir.ArrayType) and isinstance(vo.type.pointee.element, ir.ArrayType):
+            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
         inner = functools.partial(self.__gen_llvm_combine, **kwargs)
