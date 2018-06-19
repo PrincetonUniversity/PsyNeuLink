@@ -4647,8 +4647,9 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
 
     def get_output_struct_type(self):
+        default_val = self.instance_defaults.value
         with pnlvm.LLVMBuilderContext() as ctx:
-            return ir.ArrayType(ctx.float_ty, self._result_length)
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
 
 
     def get_param_ids(self):
