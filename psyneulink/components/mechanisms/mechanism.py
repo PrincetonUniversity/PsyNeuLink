@@ -951,7 +951,7 @@ from psyneulink.globals.keywords import \
     INITIALIZATION_STATUS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
     INPUT_LABELS_DICT, INPUT_STATES, \
     INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    OUTPUT_LABELS_DICT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
+    OUTPUT_LABELS_DICT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, OWNER_VALUE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
     PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SOURCE, SYSTEM_INIT, TARGET_LABELS_DICT, UNCHANGED, \
     VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -2535,10 +2535,10 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_body(self, ctx, builder):
         params, context, si, so = builder.function.args
 
-        m_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
+        main_function = ctx.get_llvm_function(self.function_object.llvmSymbolName)
         # Allocate temporary storage. We rely on the fact that series
-        # of input state results should match the mech function input.
-        is_output = builder.alloca(m_function.args[2].type.pointee, 1)
+        # of input state results should match the main function input.
+        is_output = builder.alloca(main_function.args[2].type.pointee, 1)
 
         for i, state in enumerate(self.input_states):
             is_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -2570,14 +2570,24 @@ class Mechanism_Base(Mechanism):
             builder.call(ps_function, [ps_params, ps_context, ps_input, ps_output])
 
         mf_in = is_output
-        mf_out = builder.alloca(m_function.args[3].type.pointee, 1)
+        mf_out = builder.alloca(main_function.args[3].type.pointee, 1)
         mf_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
-        builder.call(m_function, [mf_params, mf_context, mf_in, mf_out])
+        builder.call(main_function, [mf_params, mf_context, mf_in, mf_out])
 
-        os_input = mf_out
         for i, state in enumerate(self.output_states):
+            #FIXME: an we rely on this?
+            os_in_spec = state._variable
+            if os_in_spec == OWNER_VALUE:
+                os_input = mf_out
+            elif isinstance(os_in_spec, tuple) and os_in_spec[0] == OWNER_VALUE:
+                os_input = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[1])])
+            else:
+                #TODO: support more options
+                print(mf_out.type)
+                print(os_in_spec)
+                assert False
             os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
             os_output = builder.gep(so, [ctx.int32_ty(0), ctx.int32_ty(i)])
