@@ -2283,9 +2283,10 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
 
     def get_output_struct_type(self):
-        default_var = np.atleast_2d(self.instance_defaults.variable)
+        #FIXME: Remove this workaround
+        default_val = self.owner.instance_defaults.value if self.owner else self.instance_defaults.value
         with pnlvm.LLVMBuilderContext() as ctx:
-            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_var[0])
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, default_val)
 
 
     def get_param_ids(self):
