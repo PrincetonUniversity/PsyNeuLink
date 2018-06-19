@@ -5283,9 +5283,9 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
 class Buffer(Integrator):  # ------------------------------------------------------------------------------
     """
-    Buffer(        \
+    Buffer(                     \
         default_variable=None,  \
-        rate=1.0,               \
+        rate=None,              \
         noise=0.0,              \
         history=None,           \
         initializer,            \
@@ -5296,10 +5296,14 @@ class Buffer(Integrator):  # ---------------------------------------------------
 
     .. _Buffer:
 
-    Adds item to prior value by appending variable to `previous_value <Buffer.previous_value>`:
+    Appends `variable <Buffer.variable>` to the end of `previous_value <Buffer.previous_value>` (i.e., right-appends)
+    which is a deque of previous inputs.  If specified, the values of the **rate** and **noise** arguments are
+    applied to each item in the deque (including the newly added one) on each call, as follows:
 
-        :math: `variable <Buffer.variable>` * `rate <Buffer.rate>` +
-        `noise <Buffer.noise>`
+        :math: item * `rate <Buffer.rate>` + `noise <Buffer.noise>`
+
+    .. note::
+       Because **rate** and **noise** are applied on every call, their effects are cumulative over calls.
 
     Arguments
     ---------
@@ -5308,21 +5312,18 @@ class Buffer(Integrator):  # ---------------------------------------------------
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
-    rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <SimpleIntegrator.default_variable>` (see `rate <SimpleIntegrator.rate>` for details).
+    rate : float : default None
+        specifies a value applied to each item in the deque on each call.
 
-    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <SimpleIntegrator.function>`. (see
-        `noise <SimpleIntegrator.noise>` for details).
+    noise : float or Function : default 0.0
+        specifies a random value added to each item in the deque on each call.
 
     history : int : default None
-        specifies max length of `value <Buffer.value>`.
+        specifies the maxlen of the deque, and hence `value <Buffer.value>`.
 
-    initializer float, list or 1d np.array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>`
-        for details).
+    initializer float, list or ndarray : default []
+        specifies a starting value for the deque;  if none is specified, the deque is initialized with an
+        empty list.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5342,46 +5343,34 @@ class Buffer(Integrator):  # ---------------------------------------------------
     ----------
 
     variable : number or np.array
-        current input value some portion of which (determined by `rate <SimpleIntegrator.rate>`) will be
-        added to the prior value;  if it is an array, each element is independently integrated.
+        current input value appended to the end of the deque.
 
-    rate : float or 1d np.array
-        determines the rate of integration based on current and prior values. If it has a single element, it applies
-        to all elements of `variable <SimpleIntegrator.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <SimpleIntegrator.variable>`.
+    rate : float
+        value added to each item of the deque on each call.
 
-    noise : float, function, list, or 1d np.array
-        specifies random value to be added in each call to `function <SimpleIntegrator.function>`.
-
-        If noise is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or
-        array, noise will be applied to each variable element. In the case of a noise function, this means that the
-        function will be executed separately for each variable element.
-
+    noise : float or Function
+        random value added to each item of the deque in each call.
 
         .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function (see
+            In order to generate random noise, a probability distribution function should be used (see
             `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
             its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
             then the noise will simply be an offset that remains the same across all executions.
 
     history : int
-        determines maximum length of value returned by the `function <Buffer.function>`. If appending
-        `variable <Buffer.variable>` to `previous_value <Buffer.previous_value>` exceeds
-        history, the first item of `previous_value <Buffer.previous_value>` is deleted, and `variable
-        <Buffer.variable>` is appended to it, so that `value <Buffer.previous_value>`
-        maintains a constant length.  If history is not specified (or set to 0), the value returned continues to
-        be extended indefinitely.
+        determines maxlen of the deque and the value returned by the `function <Buffer.function>`. If appending
+        `variable <Buffer.variable>` to `previous_value <Buffer.previous_value>` exceeds history, the first item of
+        `previous_value <Buffer.previous_value>` is deleted, and `variable <Buffer.variable>` is appended to it,
+        so that `value <Buffer.previous_value>` maintains a constant length.  If history is not specified,
+        the value returned continues to be extended indefinitely.
 
-    initializer : float, 1d np.array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <SimpleIntegrator.previous_value>` is set.
-
-        If initializer is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
+    initializer : float, list or ndarray
+        the value assigned as the first item of the deque when the Function is initialized, or reinitialized
+        if the **new_previous_value** argument is not specified in the call to `reinitialize
+        <IntegratorFunction.reinitialize>`.
 
     previous_value : 1d np.array : default ClassDefaults.variable
-        stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
+        state of the deque prior to appending `variable <Buffer.variable>` in the current call.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -5411,8 +5400,10 @@ class Buffer(Integrator):  # ---------------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec=1.0,
-                 noise=0.0,
+                 # rate: parameter_spec=1.0,
+                 # noise=0.0,
+                 rate:tc.optional(tc.any(int, float))=None,
+                 noise:tc.optional(tc.any(int, float, callable))=None,
                  history:tc.optional(int)=None,
                  initializer=[],
                  params: tc.optional(dict)=None,
@@ -5464,7 +5455,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
         Returns
         -------
 
-        updated value of integral : 2d np.array
+        updated value of deque : deque
 
         """
 
@@ -5475,15 +5466,21 @@ class Buffer(Integrator):  # ---------------------------------------------------
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE), variable)
 
-        new_value = variable * rate + noise
-
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
-        # Just return current value (for validation).
+        # Just return current input (for validation).
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            return new_value
+            return variable
 
-        # If this NOT an initialization run, update deque
-        self.previous_value.append(new_value)
+        # If this NOT an initialization run,
+
+        # Update deque
+        self.previous_value.append(variable)
+        # Apply rate and/or noise if they are specified
+        if rate is not None:
+            self.previous_value *= rate
+        if noise:
+            self.previous_value += noise
+        self.previous_value = deque(self.previous_value, maxlen=self.history)
 
         return self.previous_value
 
