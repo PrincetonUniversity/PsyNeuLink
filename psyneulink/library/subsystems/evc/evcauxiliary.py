@@ -629,51 +629,51 @@ class PredictionMechanism(IntegratorMechanism):
     size=None,                   \
     function=TIME_AVERAGE_INPUT, \
     initial_value=None,          \
-    window_size=1,                    \
+    window_size=1,               \
     filter_function=None,        \
     params=None,                 \
     name=None,                   \
     prefs=None)
 
     Tracks the inputs to an `ORIGIN` Mechanism of the `system <EVCControlMechanism.system>` controlled by an
-    `EVCControlMechanism`, and that are used to generate the input to a `simulated run <EVCControlMechanism_Execution>`
-    of that System.
-
-    COMMENT:
-        EXPLAIN FUNCTION, INITIALIZER, WINDOW_SIZE, AND FILTER_FUNCTION HERE
-    COMMENT
+    `EVCControlMechanism`, and used to generate the input for that `ORIGIN` Mechanism in a `simulated run
+    <EVCControlMechanism_Execution>` of that System.
 
     .. _PredictionMechanism_Creation:
 
     **Creating a PredictionMechanism**
 
     PredictionMechanisms are created automatically when an `EVCControlMechanism` is created, one for each `ORIGIN`
-    Mechanism in the `System` for which the EVCControlMechanism is a `controller <System.controller>` (and designated
-    in the EVCControlMechanism's `system <EVCControlMechanism.system>` attribute).
+    Mechanism in the `system <EVCControlMechanism.system>` for which the EVCControlMechanism is a `controller
+    <System.controller>`.
 
     **Structure**
 
-    A PredictionMechanism has the same number of `InputStates <InputState>` as the `ORIGIN` Mechanism to which it
-    corresponds, each of which receives a `Projection <Projection>` from the same source as the corresponding
-    InputState of the `ORIGIN` Mechanism with which the PredictionMechanism is associated (see
-    `EVCControlMechanism_Prediction_Mechanisms`); and it has one `OutputState` for each of its InputStates.
+    The `System` to which a PredictionMechanism belongs is referenced in its `system <PredictionMechanism.system>`
+    attribute, and the System's `ORIGIN` Mechanism which the PredictionMechanism is associated is referenced in its
+    `origin_mechanism <PredictionMechanism.origin_mechanism>` attribute.  A PredictionMechanism has the same number
+    of `InputStates <InputState>` as its `origin_mechanism <PredictionMechanism.origin_mechanism>`, each of which
+    receives a `Projection <Projection>` from the same source as the corresponding InputState of its `origin_mechanism
+    <PredictionMechanism.origin_mechanism>` (see `EVCControlMechanism_Prediction_Mechanisms`); and it has one
+    `OutputState` for each of its InputStates.
 
     .. _PredictionMechanism_Function:
 
     **Function**
 
-    The `function <PredictionMechanism.function>` of a PredictionMechanism records the input received by the `ORIGIN`
-    Mechanism with which the PredictionMechanism is associated, and possibly transforms this in some way.  Any
-    function can be assigned, so long as it can take as its input a value with the same format as the
-    `variable <Mechanism_Base.variable>` of the corresponding `ORIGIN` Mechanism, and returns a similarly
-    formatted value or a list of them.  The result of a PredictionMechanism's `function
-    <PredictionMechanism.function>` is provided as the input to the corresponding `ORIGIN` Mechanism in each trial
-    of a simulated run of the `system <EVCControlMechanism.system>` (see `EVCControlMechanism Execution
-    <EVCControlMechanism_Execution>`).  If a PredictionMechanism's `function <PredictionMechanism.function>` returns
-    more than one item, then the EVCControlMechanism runs as many simulations as there are items, using each as the
-    input for one simulation, and computes the mean EVC over all of them.  Therefore, **the** `function
-    <PredictionMechanism.function>` **of every PredictionMechanism associated with an** `EVCControlMechanism` **must
-    return the same number of items.**
+    The `function <PredictionMechanism.function>` of a PredictionMechanism records the input received by its
+    `origin_mechanism <PredictionMechanism.origin_mechanism>`, and possibly transforms this in some way.  Any
+    function can be assigned, so long as it can take as its input a value with the same format as the `variable
+    <Mechanism_Base.variable>` of its `origin_mechanism <PredictionMechanism.origin_mechanism>`, and returns a
+    similarly formatted value or a list of them.  The result of a PredictionMechanism's `function
+    <PredictionMechanism.function>` is provided as the input to its `origin_mechanism
+    <PredictionMechanism.origin_mechanism>` in each trial of a simulated run of its `system
+    <PredictionMechanism.system>` (see `EVCControlMechanism Execution <EVCControlMechanism_Execution>`).  If a
+    PredictionMechanism's `function <PredictionMechanism.function>` returns more than one item,
+    then the EVCControlMechanism runs as many simulations as there are items, using each as the input for one
+    simulation, and computes the mean EVC over all of them.  Therefore, **the** `function
+    <PredictionMechanism.function>` **of every PredictionMechanism associated with an** `EVCControlMechanism`
+    **must return the same number of items.**
 
     In place of a function, the following keywords can be used to specify one of three standard configurations:
 
@@ -690,31 +690,31 @@ class PredictionMechanism(IntegratorMechanism):
 
     * *INPUT_SEQUENCE:* uses a `Buffer` Function to maintain a running record of preceding inputs, which are returned
       in a list. When the EVCControlMechanism `runs a simulation <EVCControlMechanism_Execution>`, one trial is run
-      using each item in the list as the input to the PredictionMechanism's associated `ORIGIN` Mechanism.
-      The **window_size** argument can be used to specify how many preceding inputs should be maintained in the record;
-      if the number of preceding inputs exceeds the value of **window_size**, the oldest is deleted and the most recent
-      one is added to the list.  If **window_size** is not specified (`None`), a record of all preceding inputs is
-      maintained and returned. The **filter_function** argument can be used to specify a function that filters the
-      list (e.g., modifies and/or deletes items);  the modified list is then returned by the PredictionMechanism's
-      `function <PredictionMechanism.function>`.  If the **rate** and/or **noise** arguments are specified,
-      they are applied to each item in the list, as follows: :math:`item * rate + noise`;  note that since the list
-      is maintained across trials in the actual run of the `system <EVCControlMechanism.system>`, the effects of
-      these parameters are cumulative over trials.
+      using each item in the list as the input to the PredictionMechanism's `origin_mechanism
+      <PredictionMechanism.origin_mechanism>`. The **window_size** argument can be used to specify how many preceding
+      inputs should be maintained in the record; if the number of preceding inputs exceeds the value of
+      **window_size**, the oldest is deleted and the most recent one is added to the list.  If **window_size** is not
+      specified (`None`), a record of all preceding inputs is maintained and returned. The **filter_function**
+      argument can be used to specify a function that filters the list (e.g., modifies and/or deletes items);  the
+      modified list is then returned by the PredictionMechanism's `function <PredictionMechanism.function>`.  If the
+      **rate** and/or **noise** arguments are specified, they are applied to each item in the list, as follows:
+      :math:`item * rate + noise`;  note that since the list is maintained across trials in the actual run of the
+      `system <PredictionMechanism.system>`, the effects of these parameters are cumulative over trials.
 
     **Execution**
 
-    A PredictionMechanism is executed each time the EVCControlMechanism's `system <EVCControlMechanism>` is run;
-    however, it is **not** executed when that System is simulated (that is, it is run using the EVCControlMechanism's
-    `run_simulation <EVCControlMechanism.run_simulation>` method).  Thus, its inputs are updated only once per
-    *actual* run of the System, and each simulated run (i.e., the simulation for each `allocation_policy
+    A PredictionMechanism is executed each time its `system <PredictionMechanism>` is run; however, it is **not**
+    executed when that System is simulated (that is, it is run using the EVCControlMechanism's `run_simulation
+    <EVCControlMechanism.run_simulation>` method).  Thus, its inputs are updated only once per *actual* run of the
+    System, and each simulated run (i.e., the simulation for each `allocation_policy
     <EVCControlMechanism.allocation_policy>`; see `EVCControlMechanism Execution <EVCControlMechanism_Execution>`)
     uses the *exact same* set of inputs -- the value of the PredictionMechanisms resulting from the last actual run
-    of the `system <EVCControlMechanism.system>`) -- so that the results of the simulated run for each
+    of its `system <PredictionMechanism.system>`) -- so that the results of the simulated run for each
     `allocation_policy <EVCControlMechanism.allocation_policy>` can properly be compared. If the PredictionMechanisms
     for an EVCControlMechanism generate a list of inputs (e.g., using `INPUT_SEQUENCE
     <PredictionMechanism_Input_Sequence>`), then each simulated run involves several trials, each of which uses one
-    item from the list of each PredictionMechanism as the input to the corresponding `ORIGIN` Mechanism of the `system
-    <EVCControlMechanism.system>`;  items in the list are used as inputs in the exact same sequence for the
+    item from the list of each PredictionMechanism as the input to its `origin_mechanism
+    <PredictionMechanism.origin_mechanism>`;  items in the list are used as inputs in the exact same sequence for the
     simulated run of every `allocation_policy <EVCControlMechanism.allocation_policy>` so that, once again,
     proper comparisons can be made between policies.
 
@@ -724,18 +724,17 @@ class PredictionMechanism(IntegratorMechanism):
     default_variable : number, list or np.ndarray : default None
         specifies the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method; format must match the
-        `variable <Mechanism.variable>` for the `ORIGIN` Mechanism in the `EVCControlMechanism`\\`s
-        `system <EVCControlMechanism.system>` to which the PredictionMechanism corresponds.
+        `variable <Mechanism.variable>` for its `origin_mechanism <PredictionMechanism.origin_mechanism>`.
 
     size : int, list or np.ndarray of ints
         see `size <Mechanism.size>`.
 
     function : function, *TIME_AVERAGE_INPUT*, *AVERAGE_INPUTS*, or *INPUT_SEQUENCE* : default *TIME_AVERAGE_INPUT*
-        specifies the function used to generate the input provided to the `ORIGIN` Mechanisms of
-        the EVCControlMechanism's `system <EVCControlMechanism.system>`; the function must take as its input a
-        single value with the same format as the `variable <Mechanism.variable>` of the corresponding `ORIGIN`
-        Mechanism in the EVCControlMechanism's `system <EVCControlMechanism.system>`, and must return a similarly
-        formatted value or a list of them (see `above <PredictionMechanism_Function>` for additional details).
+        specifies the function used to generate the input provided to its `origin_mechanism
+        <PredictionMechanism.origin_mechanism>`; the function must take as its input a single value with the same
+        format as the `variable <Mechanism.variable>` of its `origin_mechanism <PredictionMechanism.origin_mechanism>`,
+        and must return a similarly formatted value or a list of them (see `above <PredictionMechanism_Function>`
+        for additional details).
 
     initial_value :  value, list or np.ndarray : default None
         specifies value used to initialize the PredictionMechanism's `value <PredictionMechanism.value>` attribute;
@@ -748,9 +747,9 @@ class PredictionMechanism(IntegratorMechanism):
 
     filter_function: function : default None
         specifies a function that takes a list of values, each of which has the same format as the `variable
-        <Mechanism_Base.variable>` of the corresponding `ORIGIN` Mechanism in the EVCControlMechanism's `system
-        <EVCControlMechanism.system>`, and returns a list of similarly formatted values, though not necessarily
-        of the same length (see `above <PredictionMechanism_Function>` for additional details).
+        <Mechanism_Base.variable>` of the PredictionMechanism's `origin_mechanism
+        <PredictionMechanism.origin_mechanism>`, and returns a list of similarly formatted values, though not
+        necessarily of the same length (see `above <PredictionMechanism_Function>` for additional details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -767,22 +766,27 @@ class PredictionMechanism(IntegratorMechanism):
     Attributes
     ----------
 
+    system : System
+        the `System` to which the PredictionMechanism belongs.
+
+    origin_mechanism : Mechanism
+        the `ORIGIN` Mechanism with which the PredictionMechanism is associated (in its `system
+        <PredictionMechanism.system>`), and the input of which it tracks.
+
     variable :  2d np.array
-        the input received from the Composition to which the PredictionMechanism belongs, that is identical to the
-        input received by the `ORIGIN` Mechanism with which it is associated in the `system
-        <EVCControlMechanism.system>` controlled by the EVCControlMechanism.
+        the input received from the PredictionMechanism's `system <PredictionMechanism.system>`, that is identical
+        to the input received by its `origin_mechanism <PredictionMechanism.origin_mechanism>`.
 
     function : Function
-        used to track the inputs to the `ORIGIN` Mechanism with which the PredictionMechanism is associated
-        in the `system <EVCControlMechanism.system>` controlled by the EVCControlMechanism; the default is an
-        `AdaptiveIntegrator` (see `above <PredictionMechanism_Function>` for additional details).
+        used to track the inputs to the PredictionMechanism's `origin_mechanism <PredictionMechanism.origin_mechanism>`;
+        the default is an `AdaptiveIntegrator` (see `above <PredictionMechanism_Function>` for additional details).
 
     value : 3d np.array
         result returned by the PredictionMechanism's `function <PredictionMechanism.function>`, and provided as
-        input to the corresponding `ORIGIN` Mechanism of the EVCControlMechanism's `system
-        <EVCControlMechanism.system>`.  The format conforms to that of a System's `run <System.run>` method: items in
-        the outermost dimension (axis 0) correspond to the inputs for each trial of a simulation, each of which is a 2d
-        np.array containing the input for each `InputState` of the `Mechanism`.
+        input to its `origin_mechanism <PredictionMechanism.origin_mechanism>`.  The format conforms to that of a
+        System's `run <System.run>` method: items in the outermost dimension (axis 0) correspond to the inputs for
+        each trial of a simulation, each of which is a 2d np.array containing the input for each `InputState` of the
+        `Mechanism`.
 
     """
 
@@ -867,3 +871,22 @@ class PredictionMechanism(IntegratorMechanism):
                         # Return all input values in window_size
                         pass
         return value
+
+    @property
+    def system(self):
+        try:
+            from psyneulink.components.system import System
+            return next((p.sender.owner for p in self.afferents if isinstance(p.sender.owner, System)), None)
+        except:
+            return self._system
+
+    @system.setter
+    def system(self, value):
+        self._system = value
+
+    @property
+    def origin_mechanism(self):
+        try:
+            return self.system.origin_mechanisms[self.system.controller.prediction_mechanisms.index(self)]
+        except:
+            return None
