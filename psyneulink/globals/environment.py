@@ -813,6 +813,8 @@ def run(obj,
 
         for time_step in range(time_steps):
 
+            result = None
+
             if call_before_time_step:
                 call_before_time_step()
 
@@ -849,7 +851,7 @@ def run(obj,
                 obj.context.execution_phase = ContextFlags.PROCESSING
                 obj.context.string = RUN + ": EXECUTING " + object_type.upper() + " " + obj.name
 
-            result = obj.execute(
+            x = obj.execute(
                 input=execution_inputs,
                 execution_id=execution_id,
                 termination_processing=termination_processing,
@@ -858,10 +860,14 @@ def run(obj,
                 context=context
             )
 
+            if obj.context.execution_phase != ContextFlags.SIMULATION:
+                result = x
+
+
             if call_after_time_step:
                 call_after_time_step()
 
-        if obj.context.execution_phase != ContextFlags.SIMULATION:
+        if result:
             if isinstance(result, Iterable):
                 result_copy = result.copy()
             else:
