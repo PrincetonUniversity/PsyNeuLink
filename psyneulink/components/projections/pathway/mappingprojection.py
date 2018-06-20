@@ -512,6 +512,7 @@ class MappingProjection(PathwayProjection_Base):
         initial_rate = matrix * 0.0
 
         self._parameter_states[MATRIX].function_object = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
+                                                                               default_variable=matrix,
                                                                             initializer=matrix,
                                                                             # rate=initial_rate
                                                                                )

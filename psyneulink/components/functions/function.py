@@ -194,7 +194,7 @@ import typecheck as tc
 from psyneulink.components.component import ComponentError, DefaultsFlexibility, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from psyneulink.globals.keywords import DEFAULT_VARIABLE, INITIAL_V, INITIAL_W, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CORRELATION, CROSS_ENTROPY, CUSTOM_FUNCTION, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DistanceMetrics, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FHN_INTEGRATOR_FUNCTION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, VARIABLE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.registry import register_category
@@ -4574,12 +4574,16 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                  prefs: is_pref_set = None,
                  context=None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initializer"]
+
         if initializer is None:
             if params is not None and INITIALIZER in params and params[INITIALIZER] is not None:
                 # This is only needed as long as a new copy of a function is created
                 # whenever assigning the function to a mechanism.
                 # The old values are compiled and passed in through params argument.
                 initializer = params[INITIALIZER]
+
             else:
                 initializer = self.ClassDefaults.variable
 
@@ -4610,6 +4614,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     def _validate(self):
         self._validate_rate(self.instance_defaults.rate)
+        self._validate_initializers(self.instance_defaults.variable)
         super()._validate()
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -4750,6 +4755,21 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             raise FunctionError(
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
+
+    def _validate_initializers(self, default_variable):
+        for initial_value_name in self.initializers:
+
+            initial_value = self.get_current_function_param(initial_value_name)
+
+            if isinstance(initial_value, (list, np.ndarray)):
+                if len(initial_value) != 1:
+                    # np.atleast_2d may not be necessary here?
+                    if np.shape(np.atleast_2d(initial_value))!= np.shape(np.atleast_2d(default_variable)):
+                        raise FunctionError("{}'s {} ({}) is incompatible with its default_variable ({}) ."
+                                            .format(self.name, initial_value_name, initial_value, default_variable))
+            elif not isinstance(initial_value, (float, int)):
+                raise FunctionError("{}'s {} ({}) must be a number or a list/array of numbers."
+                                    .format(self.name, initial_value_name, initial_value))
 
 
     def _try_execute_param(self, param, var):
@@ -5917,6 +5937,8 @@ class DriftDiffusionIntegrator(
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initializer", "t0"]
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
@@ -6173,6 +6195,8 @@ class OrnsteinUhlenbeckIntegrator(
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initializer", "t0"]
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
@@ -6662,7 +6686,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
     class ClassDefaults(Integrator.ClassDefaults):
         variable = np.array([1.0])
-        initializer = np.array([1.0])
+        initial_v = np.array([1.0])
+        initial_w = np.array([1.0])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -6704,6 +6729,21 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initial_v", "initial_w", "t_0"]
+
+        if default_variable is None:
+            if params is not None and DEFAULT_VARIABLE in params and params[DEFAULT_VARIABLE] is not None:
+                default_variable = params[DEFAULT_VARIABLE]
+            else:
+                default_variable = self.ClassDefaults.variable
+
+        initial_v = np.broadcast_to(initial_v, default_variable.shape)
+        initial_w = np.broadcast_to(initial_w, default_variable.shape)
+        self.previous_v = initial_v
+        self.previous_w = initial_w
+        self.previous_time = t_0
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
                                                   offset=offset,
@@ -6730,10 +6770,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                                   params=params,
                                                   )
 
-        self.previous_v = self.initial_v
-        self.previous_w = self.initial_w
-        self.previous_time = self.t_0
-
         super().__init__(
             default_variable=default_variable,
             params=params,
@@ -6741,7 +6777,13 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
+        self.initial_v = np.broadcast_to(initial_v, default_variable.shape)
+        self.initial_w = np.broadcast_to(initial_w, default_variable.shape)
+        self.previous_v = self.initial_v
+        self.previous_w = self.initial_w
+        self.previous_time = t_0
         self.auto_dependent = True
+
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set,
@@ -6860,6 +6902,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    f_v,
                                    time_constant_v)
 
+
         slope_w_approx_3 = slope_w(variable,
                                    previous_time + time_step_size/2,
                                    previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
@@ -6870,7 +6913,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    c_w,
                                    uncorrelated_activity,
                                    time_constant_w)
-
         # Fourth approximation
         # v is approximately previous_value_v + time_step_size * slope_v_approx_3
         # w is approximately previous_value_w + time_step_size * slope_w_approx_3
@@ -6878,7 +6920,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         slope_v_approx_4 = slope_v(variable,
                                    previous_time + time_step_size,
                                    previous_value_v + (time_step_size * slope_v_approx_3),
-                                   previous_value_w + (time_step_size * slope_v_approx_3),
+                                   previous_value_w + (time_step_size * slope_w_approx_3),
                                    a_v,
                                    threshold,
                                    b_v,
@@ -6890,7 +6932,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         slope_w_approx_4 = slope_w(variable,
                                    previous_time + time_step_size,
-                                   previous_value_w + (time_step_size * slope_v_approx_3),
+                                   previous_value_w + (time_step_size * slope_w_approx_3),
                                    previous_value_v + (time_step_size * slope_v_approx_3),
                                    mode,
                                    a_w,
@@ -6898,7 +6940,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    c_w,
                                    uncorrelated_activity,
                                    time_constant_w)
-
         new_v = previous_value_v \
                 + (time_step_size/6)*(slope_v_approx_1 + 2*(slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
         new_w = previous_value_w \
@@ -6913,24 +6954,21 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         # Standard coefficients - hardcoded for testing
         # val = v - (v**3)/3 - w + variable
-
         # Gilzenrat paper - hardcoded for testing
         # val = (v*(v-0.5)*(1-v) - w + variable)/0.01
-
         return val
 
     def dw_dt(self, variable, time, w, v, mode, a_w, b_w, c_w, uncorrelated_activity, time_constant_w):
-        val = (mode*a_w*self.previous_v + b_w*w + c_w +
-                (1-mode)*uncorrelated_activity)/time_constant_w
+
+        # val = np.ones_like(variable)*(mode*a_w*self.previous_v + b_w*w + c_w + (1-mode)*uncorrelated_activity)/time_constant_w
+        val = (mode * a_w * self.previous_v + b_w * w + c_w + (1 - mode) * uncorrelated_activity) / time_constant_w
 
         # Standard coefficients - hardcoded for testing
         # val = (v + 0.7 - 0.8*w)/12.5
-
         #Gilzenrat paper - hardcoded for testing
 
         # val = (v - 0.5*w)
-
-        return val
+        return np.broadcast_to(val, variable.shape)
 
     def function(self,
                  variable=None,
@@ -7047,19 +7085,19 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         Sets
 
-        - `previous_v <DriftDiffusionIntegrator.previous_v>`
-        - `initial_v <DriftDiffusionIntegrator.initial_v>`
+        - `previous_v <FHNIntegrator.previous_v>`
+        - `initial_v <FHNIntegrator.initial_v>`
 
         to the quantity specified in the first argument.
 
         Sets
 
-        - `previous_w <DriftDiffusionIntegrator.previous_w>`
-        - `initial_w <DriftDiffusionIntegrator.initial_w>`
+        - `previous_w <FHNIntegrator.previous_w>`
+        - `initial_w <FHNIntegrator.initial_w>`
 
         to the quantity specified in the second argument.
 
-        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in the third argument.
+        Sets `previous_time <FHNIntegrator.previous_time>` to the quantity specified in the third argument.
 
         If no arguments are specified, then the instance defaults for `initial_v <FHNIntegrator.initial_v>`, `initial_w
         <FHNIntegrator.initial_w>` and `t_0 <FHNIntegrator.t_0>` are used.
@@ -7513,6 +7551,8 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initial_long_term_utility", "initial_short_term_utility"]
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
