@@ -513,7 +513,7 @@ class MappingProjection(PathwayProjection_Base):
 
         self._parameter_states[MATRIX].function_object = AccumulatorIntegrator(owner=self._parameter_states[MATRIX],
                                                                                default_variable=matrix,
-                                                                            initializer=matrix,
+                                                                               initializer=matrix,
                                                                             # rate=initial_rate
                                                                                )
         self._parameter_states[MATRIX]._function = self._parameter_states[MATRIX].function_object.function

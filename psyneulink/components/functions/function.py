@@ -4668,10 +4668,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                                  target_set=target_set,
                                  context=context)
 
-        # if INITIALIZER in target_set:
-        #     print(target_set)
-        #     self._validate_initializer(target_set[INITIALIZER])
-
         if NOISE in target_set:
             noise = target_set[NOISE]
             if isinstance(noise, DistributionFunction):
