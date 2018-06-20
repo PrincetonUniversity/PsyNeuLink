@@ -356,7 +356,8 @@ from psyneulink.components.mechanisms.processing.objectivemechanism import Objec
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.components.shellclasses import Mechanism, System_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY
+from psyneulink.globals.keywords import \
+    ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, PROJECTIONS
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -835,17 +836,7 @@ class LCControlMechanism(ControlMechanism):
                             self.modulated_mechanisms.append(mech)
 
 
-        # # MODIFIED 9/3/17 OLD [ASSIGN ALL ControlProjections TO A SINGLE ControlSignal]
-        # # Get the ParameterState for the multiplicative_param of each Mechanism in self.modulated_mechanisms
-        # multiplicative_params = []
-        # for mech in self.modulated_mechanisms:
-        #     multiplicative_params.append(mech._parameter_states[mech.function_object.multiplicative_param])
-        #
-        # # Create specification for **control_signals** argument of ControlSignal constructor
-        # self.control_signals = [{CONTROL_SIGNAL_NAME:multiplicative_params}]
-        # MODIFIED 9/3/17 NEW [ASSIGN EACH ControlProjection TO A DIFFERENT ControlSignal]
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
-        self._control_signals = []
         if self.modulated_mechanisms:
             # Create (param_name, Mechanism) specification for **control_signals** argument of ControlSignal constructor
             if not isinstance(self.modulated_mechanisms, list):
@@ -853,9 +844,10 @@ class LCControlMechanism(ControlMechanism):
             multiplicative_param_names = []
             for mech in self.modulated_mechanisms:
                 multiplicative_param_names.append(mech.function_object.multiplicative_param)
+            ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
-                self._control_signals.append((mult_param_name, mech))
-        # MODIFIED 9/3/17 END
+                ctl_sig_projs.append((mult_param_name, mech))
+            self._control_signals = [{PROJECTIONS: ctl_sig_projs}]
         super()._instantiate_output_states(context=context)
 
     def _execute(
@@ -875,12 +867,7 @@ class LCControlMechanism(ControlMechanism):
 
         gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
 
-        # # MODIFIED 1/17/18 OLD:
-        return gain_t, gain_t, output_values[0], output_values[1], output_values[2]
-        # # MODIFIED 1/17/18 NEW:
-        # output_values = np.array(output_values).reshape(3,1)
-        # return np.vstack((gain_t, gain_t, output_values))
-        # # MODIFIED 1/17/18 END
+        return gain_t, output_values[0], output_values[1], output_values[2]
 
 
 
@@ -895,7 +882,6 @@ class LCControlMechanism(ControlMechanism):
 
         # Assign ControlProjection from the LCControlMechanism's ControlSignal
         #    to the ParameterState for the multiplicative_param of each Mechanism in mechanisms
-        multiplicative_params = []
         for mech in mechanisms:
             self.modulated_mechanisms.append(mech)
             parameter_state = mech._parameter_states[mech.multiplicative_param]
