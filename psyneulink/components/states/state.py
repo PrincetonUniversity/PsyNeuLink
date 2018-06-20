@@ -195,8 +195,8 @@ A State can be specified using any of the following:
 
       .. _State_2_Item_Tuple:
 
-      * **2-item tuple: (State name or list of State names, Mechanism)** - 1st item is the name of a State or list of
-        State names, and the 2nd item is the Mechanism to which they belong; a Projection is created to or from each
+      * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- 1st item is the name of a State or
+        list of them, and the 2nd item is the Mechanism to which they belong; a Projection is created to or from each
         of the States specified.  The type of Projection depends on the type of State being created, and the type of
         States specified in the tuple  (see `Projection_Table`).  For example, if the State being created is an
         InputState, and the States specified in the tuple are OutputStates, then `MappingProjections
