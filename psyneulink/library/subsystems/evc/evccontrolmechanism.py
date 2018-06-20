@@ -238,7 +238,9 @@ greatest EVC value. The following steps are used to calculate the EVC for each `
     values of all :ref:`stateful attributes` of 'Components` in the System are :ref:`re-initialized` to the same value
     prior to each simulation, so that the results for each `allocation_policy <EVCControlMechanism.allocation_policy>`
     are based on the same initial conditions.  Each simulation includes execution of the EVCControlMechanism's
-    `objective_mechanism`, which provides the result to the EVCControlMechanism.
+    `objective_mechanism`, which provides the result to the EVCControlMechanism.  If `system
+    <EVCControlMechanism.system>`\\.recordSimulationPref is `True`, the results of each simulation are appended to the
+    `simulation_results <System.simulation_results>` attribute of `system <EVCControlMechanism.system>`.
   |
   * **Evaluate the System's performance** - this is carried out by the EVCControlMechanism's `objective_mechanism
     <EVCControlMechanism.objective_mechanism>`, which is executed as part of the simulation of the System.  The

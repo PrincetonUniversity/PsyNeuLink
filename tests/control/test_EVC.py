@@ -103,7 +103,6 @@ def test_EVC():
     # mySystem.prefs.paramValidationPref = False
     mySystem.recordSimulationPref = True
 
-
     # Stimuli
     stim_list_dict = {
         Input: [0.5, 0.123],

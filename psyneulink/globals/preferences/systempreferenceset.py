@@ -21,7 +21,7 @@ from psyneulink.globals.utilities import Modulation
 
 __all__ = [
     'SystemPreferenceSet', 'recordSimulationPrefCategoryDefault', 'recordSimulationPrefInstanceDefault',
-    'recordSimulationPrefTypeDefault', 'RECORD_SIMULATION_PREF'
+    'recordSimulationPrefTypeDefault', 'RECORD_SIMULATION_PREF', 'kpRecordSimulationPref'
 ]
 
 
@@ -29,8 +29,8 @@ RECORD_SIMULATION_PREF = kpRecordSimulationPref = '_record_simulation_pref'
 
 # Default PreferenceSets:
 recordSimulationPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-recordSimulationPrefTypeDefault = PreferenceEntry(False, PreferenceLevel.TYPE)
-recordSimulationPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.CATEGORY)
+recordSimulationPrefTypeDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+recordSimulationPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
 reportOutputPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 logPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
