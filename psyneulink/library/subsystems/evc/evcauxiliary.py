@@ -391,11 +391,11 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             EVC_values = np.array([])
             EVC_policies = np.array([[]])
 
-            # TEST PRINT:
-            inputs = []
-            for i in controller.predicted_input.values():
-                inputs.append(repr(i).replace('\n', ''))
-            print("\nEVC SIMULATION for Inputs: {}".format(inputs))
+            # # TEST PRINT:  6/19/18
+            # inputs = []
+            # for i in controller.predicted_input.values():
+            #     inputs.append(repr(i).replace('\n', ''))
+            # print("\nEVC SIMULATION for Inputs: {}".format(inputs))
 
             for allocation_vector in controller.control_signal_search_space[start:end,:]:
             # for iter in range(rank, len(controller.control_signal_search_space), size):
@@ -441,8 +441,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     EVC_max_policy = allocation_vector
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
 
-            # TEST PRINT:
-            print("EVC_max: {}\tASSOCIATED allocation_policy: {}\n".format(EVC_max, EVC_max_policy))
+            # # TEST PRINT:  6/19/18
+            # print("EVC_max: {}\tASSOCIATED allocation_policy: {}\n".format(EVC_max, EVC_max_policy))
 
             #endregion
 
@@ -590,19 +590,19 @@ def _compute_EVC(args):
                                                                   outcome=outcome,
                                                                   costs=ctlr.control_signal_costs,
                                                                   context=context))
-        assert True
-        # TEST PRINT
-        print ("Trial: {}\tInput: {}\tAllocation: {}\tOutcome: {}\tCost: {}\tEVC: {}".
-               format(i, list(inputs.values())[0], allocation_vector,
-                      EVC_list[i][1], EVC_list[i][2], EVC_list[i][0]))
+        # assert True
+        # # TEST PRINT 6/19/18
+        # print ("Trial: {}\tInput: {}\tAllocation: {}\tOutcome: {}\tCost: {}\tEVC: {}".
+        #        format(i, list(inputs.values())[0], allocation_vector,
+        #               EVC_list[i][1], EVC_list[i][2], EVC_list[i][0]))
 
     # Re-assign values of reinitialization attributes to their value at entry
     for mechanism in reinitialization_values:
         mechanism.reinitialize(*reinitialization_values[mechanism])
 
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
-    # TEST PRINT
-    print("EVC_avg: {}".format(EVC_avg[0]))
+    # TEST PRINT  6/19/18
+    # print("EVC_avg: {}".format(EVC_avg[0]))
 
     if PY_MULTIPROCESSING:
         return

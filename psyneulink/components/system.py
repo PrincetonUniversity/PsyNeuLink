@@ -2676,8 +2676,7 @@ class System(System_Base):
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
         self._execute_processing(runtime_params=runtime_params,
                                  context=context)
-
-        # outcome = self.terminal_mechanisms.outputStateValues
+        outcome = self.terminal_mechanisms.outputStateValues
 
 
         # EXECUTE LEARNING FOR EACH PROCESS
@@ -2718,8 +2717,8 @@ class System(System_Base):
         if self._report_system_output:
             self._report_system_completion()
 
-        return self.terminal_mechanisms.outputStateValues
-        # return outcome
+        # return self.terminal_mechanisms.outputStateValues
+        return outcome
 
     def _execute_processing(self, runtime_params, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase
