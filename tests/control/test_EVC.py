@@ -99,6 +99,7 @@ def test_EVC():
     # TaskExecutionProcess.prefs.paramValidationPref = False
     # RewardProcess.prefs.paramValidationPref = False
     # mySystem.prefs.paramValidationPref = False
+    mySystem.recordSimulationPref = True
 
     # Stimuli
     stim_list_dict = {
@@ -355,6 +356,8 @@ def test_EVC_gratton():
         name='EVC Gratton System'
     )
 
+    mySystem.recordSimulationPref = True
+
     # Show characteristics of system:
     mySystem.show()
     mySystem.controller.show()
@@ -596,6 +599,8 @@ def test_laming_validation_specify_control_signals():
         ],
         name='EVC Test System'
     )
+    mySystem.recordSimulationPref = True
+
     # Stimulus
     stim_list_dict = {
         Input: [0.5, 0.123],
@@ -803,6 +808,8 @@ def test_stateful_mechanism_in_simulation():
         ],
         name='EVC Test System',
     )
+
+    mySystem.recordSimulationPref = True
 
     Input.reinitialize_when = Never()
 

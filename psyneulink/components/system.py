@@ -460,6 +460,7 @@ from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPE
     SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.globals.preferences.systempreferenceset import SystemPreferenceSet
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
@@ -566,18 +567,21 @@ def sys(*args, **kwargs):
 class System(System_Base):
     """
 
-    System(                                  \
-        default_variable=None,                    \
-        processes=None,                           \
-        initial_values=None,                      \
-        controller=None,                          \
-        enable_controller=:keyword:`False`,       \
-        monitor_for_control=None,                 \
-        control_signals=None,                     \
-        learning_rate=None,                       \
-        targets=None,                             \
-        params=None,                              \
-        name=None,                                \
+    System(                                         \
+        default_variable=None,                      \
+        size=None,                                  \
+        processes=None,                             \
+        initial_values=None,                        \
+        controller=None,                            \
+        enable_controller=:keyword:`False`,         \
+        monitor_for_control=None,                   \
+        control_signals=None,                       \
+        learning_rate=None,                         \
+        targets=None,                               \
+        reinitialize_mechanisms_when=AtTimeStep(0), \
+        scheduler=None,                             \
+        params=None,                                \
+        name=None,                                  \
         prefs=None)
 
     Base class for System.
@@ -819,6 +823,9 @@ class System(System_Base):
     # classPreferences = {
     #     kwPreferenceSetName: 'SystemCustomClassPreferences',
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+    # classPreferences = {
+    #     kwReportSimulationPref: 'SystemCustomClassPreferences',
+    #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
     class ClassDefaults(System_Base.ClassDefaults):
@@ -852,9 +859,9 @@ class System(System_Base):
                  learning_rate=None,
                  targets=None,
                  reinitialize_mechanisms_when=AtTimeStep(0),
+                 scheduler=None,
                  params=None,
                  name=None,
-                 scheduler=None,
                  prefs:is_pref_set=None,
                  context=None):
 
@@ -888,6 +895,8 @@ class System(System_Base):
                           name=name,
                           registry=SystemRegistry,
                           context=context)
+
+        prefs = SystemPreferenceSet(owner=self, prefs=prefs, context=context)
 
         if not context:
             context = ContextFlags.COMPOSITION
@@ -2672,7 +2681,7 @@ class System(System_Base):
                                  context=context)
         outcome = self.terminal_mechanisms.outputStateValues
 
-        if self.context.execution_phase == ContextFlags.SIMULATION:
+        if self.recordSimulationPref and self.context.execution_phase == ContextFlags.SIMULATION:
             self.simulation_results.append(outcome)
 
         # EXECUTE LEARNING FOR EACH PROCESS
@@ -3399,6 +3408,14 @@ class System(System_Base):
             return None
         else:
             return self.controller.control_signals
+
+    @property
+    def recordSimulationPref(self):
+        return self.prefs.recordSimulationPref
+
+    @recordSimulationPref.setter
+    def recordSimulationPref(self, setting):
+        self.prefs.recordSimulationPref = setting
 
     def _get_label(self, item, show_dimensions=None, show_role=None):
 
