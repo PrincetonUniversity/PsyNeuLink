@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.4.7.1+131.g1706752 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.4.7.1+132.gb3eff0c documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1+131.g1706752 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.7.1+132.gb3eff0c documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Compositions" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.7.1+131
+                0.4.7.1+132
               </div>
             
           
@@ -275,7 +275,7 @@ belonging to more than one Process (as shown for control in this figure).</span>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>: sends a Projection that closes a recurrent loop; can be assigned an initial value.</p>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.CYCLE" title="psyneulink.globals.keywords.MechanismRoles.CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">CYCLE</span></code></a>: receives a Projection that closes a recurrent loop.</p>
 <p><a class="reference internal" href="Context.html#psyneulink.globals.context.ContextFlags.CONTROL" title="psyneulink.globals.context.ContextFlags.CONTROL"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROL</span></code></a>: monitors the value of another Mechanism for use in controlling parameter values.</p>
-<p><a class="reference internal" href="Context.html#psyneulink.globals.context.ContextFlags.LEARNING" title="psyneulink.globals.context.ContextFlags.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
+<p><a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.LEARNING" title="psyneulink.globals.log.LogCondition.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TARGET" title="psyneulink.globals.keywords.MechanismRoles.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>: ComparatorMechanism that monitors a <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of a Process and compares it to a corresponding
 value provided in the <a class="reference internal" href="#psyneulink.components.system.System.execute" title="psyneulink.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#psyneulink.components.system.System.run" title="psyneulink.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INTERNAL" title="psyneulink.globals.keywords.MechanismRoles.INTERNAL"><code class="xref any py py-attr docutils literal"><span class="pre">INTERNAL</span></code></a>: ProcessingMechanism that does not fall into any of the categories above.</p>
@@ -482,7 +482,7 @@ lists, each is treated as a pathway specification for a Process; any other args 
 
 <dl class="class">
 <dt id="psyneulink.components.system.System">
-<em class="property">class </em><code class="descclassname">psyneulink.components.system.</code><code class="descname">System</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=None</em>, <em>enable_controller=:keyword:`False`</em>, <em>monitor_for_control=None</em>, <em>control_signals=None</em>, <em>learning_rate=None</em>, <em>targets=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.system.System" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.components.system.</code><code class="descname">System</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=None</em>, <em>enable_controller=:keyword:`False`</em>, <em>monitor_for_control=None</em>, <em>control_signals=None</em>, <em>learning_rate=None</em>, <em>targets=None</em>, <em>reinitialize_mechanisms_when=AtTimeStep(0)</em>, <em>scheduler=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.system.System" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for System.</p>
 <dl class="attribute">
 <dt id="psyneulink.components.system.System.componentType">
@@ -628,7 +628,12 @@ thoese values to the the TARGET <a class="reference internal" href="InputState.h
 Length must equal the number of <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a> Mechanisms listed in the System’s
 <a class="reference internal" href="#psyneulink.components.system.System.recurrent_init_mechanisms" title="psyneulink.components.system.System.recurrent_init_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_init_mechanisms</span></code></a> attribute.</dd>
 <dt>results <span class="classifier-delimiter">:</span> <span class="classifier">List[OutputState.value]</span></dt>
-<dd>list of return values (OutputState.value) from the sequence of executions.</dd>
+<dd>list of return values from the sequence of executions.  Each item is a 1d array containing the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of the System for a given execution. Excludes simulated runs.</dd>
+<dt>simulation_results <span class="classifier-delimiter">:</span> <span class="classifier">List[OutputState.value]</span></dt>
+<dd>list of return values from the sequence of executions in simulation run(s) of the System; requires
+recordSimulationPref to be <code class="xref any docutils literal"><span class="pre">True</span></code>.  Each item is a 1d array containing the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
+each <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of each <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism in the System for a given execution in the simulation. Excludes
+values from non-simulation runs.</dd>
 <dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
 <dd>the name of the System; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
 assigned by SystemRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</dd>
@@ -676,7 +681,7 @@ phase of execution</span></a></p>
 
 <dl class="method">
 <dt id="psyneulink.components.system.System.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>inputs</em>, <em>num_trials=None</em>, <em>initialize=False</em>, <em>initial_values=None</em>, <em>targets=None</em>, <em>learning=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>termination_processing=None</em>, <em>termination_learning=None</em>, <em>runtime_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.system.System.run" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run</code><span class="sig-paren">(</span><em>inputs</em>, <em>num_trials=None</em>, <em>initialize=False</em>, <em>initial_values=None</em>, <em>targets=None</em>, <em>learning=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>termination_processing=None</em>, <em>termination_learning=None</em>, <em>runtime_params=None</em>, <em>reinitialize_values=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.system.System.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions</p>
 <p>Call execute method for each execution in a sequence specified by inputs.  See <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for details of
 formatting input specifications.</p>
@@ -704,6 +709,12 @@ If it is <code class="xref any docutils literal"><span class="pre">True</span></
 phase of execution</span></a></li>
 <li><strong>termination_learning</strong> (<em>Dict</em><em>[</em><em>TimeScale: Condition</em><em>]</em>) – a dictionary containing <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that signal the end of the associated <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale" title="psyneulink.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a> within the <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">learning
 phase of execution</span></a></li>
+<li><strong>reinitialize_values</strong> (<em>Dict</em><em>[</em><em>Mechanism: List</em><em>[</em><em>reinitialization values</em><em>] or </em><em>np.ndarray</em><em>(</em><em>reinitialization values</em><em>)</em>) – a dictionary containing Mechanism: value pairs. Each Mechanism in the dictionary calls its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method at the start of the Run. The Mechanism’s value in the
+reinitialize_values dictionary is passed into its <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method. See
+the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.reinitialize" title="psyneulink.components.functions.function.Integrator.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span> <span class="pre">method</span></code></a> of the <a class="reference internal" href="Mechanism.html#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+or <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> of the Mechanism for details on which
+values must be passed in as arguments. Keep in mind that only stateful Mechanisms may be reinitialized, and
+that Mechanisms in reinitialize_values will reinitialize regardless of whether their <a class="reference internal" href="Component.html#psyneulink.components.component.Component.reinitialize_when" title="psyneulink.components.component.Component.reinitialize_when"><code class="xref any py py-attr docutils literal"><span class="pre">reinitialize_when</span></code></a> Condition is satisfied.</li>
 </ul>
 </td>
 </tr>
@@ -777,6 +788,22 @@ projections;</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>all mechanisms in the system</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">List[Mechanism]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.components.system.System.stateful_mechanisms">
+<code class="descname">stateful_mechanisms</code><a class="headerlink" href="#psyneulink.components.system.System.stateful_mechanisms" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of all mechanisms in the system that are currently marked as stateful (mechanism.auto_dependent = True)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>all stateful mechanisms in the system</strong></td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">List[Mechanism]</td>
 </tr>
@@ -1015,7 +1042,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1+131.g1706752',
+            VERSION:'0.4.7.1+132.gb3eff0c',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
