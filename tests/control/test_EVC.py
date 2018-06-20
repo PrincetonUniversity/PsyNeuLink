@@ -8,9 +8,11 @@ from psyneulink.components.projections.modulatory.controlprojection import Contr
 from psyneulink.components.system import System
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE, SLOPE, CONTROL
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
+from psyneulink.globals.preferences.systempreferenceset import RECORD_SIMULATION_PREF
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
 from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
+from psyneulink.scheduling.condition import Never
 
 
 def test_EVC():
@@ -93,11 +95,13 @@ def test_EVC():
             (Decision.RESPONSE_TIME, -1, 1)
         ],
         name='EVC Test System',
+        # prefs={RECORD_SIMULATION_PREF:True}
     )
 
     # TaskExecutionProcess.prefs.paramValidationPref = False
     # RewardProcess.prefs.paramValidationPref = False
     # mySystem.prefs.paramValidationPref = False
+    mySystem.recordSimulationPref = True
 
     # Stimuli
     stim_list_dict = {
@@ -120,8 +124,20 @@ def test_EVC():
             elem_array.append(float(inner_elem))
         results_array.append(elem_array)
 
-    # mySystem.results expected output properly formatted
     expected_results_array = [
+        [20.0, 20.0, 0.0, 1.0, 2.378055160151634, 0.9820137900379085],
+        [20.0, 20.0, 0.0, 0.1, 0.48999967725112503, 0.5024599801509442]
+    ]
+
+    sim_results_array = []
+    for elem in mySystem.simulation_results:
+        elem_array = []
+        for inner_elem in elem:
+            elem_array.append(float(inner_elem))
+        sim_results_array.append(elem_array)
+
+    # mySystem.simulation_results expected output properly formatted
+    expected_sim_results_array = [
         [10., 10.0, 0.0, -0.1, 0.48999867, 0.50499983],
         [10., 10.0, 0.0, -0.4, 1.08965888, 0.51998934],
         [10., 10.0, 0.0, 0.7, 2.40680493, 0.53494295],
@@ -138,7 +154,6 @@ def test_EVC():
         [10., 10.0, 0.0, -0.4, 1.05791834, 0.68997448],
         [10., 10.0, 0.0, 0.7, 2.14222978, 0.80218389],
         [10., 10.0, 0.0, 1., 3.49637662, 0.88079708],
-        [10., 10.0, 0.0, 1., 3.49637662, 0.88079708],
         [15., 15.0, 0.0, 0.1, 0.48999926, 0.50372993],
         [15., 15.0, 0.0, -0.4, 1.08981011, 0.51491557],
         [15., 15.0, 0.0, 0.7, 2.40822035, 0.52608629],
@@ -154,7 +169,6 @@ def test_EVC():
         [15., 15.0, 0.0, 0.1, 0.48992596, 0.53723096],
         [15., 15.0, 0.0, -0.4, 1.07165729, 0.64492386],
         [15., 15.0, 0.0, 0.7, 2.24934228, 0.7396981],
-        [15., 15.0, 0.0, 1., 3.84279648, 0.81637827],
         [15., 15.0, 0.0, 1., 3.84279648, 0.81637827]
     ]
 
@@ -190,7 +204,12 @@ def test_EVC():
 
         # System Results Array
         #   (all intermediate output values of system)
-        (results_array, expected_results_array)
+        (results_array, expected_results_array),
+
+        # System Simulation Results Array
+        #   (all simulation output values of system)
+        (sim_results_array, expected_sim_results_array),
+
     ]
 
     for i in range(len(expected_output)):
@@ -339,6 +358,8 @@ def test_EVC_gratton():
         name='EVC Gratton System'
     )
 
+    mySystem.recordSimulationPref = True
+
     # Show characteristics of system:
     mySystem.show()
     mySystem.controller.show()
@@ -388,7 +409,11 @@ def test_EVC_gratton():
 
     mySystem.controller.reportOutputPref = True
 
-    expected_results_array = [
+    expected_results_array = [  0.2645  ,   0.32257752863413636,   0.9481940753514433, 100.      ,   0.2645  ,
+                                0.42963678062444666,   0.47661180945923376, 100.      ,   0.2645  ,   0.300291026852769,
+                                0.97089165101931, 100.      ]
+
+    expected_sim_results_array = [
         0.2645,  0.32257753,  0.94819408, 100.,
         0.2645,  0.31663196,  0.95508757, 100.,
         0.2645,  0.31093566,  0.96110142, 100.,
@@ -413,7 +438,6 @@ def test_EVC_gratton():
         0.2645,  0.29654999,  0.97391021, 100.,
         0.2645,  0.29177245,  0.97746315, 100.,
         0.2645,  0.28722523,  0.98054192, 100.,
-        0.2645,  0.28289958,  0.98320731, 100.,
         0.2645,  0.28289958,  0.98320731, 100.,
         0.2645,  0.42963678,  0.47661181, 100.,
         0.2645,  0.42846471,  0.43938586, 100.,
@@ -440,7 +464,6 @@ def test_EVC_gratton():
         0.2645,  0.42917687,  0.54214925, 100.,
         -0.2645,  0.42983261,  0.50474093, 100.,
         -0.2645,  0.42944107,  0.46727945, 100.,
-        -0.2645,  0.42944107,  0.46727945, 100.,
         0.2645,  0.32257753,  0.94819408, 100.,
         0.2645,  0.31663196,  0.95508757, 100.,
         0.2645,  0.31093566,  0.96110142, 100.,
@@ -466,7 +489,6 @@ def test_EVC_gratton():
         0.2645,  0.29177245,  0.97746315, 100.,
         0.2645,  0.28722523,  0.98054192, 100.,
         0.2645,  0.28289958,  0.98320731, 100.,
-        0.2645,  0.28289958,  0.98320731, 100.,
     ]
 
     Flanker_Rep.set_log_conditions((SLOPE, CONTROL))
@@ -479,6 +501,13 @@ def test_EVC_gratton():
     np.testing.assert_allclose(
         pytest.helpers.expand_np_ndarray(mySystem.results),
         expected_results_array,
+        atol=1e-08,
+        verbose=True,
+    )
+
+    np.testing.assert_allclose(
+        pytest.helpers.expand_np_ndarray(mySystem.simulation_results),
+        expected_sim_results_array,
         atol=1e-08,
         verbose=True,
     )
@@ -572,6 +601,8 @@ def test_laming_validation_specify_control_signals():
         ],
         name='EVC Test System'
     )
+    mySystem.recordSimulationPref = True
+
     # Stimulus
     stim_list_dict = {
         Input: [0.5, 0.123],
@@ -594,8 +625,22 @@ def test_laming_validation_specify_control_signals():
             elem_array.append(float(inner_elem))
         results_array.append(elem_array)
 
-    # mySystem.results expected output properly formatted
     expected_results_array = [
+        [20.0, 20.0, 0.0, 1.0, 2.378055160151634, 0.9820137900379085],
+        [20.0, 20.0, 0.0, 0.1, 0.48999967725112503, 0.5024599801509442]
+    ]
+
+    # rearranging mySystem.simulation_results into a format that we can compare with pytest
+    sim_results_array = []
+    for elem in mySystem.simulation_results:
+        elem_array = []
+        for inner_elem in elem:
+            elem_array.append(float(inner_elem))
+        sim_results_array.append(elem_array)
+
+
+    # # mySystem.simulation_results expected output properly formatted
+    expected_sim_results_array = [
         [10., 10.0, 0.0, -0.1, 0.48999867, 0.50499983],
         [10., 10.0, 0.0, -0.4, 1.08965888, 0.51998934],
         [10., 10.0, 0.0, 0.7, 2.40680493, 0.53494295],
@@ -611,7 +656,6 @@ def test_laming_validation_specify_control_signals():
         [10., 10.0, 0.0, 0.1, 0.4898672, 0.549834],
         [10., 10.0, 0.0, -0.4, 1.05791834, 0.68997448],
         [10., 10.0, 0.0, 0.7, 2.14222978, 0.80218389],
-        [10., 10.0, 0.0, 1., 3.49637662, 0.88079708],
         [10., 10.0, 0.0, 1., 3.49637662, 0.88079708],
         [15., 15.0, 0.0, 0.1, 0.48999926, 0.50372993],
         [15., 15.0, 0.0, -0.4, 1.08981011, 0.51491557],
@@ -629,8 +673,8 @@ def test_laming_validation_specify_control_signals():
         [15., 15.0, 0.0, -0.4, 1.07165729, 0.64492386],
         [15., 15.0, 0.0, 0.7, 2.24934228, 0.7396981],
         [15., 15.0, 0.0, 1., 3.84279648, 0.81637827],
-        [15., 15.0, 0.0, 1., 3.84279648, 0.81637827]
     ]
+
 
     expected_output = [
         # Decision Output | Second Trial
@@ -674,7 +718,11 @@ def test_laming_validation_specify_control_signals():
 
         # System Results Array
         #   (all intermediate output values of system)
-        (results_array, expected_results_array)
+        (results_array, expected_results_array),
+
+        # System Simulation Results Array
+        #   (all simulation output values of system)
+        (sim_results_array, expected_sim_results_array),
     ]
 
     for i in range(len(expected_output)):
@@ -689,3 +737,194 @@ def test_laming_validation_specify_control_signals():
         Decision._parameter_states[THRESHOLD].value,
         Decision._parameter_states[THRESHOLD].mod_afferents[0].value * Decision._parameter_states[THRESHOLD].function_object.value
     )
+
+
+def test_stateful_mechanism_in_simulation():
+    # Mechanisms
+    # integrator_mode = True on the Input mechanism makes the system stateful
+    # (though not necessarily an interesting/meaningful model)
+    Input = TransferMechanism(
+        name='Input',
+        integrator_mode=True,
+    )
+    Reward = TransferMechanism(
+        output_states=[RESULT, MEAN, VARIANCE],
+        name='Reward'
+    )
+    Decision = DDM(
+        function=BogaczEtAl(
+            drift_rate=(
+                1.0,
+                ControlProjection(
+                    function=Linear,
+                    control_signal_params={
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                    },
+                ),
+            ),
+            threshold=(
+                1.0,
+                ControlProjection(
+                    function=Linear,
+                    control_signal_params={
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                    },
+                ),
+            ),
+            noise=(0.5),
+            starting_point=(0),
+            t0=0.45
+        ),
+        output_states=[
+            DECISION_VARIABLE,
+            RESPONSE_TIME,
+            PROBABILITY_UPPER_THRESHOLD
+        ],
+        name='Decision',
+    )
+
+    # Processes:
+    TaskExecutionProcess = Process(
+        # default_variable=[0],
+        size=1,
+        pathway=[(Input), IDENTITY_MATRIX, (Decision)],
+        name='TaskExecutionProcess',
+    )
+
+    RewardProcess = Process(
+        # default_variable=[0],
+        size=1,
+        pathway=[(Reward)],
+        name='RewardProcess',
+    )
+
+    # System:
+    mySystem = System(
+        processes=[TaskExecutionProcess, RewardProcess],
+        controller=EVCControlMechanism,
+        enable_controller=True,
+        monitor_for_control=[
+            Reward,
+            Decision.PROBABILITY_UPPER_THRESHOLD,
+            (Decision.RESPONSE_TIME, -1, 1)
+        ],
+        name='EVC Test System',
+    )
+
+    mySystem.recordSimulationPref = True
+
+    Input.reinitialize_when = Never()
+
+    # Stimuli
+    stim_list_dict = {
+        Input: [0.5, 0.123],
+        Reward: [20, 20]
+    }
+
+    mySystem.run(
+        inputs=stim_list_dict,
+    )
+
+    RewardPrediction = mySystem.execution_list[3]
+    InputPrediction = mySystem.execution_list[4]
+
+    # rearranging mySystem.results into a format that we can compare with pytest
+    results_array = []
+    for elem in mySystem.results:
+        elem_array = []
+        for inner_elem in elem:
+            elem_array.append(float(inner_elem))
+        results_array.append(elem_array)
+
+    expected_results_array = [
+        [20.0, 20.0, 0.0, 1.0, 3.4963766238230596, 0.8807970779778824],
+        [20.0, 20.0, 0.0, 0.1, 0.4899992579951842, 0.503729930808051]
+    ]
+
+    # rearranging mySystem.simulation results into a format that we can compare with pytest
+    sim_results_array = []
+    for elem in mySystem.simulation_results:
+        elem_array = []
+        for inner_elem in elem:
+            elem_array.append(float(inner_elem))
+        sim_results_array.append(elem_array)
+
+    # # mySystem.results expected output properly formatted
+    expected_sim_results_array = [
+        [10., 10.0, 0.0, -0.1, 0.48999867, 0.50499983],
+        [10., 10.0, 0.0, -0.4, 1.08965888, 0.51998934],
+        [10., 10.0, 0.0, 0.7, 2.40680493, 0.53494295],
+        [10., 10.0, 0.0, -1., 4.43671978, 0.549834],
+        [10., 10.0, 0.0, 0.1, 0.48997868, 0.51998934],
+        [10., 10.0, 0.0, -0.4, 1.08459402, 0.57932425],
+        [10., 10.0, 0.0, 0.7, 2.36033556, 0.63645254],
+        [10., 10.0, 0.0, 1., 4.24948962, 0.68997448],
+        [10., 10.0, 0.0, 0.1, 0.48993479, 0.53494295],
+        [10., 10.0, 0.0, 0.4, 1.07378304, 0.63645254],
+        [10., 10.0, 0.0, 0.7, 2.26686573, 0.72710822],
+        [10., 10.0, 0.0, 1., 3.90353015, 0.80218389],
+        [10., 10.0, 0.0, 0.1, 0.4898672, 0.549834],
+        [10., 10.0, 0.0, -0.4, 1.05791834, 0.68997448],
+        [10., 10.0, 0.0, 0.7, 2.14222978, 0.80218389],
+        [10., 10.0, 0.0, 1., 3.49637662, 0.88079708],
+        [15., 15.0, 0.0, 0.1, 0.48999926, 0.50372993],
+        [15., 15.0, 0.0, -0.4, 1.08981011, 0.51491557],
+        [15., 15.0, 0.0, 0.7, 2.40822035, 0.52608629],
+        [15., 15.0, 0.0, 1., 4.44259627, 0.53723096],
+        [15., 15.0, 0.0, 0.1, 0.48998813, 0.51491557],
+        [15., 15.0, 0.0, 0.4, 1.0869779, 0.55939819],
+        [15., 15.0, 0.0, -0.7, 2.38198336, 0.60294711],
+        [15., 15.0, 0.0, 1., 4.33535807, 0.64492386],
+        [15., 15.0, 0.0, 0.1, 0.48996368, 0.52608629],
+        [15., 15.0, 0.0, 0.4, 1.08085171, 0.60294711],
+        [15., 15.0, 0.0, 0.7, 2.32712843, 0.67504223],
+        [15., 15.0, 0.0, 1., 4.1221271, 0.7396981],
+        [15., 15.0, 0.0, 0.1, 0.48992596, 0.53723096],
+        [15., 15.0, 0.0, -0.4, 1.07165729, 0.64492386],
+        [15., 15.0, 0.0, 0.7, 2.24934228, 0.7396981],
+        [15., 15.0, 0.0, 1., 3.84279648, 0.81637827]
+    ]
+
+    expected_output = [
+        # Decision Output | Second Trial
+        (Decision.output_states[0].value, np.array(1.0)),
+
+        # Input Prediction Output | Second Trial
+        (InputPrediction.output_states[0].value, np.array(0.1865)),
+
+        # RewardPrediction Output | Second Trial
+        (RewardPrediction.output_states[0].value, np.array(15.0)),
+
+        # --- Decision Mechanism ---
+        #    Output State Values
+        #       decision variable
+        (Decision.output_states[DECISION_VARIABLE].value, np.array([1.0])),
+        #       response time
+        (Decision.output_states[RESPONSE_TIME].value, np.array([3.84279648])),
+        #       upper bound
+        (Decision.output_states[PROBABILITY_UPPER_THRESHOLD].value, np.array([0.81637827])),
+        #       lower bound
+        # (round(float(Decision.output_states['DDM_probability_lowerBound'].value),3), 0.184),
+
+        # --- Reward Mechanism ---
+        #    Output State Values
+        #       transfer mean
+        (Reward.output_states[RESULT].value, np.array([15.])),
+        #       transfer_result
+        (Reward.output_states[MEAN].value, np.array(15.0)),
+        #       transfer variance
+        (Reward.output_states[VARIANCE].value, np.array(0.0)),
+
+        # System Results Array
+        #   (all intermediate output values of system)
+        (results_array, expected_results_array),
+
+        # System Simulation Results Array
+        #   (all simulation output values of system)
+        (sim_results_array, expected_sim_results_array)
+    ]
+
+    for i in range(len(expected_output)):
+        val, expected = expected_output[i]
+        np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+

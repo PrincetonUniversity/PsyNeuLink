@@ -49,7 +49,7 @@ When a ControlSignal is specified in the **control_signals** argument of the con
     * for controlling a single parameter, the dictionary can have the following two entries:
 
         * *NAME*: str
-            the string must be the name of the parameter to be gated;
+            the string must be the name of the parameter to be controlled;
 
         * *MECHANISM*: Mechanism
             the Mechanism must be the one to the which the parameter to be controlled belongs.
@@ -61,10 +61,10 @@ When a ControlSignal is specified in the **control_signals** argument of the con
             and each item of the list must be a `specification of a parameter <ParameterState_Specification>` to be
             controlled by the ControlSignal (and that will receive a `ControlProjection` from it).
   ..
-  * **2-item tuple** -- the 1st time must be the name of the parameter (or list of parameter names), and the 2nd item
-    the Mechanism to which it (they) belong(s); this is a convenience format, that is simpler to use than a
-    specification dictionary (see above), but precludes specification of any `parameters <ControlSignal_Structure>`
-    for the ControlSignal.
+  * **2-item tuple:** *(parameter name or list of them>, <Mechanism>)* -- the 1st item must be the name of the
+    parameter (or list of parameter names), and the 2nd item the Mechanism to which it (they) belong(s); this is a
+    convenience format, that is simpler to use than a specification dictionary (see above), but precludes
+    specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
   ..
 
 .. _ControlSignal_Structure:

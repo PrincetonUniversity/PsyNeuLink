@@ -7,7 +7,7 @@ from psyneulink.components.functions.function import AccumulatorIntegrator, Cons
 from psyneulink.components.functions.function import FunctionError, LCAIntegrator
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-
+from psyneulink.scheduling.condition import Never
 from psyneulink.scheduling.time import TimeScale
 
 
@@ -15,7 +15,7 @@ class TestReinitialize:
     def test_FHN_valid(self):
         I = IntegratorMechanism(name="I",
                 function=FHNIntegrator())
-
+        I.reinitialize_when = Never()
         I.execute(1.0)
 
         assert np.allclose([[0.05127053]], I.value[0])
@@ -57,38 +57,28 @@ class TestReinitialize:
     def test_AGTUtility_valid(self):
         I = IntegratorMechanism(name="I",
                 function=AGTUtilityIntegrator())
-
-        assert np.allclose([[0.0]], I.function_object.initial_short_term_utility)
-        assert np.allclose([[0.0]], I.function_object.initial_long_term_utility)
+        I.reinitialize_when = Never()
         assert np.allclose([[0.0]], I.function_object.previous_short_term_utility)
         assert np.allclose([[0.0]], I.function_object.previous_long_term_utility)
 
         I.function_object.reinitialize(0.2, 0.8)
 
-        assert np.allclose([[0.2]], I.function_object.initial_short_term_utility)
-        assert np.allclose([[0.8]], I.function_object.initial_long_term_utility)
         assert np.allclose([[0.2]], I.function_object.previous_short_term_utility)
         assert np.allclose([[0.8]], I.function_object.previous_long_term_utility)
 
         I.function_object.reinitialize()
 
-        assert np.allclose([[0.0]], I.function_object.initial_short_term_utility)
-        assert np.allclose([[0.0]], I.function_object.initial_long_term_utility)
         assert np.allclose([[0.0]], I.function_object.previous_short_term_utility)
         assert np.allclose([[0.0]], I.function_object.previous_long_term_utility)
 
         I.reinitialize(0.3, 0.7)
 
-        assert np.allclose([[0.3]], I.function_object.initial_short_term_utility)
-        assert np.allclose([[0.7]], I.function_object.initial_long_term_utility)
         assert np.allclose([[0.3]], I.function_object.previous_short_term_utility)
         assert np.allclose([[0.7]], I.function_object.previous_long_term_utility)
         assert np.allclose(I.function_object.combine_utilities(0.3, 0.7), I.value)
 
         I.reinitialize()
 
-        assert np.allclose([[0.0]], I.function_object.initial_short_term_utility)
-        assert np.allclose([[0.0]], I.function_object.initial_long_term_utility)
         assert np.allclose([[0.0]], I.function_object.previous_short_term_utility)
         assert np.allclose([[0.0]], I.function_object.previous_long_term_utility)
         assert np.allclose(I.function_object.combine_utilities(0.0, 0.0), I.value)
@@ -99,6 +89,7 @@ class TestReinitialize:
             function=SimpleIntegrator(
             ),
         )
+        I.reinitialize_when = Never()
 
         #  returns previous_value + rate*variable + noise
         # so in this case, returns 10.0

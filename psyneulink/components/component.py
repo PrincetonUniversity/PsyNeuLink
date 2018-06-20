@@ -158,6 +158,19 @@ user once the component is constructed, with the one exception of `prefs <Compon
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
   preference (see `PreferenceSet <LINK>` for details).
 
+.. _Reinitialize_When:
+* **reinitialize_when** - the `reinitialize_when <Component.reinitialize_when>` attribute contains a `Condition`. When
+  this condition is satisfied, the Component calls its `reinitialize <Component.reinitialize>` method. The
+  `reinitialize <Component.reinitialize>` method is executed without arguments, meaning that the relevant function's
+  `initializer<Integrator.initializer>` attribute (or equivalent -- initialization attributes vary among functions) is
+  used for reinitialization. Keep in mind that the `reinitialize <Component.reinitialize>` method and `reinitialize_when
+  <Component.reinitialize_when>` attribute only exist on stateful Mechanisms.
+
+  .. note::
+
+        Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
+        Components do not reinitialize.
+
 .. _User_Modifiable_Parameters:
 
 User-modifiable Parameters
@@ -400,6 +413,7 @@ import typecheck as tc
 from psyneulink.globals.context import Context, ContextFlags, _get_time
 from psyneulink.globals.keywords import COMPONENT_INIT, CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PREFS_ARG, SEPARATOR_BAR, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from psyneulink.globals.log import LogCondition
+from psyneulink.scheduling.condition import AtTimeStep, Never
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.registry import register_category
@@ -743,6 +757,9 @@ class Component(object):
     current_execution_time : tuple(`Time.RUN`, `Time.TRIAL`, `Time.PASS`, `Time.TIME_STEP`)
         see `current_execution_time <Component_Current_Execution_Time>`
 
+    reinitialize_when : `Condition`
+
+
     name : str
         see `name <Component_Name>`
 
@@ -908,6 +925,7 @@ class Component(object):
         context = ContextFlags.COMPONENT
         self.context.initialization_status = ContextFlags.INITIALIZING
         self.context.execution_phase = None
+
         if not self.context.source:
             self.context.source = ContextFlags.COMPONENT
         self.context.string = "{}: {} {}".format(COMPONENT_INIT, INITIALIZING, self.name)
@@ -924,7 +942,6 @@ class Component(object):
         else:
             default_variable = v
             defaults[VARIABLE] = default_variable
-
         self.instance_defaults = self.InstanceDefaults(**defaults)
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
@@ -2472,9 +2489,12 @@ class Component(object):
 
         # If the 2nd item is a CONTROL or LEARNING SPEC, return the first item as the value
         if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
+                # MODIFIED 6/16/18 NEW:
+                not isinstance(param_spec[1], dict) and
+                # MODIFIED 6/16/18 END
                 (param_spec[1] in ALLOWABLE_TUPLE_SPEC_KEYWORDS or
-                     isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
-                         (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES)))
+                 isinstance(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES) or
+                 (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], ALLOWABLE_TUPLE_SPEC_CLASSES)))
             ):
             value =  param_spec[0]
 
@@ -2635,6 +2655,13 @@ class Component(object):
             raise ComponentError('Unsupported function type: {0}, function={1}'.format(type(function), function))
 
         self.function_object.owner = self
+
+        # KAM added 6/14/18 for functions that do not pass their auto_dependent status up to their owner via property
+        # FIX: need comprehensive solution for auto_dependent; need to determine whether states affect mechanism's
+        # auto_dependent status
+        if self.function_object.auto_dependent:
+            self._auto_dependent = True
+
         # assign to backing field to avoid long chain of assign_params, instantiate_defaults, etc.
         # that ultimately doesn't end up assigning the attribute
         # self._function_params = self.function_object.user_params
@@ -2667,6 +2694,24 @@ class Component(object):
 
     def initialize(self):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
+
+    def reinitialize(self, *args):
+        """
+            If the component's execute method involves execution of an `Integrator` Function, this method
+            effectively begins the function's accumulation over again at the specified value, and may update related
+            values on the component, depending on the component type.
+        """
+        from psyneulink.components.functions.function import Integrator
+        if hasattr(self, "function_object"):
+            if isinstance(self.function_object, Integrator):
+                new_value = self.function_object.reinitialize(*args)
+                self.value = np.atleast_2d(new_value)
+            else:
+                ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
+                               "(It does not have an accumulator to reinitialize).".format(self.name))
+        else:
+            ComponentError("Reinitializing {} is not allowed because this Component is not stateful. "
+                           "(It does not have an accumulator to reinitialize).".format(self.name))
 
     def execute(self, variable=None, runtime_params=None, context=None):
         return self._execute(variable=variable, runtime_params=runtime_params, context=context)
@@ -2997,15 +3042,31 @@ class Component(object):
 
     @auto_dependent.setter
     def auto_dependent(self, value):
-        """Assign auto_dependent status to Component and any of its owners up the hierarchy
+        """
+        Assign auto_dependent status to Component and any of its owners up the hierarchy.
+
+        Adding reinitialize_when attribute to Components that are now auto_dependent, and setting the default
+        reinitialize condition to AtTimeStep(0).
         """
         if self.owner is self:
             self._auto_dependent = value
+            if value:
+                # self.reinitialize_when = AtTimeStep(0)
+                self.reinitialize_when = Never()
+            # else:
+            #     if hasattr(self, "reinitialize_when"):
+            #         del self.reinitialize_when
         else:
             owner = self
             while owner is not None:
                 try:
                     owner._auto_dependent = value
+                    if value:
+                        # owner.reinitialize_when = AtTimeStep(0)
+                        owner.reinitialize_when = Never()
+                    # else:
+                    #     if hasattr(owner.reinitialize_when):
+                    #         del owner.reinitialize_when
                     owner = owner.owner
 
                 except AttributeError:

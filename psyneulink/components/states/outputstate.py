@@ -260,12 +260,12 @@ which it should project. Each of these is described below:
     * **OutputState specification tuples** -- these are convenience formats that can be used to compactly specify an
       OutputState along with Projections to or from it in any of the following ways:
 
-        * **2-item tuple:** *(State name or list of State names, Mechanism)* -- 1st item must be the name of an
+        * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- 1st item must be the name of an
           `InputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
         |
-        * **2-item tuple:** *(<State, Mechanism, or list of them>, Projection specification)* -- this is a contracted
+        * **2-item tuple:** *(<State, Mechanism, or list of them>, <Projection specification>)* -- this is a contracted
           form of the 3-item tuple described below
         |
         * **3-item tuple:** *(<value, State spec, or list of State specs>, variable spec, Projection specification)* --

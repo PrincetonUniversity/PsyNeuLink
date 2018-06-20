@@ -440,7 +440,8 @@ from toposort import toposort, toposort_flatten
 
 from psyneulink.components.component import Component
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism, OBJECTIVE_MECHANISM
-from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
+from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary import \
+    _assign_error_signal_projections, _get_learning_mechanisms
 from psyneulink.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, ERROR_SIGNAL
 from psyneulink.components.mechanisms.mechanism import MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import \
@@ -458,11 +459,12 @@ from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPE
     INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, \
     SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.globals.preferences.systempreferenceset import SystemPreferenceSet, is_sys_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
 from psyneulink.scheduling.scheduler import Scheduler, Condition, Always
+from psyneulink.scheduling.condition import AtTimeStep, Never
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'INPUT_ARRAY', 'kwSystemInputState',
@@ -564,18 +566,21 @@ def sys(*args, **kwargs):
 class System(System_Base):
     """
 
-    System(                                  \
-        default_variable=None,                    \
-        processes=None,                           \
-        initial_values=None,                      \
-        controller=None,                          \
-        enable_controller=:keyword:`False`,       \
-        monitor_for_control=None,                 \
-        control_signals=None,                     \
-        learning_rate=None,                       \
-        targets=None,                             \
-        params=None,                              \
-        name=None,                                \
+    System(                                         \
+        default_variable=None,                      \
+        size=None,                                  \
+        processes=None,                             \
+        initial_values=None,                        \
+        controller=None,                            \
+        enable_controller=:keyword:`False`,         \
+        monitor_for_control=None,                   \
+        control_signals=None,                       \
+        learning_rate=None,                         \
+        targets=None,                               \
+        reinitialize_mechanisms_when=AtTimeStep(0), \
+        scheduler=None,                             \
+        params=None,                                \
+        name=None,                                  \
         prefs=None)
 
     Base class for System.
@@ -786,7 +791,14 @@ class System(System_Base):
         `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute.
 
     results : List[OutputState.value]
-        list of return values (OutputState.value) from the sequence of executions.
+        list of return values from the sequence of executions.  Each item is a 1d array containing the `value
+        <OutputState.value>` of each `TERMINAL` Mechanism of the System for a given execution. Excludes simulated runs.
+
+    simulation_results : List[OutputState.value]
+        list of return values from the sequence of executions in simulation run(s) of the System; requires
+        recordSimulationPref to be `True`.  Each item is a 1d array containing the `value <OutputState.value>` of
+        each `OutputState` of each `TERMINAL` Mechanism in the System for a given execution in the simulation. Excludes
+        values from non-simulation runs.
 
     name : str
         the name of the System; if it is not specified in the **name** argument of the constructor, a default is
@@ -810,6 +822,9 @@ class System(System_Base):
     # These will override those specified in CategoryDefaultPreferences
     # classPreferences = {
     #     kwPreferenceSetName: 'SystemCustomClassPreferences',
+    #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+    # classPreferences = {
+    #     kwReportSimulationPref: 'SystemCustomClassPreferences',
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
@@ -843,10 +858,11 @@ class System(System_Base):
                  # learning=None,
                  learning_rate=None,
                  targets=None,
+                 reinitialize_mechanisms_when=AtTimeStep(0),
+                 scheduler=None,
                  params=None,
                  name=None,
-                 scheduler=None,
-                 prefs:is_pref_set=None,
+                 prefs:is_sys_pref_set=None,
                  context=None):
 
         # Required to defer assignment of self.controller by setter
@@ -880,6 +896,8 @@ class System(System_Base):
                           registry=SystemRegistry,
                           context=context)
 
+        prefs = SystemPreferenceSet(owner=self, prefs=prefs, context=context)
+
         if not context:
             context = ContextFlags.COMPOSITION
             self.context.initialization_status = ContextFlags.INITIALIZING
@@ -892,6 +910,7 @@ class System(System_Base):
                          context=context)
 
         self.context.initialization_status = ContextFlags.INITIALIZED
+        self.reinitialize_mechanisms_when = reinitialize_mechanisms_when
         self._execution_id = None
 
         # Assign controller
@@ -902,6 +921,20 @@ class System(System_Base):
         #     print("\n{0} initialized with:\n- pathway: [{1}]".
         #           # format(self.name, self.pathwayMechanismNames.__str__().strip("[]")))
         #           format(self.name, self.names.__str__().strip("[]")))
+
+    def _assign_reinitialize_condition_to_mechanisms(self, reinitialize_mechanisms_when):
+        """
+        Assign the Condition specified in the reinitialize_mechanisms_when argument to the reinitialize_when attribute
+        of each Mechanism in the System.
+        """
+        if not isinstance(reinitialize_mechanisms_when, Condition):
+            raise SystemError("{} is not a valid specification for reinitialize_mechanisms_when of {}. "
+                              "reinitialize_mechanisms_when must be a Condition.".format(reinitialize_mechanisms_when,
+                                                                                         self.name))
+        for mechanism in self.mechanisms:
+            if hasattr(mechanism, "reinitialize_when"):
+                if isinstance(mechanism.reinitialize_when, Never):
+                    mechanism.reinitialize_when = reinitialize_mechanisms_when
 
     def _validate_variable(self, variable, context=None):
         """Convert variable to 2D np.array: \
@@ -2050,19 +2083,7 @@ class System(System_Base):
                       format(self.controller.name, self.name))
             self.enable_controller = False
 
-        # Compare _phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
-        try:
-            # Get phaseSpec from controller
-            self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
-        except (AttributeError, TypeError):
-            # Controller phaseSpec not specified
-            try:
-                # Assign System specification of Controller phaseSpec if provided
-                self.controller.phaseSpec = self.paramsCurrent[CONROLLER_PHASE_SPEC]
-                self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
-            except:
-                # No System specification, so use System max as default
-                self.controller.phaseSpec = self._phaseSpecMax
+        self.simulation_results = []
 
     def _get_monitored_output_states_for_system(self, controller=None, context=None):
         """
@@ -2556,6 +2577,7 @@ class System(System_Base):
             Each item is a 2d array that contains arrays for each OutputState.value of each `TERMINAL` Mechanism
 
         """
+
         if self.scheduler_processing is None:
             self.scheduler_processing = Scheduler(system=self)
 
@@ -2655,7 +2677,12 @@ class System(System_Base):
         # sorted_list = list(object_item[0].name for object_item in self.execution_list)
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
-        self._execute_processing(runtime_params=runtime_params, context=context)
+        self._execute_processing(runtime_params=runtime_params,
+                                 context=context)
+        outcome = self.terminal_mechanisms.outputStateValues
+
+        if self.recordSimulationPref and self.context.execution_phase == ContextFlags.SIMULATION:
+            self.simulation_results.append(outcome)
 
         # EXECUTE LEARNING FOR EACH PROCESS
 
@@ -2695,7 +2722,8 @@ class System(System_Base):
         if self._report_system_output:
             self._report_system_completion()
 
-        return self.terminal_mechanisms.outputStateValues
+        # return self.terminal_mechanisms.outputStateValues
+        return outcome
 
     def _execute_processing(self, runtime_params, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase
@@ -2709,6 +2737,7 @@ class System(System_Base):
         for next_execution_set in self.scheduler_processing.run(termination_conds=self.termination_processing):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
+
             for mechanism in next_execution_set:
                 logger.debug('\tRunning Mechanism {0}'.format(mechanism))
 
@@ -2720,13 +2749,18 @@ class System(System_Base):
                 mechanism.context.string = "Mechanism: " + mechanism.name + " [in processes: " + str(process_names) + "]"
                 mechanism.context.composition = self
 
+
                 execution_runtime_params = {}
                 if mechanism in runtime_params:
                     for param in runtime_params[mechanism]:
                         if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
-                mechanism.context.execution_phase = ContextFlags.PROCESSING
+                # # MODIFIED 6/18/18 OLD:
+                # mechanism.context.execution_phase = ContextFlags.PROCESSING
+                # MODIFIED 6/18/18 NEW:
+                mechanism.context.execution_phase = self.context.execution_phase
+                # MODIFIED 6/18/18 END
                 mechanism.execute(runtime_params=execution_runtime_params, context=context)
                 for key in mechanism._runtime_params_reset:
                     mechanism._set_parameter_value(key, mechanism._runtime_params_reset[key])
@@ -2834,7 +2868,7 @@ class System(System_Base):
 
                 component.context.execution_phase = ContextFlags.IDLE
 
-                # # TEST PRINT:
+                # # TEST PRINT LEARNING:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
         # THEN update all MappingProjections
@@ -2868,7 +2902,7 @@ class System(System_Base):
 
                 component.context.execution_phase = ContextFlags.IDLE
 
-                # TEST PRINT:
+                # TEST PRINT LEARNING:
                 # print ("EXECUTING WEIGHT UPDATES: ", component.name)
 
         # FINALLY report outputs
@@ -2904,7 +2938,9 @@ class System(System_Base):
             termination_processing=None,
             termination_learning=None,
             runtime_params=None,
+            reinitialize_values=None,
             context=None):
+
         """Run a sequence of executions
 
         Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run` for details of
@@ -2954,6 +2990,16 @@ class System(System_Base):
             a dictionary containing `Condition`\\ s that signal the end of the associated `TimeScale` within the :ref:`learning
             phase of execution <System_Execution_Learning>`
 
+        reinitialize_values : Dict[Mechanism: List[reinitialization values] or np.ndarray(reinitialization values)
+            a dictionary containing Mechanism: value pairs. Each Mechanism in the dictionary calls its `reinitialize
+            <Mechanism_Base.reinitialize>` method at the start of the Run. The Mechanism's value in the
+            reinitialize_values dictionary is passed into its `reinitialize <Mechanism_Base.reinitialize>` method. See
+            the `reinitialize method <Integrator.reinitialize>` of the `function <Mechanism_Base.function>`
+            or `integrator_function <TransferMechanism.integrator_function>` of the Mechanism for details on which
+            values must be passed in as arguments. Keep in mind that only stateful Mechanisms may be reinitialized, and
+            that Mechanisms in reinitialize_values will reinitialize regardless of whether their `reinitialize_when
+            <Component.reinitialize_when>` Condition is satisfied.
+
         Returns
         -------
 
@@ -2969,6 +3015,12 @@ class System(System_Base):
 
         if runtime_params is None:
             runtime_params = {}
+
+        if reinitialize_values is None:
+            reinitialize_values = {}
+
+        for mechanism in reinitialize_values:
+            mechanism.reinitialize(*reinitialize_values[mechanism])
 
         self.initial_values = initial_values
 
@@ -3274,6 +3326,27 @@ class System(System_Base):
         return self.execute
 
     @property
+    def reinitialize_mechanisms_when(self):
+        return self._reinitialize_mechanisms_when
+
+    @reinitialize_mechanisms_when.setter
+    def reinitialize_mechanisms_when(self, new_condition):
+
+        # Validate
+        if not isinstance(new_condition, Condition):
+            raise SystemError("{} is not a valid specification for reinitialize_mechanisms_when of {}. "
+                              "reinitialize_mechanisms_when must be a Condition.".format(new_condition, self.name))
+
+        # assign to backing field
+        self._reinitialize_mechanisms_when = new_condition
+
+        # assign to all mechanisms that do not already have a user-specified condition
+        for mechanism in self.mechanisms:
+            if hasattr(mechanism, "reinitialize_when"):
+                if isinstance(mechanism.reinitialize_when, Never):
+                    mechanism.reinitialize_when = new_condition
+
+    @property
     def mechanisms(self):
         """List of all mechanisms in the system
 
@@ -3283,6 +3356,25 @@ class System(System_Base):
 
         """
         return self._all_mechanisms.mechanisms
+
+    @property
+
+    def stateful_mechanisms(self):
+        """
+        List of all mechanisms in the system that are currently marked as stateful (mechanism.auto_dependent = True)
+
+        Returns
+        -------
+        all stateful mechanisms in the system : List[Mechanism]
+
+        """
+
+        stateful_mechanisms = []
+        for mechanism in self.mechanisms:
+            if mechanism.auto_dependent:
+                stateful_mechanisms.append(mechanism)
+
+        return stateful_mechanisms
 
     @property
     def numPhases(self):
@@ -3316,6 +3408,14 @@ class System(System_Base):
             return None
         else:
             return self.controller.control_signals
+
+    @property
+    def recordSimulationPref(self):
+        return self.prefs.recordSimulationPref
+
+    @recordSimulationPref.setter
+    def recordSimulationPref(self, setting):
+        self.prefs.recordSimulationPref = setting
 
     def _get_label(self, item, show_dimensions=None, show_role=None):
 
