@@ -221,36 +221,36 @@ class TestReinitialize:
         # decay=1.0, initializer=0.0, rate=1.0, time_step_size=1.0, noise=0.0
         # returns 0.0 + (1.0*0.0 - 1.0*10.0*1.0) + 0.0 = -10.0
         I.execute(2.0)
-        assert np.allclose(I.value, -2.0)
+        assert np.allclose(I.value[0], -2.0)
         assert np.allclose(I.output_state.value, -2.0)
 
         # reinitialize function
-        I.function_object.reinitialize(5.0)
-        assert np.allclose(I.function_object.value, 5.0)
-        assert np.allclose(I.value, -2.0)
+        I.function_object.reinitialize(5.0, 0.0)
+        assert np.allclose(I.function_object.value[0], 5.0)
+        assert np.allclose(I.value[0], -2.0)
         assert np.allclose(I.output_states[0].value, -2.0)
 
         # reinitialize function without value spec
         I.function_object.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
-        assert np.allclose(I.value, -2.0)
+        assert np.allclose(I.function_object.value[0], 0.0)
+        assert np.allclose(I.value[0], -2.0)
         assert np.allclose(I.output_states[0].value, -2.0)
 
         # reinitialize mechanism
-        I.reinitialize(4.0)
-        assert np.allclose(I.function_object.value, 4.0)
-        assert np.allclose(I.value, 4.0)
+        I.reinitialize(4.0, 0.0)
+        assert np.allclose(I.function_object.value[0], 4.0)
+        assert np.allclose(I.value[0], 4.0)
         assert np.allclose(I.output_states[0].value, 4.0)
 
         I.execute(1.0)
         # 4.0 + (1.0 * 4.0 - 1.0 * 1.0) * 1.0 = 4 + 3 = 7
-        assert np.allclose(I.value, 7.0)
+        assert np.allclose(I.value[0], 7.0)
         assert np.allclose(I.output_states[0].value, 7.0)
 
         # reinitialize mechanism without value spec
         I.reinitialize()
-        assert np.allclose(I.function_object.value, 0.0)
-        assert np.allclose(I.value, 0.0)
+        assert np.allclose(I.function_object.value[0], 0.0)
+        assert np.allclose(I.value[0], 0.0)
         assert np.allclose(I.output_states[0].value, 0.0)
 
     def test_Accumulator_valid(self):
@@ -420,7 +420,7 @@ class TestIntegratorFunctions:
         # P = Process(pathway=[I])
         # 10 + 10*0.5 + 0 + 10 = 25
         val = I.execute(1)
-        assert val == 25
+        assert np.allclose([[[25.]], [[0.5]]], val)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -490,8 +490,8 @@ class TestIntegratorFunctions:
     def test_integrator_no_function(self):
         I = IntegratorMechanism()
         # P = Process(pathway=[I])
-        val = float(I.execute(10))
-        assert val == 5
+        val = I.execute(10)
+        assert np.allclose(val, [[5.0]])
 
 class TestIntegratorInputs:
     # Part 1: VALID INPUT:
@@ -646,8 +646,8 @@ class TestIntegratorRate:
             )
         )
         # P = Process(pathway=[I])
-        val = float(I.execute(10.0))
-        assert val == 50.0
+        val = I.execute(10.0)
+        assert np.allclose([[[50.0]], [[1.0]]], val)
 
     # rate = list, integration_type = simple
 
@@ -955,9 +955,8 @@ class TestIntegratorNoise:
             ),
         )
 
-        val = float(I.execute(10))
-
-        np.testing.assert_allclose(val, 12.188524664621541)
+        val = I.execute(10.0)
+        assert np.allclose([[[12.188524664621541]], [[1.0]]], val)
 
 # COMMENTED OUT UNTIL OU INTEGRATOR IS VALIDATED
     @pytest.mark.mechanism
@@ -976,7 +975,7 @@ class TestIntegratorNoise:
         # val = 1.0 + 0.5 * (1.0 - 0.25 * 2.5) * 1.0 + np.sqrt(1.0 * 2.0) * np.random.normal()
 
 
-        val = float(I.execute(2.5))
+        val = I.execute(2.5)
 
         # np.testing.assert_allclose(val, 4.356601554140335)
 
