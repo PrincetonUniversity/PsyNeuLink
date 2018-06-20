@@ -556,30 +556,17 @@ class LCControlMechanism(ControlMechanism):
         the influence of the `FHNIntegrator` Function's `mode <FHNIntegrator.mode>` attribute
         (see `LCControlMechanism_Function` for additional details).
 
-    COMMENT:
-    VERSIONS FOR SINGLE ControlSignal
-        control_signals : List[ControlSignal]
-            contains the LCControlMechanism's single `ControlSignal`, which sends `ControlProjections` to the
-            `multiplicative_param <Function_Modulatory_Params>` of each of the Mechanisms the LCControlMechanism
-            controls (listed in its `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` attribute).
-
-        control_projections : List[ControlProjection]
-            list of `ControlProjections <ControlProjection>` sent by the LCControlMechanism's `ControlSignal`, each of
-            which projects to the `ParameterState` for the `multiplicative_param <Function_Modulatory_Params>` of the
-            `function <Mechanism_Base.function>` of one of the Mechanisms listed in `modulated_mechanisms
-            <LCControlMechanism.modulated_mechanisms>` attribute.
-    COMMENT
-
     control_signals : List[ControlSignal]
-        list of the `ControlSignals <ControlSIgnal>` for each Mechanism listed in the LCControlMechanism's
-        `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` attribute  (same as the LCControlMechanism's `output_states
-        <Mechanism_Base.output_states>` attribute); each sends a `ControlProjections` to the `ParameterState` for the
-        `multiplicative_param <Function_Modulatory_Params>` of the `function <Mechanism_Base.function>corresponding
-        Mechanism.
+        contains the LCControlMechanism's single `ControlSignal`, which sends `ControlProjections
+        <ControlProjection>` to the `multiplicative_param <Function_Modulatory_Params>` of each of the Mechanisms
+        listed in the LCControlMechanism's `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>`
+        attribute.
 
     control_projections : List[ControlProjection]
-        list of all of the `ControlProjections <ControlProjection>` sent by the `ControlSignals <ControlSignal>` listed
-        in `control_signals <LC_Mechanism.control_signals>`.
+        list of `ControlProjections <ControlProjection>` sent by the LCControlMechanism's `ControlSignal`, each of
+        which projects to the `ParameterState` for the `multiplicative_param <Function_Modulatory_Params>` of the
+        `function <Mechanism_Base.function>` of one of the Mechanisms listed in `modulated_mechanisms
+        <LCControlMechanism.modulated_mechanisms>` attribute.
 
     modulated_mechanisms : List[Mechanism]
         list of `Mechanisms <Mechanism>` modulated by the LCControlMechanism.
@@ -834,7 +821,6 @@ class LCControlMechanism(ControlMechanism):
                 for mech in process.mechanisms:
                     if isinstance(mech, ProcessingMechanism_Base) and hasattr(mech.function, MULTIPLICATIVE_PARAM):
                             self.modulated_mechanisms.append(mech)
-
 
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
         if self.modulated_mechanisms:
