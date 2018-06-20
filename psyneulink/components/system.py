@@ -788,7 +788,13 @@ class System(System_Base):
         `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute.
 
     results : List[OutputState.value]
-        list of return values (OutputState.value) from the sequence of executions.
+        list of return values from the sequence of executions.  Each item is a 1d array containing the `value
+        <OutputState.value>` of each `TERMINAL` Mechanism of the System for a given execution. Excludes simulated runs.
+
+    simulation_results : List[OutputState.value]
+        list of return values from the sequence of executions in simulation run(s) of the System.  Each item is a 1d
+        array containing the `value <OutputState.value>` of each `TERMINAL` Mechanism of the System for a given
+        execution in a simulation. Excludes values from non-simulation runs.
 
     name : str
         the name of the System; if it is not specified in the **name** argument of the constructor, a default is
@@ -2068,19 +2074,7 @@ class System(System_Base):
                       format(self.controller.name, self.name))
             self.enable_controller = False
 
-        # Compare _phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
-        try:
-            # Get phaseSpec from controller
-            self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
-        except (AttributeError, TypeError):
-            # Controller phaseSpec not specified
-            try:
-                # Assign System specification of Controller phaseSpec if provided
-                self.controller.phaseSpec = self.paramsCurrent[CONROLLER_PHASE_SPEC]
-                self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
-            except:
-                # No System specification, so use System max as default
-                self.controller.phaseSpec = self._phaseSpecMax
+        self.simulation_results = []
 
     def _get_monitored_output_states_for_system(self, controller=None, context=None):
         """
@@ -2678,6 +2672,8 @@ class System(System_Base):
                                  context=context)
         outcome = self.terminal_mechanisms.outputStateValues
 
+        if self.context.execution_phase == ContextFlags.SIMULATION:
+            self.simulation_results.append(outcome)
 
         # EXECUTE LEARNING FOR EACH PROCESS
 
