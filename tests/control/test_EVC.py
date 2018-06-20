@@ -8,6 +8,7 @@ from psyneulink.components.projections.modulatory.controlprojection import Contr
 from psyneulink.components.system import System
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE, SLOPE, CONTROL
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpReportOutputPref, kpVerbosePref
+from psyneulink.globals.preferences.systempreferenceset import RECORD_SIMULATION_PREF
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.library.mechanisms.processing.integrator.ddm import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
 from psyneulink.library.subsystems.evc.evccontrolmechanism import EVCControlMechanism
@@ -94,12 +95,14 @@ def test_EVC():
             (Decision.RESPONSE_TIME, -1, 1)
         ],
         name='EVC Test System',
+        # prefs={RECORD_SIMULATION_PREF:True}
     )
 
     # TaskExecutionProcess.prefs.paramValidationPref = False
     # RewardProcess.prefs.paramValidationPref = False
     # mySystem.prefs.paramValidationPref = False
     mySystem.recordSimulationPref = True
+
 
     # Stimuli
     stim_list_dict = {

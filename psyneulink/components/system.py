@@ -459,8 +459,7 @@ from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPE
     INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, \
     SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
-from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.globals.preferences.systempreferenceset import SystemPreferenceSet
+from psyneulink.globals.preferences.systempreferenceset import SystemPreferenceSet, is_sys_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category
 from psyneulink.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible
@@ -862,7 +861,7 @@ class System(System_Base):
                  scheduler=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:is_sys_pref_set=None,
                  context=None):
 
         # Required to defer assignment of self.controller by setter

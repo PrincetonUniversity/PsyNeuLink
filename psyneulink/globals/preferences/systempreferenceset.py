@@ -14,7 +14,7 @@ import inspect
 
 from psyneulink.globals.keywords import NAME, kwPrefLevel, kwPrefsOwner
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, \
-    kpLogPref, kpParamValidationPref, kpReportOutputPref, kpVerbosePref
+    kpLogPref, kpParamValidationPref, kpReportOutputPref, kpVerbosePref, kpRuntimeParamModulationPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.globals.utilities import Modulation
 
@@ -23,6 +23,7 @@ __all__ = [
     'SystemPreferenceSet', 'recordSimulationPrefCategoryDefault', 'recordSimulationPrefInstanceDefault',
     'recordSimulationPrefTypeDefault', 'RECORD_SIMULATION_PREF'
 ]
+
 
 RECORD_SIMULATION_PREF = kpRecordSimulationPref = '_record_simulation_pref'
 
@@ -35,6 +36,30 @@ reportOutputPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANC
 logPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 verbosePrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 paramValidationPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+
+SystemPreferenceSetPrefs = {
+    kpVerbosePref,
+    kpParamValidationPref,
+    kpReportOutputPref,
+    kpRecordSimulationPref,
+    kpLogPref,
+    kpRuntimeParamModulationPref
+}
+
+def is_sys_pref(pref):
+    return pref in SystemPreferenceSetPrefs
+
+
+def is_sys_pref_set(pref):
+    if pref is None:
+        return True
+    if isinstance(pref, (SystemPreferenceSet, type(None))):
+        return True
+    if isinstance(pref, dict):
+        if all(key in SystemPreferenceSetPrefs for key in pref):
+            return True
+    return False
+
 
 class SystemPreferenceSet(ComponentPreferenceSet):
     """Extends ComponentPreferenceSet to include Mechanism-specific preferences
