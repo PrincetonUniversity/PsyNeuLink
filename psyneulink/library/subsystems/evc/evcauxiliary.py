@@ -393,7 +393,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             EVC_values = np.array([])
             EVC_policies = np.array([[]])
 
-            # # TEST PRINT:  6/19/18
+            # # TEST PRINT EVC:
             # inputs = []
             # for i in controller.predicted_input.values():
             #     inputs.append(repr(i).replace('\n', ''))
@@ -443,7 +443,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                     EVC_max_policy = allocation_vector
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
 
-            # # TEST PRINT:  6/19/18
+            # # TEST PRINT EVC:
             # print("EVC_max: {}\tASSOCIATED allocation_policy: {}\n".format(EVC_max, EVC_max_policy))
 
             #endregion
@@ -593,7 +593,7 @@ def _compute_EVC(args):
                                                                   costs=ctlr.control_signal_costs,
                                                                   context=context))
         # assert True
-        # # TEST PRINT 6/19/18
+        # # TEST PRINT EVC:
         # print ("Trial: {}\tInput: {}\tAllocation: {}\tOutcome: {}\tCost: {}\tEVC: {}".
         #        format(i, list(inputs.values())[0], allocation_vector,
         #               EVC_list[i][1], EVC_list[i][2], EVC_list[i][0]))
@@ -603,7 +603,7 @@ def _compute_EVC(args):
         mechanism.reinitialize(*reinitialization_values[mechanism])
 
     EVC_avg = list(map(lambda x: (sum(x))/num_trials, zip(*EVC_list)))
-    # TEST PRINT  6/19/18
+    # TEST PRINT EVC:
     # print("EVC_avg: {}".format(EVC_avg[0]))
 
     if PY_MULTIPROCESSING:
