@@ -1027,7 +1027,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             outputs = self._clip_result(clip, current_input, runtime_params, context)
 
-        # # TEST PRINT:  6/19/18
+        # # TEST PRINT:
         # print('OUTPUT: ', outputs)
         return outputs
 

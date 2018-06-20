@@ -2868,7 +2868,7 @@ class System(System_Base):
 
                 component.context.execution_phase = ContextFlags.IDLE
 
-                # # TEST PRINT:
+                # # TEST PRINT LEARNING:
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
         # THEN update all MappingProjections
@@ -2902,7 +2902,7 @@ class System(System_Base):
 
                 component.context.execution_phase = ContextFlags.IDLE
 
-                # TEST PRINT:
+                # TEST PRINT LEARNING:
                 # print ("EXECUTING WEIGHT UPDATES: ", component.name)
 
         # FINALLY report outputs
