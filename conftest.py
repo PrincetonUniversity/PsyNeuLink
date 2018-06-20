@@ -41,6 +41,7 @@ def pytest_runtest_call(item):
 
 @pytest.helpers.register
 def expand_np_ndarray(arr):
+    # this will fail on an input containing a float (not np.ndarray)
     try:
         iter(arr)
     except TypeError:
