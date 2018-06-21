@@ -7248,9 +7248,9 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             else:
                 default_variable = self.ClassDefaults.variable
 
-        if not np.isscalar(default_variable):
-            initial_v = np.broadcast_to(initial_v, default_variable.shape)
-            initial_w = np.broadcast_to(initial_w, default_variable.shape)
+        default_variable = np.atleast_1d(default_variable)
+        initial_v = np.broadcast_to(initial_v, default_variable.shape)
+        initial_w = np.broadcast_to(initial_w, default_variable.shape)
 
         self.previous_v = initial_v
         self.previous_w = initial_w
@@ -7294,9 +7294,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        if not np.isscalar(default_variable):
-            initial_v = np.broadcast_to(initial_v, default_variable.shape)
-            initial_w = np.broadcast_to(initial_w, default_variable.shape)
+        initial_v = np.broadcast_to(initial_v, default_variable.shape)
+        initial_w = np.broadcast_to(initial_w, default_variable.shape)
 
         self.initial_v = initial_v
         self.initial_w = initial_w
@@ -7489,9 +7488,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         #Gilzenrat paper - hardcoded for testing
 
         # val = (v - 0.5*w)
-        if not np.isscalar(variable):
-            val = np.broadcast_to(val, variable.shape)
-
         return val
 
     def function(self,
