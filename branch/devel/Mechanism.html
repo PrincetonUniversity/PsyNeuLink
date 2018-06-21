@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.4.7.1+137.g2a1b3fa documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.4.7.1+138.g9b9b7ed documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1+137.g2a1b3fa documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.7.1+138.g9b9b7ed documentation" href="index.html"/>
         <link rel="up" title="Components" href="Component.html"/>
         <link rel="next" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
         <link rel="prev" title="Components" href="Component.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.7.1+137
+                0.4.7.1+138
               </div>
             
           
@@ -365,14 +365,14 @@ constructor, as described under <a class="reference internal" href="ParameterSta
 specified by the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute.  Every type of Mechanism has at least one
 (primary) function, and some have additional (auxiliary) ones (for example, <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> and
 <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>). Mechanism functions are generally from the PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class.  Most Mechanisms
-allow their function to be specified, using the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.mechanisms.adaptive.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> argument of the Mechanism’s constructor.  The function can
+allow their function to be specified, using the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic.function" title="psyneulink.components.functions.function.Logistic.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> argument of the Mechanism’s constructor.  The function can
 be specified using the name of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class, or its constructor (including arguments that specify its
 parameters).  For example, the <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, which is <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Linear" title="psyneulink.components.functions.function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> by
 default, can be specified to be the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic" title="psyneulink.components.functions.function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Notice that the parameters of the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> (in this case, <a class="reference internal" href="Function.html#psyneulink.components.functions.function.SoftMax.gain" title="psyneulink.components.functions.function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> and <a class="reference internal" href="Function.html#psyneulink.components.functions.function.NavarroAndFuss.bias" title="psyneulink.components.functions.function.NavarroAndFuss.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a>) can be specified by including
+<p>Notice that the parameters of the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> (in this case, <a class="reference internal" href="Function.html#psyneulink.components.functions.function.SoftMax.gain" title="psyneulink.components.functions.function.SoftMax.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> and <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Logistic.bias" title="psyneulink.components.functions.function.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a>) can be specified by including
 them in its constructor.  Some Mechanisms support only a single function.  In that case, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>
 argument is not available in the Mechanism’s constructor, but it does include arguments for the function’s
 parameters.  For example, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is always the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.LinearCombination" title="psyneulink.components.functions.function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function,
@@ -1162,41 +1162,45 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <dl class="method">
 <dt id="psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize">
 <code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>If the mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> is an <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator" title="psyneulink.components.functions.function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a>, or if the mechanism has and
+<dd><blockquote>
+<div><p>If the mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> is an <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator" title="psyneulink.components.functions.function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a>, or if the mechanism has and
 <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> (see <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>), this method
 effectively begins the function’s accumulation over again at the specified value, and updates related
 attributes on the mechanism.</p>
-<p>If the mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is an <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator" title="psyneulink.components.functions.function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a>:</p>
+<p>If the mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is an <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator" title="psyneulink.components.functions.function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a>, its <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method:</p>
 <blockquote>
-<div><p><a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> first calls the function’s own <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.reinitialize" title="psyneulink.components.functions.function.Integrator.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method, which
-typically sets:</p>
-<ul class="simple">
-<li><a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.previous_value" title="psyneulink.components.functions.function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a></li>
-<li><code class="xref any docutils literal"><span class="pre">initializer</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">value</span></code></li>
-</ul>
-<p>to the quantity specified. For specific types of Integrator functions, additional values, such as
-initial time, must be specified, and additional attributes are reset. See individual functions for
-details.</p>
-<p>Then, the mechanism sets its <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> to the quantity specified, and updates its
-<a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_state" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output</span> <span class="pre">states</span></code></a>.</p>
+<div><ol class="arabic simple">
+<li>Calls the function’s own <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.reinitialize" title="psyneulink.components.functions.function.Integrator.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method (see Note below for
+details)</li>
+<li>Sets the mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> to the output of the function’s
+reinitialize method</li>
+<li>Updates its <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_state" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output</span> <span class="pre">states</span></code></a> based on its new <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a></li>
+</ol>
 </div></blockquote>
-<p>If the mechanism has an <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>:</p>
-<blockquote>
-<div><p><a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> first calls the <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function's</span></code></a> own
-<a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.reinitialize" title="psyneulink.components.functions.function.Integrator.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method, which typically sets:</p>
-<ul class="simple">
-<li><a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.previous_value" title="psyneulink.components.functions.function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a></li>
-<li><code class="xref any docutils literal"><span class="pre">initializer</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">value</span></code></li>
-</ul>
-<p>to the quantity specified. For specific types of Integrator functions, additional values, such as
-initial time, must be specified, and additional attributes are reset. See individual functions for
-details.</p>
-<p>Then, the mechanism executes its <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> using the quantity specified as the
-function’s variable. The mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is set to the output of its function.
-Finally, the mechanism updates its <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_state" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output</span> <span class="pre">states</span></code></a>.</p>
+<p>If the mechanism has an <a class="reference internal" href="TransferMechanism.html#psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>, its <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>(1) Calls the `integrator_function&#39;s &lt;TransferMechanism.integrator_function&gt;` own `reinitialize
+    &lt;Integrator.reinitialize&gt;` method (see Note below for details)
+
+(2) Executes its `function &lt;Mechanism_Base.function&gt;` using the output of the `integrator_function&#39;s
+    &lt;TransferMechanism.integrator_function&gt;` `reinitialize &lt;Integrator.reinitialize&gt;` method as the
+    function&#39;s variable
+
+(3) Sets the mechanism&#39;s `value &lt;Mechanism_Base.value&gt;` to the output of its function
+
+(4) Updates its `output states &lt;Mechanism_Base.output_state&gt;` based on its new `value
+    &lt;Mechanism_Base.value&gt;`
+</pre></div>
+</div>
 </div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The reinitialize method of an Integrator Function typically resets the function’s <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.previous_value" title="psyneulink.components.functions.function.Integrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (and any other <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.stateful_attributes" title="psyneulink.components.functions.function.Integrator.stateful_attributes"><code class="xref any py py-attr docutils literal"><span class="pre">stateful_attributes</span></code></a>) and
+<code class="xref any docutils literal"><span class="pre">value</span></code> to the quantity (or quantities) specified. If <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> is called without arguments, the <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.initializer" title="psyneulink.components.functions.function.Integrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a>
+value (or the values of each of the attributes in <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.initializers" title="psyneulink.components.functions.function.Integrator.initializers"><code class="xref any py py-attr docutils literal"><span class="pre">initializers</span></code></a>) is used
+instead. The <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.reinitialize" title="psyneulink.components.functions.function.Integrator.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method may vary across different Integrators.
+See individual functions for details on their <a class="reference internal" href="Function.html#psyneulink.components.functions.function.Integrator.stateful_attributes" title="psyneulink.components.functions.function.Integrator.stateful_attributes"><code class="xref any py py-attr docutils literal"><span class="pre">stateful_attributes</span></code></a>,
+as well as other reinitialization steps that the reinitialize method may carry out.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1208,14 +1212,14 @@ Finally, the mechanism updates its <a class="reference internal" href="#psyneuli
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>input</strong> (<em>List</em><em>[</em><a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value"><em>value</em></a><em>] or </em><em>ndarray : default self.instance_defaults.variable</em>) – input to use for execution of the Mechanism.
+<li><strong>input</strong> (<em>List</em><em>[</em><a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value" title="psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value"><em>value</em></a><em>] or </em><em>ndarray : default self.instance_defaults.variable</em>) – input to use for execution of the Mechanism.
 This must be consistent with the format of the Mechanism’s <a class="reference internal" href="#mechanism-inputstates"><span class="std std-ref">InputState(s)</span></a>:
 the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
 of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>, and each item must be compatible with the
 format (number and type of elements) of the <code class="xref any docutils literal"><span class="pre">variable</span></code> of the
 corresponding InputState (see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Run Inputs</span></a> for details of input
 specification formats).</li>
-<li><strong>runtime_params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value"><em>value</em></a><em>]</em><em>]</em><em>]</em><em>]</em><em>:</em>) – a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism or
+<li><strong>runtime_params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value" title="psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value"><em>value</em></a><em>]</em><em>]</em><em>]</em><em>]</em><em>:</em>) – a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism or
 its function. Any value assigned to a parameter will override the current value of that parameter for <em>only
 the current</em> execution of the Mechanism. When runtime_params are passed down from the <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> level
 <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> method, parameters reset to their original values immediately following the execution during which
@@ -1225,10 +1229,10 @@ beginning of the next execution.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Mechanism’s output_values</strong> – list with the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of the Mechanism’s <a class="reference internal" href="#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a> after either one <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or a <a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.TRIAL" title="psyneulink.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Mechanism’s output_values</strong> – list with the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of the Mechanism’s <a class="reference internal" href="#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a> after either one <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or a <a class="reference internal" href="Time.html#psyneulink.scheduling.time.TimeScale.TRIAL" title="psyneulink.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value">value</a>]</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value" title="psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value">value</a>]</p>
 </td>
 </tr>
 </tbody>
@@ -1255,7 +1259,7 @@ description of formatting requirements and options).</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Mechanism’s output_values</strong> – list with the <a class="reference internal" href="OutputState.html#psyneulink.components.states.outputstate.OutputState.value" title="psyneulink.components.states.outputstate.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of the Mechanism’s <a class="reference internal" href="#mechanism-outputstates"><span class="std std-ref">OutputStates</span></a> for each execution of the Mechanism.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value">value</a>]</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value" title="psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value">value</a>]</p>
 </td>
 </tr>
 </tbody>
@@ -1271,7 +1275,7 @@ description of formatting requirements and options).</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>List</em><em>[</em><a class="reference internal" href="DDM.html#psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.mechanisms.processing.integrator.ddm.DDM.value"><em>value</em></a><em>] or </em><em>1d ndarray</em>) – value used to initialize the first item of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>List</em><em>[</em><a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value" title="psyneulink.library.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.value"><em>value</em></a><em>] or </em><em>1d ndarray</em>) – value used to initialize the first item of the Mechanism’s <a class="reference internal" href="#psyneulink.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.</td>
 </tr>
 </tbody>
 </table>
@@ -1523,7 +1527,7 @@ one exists, and the numeric value otherwise.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1+137.g2a1b3fa',
+            VERSION:'0.4.7.1+138.g9b9b7ed',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

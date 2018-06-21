@@ -8,6 +8,7 @@ import numpy as np
 import psyneulink as pnl
 import sys
 
+
 from matplotlib import pyplot as plt
 
 # Define Variables ----------------------------------------------------------------------------------------------------
@@ -152,7 +153,8 @@ LC = pnl.LCControlMechanism(
     name='LC'
 )
 
-task = pnl.System(processes=[decision_process])
+task = pnl.System(processes=[decision_process],
+                  reinitialize_mechanisms_when=pnl.Never())
 
 # This displays a diagram of the System
 task.show_graph()
