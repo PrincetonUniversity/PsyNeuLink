@@ -868,6 +868,7 @@ class System(System_Base):
         # Required to defer assignment of self.controller by setter
         #     until the rest of the System has been instantiated
         self.context.initialization_status = ContextFlags.INITIALIZING
+
         processes = processes or []
         if not isinstance(processes, list):
             processes = [processes]
@@ -877,6 +878,11 @@ class System(System_Base):
             self.control_signals_arg = [self.control_signals_arg]
         if not isinstance(monitor_for_control, list):
             monitor_for_control = [monitor_for_control]
+
+        # # If controller has already been instantiated, assign self to its system attribute so that it
+        # #    and its ObjectiveMechanism are recognized as the controller for the System in _instantiate_system_graph()
+        # if isinstance(controller, ControlMechanism):
+        #     controller.system = self
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
@@ -1241,11 +1247,13 @@ class System(System_Base):
                 elif (sender_mech is self.controller or
                           (isinstance(sender_mech, ObjectiveMechanism) and
                            (all(
-                                   all(projection.receiver.owner is self.controller
+                                   all((       # controller for self is ControlMechanism to which sender_mech projects
+                                               (projection.receiver.owner is self.controller) or
+                                               # system attrib of ControlMechanism to which sender_mech projects is self
+                                               (projection.receiver.owner.system is self))
                                        for projection in output_state.efferents)
                                    for output_state in sender_mech.output_states)
-                           or sender_mech.controller)
-                          )):
+                           ))):
                     sender_mech.systems[self] = CONTROL
                     return
                 # If sender is a ControlMechanism that is not the controller for the System,
@@ -2073,10 +2081,8 @@ class System(System_Base):
         self._controller = controller
 
         # Add controller's ObjectiveMechanism to the System's execution_list and execution_graph
-        #    and identify it as associated with a controller
         self.execution_list.append(self.controller.objective_mechanism)
         self.execution_graph[self.controller.objective_mechanism] = set(self.execution_list[:-1])
-        self.controller.objective_mechanism.controller = True
 
         # Check whether controller has input, and if not then disable
         has_input_states = isinstance(self.controller.input_states, ContentAddressableList)

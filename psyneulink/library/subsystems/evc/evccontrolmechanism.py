@@ -810,10 +810,6 @@ class EVCControlMechanism(ControlMechanism):
             self._instantiate_prediction_mechanisms(system=self.system, context=context)
         super()._instantiate_input_states(context=context)
 
-    def _instantiate_objective_mechanism(self, context=None):
-        super()._instantiate_objective_mechanism(context=context)
-        self.objective_mechanism.controller = True
-
     def _instantiate_prediction_mechanisms(self, system:System_Base, context=None):
         """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in system
 
