@@ -154,7 +154,9 @@ Bidirectional_Stroop = pnl.System(processes=[color_response_process,
                                                    word_response_process,
                                                    task_color_response_process,
                                                    task_word_response_process],
-                                        name='FEEDFORWARD_STROOP_SYSTEM')
+
+                                  reinitialize_mechanisms_when=pnl.Never(),
+                                  name='FEEDFORWARD_STROOP_SYSTEM')
 
 # LOGGING:
 colors_hidden_layer.set_log_conditions('value')

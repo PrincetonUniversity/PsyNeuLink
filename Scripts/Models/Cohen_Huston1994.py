@@ -218,6 +218,7 @@ Bidirectional_Stroop = pnl.System(
         task_color_response_process,
         task_word_response_process
     ],
+    reinitialize_mechanisms_when=pnl.Never(),
     name='Bidirectional_Stroop_SYSTEM'
 )
 response_layer.systems[Bidirectional_Stroop] = pnl.TERMINAL
