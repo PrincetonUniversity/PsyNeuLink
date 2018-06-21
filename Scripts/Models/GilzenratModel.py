@@ -8,7 +8,7 @@ import numpy as np
 import psyneulink as pnl
 import sys
 
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 
 # Define Variables ----------------------------------------------------------------------------------------------------
 
@@ -152,10 +152,11 @@ LC = pnl.LCControlMechanism(
     name='LC'
 )
 
-task = pnl.System(processes=[decision_process])
+task = pnl.System(processes=[decision_process],
+                  reinitialize_mechanisms_when=pnl.Never())
 
 # This displays a diagram of the System
-task.show_graph()
+# task.show_graph()
 
 
 # Create Stimulus -----------------------------------------------------------------------------------------------------
@@ -187,8 +188,8 @@ response_layer_values = [0.0]
 
 def record_trial():
     # After each trial, store all of the following values:
-    LC_results_h_of_v.append(h_v(LC.value[2][0], C, d))
-    LC_results_u.append(LC.value[3][0])
+    LC_results_h_of_v.append(h_v(LC.value[1][0], C, d))
+    LC_results_u.append(LC.value[2][0])
     decision_layer_target_values.append(decision_layer.value[0][0])
     decision_layer_distractor_values.append(decision_layer.value[0][1])
     response_layer_values.append(response_layer.value[0][0])
@@ -218,48 +219,48 @@ task.run(
 # Create x axis "t" for plotting
 t = np.arange(0.0, 20.02, 0.02)
 
-# # Plot target unit, distraction unit, response unit, h(v), and u using the values that were recorded after each trial
-# plt.plot(
-#     t,
-#     decision_layer_target_values,
-#     label="target unit",
-#     color='green'
-# )
-# plt.plot(
-#     t,
-#     decision_layer_distractor_values,
-#     label="distraction unit",
-#     color='red'
-# )
-# plt.plot(
-#     t,
-#     response_layer_values,
-#     label="response unit",
-#     color='magenta'
-# )
-# plt.plot(
-#     t,
-#     LC_results_h_of_v,
-#     label="h(v)",
-#     color='b'
-# )
-# plt.plot(
-#     t,
-#     LC_results_u,
-#     label="u",
-#     color='black'
-# )
-#
-# plt.xlabel('Time')
-# plt.ylabel('Activation')
-# plt.legend(loc='upper left')
-# plt.xlim((0.0, 20.0))
-# plt.ylim((-0.2, 1.2))
-# x_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-# plt.xticks(x_values)
-# plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
-#
-#
-# plt.show()
+# Plot target unit, distraction unit, response unit, h(v), and u using the values that were recorded after each trial
+plt.plot(
+    t,
+    decision_layer_target_values,
+    label="target unit",
+    color='green'
+)
+plt.plot(
+    t,
+    decision_layer_distractor_values,
+    label="distraction unit",
+    color='red'
+)
+plt.plot(
+    t,
+    response_layer_values,
+    label="response unit",
+    color='magenta'
+)
+plt.plot(
+    t,
+    LC_results_h_of_v,
+    label="h(v)",
+    color='b'
+)
+plt.plot(
+    t,
+    LC_results_u,
+    label="u",
+    color='black'
+)
+
+plt.xlabel('Time')
+plt.ylabel('Activation')
+plt.legend(loc='upper left')
+plt.xlim((0.0, 20.0))
+plt.ylim((-0.2, 1.2))
+x_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+plt.xticks(x_values)
+plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
+
+
+plt.show()
 
 task.show()

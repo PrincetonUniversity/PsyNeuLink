@@ -196,7 +196,7 @@ import typecheck as tc
 from psyneulink.components.component import ComponentError, DefaultsFlexibility, function_type, method_type, parameter_keywords
 from psyneulink.components.shellclasses import Function
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
+from psyneulink.globals.keywords import DEFAULT_VARIABLE, INITIAL_V, INITIAL_W, ACCUMULATOR_INTEGRATOR_FUNCTION, \
     ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, \
     BACKPROPAGATION_FUNCTION, BETA, BIAS, \
     COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONSTANT_INTEGRATOR_FUNCTION, CONTEXT, CORRELATION, \
@@ -4561,8 +4561,19 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         array, initializer will be applied to each variable element. In the case of an initializer function, this means
         that the function will be executed separately for each variable element.
 
-    previous_value : 1d np.array : default ClassDefaults.variable
+    previous_value : 1d np.array
         stores previous value with which `variable <Integrator.variable>` is integrated.
+
+    initializers : list
+        stores the names of the initialization attributes for each of the stateful attributes of the function. The
+        index i item in initializers provides the initialization value for the index i item in `stateful_attributes
+        <Integrator.stateful_attributes>`.
+
+    stateful_attributes : list
+        stores the names of each of the stateful attributes of the function. The index i item in stateful_attributes is
+        initialized by the value of the initialization attribute whose name is stored in index i of `initializers
+        <Integrator.initializers>`. In most cases, the stateful_attributes, in that order, are the return values of the
+        function.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4597,12 +4608,19 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                  prefs: is_pref_set = None,
                  context=None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initializer"]
+
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["previous_value"]
+
         if initializer is None:
             if params is not None and INITIALIZER in params and params[INITIALIZER] is not None:
                 # This is only needed as long as a new copy of a function is created
                 # whenever assigning the function to a mechanism.
                 # The old values are compiled and passed in through params argument.
                 initializer = params[INITIALIZER]
+
             else:
                 initializer = self.ClassDefaults.variable
 
@@ -4616,7 +4634,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                                                   noise=noise,
                                                   params=params)
 
-        self.stateful_attributes = ["previous_value"]
         # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
         params[INITIALIZER] = initializer
 
@@ -4630,6 +4647,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     def _validate(self):
         self._validate_rate(self.instance_defaults.rate)
+        self._validate_initializers(self.instance_defaults.variable)
         super()._validate()
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -4682,10 +4700,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
-
-        # if INITIALIZER in target_set:
-        #     print(target_set)
-        #     self._validate_initializer(target_set[INITIALIZER])
 
         if NOISE in target_set:
             noise = target_set[NOISE]
@@ -4771,8 +4785,23 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
 
+    def _validate_initializers(self, default_variable):
+        for initial_value_name in self.initializers:
+
+            initial_value = self.get_current_function_param(initial_value_name)
+
+            if isinstance(initial_value, (list, np.ndarray)):
+                if len(initial_value) != 1:
+                    # np.atleast_2d may not be necessary here?
+                    if np.shape(np.atleast_2d(initial_value))!= np.shape(np.atleast_2d(default_variable)):
+                        raise FunctionError("{}'s {} ({}) is incompatible with its default_variable ({}) ."
+                                            .format(self.name, initial_value_name, initial_value, default_variable))
+            elif not isinstance(initial_value, (float, int)):
+                raise FunctionError("{}'s {} ({}) must be a number or a list/array of numbers."
+                                    .format(self.name, initial_value_name, initial_value))
+
     def _initialize_previous_value(self, initializer):
-        self.previous_value = initializer
+        self.previous_value = np.atleast_1d(initializer)
 
     def _try_execute_param(self, param, var):
 
@@ -4828,26 +4857,85 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         return value
 
 
-    def reinitialize(self, new_previous_value=None, **kwargs):
+    def reinitialize(self, *args):
         """
-            Effectively begins accumulation over again at the specified value.
+            Effectively begins accumulation over again at the specified value(s).
 
-            Sets
+            If arguments are passed into the reinitialize method, then reinitialize sets each of the attributes in
+            `stateful_attributes <Integrator.stateful_attributes>` to the value of the corresponding argument. Next, it
+            sets the `value <Integrator.value>` to a list containing each of the argument values.
 
-            - `previous_value <Integrator.previous_value>`
-            - `value <Integrator.value>`
+            If reinitialize is called without arguments, then it sets each of the attributes in `stateful_attributes
+            <Integrator.stateful_attributes>` to the value of the corresponding attribute in `initializers
+            <Integrator.initializers>`. Next, it sets the `value <Integrator.value>` to a list containing the values of
+            each of the attributes in `initializers <Integrator.initializers>`.
 
-            to the quantity specified.
+            Often, the only attribute in `stateful_attributes <Integrator.stateful_attributes>` is
+            `previous_value <Integrator.previous_value>` and the only attribute in `initializers
+            <Integrator.initializers>` is `initializer <Integrator.initializer>`, in which case the reinitialize method
+            sets `previous_value <Integrator.previous_value>` and `value <Integrator.value>` to either the value of the
+            argument (if an argument was passed into reinitialize) or the current value of `initializer
+            <Integrator.initializer>`.
 
-            For specific types of Integrator functions, additional values, such as initial time, must be specified, and
-            additional attributes are reset.
+            For specific types of Integrator functions, the reinitialize method may carry out other reinitialization
+            steps.
 
-            If no arguments are specified, then the current value of `initializer <Integrator.initializer>` is used.
         """
-        if new_previous_value is None:
-            new_previous_value = self.get_current_function_param("initializer")
-        self.value = new_previous_value
-        self.previous_value = new_previous_value
+
+        reinitialization_values = []
+
+        # no arguments were passed in -- use current values of initializer attributes
+        if len(args) == 0 or args is None:
+            for i in range(len(self.initializers)):
+                initializer_name = self.initializers[i]
+                reinitialization_values.append(self.get_current_function_param(initializer_name))
+
+        elif len(args) == len(self.initializers):
+            for i in range(len(self.initializers)):
+                initializer_name = self.initializers[i]
+                if args[i] is None:
+                    reinitialization_values.append(self.get_current_function_param(initializer_name))
+                else:
+                    # Not sure if np.atleast_1d is necessary here:
+                    reinitialization_values.append(np.atleast_1d(args[i]))
+
+        # arguments were passed in, but there was a mistake in their specification -- raise error!
+        else:
+            stateful_attributes_string = self.stateful_attributes[0]
+            if len(self.stateful_attributes) > 1:
+                for i in range(1, len(self.stateful_attributes) - 1):
+                    stateful_attributes_string += ", "
+                    stateful_attributes_string += self.stateful_attributes[i]
+                stateful_attributes_string += " and "
+                stateful_attributes_string += self.stateful_attributes[len(self.stateful_attributes) - 1]
+
+            initializers_string = self.initializers[0]
+            if len(self.initializers) > 1:
+                for i in range(1, len(self.initializers) - 1):
+                    initializers_string += ", "
+                    initializers_string += self.initializers[i]
+                initializers_string += " and "
+                initializers_string += self.initializers[len(self.initializers) - 1]
+
+            raise FunctionError("Invalid arguments ({}) specified for {}. If arguments are specified for the "
+                                "reinitialize method of {}, then a value must be passed to reinitialize each of its "
+                                "stateful_attributes: {}, in that order. Alternatively, reinitialize may be called "
+                                "without any arguments, in which case the current values of {}'s initializers: {}, will"
+                                " be used to reinitialize their corresponding stateful_attributes."
+                                .format(args,
+                                        self.name,
+                                        self.name,
+                                        stateful_attributes_string,
+                                        self.name,
+                                        initializers_string))
+
+        # rebuilding self.value rather than simply returning reinitialization_values in case any of the stateful
+        # attrs are modified during assignment
+        self.value = []
+        for i in range(len(self.stateful_attributes)):
+            setattr(self, self.stateful_attributes[i], reinitialization_values[i])
+            self.value.append(getattr(self, self.stateful_attributes[i]))
+
         return self.value
 
     def function(self, *args, **kwargs):
@@ -5933,6 +6021,12 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initializer", "t0"]
+
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["previous_value", "previous_time"]
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
@@ -5945,6 +6039,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
 
         # Assign here as default, for use in initialization of function
         self.previous_value = initializer
+        self.previous_time = t0
         super().__init__(
             default_variable=default_variable,
             initializer=initializer,
@@ -5952,10 +6047,8 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
             owner=owner,
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
-
         self.previous_time = self.t0
         self.auto_dependent = True
-        self.stateful_attributes = ["previous_value", "previous_time"]
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -6018,37 +6111,10 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
             self.previous_time += time_step_size
-
+            self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
         # FIX?
         # Current output format is [[[decision_variable]], time]
-        return adjusted_value
-
-    def reinitialize(self, new_previous_value=None, new_previous_time=None):
-        """
-        In effect, begins accumulation over again at the original starting point and time, or new ones.
-
-        Sets
-
-        - `previous_value <DriftDiffusionIntegrator.previous_value>`
-        - `value <DriftDiffusionIntegrator.value>`
-
-        to the value specified in the first argument.
-
-        Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the value specified in the second argument.
-
-        If arguments are not specified, then the current values for `initializer
-        <DriftDiffusionIntegrator.initializer>` and `t0 <DriftDiffusionIntegrator.t0>` are used.
-        """
-        if new_previous_value is None:
-            new_previous_value = self.get_current_function_param("initializer")
-        if new_previous_time is None:
-            new_previous_time = self.get_current_function_param("t0")
-
-        self.value = new_previous_value
-        self.previous_value = new_previous_value
-        self.previous_time = new_previous_time
-        return np.atleast_1d(new_previous_value), np.atleast_1d(new_previous_time)
-
+        return self.previous_value, self.previous_time
 
 class OrnsteinUhlenbeckIntegrator(Integrator):  # ----------------------------------------------------------------------
     """
@@ -6189,6 +6255,12 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initializer", "t0"]
+
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["previous_value", "previous_time"]
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
@@ -6201,6 +6273,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
 
         # Assign here as default, for use in initialization of function
         self.previous_value = initializer
+        self.previous_time = t0
 
         super().__init__(
             default_variable=default_variable,
@@ -6212,7 +6285,6 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
 
         self.previous_time = self.t0
         self.auto_dependent = True
-        self.stateful_attributes = ["previous_value", "previous_time"]
 
     def _validate_noise(self, noise):
         if not isinstance(noise, float):
@@ -6273,34 +6345,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
             self.previous_value = adjusted_value
             self.previous_time += time_step_size
 
-        return adjusted_value
-
-    def reinitialize(self, new_previous_value=None, new_previous_time=None):
-        """
-        In effect, begins accumulation over again at the original starting point and time, or new ones.
-
-        Sets
-
-        - `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`
-        - `value <OrnsteinUhlenbeckIntegrator.value>`
-
-        to the value specified in the first argument.
-
-        Sets `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>` to the value specified in the second argument.
-
-        If no arguments are specified, then the current values of `initializer
-        <OrnsteinUhlenbeckIntegrator.initializer>` and `t0 <OrnsteinUhlenbeckIntegrator.t0>` are used.
-        """
-        if new_previous_value is None:
-            new_previous_value =self.get_current_function_param("initializer")
-        if new_previous_time is None:
-            new_previous_time = self.get_current_function_param("t0")
-
-        self.value = new_previous_value
-        self.previous_value = new_previous_value
-        self.previous_time = new_previous_time
-        return self.value
-
+        return [[self.previous_value], [self.previous_time]]
 
 class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -6679,7 +6724,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
     class ClassDefaults(Integrator.ClassDefaults):
         variable = np.array([1.0])
-        initializer = np.array([1.0])
+        initial_v = np.array([1.0])
+        initial_w = np.array([1.0])
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
@@ -6721,6 +6767,24 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initial_v", "initial_w", "t_0"]
+
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
+
+        if default_variable is None:
+            if params is not None and DEFAULT_VARIABLE in params and params[DEFAULT_VARIABLE] is not None:
+                default_variable = params[DEFAULT_VARIABLE]
+            else:
+                default_variable = self.ClassDefaults.variable
+
+        initial_v = np.broadcast_to(initial_v, default_variable.shape)
+        initial_w = np.broadcast_to(initial_w, default_variable.shape)
+        self.previous_v = initial_v
+        self.previous_w = initial_w
+        self.previous_time = t_0
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
                                                   offset=offset,
@@ -6747,10 +6811,10 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                                   params=params,
                                                   )
 
+
         self.previous_v = self.initial_v
         self.previous_w = self.initial_w
         self.previous_time = self.t_0
-        self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
 
         super().__init__(
             default_variable=default_variable,
@@ -6759,7 +6823,13 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
+        self.initial_v = np.broadcast_to(initial_v, default_variable.shape)
+        self.initial_w = np.broadcast_to(initial_w, default_variable.shape)
+        self.previous_v = self.initial_v
+        self.previous_w = self.initial_w
+        self.previous_time = t_0
         self.auto_dependent = True
+
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set,
@@ -6878,6 +6948,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    f_v,
                                    time_constant_v)
 
+
         slope_w_approx_3 = slope_w(variable,
                                    previous_time + time_step_size/2,
                                    previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
@@ -6888,7 +6959,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    c_w,
                                    uncorrelated_activity,
                                    time_constant_w)
-
         # Fourth approximation
         # v is approximately previous_value_v + time_step_size * slope_v_approx_3
         # w is approximately previous_value_w + time_step_size * slope_w_approx_3
@@ -6896,7 +6966,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         slope_v_approx_4 = slope_v(variable,
                                    previous_time + time_step_size,
                                    previous_value_v + (time_step_size * slope_v_approx_3),
-                                   previous_value_w + (time_step_size * slope_v_approx_3),
+                                   previous_value_w + (time_step_size * slope_w_approx_3),
                                    a_v,
                                    threshold,
                                    b_v,
@@ -6908,7 +6978,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         slope_w_approx_4 = slope_w(variable,
                                    previous_time + time_step_size,
-                                   previous_value_w + (time_step_size * slope_v_approx_3),
+                                   previous_value_w + (time_step_size * slope_w_approx_3),
                                    previous_value_v + (time_step_size * slope_v_approx_3),
                                    mode,
                                    a_w,
@@ -6916,7 +6986,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                    c_w,
                                    uncorrelated_activity,
                                    time_constant_w)
-
         new_v = previous_value_v \
                 + (time_step_size/6)*(slope_v_approx_1 + 2*(slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
         new_w = previous_value_w \
@@ -6931,24 +7000,21 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
 
         # Standard coefficients - hardcoded for testing
         # val = v - (v**3)/3 - w + variable
-
         # Gilzenrat paper - hardcoded for testing
         # val = (v*(v-0.5)*(1-v) - w + variable)/0.01
-
         return val
 
     def dw_dt(self, variable, time, w, v, mode, a_w, b_w, c_w, uncorrelated_activity, time_constant_w):
-        val = (mode*a_w*self.previous_v + b_w*w + c_w +
-                (1-mode)*uncorrelated_activity)/time_constant_w
+
+        # val = np.ones_like(variable)*(mode*a_w*self.previous_v + b_w*w + c_w + (1-mode)*uncorrelated_activity)/time_constant_w
+        val = (mode * a_w * self.previous_v + b_w * w + c_w + (1 - mode) * uncorrelated_activity) / time_constant_w
 
         # Standard coefficients - hardcoded for testing
         # val = (v + 0.7 - 0.8*w)/12.5
-
         #Gilzenrat paper - hardcoded for testing
 
         # val = (v - 0.5*w)
-
-        return val
+        return np.broadcast_to(val, variable.shape)
 
     def function(self,
                  variable=None,
@@ -7058,35 +7124,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             self.previous_time += time_step_size
 
         return self.previous_v, self.previous_w, self.previous_time
-
-    def reinitialize(self, new_previous_v=None, new_previous_w=None, new_previous_time=None):
-        """
-        Effectively begins accumulation over again at the specified v, w, and time.
-
-            - Sets `previous_v <DriftDiffusionIntegrator.previous_v>` to the quantity specified in the first argument.
-
-            - Sets `previous_w <DriftDiffusionIntegrator.previous_w>` to the quantity specified in the second argument.
-
-            - Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in the third
-              argument.
-
-        If no arguments are specified, then the current values of `initial_v <FHNIntegrator.initial_v>`, `initial_w
-        <FHNIntegrator.initial_w>` and `t_0 <FHNIntegrator.t_0>` are used.
-        """
-        if new_previous_v is None:
-            new_previous_v = self.get_current_function_param("initial_v")
-        if new_previous_w is None:
-            new_previous_w = self.get_current_function_param("initial_w")
-        if new_previous_time is None:
-            new_previous_time = self.get_current_function_param("t_0")
-
-        self.previous_v = new_previous_v
-        self.previous_w = new_previous_w
-        self.previous_time = new_previous_time
-        self.value = new_previous_v, new_previous_w, new_previous_time
-
-        return [new_previous_v], [new_previous_w], [new_previous_time]
-
 
 class AccumulatorIntegrator(Integrator):  # ----------------------------------------------------------------------------
     """
@@ -7734,6 +7771,12 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
+        if not hasattr(self, "initializers"):
+            self.initializers = ["initial_long_term_utility", "initial_short_term_utility"]
+
+        if not hasattr(self, "stateful_attributes"):
+            self.stateful_attributes = ["previous_short_term_utility", "previous_long_term_utility"]
+
         # Assign args to params and functionParams dicts
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
@@ -7762,7 +7805,6 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
             context=ContextFlags.CONSTRUCTOR)
 
         self.auto_dependent = True
-        self.stateful_attributes = ["previous_short_term_utility", "previous_long_term_utility"]
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -7959,7 +8001,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         self.value = self.combine_utilities(short, long)
 
         return self.value
-#
+
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'

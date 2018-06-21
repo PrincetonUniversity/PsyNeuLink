@@ -1621,7 +1621,7 @@ class State_Base(State):
             # Validate that State to be connected to specified in receiver is same as any one specified in connection
             def _get_receiver_state(spec):
                 """Get state specification from ProjectionTuple, which itself may be a ProjectionTuple"""
-                if isinstance(spec, ProjectionTuple):
+                if isinstance(spec, (tuple, ProjectionTuple)):
                     spec = _parse_connection_specs(connectee_state_type=self.__class__,
                                                    owner=self.owner,
                                                    connections=receiver)
@@ -1985,6 +1985,8 @@ class State_Base(State):
             if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                 continue
 
+            # KDM 6/20/18: consider moving handling of Pathway and Modulatory projections
+            # into separate methods
             if isinstance(projection, PathwayProjection_Base):
                 # Add projection_value to list of PathwayProjection values (for aggregation below)
                 # MODIFIED 5/4/18 OLD:
@@ -2018,6 +2020,9 @@ class State_Base(State):
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
                 self._mod_proj_values[mod_meta_param].append(mod_value)
+
+        # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
+        # a bit handwavy just to make stuff work
 
         # Handle ModulatoryProjection OVERRIDE
         #    if there is one and it wasn't been handled above (i.e., if paramValidation is set)
@@ -2178,7 +2183,8 @@ def _instantiate_state_list(owner,
                                                           reference_value))
 
     # States should be either in a list, or possibly an np.array (from reference_value assignment above):
-    if not isinstance(state_list, (ContentAddressableList, list, np.ndarray)):
+    # KAM 6/21/18 modified to include tuple as an option for state_list
+    if not isinstance(state_list, (ContentAddressableList, list, np.ndarray, tuple)):
         # This shouldn't happen, as items of state_list should be validated to be one of the above in _validate_params
         raise StateError("PROGRAM ERROR: {} for {} is not a recognized \'{}\' specification for {}; "
                          "it should have been converted to a list in Mechanism._validate_params)".
