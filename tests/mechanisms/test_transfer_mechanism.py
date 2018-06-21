@@ -3,7 +3,7 @@ import pytest
 
 from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import FunctionError
-from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax, UserDefinedFunction
+from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, Relu, SoftMax, UserDefinedFunction
 from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
