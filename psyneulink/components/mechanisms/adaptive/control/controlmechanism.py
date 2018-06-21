@@ -356,7 +356,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     ControlMechanism(                              \
         system=None                                \
         objective_mechanism=None,                  \
-        monitor_for_control=None,                  \
         function=Linear,                           \
         control_signals=None,                      \
         modulation=ModulationParam.MULTIPLICATIVE  \
@@ -577,13 +576,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                     function=function,
                                                     prefs=prefs,
                                                     context=ContextFlags.CONSTRUCTOR)
-
-        try:
-            self.monitored_output_states
-        except AttributeError:
-            raise ControlMechanismError("{} (subclass of {}) must implement a \'monitored_output_states\' attribute".
-                                              format(self.__class__.__name__,
-                                                     self.__class__.__bases__[0].__name__))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
@@ -1020,7 +1012,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Add all other monitored_output_states to the ControlMechanism's monitored_output_states attribute
         #    and to its ObjectiveMechanisms monitored_output_states attribute
-        self.add_monitored_output_states(monitored_output_states)
+        if monitored_output_states:
+            self.add_monitored_output_states(monitored_output_states)
 
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
