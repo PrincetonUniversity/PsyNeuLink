@@ -79,8 +79,8 @@ class TestLCControlMechanism:
 
         LC = pnl.LCControlMechanism(
             base_level_gain=3.0,
-            scaling_factor_gain=0.5,
+            scaling_factor_gain=0.5
         )
         val = LC.execute([[10.0]])
-        assert np.allclose(np.asfarray(val).flatten(), [3.00126183, 3.00126183, 0.51215226, 0.00252367, 0.05])
+        assert np.allclose(np.asfarray(val).flatten(), [3.00139776, 3.00139776,  0.512152259, .00279552477, 0.05000])
         val = benchmark(LC.execute, [[10.0]])
