@@ -19,7 +19,7 @@ class TestReinitialize:
         I.execute(1.0)
 
         assert np.allclose([[0.05127053]], I.value[0])
-        assert np.allclose([[0.00276967]], I.value[1])
+        assert np.allclose([[0.00279552]], I.value[1])
         assert np.allclose([[0.05]], I.value[2])
 
         I.function_object.reinitialize(0.01, 0.02, 0.03)
@@ -29,7 +29,7 @@ class TestReinitialize:
         assert np.allclose(0.03, I.function_object.value[2])
 
         assert np.allclose([[0.05127053]], I.value[0])
-        assert np.allclose([[0.00276967]], I.value[1])
+        assert np.allclose([[0.00279552]], I.value[1])
         assert np.allclose([[0.05]], I.value[2])
 
         assert np.allclose([[0.05127053]], I.output_states[0].value)
@@ -37,7 +37,7 @@ class TestReinitialize:
         I.execute(1.0)
 
         assert np.allclose([[0.06075727]], I.value[0])
-        assert np.allclose([[0.02274597]], I.value[1])
+        assert np.allclose([[0.02277156]], I.value[1])
         assert np.allclose([[0.08]], I.value[2])
 
         assert np.allclose([[0.06075727]], I.output_states[0].value)
@@ -75,6 +75,8 @@ class TestReinitialize:
 
         assert np.allclose([[0.3]], I.function_object.previous_short_term_utility)
         assert np.allclose([[0.7]], I.function_object.previous_long_term_utility)
+        print(I.value)
+        print(I.function_object.combine_utilities(0.3, 0.7))
         assert np.allclose(I.function_object.combine_utilities(0.3, 0.7), I.value)
 
         I.reinitialize()
