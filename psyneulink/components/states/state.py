@@ -2183,7 +2183,8 @@ def _instantiate_state_list(owner,
                                                           reference_value))
 
     # States should be either in a list, or possibly an np.array (from reference_value assignment above):
-    if not isinstance(state_list, (ContentAddressableList, list, np.ndarray)):
+    # KAM 6/21/18 modified to include tuple as an option for state_list
+    if not isinstance(state_list, (ContentAddressableList, list, np.ndarray, tuple)):
         # This shouldn't happen, as items of state_list should be validated to be one of the above in _validate_params
         raise StateError("PROGRAM ERROR: {} for {} is not a recognized \'{}\' specification for {}; "
                          "it should have been converted to a list in Mechanism._validate_params)".
