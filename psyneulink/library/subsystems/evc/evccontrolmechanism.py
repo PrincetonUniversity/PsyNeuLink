@@ -750,15 +750,16 @@ class EVCControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  system:tc.optional(System_Base)=None,
-                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
-                 control_signals:tc.optional(list) = None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
+                 # monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism))=None,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
                  cost_function=LinearCombination(operation=SUM),
                  combine_outcome_and_cost_function=LinearCombination(operation=SUM),
                  save_all_values_and_policies:bool=False,
+                 control_signals:tc.optional(list) = None,
+                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
@@ -766,26 +767,21 @@ class EVCControlMechanism(ControlMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanisms=prediction_mechanisms,
-                                                  objective_mechanism=objective_mechanism,
-                                                  function=function,
-                                                  control_signals=control_signals,
-                                                  modulation=modulation,
                                                   value_function=value_function,
                                                   cost_function=cost_function,
                                                   combine_outcome_and_cost_function=combine_outcome_and_cost_function,
                                                   save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
-        super(EVCControlMechanism, self).__init__(# default_variable=default_variable,
-                                           # size=size,
-                                           system=system,
-                                           objective_mechanism=objective_mechanism,
-                                           function=function,
-                                           control_signals=control_signals,
-                                           modulation=modulation,
-                                           params=params,
-                                           name=name,
-                                           prefs=prefs)
+        super().__init__(system=system,
+                         objective_mechanism=objective_mechanism,
+                         # monitor_for_control=monitor_for_control,
+                         function=function,
+                         control_signals=control_signals,
+                         modulation=modulation,
+                         params=params,
+                         name=name,
+                         prefs=prefs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         '''Validate prediction_mechanisms'''
@@ -852,58 +848,6 @@ class EVCControlMechanism(ControlMechanism):
         # List of prediction Mechanism tuples (used by System to execute them)
         self.prediction_mechs = []
 
-        # MODIFIED 6/16/18 OLD:
-        # # Get any params specified for predictionMechanism(s) by EVCControlMechanism
-        # try:
-        #     prediction_mechanism_params = self.paramsCurrent[PREDICTION_MECHANISM_PARAMS]
-        # except KeyError:
-        #     prediction_mechanism_params = {}
-        #
-        # for origin_mech in system.origin_mechanisms.mechanisms:
-        #     state_names = []
-        #     variable = []
-        #     for state_name in origin_mech.input_states.names:
-        #         state_names.append(state_name)
-        #         # variable.append(origin_mech.input_states[state_name].instance_defaults.variable)
-        #         variable.append(origin_mech.input_states[state_name].value)
-        #
-        #     # Instantiate PredictionMechanism
-        #     prediction_mechanism = self.prediction_mechanism_type(
-        #             name=origin_mech.name + " " + PREDICTION_MECHANISM,
-        #             default_variable=variable,
-        #             input_states=state_names,
-        #             params = prediction_mechanism_params)
-        #     prediction_mechanism._role = CONTROL
-        #     prediction_mechanism.origin_mech = origin_mech
-        #
-        #     # Assign projections to prediction_mechanism that duplicate those received by origin_mech
-        #     #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
-        #     for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
-        #                                                     prediction_mechanism.input_states):
-        #         for projection in orig_input_state.path_afferents:
-        #             MappingProjection(sender=projection.sender,
-        #                               receiver=prediction_input_state,
-        #                               matrix=projection.matrix)
-        #
-        #     # Assign list of processes for which prediction_mechanism will provide input during the simulation
-        #     # - used in _get_simulation_system_inputs()
-        #     # - assign copy,
-        #     #       since don't want to include the prediction process itself assigned to origin_mech.processes below
-        #     prediction_mechanism.use_for_processes = list(origin_mech.processes.copy())
-        #
-        #     # # FIX: REPLACE REFERENCE TO THIS ELSEWHERE WITH REFERENCE TO MECH_TUPLES BELOW
-        #     self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
-        #
-        #     # Add to list of EVCControlMechanism's prediction_object_items
-        #     # prediction_object_item = prediction_mechanism
-        #     self.prediction_mechs.append(prediction_mechanism)
-        #
-        #     # Add to system execution_graph and execution_list
-        #     system.execution_graph[prediction_mechanism] = set()
-        #     system.execution_list.append(prediction_mechanism)
-
-        # MODIFIED 6/16/18 NEW:
-
         # IF IT IS A MECHANISM, PUT IT IN A LIST
         # IF IT IS A CLASS, PUT IT IN A TUPLE WITH NONE
         # NOW IF IT IS TUPLE,
@@ -953,7 +897,8 @@ class EVCControlMechanism(ControlMechanism):
                         default_variable=variable,
                         input_states=state_names,
                         # params = mech_params
-                        **mech_params
+                        **mech_params,
+                        context=context
                 )
             else:
                 raise EVCError("PROGRAM ERROR: Unexpected item ({}) in list for {} arg of constructor for {}".
@@ -987,9 +932,6 @@ class EVCControlMechanism(ControlMechanism):
             # Add to system execution_graph and execution_list
             system.execution_graph[prediction_mechanism] = set()
             system.execution_list.append(prediction_mechanism)
-
-        # MODIFIED 6/16/18 END
-
 
         self.prediction_mechanisms = MechanismList(self, self.prediction_mechs)
 
