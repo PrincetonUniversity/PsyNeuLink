@@ -252,13 +252,13 @@ should project to the InputState. Each of these is described below:
 
         .. _InputState_State_Mechanism_Tuple:
 
-        * **2-item tuple:** *(<State name or list of State names>, Mechanism)* -- 1st item must be the name of an
+        * **2-item tuple:** *(<State name or list of State names>, <Mechanism>)* -- 1st item must be the name of an
           `OutputState` or `ModulatorySignal`, or a list of such names, and the 2nd item must be the Mechanism to
           which they all belong.  Projections of the relevant types are created for each of the specified States
           (see `State 2-item tuple <State_2_Item_Tuple>` for additional details).
         |
-        * **2-item tuple:** *(<value, State specification, or list of State specs>, Projection specification)* -- this
-          is a contracted form of the 4-item tuple described below;
+        * **2-item tuple:** *(<value, State specification, or list of State specs>, <Projection specification>)* --
+          this is a contracted form of the 4-item tuple described below;
         |
         * **4-item tuple:** *(<value, State spec, or list of State specs>, weight, exponent, Projection specification)*
           -- this allows the specification of State(s) that should project to the InputState, together with a

@@ -152,10 +152,11 @@ LC = pnl.LCControlMechanism(
     name='LC'
 )
 
-task = pnl.System(processes=[decision_process])
+task = pnl.System(processes=[decision_process],
+                  reinitialize_mechanisms_when=pnl.Never())
 
 # This displays a diagram of the System
-task.show_graph()
+# task.show_graph()
 
 
 # Create Stimulus -----------------------------------------------------------------------------------------------------
@@ -187,8 +188,8 @@ response_layer_values = [0.0]
 
 def record_trial():
     # After each trial, store all of the following values:
-    LC_results_h_of_v.append(h_v(LC.value[2][0], C, d))
-    LC_results_u.append(LC.value[3][0])
+    LC_results_h_of_v.append(h_v(LC.value[1][0], C, d))
+    LC_results_u.append(LC.value[2][0])
     decision_layer_target_values.append(decision_layer.value[0][0])
     decision_layer_distractor_values.append(decision_layer.value[0][1])
     response_layer_values.append(response_layer.value[0][0])

@@ -208,7 +208,6 @@ starting point. This is done using the `reinitialize <AdaptiveIntegrator.reiniti
 The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_function
 <TransferMechanism.integrator_function>` sets:
 
-    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
     - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
     - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
 
@@ -216,16 +215,14 @@ The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_f
 
 The `reinitialize <TransferMechanism.reinitialize>` method of the `TransferMechanism` first sets:
 
-    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
     - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
     - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
-    - the TransferMechanism's `initial_value <TransferMechanism.initial_value>` attribute
 
     to the specified value. Then:
 
     - the specified value is passed into the mechanism's `function <TransferMechanism.function>` and the function is executed
     - the TransferMechanism's `value <TransferMechanism.value>` attribute is set to the output of the function
-    - the TransferMechanism updates is `output_states <TransferMechanism.output_states>`
+    - the TransferMechanism updates its `output_states <TransferMechanism.output_states>`
 
 A use case for `reinitialize <AdaptiveIntegrator.reinitialize>` is demonstrated in the following example:
 
@@ -935,12 +932,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                           owner=self)
 
             self.original_integrator_function = self.integrator_function
-
         current_input = self.integrator_function.execute(function_variable,
                                                          # Should we handle runtime params?
-                                                         runtime_params={INITIALIZER: self.initial_value,
-                                                                         NOISE: self.noise,
-                                                                         RATE: self.smoothing_factor},
+                                                         runtime_params={INITIALIZER: initial_value,
+                                                                         NOISE: noise,
+                                                                         RATE: smoothing_factor},
                                                          context=context)
 
         return current_input
@@ -1238,7 +1234,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         noise = self.get_current_mechanism_param("noise")
         initial_value = self.get_current_mechanism_param("initial_value")
 
-
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
@@ -1247,9 +1242,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update according to time-scale of integration
         if integrator_mode:
             current_input = self._get_integrated_function_input(variable,
-                                                                    initial_value,
-                                                                    noise,
-                                                                    context)
+                                                                initial_value,
+                                                                noise,
+                                                                context)
 
         else:
             current_input = self._get_instantaneous_function_input(variable, noise)
@@ -1266,6 +1261,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             outputs = self._clip_result(clip, current_input, runtime_params, context)
 
+        # # TEST PRINT:
+        # print('OUTPUT: ', outputs)
         return outputs
 
     def _report_mechanism_execution(self, input, params, output):
