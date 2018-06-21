@@ -1621,7 +1621,7 @@ class State_Base(State):
             # Validate that State to be connected to specified in receiver is same as any one specified in connection
             def _get_receiver_state(spec):
                 """Get state specification from ProjectionTuple, which itself may be a ProjectionTuple"""
-                if isinstance(spec, ProjectionTuple):
+                if isinstance(spec, (tuple, ProjectionTuple)):
                     spec = _parse_connection_specs(connectee_state_type=self.__class__,
                                                    owner=self.owner,
                                                    connections=receiver)

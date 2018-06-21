@@ -329,21 +329,6 @@ ALLOCATION_POLICY = 'allocation_policy'
 
 ControlMechanismRegistry = {}
 
-# MODIFIED 11/28/17 OLD:
-# def _is_control_spec(spec):
-#     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-#     if isinstance(spec, tuple):
-#         return _is_control_spec(spec[1])
-#     elif isinstance(spec, (ControlMechanism, ControlSignal, ControlProjection)):
-#         return True
-#     elif isinstance(spec, type) and issubclass(spec, ControlSignal):
-#         return True
-#     elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
-#         return True
-#     else:
-#         return False
-
-# MODIFIED 11/28/17 NEW:
 def _is_control_spec(spec):
     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
     if isinstance(spec, tuple):
@@ -358,7 +343,6 @@ def _is_control_spec(spec):
         return True
     else:
         return False
-# MODIFIED 11/28/17 END
 
 
 class ControlMechanismError(Exception):
@@ -369,7 +353,7 @@ class ControlMechanismError(Exception):
 # class ControlMechanism(Mechanism_Base):
 class ControlMechanism(AdaptiveMechanism_Base):
     """
-    ControlMechanism(                         \
+    ControlMechanism(                              \
         system=None                                \
         objective_mechanism=None,                  \
         function=Linear,                           \
@@ -592,13 +576,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                     function=function,
                                                     prefs=prefs,
                                                     context=ContextFlags.CONSTRUCTOR)
-
-        try:
-            self.monitored_output_states
-        except AttributeError:
-            raise ControlMechanismError("{} (subclass of {}) must implement a \'monitored_output_states\' attribute".
-                                              format(self.__class__.__name__,
-                                                     self.__class__.__bases__[0].__name__))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
@@ -1035,7 +1012,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
         # Add all other monitored_output_states to the ControlMechanism's monitored_output_states attribute
         #    and to its ObjectiveMechanisms monitored_output_states attribute
-        self.add_monitored_output_states(monitored_output_states)
+        if monitored_output_states:
+            self.add_monitored_output_states(monitored_output_states)
 
         # The system does NOT already have a controller,
         #    so assign it ControlSignals for any parameters in the System specified for control
@@ -1078,7 +1056,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.system = system
 
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
-        self._objective_mechanism.controller = True
+        self._objective_mechanism.for_controller = True
 
         if context != ContextFlags.PROPERTY:
             system._controller = self
