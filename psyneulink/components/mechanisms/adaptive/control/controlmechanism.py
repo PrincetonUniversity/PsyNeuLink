@@ -356,6 +356,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
     ControlMechanism(                              \
         system=None                                \
         objective_mechanism=None,                  \
+        monitor_for_control=None,                  \
         function=Linear,                           \
         control_signals=None,                      \
         modulation=ModulationParam.MULTIPLICATIVE  \

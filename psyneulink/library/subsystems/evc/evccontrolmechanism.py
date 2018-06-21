@@ -752,6 +752,7 @@ class EVCControlMechanism(ControlMechanism):
                  system:tc.optional(System_Base)=None,
                  prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
+                 monitor_for_control:tc.any(is_iterable, Mechanism)=None,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
                  cost_function=LinearCombination(operation=SUM),
@@ -774,6 +775,7 @@ class EVCControlMechanism(ControlMechanism):
 
         super().__init__(system=system,
                          objective_mechanism=objective_mechanism,
+                         monitor_for_control=monitor_for_control,
                          function=function,
                          control_signals=control_signals,
                          modulation=modulation,
