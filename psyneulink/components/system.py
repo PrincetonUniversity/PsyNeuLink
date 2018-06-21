@@ -1234,15 +1234,18 @@ class System(System_Base):
                         (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
                     sender_mech.systems[self] = LEARNING
                     return
-                # System's controller or ObjectiveMechanism that projects *only* to it:  label as CONTROL and return
-                # IMPLEMENTATION NOTE:  This the permits an ObjectiveMechanism to project to other Mechanisms
-                #                       that can be included in the System's execution_graph
+                # System's controller, or ObjectiveMechanism that projects *only* to it or _role is CONTROL
+                #     label as CONTROL and return
+                # IMPLEMENTATION NOTE:  This allows ObjectiveMechanisms to be included in the System's execution_graph
+                #                       that project to Mechanisms other than the System's controller
                 elif (sender_mech is self.controller or
                           (isinstance(sender_mech, ObjectiveMechanism) and
-                               all(
+                           (all(
                                    all(projection.receiver.owner is self.controller
                                        for projection in output_state.efferents)
-                                   for output_state in sender_mech.output_states))):
+                                   for output_state in sender_mech.output_states)) or
+                              sender_mech._role is CONTROL
+                          )):
                     sender_mech.systems[self] = CONTROL
                     return
                 # If sender is a ControlMechanism that is not the controller for the System,
