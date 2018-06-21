@@ -4758,6 +4758,23 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+
+        variable_shape = self.instance_defaults.variable.shape
+        if variable_shape is None:
+            variable_shape = self.ClassDefaults.variable.shape
+
+        for attr in self.initializers:
+            setattr(self, attr, np.broadcast_to(getattr(self, attr), variable_shape).copy())
+
+        for i in range(len(self.stateful_attributes)):
+            attr_name = self.stateful_attributes[i]
+            initializer_value = getattr(self, self.initializers[i])
+            setattr(self, attr_name, initializer_value)
+
+        self.auto_dependent = True
+
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
     def _validate_noise(self, noise):
         # Noise is a list or array
@@ -6038,8 +6055,6 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = initializer
-        self.previous_time = t0
         super().__init__(
             default_variable=default_variable,
             initializer=initializer,
@@ -6047,7 +6062,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
             owner=owner,
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
-        self.previous_time = self.t0
+
         self.auto_dependent = True
 
     def _validate_noise(self, noise):
@@ -6773,18 +6788,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
 
-        if default_variable is None:
-            if params is not None and DEFAULT_VARIABLE in params and params[DEFAULT_VARIABLE] is not None:
-                default_variable = params[DEFAULT_VARIABLE]
-            else:
-                default_variable = self.ClassDefaults.variable
-
-        initial_v = np.broadcast_to(initial_v, default_variable.shape)
-        initial_w = np.broadcast_to(initial_w, default_variable.shape)
-        self.previous_v = initial_v
-        self.previous_w = initial_w
-        self.previous_time = t_0
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(default_variable=default_variable,
                                                   offset=offset,
@@ -6811,11 +6814,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                                   params=params,
                                                   )
 
-
-        self.previous_v = self.initial_v
-        self.previous_w = self.initial_w
-        self.previous_time = self.t_0
-
         super().__init__(
             default_variable=default_variable,
             params=params,
@@ -6823,13 +6821,20 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
 
-        self.initial_v = np.broadcast_to(initial_v, default_variable.shape)
-        self.initial_w = np.broadcast_to(initial_w, default_variable.shape)
-        self.previous_v = self.initial_v
-        self.previous_w = self.initial_w
-        self.previous_time = t_0
-        self.auto_dependent = True
-
+    # def _instantiate_attributes_before_function(self, function=None, context=None):
+    #
+    #     variable_shape = self.instance_defaults.variable.shape
+    #     if variable_shape is None:
+    #         variable_shape = self.ClassDefaults.variable.shape
+    #
+    #     self.initial_v = np.broadcast_to(self.initial_v, variable_shape)
+    #     self.initial_w = np.broadcast_to(self.initial_w, variable_shape)
+    #     self.previous_v = self.initial_v
+    #     self.previous_w = self.initial_w
+    #     self.previous_time = self.t_0
+    #     self.auto_dependent = True
+    #
+    #     super()._instantiate_attributes_before_function(function=function, context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set,
