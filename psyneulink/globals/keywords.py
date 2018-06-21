@@ -857,6 +857,8 @@ PROB_INDICATOR = 'PROB_INDICATOR'
 MUTUAL_ENTROPY = 'mutual entropy'
 
 INITIALIZER = 'initializer'
+INITIAL_V = 'initial_v'
+INITIAL_W = 'initial_w'
 WEIGHTS = "weights"
 EXPONENTS = "exponents"
 OPERATION = "operation"

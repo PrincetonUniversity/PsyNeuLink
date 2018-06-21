@@ -1033,7 +1033,7 @@ class DDM(ProcessingMechanism_Base):
             if self.context.initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
-            return np.array([result, [self.function_object.previous_time]])
+            return np.array([result[0], [result[1]]])
 
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
