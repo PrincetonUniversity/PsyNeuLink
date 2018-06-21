@@ -4561,8 +4561,19 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         array, initializer will be applied to each variable element. In the case of an initializer function, this means
         that the function will be executed separately for each variable element.
 
-    previous_value : 1d np.array : default ClassDefaults.variable
+    previous_value : 1d np.array
         stores previous value with which `variable <Integrator.variable>` is integrated.
+
+    initializers : list
+        stores the names of the initialization attributes for each of the stateful attributes of the function. The
+        index i item in initializers provides the initialization value for the index i item in `stateful_attributes
+        <Integrator.stateful_attributes>`.
+
+    stateful_attributes : list
+        stores the names of each of the stateful attributes of the function. The index i item in stateful_attributes is
+        initialized by the value of the initialization attribute whose name is stored in index i of `initializers
+        <Integrator.initializers>`. In most cases, the stateful_attributes, in that order, are the return values of the
+        function.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -4790,7 +4801,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                                     .format(self.name, initial_value_name, initial_value))
 
     def _initialize_previous_value(self, initializer):
-        self.previous_value = initializer
+        self.previous_value = np.atleast_1d(initializer)
 
     def _try_execute_param(self, param, var):
 
@@ -4848,19 +4859,27 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     def reinitialize(self, *args):
         """
-            Effectively begins accumulation over again at the specified value.
+            Effectively begins accumulation over again at the specified value(s).
 
-            Sets
+            If arguments are passed into the reinitialize method, then reinitialize sets each of the attributes in
+            `stateful_attributes <Integrator.stateful_attributes>` to the value of the corresponding argument. Next, it
+            sets the `value <Integrator.value>` to a list containing each of the argument values.
 
-            - `previous_value <Integrator.previous_value>`
-            - `value <Integrator.value>`
+            If reinitialize is called without arguments, then it sets each of the attributes in `stateful_attributes
+            <Integrator.stateful_attributes>` to the value of the corresponding attribute in `initializers
+            <Integrator.initializers>`. Next, it sets the `value <Integrator.value>` to a list containing the values of
+            each of the attributes in `initializers <Integrator.initializers>`.
 
-            to the quantity specified.
+            Often, the only attribute in `stateful_attributes <Integrator.stateful_attributes>` is
+            `previous_value <Integrator.previous_value>` and the only attribute in `initializers
+            <Integrator.initializers>` is `initializer <Integrator.initializer>`, in which case the reinitialize method
+            sets `previous_value <Integrator.previous_value>` and `value <Integrator.value>` to either the value of the
+            argument (if an argument was passed into reinitialize) or the current value of `initializer
+            <Integrator.initializer>`.
 
-            For specific types of Integrator functions, additional values, such as initial time, must be specified, and
-            additional attributes are reset.
+            For specific types of Integrator functions, the reinitialize method may carry out other reinitialization
+            steps.
 
-            If no arguments are specified, then the current value of `initializer <Integrator.initializer>` is used.
         """
 
         reinitialization_values = []
@@ -6097,33 +6116,6 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         # Current output format is [[[decision_variable]], time]
         return self.previous_value, self.previous_time
 
-    # def reinitialize(self, new_previous_value=None, new_previous_time=None):
-    #     """
-    #     In effect, begins accumulation over again at the original starting point and time, or new ones.
-    #
-    #     Sets
-    #
-    #     - `previous_value <DriftDiffusionIntegrator.previous_value>`
-    #     - `value <DriftDiffusionIntegrator.value>`
-    #
-    #     to the value specified in the first argument.
-    #
-    #     Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the value specified in the second argument.
-    #
-    #     If arguments are not specified, then the current values for `initializer
-    #     <DriftDiffusionIntegrator.initializer>` and `t0 <DriftDiffusionIntegrator.t0>` are used.
-    #     """
-    #     if new_previous_value is None:
-    #         new_previous_value = self.get_current_function_param("initializer")
-    #     if new_previous_time is None:
-    #         new_previous_time = self.get_current_function_param("t0")
-    #
-    #     self.value = new_previous_value
-    #     self.previous_value = new_previous_value
-    #     self.previous_time = new_previous_time
-    #     return np.atleast_1d(new_previous_value), np.atleast_1d(new_previous_time)
-    #
-
 class OrnsteinUhlenbeckIntegrator(Integrator):  # ----------------------------------------------------------------------
     """
     OrnsteinUhlenbeckIntegrator(        \
@@ -6354,33 +6346,6 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
             self.previous_time += time_step_size
 
         return [[self.previous_value], [self.previous_time]]
-
-    # def reinitialize(self, new_previous_value=None, new_previous_time=None):
-    #     """
-    #     In effect, begins accumulation over again at the original starting point and time, or new ones.
-    #
-    #     Sets
-    #
-    #     - `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`
-    #     - `value <OrnsteinUhlenbeckIntegrator.value>`
-    #
-    #     to the value specified in the first argument.
-    #
-    #     Sets `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>` to the value specified in the second argument.
-    #
-    #     If no arguments are specified, then the current values of `initializer
-    #     <OrnsteinUhlenbeckIntegrator.initializer>` and `t0 <OrnsteinUhlenbeckIntegrator.t0>` are used.
-    #     """
-    #     if new_previous_value is None:
-    #         new_previous_value =self.get_current_function_param("initializer")
-    #     if new_previous_time is None:
-    #         new_previous_time = self.get_current_function_param("t0")
-    #
-    #     self.value = new_previous_value
-    #     self.previous_value = new_previous_value
-    #     self.previous_time = new_previous_time
-    #     return self.value
-
 
 class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -7159,36 +7124,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             self.previous_time += time_step_size
 
         return self.previous_v, self.previous_w, self.previous_time
-
-    # def reinitialize(self, new_previous_v=None, new_previous_w=None, new_previous_time=None):
-    #     """
-    #     Effectively begins accumulation over again at the specified v, w, and time.
-    #
-    #
-    #         - Sets `previous_v <FHNIntegrator.previous_v>` to the quantity specified in the first argument.
-    #
-    #         - Sets `previous_w <DriftDiffusionIntegrator.previous_w>` to the quantity specified in the second argument.
-    #
-    #         - Sets `previous_time <DriftDiffusionIntegrator.previous_time>` to the quantity specified in the third
-    #           argument.
-    #
-    #     If no arguments are specified, then the current values of `initial_v <FHNIntegrator.initial_v>`, `initial_w
-    #     <FHNIntegrator.initial_w>` and `t_0 <FHNIntegrator.t_0>` are used.
-    #     """
-    #     if new_previous_v is None:
-    #         new_previous_v = self.get_current_function_param("initial_v")
-    #     if new_previous_w is None:
-    #         new_previous_w = self.get_current_function_param("initial_w")
-    #     if new_previous_time is None:
-    #         new_previous_time = self.get_current_function_param("t_0")
-    #
-    #     self.previous_v = new_previous_v
-    #     self.previous_w = new_previous_w
-    #     self.previous_time = new_previous_time
-    #     self.value = new_previous_v, new_previous_w, new_previous_time
-    #
-    #     return [new_previous_v], [new_previous_w], [new_previous_time]
-    #
 
 class AccumulatorIntegrator(Integrator):  # ----------------------------------------------------------------------------
     """

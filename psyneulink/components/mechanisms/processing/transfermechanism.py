@@ -208,7 +208,6 @@ starting point. This is done using the `reinitialize <AdaptiveIntegrator.reiniti
 The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_function
 <TransferMechanism.integrator_function>` sets:
 
-    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
     - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
     - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
 
@@ -216,16 +215,14 @@ The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_f
 
 The `reinitialize <TransferMechanism.reinitialize>` method of the `TransferMechanism` first sets:
 
-    - the integrator_function's `initializer <AdaptiveIntegrator.initializer>` attribute
     - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute
     - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
-    - the TransferMechanism's `initial_value <TransferMechanism.initial_value>` attribute
 
     to the specified value. Then:
 
     - the specified value is passed into the mechanism's `function <TransferMechanism.function>` and the function is executed
     - the TransferMechanism's `value <TransferMechanism.value>` attribute is set to the output of the function
-    - the TransferMechanism updates is `output_states <TransferMechanism.output_states>`
+    - the TransferMechanism updates its `output_states <TransferMechanism.output_states>`
 
 A use case for `reinitialize <AdaptiveIntegrator.reinitialize>` is demonstrated in the following example:
 
