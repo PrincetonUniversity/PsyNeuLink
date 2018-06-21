@@ -750,15 +750,15 @@ class EVCControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  system:tc.optional(System_Base)=None,
-                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  prediction_mechanisms:tc.any(is_iterable, Mechanism, type)=PredictionMechanism,
-                 control_signals:tc.optional(list) = None,
-                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
+                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
                  cost_function=LinearCombination(operation=SUM),
                  combine_outcome_and_cost_function=LinearCombination(operation=SUM),
                  save_all_values_and_policies:bool=False,
+                 control_signals:tc.optional(list) = None,
+                 modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
@@ -766,26 +766,20 @@ class EVCControlMechanism(ControlMechanism):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanisms=prediction_mechanisms,
-                                                  objective_mechanism=objective_mechanism,
-                                                  function=function,
-                                                  control_signals=control_signals,
-                                                  modulation=modulation,
                                                   value_function=value_function,
                                                   cost_function=cost_function,
                                                   combine_outcome_and_cost_function=combine_outcome_and_cost_function,
                                                   save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
-        super(EVCControlMechanism, self).__init__(# default_variable=default_variable,
-                                           # size=size,
-                                           system=system,
-                                           objective_mechanism=objective_mechanism,
-                                           function=function,
-                                           control_signals=control_signals,
-                                           modulation=modulation,
-                                           params=params,
-                                           name=name,
-                                           prefs=prefs)
+        super().__init__(system=system,
+                         objective_mechanism=objective_mechanism,
+                         function=function,
+                         control_signals=control_signals,
+                         modulation=modulation,
+                         params=params,
+                         name=name,
+                         prefs=prefs)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         '''Validate prediction_mechanisms'''

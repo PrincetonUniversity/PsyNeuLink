@@ -329,21 +329,6 @@ ALLOCATION_POLICY = 'allocation_policy'
 
 ControlMechanismRegistry = {}
 
-# MODIFIED 11/28/17 OLD:
-# def _is_control_spec(spec):
-#     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
-#     if isinstance(spec, tuple):
-#         return _is_control_spec(spec[1])
-#     elif isinstance(spec, (ControlMechanism, ControlSignal, ControlProjection)):
-#         return True
-#     elif isinstance(spec, type) and issubclass(spec, ControlSignal):
-#         return True
-#     elif isinstance(spec, str) and spec in {CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL}:
-#         return True
-#     else:
-#         return False
-
-# MODIFIED 11/28/17 NEW:
 def _is_control_spec(spec):
     from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
     if isinstance(spec, tuple):
@@ -358,7 +343,6 @@ def _is_control_spec(spec):
         return True
     else:
         return False
-# MODIFIED 11/28/17 END
 
 
 class ControlMechanismError(Exception):
@@ -369,7 +353,7 @@ class ControlMechanismError(Exception):
 # class ControlMechanism(Mechanism_Base):
 class ControlMechanism(AdaptiveMechanism_Base):
     """
-    ControlMechanism(                         \
+    ControlMechanism(                              \
         system=None                                \
         objective_mechanism=None,                  \
         function=Linear,                           \
