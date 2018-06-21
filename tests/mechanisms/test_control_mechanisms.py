@@ -38,7 +38,6 @@ class TestLCControlMechanism:
         S = pnl.System(processes=[P])
 
         gain_created_by_LC_output_state_1 = []
-        gain_created_by_LC_output_state_2 = []
         mod_gain_assigned_to_A = []
         base_gain_assigned_to_A = []
         mod_gain_assigned_to_B = []
@@ -46,7 +45,6 @@ class TestLCControlMechanism:
 
         def report_trial():
             gain_created_by_LC_output_state_1.append(LC.output_states[0].value[0])
-            gain_created_by_LC_output_state_2.append(LC.output_states[1].value[0])
             mod_gain_assigned_to_A.append(A.mod_gain)
             mod_gain_assigned_to_B.append(B.mod_gain)
             base_gain_assigned_to_A.append(A.function_object.gain)
@@ -65,7 +63,6 @@ class TestLCControlMechanism:
 
         # (3) LC output on trial n becomes gain of A and B on trial n + 1
         assert np.allclose(mod_gain_assigned_to_A[1:], gain_created_by_LC_output_state_1[0:-1])
-        assert np.allclose(mod_gain_assigned_to_B[1:], gain_created_by_LC_output_state_2[0:-1])
 
         # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
         assert np.allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)
@@ -82,5 +79,5 @@ class TestLCControlMechanism:
             scaling_factor_gain=0.5
         )
         val = LC.execute([[10.0]])
-        assert np.allclose(np.asfarray(val).flatten(), [3.00139776, 3.00139776,  0.512152259, .00279552477, 0.05000])
+        assert np.allclose(np.asfarray(val).flatten(), [3.00139776,  0.512152259, .00279552477, 0.05000])
         val = benchmark(LC.execute, [[10.0]])
