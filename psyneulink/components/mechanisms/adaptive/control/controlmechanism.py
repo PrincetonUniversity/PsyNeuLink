@@ -1056,7 +1056,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         self.system = system
 
         # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
-        self._objective_mechanism.controller = True
+        self._objective_mechanism.for_controller = True
 
         if context != ContextFlags.PROPERTY:
             system._controller = self

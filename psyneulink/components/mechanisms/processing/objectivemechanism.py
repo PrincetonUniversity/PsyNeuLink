@@ -590,6 +590,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          prefs=prefs,
                          context=ContextFlags.CONSTRUCTOR)
 
+        # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
+        #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
+        self.for_controller = False
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate **role**, **monitored_output_states**, amd **input_states** arguments
 
