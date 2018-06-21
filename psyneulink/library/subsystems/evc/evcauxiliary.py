@@ -15,6 +15,7 @@ Auxiliary functions for `EVCControlMechanism`.
 
 import numpy as np
 import typecheck as tc
+import warnings
 
 from psyneulink.components.functions.function import Function_Base, Buffer, Integrator
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
@@ -644,9 +645,9 @@ class PredictionMechanism(IntegratorMechanism):
 
     PredictionMechanisms are created automatically when an `EVCControlMechanism` is created, one for each `ORIGIN`
     Mechanism in the `system <EVCControlMechanism.system>` for which the EVCControlMechanism is a `controller
-    <System.controller>`. PredictionMechanisms should not be created on their own, as execution requires
-    tight integration with an EVCControlMechanism and the System to which it belongs, are unlikely to function
-    properly if this is not properly configured.
+    <System.controller>`. PredictionMechanisms should not be created on their own, as their execution requires
+    tight integration with an EVCControlMechanism and the System to which it belongs, and they will not function
+    properly if this is not insured.
 
     **Structure**
 
@@ -806,7 +807,13 @@ class PredictionMechanism(IntegratorMechanism):
                  filter_function:tc.optional(callable)=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None):
+                 prefs:is_pref_set=None,
+                 context=None):
+
+        if context != ContextFlags.COMPOSITION:
+            warnings.warn("PredictionMechanism should not be constructed on its own.  If you insist,"
+                          "set context=ContextFlags.Composition, but proceed at your peril!")
+            return
 
         if params and FUNCTION in params:
             function = params[FUNCTION]

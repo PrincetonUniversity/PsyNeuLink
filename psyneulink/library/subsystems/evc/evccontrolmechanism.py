@@ -953,7 +953,8 @@ class EVCControlMechanism(ControlMechanism):
                         default_variable=variable,
                         input_states=state_names,
                         # params = mech_params
-                        **mech_params
+                        **mech_params,
+                        context=context
                 )
             else:
                 raise EVCError("PROGRAM ERROR: Unexpected item ({}) in list for {} arg of constructor for {}".
