@@ -390,7 +390,26 @@ class TestTransferMechanismFunctions:
         )
         val = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
+    
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism Relu")
+    def test_transfer_mech_relu_fun(self, benchmark):
 
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0 for i in range(VECTOR_SIZE)],
+            function=Relu(),
+            smoothing_factor=1.0,
+            integrator_mode=True
+        )
+        val1 = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        val2 = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        val3 = benchmark(T.execute, [-1 for i in range(VECTOR_SIZE)])
+        assert np.allclose(val1, [[0.0 for i in range(VECTOR_SIZE)]])
+        assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
+        assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
+    
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Exponential")
