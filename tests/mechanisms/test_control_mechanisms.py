@@ -40,10 +40,10 @@ class TestLCControlMechanism:
         base_gain_assigned_to_B = []
 
         def report_trial():
-            gain_created_by_LC_output_state_1.append(LC.output_states[0].value)
-            gain_created_by_LC_output_state_2.append(LC.output_states[1].value)
-            mod_gain_assigned_to_A.append(A.mod_gain[0])
-            mod_gain_assigned_to_B.append(B.mod_gain[0])
+            gain_created_by_LC_output_state_1.append(LC.output_states[0].value[0])
+            gain_created_by_LC_output_state_2.append(LC.output_states[1].value[0])
+            mod_gain_assigned_to_A.append(A.mod_gain)
+            mod_gain_assigned_to_B.append(B.mod_gain)
             base_gain_assigned_to_A.append(A.function_object.gain)
             base_gain_assigned_to_B.append(B.function_object.gain)
 
