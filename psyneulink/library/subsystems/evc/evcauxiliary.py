@@ -644,7 +644,9 @@ class PredictionMechanism(IntegratorMechanism):
 
     PredictionMechanisms are created automatically when an `EVCControlMechanism` is created, one for each `ORIGIN`
     Mechanism in the `system <EVCControlMechanism.system>` for which the EVCControlMechanism is a `controller
-    <System.controller>`.
+    <System.controller>`. PredictionMechanisms should not be created on their own, as execution requires
+    tight integration with an EVCControlMechanism and the System to which it belongs, are unlikely to function
+    properly if this is not properly configured.
 
     **Structure**
 
