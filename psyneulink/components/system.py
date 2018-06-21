@@ -873,6 +873,10 @@ class System(System_Base):
             processes = [processes]
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
         self.control_signals_arg = control_signals or []
+        if not isinstance(self.control_signals_arg, list):
+            self.control_signals_arg = [self.control_signals_arg]
+        if not isinstance(monitor_for_control, list):
+            monitor_for_control = [monitor_for_control]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,

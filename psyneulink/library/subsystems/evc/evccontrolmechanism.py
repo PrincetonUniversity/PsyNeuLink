@@ -852,58 +852,6 @@ class EVCControlMechanism(ControlMechanism):
         # List of prediction Mechanism tuples (used by System to execute them)
         self.prediction_mechs = []
 
-        # MODIFIED 6/16/18 OLD:
-        # # Get any params specified for predictionMechanism(s) by EVCControlMechanism
-        # try:
-        #     prediction_mechanism_params = self.paramsCurrent[PREDICTION_MECHANISM_PARAMS]
-        # except KeyError:
-        #     prediction_mechanism_params = {}
-        #
-        # for origin_mech in system.origin_mechanisms.mechanisms:
-        #     state_names = []
-        #     variable = []
-        #     for state_name in origin_mech.input_states.names:
-        #         state_names.append(state_name)
-        #         # variable.append(origin_mech.input_states[state_name].instance_defaults.variable)
-        #         variable.append(origin_mech.input_states[state_name].value)
-        #
-        #     # Instantiate PredictionMechanism
-        #     prediction_mechanism = self.prediction_mechanism_type(
-        #             name=origin_mech.name + " " + PREDICTION_MECHANISM,
-        #             default_variable=variable,
-        #             input_states=state_names,
-        #             params = prediction_mechanism_params)
-        #     prediction_mechanism._role = CONTROL
-        #     prediction_mechanism.origin_mech = origin_mech
-        #
-        #     # Assign projections to prediction_mechanism that duplicate those received by origin_mech
-        #     #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
-        #     for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
-        #                                                     prediction_mechanism.input_states):
-        #         for projection in orig_input_state.path_afferents:
-        #             MappingProjection(sender=projection.sender,
-        #                               receiver=prediction_input_state,
-        #                               matrix=projection.matrix)
-        #
-        #     # Assign list of processes for which prediction_mechanism will provide input during the simulation
-        #     # - used in _get_simulation_system_inputs()
-        #     # - assign copy,
-        #     #       since don't want to include the prediction process itself assigned to origin_mech.processes below
-        #     prediction_mechanism.use_for_processes = list(origin_mech.processes.copy())
-        #
-        #     # # FIX: REPLACE REFERENCE TO THIS ELSEWHERE WITH REFERENCE TO MECH_TUPLES BELOW
-        #     self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
-        #
-        #     # Add to list of EVCControlMechanism's prediction_object_items
-        #     # prediction_object_item = prediction_mechanism
-        #     self.prediction_mechs.append(prediction_mechanism)
-        #
-        #     # Add to system execution_graph and execution_list
-        #     system.execution_graph[prediction_mechanism] = set()
-        #     system.execution_list.append(prediction_mechanism)
-
-        # MODIFIED 6/16/18 NEW:
-
         # IF IT IS A MECHANISM, PUT IT IN A LIST
         # IF IT IS A CLASS, PUT IT IN A TUPLE WITH NONE
         # NOW IF IT IS TUPLE,
@@ -988,9 +936,6 @@ class EVCControlMechanism(ControlMechanism):
             # Add to system execution_graph and execution_list
             system.execution_graph[prediction_mechanism] = set()
             system.execution_list.append(prediction_mechanism)
-
-        # MODIFIED 6/16/18 END
-
 
         self.prediction_mechanisms = MechanismList(self, self.prediction_mechs)
 

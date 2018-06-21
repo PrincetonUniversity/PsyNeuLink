@@ -810,9 +810,9 @@ class PredictionMechanism(IntegratorMechanism):
                  prefs:is_pref_set=None,
                  context=None):
 
-        if context != ContextFlags.COMPOSITION:
+        if not context in {ContextFlags.COMPONENT, ContextFlags.COMPOSITION, ContextFlags.COMMAND_LINE}:
             warnings.warn("PredictionMechanism should not be constructed on its own.  If you insist,"
-                          "set context=ContextFlags.Composition, but proceed at your peril!")
+                          "set context=ContextFlags.COMMAND_LINE, but proceed at your peril!")
             return
 
         if params and FUNCTION in params:
