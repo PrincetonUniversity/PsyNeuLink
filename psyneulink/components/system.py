@@ -1243,8 +1243,8 @@ class System(System_Base):
                            (all(
                                    all(projection.receiver.owner is self.controller
                                        for projection in output_state.efferents)
-                                   for output_state in sender_mech.output_states)) or
-                              sender_mech._role is CONTROL
+                                   for output_state in sender_mech.output_states)
+                           or sender_mech.controller)
                           )):
                     sender_mech.systems[self] = CONTROL
                     return
@@ -2069,16 +2069,14 @@ class System(System_Base):
             warnings.warn("The existing {} for {} ({}) is being replaced by {}".
                           format(CONTROLLER, self.name, self.controller.name, controller.name))
 
-        # Make assignment (and assign controller's ControlSignals to self.control_signals)
+        # Make assignment
         self._controller = controller
-        # if self.control_signals is None:
-        #     self.control_signals = controller.control_signals
-        # else:
-        #     self.control_signals.append(controller.control_signals)
 
         # Add controller's ObjectiveMechanism to the System's execution_list and execution_graph
+        #    and identify it as associated with a controller
         self.execution_list.append(self.controller.objective_mechanism)
         self.execution_graph[self.controller.objective_mechanism] = set(self.execution_list[:-1])
+        self.controller.objective_mechanism.controller = True
 
         # Check whether controller has input, and if not then disable
         has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
