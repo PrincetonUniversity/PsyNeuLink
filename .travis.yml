@@ -5,16 +5,46 @@ python:
     - 3.6
 
 install:
+  - python -m pip install -U pip
+  - python -m easy_install -U setuptools
   - pip install git+https://github.com/benureau/leabra.git@master
   - pip install -e .[dev]
 
 os:
   - linux
 
+matrix:
+  include:
+  - os: osx
+    language: generic
+    env: PYTHON=3.5.5
+  - os: osx
+    language: generic
+    env: PYTHON=3.6.5
+
 addons:
   apt:
     packages:
       - graphviz
+
+before_install: |
+  if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    brew update
+    # Per the `pyenv homebrew recommendations <https://github.com/yyuu/pyenv/wiki#suggested-build-environment>`_.
+    brew install openssl readline
+    brew outdated pyenv
+    brew upgrade pyenv
+    brew install graphviz
+    # use `pyenv-virtualenv <https://github.com/yyuu/pyenv-virtualenv/blob/master/README.md>`_.
+    brew install pyenv-virtualenv
+    pyenv install $PYTHON
+    export PYENV_VERSION=$PYTHON
+    export PATH="$HOME/.pyenv/shims:${PATH}"
+    pyenv-virtualenv venv
+    source venv/bin/activate
+    # A manual check that the correct version of Python is running.
+    python --version
+  fi
 
 script:
   - python -m pytest -p no:logging tests/

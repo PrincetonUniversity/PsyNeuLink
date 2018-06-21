@@ -1,10 +1,15 @@
 import numpy as np
 import psyneulink as pnl
+import pytest
 
 
 class TestLCControlMechanism:
 
-    def test_default_lc_control_mechanism(self):
+    @pytest.mark.mechanism
+    @pytest.mark.control_mechanism
+    @pytest.mark.benchmark(group="LCControlMechanism Default")
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_default_lc_control_mechanism(self, benchmark, mode):
         G = 1.0
         k = 0.5
         starting_value_LC = 2.0
@@ -40,14 +45,14 @@ class TestLCControlMechanism:
         base_gain_assigned_to_B = []
 
         def report_trial():
-            gain_created_by_LC_output_state_1.append(LC.output_states[0].value)
-            gain_created_by_LC_output_state_2.append(LC.output_states[1].value)
-            mod_gain_assigned_to_A.append(A.mod_gain[0])
-            mod_gain_assigned_to_B.append(B.mod_gain[0])
+            gain_created_by_LC_output_state_1.append(LC.output_states[0].value[0])
+            gain_created_by_LC_output_state_2.append(LC.output_states[1].value[0])
+            mod_gain_assigned_to_A.append(A.mod_gain)
+            mod_gain_assigned_to_B.append(B.mod_gain)
             base_gain_assigned_to_A.append(A.function_object.gain)
             base_gain_assigned_to_B.append(B.function_object.gain)
 
-        S.run(inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
+        benchmark(S.run, inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
               call_after_trial=report_trial)
 
         # (1) First value of gain in mechanisms A and B must be whatever we hardcoded for LC starting value
@@ -64,3 +69,18 @@ class TestLCControlMechanism:
 
         # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
         assert np.allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)
+
+
+    @pytest.mark.mechanism
+    @pytest.mark.control_mechanism
+    @pytest.mark.benchmark(group="LCControlMechanism Basic")
+    @pytest.mark.parametrize("mode", ['Python'])
+    def test_lc_control_mech_basic(self, benchmark, mode):
+
+        LC = pnl.LCControlMechanism(
+            base_level_gain=3.0,
+            scaling_factor_gain=0.5,
+        )
+        val = LC.execute([[10.0]])
+        assert np.allclose(np.asfarray(val).flatten(), [3.00126183, 3.00126183, 0.51215226, 0.00252367, 0.05])
+        val = benchmark(LC.execute, [[10.0]])

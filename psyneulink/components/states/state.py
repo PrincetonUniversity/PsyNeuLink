@@ -1985,6 +1985,8 @@ class State_Base(State):
             if projection.context.initialization_status == ContextFlags.DEFERRED_INIT:
                 continue
 
+            # KDM 6/20/18: consider moving handling of Pathway and Modulatory projections
+            # into separate methods
             if isinstance(projection, PathwayProjection_Base):
                 # Add projection_value to list of PathwayProjection values (for aggregation below)
                 # MODIFIED 5/4/18 OLD:
@@ -2018,6 +2020,9 @@ class State_Base(State):
                 else:
                     mod_value = type_match(projection_value, type(mod_param_value))
                 self._mod_proj_values[mod_meta_param].append(mod_value)
+
+        # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
+        # a bit handwavy just to make stuff work
 
         # Handle ModulatoryProjection OVERRIDE
         #    if there is one and it wasn't been handled above (i.e., if paramValidation is set)
