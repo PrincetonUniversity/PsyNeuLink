@@ -3061,7 +3061,9 @@ class TransferFunction(Function_Base):
 
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
-        if self.instance_defaults.variable.ndim > 1:
+        assert isinstance(vi.type.pointee, ir.ArrayType)
+        if isinstance(vi.type.pointee.element, ir.ArrayType):
+            assert vi.type == vo.type
             vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
             vo = builder.bitcast(vo, ir.ArrayType(ctx.float_ty, self._result_length).as_pointer())
 
