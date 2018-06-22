@@ -4770,8 +4770,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             else:
                 initializer = self.ClassDefaults.variable
 
-        # Assign here as default, for use in initialization of function
-        # self.previous_value = initializer
         self._initialize_previous_value(initializer)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -5679,6 +5677,37 @@ class Buffer(Integrator):  # ---------------------------------------------------
     def _initialize_previous_value(self, initializer):
         initializer = initializer or []
         self.previous_value = deque(initializer, maxlen=self.history)
+        return self.previous_value
+
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+
+        self.auto_dependent = True
+
+    def reinitialize(self, *args):
+
+        # no arguments were passed in -- use current values of initializer attributes
+        if len(args) == 0 or args is None:
+            reinitialization_value = self.get_current_function_param("initializer")
+
+        elif len(args) == 1:
+            reinitialization_value = args[0]
+
+        # arguments were passed in, but there was a mistake in their specification -- raise error!
+        else:
+            raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
+                                "reinitialize its stateful attribute: previous_value, or reinitialize must be called "
+                                "without any arguments, in which case the current initializer value, will be used to "
+                                "reinitialize previous_value".format(args,
+                                                                     self.name))
+
+        if reinitialization_value is None or reinitialization_value == []:
+            self.previous_value.clear()
+            self.value = deque([], maxlen=self.history)
+
+        else:
+            self.value = self._initialize_previous_value(reinitialization_value)
+
+        return self.value
 
     def function(self,
                  variable=None,
@@ -5725,6 +5754,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
         # Update deque
         # FIX: Need to recast as deque (since if reinitialize has been called, it returns np.array
         self.previous_value = deque(self.previous_value, maxlen=self.history)
+
         self.previous_value.append(variable)
 
         # Apply rate and/or noise if they are specified
@@ -5732,6 +5762,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
             self.previous_value *= rate
         if noise:
             self.previous_value += noise
+
         self.previous_value = deque(self.previous_value, maxlen=self.history)
 
         return self.previous_value

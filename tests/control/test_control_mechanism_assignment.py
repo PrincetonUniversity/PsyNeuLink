@@ -67,22 +67,22 @@ def test_prediction_mechanism_assignment():
     S = pnl.sys(T,
                 controller=pnl.EVCControlMechanism(name='EVC',
                                                    prediction_mechanisms=(pnl.PredictionMechanism,
-                                                                          {pnl.FUNCTION:pnl.INPUT_SEQUENCE,
-                                                                           pnl.RATE:1,
-                                                                           pnl.WINDOW_SIZE:3,
+                                                                          {pnl.FUNCTION: pnl.INPUT_SEQUENCE,
+                                                                           pnl.RATE: 1,
+                                                                           pnl.WINDOW_SIZE: 3,
                                                                            }),
                                                    objective_mechanism=[T]
                                                    ),
                 control_signals=pnl.ControlSignal(allocation_samples=[1, 5, 10],
-                                                   projections=(pnl.SLOPE, T)),
+                                                projections=(pnl.SLOPE, T)),
                 enable_controller=True
                 )
 
     S.recordSimulationPref = True
-    input_dict = {T:[1,2,3,4]}
+    input_dict = {T: [1, 2, 3, 4]}
     results = S.run(inputs=input_dict)
     assert results == [[[1.]], [[2.]], [[3.]], [[4.]]]
-    assert S.simulation_results ==  [[[1.]], [[5.]], [[10.]],
+    assert S.simulation_results == [[[1.]], [[5.]], [[10.]],
                                     [[1.]], [[2.]], [[5.]], [[10.]], [[10.]], [[20.]],
                                     [[1.]], [[2.]], [[3.]], [[5.]], [[10.]], [[15.]], [[10.]], [[20.]], [[30.]],
                                     [[2.]], [[3.]], [[4.]], [[10.]], [[15.]], [[20.]], [[20.]], [[30.]], [[40.]]]
@@ -96,25 +96,26 @@ def test_prediction_mechanism_filter_function():
     S = pnl.sys(T,
                 controller=pnl.EVCControlMechanism(name='EVC',
                                                    prediction_mechanisms=(pnl.PredictionMechanism,
-                                                                          {pnl.FUNCTION:pnl.INPUT_SEQUENCE,
-                                                                           pnl.RATE:1,
-                                                                           pnl.WINDOW_SIZE:3,
-                                                                           pnl.FILTER_FUNCTION:f
+                                                                          {pnl.FUNCTION: pnl.INPUT_SEQUENCE,
+                                                                           pnl.RATE: 1,
+                                                                           pnl.WINDOW_SIZE: 3,
+                                                                           pnl.FILTER_FUNCTION: f
                                                                            }),
                                                    objective_mechanism=[T]
                                                    ),
                 control_signals=pnl.ControlSignal(allocation_samples=[1, 5, 10],
-                                                   projections=(pnl.SLOPE, T)),
+                                                  projections=(pnl.SLOPE, T)),
                 enable_controller=True
                 )
 
     S.recordSimulationPref = True
-    input_dict = {T:[1,2,3,4]}
+    input_dict = {T: [1, 2, 3, 4]}
     results = S.run(inputs=input_dict)
     expected_results = [[[1.0]], [[2.0]], [[3.0]], [[4.0]]]
-    expected_sim_results = [[[1.]], [[5.]], [[10.]],
-                            [[7.]], [[35.]], [[70.]],
-                            [[7.]], [[35.]], [[70.]],
-                            [[14.]], [[70.]], [[140.]]]
+    expected_sim_results = [[[1.]], [[5.]], [[10.]],    # before EVC | [1]
+                            [[7.]], [[35.]], [[70.]],   # [1, 2]
+                            [[7.]], [[35.]], [[70.]],   # [1, 2, 3]
+                            [[14.]], [[70.]], [[140.]]] # [2, 3, 4]
+
     np.testing.assert_allclose(results, expected_results, atol=1e-08, err_msg='Failed on results')
     np.testing.assert_allclose(S.simulation_results, expected_sim_results, atol=1e-08, err_msg='Failed on results')
