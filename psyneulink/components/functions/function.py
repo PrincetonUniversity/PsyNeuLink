@@ -32,7 +32,7 @@ Integrator Functions:
   * `Integrator`
   * `SimpleIntegrator`
   * `ConstantIntegrator`
-  * 'Buffer`
+  * `Buffer`
   * `AdaptiveIntegrator`
   * `DriftDiffusionIntegrator`
   * `OrnsteinUhlenbeckIntegrator`
@@ -3505,7 +3505,7 @@ class Relu(TransferFunction):  # -----------------------------------------------
         """
         Return:
             
-            :math: `gain*(variable - bias) if (variable - bias) > 0, leak*(variable - bias) otherwise`
+            :math:`gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise`
             
         Arguments
         ---------

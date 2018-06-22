@@ -542,6 +542,7 @@ LINEAR_FUNCTION = "Linear Function"
 LEABRA_FUNCTION = "Leabra Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
 LOGISTIC_FUNCTION = "Logistic Function"
+RELU_FUNCTION = "ReLU Function"
 ONE_HOT_FUNCTION = "OneHot Function"
 SOFTMAX_FUNCTION = 'SoftMax Function'
 INTEGRATOR_FUNCTION = "Integrator Function"
