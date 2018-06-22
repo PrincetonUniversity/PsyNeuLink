@@ -4766,7 +4766,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
             setattr(self, attr, np.broadcast_to(getattr(self, attr), variable_shape).copy())
 
         # create all stateful attributes and initialize their values to the current values of their
-        # corresponding initializer attributes 
+        # corresponding initializer attributes
         for i in range(len(self.stateful_attributes)):
             attr_name = self.stateful_attributes[i]
             initializer_value = getattr(self, self.initializers[i]).copy()
