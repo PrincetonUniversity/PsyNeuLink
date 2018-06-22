@@ -4756,26 +4756,28 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                             )
                         )
 
-    # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
-    # need to be executed
     def _instantiate_attributes_before_function(self, function=None, context=None):
 
         variable_shape = self.instance_defaults.variable.shape
-        if variable_shape is None:
-            variable_shape = self.ClassDefaults.variable.shape
 
+        # use np.broadcast_to to guarantee that all initializer type attributes take on the same
+        # shape as variable
         for attr in self.initializers:
             setattr(self, attr, np.broadcast_to(getattr(self, attr), variable_shape).copy())
 
+        # create all stateful attributes and initialize their values to the current values of their
+        # corresponding initializer attributes 
         for i in range(len(self.stateful_attributes)):
             attr_name = self.stateful_attributes[i]
-            initializer_value = getattr(self, self.initializers[i])
+            initializer_value = getattr(self, self.initializers[i]).copy()
             setattr(self, attr_name, initializer_value)
 
         self.auto_dependent = True
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
+    # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
+    # need to be executed
     def _validate_noise(self, noise):
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
@@ -4905,6 +4907,8 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         if len(args) == 0 or args is None:
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
+                print("getting ", initializer_name, " value: ", self.get_current_function_param(initializer_name))
+
                 reinitialization_values.append(self.get_current_function_param(initializer_name))
 
         elif len(args) == len(self.initializers):
@@ -6125,8 +6129,14 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
+            print("self.previous_time = ", self.previous_time)
+            print("self.t0 = ", self.t0)
             self.previous_time += time_step_size
+            print("self.previous_time = ", self.previous_time)
+            print("self.t0 = ", self.t0)
             self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
+            print("self.previous_time = ", self.previous_time)
+            print("self.t0 = ", self.t0)
         # FIX?
         # Current output format is [[[decision_variable]], time]
         return self.previous_value, self.previous_time
@@ -6820,21 +6830,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             owner=owner,
             prefs=prefs,
             context=ContextFlags.CONSTRUCTOR)
-
-    # def _instantiate_attributes_before_function(self, function=None, context=None):
-    #
-    #     variable_shape = self.instance_defaults.variable.shape
-    #     if variable_shape is None:
-    #         variable_shape = self.ClassDefaults.variable.shape
-    #
-    #     self.initial_v = np.broadcast_to(self.initial_v, variable_shape)
-    #     self.initial_w = np.broadcast_to(self.initial_w, variable_shape)
-    #     self.previous_v = self.initial_v
-    #     self.previous_w = self.initial_w
-    #     self.previous_time = self.t_0
-    #     self.auto_dependent = True
-    #
-    #     super()._instantiate_attributes_before_function(function=function, context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set,
