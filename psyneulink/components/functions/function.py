@@ -10506,7 +10506,12 @@ class Distance(ObjectiveFunction):
             raise RuntimeError('Unsupported metric')
 
 
-        vector_length = ctx.int32_ty(self._variable_length // 2)
+        assert isinstance(vi.type.pointee, ir.ArrayType)
+        assert isinstance(vi.type.pointee.element, ir.ArrayType)
+        assert vi.type.pointee.count == 2
+
+        input_length = vi.type.pointee.element.count
+        vector_length = ctx.int32_ty(input_length)
         builder = helpers.for_loop_zero_inc(builder, vector_length, inner, self.metric)
         sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
         ret = builder.load(acc_ptr)
@@ -10515,7 +10520,7 @@ class Distance(ObjectiveFunction):
         elif (self.metric == PEARSON):
             # (n * acc_xy - acc_x * acc_y) /
             # sqrt((n * acc_x2 - acc_x^2)*(n * acc_y2 - acc_y^2))
-            fn = ctx.float_ty(self._variable_length // 2)
+            fn = ctx.float_ty(input_length)
             acc_xy = builder.load(acc_xy_ptr)
             acc_x = builder.load(acc_x_ptr)
             acc_y = builder.load(acc_y_ptr)
@@ -10540,7 +10545,7 @@ class Distance(ObjectiveFunction):
             ret = builder.fdiv(numerator, denominator)
 
         if self.normalize:
-            norm_factor = self._variable_length // 2
+            norm_factor = input_length
             if self.metric == ENERGY:
                 norm_factor = norm_factor ** 2
             ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
