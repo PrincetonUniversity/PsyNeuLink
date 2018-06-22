@@ -62,7 +62,6 @@ def test_control_mechanism_assignment_additional():
 def test_prediction_mechanism_assignment():
     '''Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments'''
 
-    # f = lambda x: x[0]*2
     T = pnl.TransferMechanism(name='T')
 
     S = pnl.sys(T,
@@ -71,7 +70,6 @@ def test_prediction_mechanism_assignment():
                                                                           {pnl.FUNCTION:pnl.INPUT_SEQUENCE,
                                                                            pnl.RATE:1,
                                                                            pnl.WINDOW_SIZE:3,
-                                                                           # pnl.FILTER_FUNCTION:f
                                                                            }),
                                                    objective_mechanism=[T]
                                                    ),
@@ -89,3 +87,34 @@ def test_prediction_mechanism_assignment():
                                     [[1.]], [[2.]], [[3.]], [[5.]], [[10.]], [[15.]], [[10.]], [[20.]], [[30.]],
                                     [[2.]], [[3.]], [[4.]], [[10.]], [[15.]], [[20.]], [[20.]], [[30.]], [[40.]]]
 
+def test_prediction_mechanism_filter_function():
+    '''Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments'''
+
+    f = lambda x: [x[0]*7]
+    T = pnl.TransferMechanism(name='T')
+
+    S = pnl.sys(T,
+                controller=pnl.EVCControlMechanism(name='EVC',
+                                                   prediction_mechanisms=(pnl.PredictionMechanism,
+                                                                          {pnl.FUNCTION:pnl.INPUT_SEQUENCE,
+                                                                           pnl.RATE:1,
+                                                                           pnl.WINDOW_SIZE:3,
+                                                                           pnl.FILTER_FUNCTION:f
+                                                                           }),
+                                                   objective_mechanism=[T]
+                                                   ),
+                control_signals=pnl.ControlSignal(allocation_samples=[1, 5, 10],
+                                                   projections=(pnl.SLOPE, T)),
+                enable_controller=True
+                )
+
+    S.recordSimulationPref = True
+    input_dict = {T:[1,2,3,4]}
+    results = S.run(inputs=input_dict)
+    expected_results = [[[1.0]], [[2.0]], [[3.0]], [[4.0]]]
+    expected_sim_results = [[[1.]], [[5.]], [[10.]],
+                            [[7.]], [[35.]], [[70.]],
+                            [[7.]], [[35.]], [[70.]],
+                            [[14.]], [[70.]], [[140.]]]
+    np.testing.assert_allclose(results, expected_results, atol=1e-08, err_msg='Failed on results')
+    np.testing.assert_allclose(S.simulation_results, expected_sim_results, atol=1e-08, err_msg='Failed on results')
