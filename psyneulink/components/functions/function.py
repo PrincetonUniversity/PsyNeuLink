@@ -3415,7 +3415,10 @@ class Relu(TransferFunction):  # -----------------------------------------------
          prefs=None        \
          )
     .. _Relu:
-    Perform Relu transformation on variable.
+    Perform rectified linear transformation on variable,
+
+    Commonly used by `ReLU <https://en.wikipedia.org/wiki/Rectifier_(neural_networks>`_ units in neural networks.
+
     Arguments
     ---------
     variable : number or np.array : default ClassDefaults.variable
@@ -3502,7 +3505,7 @@ class Relu(TransferFunction):  # -----------------------------------------------
         """
         Return:
             
-            gain*(variable - bias) if (variable - bias) > 0, leak*(variable - bias) otherwise
+            :math: `gain*(variable - bias) if (variable - bias) > 0, leak*(variable - bias) otherwise`
             
         Arguments
         ---------
@@ -3540,6 +3543,7 @@ class Relu(TransferFunction):  # -----------------------------------------------
         
         if (output > 0): return gain
         else: return leak
+
 
 MODE = 'mode'
 
