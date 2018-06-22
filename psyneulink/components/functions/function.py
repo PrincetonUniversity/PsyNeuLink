@@ -3526,7 +3526,7 @@ class Relu(TransferFunction):  # -----------------------------------------------
         bias = self.get_current_function_param(BIAS)
         leak = self.get_current_function_param(LEAK)
         
-        # FIXED:  [JDC: I BELIEVE WE WANT TO OPERATE ON AND TEST VECTORS *ELEMENTWISE*, WHICH MEANS NEED TO USE map]
+        # JDC: I BELIEVE WE WANT TO OPERATE ON AND TEST VECTORS *ELEMENTWISE*, WHICH MEANS NEED TO USE map
         # if ((variable-bias) > 0): return gain*(variable-bias)
         # else: return leak*(variable-bias)
         return np.array(list(map(lambda v: gain*(v-bias) if (v-bias)>0 else leak*(v-bias), variable)))
