@@ -48,4 +48,37 @@ def test_control_mechanism_assignment():
     assert len(S.control_signals)==4
     assert S.controller.name == 'C-2'
 
+def test_control_mechanism_assignment_additional():
+    '''Tests "free-standing" specifications of monitor_for_control and ControlSignal (i.e., outside of a list)'''
+    T = pnl.TransferMechanism(name='T')
+    S = pnl.sys(T,
+                controller=pnl.EVCControlMechanism(),
+                monitor_for_control=T,
+                control_signals=(pnl.SLOPE, T),
+                enable_controller=True)
+    assert S.controller.objective_mechanism.input_state.path_afferents[0].sender.owner == T
+    assert T.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
+
+def test_prediction_mechanism_assignment():
+    '''Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments'''
+
+
+    wf = lambda x: [x[0],x[1]]
+    T = pnl.TransferMechanism(name='T')
+
+    S = pnl.sys(T,
+                controller=pnl.EVCControlMechanism(name='EVC',
+                                                   prediction_mechanisms=(pnl.PredictionMechanism,
+                                                                          {pnl.FUNCTION:pnl.INPUT_SEQUENCE,
+                                                                           pnl.RATE:1,
+                                                                           pnl.WINDOW_SIZE:3,
+                                                                           # pnl.WINDOWING_FUNCTION:wf
+                                                                           }),
+                                                   objective_mechanism=[T]
+                                                   ),
+                control_signals=pnl.ControlSignal(allocation_samples=[0.1, 0.5, 0.9],
+                                                   projections=(pnl.SLOPE, T)),
+                enable_controller=True
+                )
+
 
