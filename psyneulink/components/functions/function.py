@@ -6273,9 +6273,9 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
             self.previous_time = self.previous_time + time_step_size
+            if not np.isscalar(variable):
+                self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
-        # FIX?
-        # Current output format is [[[decision_variable]], time]
         return self.previous_value, self.previous_time
 
 class OrnsteinUhlenbeckIntegrator(Integrator):  # ----------------------------------------------------------------------
@@ -6506,8 +6506,11 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
             self.previous_time = self.previous_time + time_step_size
+            if not np.isscalar(variable):
+                self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
-        return [[self.previous_value], [self.previous_time]]
+
+        return self.previous_value, self.previous_time
 
 class FHNIntegrator(Integrator):  # --------------------------------------------------------------------------------
     """
@@ -7262,6 +7265,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
             self.previous_v = approximate_values[0]
             self.previous_w = approximate_values[1]
             self.previous_time = self.previous_time + time_step_size
+            if not np.isscalar(variable):
+                self.previous_time = np.broadcast_to(self.previous_time, variable.shape).copy()
 
         return self.previous_v, self.previous_w, self.previous_time
 
