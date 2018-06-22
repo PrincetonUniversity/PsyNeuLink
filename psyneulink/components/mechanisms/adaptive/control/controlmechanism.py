@@ -682,16 +682,16 @@ class ControlMechanism(AdaptiveMechanism_Base):
         from psyneulink.components.states.inputstate import EXPONENT_INDEX, WEIGHT_INDEX
         from psyneulink.components.functions.function import FunctionError
 
-        monitored_output_states = None
-
         # GET OutputStates to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_states attribute
+
+        monitored_output_states = []
 
         # If the ControlMechanism has already been assigned to a System
         #    get OutputStates in System specified as MONITOR_FOR_CONTROL
         #        do this by calling _get_monitored_output_states_for_system(),
         #        which also gets any OutputStates already being monitored by the ControlMechanism
         if self.system:
-            monitored_output_states = self.system._get_monitored_output_states_for_system(self, context=context)
+            monitored_output_states.extend(self.system._get_monitored_output_states_for_system(self,context=context))
 
         # Otherwise, if objective_mechanism argument was specified as a list, get the OutputStates specified in it
         # - IF ControlMechanism HAS NOT ALREADY BEEN ASSIGNED TO A SYSTEM:
@@ -701,9 +701,11 @@ class ControlMechanism(AdaptiveMechanism_Base):
         #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
         #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
         if isinstance(self.objective_mechanism, list):
-            monitored_output_states = [None] * len(self.objective_mechanism)
+            l = len(monitored_output_states)
+            monitored_output_states.extend([None] * len(self.objective_mechanism))
             for i, item in enumerate(self.objective_mechanism):
                 # If it is a 4-item tuple, convert to MonitoredOutputStateTuple for treatment below
+                n = i+l
                 if isinstance(item, tuple) and len(item)==4:
                     item = MonitoredOutputStateTuple(item[0],item[1],item[2],item[3])
                 # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
@@ -716,13 +718,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     else:
                         variable = item.output_state.value
                     # Create InputState specification dictionary:
-                    monitored_output_states[i] = {NAME: item.output_state.name,
-                                                  VARIABLE: variable,
-                                                  WEIGHT:item.weight,
-                                                  EXPONENT:item.exponent,
-                                                  PROJECTIONS:[(item.output_state, item.matrix)]}
+                    monitored_output_states[n] = {NAME: item.output_state.name,
+                                                            VARIABLE: variable,
+                                                            WEIGHT:item.weight,
+                                                            EXPONENT:item.exponent,
+                                                            PROJECTIONS:[(item.output_state, item.matrix)]}
                 else:
-                    monitored_output_states[i] = item
+                    monitored_output_states[n] = item
+
 
         # INSTANTIATE ObjectiveMechanism
 
