@@ -2433,10 +2433,14 @@ class System(System_Base):
             # if not any((spec is mech.name or spec in mech.output_states.names)
             if not any((spec in {mech, mech.name} or spec in mech.output_states or spec in mech.output_states.names)
                        for mech in self.mechanisms):
+                if isinstance(spec, OutputState):
+                    spec_str = "{} {} of {}".format(spec.name, OutputState.__name__, spec.owner.name)
+                else:
+                    spec_str = spec
                 raise SystemError("Specification of {} arg for {} appears to be a list of "
                                             "Mechanisms and/or OutputStates to be monitored, but one "
                                             "of them ({}) is in a different System".
-                                            format(OBJECTIVE_MECHANISM, self.name, spec))
+                                            format(OBJECTIVE_MECHANISM, self.name, spec_str))
 
     def _get_control_signals_for_system(self, control_signals=None, context=None):
         """Generate and return a list of control_signal_specs for System
