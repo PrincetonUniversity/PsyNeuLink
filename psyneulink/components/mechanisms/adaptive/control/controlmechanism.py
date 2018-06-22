@@ -693,22 +693,18 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if self.system:
             monitored_output_states.extend(self.system._get_monitored_output_states_for_system(self,context=context))
 
-        # If objective_mechanism argument was specified as a list, get the OutputStates specified in it
-        # - IF ControlMechanism HAS NOT ALREADY BEEN ASSIGNED TO A SYSTEM:
-        #      IF objective_mechanism IS SPECIFIED AS A LIST:
-        #          CALL _parse_monitored_output_states_list() TO GET LIST OF OutputStates
-        #          CALL CONSTRUCTOR WITH monitored_output_states AND monitoring_input_states
-        #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
-        #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
+        # If objective_mechanism argument was specified as a list, parse and add to monitored_output_states
         if isinstance(self.objective_mechanism, list):
             for i, item in enumerate(self.objective_mechanism):
-                # If it is a 4-item tuple, convert to MonitoredOutputStateTuple for treatment below
+                # If it is already in the list received from System, ignore
                 if item in monitored_output_states:
+                    # NOTE: this can happen if ControlMechanisms is being constructed by System
+                    #       which passed its monitor_for_control specification
                     continue
+                # If it is a 4-item tuple, convert to MonitoredOutputStateTuple for treatment below
                 if isinstance(item, tuple) and len(item)==4:
                     item = MonitoredOutputStateTuple(item[0],item[1],item[2],item[3])
                 # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
-                # Otherwise, assume it is a valid form of InputSate specification, and pass to ObjectiveMechanism
                 if isinstance(item, MonitoredOutputStateTuple):
                     # If matrix is specified, let it determine the variable
                     if item.matrix is not None:
@@ -717,14 +713,14 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     else:
                         variable = item.output_state.value
                     # Create InputState specification dictionary:
-                    monitored_output_states.extend(list({NAME: item.output_state.name,
-                                                        VARIABLE: variable,
-                                                        WEIGHT:item.weight,
-                                                        EXPONENT:item.exponent,
-                                                        PROJECTIONS:[(item.output_state, item.matrix)]}))
+                    monitored_output_states.extend([{NAME: item.output_state.name,
+                                                     VARIABLE: variable,
+                                                     WEIGHT:item.weight,
+                                                     EXPONENT:item.exponent,
+                                                     PROJECTIONS:[(item.output_state, item.matrix)]}])
+                # Otherwise, assume it is a valid form of InputSate specification, and add to monitored_output_states
                 else:
-                    monitored_output_states.extend(list(item))
-
+                    monitored_output_states.extend([item])
 
         # INSTANTIATE ObjectiveMechanism
 
@@ -734,10 +730,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 self.objective_mechanism.add_monitored_output_states(
                                                               monitored_output_states_specs=monitored_output_states,
                                                               context=context)
-        # Otherwise, instantiate ObjectiveMechanism with list of states in *objective_mechanism* argument
+        # Otherwise, instantiate ObjectiveMechanism with list of states in monitored_output_states
         else:
-            # Create specification for ObjectiveMechanism InputStates corresponding to
-            #    monitored_output_states and their exponents and weights
             try:
                 self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                                function=LinearCombination(operation=PRODUCT),
