@@ -3521,13 +3521,16 @@ class Relu(TransferFunction):  # -----------------------------------------------
         """
         
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
         gain = self.get_current_function_param(GAIN)
         bias = self.get_current_function_param(BIAS)
         leak = self.get_current_function_param(LEAK)
         
-        if ((variable-bias) > 0): return gain*(variable-bias)
-        else: return leak*(variable-bias)
-    
+        # FIXED:  [JDC: I BELIEVE WE WANT TO OPERATE ON AND TEST VECTORS *ELEMENTWISE*, WHICH MEANS NEED TO USE map]
+        # if ((variable-bias) > 0): return gain*(variable-bias)
+        # else: return leak*(variable-bias)
+        return np.array(list(map(lambda v: gain*(v-bias) if (v-bias)>0 else leak*(v-bias), variable)))
+
     
     def derivative(self, output):
         """
