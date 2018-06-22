@@ -23,6 +23,7 @@ Transfer Functions:
   * `Linear`
   * `Exponential`
   * `Logistic`
+  * `ReLU`
   * `OneHot`
   * `SoftMax`
   * `LinearMatrix`
@@ -31,7 +32,7 @@ Integrator Functions:
   * `Integrator`
   * `SimpleIntegrator`
   * `ConstantIntegrator`
-  * 'Buffer`
+  * `Buffer`
   * `AdaptiveIntegrator`
   * `DriftDiffusionIntegrator`
   * `OrnsteinUhlenbeckIntegrator`
@@ -208,14 +209,14 @@ from psyneulink.globals.keywords import DEFAULT_VARIABLE, INITIAL_V, INITIAL_W, 
     GAIN, GAMMA_DIST_FUNCTION, \
     HEBBIAN_FUNCTION, HIGH, HOLLOW_MATRIX, \
     IDENTITY_MATRIX, INCREMENT, INITIALIZER, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, \
-    LCA_INTEGRATOR_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
+    LCA_INTEGRATOR_FUNCTION, LEAK, LEARNING_FUNCTION_TYPE, LEARNING_RATE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, \
     LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, \
     MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, \
     NOISE, NORMALIZING_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, \
     OBJECTIVE_FUNCTION_TYPE, OFFSET, ONE_HOT_FUNCTION, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, \
     OUTPUT_STATES, OUTPUT_TYPE, \
     PARAMETER_STATE_PARAMS, PARAMS, PEARSON, PREDICTION_ERROR_DELTA_FUNCTION, PROB, PROB_INDICATOR, PRODUCT, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RL_FUNCTION, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, BUFFER_FUNCTION, REDUCE_FUNCTION, RELU_FUNCTION, RL_FUNCTION, \
     SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, \
     TDLEARNING_FUNCTION, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, UTILITY_INTEGRATOR_FUNCTION, \
@@ -247,7 +248,7 @@ __all__ = [
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
     'OneHot', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
-    'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReturnVal', 'SimpleIntegrator',
+    'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReLU', 'ReturnVal', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
     'UniformDist', 'UniformToNormalDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
@@ -511,7 +512,7 @@ class Function_Base(Function):
             - Parameters can be assigned and/or changed individually or in sets, by:
               - including them in the initialization call
               - calling the _instantiate_defaults method (which changes their default values)
-              - including them in a call the function method (which changes their values for just for that call)
+              - including them in a call the function method (which changes their values for just for that call)
             - Parameters must be specified in a params dictionary:
               - the key for each entry should be the name of the parameter (used also to name associated Projections)
               - the value for each entry is the value of the parameter
@@ -3400,6 +3401,151 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
 
 MODE = 'mode'
+
+class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
+    """
+    ReLU(                  \
+         default_variable, \
+         gain=1.0,         \
+         bias=0.0,         \
+         leak=0.0,         \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+    .. _Relu:
+    Perform rectified linear transformation on variable,
+
+    Commonly used by `ReLU <https://en.wikipedia.org/wiki/Rectifier_(neural_networks>`_ units in neural networks.
+
+    Arguments
+    ---------
+    variable : number or np.array : default ClassDefaults.variable
+        specifies a template for the value to be transformed.
+    gain : float : default 1.0
+        specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
+        from it, if (variable - bias) is greater than 0.
+    bias : float : default 0.0
+        specifies a value to subtract from each element of `variable <ReLU.variable>` before checking if the
+        result is greater than 0 and multiplying by either gain or leak based on the result. 
+    leak : float : default 0.0
+        specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
+        from it if (variable - bias) is lesser than or equal to 0. 
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+    owner : Component
+        `component <Component>` to which to assign the Function.
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    Attributes
+    ----------
+    variable : number or np.array
+        contains value to be transformed.
+    gain : float : default 1.0
+        value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
+        (variable - bias) is greater than 0. 
+    bias : float : default 0.0
+        value subtracted from each element of `variable <ReLU.variable>` before checking if the result is
+        greater than 0 and multiplying by either gain or leak based on the result. 
+    leak : float : default 0.0
+        value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
+        (variable - bias) is lesser than or equal to 0. 
+    bounds : (None,None)
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
+        <LINK>` for details).
+    """
+    
+    
+    componentName = RELU_FUNCTION
+    parameter_keywords.update({GAIN, BIAS, LEAK})
+    
+    bounds = (None,None)
+    multiplicative_param = GAIN
+    additive_param = BIAS
+    
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 gain: parameter_spec = 1.0,
+                 bias: parameter_spec = 0.0,
+                 leak: parameter_spec = 0.0,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(gain=gain,
+                                                  bias=bias,
+                                                  leak=leak,
+                                                  params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=ContextFlags.CONSTRUCTOR)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+        Return:
+            
+            :math:`gain*(variable - bias)\ if\ (variable - bias) > 0,\ leak*(variable - bias)\ otherwise`
+            
+        Arguments
+        ---------
+        variable : number or np.array : default ClassDefaults.variable
+           a single value or array to be transformed.
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+        Returns
+        -------
+        ReLU transformation of variable : number or np.array
+        """
+        
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        gain = self.get_current_function_param(GAIN)
+        bias = self.get_current_function_param(BIAS)
+        leak = self.get_current_function_param(LEAK)
+        
+        return np.maximum(gain*(variable-bias), bias, leak*(variable-bias))
+
+    def derivative(self, output):
+        """
+        derivative(output)
+        Derivative of `function <ReLU.function>`.
+        Returns
+        -------
+        derivative :  number
+            gain if output > 0, leak otherwise
+        """
+        gain = self.get_current_function_param(GAIN)
+        leak = self.get_current_function_param(LEAK)
+        
+        if (output > 0): return gain
+        else: return leak
+
+
+MODE = 'mode'
+
 class OneHot(TransferFunction):  # -------------------------------------------------------------------------------------
     """
     OneHot(                \
@@ -4099,7 +4245,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 else:
                     raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
                                         format(self.receiver, self.name))
-            # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
+            # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
             else:
                 if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
                     print("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
@@ -4468,8 +4614,8 @@ class IntegratorFunction(Function_Base):
     componentType = INTEGRATOR_FUNCTION_TYPE
 
 # • why does integrator return a 2d array?
-# • are rate and noise converted to 1d np.array?  If not, correct docstring
-# • can noise and initializer be an array?  If so, validated in validate_param?
+# • are rate and noise converted to 1d np.array?  If not, correct docstring
+# • can noise and initializer be an array?  If so, validated in validate_param?
 
 class Integrator(IntegratorFunction):  # -------------------------------------------------------------------------------
     """
