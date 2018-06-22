@@ -6272,7 +6272,7 @@ class DriftDiffusionIntegrator(Integrator):  # ---------------------------------
         #    (don't want to count it as an execution step)
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
-            self.previous_time += time_step_size
+            self.previous_time = self.previous_time + time_step_size
 
         # FIX?
         # Current output format is [[[decision_variable]], time]
@@ -6505,7 +6505,7 @@ class OrnsteinUhlenbeckIntegrator(Integrator):  # ------------------------------
 
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_value = adjusted_value
-            self.previous_time += time_step_size
+            self.previous_time = self.previous_time + time_step_size
 
         return [[self.previous_value], [self.previous_time]]
 
@@ -7261,7 +7261,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         if self.context.initialization_status != ContextFlags.INITIALIZING:
             self.previous_v = approximate_values[0]
             self.previous_w = approximate_values[1]
-            self.previous_time += time_step_size
+            self.previous_time = self.previous_time + time_step_size
 
         return self.previous_v, self.previous_w, self.previous_time
 
