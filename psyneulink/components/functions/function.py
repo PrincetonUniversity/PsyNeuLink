@@ -5710,7 +5710,7 @@ class Buffer(Integrator):  # ---------------------------------------------------
         self.previous_value.append(variable)
 
         # Apply rate and/or noise if they are specified
-        if rate is not None:
+        if rate != 1.0:
             self.previous_value *= rate
         if noise:
             self.previous_value += noise
