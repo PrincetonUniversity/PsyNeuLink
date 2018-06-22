@@ -5705,10 +5705,10 @@ class Buffer(Integrator):  # ---------------------------------------------------
         # If this NOT an initialization run,
 
         # Update deque
-        # FIX: Need to recast as deque (since reinitialize has done something to it
+        # FIX: Need to recast as deque (since if reinitialize has been called, it returns np.array
         self.previous_value = deque(self.previous_value, maxlen=self.history)
-
         self.previous_value.append(variable)
+
         # Apply rate and/or noise if they are specified
         if rate is not None:
             self.previous_value *= rate
