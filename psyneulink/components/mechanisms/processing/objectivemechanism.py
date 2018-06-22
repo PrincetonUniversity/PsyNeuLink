@@ -620,11 +620,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Otherwise, uses monitored_output_States_specs as specification of InputStates to instantiate;
             these will replace any existing InputStates (including a default one)
         """
-        from psyneulink.components.states.inputstate import InputState
         # If call is for initialization
         if self.context.initialization_status == ContextFlags.INITIALIZING:
-            # Use self.input_states (containing specs from **input_states** arg of constructor) or default InputState
-            input_states = self.input_states or [{STATE_TYPE: InputState, VARIABLE: [0]}]
+            # Use self.input_states (containing specs from **input_states** arg of constructor) or
+            #    or pass off instantiation of default InputState(s) to super
+            input_states = self.input_states or None
             return super()._instantiate_input_states(input_states=input_states, context=context)
 
         # Instantiate InputStates corresponding to OutputStates specified in monitored_output_states

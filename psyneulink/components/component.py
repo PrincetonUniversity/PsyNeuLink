@@ -2634,7 +2634,14 @@ class Component(object):
                 # ensure copy does not have identical name
                 register_category(self.function_object, Function_Base, self.function_object.name, FunctionRegistry)
 
+            # setting init status because many mechanisms change execution or validation behavior
+            # during initialization
+            self.function_object.context.initialization_status = ContextFlags.INITIALIZING
+
             self.function_object.instance_defaults.variable = function_variable
+            self.function_object._instantiate_value(context)
+
+            self.function_object.context.initialization_status = ContextFlags.INITIALIZED
         elif inspect.isclass(function) and issubclass(function, Function):
             kwargs_to_instantiate = function.ClassDefaults.values().copy()
             if function_params is not None:
