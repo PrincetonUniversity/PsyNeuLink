@@ -693,7 +693,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         if self.system:
             monitored_output_states.extend(self.system._get_monitored_output_states_for_system(self,context=context))
 
-        # Otherwise, if objective_mechanism argument was specified as a list, get the OutputStates specified in it
+        # If objective_mechanism argument was specified as a list, get the OutputStates specified in it
         # - IF ControlMechanism HAS NOT ALREADY BEEN ASSIGNED TO A SYSTEM:
         #      IF objective_mechanism IS SPECIFIED AS A LIST:
         #          CALL _parse_monitored_output_states_list() TO GET LIST OF OutputStates
@@ -701,11 +701,10 @@ class ControlMechanism(AdaptiveMechanism_Base):
         #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
         #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
         if isinstance(self.objective_mechanism, list):
-            l = len(monitored_output_states)
-            monitored_output_states.extend([None] * len(self.objective_mechanism))
             for i, item in enumerate(self.objective_mechanism):
                 # If it is a 4-item tuple, convert to MonitoredOutputStateTuple for treatment below
-                n = i+l
+                if item in monitored_output_states:
+                    continue
                 if isinstance(item, tuple) and len(item)==4:
                     item = MonitoredOutputStateTuple(item[0],item[1],item[2],item[3])
                 # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
@@ -718,13 +717,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
                     else:
                         variable = item.output_state.value
                     # Create InputState specification dictionary:
-                    monitored_output_states[n] = {NAME: item.output_state.name,
-                                                            VARIABLE: variable,
-                                                            WEIGHT:item.weight,
-                                                            EXPONENT:item.exponent,
-                                                            PROJECTIONS:[(item.output_state, item.matrix)]}
+                    monitored_output_states.extend(list({NAME: item.output_state.name,
+                                                        VARIABLE: variable,
+                                                        WEIGHT:item.weight,
+                                                        EXPONENT:item.exponent,
+                                                        PROJECTIONS:[(item.output_state, item.matrix)]}))
                 else:
-                    monitored_output_states[n] = item
+                    monitored_output_states.extend(list(item))
 
 
         # INSTANTIATE ObjectiveMechanism
@@ -735,7 +734,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 self.objective_mechanism.add_monitored_output_states(
                                                               monitored_output_states_specs=monitored_output_states,
                                                               context=context)
-        # Otherwise, instantiate ObjectiveMechanism with list of states in *objective_mechanism* arg
+        # Otherwise, instantiate ObjectiveMechanism with list of states in *objective_mechanism* argument
         else:
             # Create specification for ObjectiveMechanism InputStates corresponding to
             #    monitored_output_states and their exponents and weights
