@@ -169,11 +169,13 @@ Class Reference
 import logging
 import numbers
 import warnings
+
 from collections import Iterable
 
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import Logistic
 from psyneulink.globals.keywords import INITIALIZING, KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
@@ -483,8 +485,14 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
     componentType = KWTA_MECHANISM
 
-    class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
-        function = Logistic
+    class Params(RecurrentTransferMechanism.Params):
+        function = Param(Logistic, stateful=False, loggable=False)
+        k_value = Param(0.5, modulable=True)
+        threshold = Param(0.0, modulable=True)
+        ratio = Param(0.5, modulable=True)
+
+        average_based = False
+        inhibition_only = True
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({'function': Logistic})  # perhaps hacky? not sure (7/10/17 CW)

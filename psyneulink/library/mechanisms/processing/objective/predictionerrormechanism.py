@@ -155,6 +155,7 @@ from typing import Iterable
 import numpy as np
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import PredictionErrorDeltaFunction
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.objectivemechanism import OUTCOME
@@ -258,8 +259,12 @@ class PredictionErrorMechanism(ComparatorMechanism):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
-    class ClassDefaults(ComparatorMechanism.ClassDefaults):
-        variable = None
+    class Params(ComparatorMechanism.Params):
+        variable = Param(None, read_only=True)
+        learning_rate = Param(0.3, modulable=True)
+        function = PredictionErrorDeltaFunction
+        sample = None
+        target = None
 
     paramClassDefaults = ComparatorMechanism.paramClassDefaults.copy()
     standard_output_states = ComparatorMechanism.standard_output_states.copy()

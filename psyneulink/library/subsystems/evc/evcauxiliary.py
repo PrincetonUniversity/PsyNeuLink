@@ -63,7 +63,7 @@ class EVCAuxiliaryFunction(Function_Base):
     """
     componentType = kwEVCAuxFunctionType
 
-    class ClassDefaults(Function_Base.ClassDefaults):
+    class Params(Function_Base.Params):
         variable = None
 
     classPreferences = {

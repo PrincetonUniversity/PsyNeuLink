@@ -53,6 +53,7 @@ Class Reference
 import logging
 import numbers
 import warnings
+
 from collections import Iterable
 
 import numpy as np
@@ -342,10 +343,6 @@ class KohonenMechanism(TransferMechanism):
     """
 
     componentType = KOHONEN_MECHANISM
-
-    class ClassDefaults(TransferMechanism.ClassDefaults):
-        # variable = [0,0]
-        function = Linear
 
     paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({'function': Linear})  # perhaps hacky? not sure (7/10/17 CW)

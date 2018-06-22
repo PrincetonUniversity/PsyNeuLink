@@ -328,10 +328,12 @@ Class Reference
 
 """
 import warnings
+
 from collections import Iterable
 
 import typecheck as tc
 
+from psyneulink.components.component import Param
 from psyneulink.components.functions.function import LinearCombination
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
@@ -545,8 +547,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # ClassDefaults.variable = None;  Must be specified using either **input_states** or **monitored_output_states**
     # kmantel: above needs to be clarified - can ClassDefaults.variable truly be anything? or should there be some format?
     #   if the latter, we should specify one such valid assignment here, and override _validate_default_variable accordingly
-    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
-        function = LinearCombination
+    class Params(ProcessingMechanism_Base.Params):
+        function = Param(LinearCombination, stateful=False, loggable=False)
 
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()

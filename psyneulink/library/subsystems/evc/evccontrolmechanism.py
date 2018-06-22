@@ -377,23 +377,22 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.components.component import function_type
-from psyneulink.components.functions.function import ModulationParam, _is_modulation_param, Buffer
-from psyneulink.components.mechanisms.mechanism import MechanismList, Mechanism
+from psyneulink.components.component import Param, function_type
+from psyneulink.components.functions.function import Buffer, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+from psyneulink.components.mechanisms.mechanism import Mechanism, MechanismList
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.components.shellclasses import Function, System_Base
+from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
 from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.states.parameterstate import ParameterState
-from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignalCosts
-from psyneulink.components.shellclasses import Function, System_Base
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM,\
-    INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
+from psyneulink.globals.keywords import CONTROL, CONTROLLER, COST_FUNCTION, EVC_MECHANISM, INIT_FUNCTION_METHOD_ONLY, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISMS, SUM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.utilities import ContentAddressableList, is_iterable
-from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, ValueFunction, PredictionMechanism
+from psyneulink.library.subsystems.evc.evcauxiliary import ControlSignalGridSearch, PredictionMechanism, ValueFunction
 
 __all__ = [
     'EVCControlMechanism', 'EVCError',
@@ -741,8 +740,9 @@ class EVCControlMechanism(ControlMechanism):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(ControlMechanism.ClassDefaults):
-        function = ControlSignalGridSearch
+    class Params(ControlMechanism.Params):
+        function = Param(ControlSignalGridSearch, stateful=False, loggable=False)
+        simulation_ids = Param(list, user=False)
 
     from psyneulink.components.functions.function import LinearCombination
     # from Components.__init__ import DefaultSystem

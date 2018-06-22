@@ -101,7 +101,7 @@ import inspect
 
 import typecheck as tc
 
-from psyneulink.components.component import parameter_keywords
+from psyneulink.components.component import Param, parameter_keywords
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -275,8 +275,8 @@ class ControlProjection(ModulatoryProjection_Base):
         sender=[CONTROL_SIGNAL]
         receiver=[PARAMETER_STATE]
 
-    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
-        function = Linear
+    class Params(ModulatoryProjection_Base.Params):
+        function = Param(Linear, stateful=False, loggable=False)
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

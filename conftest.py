@@ -42,8 +42,8 @@ def pytest_runtest_call(item):
 def pytest_runtest_teardown(item):
     from psyneulink import clear_registry, primary_registries
 
-    # Clear Registry to have a stable reference for indexed suffixes of default names
     for registry in primary_registries:
+        # Clear Registry to have a stable reference for indexed suffixes of default names
         clear_registry(registry)
 
 
