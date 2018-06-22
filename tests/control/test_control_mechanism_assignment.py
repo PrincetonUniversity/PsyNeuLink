@@ -48,4 +48,73 @@ def test_control_mechanism_assignment():
     assert len(S.control_signals)==4
     assert S.controller.name == 'C-2'
 
+def test_control_mechanism_assignment_additional():
+    '''Tests "free-standing" specifications of monitor_for_control and ControlSignal (i.e., outside of a list)'''
+    T = pnl.TransferMechanism(name='T')
+    S = pnl.sys(T,
+                controller=pnl.EVCControlMechanism(),
+                monitor_for_control=T,
+                control_signals=(pnl.SLOPE, T),
+                enable_controller=True)
+    assert S.controller.objective_mechanism.input_state.path_afferents[0].sender.owner == T
+    assert T.parameter_states[pnl.SLOPE].mod_afferents[0].sender.owner == S.controller
 
+def test_prediction_mechanism_assignment():
+    '''Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments'''
+
+    T = pnl.TransferMechanism(name='T')
+
+    S = pnl.sys(T,
+                controller=pnl.EVCControlMechanism(name='EVC',
+                                                   prediction_mechanisms=(pnl.PredictionMechanism,
+                                                                          {pnl.FUNCTION:pnl.INPUT_SEQUENCE,
+                                                                           pnl.RATE:1,
+                                                                           pnl.WINDOW_SIZE:3,
+                                                                           }),
+                                                   objective_mechanism=[T]
+                                                   ),
+                control_signals=pnl.ControlSignal(allocation_samples=[1, 5, 10],
+                                                   projections=(pnl.SLOPE, T)),
+                enable_controller=True
+                )
+
+    S.recordSimulationPref = True
+    input_dict = {T:[1,2,3,4]}
+    results = S.run(inputs=input_dict)
+    assert results == [[[1.]], [[2.]], [[3.]], [[4.]]]
+    assert S.simulation_results ==  [[[1.]], [[5.]], [[10.]],
+                                    [[1.]], [[2.]], [[5.]], [[10.]], [[10.]], [[20.]],
+                                    [[1.]], [[2.]], [[3.]], [[5.]], [[10.]], [[15.]], [[10.]], [[20.]], [[30.]],
+                                    [[2.]], [[3.]], [[4.]], [[10.]], [[15.]], [[20.]], [[20.]], [[30.]], [[40.]]]
+
+def test_prediction_mechanism_filter_function():
+    '''Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments'''
+
+    f = lambda x: [x[0]*7]
+    T = pnl.TransferMechanism(name='T')
+
+    S = pnl.sys(T,
+                controller=pnl.EVCControlMechanism(name='EVC',
+                                                   prediction_mechanisms=(pnl.PredictionMechanism,
+                                                                          {pnl.FUNCTION:pnl.INPUT_SEQUENCE,
+                                                                           pnl.RATE:1,
+                                                                           pnl.WINDOW_SIZE:3,
+                                                                           pnl.FILTER_FUNCTION:f
+                                                                           }),
+                                                   objective_mechanism=[T]
+                                                   ),
+                control_signals=pnl.ControlSignal(allocation_samples=[1, 5, 10],
+                                                   projections=(pnl.SLOPE, T)),
+                enable_controller=True
+                )
+
+    S.recordSimulationPref = True
+    input_dict = {T:[1,2,3,4]}
+    results = S.run(inputs=input_dict)
+    expected_results = [[[1.0]], [[2.0]], [[3.0]], [[4.0]]]
+    expected_sim_results = [[[1.]], [[5.]], [[10.]],
+                            [[7.]], [[35.]], [[70.]],
+                            [[7.]], [[35.]], [[70.]],
+                            [[14.]], [[70.]], [[140.]]]
+    np.testing.assert_allclose(results, expected_results, atol=1e-08, err_msg='Failed on results')
+    np.testing.assert_allclose(S.simulation_results, expected_sim_results, atol=1e-08, err_msg='Failed on results')

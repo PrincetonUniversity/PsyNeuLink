@@ -801,8 +801,10 @@ class PredictionMechanism(IntegratorMechanism):
                  input_states:tc.optional(tc.any(list, dict))=None,
                  function:tc.optional(tc.enum(TIME_AVERAGE_INPUT, AVERAGE_INPUTS, INPUT_SEQUENCE))=TIME_AVERAGE_INPUT,
                  initial_value=None,
-                 rate:tc.optional(tc.any(int, float))=None,
-                 noise:tc.optional(tc.any(int, float, callable))=None,
+                 # rate:tc.optional(tc.any(int, float))=1.0,
+                 # noise:tc.optional(tc.any(int, float, callable))=0.0,
+                 rate:tc.any(int, float)=1.0,
+                 noise:tc.any(int, float, callable)=0.0,
                  window_size=1,
                  filter_function:tc.optional(callable)=None,
                  params=None,
@@ -821,8 +823,6 @@ class PredictionMechanism(IntegratorMechanism):
         input_type = None
         if function in input_types:
             input_type = function
-
-        noise= noise or 0.0
 
         params = self._assign_args_to_param_dicts(window_size=window_size,
                                                   input_type=input_type,
