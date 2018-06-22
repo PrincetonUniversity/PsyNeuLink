@@ -62,8 +62,7 @@ def test_control_mechanism_assignment_additional():
 def test_prediction_mechanism_assignment():
     '''Tests prediction mechanism assignment and more tests for ObjectiveMechanism and ControlSignal assignments'''
 
-
-    wf = lambda x: [x[0],x[1]]
+    # f = lambda x: x[0]*2
     T = pnl.TransferMechanism(name='T')
 
     S = pnl.sys(T,
@@ -72,13 +71,21 @@ def test_prediction_mechanism_assignment():
                                                                           {pnl.FUNCTION:pnl.INPUT_SEQUENCE,
                                                                            pnl.RATE:1,
                                                                            pnl.WINDOW_SIZE:3,
-                                                                           # pnl.WINDOWING_FUNCTION:wf
+                                                                           # pnl.FILTER_FUNCTION:f
                                                                            }),
                                                    objective_mechanism=[T]
                                                    ),
-                control_signals=pnl.ControlSignal(allocation_samples=[0.1, 0.5, 0.9],
+                control_signals=pnl.ControlSignal(allocation_samples=[1, 5, 10],
                                                    projections=(pnl.SLOPE, T)),
                 enable_controller=True
                 )
 
+    S.recordSimulationPref = True
+    input_dict = {T:[1,2,3,4]}
+    results = S.run(inputs=input_dict)
+    assert results == [[[1.]], [[2.]], [[3.]], [[4.]]]
+    assert S.simulation_results ==  [[[1.]], [[5.]], [[10.]],
+                                    [[1.]], [[2.]], [[5.]], [[10.]], [[10.]], [[20.]],
+                                    [[1.]], [[2.]], [[3.]], [[5.]], [[10.]], [[15.]], [[10.]], [[20.]], [[30.]],
+                                    [[2.]], [[3.]], [[4.]], [[10.]], [[15.]], [[20.]], [[20.]], [[30.]], [[40.]]]
 
