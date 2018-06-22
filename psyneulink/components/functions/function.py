@@ -7488,7 +7488,7 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         #Gilzenrat paper - hardcoded for testing
 
         # val = (v - 0.5*w)
-        return val
+        return np.broadcast_to(val, np.atleast_1d(variable).shape)
 
     def function(self,
                  variable=None,
