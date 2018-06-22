@@ -23,7 +23,7 @@ Transfer Functions:
   * `Linear`
   * `Exponential`
   * `Logistic`
-  * `Relu`
+  * `ReLU`
   * `OneHot`
   * `SoftMax`
   * `LinearMatrix`
@@ -248,7 +248,7 @@ __all__ = [
     'MultiplicativeParam', 'NavarroAndFuss', 'NF_Results', 'NON_DECISION_TIME',
     'NormalDist', 'ObjectiveFunction', 'OrnsteinUhlenbeckIntegrator',
     'OneHot', 'OVERRIDE', 'OVERRIDE_PARAM', 'PERTINACITY', 'PredictionErrorDeltaFunction',
-    'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'Relu', 'ReturnVal', 'SimpleIntegrator',
+    'PROPENSITY', 'Buffer', 'Reduce', 'Reinforcement', 'ReLU', 'ReturnVal', 'SimpleIntegrator',
     'SoftMax', 'Stability', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
     'TDLearning', 'THRESHOLD', 'TransferFunction', 'THRESHOLD_VARIABILITY',
     'UniformDist', 'UniformToNormalDist', 'UserDefinedFunction', 'WaldDist', 'WT_MATRIX_RECEIVERS_DIM',
@@ -3402,9 +3402,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
 MODE = 'mode'
 
-class Relu(TransferFunction):  # ------------------------------------------------------------------------------------
+class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
     """
-    Relu(                  \
+    ReLU(                  \
          default_variable, \
          gain=1.0,         \
          bias=0.0,         \
@@ -3424,13 +3424,13 @@ class Relu(TransferFunction):  # -----------------------------------------------
     variable : number or np.array : default ClassDefaults.variable
         specifies a template for the value to be transformed.
     gain : float : default 1.0
-        specifies a value by which to multiply `variable <Relu.variable>` after `bias <Relu.bias>` is subtracted
+        specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
         from it, if (variable - bias) is greater than 0.
     bias : float : default 0.0
-        specifies a value to subtract from each element of `variable <Relu.variable>` before checking if the
+        specifies a value to subtract from each element of `variable <ReLU.variable>` before checking if the
         result is greater than 0 and multiplying by either gain or leak based on the result. 
     leak : float : default 0.0
-        specifies a value by which to multiply `variable <Relu.variable>` after `bias <Relu.bias>` is subtracted
+        specifies a value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
         from it if (variable - bias) is lesser than or equal to 0. 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -3447,13 +3447,13 @@ class Relu(TransferFunction):  # -----------------------------------------------
     variable : number or np.array
         contains value to be transformed.
     gain : float : default 1.0
-        value multiplied with `variable <Relu.variable>` after `bias <Relu.bias>` is subtracted from it if
+        value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
         (variable - bias) is greater than 0. 
     bias : float : default 0.0
-        value subtracted from each element of `variable <Relu.variable>` before checking if the result is
+        value subtracted from each element of `variable <ReLU.variable>` before checking if the result is
         greater than 0 and multiplying by either gain or leak based on the result. 
     leak : float : default 0.0
-        value multiplied with `variable <Relu.variable>` after `bias <Relu.bias>` is subtracted from it if
+        value multiplied with `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted from it if
         (variable - bias) is lesser than or equal to 0. 
     bounds : (None,None)
     owner : Component
@@ -3517,7 +3517,7 @@ class Relu(TransferFunction):  # -----------------------------------------------
             arguments of the constructor.
         Returns
         -------
-        relu transformation of variable : number or np.array
+        ReLU transformation of variable : number or np.array
         """
         
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
@@ -3526,16 +3526,12 @@ class Relu(TransferFunction):  # -----------------------------------------------
         bias = self.get_current_function_param(BIAS)
         leak = self.get_current_function_param(LEAK)
         
-        # JDC: I BELIEVE WE WANT TO OPERATE ON AND TEST VECTORS *ELEMENTWISE*, WHICH MEANS NEED TO USE map
-        # if ((variable-bias) > 0): return gain*(variable-bias)
-        # else: return leak*(variable-bias)
-        return np.array(list(map(lambda v: gain*(v-bias) if (v-bias)>0 else leak*(v-bias), variable)))
+        return np.maximum(gain*(variable-bias), bias, leak*(variable-bias))
 
-    
     def derivative(self, output):
         """
         derivative(output)
-        Derivative of `function <Relu.function>`.
+        Derivative of `function <ReLU.function>`.
         Returns
         -------
         derivative :  number

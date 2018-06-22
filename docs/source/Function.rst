@@ -17,7 +17,7 @@ Functions
              Linear,
              Exponential,
              Logistic,
-             Relu,
+             ReLU,
              OneHot,
              SoftMax,
              LinearMatrix,

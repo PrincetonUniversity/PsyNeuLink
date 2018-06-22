@@ -3,7 +3,7 @@ import pytest
 
 from psyneulink.components.component import ComponentError
 from psyneulink.components.functions.function import FunctionError
-from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, Relu, SoftMax, UserDefinedFunction
+from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, ReLU, SoftMax, UserDefinedFunction
 from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
 from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
@@ -393,23 +393,29 @@ class TestTransferMechanismFunctions:
     
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    @pytest.mark.benchmark(group="TransferMechanism Relu")
+    @pytest.mark.benchmark(group="TransferMechanism ReLU")
     def test_transfer_mech_relu_fun(self, benchmark):
 
         T = TransferMechanism(
             name='T',
             default_variable=[0 for i in range(VECTOR_SIZE)],
-            function=Relu(),
+            function=ReLU(),
             smoothing_factor=1.0,
             integrator_mode=True
         )
-        val1 = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
-        val2 = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
-        val3 = benchmark(T.execute, [-1 for i in range(VECTOR_SIZE)])
+        # val1 = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+        # val2 = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
+        # val3 = benchmark(T.execute, [-1 for i in range(VECTOR_SIZE)])
+        # assert np.allclose(val1, [[0.0 for i in range(VECTOR_SIZE)]])
+        # assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
+        # assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
+        val1 = T.execute([0 for i in range(VECTOR_SIZE)])
+        val2 = T.execute([1 for i in range(VECTOR_SIZE)])
+        val3 = T.execute([-1 for i in range(VECTOR_SIZE)])
         assert np.allclose(val1, [[0.0 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
-    
+
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism Exponential")
