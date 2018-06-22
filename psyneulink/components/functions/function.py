@@ -3526,7 +3526,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         bias = self.get_current_function_param(BIAS)
         leak = self.get_current_function_param(LEAK)
         
-        return np.maximum(gain*(variable-bias), bias, leak*(variable-bias))
+        return np.where((variable > bias), gain*(variable - bias), leak*(variable - bias))
 
     def derivative(self, output):
         """
@@ -3540,8 +3540,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = self.get_current_function_param(GAIN)
         leak = self.get_current_function_param(LEAK)
         
-        if (output > 0): return gain
-        else: return leak
+        return np.where((output > 0), gain, leak)
 
 
 MODE = 'mode'

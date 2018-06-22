@@ -395,26 +395,62 @@ class TestTransferMechanismFunctions:
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism ReLU")
     def test_transfer_mech_relu_fun(self, benchmark):
-
-        T = TransferMechanism(
-            name='T',
-            default_variable=[0 for i in range(VECTOR_SIZE)],
-            function=ReLU(),
-            smoothing_factor=1.0,
-            integrator_mode=True
-        )
+        
+        # mechanism for testing with default parameters
+        Tdef = TransferMechanism(
+                name='T',
+                default_variable=[0 for i in range(VECTOR_SIZE)],
+                function=ReLU(),
+                smoothing_factor=1.0,
+                integrator_mode=True
+                )
+        
+        # mechanism for testing with non-default parameters 
+        Tnondef = TransferMechanism(
+                name='T',
+                default_variable=[0 for i in range(VECTOR_SIZE)],
+                function=ReLU(gain=2, bias=1, leak=0.1),
+                smoothing_factor=1.0,
+                integrator_mode=True
+                )
+        
+        # test relu function with default parameters, input vectors that are same at every element
+        stdval_Tdef_1 = Tdef.execute([0 for i in range(VECTOR_SIZE)])
+        stdval_Tdef_2 = Tdef.execute([2 for i in range(VECTOR_SIZE)])
+        stdval_Tdef_3 = Tdef.execute([-2 for i in range(VECTOR_SIZE)])
+        assert np.allclose(stdval_Tdef_1, [[0.0 for i in range(VECTOR_SIZE)]])
+        assert np.allclose(stdval_Tdef_2, [[2.0 for i in range(VECTOR_SIZE)]])
+        assert np.allclose(stdval_Tdef_3, [[0.0 for i in range(VECTOR_SIZE)]])
+        
+        # test relu function with default parameters, input vector that has different behavior at different elements
+        nonstdval_Tdef = Tdef.execute([-2, -1, 0, 2])
+        assert np.allclose(nonstdval_Tdef, [[0.0, 0.0, 0.0, 2.0]])
+        
+        # test relu function with non-default parameters, input vectors that are same at every element
+        stdval_Tnondef_1 = Tnondef.execute([0 for i in range(VECTOR_SIZE)])
+        stdval_Tnondef_2 = Tnondef.execute([2 for i in range(VECTOR_SIZE)])
+        stdval_Tnondef_3 = Tnondef.execute([-2 for i in range(VECTOR_SIZE)])
+        assert np.allclose(stdval_Tnondef_1, [[-0.1 for i in range(VECTOR_SIZE)]])
+        assert np.allclose(stdval_Tnondef_2, [[2.0 for i in range(VECTOR_SIZE)]])
+        assert np.allclose(stdval_Tnondef_3, [[-0.3 for i in range(VECTOR_SIZE)]])
+        
+        # test relu function with non-default parameters, input vector that has different behavior at different elements
+        nonstdval_Tnondef = Tnondef.execute([-2, -1, 0, 2])
+        assert np.allclose(nonstdval_Tdef, [[-0.3, -0.2, -0.1, 2.0]])
+        
+        
         # val1 = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         # val2 = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
         # val3 = benchmark(T.execute, [-1 for i in range(VECTOR_SIZE)])
         # assert np.allclose(val1, [[0.0 for i in range(VECTOR_SIZE)]])
         # assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
         # assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
-        val1 = T.execute([0 for i in range(VECTOR_SIZE)])
-        val2 = T.execute([1 for i in range(VECTOR_SIZE)])
-        val3 = T.execute([-1 for i in range(VECTOR_SIZE)])
-        assert np.allclose(val1, [[0.0 for i in range(VECTOR_SIZE)]])
-        assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
-        assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
+        # val1 = T.execute([0 for i in range(VECTOR_SIZE)])
+        # val2 = T.execute([1 for i in range(VECTOR_SIZE)])
+        # val3 = T.execute([-1 for i in range(VECTOR_SIZE)])
+        # assert np.allclose(val1, [[0.0 for i in range(VECTOR_SIZE)]])
+        # assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
+        # assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
