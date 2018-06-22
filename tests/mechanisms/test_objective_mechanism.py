@@ -1,15 +1,7 @@
 import numpy as np
 import pytest
 
-#from psyneulink.components.component import ComponentError
-#from psyneulink.components.functions.function import FunctionError
-#from psyneulink.components.functions.function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax, UserDefinedFunction
-#from psyneulink.components.functions.function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist, UniformToNormalDist
-#from psyneulink.components.mechanisms.mechanism import MechanismError
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-#from psyneulink.globals.utilities import UtilitiesError
-#from psyneulink.components.process import Process
-#from psyneulink.components.system import System
 
 VECTOR_SIZE=4
 
