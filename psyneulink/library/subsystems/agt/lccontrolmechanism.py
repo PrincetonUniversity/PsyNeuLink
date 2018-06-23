@@ -350,14 +350,17 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.components.functions.function import FHNIntegrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
+from psyneulink.components.functions.function import \
+    FHNIntegrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
+from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.components.states.outputstate import OutputState
 from psyneulink.components.shellclasses import Mechanism, System_Base
-from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
     ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, PROJECTIONS
+from psyneulink.globals.utilities import is_iterable
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -685,6 +688,7 @@ class LCControlMechanism(ControlMechanism):
                  system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
+                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  modulated_mechanisms=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  integration_method="RK4",
@@ -715,7 +719,6 @@ class LCControlMechanism(ControlMechanism):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
-                                                  objective_mechanism=objective_mechanism,
                                                   modulated_mechanisms=modulated_mechanisms,
                                                   modulation=modulation,
                                                   integration_method=integration_method,
@@ -743,6 +746,7 @@ class LCControlMechanism(ControlMechanism):
 
         super().__init__(system=system,
                          objective_mechanism=objective_mechanism,
+                         monitor_for_control=monitor_for_control,
                          function=FHNIntegrator(  integration_method=integration_method,
                                                   initial_v=initial_v_FHN,
                                                   initial_w=initial_w_FHN,
