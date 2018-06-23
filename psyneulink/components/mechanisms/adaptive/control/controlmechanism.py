@@ -308,18 +308,19 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import LinearCombination, ModulationParam, _is_modulation_param
 from psyneulink.components.mechanisms.adaptive.adaptivemechanism import AdaptiveMechanism_Base
-from psyneulink.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.components.shellclasses import System_Base
+from psyneulink.components.states.outputstate import OutputState
+from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.components.states.outputstate import SEQUENTIAL
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.defaults import defaultControlAllocation
-from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, COMMAND_LINE, CONTROL, CONTROL_PROJECTION, \
-    CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, EXPONENT, INIT__EXECUTE__METHOD_ONLY, NAME, \
-    OBJECTIVE_MECHANISM, OWNER_VALUE, PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM, VARIABLE, WEIGHT
+from psyneulink.globals.keywords import AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, \
+    CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, \
+    MONITOR_FOR_CONTROL, OBJECTIVE_MECHANISM, OWNER_VALUE,  PRODUCT, PROJECTIONS, PROJECTION_TYPE, SYSTEM
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import ContentAddressableList
+from psyneulink.globals.utilities import ContentAddressableList, is_iterable
 
 __all__ = [
     'ALLOCATION_POLICY', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry'
@@ -552,16 +553,24 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  default_variable=None,
                  size=None,
                  system:tc.optional(System_Base)=None,
+                 # monitor_for_control=None,
+                 monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
                  function=None,
-                 control_signals=None,
+                 # control_signals=None,
+                 control_signals:tc.optional(tc.any(is_iterable, ParameterState))=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
+        self.control_signals_arg = control_signals or []
+        if not isinstance(self.control_signals_arg, list):
+            self.control_signals_arg = [self.control_signals_arg]
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
+                                                  monitor_for_control=monitor_for_control,
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   control_signals=control_signals,
@@ -592,11 +601,43 @@ class ControlMechanism(AdaptiveMechanism_Base):
         super(ControlMechanism, self)._validate_params(request_set=request_set,
                                                        target_set=target_set,
                                                        context=context)
+
+        def validate_monitored_state_spec(spec_list):
+            for spec in spec_list:
+                if isinstance(spec, MonitoredOutputStateTuple):
+                    spec = spec.output_state
+                if isinstance(spec, dict):
+                    # If it is a dict, parse to validate that it is an InputState specification dict
+                    #    (for InputState of ObjectiveMechanism to be assigned to the monitored_output_state)
+                    spec = _parse_state_spec(owner=self,
+                                             state_type=InputState,
+                                             state_spec=spec,
+                                             context=context)
+                    # Get the OutputState, to validate that it is in the ControlMechanism's System (below);
+                    #    presumes that the monitored_output_state is the first in the list of projection_specs
+                    #    in the InputState state specification dictionary returned from the parse,
+                    #    and that it is specified as a projection_spec (parsed into that in the call
+                    #    to _parse_connection_specs by _parse_state_spec)
+
+                    spec = spec[PROJECTIONS][0][0]
+
+                # If ControlMechanism has been assigned to a System, check that
+                #    all the items in the list used to specify objective_mechanism are in the same System
+                if self.system:
+                    self.system._validate_monitored_states_in_system([spec], context=context)
+
+
         if SYSTEM in target_set:
             if not isinstance(target_set[SYSTEM], System_Base):
                 raise KeyError
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
+
+        if MONITOR_FOR_CONTROL in target_set and target_set[MONITOR_FOR_CONTROL] is not None:
+            spec = target_set[MONITOR_FOR_CONTROL]
+            if not isinstance(spec, list):
+                spec = [spec]
+            validate_monitored_state_spec(spec)
 
         if OBJECTIVE_MECHANISM in target_set and target_set[OBJECTIVE_MECHANISM] is not None:
 
@@ -604,8 +645,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
                 obj_mech_spec_list = target_set[OBJECTIVE_MECHANISM]
 
-                # Check if there is any ObjectiveMechanism in the list
-                #    (incorrect but possibly forgivable mis-specification
+                # Check if there is any ObjectiveMechanism is in the list;
+                #    incorrect but possibly forgivable mis-specification --
+                #    if an ObjectiveMechanism is specified, it should be "exposed" (i.e., not in a list)
                 if any(isinstance(spec, ObjectiveMechanism) for spec in obj_mech_spec_list):
                     # If an ObjectiveMechanism is the *only* item in the list, forgive the mis-spsecification and use it
                     if len(obj_mech_spec_list)==1 and isinstance(obj_mech_spec_list[0], ObjectiveMechanism):
@@ -621,28 +663,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                     " it is in a list with other items ({})".
                                                     format(OBJECTIVE_MECHANISM, self.name, obj_mech_spec_list))
                 else:
-                    for spec in obj_mech_spec_list:
-                        if isinstance(spec, MonitoredOutputStateTuple):
-                            spec = spec.output_state
-                        if isinstance(spec, dict):
-                            # If it is a dict, parse to validate that it is an InputState specification dict
-                            #    (for InputState of ObjectiveMechanism to be assigned to the monitored_output_state)
-                            spec = _parse_state_spec(owner=self,
-                                                     state_type=InputState,
-                                                     state_spec=spec,
-                                                     context=context)
-                            # Get the OutputState, to validate that it is in the ControlMechanism's System (below);
-                            #    presumes that the monitored_output_state is the first in the list of projection_specs
-                            #    in the InputState state specification dictionary returned from the parse,
-                            #    and that it is specified as a projection_spec (parsed into that in the call
-                            #    to _parse_connection_specs by _parse_state_spec)
-
-                            spec = spec[PROJECTIONS][0][0]
-
-                        # If ControlMechanism has been assigned to a System, check that
-                        #    all the items in the list used to specify objective_mechanism are in the same System
-                        if self.system:
-                            self.system._validate_monitored_states_in_system([spec], context=context)
+                    validate_monitored_state_spec(obj_mech_spec_list)
 
             if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list)):
                 raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
@@ -661,7 +682,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
     # ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, context=None):
         """
-        Assign InputState to ControlMechanism for each OutputState to be monitored;
+        # FIX: ??THIS SHOULD BE IN OR MOVED TO ObjectiveMechanism
+        Assign InputState to ObjectiveMechanism for each OutputState to be monitored;
             uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
             For each item in self.monitored_output_states:
             - if it is a OutputState, call _instantiate_monitoring_input_state()
@@ -687,40 +709,29 @@ class ControlMechanism(AdaptiveMechanism_Base):
         monitored_output_states = []
 
         # If the ControlMechanism has already been assigned to a System
-        #    get OutputStates in System specified as MONITOR_FOR_CONTROL
+        #    get OutputStates in System specified as monitor_for_control or already being monitored:
         #        do this by calling _get_monitored_output_states_for_system(),
         #        which also gets any OutputStates already being monitored by the ControlMechanism
         if self.system:
             monitored_output_states.extend(self.system._get_monitored_output_states_for_system(self,context=context))
 
-        # If objective_mechanism argument was specified as a list, parse and add to monitored_output_states
+        self.monitor_for_control = self.monitor_for_control or []
+        if not isinstance(self.monitor_for_control, list):
+            self.monitor_for_control = [self.monitor_for_control]
+
+        # If objective_mechanism is used to specify OutputStates to be monitored (legacy feature)
+        #    move them to monitor_for_control
         if isinstance(self.objective_mechanism, list):
-            for i, item in enumerate(self.objective_mechanism):
-                # If it is already in the list received from System, ignore
-                if item in monitored_output_states:
-                    # NOTE: this can happen if ControlMechanisms is being constructed by System
-                    #       which passed its monitor_for_control specification
-                    continue
-                # If it is a 4-item tuple, convert to MonitoredOutputStateTuple for treatment below
-                if isinstance(item, tuple) and len(item)==4:
-                    item = MonitoredOutputStateTuple(item[0],item[1],item[2],item[3])
-                # If it is a MonitoredOutputStateTuple, create InputState specification dictionary
-                if isinstance(item, MonitoredOutputStateTuple):
-                    # If matrix is specified, let it determine the variable
-                    if item.matrix is not None:
-                        variable = None
-                    # Otherwise, use OutputState's value as variable for InputState
-                    else:
-                        variable = item.output_state.value
-                    # Create InputState specification dictionary:
-                    monitored_output_states.extend([{NAME: item.output_state.name,
-                                                     VARIABLE: variable,
-                                                     WEIGHT:item.weight,
-                                                     EXPONENT:item.exponent,
-                                                     PROJECTIONS:[(item.output_state, item.matrix)]}])
-                # Otherwise, assume it is a valid form of InputSate specification, and add to monitored_output_states
-                else:
-                    monitored_output_states.extend([item])
+            self.monitor_for_control.extend(self.objective_mechanism)
+
+        # Add items in monitor_for_control to monitored_output_states
+        for i, item in enumerate(self.monitor_for_control):
+            # If it is already in the list received from System, ignore
+            if item in monitored_output_states:
+                # NOTE: this can happen if ControlMechanisms is being constructed by System
+                #       which passed its monitor_for_control specification
+                continue
+            monitored_output_states.extend([item])
 
         # INSTANTIATE ObjectiveMechanism
 
@@ -1002,9 +1013,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
         monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
 
         # Don't add any OutputStates that are already being monitored by the ControlMechanism's ObjectiveMechanism
-        for i, monitored_output_state in enumerate(monitored_output_states.copy()):
+        for monitored_output_state in monitored_output_states.copy():
             if monitored_output_state.output_state in self.monitored_output_states:
-                del monitored_output_states[i]
+                monitored_output_states.remove(monitored_output_state)
 
         # Add all other monitored_output_states to the ControlMechanism's monitored_output_states attribute
         #    and to its ObjectiveMechanisms monitored_output_states attribute
