@@ -6,6 +6,7 @@ from psyneulink.components.mechanisms.processing.transfermechanism import Transf
 from psyneulink.components.functions.function import Linear
 from psyneulink.components.process import Process
 from psyneulink.components.system import System
+from psyneulink.scheduling.condition import Never
 
 class TestLCA:
     def test_LCA_length_1(self):
@@ -18,7 +19,7 @@ class TestLCA:
                 time_step_size=0.1)
         P = Process(pathway=[T, L])
         S = System(processes=[P])
-
+        L.reinitialize_when = Never()
         #  - - - - - - - Equations to be executed  - - - - - - -
 
         # new_transfer_input =
@@ -68,9 +69,10 @@ class TestLCA:
                 leak=0.5,
                 competition=1.0,
                 time_step_size=0.1)
+
         P = Process(pathway=[T, L])
         S = System(processes=[P])
-
+        L.reinitialize_when = Never()
         #  - - - - - - - Equations to be executed  - - - - - - -
 
         # new_transfer_input =
@@ -136,6 +138,7 @@ class TestLCAReinitialize:
         S = System(name="S",
                    processes=[P])
 
+        L.reinitialize_when = Never()
         assert np.allclose(L.previous_value, 0.5)
         assert np.allclose(L.initial_value, 0.5)
         assert np.allclose(L.integrator_function.initializer, 0.5)
@@ -154,21 +157,15 @@ class TestLCAReinitialize:
         # integration: 1.55 + (0.1*1.55 + 2.55)*1.0 + 0.0 = 4.255
         #  linear fn: 4.255*1.0 = 4.255
         assert np.allclose(L.previous_value, 4.255)
-        assert np.allclose(L.initial_value, 0.5)
-        assert np.allclose(L.integrator_function.initializer, 0.5)
 
         L.integrator_function.reinitialize(0.9)
 
         assert np.allclose(L.previous_value, 0.9)
-        assert np.allclose(L.initial_value, 0.5)
-        assert np.allclose(L.integrator_function.initializer, 0.9)
         assert np.allclose(L.value, 4.255)
 
         L.reinitialize(0.5)
 
         assert np.allclose(L.previous_value, 0.5)
-        assert np.allclose(L.initial_value, 0.5)
-        assert np.allclose(L.integrator_function.initializer, 0.5)
         assert np.allclose(L.value, 0.5)
 
         S.run(inputs={L: 1.0},

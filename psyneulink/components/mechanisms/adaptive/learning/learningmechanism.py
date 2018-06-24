@@ -52,7 +52,8 @@ form, PsyNeuLink is not suitable for conducting large scale learning models (e.g
 once trained, the parameters of such models can easily be incorporated into a PsyNeuLink model for use as part of a
 `System`.  Future extensions of PsyNeuLink will provide an interface for the direct construction and integration
 within the PsyNeuLink environment of objects created in other environments (e.g.,
-`TensorFlow <https://www.tensorflow.org/>`_ or `Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_).
+`TensorFlow <https://www.tensorflow.org/>`_, `PyTorch <https://pytorch.org>`_ or
+`Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_).
 
 
 .. _LearningMechanism_Creation:

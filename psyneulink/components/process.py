@@ -1050,11 +1050,6 @@ class Process(Process_Base):
         for i in range(len(pathway)):
             item = pathway[i]
 
-            # Get max phaseSpec for Mechanisms in pathway
-            # if not phase_spec:
-            #     phase_spec = 0
-            # self._phaseSpecMax = int(max(math.floor(float(phase_spec)), self._phaseSpecMax))
-
             # VALIDATE PLACEMENT OF PROJECTION ENTRIES  ----------------------------------------------------------
 
             # Can't be first entry, and can never have two in a row
@@ -1094,7 +1089,6 @@ class Process(Process_Base):
 
             # Entry IS already a Mechanism object
             # Add entry to _mechs and name to mechanism_names list
-            # mech.phaseSpec = phase_spec
             # Add Process to the mechanism's list of processes to which it belongs
             if not self in mech.processes:
                 mech.processes[self] = INTERNAL
@@ -1717,8 +1711,7 @@ class Process(Process_Base):
                 exhaustively check all of Components of each Mechanism,
                     including all projections to its input_states and _parameter_states
                 initialize all items that specified deferred initialization
-                construct a _learning_mechs of Mechanism tuples (mech, params, phase_spec):
-                    assign phase_spec for each LearningMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
+                construct a _learning_mechs of Mechanism tuples (mech, params):
                 add _learning_mechs to the Process' _mechs
                 assign input Projection from Process to first Mechanism in _learning_mechs
 
@@ -2233,7 +2226,7 @@ class Process(Process_Base):
             call_before_trial=None,
             call_after_trial=None,
             call_before_time_step=None,
-            call_after_time_step=None,
+            call_after_time_step=None
     ):
         """Run a sequence of executions
 
@@ -2323,8 +2316,8 @@ class Process(Process_Base):
                    call_before_trial=call_before_trial,
                    call_after_trial=call_after_trial,
                    call_before_time_step=call_before_time_step,
-                   call_after_time_step=call_after_time_step,
-        )
+                   call_after_time_step=call_after_time_step)
+
     def _report_process_initiation(self, input=None, separator=False):
         """
         Parameters

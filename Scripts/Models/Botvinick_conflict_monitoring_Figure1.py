@@ -152,6 +152,7 @@ System_Conflict_Monitoring = pnl.System(processes=[color_response_process,
                                                    word_response_process,
                                                    task_color_response_process,
                                                    task_word_response_process],
+                                        reinitialize_mechanisms_when=pnl.Never(),
                                         name='CONFLICT MONITORING_SYSTEM')
 
 response_layer.systems[System_Conflict_Monitoring] = pnl.TERMINAL
