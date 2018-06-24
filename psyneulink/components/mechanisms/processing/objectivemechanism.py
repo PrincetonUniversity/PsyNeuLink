@@ -8,7 +8,6 @@
 
 # *********************************************  ObjectiveMechanism ****************************************************
 
-# FIX: RE-WRITE DOCS TO INDICATE THAT monitored_output_states IS AN ALIAS TO input_states ARGUMENT/ATTRIBUTE
 """
 
 Overview
@@ -36,6 +35,13 @@ as described below.
 
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+FOR DEVELOPERS:
+    The monitored_output_states argument is in effect and alias to the input_states argument
+    of the constructor for a Mechanism;  it is simply assigned to input_state in the __init__ method
+    and the specifications are handled by an override of the Mechanism's _instantiate_input_states method
+COMMENT
 
 The **monitored_output_states** argument of the constructor specifies the `OutputStates <OutputState>` it monitors.
 This takes the place of the **input_states** argument used by most other forms of `Mechanism <Mechanism>`, and is used
