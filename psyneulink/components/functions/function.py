@@ -3064,8 +3064,10 @@ class TransferFunction(Function_Base):
         assert isinstance(vi.type.pointee, ir.ArrayType)
         if isinstance(vi.type.pointee.element, ir.ArrayType):
             assert vi.type == vo.type
-            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, self._variable_length).as_pointer())
-            vo = builder.bitcast(vo, ir.ArrayType(ctx.float_ty, self._result_length).as_pointer())
+            # Array elements need all to be of the same size
+            length = vi.type.pointee.count * vi.type.pointee.element.count
+            vi = builder.bitcast(vi, ir.ArrayType(ctx.float_ty, length).as_pointer())
+            vo = builder.bitcast(vo, ir.ArrayType(ctx.float_ty, length).as_pointer())
 
         kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
         inner = functools.partial(self._gen_llvm_transfer, **kwargs)
