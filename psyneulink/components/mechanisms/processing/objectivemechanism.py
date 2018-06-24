@@ -562,6 +562,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None,
                  **kwargs):
 
+        monitored_output_states = monitored_output_states or None # deal with possibility of empty list
         input_states = monitored_output_states
         if output_states is None or output_states is OUTCOME:
             output_states = [OUTCOME]
