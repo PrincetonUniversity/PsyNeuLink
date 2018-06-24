@@ -41,20 +41,26 @@ In the PsyNeuLink git repository, there are many folders and files. The followin
 Environment Setup
 -----------------
 
+PsyNeuLink is coded in Python 3, and should work in both Python 3.5 and 3.6. First install Python and pip on your machine, if not there already. Clone the PsyNeuLink git repository. To install the required packages, navigate to the PsyNeuLink folder and run `pip install -r requirements.txt` and `pip install -r dev_requirements.txt`, or use pip3 if needed.
+
+To contribute, you should create your own branch off of the `devel` branch, and make a pull request to `devel` once your changes are complete.
+
 .. _Components_Overview:
 
 Components Overview
 -------------------
 
-.. _Mechanism_Implementation:
-
-Mechanism Implementation
-------------------------
+In PsyNeuLink, every piece of t
 
 .. _Compositions_Overview:
 
 Compositions Overview
 ---------------------
+
+.. _Mechanism_Implementation:
+
+Mechanism Implementation
+------------------------
 
 .. _Scheduler:
 
