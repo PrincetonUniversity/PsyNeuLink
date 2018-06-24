@@ -3782,7 +3782,8 @@ class System(System_Base):
             if isinstance(rcvr, LearningMechanism):
                 return
             # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
-            if isinstance(rcvr, ObjectiveMechanism) and rcvr.controller is True:
+            if isinstance(rcvr, ObjectiveMechanism) and rcvr.for_controller is True:
+            # if isinstance(rcvr, ObjectiveMechanism) and rcvr._role is CONTROL:
                 return
 
             # loop through senders to implement edges
@@ -4179,7 +4180,8 @@ class System(System_Base):
                     pred_mech_color = active_color
                 else:
                     pred_mech_color = prediction_mechanism_color
-                if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
+                # if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
+                if mech.for_control is True and hasattr(mech, 'origin_mech'):
                     recvr = mech.origin_mech
                     recvr_label = self._get_label(recvr, show_dimensions, show_roles)
                     # IMPLEMENTATION NOTE:

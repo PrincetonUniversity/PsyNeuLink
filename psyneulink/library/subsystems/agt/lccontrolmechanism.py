@@ -58,10 +58,14 @@ constructor. An LCControlMechanism controls a `Mechanism <Mechanism>` by modifyi
 <Function_Modulatory_Params>` of the Mechanism's `function <TransferMechanism.function>`.  Therefore, any Mechanism
 specified for control by an LCControlMechanism must be either a `TransferMechanism`, or a Mechanism that uses a
 `TransferFunction` or a class of `Function <Function>` that implements a `multiplicative_param
-<Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be a list of such Mechanisms.  The keyword
+<Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be a list of such Mechanisms.
+COMMENT:
+The keyword
 *ALL* can also be used to specify all of the eligible `ProcessMechanisms <ProcessingMechanism>` in all of the
 `Compositions <Composition>` to which the LCControlMechanism belongs.  If a Mechanism specified in the
-**modulated_mechanisms** argument does not implement a multiplicative_param, it is ignored. A `ControlProjection` is
+**modulated_mechanisms** argument does not implement a multiplicative_param, it is ignored.
+COMMENT
+A `ControlProjection` is
 automatically created that projects from the LCControlMechanism to the `ParameterState` for the `multiplicative_param
 <Function_Modulatory_Params>` of every Mechanism specified in the **modulated_mechanisms** argument.  The Mechanisms
 modulated by an LCControlMechanism are listed in its `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>`
@@ -343,18 +347,24 @@ class LCControlMechanism(ControlMechanism):
         argument of the `system <LCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
-    objective_mechanism : ObjectiveMechanism, List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d
+    objective_mechanism : ObjectiveMechanism, List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d \
     np.array]] : default ObjectiveMechanism(function=CombineMeans)
         specifies either an `ObjectiveMechanism` to use for the LCControlMechanism or a list of the OutputStates it should
         monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
+    COMMENT:
     modulated_mechanisms : List[`Mechanism`] or *ALL*
+    COMMENT
+    modulated_mechanisms : List[`Mechanism`]
         specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a Mechanism
         with a `function <Mechanism_Base.function>` that implements a `multiplicative_param
-        <Function_Modulatory_Params>`;  alternatively the keyword *ALL* can be used to specify all of the
+        <Function_Modulatory_Params>`.
+        COMMENT:
+        ;  alternatively the keyword *ALL* can be used to specify all of the
         `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCControlMechanism
         belongs.
+        COMMENT
 
     initial_w_FHN : float : default 0.0
         sets `initial_w <initial_w.FHNIntegrator>` on the LCControlMechanism's `FHNIntegrator <FHNIntegrator>` function
@@ -714,21 +724,25 @@ class LCControlMechanism(ControlMechanism):
         if MODULATED_MECHANISMS in target_set and target_set[MODULATED_MECHANISMS]:
             spec = target_set[MODULATED_MECHANISMS]
 
-            if isinstance (spec, str):
-                if not spec == ALL:
-                    raise LCControlMechanismError("A string other than the keyword \'ALL\' was specified for the {} argument "
-                                           "the constructor for {}".format(MODULATED_MECHANISMS, self.name))
             if not isinstance(spec, list):
                 spec = [spec]
 
             for mech in spec:
-                if not isinstance(mech, Mechanism):
-                    raise LCControlMechanismError("The specification of the {} argument for {} contained an item ({})"
-                                           "that is not a Mechanism.".format(MODULATED_MECHANISMS, self.name, mech))
-                if not hasattr(mech.function_object, MULTIPLICATIVE_PARAM):
-                    raise LCControlMechanismError("The specification of the {} argument for {} contained a Mechanism ({})"
-                                           "that does not have a {}.".
-                                           format(MODULATED_MECHANISMS, self.name, mech, MULTIPLICATIVE_PARAM))
+                if isinstance (mech, str):
+                    if not mech == ALL:
+                        raise LCControlMechanismError("A string other than the keyword {} was specified "
+                                                      "for the {} argument the constructor for {}".
+                                                      format(repr(ALL), repr(MODULATED_MECHANISMS), self.name))
+                elif not isinstance(mech, Mechanism):
+                    raise LCControlMechanismError("The specification of the {} argument for {} "
+                                                  "contained an item ({}) that is not a Mechanism.".
+                                                  format(repr(MODULATED_MECHANISMS), self.name, mech))
+                elif not hasattr(mech.function_object, MULTIPLICATIVE_PARAM):
+                    raise LCControlMechanismError("The specification of the {} argument for {} "
+                                                  "contained a Mechanism ({}) that does not have a {}.".
+                                           format(repr(MODULATED_MECHANISMS),
+                                                  self.name, mech,
+                                                  repr(MULTIPLICATIVE_PARAM)))
 
     def _instantiate_output_states(self, context=None):
         """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms
@@ -741,9 +755,13 @@ class LCControlMechanism(ControlMechanism):
         from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
         # *ALL* is specified for modulated_mechanisms:
-        # assign all Processing Mechanisms in the LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
+        # assign all Processing Mechanisms in LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
             self.modulated_mechanisms = []
+            if not (hasattr(self, 'systems') or hasattr(self, 'processes')):
+                raise LCControlMechanismError("The keyword {} was specified for the {} argument of the constructor "
+                                              "for {}, but it does not belong to any Systems or Processes".
+                                              format(repr(ALL), repr(MODULATED_MECHANISMS), self.name))
             for system in self.systems:
                 for mech in system.mechanisms:
                     if isinstance(mech, ProcessingMechanism_Base) and hasattr(mech.function, MULTIPLICATIVE_PARAM):
