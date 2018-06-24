@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.4.7.1+146.gfc3caa9 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.4.7.1+147.g70a9987 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.4.7.1+146.gfc3caa9 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.4.7.1+147.g70a9987 documentation" href="index.html"/>
         <link rel="up" title="Compositions" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Compositions" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.4.7.1+146
+                0.4.7.1+147
               </div>
             
           
@@ -208,7 +208,7 @@ arguments of the <a class="reference internal" href="#"><span class="doc">System
 <ul>
 <li><p class="first"><strong>monitor_for_control</strong> argument – used to specify OutputStates of Mechanisms in the System that should be
 monitored by the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> associated with the System’s <a class="reference internal" href="#psyneulink.components.system.System.controller" title="psyneulink.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> (see
-<a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism and Monitored OutputStates</span></a>);  these are used in addition to any specified for the ControlMechanism or
+<a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism</span></a>);  these are used in addition to any specified for the ControlMechanism or
 its ObjectiveMechanism.  These can be specified in the <strong>monitor_for_control</strong> argument of the <a class="reference internal" href="#"><span class="doc">System</span></a> using
 any of the ways used to specify the <em>monitored_output_states</em> for an ObjectiveMechanism (see
 <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-output-states"><span class="std std-ref">Monitored OutputStates</span></a>).  In addition, the <strong>monitor_for_control</strong> argument supports two
@@ -274,8 +274,8 @@ belonging to more than one Process (as shown for control in this figure).</span>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.SINGLETON" title="psyneulink.globals.keywords.MechanismRoles.SINGLETON"><code class="xref any py py-attr docutils literal"><span class="pre">SINGLETON</span></code></a>: both an <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.ORIGIN" title="psyneulink.globals.keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and a <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism.</p>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE" title="psyneulink.globals.keywords.MechanismRoles.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>: sends a Projection that closes a recurrent loop; can be assigned an initial value.</p>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.CYCLE" title="psyneulink.globals.keywords.MechanismRoles.CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">CYCLE</span></code></a>: receives a Projection that closes a recurrent loop.</p>
-<p><a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.CONTROL" title="psyneulink.globals.log.LogCondition.CONTROL"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROL</span></code></a>: monitors the value of another Mechanism for use in controlling parameter values.</p>
-<p><a class="reference internal" href="Context.html#psyneulink.globals.context.ContextFlags.LEARNING" title="psyneulink.globals.context.ContextFlags.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
+<p><a class="reference internal" href="Context.html#psyneulink.globals.context.ContextFlags.CONTROL" title="psyneulink.globals.context.ContextFlags.CONTROL"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROL</span></code></a>: monitors the value of another Mechanism for use in controlling parameter values.</p>
+<p><a class="reference internal" href="Log.html#psyneulink.globals.log.LogCondition.LEARNING" title="psyneulink.globals.log.LogCondition.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">LEARNING</span></code></a>: monitors the value of another Mechanism for use in learning.</p>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TARGET" title="psyneulink.globals.keywords.MechanismRoles.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>: ComparatorMechanism that monitors a <a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.TERMINAL" title="psyneulink.globals.keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of a Process and compares it to a corresponding
 value provided in the <a class="reference internal" href="#psyneulink.components.system.System.execute" title="psyneulink.components.system.System.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#psyneulink.components.system.System.run" title="psyneulink.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
 <p><a class="reference internal" href="Keywords.html#psyneulink.globals.keywords.MechanismRoles.INTERNAL" title="psyneulink.globals.keywords.MechanismRoles.INTERNAL"><code class="xref any py py-attr docutils literal"><span class="pre">INTERNAL</span></code></a>: ProcessingMechanism that does not fall into any of the categories above.</p>
@@ -447,7 +447,7 @@ argument of the EVCControlMechanism, respectively.</p>
 </pre></div>
 </div>
 <p>Here, the constructor for the ObjectiveMechanism is elided, and the <strong>objective_mechanism</strong> argument for the
-EVCControlMechanism is specified as a list of OutputStates (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism and Monitored OutputStates</span></a>).</p>
+EVCControlMechanism is specified as a list of OutputStates (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism</span></a>).</p>
 <p>The specification can be made even simpler, but with some additional considerations that must be kept in mind,
 as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_system</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">TaskExecutionProcess</span><span class="p">,</span> <span class="n">RewardProcess</span><span class="p">],</span>
@@ -1042,7 +1042,7 @@ corresponding InputState of the <a class="reference internal" href="#psyneulink.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.4.7.1+146.gfc3caa9',
+            VERSION:'0.4.7.1+147.g70a9987',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
