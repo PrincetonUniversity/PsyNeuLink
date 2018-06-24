@@ -82,6 +82,34 @@ below.
 ObjectiveMechanism and Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+COMMENT:
+    ADD DESCRIPTION OF HOW TO SPECIFY MONITOR_FOR_CONTROL / MONITORED-OUTPUTSTATES
+
+    * specifying a list of OutputStates to be monitored in the **monitor_for_control**
+      argument of the LCControlMechanism's constructor, using the `tuples format
+      <InputState_Tuple_Specification>` to specify weights and/or exponents for any of these;
+    ..
+    * specifying an `ObjectiveMechanism` in the **objective_mechanism** argument of the
+      LCControlMechanism's constructor, using its **monitored_output_states** and/or its **function** arguments
+      to customize its corresponding attributes.
+
+    * specifying a list of OutputStates to be monitored in the **monitor_for_control**
+      argument of the LCControlMechanism's constructor, using the `tuples format
+      <InputState_Tuple_Specification>` to specify weights and/or exponents for each;
+    ..
+    * specifying an `ObjectiveMechanism` in the **objective_mechanism** argument of the
+      LCControlMechanism's constructor, and specifying one or both of the following in the ObjectiveMechanism's
+      constructor:
+
+    * specifying a different `function <ObjectiveMechanism.function>` for the ObjectiveMechanism
+      (see `ObjectiveMechanism_Weights_and_Exponents_Example` for an example);
+    ..
+
+    * using the  **monitored_output_states** argument of the `objective_mechanism <LCControlMechanism.objective_mechanism>`'s
+      constructor;
+      **objective_mechanism** argument of the LCControlMechanism's constructor;
+COMMENT
+
 When a ControlMechanism is created, it is associated with an `ObjectiveMechanism` that is used to monitor and
 evaluate a set of `OutputStates <OutputState>` upon which it bases it `allocation_policy
 <ControlMechanism.allocation_policy>`.  If the ControlMechanism is created explicitly, its ObjectiveMechanism
@@ -456,12 +484,12 @@ class ControlMechanism(AdaptiveMechanism_Base):
         **objective_mechanism** argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL*
         `input_state <Mechanism_Base.input_state>`.
 
-    monitored_output_states : List[OutputState]
+    monitor_for_control : List[OutputState]
         each item is an `OutputState` monitored by the ObjectiveMechanism listed in the ControlMechanism's
         `objective_mechanism <ControlMechanism.objective_mechanism>` attribute;  it is the same as that
         ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute
         (see `ObjectiveMechanism_Monitored_Output_States` for specification).  The `value <OutputState.value>`
-        of the OutputStates listed are used by the ObjectiveMechanism to generate the ControlMechanism's `input
+        of the OutputStates in the list are used by the ObjectiveMechanism to generate the ControlMechanism's `input
         <ControlMechanism_Input>`.
 
     monitored_output_states_weights_and_exponents : List[Tuple(float, float)]
@@ -553,7 +581,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  default_variable=None,
                  size=None,
                  system:tc.optional(System_Base)=None,
-                 # monitor_for_control=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputState))=None,
                  objective_mechanism=None,
                  function=None,
@@ -776,6 +803,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                           receiver=self,
                           matrix=AUTO_ASSIGN_MATRIX,
                           name=name)
+
+        self.monitor_for_control = self.monitored_output_states
 
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
