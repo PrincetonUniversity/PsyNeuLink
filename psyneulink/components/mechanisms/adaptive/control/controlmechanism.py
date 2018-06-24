@@ -651,7 +651,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 # If ControlMechanism has been assigned to a System, check that
                 #    all the items in the list used to specify objective_mechanism are in the same System
                 if self.system:
-                    self.system._validate_monitored_states_in_system([spec], context=context)
+                    if not isinstance(spec, (list, ContentAddressableList)):
+                        spec = [spec]
+                    self.system._validate_monitored_states_in_system(spec, context=context)
 
 
         if SYSTEM in target_set:

@@ -4181,7 +4181,7 @@ class System(System_Base):
                 else:
                     pred_mech_color = prediction_mechanism_color
                 # if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-                if mech.for_control is True and hasattr(mech, 'origin_mech'):
+                if hasattr(mech, 'for_control') and mech.for_control is True and hasattr(mech, 'origin_mech'):
                     recvr = mech.origin_mech
                     recvr_label = self._get_label(recvr, show_dimensions, show_roles)
                     # IMPLEMENTATION NOTE:
