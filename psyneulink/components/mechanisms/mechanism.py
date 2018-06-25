@@ -954,7 +954,8 @@ from psyneulink.globals.keywords import \
     VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, \
+    append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
     'Mechanism_Base', 'MechanismError'
@@ -1456,7 +1457,7 @@ class Mechanism_Base(Mechanism):
         self._status = INITIALIZING
         self._receivesProcessInput = False
         self.phaseSpec = None
-        self.processes = {}
+        self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
         self.systems = {}
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -2910,7 +2911,7 @@ class Mechanism_Base(Mechanism):
         if not isinstance(process, Process):
             raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_process ({}) must be a {}".
                                  format(Mechanism.__name__, process, Process.__name__))
-        self.processes[process] = role
+        self.processes.__additem__(process, role)
 
     @property
     def is_finished(self):

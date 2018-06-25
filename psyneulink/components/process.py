@@ -982,7 +982,7 @@ class Process(Process_Base):
         # Identify origin and terminal mechanisms in the process and
         #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
         self.first_mechanism = pathway[0]
-        self.first_mechanism.processes[self] = ORIGIN
+        self.first_mechanism._add_process(self, ORIGIN)
         self._origin_mechs = [pathway[0]]
         self.origin_mechanisms = MechanismList(self, self._origin_mechs)
 
@@ -993,9 +993,9 @@ class Process(Process_Base):
         self.last_mechanism = pathway[i]
 
         if self.last_mechanism is self.first_mechanism:
-            self.last_mechanism.processes[self] = SINGLETON
+            self.last_mechanism._add_process(self, SINGLETON)
         else:
-            self.last_mechanism.processes[self] = TERMINAL
+            self.last_mechanism._add_process(self, TERMINAL)
         self._terminal_mechs = [pathway[-1]]
         self.terminal_mechanisms = MechanismList(self, self._terminal_mechs)
 
@@ -1091,7 +1091,7 @@ class Process(Process_Base):
             # Add entry to _mechs and name to mechanism_names list
             # Add Process to the mechanism's list of processes to which it belongs
             if not self in mech.processes:
-                mech.processes[self] = INTERNAL
+                mech._add_process(self, INTERNAL)
                 self._mechs.append(pathway[i])
             # self.mechanism_names.append(mech.name)
 
@@ -1769,7 +1769,7 @@ class Process(Process_Base):
                         mech._learning_role is TARGET and
                         self.learning
                             ):
-                    object_item.processes[self] = TARGET
+                    object_item._add_process(self, TARGET)
                 else:
                     # mech must be a LearningMechanism;
                     # If a learning_rate has been specified for the process, assign that to all LearningMechanism
@@ -1779,7 +1779,7 @@ class Process(Process_Base):
                         mech.function_object.learning_rate = self.learning_rate
 
                     # Assign its label
-                    object_item.processes[self] = LEARNING
+                    object_item._add_process(self, LEARNING)
 
             # Add _learning_mechs to _mechs
             self._mechs.extend(self._learning_mechs)

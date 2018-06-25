@@ -1167,6 +1167,14 @@ class System(System_Base):
 
             process._all_mechanisms = MechanismList(process, components_list=process._mechs)
 
+        # MODIFIED 6/24/18 NEW:
+        # Call all ControlMechanisms to allow them to implement specification of ALL
+        #    in monitor_for_control and/or control_signals arguments of their constructors
+        for mech in self.mechanisms:
+            pass
+        # MODIFIED 6/24/18 END
+
+
         # # Instantiate processList using process_tuples, and point self.processes to it
         # # Note: this also points self.params[PROCESSES] to self.processes
         self.process_tuples = processes_spec
@@ -1292,6 +1300,7 @@ class System(System_Base):
             #          only ones to ObjectiveMechanism(s) used for Learning or Control
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
+            assert True
             if (
                 not (isinstance(sender_mech, ControlMechanism) or
                 # FIX: ALLOW IT TO BE TERMINAL IF IT PROJECTS ONLY TO A ControlMechanism or ObjectiveMechanism for one
@@ -1393,22 +1402,24 @@ class System(System_Base):
                         try:
                             # If receiver_tuple already has dependencies in its set, add sender_mech to set
                             if self.execution_graph[receiver]:
-                                self.execution_graph[receiver].\
-                                    add(sender_mech)
+                                self.execution_graph[receiver].add(sender_mech)
                             # If receiver set is empty, assign sender_mech to set
                             else:
-                                self.execution_graph[receiver] = \
-                                    {sender_mech}
+                                self.execution_graph[receiver] = {sender_mech}
                             # Use toposort to test whether the added dependency produced a cycle (feedback loop)
                             list(toposort(self.execution_graph))
                         # If making receiver dependent on sender produced a cycle (feedback loop), remove from graph
                         except ValueError:
-                            self.execution_graph[receiver].\
-                                remove(sender_mech)
+                            self.execution_graph[receiver].remove(sender_mech)
                             # Assign sender_mech INITIALIZE_CYCLE as system status if not ORIGIN or not yet assigned
-                            if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
+                            if not sender_mech.systems or not (sender_mech.systems[self] in
+                                                               {ORIGIN, SINGLETON,TERMINAL}):
                                 sender_mech.systems[self] = INITIALIZE_CYCLE
-                            if not (receiver.systems[self] in {ORIGIN, SINGLETON}):
+                            # # MODIFIED 6/24/18 OLD:
+                            # if not (receiver.systems[self] in {ORIGIN, SINGLETON}):
+                            # MODIFIED 6/24/18 NEW:
+                            if not (receiver.systems[self] in {ORIGIN, SINGLETON, TERMINAL}):
+                            # MODIFIED 6/24/18 END
                                 receiver.systems[self] = CYCLE
                             continue
 
@@ -1742,7 +1753,7 @@ class System(System_Base):
                                                sample_mech.output_state.efferents if
                                                isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
                         sender_mech = other_obj_mech
-                        sender_mech.processes[process]=TARGET
+                        sender_mech._add_process(process, TARGET)
                         obj_mech_replaced = TERMINAL
                         # Move error_signal Projections from old obj_mech to new one (now sender_mech)
                         for error_signal_proj in obj_mech.output_states[OUTCOME].efferents:
