@@ -1219,6 +1219,11 @@ class System(System_Base):
             else:
                 return False
 
+        def is_in_system(mech):
+            if set(self.processes).intersection(set(mech.processes)):
+                return True
+            return False
+
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
 
@@ -1252,10 +1257,12 @@ class System(System_Base):
                     return
                 # If sender is a ControlMechanism that is not the controller for the System,
                 #    assign its dependency to its ObjectiveMechanism and label as INTERNAL
-                elif isinstance(sender_mech, ControlMechanism):
+                elif (isinstance(sender_mech, ControlMechanism)
+                      # MODIFIED 6/24/18 NEW:
+                      and is_in_system(sender_mech)
+                      # MODIFIED 6/24/18 END:
+                ):
                     sender_mech.systems[self] = INTERNAL
-                    # FIX:  ALLOW TO CONTINUE FROM ControlMechanism TO RECIPIENT OF ITS ControlProjections?
-                    # FIX:  I.E., **DON'T** RETURN
 
             # PRUNE ANY NON-SYSTEM COMPONENTS ---------------------------------------------------------------------
 
@@ -1342,8 +1349,18 @@ class System(System_Base):
 
                     # If receiver is not in system's list of mechanisms, must belong to a process that has
                     #    not been included in the system, so ignore it
-                    # MODIFIED 7/28/17 CW: added a check for auto-recurrent projections (i.e. receiver is sender_mech)
-                    if not receiver or (receiver is sender_mech):
+                    if (not receiver or
+                            # MODIFIED 7/28/17 CW: added a check for auto-recurrent projections
+                            #                      (i.e. receiver is sender_mech)
+                            # FIX: JDC: NOT SURE WE WANT THIS CHECK, AS IT PRECLUDES IDENTIFYING MECHANISMS
+                            # FIX:      THAT SHOULD BE IDENTIFIED AS CYCLES AND ASSIGNED INITIALIZATION ROLE
+                            receiver is sender_mech
+                            # MODIFIED 7/8/17 END
+                            # MODIFIED 6/24/18 NEW:
+                            # Exclude any Mechanisms not in any processes belonging to the current System
+                            or not is_in_system(receiver)
+                            # MODIFIED 6/24/18 END
+                    ):
                         continue
                     if is_monitoring_mech(receiver):
                         # Don't include receiver if it is the controller for the System,
