@@ -2455,7 +2455,20 @@ class Mechanism_Base(Mechanism):
             param_param_list.append(state.get_param_struct_type())
         param_param_struct = ir.LiteralStructType(param_param_list)
 
-        return ir.LiteralStructType([input_param_struct, self.function_object.get_param_struct_type(), output_param_struct, param_param_struct])
+        param_list = [input_param_struct,
+                      self.function_object.get_param_struct_type(),
+                      output_param_struct,
+                      param_param_struct]
+
+        mech_params = self._get_mech_params_type()
+        if mech_params is not None:
+            param_list.append(mech_params)
+
+        return ir.LiteralStructType(param_list)
+
+
+    def _get_mech_params_type(self):
+        pass
 
 
     def get_context_struct_type(self):
@@ -2511,7 +2524,18 @@ class Mechanism_Base(Mechanism):
             param_param_init_list.append(state.get_param_initializer())
         param_param_init = tuple(param_param_init_list)
 
-        return tuple([input_param_init, function_param_init, output_param_init, param_param_init])
+        param_init_list = [input_param_init, function_param_init,
+                           output_param_init, param_param_init]
+
+        mech_params_init = self._get_mech_params_init()
+        if mech_params_init is not None:
+            param_init_list.append(mech_params_init)
+
+        return tuple(param_init_list)
+
+
+    def _get_mech_params_init(self):
+        pass
 
 
     def get_context_initializer(self):
@@ -2579,16 +2603,18 @@ class Mechanism_Base(Mechanism):
 
         builder.call(main_function, [mf_params, mf_context, mf_in, mf_out])
 
+        ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, mf_out)
+
         for i, state in enumerate(self.output_states):
             #FIXME: an we rely on this?
             os_in_spec = state._variable
             if os_in_spec == OWNER_VALUE:
-                os_input = mf_out
+                os_input = ppval
             elif isinstance(os_in_spec, tuple) and os_in_spec[0] == OWNER_VALUE:
-                os_input = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[1])])
+                os_input = builder.gep(ppval, [ctx.int32_ty(0), ctx.int32_ty(os_in_spec[1])])
             else:
                 #TODO: support more options
-                print(mf_out.type)
+                print(ppval.type)
                 print(os_in_spec)
                 assert False
             os_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), ctx.int32_ty(i)])
@@ -2598,6 +2624,10 @@ class Mechanism_Base(Mechanism):
             builder.call(os_function, [os_params, os_context, os_input, os_output])
 
         return builder
+
+
+    def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
+        return mf_out, builder
 
 
     def _bin_execute(self,
