@@ -528,6 +528,9 @@ class EntriesDict(MutableMapping,dict):
         return dict.__getitem__(self,key)
 
     def __setitem__(self, key, value):
+        if isinstance(value, list):
+            dict.__setitem__(self, key, value)
+            return
 
         if not isinstance(value, LogEntry):
             raise LogError("Object other than a {} assigned to Log for {}".format(LogEntry.__name__, self.owner.name))

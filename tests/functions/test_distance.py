@@ -63,6 +63,7 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark):
     assert np.allclose(res, expected)
     assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)
 
+
 @pytest.mark.function
 @pytest.mark.distance_function
 @pytest.mark.parametrize("variable, metric, normalize, fail, expected", test_data, ids=names)

@@ -103,6 +103,7 @@ from psyneulink.globals.keywords import CONTROL, EXECUTING, FLAGS, INITIALIZING,
 
 from psyneulink.globals.keywords import \
     CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, SOURCE, LEARNING, VALIDATE
+from psyneulink.globals.utilities import get_deepcopy_with_shared_keys
 # from psyneulink.composition import Composition
 
 
@@ -359,6 +360,8 @@ class Context():
     """
 
     __name__ = 'Context'
+    _deepcopy_shared_keys = {'owner'}
+
     def __init__(self,
                  owner=None,
                  composition=None,
@@ -395,6 +398,8 @@ class Context():
         self.execution_id = execution_id
         self.execution_time = None
         self.string = string
+
+    __deepcopy__ = get_deepcopy_with_shared_keys(_deepcopy_shared_keys)
 
     @property
     def composition(self):
