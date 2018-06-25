@@ -273,6 +273,8 @@ Class Reference
 
 """
 import typecheck as tc
+import functools
+from llvmlite import ir
 
 from psyneulink.components.functions.function import \
     FHNIntegrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
@@ -287,6 +289,8 @@ from psyneulink.globals.keywords import \
 from psyneulink.globals.utilities import is_iterable
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
+
+import psyneulink.llvm as pnlvm
 
 __all__ = [
     'CONTROL_SIGNAL_NAME', 'ControlMechanismRegistry', 'LCControlMechanism', 'LCControlMechanismError',
@@ -806,6 +810,58 @@ class LCControlMechanism(ControlMechanism):
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
+
+    def _get_mech_params_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            return pnlvm._convert_python_struct_to_llvm_ir(ctx, (self.scaling_factor_gain, self.base_level_gain))
+
+    def _get_mech_params_init(self):
+        return (self.scaling_factor_gain, self.base_level_gain)
+
+
+    def __gen_llvm_gain(self, builder, index, ctx, vi, vo, scaling, base):
+        in_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
+        val = builder.load(in_ptr);
+        val = builder.fmul(val, scaling)
+        val = builder.fadd(val, base)
+
+        out_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(val, out_ptr)
+
+
+    def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
+        # prepend gain type (matches output[1] type)
+        gain_ty = mf_out.type.pointee.elements[1]
+        elements = gain_ty, *mf_out.type.pointee.elements
+        elements_ty = ir.LiteralStructType(elements)
+
+        # allocate new output type
+        new_out = builder.alloca(elements_ty, 1)
+
+        # Load mechanism parameters
+        params, _, _, _ = builder.function.args
+        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(4)])
+        scaling_factor_ptr = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        base_factor_ptr = builder.gep(mech_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        scaling_factor =  builder.load(scaling_factor_ptr)
+        base_factor = builder.load(base_factor_ptr)
+
+        # Apply on the entire vector
+        vi = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        vo = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "scaling":scaling_factor, "base":base_factor}
+        inner = functools.partial(self.__gen_llvm_gain, **kwargs)
+
+        vector_length = ctx.int32_ty(gain_ty.count)
+        builder = pnlvm.helpers.for_loop_zero_inc(builder, vector_length, inner, "LC_gain")
+        # copy the main function return value
+        for i in range(len(mf_out.type.pointee.elements)):
+            ptr = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            out_ptr = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
+            val = builder.load(ptr)
+            builder.store(val, out_ptr)
+
+        return new_out, builder
 
 
     @tc.typecheck
