@@ -6194,16 +6194,15 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
 
     def get_context_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            previous_ty = ir.ArrayType(ctx.float_ty, self._result_length)
-            context_type = ir.LiteralStructType([previous_ty])
-        return context_type
+        return self.get_output_struct_type()
 
 
     def get_context_initializer(self, data=None):
         if data is None:
             data = np.asfarray(self.previous_value).flatten().tolist()
-        return (tuple(data),)
+            if self.instance_defaults.variable.ndim > 1:
+                return (tuple(data),)
+            return tuple(data)
 
 
     def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
@@ -6219,7 +6218,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
 
         noise = builder.load(noise_p)
 
-        prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), index])
+        prev_ptr = builder.gep(state, [ctx.int32_ty(0), index])
         prev_val = builder.load(prev_ptr)
 
         vi_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -6246,6 +6245,7 @@ class AdaptiveIntegrator(Integrator):  # ---------------------------------------
             assert self.instance_defaults.variable.shape[0] == 1
             vi = builder.gep(vi, [ctx.int32_ty(0), ctx.int32_ty(0)])
             vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params": params, "state":state}
         inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
