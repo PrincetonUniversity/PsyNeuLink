@@ -3049,12 +3049,6 @@ class TransferFunction(Function_Base):
     def additive(self, val):
         setattr(self, self.additive_param, val)
 
-    @property
-    def _result_length(self):
-        # By default same vector as input
-        # TODO: This should correspond to default value,
-        # but it fails in one test
-        return self._variable_length
 
     def _gen_llvm_function_body(self, ctx, builder):
         params, _, vi, vo = builder.function.args
