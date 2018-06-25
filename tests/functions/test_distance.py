@@ -61,6 +61,7 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark):
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
+    assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)
 
 @pytest.mark.function
 @pytest.mark.distance_function
@@ -77,3 +78,4 @@ def test_llvm(variable, metric, normalize, fail, expected, benchmark):
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.bin_function, variable)
     assert np.allclose(res, expected)
+    assert np.isscalar(res) or len(res) == 1 or (metric == kw.PEARSON and res.size == 4)
