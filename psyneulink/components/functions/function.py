@@ -4666,10 +4666,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         else:
             return np.array(specification)
 
-    @property
-    def _result_length(self):
-        return len(self.instance_defaults.value)
-
 
     def get_output_struct_type(self):
         default_val = self.instance_defaults.value
