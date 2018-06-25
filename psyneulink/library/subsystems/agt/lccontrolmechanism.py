@@ -652,7 +652,8 @@ class LCControlMechanism(ControlMechanism):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=None):
+                 context=None,
+                 default_variable=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
@@ -682,6 +683,7 @@ class LCControlMechanism(ControlMechanism):
                                                   params=params)
 
         super().__init__(system=system,
+                         default_variable=default_variable,
                          objective_mechanism=objective_mechanism,
                          monitor_for_control=monitor_for_control,
                          function=FHNIntegrator(  integration_method=integration_method,
