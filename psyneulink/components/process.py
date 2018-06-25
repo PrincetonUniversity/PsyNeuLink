@@ -979,14 +979,22 @@ class Process(Process_Base):
         # VALIDATE PATHWAY THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
         self._parse_and_instantiate_mechanism_entries(pathway=pathway, context=context)
 
-        # Identify origin and terminal mechanisms in the process and
-        #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
+        # Identify ORIGIN and TERMINAL Mechanisms in the Process and
+        #    and assign the Mechanism's status in the Process to its entry in the Mechanism's processes dict
+
+        # Move any ControlMechanisms in the pathway to the end
+        from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
+        for i, item in enumerate(pathway):
+            if isinstance(item, ControlMechanism):
+                pathway += [pathway.pop(i)]
+
+        # Identify and assign first Mechanism as first_mechanism and ORIGIN
         self.first_mechanism = pathway[0]
         self.first_mechanism._add_process(self, ORIGIN)
         self._origin_mechs = [pathway[0]]
         self.origin_mechanisms = MechanismList(self, self._origin_mechs)
 
-        # Assign last mechanism in pathway to last_mechanism attribute
+        # Identify and assign last Mechanism as last_mechanism and ORIGIN
         i = -1
         while not isinstance(pathway[i],Mechanism_Base):
             i -=1
