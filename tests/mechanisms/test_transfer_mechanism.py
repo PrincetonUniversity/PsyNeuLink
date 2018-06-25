@@ -437,8 +437,7 @@ class TestTransferMechanismFunctions:
         # test relu function with non-default parameters, input vector that has different behavior at different elements
         nonstdval_Tnondef = Tnondef.execute([-2, -1, 0, 2])
         assert np.allclose(nonstdval_Tnondef, [[-0.3, -0.2, -0.1, 2.0]])
-        
-        
+
         # val1 = benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
         # val2 = benchmark(T.execute, [1 for i in range(VECTOR_SIZE)])
         # val3 = benchmark(T.execute, [-1 for i in range(VECTOR_SIZE)])

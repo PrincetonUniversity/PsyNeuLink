@@ -3542,7 +3542,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         
         return np.where((output > 0), gain, leak)
 
-
 MODE = 'mode'
 
 class OneHot(TransferFunction):  # -------------------------------------------------------------------------------------
@@ -5704,9 +5703,12 @@ class Buffer(Integrator):  # ---------------------------------------------------
         # If this NOT an initialization run,
 
         # Update deque
+        # FIX: Need to recast as deque (since if reinitialize has been called, it returns np.array
+        self.previous_value = deque(self.previous_value, maxlen=self.history)
         self.previous_value.append(variable)
+
         # Apply rate and/or noise if they are specified
-        if rate is not None:
+        if rate != 1.0:
             self.previous_value *= rate
         if noise:
             self.previous_value += noise
@@ -9814,7 +9816,7 @@ class Distance(ObjectiveFunction):
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
             # FIX: unsure about desired behavior when v2 = 0 and v1 != 0
             # JDC: returns [inf]; leave, and let it generate a warning or error message for user
-            result = np.where(np.logical_and(v1==0, v2==0), 0, -np.sum(v1*np.log(v2)))
+            result = -np.sum(np.where(np.logical_and(v1==0, v2==0), 0, v1*np.log(v2)))
 
         # Energy
         elif self.metric is ENERGY:

@@ -114,50 +114,51 @@ decision_process = pnl.Process(
 # Monitor decision layer in order to modulate gain --------------------------------------------------------------------
 
 LC = pnl.LCControlMechanism(
-    integration_method="EULER",
-    threshold_FHN=a,
-    uncorrelated_activity_FHN=d,
-    base_level_gain=G,
-    scaling_factor_gain=k,
-    time_step_size_FHN=dt,
-    mode_FHN=C,
-    time_constant_v_FHN=tau_v,
-    time_constant_w_FHN=tau_u,
-    a_v_FHN=-1.0,
-    b_v_FHN=1.0,
-    c_v_FHN=1.0,
-    d_v_FHN=0.0,
-    e_v_FHN=-1.0,
-    f_v_FHN=1.0,
-    a_w_FHN=1.0,
-    b_w_FHN=-1.0,
-    c_w_FHN=0.0,
-    t_0_FHN=0.0,
-    initial_v_FHN=initial_v,
-    initial_w_FHN=initial_u,
-    objective_mechanism=pnl.ObjectiveMechanism(
-        function=pnl.Linear,
-        monitored_output_states=[(
-            decision_layer,
-            None,
-            None,
-            np.array([
-                [w_vX1],
-                [0.0]]
-            )
-        )],
-        name='LC ObjectiveMechanism'
-    ),
-    modulated_mechanisms=[decision_layer, response_layer],  # Modulate gain of decision & response layers
-    name='LC'
+        integration_method="EULER",
+        threshold_FHN=a,
+        uncorrelated_activity_FHN=d,
+        base_level_gain=G,
+        scaling_factor_gain=k,
+        time_step_size_FHN=dt,
+        mode_FHN=C,
+        time_constant_v_FHN=tau_v,
+        time_constant_w_FHN=tau_u,
+        a_v_FHN=-1.0,
+        b_v_FHN=1.0,
+        c_v_FHN=1.0,
+        d_v_FHN=0.0,
+        e_v_FHN=-1.0,
+        f_v_FHN=1.0,
+        a_w_FHN=1.0,
+        b_w_FHN=-1.0,
+        c_w_FHN=0.0,
+        t_0_FHN=0.0,
+        initial_v_FHN=initial_v,
+        initial_w_FHN=initial_u,
+        objective_mechanism=pnl.ObjectiveMechanism(
+                function=pnl.Linear,
+                monitored_output_states=[(
+                    decision_layer,
+                    None,
+                    None,
+                    np.array([
+                        [w_vX1],
+                        [0.0]]
+                    )
+                )],
+                name='LC ObjectiveMechanism'
+        ),
+        modulated_mechanisms=[decision_layer, response_layer],  # Modulate gain of decision & response layers
+        name='LC'
 )
 
-task = pnl.System(processes=[decision_process],
+LC_process = pnl.Process(pathway=[LC])
+
+task = pnl.System(processes=[decision_process, LC_process],
                   reinitialize_mechanisms_when=pnl.Never())
 
 # This displays a diagram of the System
 # task.show_graph()
-
 
 # Create Stimulus -----------------------------------------------------------------------------------------------------
 

@@ -15,12 +15,9 @@ class TestLCControlMechanism:
         starting_value_LC = 2.0
         user_specified_gain = 1.0
 
-        A = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain))
-
-        B = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain))
+        A = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='A')
+        B = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='B')
         # B.output_states[0].value *= 0.0  # Reset after init | Doesn't matter here b/c default var = zero, no intercept
-
-        P = pnl.Process(pathway=[A, B])
 
         LC = pnl.LCControlMechanism(
             modulated_mechanisms=[A, B],
@@ -35,7 +32,14 @@ class TestLCControlMechanism:
         for output_state in LC.output_states:
             output_state.value *= starting_value_LC
 
+        P = pnl.Process(pathway=[A, B, LC])
         S = pnl.System(processes=[P])
+
+        # THIS CURRENTLY DOES NOT WORK:
+        # P = pnl.Process(pathway=[A, B])
+        # P2 = pnl.Process(pathway=[LC])
+        # S = pnl.System(processes=[P, P2])
+        # S.show_graph()
 
         gain_created_by_LC_output_state_1 = []
         mod_gain_assigned_to_A = []

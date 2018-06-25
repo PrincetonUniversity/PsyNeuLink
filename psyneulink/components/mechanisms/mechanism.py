@@ -947,16 +947,15 @@ from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.components.states.state import REMOVE_STATES, _parse_state_spec
 from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import \
-    CHANGED, COMMAND_LINE, EVC_SIMULATION, EXECUTING, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
-    INITIALIZATION_STATUS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, \
-    INPUT_LABELS_DICT, INPUT_STATES, \
-    INPUT_STATE_PARAMS, LEARNING, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, \
-    OUTPUT_LABELS_DICT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATES, PARAMETER_STATE_PARAMS, \
-    PROCESS_INIT, REFERENCE_VALUE, SEPARATOR_BAR, SOURCE, SYSTEM_INIT, TARGET_LABELS_DICT, UNCHANGED, \
-    VALIDATE, VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
+    CHANGED, EXECUTION_PHASE, FUNCTION, FUNCTION_PARAMS, \
+    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_LABELS_DICT, INPUT_STATES, \
+    MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, OUTPUT_LABELS_DICT, OUTPUT_STATES, \
+    PARAMETER_STATES, REFERENCE_VALUE, TARGET_LABELS_DICT, UNCHANGED, \
+    VALUE, VARIABLE, kwMechanismComponentCategory, kwMechanismExecuteFunction
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.globals.utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, \
+    append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
     'Mechanism_Base', 'MechanismError'
@@ -1458,7 +1457,7 @@ class Mechanism_Base(Mechanism):
         self._status = INITIALIZING
         self._receivesProcessInput = False
         self.phaseSpec = None
-        self.processes = {}
+        self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
         self.systems = {}
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -2905,6 +2904,14 @@ class Mechanism_Base(Mechanism):
         for state in states:
             labels.append(state.label)
         return labels
+
+    @tc.typecheck
+    def _add_process(self, process, role:str):
+        from psyneulink.components.process import Process
+        if not isinstance(process, Process):
+            raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_process ({}) must be a {}".
+                                 format(Mechanism.__name__, process, Process.__name__))
+        self.processes.__additem__(process, role)
 
     @property
     def is_finished(self):
