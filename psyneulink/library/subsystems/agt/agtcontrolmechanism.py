@@ -89,6 +89,33 @@ ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of 
 `ParameterState` to which it projects to modify the value of the parameter it controls (see
 `ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
 
+COMMENT:
+FROM LCControlMechanism
+If the **mode** argument of the LCControlMechanism's constructor is specified, the following Components are also
+automatically created and assigned to the LCControlMechanism when it is created:
+
+    * an `LCController` -- takes the output of the AGTUtilityIntegratorMechanism (see below) and uses this to
+      control the value of the LCControlMechanism's `mode <FHNIntegrator.mode>` attribute.  It is assigned a single
+      `ControlSignal` that projects to the `ParameterState` for the LCControlMechanism's `mode <FHNIntegrator.mode>`
+      attribute.
+    ..
+    * a `AGTUtilityIntegratorMechanism` -- monitors the `value <OutputState.value>` of any `OutputStates <OutputState>`
+      specified in the **mode** argument of the LCControlMechanism's constructor;  these are listed in the
+      LCControlMechanism's `monitored_output_states <LCControlMechanism.monitored_output_states>` attribute,
+      as well as that attribute of the AGTUtilityIntegratorMechanism and LCController.  They are evaluated by the
+      AGTUtilityIntegratorMechanism's `AGTUtilityIntegrator` Function, the result of whch is used by the LCControl to
+      control the value of the LCControlMechanism's `mode <FHNIntegrator.mode>` attribute.
+    ..
+    * `MappingProjections <MappingProjection>` from Mechanisms or OutputStates specified in **monitor_for_control** to
+      the AGTUtilityIntegratorMechanism's `primary InputState <InputState_Primary>`.
+    ..
+    * a `MappingProjection` from the AGTUtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
+      <AGTUtilityIntegratorMechanism_Structure>` to the LCControlMechanism's *MODE* <InputState_Primary>`.
+    ..
+    * a `ControlProjection` from the LCController's ControlSignal to the `ParameterState` for the LCControlMechanism's
+      `mode <FHNIntegrator.mode>` attribute.
+COMMENT
+
 
 .. _AGTControlMechanism_Execution:
 

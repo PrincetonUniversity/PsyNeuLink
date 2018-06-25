@@ -2433,10 +2433,14 @@ class System(System_Base):
             # if not any((spec is mech.name or spec in mech.output_states.names)
             if not any((spec in {mech, mech.name} or spec in mech.output_states or spec in mech.output_states.names)
                        for mech in self.mechanisms):
+                if isinstance(spec, OutputState):
+                    spec_str = "{} {} of {}".format(spec.name, OutputState.__name__, spec.owner.name)
+                else:
+                    spec_str = spec
                 raise SystemError("Specification of {} arg for {} appears to be a list of "
                                             "Mechanisms and/or OutputStates to be monitored, but one "
                                             "of them ({}) is in a different System".
-                                            format(OBJECTIVE_MECHANISM, self.name, spec))
+                                            format(OBJECTIVE_MECHANISM, self.name, spec_str))
 
     def _get_control_signals_for_system(self, control_signals=None, context=None):
         """Generate and return a list of control_signal_specs for System
@@ -3778,7 +3782,8 @@ class System(System_Base):
             if isinstance(rcvr, LearningMechanism):
                 return
             # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
-            if isinstance(rcvr, ObjectiveMechanism) and rcvr.controller is True:
+            if isinstance(rcvr, ObjectiveMechanism) and rcvr.for_controller is True:
+            # if isinstance(rcvr, ObjectiveMechanism) and rcvr._role is CONTROL:
                 return
 
             # loop through senders to implement edges
@@ -4176,6 +4181,7 @@ class System(System_Base):
                 else:
                     pred_mech_color = prediction_mechanism_color
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
+                # if hasattr(mech, 'for_control') and mech.for_control is True and hasattr(mech, 'origin_mech'):
                     recvr = mech.origin_mech
                     recvr_label = self._get_label(recvr, show_dimensions, show_roles)
                     # IMPLEMENTATION NOTE:

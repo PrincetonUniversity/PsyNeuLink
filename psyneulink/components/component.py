@@ -277,7 +277,7 @@ COMMENT
 
 ..
 COMMENT:
-  INCLUDE IN DEVELOPERS' MANUAL
+  FOR DEVELOPERS:
     * **paramClassDefaults**
 
     * **paramInstanceDefaults**
@@ -290,7 +290,7 @@ Component Methods
 ~~~~~~~~~~~~~~~~~
 
 COMMENT:
-   INCLUDE IN DEVELOPERS' MANUAL
+   FOR DEVELOPERS:
 
     There are two sets of methods that belong to every Component: one set that is called when it is initialized; and
     another set that can be called to perform various operations common to all Components.  Each of these is described
