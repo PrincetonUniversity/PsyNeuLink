@@ -7802,6 +7802,12 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         params, previous, vi, out = builder.function.args
         zero_i32 = ctx.int32_ty(0)
 
+        # Get rid of 2d array
+        assert isinstance(vi.type.pointee, ir.ArrayType)
+        if isinstance(vi.type.pointee.element, ir.ArrayType):
+            assert(vi.type.pointee.count == 1)
+            vi = builder.gep(vi, [zero_i32, zero_i32])
+
         # Load previous values
         previous_v_ptr = builder.gep(previous, [zero_i32, ctx.int32_ty(0)])
         previous_w_ptr = builder.gep(previous, [zero_i32, ctx.int32_ty(1)])
