@@ -822,7 +822,12 @@ class Function_Base(Function):
         # Covnert input to doubles
         variable = np.asfarray(variable)
 
-        ret = np.zeros(self._result_length)
+        def nested_len(x):
+            try:
+                return sum(nested_len(y) for y in x)
+            except:
+                return 1
+        ret = np.zeros(nested_len(self.instance_defaults.value))
 
         par_struct_ty, state_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 

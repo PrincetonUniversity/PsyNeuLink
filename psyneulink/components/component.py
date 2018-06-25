@@ -1085,16 +1085,6 @@ class Component(object):
 
 
     @property
-    def _result_length(self):
-        def nested_len(x):
-            try:
-                return sum(nested_len(y) for y in x)
-            except:
-                return 1
-        default_val = self.instance_defaults.value
-        return nested_len(default_val)
-
-    @property
     def llvmSymbolName(self):
         if self.__llvm_function_name is None:
             self.__llvm_function_name = self._gen_llvm_function()
