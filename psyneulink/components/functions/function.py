@@ -10353,15 +10353,6 @@ class Distance(ObjectiveFunction):
                     )
                 )
 
-    @property
-    def _result_length(self):
-        # Override defaults. We only output single value
-        return 1
-
-    def get_output_struct_type(self):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            return ir.ArrayType(ctx.float_ty, self._result_length)
-
 
     def __gen_llvm_difference(self, builder, index, ctx, v1, v2, acc):
         ptr1 = builder.gep(v1, [index])
@@ -10545,8 +10536,17 @@ class Distance(ObjectiveFunction):
             if self.metric == ENERGY:
                 norm_factor = norm_factor ** 2
             ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
-        vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        builder.store(ret, vo)
+        if (self.metric == PEARSON):
+            selfcor = ctx.float_ty(1 / input_length if self.normalize else 1)
+            for i in range(4):
+                o = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
+                if i == 0 or i == 3:
+                    builder.store(selfcor, o)
+                else:
+                    builder.store(ret, o)
+        else:
+            vo = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(ret, vo)
 
         return builder
 
@@ -10559,9 +10559,13 @@ class Distance(ObjectiveFunction):
         ret = super().bin_function(variable, params, context)
 
         # FIXME: PEARSON breaks output format
-        if (self.metric == PEARSON):
-            selfcor = 1 / len(variable[0]) if self.normalize else 1
-            return np.array([[selfcor, ret], [ret, selfcor]])
+        if self.metric == PEARSON:
+            return ret.reshape((2,2))
+        elif self.metric == CROSS_ENTROPY:
+            # FIXME: CROSS_ENTROPY was broken in daebb626b4 (poorly named)
+            # ("Linear Combination Fix") which forces CROSS_ENTROPY value
+            # to be the same size as input
+            return ret[0]
         return ret
 
     def function(self,
