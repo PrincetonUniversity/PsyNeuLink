@@ -10560,7 +10560,7 @@ class Distance(ObjectiveFunction):
 
         # FIXME: PEARSON breaks output format
         if (self.metric == PEARSON):
-            selfcor = 1/(self._variable_length // 2) if self.normalize else 1
+            selfcor = 1 / len(variable[0]) if self.normalize else 1
             return np.array([[selfcor, ret], [ret, selfcor]])
         return ret
 
