@@ -7618,14 +7618,6 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
         return v, w, ret[-1]
 
 
-    @property
-    def _result_length(self):
-        # Override defaults. We output the entire saved context
-        initializer = self.get_context_initializer()
-        w_len = 1 if np.isscalar(initializer[1]) else len(initializer[1])
-        return len(initializer[0]) + w_len + 1
-
-
     def get_param_ids(self):
         # Omit "integration_method" which is a compile time parameter
         return ("a_v", "b_v", "c_v", "d_v", "e_v", "f_v", "a_w", "b_w", "c_w",
