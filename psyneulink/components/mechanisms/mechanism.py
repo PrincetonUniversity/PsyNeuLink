@@ -2630,8 +2630,9 @@ class Mechanism_Base(Mechanism):
         vi_init = tupleize(new_var)
         ct_vi = vi_ty(*vi_init)
 
-        # The output is the same size as input
-        ret = np.zeros_like(variable, dtype=np.float64)
+        # The output is a combination of output state values
+        os = [os.instance_defaults.value for os in self.output_states]
+        ret = np.zeros_like(os, dtype=np.float64)
         # This is bit hacky because numpy can't cast to arrays
         ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
 
