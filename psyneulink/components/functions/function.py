@@ -10703,11 +10703,6 @@ class Distance(ObjectiveFunction):
         # FIXME: PEARSON breaks output format
         if self.metric == PEARSON:
             return ret.reshape((2,2))
-        elif self.metric == CROSS_ENTROPY:
-            # FIXME: CROSS_ENTROPY was broken in daebb626b4 (poorly named)
-            # ("Linear Combination Fix") which forces CROSS_ENTROPY value
-            # to be the same size as input
-            return ret[0]
         return ret
 
     def function(self,
