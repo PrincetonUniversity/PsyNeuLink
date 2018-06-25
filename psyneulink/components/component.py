@@ -1085,17 +1085,6 @@ class Component(object):
 
 
     @property
-    def _variable_length(self):
-        # TODO: move this to a nicer, shareable place
-        def nested_len(x):
-            try:
-                return sum(nested_len(y) for y in x)
-            except:
-                return 1
-        default_var = self.instance_defaults.variable
-        return nested_len(default_var)
-
-    @property
     def _result_length(self):
         def nested_len(x):
             try:
