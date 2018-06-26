@@ -277,7 +277,7 @@ COMMENT
 
 ..
 COMMENT:
-  INCLUDE IN DEVELOPERS' MANUAL
+  FOR DEVELOPERS:
     * **paramClassDefaults**
 
     * **paramInstanceDefaults**
@@ -290,7 +290,7 @@ Component Methods
 ~~~~~~~~~~~~~~~~~
 
 COMMENT:
-   INCLUDE IN DEVELOPERS' MANUAL
+   FOR DEVELOPERS:
 
     There are two sets of methods that belong to every Component: one set that is called when it is initialized; and
     another set that can be called to perform various operations common to all Components.  Each of these is described
@@ -417,7 +417,7 @@ from psyneulink.scheduling.condition import AtTimeStep, Never
 from psyneulink.globals.preferences.componentpreferenceset import ComponentPreferenceSet, kpVerbosePref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PreferenceSet
 from psyneulink.globals.registry import register_category
-from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, object_has_single_value, prune_unused_args
+from psyneulink.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared_keys, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, object_has_single_value, prune_unused_args
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
@@ -1079,18 +1079,7 @@ class Component(object):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
-    # based off the answer here https://stackoverflow.com/a/15774013/3131666
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memo[id(self)] = result
-        for k, v in self.__dict__.items():
-            if k in self.deepcopy_shared_keys:
-                res_val = v
-            else:
-                res_val = copy.deepcopy(v, memo)
-            setattr(result, k, res_val)
-        return result
+    __deepcopy__ = get_deepcopy_with_shared_keys(deepcopy_shared_keys)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers
