@@ -276,7 +276,6 @@ import typecheck as tc
 
 from psyneulink.components.functions.function import \
     FHNIntegrator, MULTIPLICATIVE_PARAM, ModulationParam, _is_modulation_param
-from psyneulink.components.mechanisms.mechanism import Mechanism
 from psyneulink.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
 from psyneulink.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.components.projections.modulatory.controlprojection import ControlProjection
@@ -285,6 +284,7 @@ from psyneulink.components.shellclasses import Mechanism, System_Base
 from psyneulink.globals.keywords import \
     ALL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, FUNCTION, INIT__EXECUTE__METHOD_ONLY, PROJECTIONS
 from psyneulink.globals.utilities import is_iterable
+from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
 
@@ -758,18 +758,31 @@ class LCControlMechanism(ControlMechanism):
         # assign all Processing Mechanisms in LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
             self.modulated_mechanisms = []
-            if not (hasattr(self, 'systems') or hasattr(self, 'processes')):
-                raise LCControlMechanismError("The keyword {} was specified for the {} argument of the constructor "
-                                              "for {}, but it does not belong to any Systems or Processes".
-                                              format(repr(ALL), repr(MODULATED_MECHANISMS), self.name))
-            for system in self.systems:
-                for mech in system.mechanisms:
-                    if isinstance(mech, ProcessingMechanism_Base) and hasattr(mech.function, MULTIPLICATIVE_PARAM):
+            # if not (hasattr(self, 'systems') or hasattr(self, 'processes')):
+                # raise LCControlMechanismError("The keyword {} was specified for the {} argument of the constructor "
+                #                               "for {}, but it does not belong to any Systems or Processes".
+                #                               format(repr(ALL), repr(MODULATED_MECHANISMS), self.name))
+                # defer instantiation of OutputStates until LCControlMechanism is in a System
+                # return
+            # if hasattr(self, 'systems'):
+            if self.systems:
+                for system in self.systems:
+                    for mech in system.mechanisms:
+                        if (mech not in self.modulated_mechanisms and
+                                isinstance(mech, ProcessingMechanism_Base) and
+                                hasattr(mech.function, MULTIPLICATIVE_PARAM)):
                             self.modulated_mechanisms.append(mech)
-            for process in self.processes:
-                for mech in process.mechanisms:
-                    if isinstance(mech, ProcessingMechanism_Base) and hasattr(mech.function, MULTIPLICATIVE_PARAM):
+            # elif hasattr(self, 'processes'):
+            elif self.processes:
+                for process in self.processes:
+                    for mech in process.mechanisms:
+                        if (mech not in self.modulated_mechanisms and
+                                isinstance(mech, ProcessingMechanism_Base) and
+                                hasattr(mech.function, MULTIPLICATIVE_PARAM)):
                             self.modulated_mechanisms.append(mech)
+            else:
+                # If LCControlMechanism is not in a Process or System, defer implementing OutputStates until it is
+                return
 
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
         if self.modulated_mechanisms:
@@ -794,17 +807,23 @@ class LCControlMechanism(ControlMechanism):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
         # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
-        output_values = super(ControlMechanism, self)._execute(
-            variable=variable,
-            runtime_params=runtime_params,
-            context=context
-        )
+        output_values = super(ControlMechanism, self)._execute(variable=variable,
+                                                               runtime_params=runtime_params,
+                                                               context=context)
 
         gain_t = self.scaling_factor_gain*output_values[1] + self.base_level_gain
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
+    @tc.typecheck
+    def _add_process(self, process, role:str):
+        super()._add_process(process, role)
+        self._instantiate_output_states(context=ContextFlags.METHOD)
 
+    @tc.typecheck
+    def _add_system(self, system, role:str):
+        super()._add_system(system, role)
+        self._instantiate_output_states(context=ContextFlags.METHOD)
 
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):

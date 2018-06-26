@@ -2919,7 +2919,7 @@ class Mechanism_Base(Mechanism):
         if not isinstance(system, System):
             raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_system ({}) must be a {}".
                                  format(Mechanism.__name__, system, System.__name__))
-        self.processes.__additem__(system, role)
+        self.systems.__additem__(system, role)
 
     @property
     def is_finished(self):
