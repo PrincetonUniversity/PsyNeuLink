@@ -5695,7 +5695,8 @@ class Buffer(Integrator):  # ---------------------------------------------------
         Clears the `previous_value <Buffer.previous_value>` deque.
 
         If an argument is passed into reinitialize or if the `initializer <Buffer.initializer>` attribute contains a
-        value besides [], then that value is used to start the deque.
+        value besides [], then that value is used to start the new `previous_value <Buffer.previous_value>` deque.
+        Otherwise, the new `previous_value <Buffer.previous_value>` deque starts out empty.
 
         `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
 
