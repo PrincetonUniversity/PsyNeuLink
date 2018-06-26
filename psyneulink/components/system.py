@@ -3815,8 +3815,8 @@ class System(System_Base):
             if isinstance(rcvr, LearningMechanism):
                 return
             # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller
+            #    break, as those handled below
             if isinstance(rcvr, ObjectiveMechanism) and rcvr.for_controller is True:
-            # if isinstance(rcvr, ObjectiveMechanism) and rcvr._role is CONTROL:
                 return
 
             # loop through senders to implement edges
@@ -3839,8 +3839,11 @@ class System(System_Base):
                         for proj in projs:
                             if proj.receiver.owner == rcvr:
                                 if show_mechanism_structure:
-                                    sndr_proj_label = '{}:{}-{}'.format(sndr_label, OutputState.__name__, proj.sender.name)
-                                    proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                    sndr_proj_label = '{}:{}-{}'.\
+                                        format(sndr_label, OutputState.__name__, proj.sender.name)
+                                    proc_mech_rcvr_label = '{}:{}-{}'.\
+                                        format(rcvr_label, proj.receiver.__class__.__name__, proj.receiver.name)
+                                        # format(rcvr_label, InputState.__name__, proj.receiver.name)
                                 else:
                                     sndr_proj_label = sndr_label
                                     proc_mech_rcvr_label = rcvr_label
@@ -4048,30 +4051,6 @@ class System(System_Base):
                         else:
                             sndr_color = learning_color
 
-                        # # MODIFIED 5/13/18 OLD:
-                        # # If Projection is not from another learning component
-                        # #    only show if ALL is set, and don't color
-                        # # if (isinstance(sndr, LearningMechanism)
-                        # #         or (isinstance(sndr, ObjectiveMechanism)
-                        # if (isinstance(sndr, LearningMechanism)
-                        #      and sndr._role is LEARNING
-                        #      and self in sndr.systems):
-                        #
-                        #     # assert False, "WHY IS LearningMechanism NODE BEING ASSIGNED HERE? DOES IT HAVE _role ATTR?"
-                        #
-                        #     if show_mechanism_structure:
-                        #         sg.node(self._get_label(sndr, show_dimensions, show_roles),
-                        #                sndr.show_structure(**mech_struct_args),
-                        #                color=sndr_color)
-                        #     else:
-                        #         sg.node(self._get_label(sndr, show_dimensions, show_roles),
-                        #                shape=mechanism_shape,
-                        #                color=sndr_color)
-                        # else:
-                        #     if not show_learning is ALL:
-                        #         continue
-                        # # MODIFIED 5/12/18 END
-
                         # Create an edge for the Projection to the LearningMecchanism if:
                         #    - it is from another LearningMechanism in the same System
                         #    - it is from an ObjectiveMechanism used for learning in the same System
@@ -4242,7 +4221,7 @@ class System(System_Base):
                                color=prediction_mechanism_color)
                     pass
 
-        # MAIN BODY OFF METHOD:
+        # MAIN BODY OF METHOD:
 
         import graphviz as gv
 
@@ -4393,7 +4372,6 @@ class System(System_Base):
                         else:
                             raise SystemError("PROGRAM ERROR: Component in interaction process ({}) is not in "
                                               "{}'s graph or learningGraph".format(r.name, self.name))
-
 
         else:
             for r in rcvrs:

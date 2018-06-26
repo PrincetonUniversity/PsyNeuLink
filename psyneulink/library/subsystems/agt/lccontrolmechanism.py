@@ -827,7 +827,8 @@ class LCControlMechanism(ControlMechanism):
     def _add_system(self, system, role:str):
         super()._add_system(system, role)
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
-            self._instantiate_output_states(context=ContextFlags.METHOD)
+            # Call with ContextFlags.COMPONENT so that OutputStates are replaced rather than added
+            self._instantiate_output_states(context=ContextFlags.COMPONENT)
 
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):
